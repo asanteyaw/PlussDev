@@ -47,3 +47,14 @@ schema ncases=3
 - [`graph`](graph.md): the table-free, relationship-only counterpart.
 - [`persistence`](persistence.md): where `schema()`'s format is written to
   and read from disk.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="scan.html">
+    <span class="label">Previous</span>
+    <span class="title">scan</span>
+  </a>
+  <a class="next-link" href="select.html">
+    <span class="label">Next</span>
+    <span class="title">select</span>
+  </a>
+</div>

@@ -1,6 +1,6 @@
 # `control::PlaceOptions`
 
-Numerical controls for iterative pole placement.
+Numerical controls of pole placement.
 
 ## Signature
 
@@ -10,63 +10,47 @@ control::PlaceOptions
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Three settings: how many refinement sweeps to run when there are several inputs, the tolerance for rank decisions, and the largest acceptable condition number of the eigenvector basis.
 
 ## Fields
 
-### `sweeps`
-
-Maximum eigenvector-refinement sweeps. The default is `5`; larger values allow more refinement for difficult multi-input assignments.
-
-### `tolerance`
-
-Residual convergence tolerance, default `1e-10`.
-
-### `condition_limit`
-
-Maximum accepted basis condition estimate, default `1e12`.
+| Field | Meaning | Default |
+|---|---|---|
+| `sweeps` | Refinement sweeps over the eigenvectors; only used with more than one input. | `5` |
+| `tolerance` | Relative tolerance for rank and conjugate-pair decisions. | `1e-10` |
+| `condition_limit` | Largest accepted condition number of the assigned basis. | `1e12` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Argument of `place`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A negative `sweeps`, a non-positive `tolerance` and a basis whose condition number exceeds `condition_limit` throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Increase `sweeps` only when multi-input refinement has not met `tolerance`. Tightening tolerance can expose numerical sensitivity rather than improve a poorly conditioned assignment. `condition_limit` is a safety boundary; relaxing it accepts a more fragile eigenvector basis.
+With a single input the basis is unique, so the sweeps do nothing (the first example reports zero). With two inputs each sweep reduces the condition number of the basis: from 11.15 with no sweeps to 9.68 after one and 9.60 after five (the second example). Lower `condition_limit` to refuse poor placements early (the third example), or raise it only when a sensitive closed loop is acceptable.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Use defaults and inspect residual and conditioning diagnostics.
+The defaults, and what a single-input problem does with the sweeps.
 
-@@example Eng/api/control_place.cpp@@
+@@example Eng/api/control_placeoptions_defaults.cpp@@
 
 ### Example 2
 
-See a structural controllability failure options cannot repair.
+Refinement sweeps on a two-input problem.
 
-@@example Eng/api/control_controller_errors.cpp@@
+@@example Eng/api/control_placeoptions_sweeps.cpp@@
 
 ### Example 3
 
-Contrast exact pole assignment with cost-based feedback synthesis.
+A condition limit that rejects a close pole pair.
 
-@@example Eng/api/control_optimal.cpp@@
+@@example Eng/api/control_placeoptions_condition.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="PlaceResult.html">
-    <span class="label">Next</span>
-    <span class="title">PlaceResult</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

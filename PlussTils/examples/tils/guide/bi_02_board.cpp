@@ -13,12 +13,12 @@ int main() {
   std::cout << std::boolalpha;
   namespace fs = std::filesystem;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
   });
   const pluss::bundle::Nexus nexus({{"sales", sales}});
   std::cout << "table registered: " << nexus.has("sales") << '\n';

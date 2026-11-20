@@ -9,29 +9,29 @@
 
 ```cpp
 Stream StreamLabelAccessor::set(const Stream& labels) const
-Stream StreamLabelAccessor::set(const pluss::table::Slate& labels) const
+Stream StreamLabelAccessor::set(const pluss::table::Shelf& labels) const
 ```
 
 ## What It Does
 
 Attaches `labels` as the bound stream's row labels, returning a new stream.
 Both overloads accept the same length-matching label data — as a `Stream`
-or a `pluss::table::Slate` — and are otherwise interchangeable.
+or a `pluss::table::Shelf` — and are otherwise interchangeable.
 
 ```{important} make_note(...) is ambiguous here — wrap it explicitly
 `pluss::make_note(...)` (and other `make_*` helpers) implicitly convert to
-**both** `Stream` and `pluss::table::Slate` — passing one directly to
+**both** `Stream` and `pluss::table::Shelf` — passing one directly to
 `set()` fails to compile with an ambiguous-overload error. Wrap it
 explicitly in whichever type you mean:
-`set(pluss::table::Slate(pluss::make_note({...})))` or
+`set(pluss::table::Shelf(pluss::make_note({...})))` or
 `set(pluss::kindle::Stream(pluss::make_note({...})))`. A pre-built `Stream`
-or `Slate` value (not a bare `make_note(...)` call) resolves cleanly with
+or `Shelf` value (not a bare `make_note(...)` call) resolves cleanly with
 no wrapping needed.
 ```
 
 ## Parameters
 
-**labels** (`const Stream&` or `const pluss::table::Slate&`)
+**labels** (`const Stream&` or `const pluss::table::Shelf&`)
     The new row labels. Must be the same length as the bound stream.
 
 ## Returns
@@ -42,13 +42,13 @@ no wrapping needed.
 
 ## Examples
 
-Example 1. Attach `Note`-kind labels via the `Slate` overload.
+Example 1. Attach `Note`-kind labels via the `Shelf` overload.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}));
-auto labeled = stream.lbl().set(Slate(pluss::make_note({"a", "b", "c"})));
+auto labeled = stream.lbl().set(Shelf(pluss::make_note({"a", "b", "c"})));
 std::cout << labeled;
 ```
 

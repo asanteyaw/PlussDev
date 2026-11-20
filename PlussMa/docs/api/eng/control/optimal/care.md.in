@@ -1,6 +1,6 @@
 # `control::care`
 
-Solves a continuous algebraic Riccati equation.
+Solves the continuous-time algebraic Riccati equation of the linear-quadratic regulator.
 
 ## Signature
 
@@ -23,71 +23,62 @@ control::RiccatiResult control::care(
 
 ## What It Does
 
-`care` solves the continuous-time equation and synthesizes the stabilizing feedback law. Leading dimensions are batch axes and broadcast under normal `Series` rules.
+Finds the stabilising `P` of `A'P + PA - (P B + N) R^{-1} (B'P + N') + Q = 0` and returns it with the optimal feedback `K = R^{-1}(B'P + N')` and the closed-loop matrix `A - B K`. With the cross-weight `N` omitted the equation is the classic `A'P + PA - P B R^{-1} B' P + Q = 0`. The control `u = -K x` minimises the cost `integral(x'Qx + 2x'Nu + u'Ru) dt`.
 
 ## Parameters
 
-`a`
-: The continuous state matrix `A`, shaped `[..., states, states]`.
-
-`b`
-: The input matrix `B`, shaped `[..., states, inputs]`.
+`a`, `b`
+: The dynamics `[..., n, n]` and input matrix `[..., n, m]`.
 
 `q`
-: Hermitian positive-semidefinite state cost `Q`.
+: State weight `[..., n, n]`, symmetric and positive semidefinite.
 
 `r`
-: Hermitian positive-definite input cost `R`.
+: Input weight `[..., m, m]`, symmetric and positive definite.
 
 `cross`
-: Optional state-input cross cost `S`; the joint cost block must remain positive semidefinite.
+: Optional cross-weight `N`, `[..., n, m]`.
 
 `options`
-: Numerical matrix-equation tolerances and iteration controls.
+: `MatrixEqOptions` of the underlying solver.
 
 ## Returns
 
-A `control::RiccatiResult` containing `X`, `K`, and `A - B K`.
+A `RiccatiResult` with `value` (`P`), `gain` (`K`) and `closed_loop` (`A - B K`).
 
 ## Errors
 
-Throws when shapes are incompatible, costs violate their Hermitian definiteness contracts, or no stabilizing solution can be established.
+An `R` that is not positive definite, a cross-weight that makes the joint cost `[Q, N; N', R]` indefinite, matrices of inconsistent shape, and a pair with no stabilising solution (an unstable mode the input cannot reach, or one the weight `Q` does not see) throw `pluss::Error`. The last message names the conditions and appends the solver's own message.
 
 ## Interpretation and Use
 
-Use `care` when matrices are already available and the dynamics are continuous. The cross-weight overload is not a numerical hint: it changes the quadratic objective. Start without it unless the model genuinely contains state-input coupling, and always inspect `closed_loop` after synthesis.
+For `a = b = q = r = 1` the equation is `2p - p^2 + 1 = 0` and the stabilising root is `1 + sqrt(2)`, which the first example reproduces; the closed loop is `-sqrt(2)`. The second example checks the Riccati equation itself for a double integrator: its residual is at rounding level and `P` is symmetric. A cross-weight shifts the gain (the third example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Solve the cross-weight overload and inspect its stabilizing solution.
+A scalar problem against its closed form.
 
-@@example Eng/api/control_care_cross.cpp@@
+@@example Eng/api/control_care_scalar.cpp@@
 
 ### Example 2
 
-Use the equivalent state-space route for a standard continuous regulator.
+The residual of the Riccati equation for a double integrator.
 
-@@example Eng/api/control_optimal.cpp@@
+@@example Eng/api/control_care_residual.cpp@@
 
 ### Example 3
 
-See the exact failures for singular `R` and non-Hermitian `Q`.
+A cross-weight `N` and its effect on the gain.
 
-@@example Eng/api/control_optimal_errors.cpp@@
+@@example Eng/api/control_care_cross.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="RiccatiResult.html">
-    <span class="label">Previous</span>
-    <span class="title">RiccatiResult</span>
-  </a>
-  <a class="next-link" href="dare.html">
-    <span class="label">Next</span>
-    <span class="title">dare</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+@@example Eng/api/control_care_errors.cpp@@
+

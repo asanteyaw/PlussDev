@@ -71,12 +71,12 @@ id	city
   underlying alignment step.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="save_parquet.html">
+  <a class="prev-link" href="save_streams.html">
     <span class="label">Previous</span>
-    <span class="title">save_parquet</span>
+    <span class="title">save_streams</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="scribbelize.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">scribbelize</span>
   </a>
 </div>

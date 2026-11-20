@@ -61,13 +61,13 @@ std::cout << *found;
 
 ```text
 true
-=========================
-      | customer_id  name
--------------------------
-0     | 1            Ada 
-1     | 2            Bola
-2     | 3            Chen
--------------------------
+========================
+     | customer_id  name
+------------------------
+0    | 1            Ada 
+1    | 2            Bola
+2    | 3            Chen
+------------------------
 [3 cs x 2 feat]
 ```
 
@@ -105,8 +105,8 @@ disengaged `optional`.
     <span class="label">Previous</span>
     <span class="title">from_atlas</span>
   </a>
-  <a class="next-link" href="graph.html">
+  <a class="next-link" href="grain_audit.html">
     <span class="label">Next</span>
-    <span class="title">graph</span>
+    <span class="title">grain_audit</span>
   </a>
 </div>

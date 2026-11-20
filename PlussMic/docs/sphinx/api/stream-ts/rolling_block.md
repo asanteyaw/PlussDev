@@ -68,11 +68,11 @@ std::cout << out;
 ===========================================================
      | roll_mean_w2  roll_std_w2  roll_mean_w3  roll_std_w3
 -----------------------------------------------------------
-0    | 10            0            10            0          
-1    | 15            5            15            5          
-2    | 25            5            20            8.164965809
-3    | 35            5            30            8.164965809
-4    | 45            5            40            8.164965809
+0    | 10            NULL         10            NULL       
+1    | 15            7.071067812  15            7.071067812
+2    | 25            7.071067812  20            10         
+3    | 35            7.071067812  30            10         
+4    | 45            7.071067812  40            10         
 -----------------------------------------------------------
 [5 cs x 4 feat]
 ```
@@ -96,8 +96,8 @@ count, not count `- 1`), same as [`zscore_rolling()`](zscore_rolling.md).
 - [`StreamTimeSeriesAccessor::zscore_rolling`](zscore_rolling.md): shares
   this method's underlying rolling-mean/rolling-std engine.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::rolling_block`](../slate-ts/rolling_block.md): the
-  underlying single-slate engine.
+- [`TimeSeriesAccessor::rolling_block`](../shelf-ts/rolling_block.md): the
+  underlying single-shelf engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling.html">

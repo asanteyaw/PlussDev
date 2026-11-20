@@ -14,6 +14,7 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out);
 bool supports_maximum_minimum(ScalarType dt) noexcept;
 void maximum(const Series& a, const Series& b, Series& out);
 void minimum(const Series& a, const Series& b, Series& out);
+void nextafter(const Series& a, const Series& b, Series& out); // float32: the next representable value from a toward b
 bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept;
 void where(const Series& cond, const Series& a, const Series& b, Series& out);
 

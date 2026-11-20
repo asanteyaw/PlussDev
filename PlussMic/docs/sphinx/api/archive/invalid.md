@@ -60,6 +60,7 @@ id                       | Series       | Series[bool]     | 3       | [false, t
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction.
 - Every resulting stream is `Series[bool]`, regardless of its original kind.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
@@ -76,8 +77,8 @@ id                       | Series       | Series[bool]     | 3       | [false, t
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

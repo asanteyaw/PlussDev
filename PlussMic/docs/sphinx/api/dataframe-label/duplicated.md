@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Slate DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const
-Slate DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const
-Slate DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const
+Shelf DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const
+Shelf DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const
+Shelf DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does
@@ -42,8 +42,8 @@ If `true`, the *last* occurrence is spared instead; every earlier one is
 
 ## Returns
 
-`Slate`
-    A boolean slate, one entry per row, `display_name` `"duplicated"`,
+`Shelf`
+    A boolean shelf, one entry per row, `display_name` `"duplicated"`,
     displayed against the case label(s) it was computed from.
 
 ## Examples
@@ -54,8 +54,8 @@ Example 1. Mark duplicates on the full case label, with one repeated value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().duplicated();
@@ -80,12 +80,12 @@ Example 2. Key the check on just one level of a structured, multi-level frame.
 
 ```cpp
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.labels().set({"region", "city"}, true, "/");
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+auto grouped = readings.labels().set(std::vector<std::string_view>{"region", "city"}, true, "/");
 
-auto out2 = grouped.labels().duplicated({"region"});
+auto out2 = grouped.labels().duplicated(std::vector<std::string_view>{"region"});
 std::cout << out2;
 ```
 
@@ -111,8 +111,8 @@ Example 3. Spare the *last* occurrence instead of the first, with
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().duplicated(false, true);
@@ -142,14 +142,14 @@ the call throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 try {
   auto out = labeled.labels().duplicated(true, true);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -157,7 +157,7 @@ try {
 ### Output
 
 ```text
-Slate::duplicated: keep_first and keep_last cannot both be true
+Shelf::duplicated: keep_first and keep_last cannot both be true
 ```
 
 Sparing both the first *and* the last occurrence isn't a coherent request, so

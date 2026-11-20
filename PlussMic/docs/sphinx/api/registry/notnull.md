@@ -59,6 +59,7 @@ std::cout << out.fields("id").to_json();
 
 ## Notes
 
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - `notnull()` is exactly `isnull()` with every flag inverted.
 - Never throws on a mismatched field kind — unlike [`fillnull()`](fillnull.md).
 - Full per-value semantics documented on [`Slot::notnull`](../slot/notnull.md).
@@ -72,9 +73,9 @@ std::cout << out.fields("id").to_json();
   kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nfields.html">
+  <a class="prev-link" href="notnan.html">
     <span class="label">Previous</span>
-    <span class="title">nfields</span>
+    <span class="title">notnan</span>
   </a>
   <a class="next-link" href="nstate.html">
     <span class="label">Next</span>

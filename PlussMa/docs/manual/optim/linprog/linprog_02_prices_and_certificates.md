@@ -6,7 +6,7 @@ A linear program's answer carries more than the best plan. Every constraint has 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 For a minimization, the **dual value** of a row is the rate at which the optimal objective changes as the row's right-hand side increases. Because the objective is linear and the plan changes in steps, the price is exact for small changes and holds until the set of binding constraints changes. Three facts organize everything:
 

@@ -1,0 +1,171 @@
+<!-- generated from links.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 053a26e467c1 -->
+
+# `fluid::Network::links`
+
+[Back to `fluid::Network`](../Network.md)
+
+The number of links: pipes plus pumps plus valves.
+
+## Signature
+
+```cpp
+std::int64_t fluid::Network::links() const noexcept;
+```
+
+## What It Does
+
+Returns the total link count. It is the length of the link axis of every result, such as `flow` and `head_loss`, ordered pipes first, then pumps, then valves.
+
+## Returns
+
+The number of links.
+
+## Practical Examples
+
+### Example 1
+
+One pipe from a reservoir to a demand junction.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.02});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  const auto obj = fluid::network(net);
+  out.writeln("links =", obj.links(), " pipes", obj.pipes(), " pumps", obj.pumps(), " valves", obj.valves());
+}
+```
+
+Output
+
+```text
+links = 1  pipes 1  pumps 0  valves 0
+```
+
+### Example 2
+
+A pump lifting water from one reservoir to a junction that drains to a second reservoir.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Reservoir};
+  net.nodes.elevation = vec({0.0, 5.0, 0.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.0});
+  net.nodes.head = vec({10.0, 40.0, 40.0});
+  net.pumps.from = {0};
+  net.pumps.to = {1};
+  net.pumps.shutoff_head = vec({60.0});
+  net.pumps.resistance = vec({4000.0});
+  net.pumps.exponent = vec({2.0});
+  net.pumps.speed = vec({1.0});
+  net.pipes.from = {1};
+  net.pipes.to = {2};
+  net.pipes.length = vec({500.0});
+  net.pipes.diameter = vec({0.20});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  const auto obj = fluid::network(net);
+  out.writeln("links =", obj.links(), " pipes", obj.pipes(), " pumps", obj.pumps(), " valves", obj.valves());
+}
+```
+
+Output
+
+```text
+links = 2  pipes 1  pumps 1  valves 0
+```
+
+### Example 3
+
+A throttle valve between two junctions, with a second pipe feeding the far junction.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 10.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.02, 0.02});
+  net.nodes.head = vec({80.0, 55.0, 55.0});
+  net.pipes.from = {0, 0};
+  net.pipes.to = {1, 2};
+  net.pipes.length = vec({600.0, 900.0});
+  net.pipes.diameter = vec({0.20, 0.15});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  net.valves.kind = {fluid::ValveKind::Throttle};
+  net.valves.from = {1};
+  net.valves.to = {2};
+  net.valves.diameter = vec({0.20});
+  net.valves.minor = vec({0.0});
+  net.valves.setting = vec({1.0});
+  const auto obj = fluid::network(net);
+  out.writeln("links =", obj.links(), " pipes", obj.pipes(), " pumps", obj.pumps(), " valves", obj.valves());
+}
+```
+
+Output
+
+```text
+links = 3  pipes 2  pumps 0  valves 1
+```
+
+## See Also
+
+- [`pipes`](pipes.md): the pipe count
+- [`pumps`](pumps.md): the pump count
+- [`valves`](valves.md): the valve count
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="junctions.html">
+    <span class="label">Previous</span>
+    <span class="title">junctions</span>
+  </a>
+  <a class="next-link" href="liquid.html">
+    <span class="label">Next</span>
+    <span class="title">liquid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

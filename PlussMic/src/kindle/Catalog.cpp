@@ -161,16 +161,16 @@ std::vector<std::int64_t> sort_indices_for_keys(const std::vector<Stream>& key_s
     PLUSS_CHECK(s.size() == n, "Catalog::sort: all key streams must have same length");
   }
 
-  std::vector<pluss::table::Slate> key_slates;
-  key_slates.reserve(key_streams.size());
-  for (const auto& s : key_streams) key_slates.push_back(s.to_slate());
+  std::vector<pluss::table::Shelf> key_shelves;
+  key_shelves.reserve(key_streams.size());
+  for (const auto& s : key_streams) key_shelves.push_back(s.to_shelf());
 
   std::vector<std::int64_t> idx(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i) idx[static_cast<std::size_t>(i)] = i;
 
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
-    for (std::size_t k = 0; k < key_slates.size(); ++k) {
-      const int cmp = pluss::table::detail::compare_rows(key_slates[k], a, b, true);
+    for (std::size_t k = 0; k < key_shelves.size(); ++k) {
+      const int cmp = pluss::table::detail::compare_rows(key_shelves[k], a, b, true);
       if (cmp == 0) continue;
       const bool asc = k < ascending.size() ? ascending[k] : true;
       return asc ? (cmp < 0) : (cmp > 0);
@@ -281,31 +281,31 @@ std::int64_t positional_target_len(const std::vector<Stream>& streams,
   return min_len;
 }
 
-pluss::table::Slate apply_fill_policy(pluss::table::Slate slate,
+pluss::table::Shelf apply_fill_policy(pluss::table::Shelf shelf,
                                        StreamKind kind,
                                        const TabelizePolicy& policy) {
   switch (policy.fill) {
     case FillPolicy::Null:
-      return slate;
+      return shelf;
     case FillPolicy::Scalar:
       PLUSS_CHECK(kind == StreamKind::Series,
                   "Catalog::tabelize(fill=scalar): supported only for Series streams");
       PLUSS_CHECK(policy.fill_scalar.has_value(),
                   "Catalog::tabelize(fill=scalar): fill_scalar must be provided");
-      return slate.fillnull(*policy.fill_scalar);
+      return shelf.fillnull(*policy.fill_scalar);
     case FillPolicy::ForwardFill:
-      return slate.ffill();
+      return shelf.ffill();
     case FillPolicy::BackwardFill:
-      return slate.bfill();
+      return shelf.bfill();
   }
-  return slate;
+  return shelf;
 }
 
-pluss::table::Slate build_aligned_slate(const Stream& stream,
+pluss::table::Shelf build_aligned_shelf(const Stream& stream,
                                           const std::vector<std::int64_t>& source_index,
                                           const TabelizePolicy& policy) {
   const auto target_len = static_cast<std::int64_t>(source_index.size());
-  const auto source = stream.to_slate();
+  const auto source = stream.to_shelf();
   const auto source_note = source.cast().note().as_note();
   const auto source_valid = validity_or_all_true(stream);
 
@@ -321,9 +321,9 @@ pluss::table::Slate build_aligned_slate(const Stream& stream,
 
   const std::array<std::int64_t, 1> shape{target_len};
   auto note = pluss::make_note(values, shape);
-  pluss::table::Slate out_note(note, optional_mask_from_valid(valid));
+  pluss::table::Shelf out_note(note, optional_mask_from_valid(valid));
 
-  pluss::table::Slate out{};
+  pluss::table::Shelf out{};
   try {
     switch (stream.kind()) {
       case StreamKind::Series:
@@ -346,7 +346,7 @@ pluss::table::Slate build_aligned_slate(const Stream& stream,
                 source_values[static_cast<std::size_t>(src_i)];
           }
         }
-        out = pluss::table::Slate(
+        out = pluss::table::Shelf(
             pluss::duration::nanos(std::move(duration_values), {target_len}),
             optional_mask_from_valid(valid));
         break;
@@ -366,7 +366,7 @@ pluss::table::Slate build_aligned_slate(const Stream& stream,
 struct AlignmentPlan {
   AlignBy effective_align_by{AlignBy::Pos};
   std::int64_t target_len{0};
-  pluss::table::Slate label_axis{};
+  pluss::table::Shelf label_axis{};
   std::vector<std::vector<std::int64_t>> source_index_by_stream{};
 };
 
@@ -397,7 +397,7 @@ AlignmentPlan build_alignment_plan(const std::vector<std::string>& keys,
 
     std::vector<std::int64_t> idx(static_cast<std::size_t>(plan.target_len));
     for (std::int64_t i = 0; i < plan.target_len; ++i) idx[static_cast<std::size_t>(i)] = i;
-    plan.label_axis = pluss::table::Slate(pluss::make_series(idx, {plan.target_len}));
+    plan.label_axis = pluss::table::Shelf(pluss::make_series(idx, {plan.target_len}));
     return plan;
   }
 
@@ -478,7 +478,7 @@ AlignmentPlan build_alignment_plan(const std::vector<std::string>& keys,
   if (all_labels_in_anchor) {
     plan.label_axis = streams[anchor].label()->take(anchor_label_indices);
   } else {
-    plan.label_axis = pluss::table::Slate(
+    plan.label_axis = pluss::table::Shelf(
         pluss::make_note(target_labels, {plan.target_len}));
   }
   return plan;
@@ -497,9 +497,9 @@ std::string unique_label_feature_name(std::string base, const std::unordered_set
 Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
                                const pluss::loader::ReadCsvOptions& infer_options,
                                const KindelizePolicy& policy = {}) {
-  std::optional<pluss::table::Slate> case_axis = std::nullopt;
+  std::optional<pluss::table::Shelf> case_axis = std::nullopt;
   if (raw.cases.has_value()) {
-    case_axis = pluss::table::detail::infer_slate_from_raw_csv_column(*raw.cases, infer_options);
+    case_axis = pluss::table::detail::infer_shelf_from_raw_csv_column(*raw.cases, infer_options);
   }
 
   std::vector<std::pair<std::string, Stream>> out;
@@ -508,21 +508,21 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
   names.reserve(raw.features.size() * 2);
 
   for (const auto& col : raw.features) {
-    auto feature = pluss::table::detail::infer_slate_from_raw_csv_column(col, infer_options);
+    auto feature = pluss::table::detail::infer_shelf_from_raw_csv_column(col, infer_options);
 
-    std::optional<pluss::table::Slate> stream_label = std::nullopt;
+    std::optional<pluss::table::Shelf> stream_label = std::nullopt;
     if (policy.attach_labels && case_axis.has_value() && case_axis->size() == feature.size()) {
       stream_label = case_axis;
     }
 
     names.insert(col.name);
-    out.emplace_back(col.name, Stream::from_slate(feature, std::move(stream_label)));
+    out.emplace_back(col.name, Stream::from_shelf(feature, std::move(stream_label)));
   }
 
   if (policy.materialize_label && case_axis.has_value()) {
     PLUSS_CHECK(names.find(policy.label_key) == names.end(),
                 "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, Stream::from_slate(*case_axis));
+    out.emplace_back(policy.label_key, Stream::from_shelf(*case_axis));
   }
 
   return Catalog(std::move(out));
@@ -537,8 +537,8 @@ Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy&
   names.reserve(batch.features.size() * 2);
   for (auto& [name, feature] : batch.features) {
     auto s = policy.attach_labels
-        ? Stream::from_slate(feature, case_axis)
-        : Stream::from_slate(feature);
+        ? Stream::from_shelf(feature, case_axis)
+        : Stream::from_shelf(feature);
     names.insert(name);
     out.emplace_back(std::move(name), std::move(s));
   }
@@ -546,7 +546,7 @@ Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy&
   if (policy.materialize_label && case_axis.has_value()) {
     PLUSS_CHECK(names.find(policy.label_key) == names.end(),
                 "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, Stream::from_slate(*case_axis));
+    out.emplace_back(policy.label_key, Stream::from_shelf(*case_axis));
   }
 
   return Catalog(std::move(out));

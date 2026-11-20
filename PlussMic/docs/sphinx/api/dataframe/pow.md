@@ -11,9 +11,9 @@
 DataFrame DataFrame::pow(double other) const
 DataFrame DataFrame::pow(const DataFrame& other) const
 DataFrame DataFrame::pow(const DataFrame& other, const AlignOptions& options) const
-DataFrame DataFrame::pow(const Slate& other, Axis axis = Axis::Feature) const
-DataFrame DataFrame::pow(const Slate& other, Axis axis, const AlignOptions& options) const
-DataFrame DataFrame::pow(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
+DataFrame DataFrame::pow(const Shelf& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::pow(const Shelf& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::pow(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does
@@ -35,9 +35,9 @@ The right-hand operand (the exponent), in one of three shapes:
 - `double`: one scalar exponent, applied to every numeric feature.
 - `const DataFrame&`: another frame supplying one exponent per cell, after the two
   frames are aligned.
-- `const Slate&`: one column of exponents, broadcast according to `axis`.
+- `const Shelf&`: one column of exponents, broadcast according to `axis`.
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 - `Axis::Feature` (the default): `other` supplies **one exponent per feature** — its
   length must match `nfeatures()`. Feature `i`'s exponent is applied to every case in
@@ -47,7 +47,7 @@ The right-hand operand (the exponent), in one of three shapes:
 
 **options** (`AlignOptions`, optional)
 
-Controls how the `DataFrame` or `Slate` right-hand operand is aligned to the current
+Controls how the `DataFrame` or `Shelf` right-hand operand is aligned to the current
 frame before the exponentiation runs (by position, case label, or feature name), and
 how missing values are filled during alignment. Defaults to strict positional
 alignment (`AlignBy::Pos`).
@@ -76,13 +76,13 @@ std::cout << values;
 ### Output (before)
 
 ```text
-===================
-      | base  scale
--------------------
-a     | 2     10   
-b     | 3     20   
-c     | 4     30   
--------------------
+==================
+     | base  scale
+------------------
+a    | 2     10   
+b    | 3     20   
+c    | 4     30   
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -94,21 +94,21 @@ std::cout << out;
 ### Output (after)
 
 ```text
-===================
-      | base  scale
--------------------
-a     | 4     100  
-b     | 9     400  
-c     | 16    900  
--------------------
+==================
+     | base  scale
+------------------
+a    | 4     100  
+b    | 9     400  
+c    | 16    900  
+------------------
 [3 cs x 2 feat]
 ```
 
-Example 2. Raise each feature to its own exponent via a `Slate` with one value per
+Example 2. Raise each feature to its own exponent via a `Shelf` with one value per
 feature (`Axis::Feature`, the default) — `base` gets `^2`, `scale` gets `^3`.
 
 ```cpp
-auto per_feature_exp = Slate(pluss::make_series({2.0, 3.0}));
+auto per_feature_exp = Shelf(pluss::make_series({2.0, 3.0}));
 auto out = values.pow(per_feature_exp);
 std::cout << out;
 ```
@@ -116,13 +116,13 @@ std::cout << out;
 ### Output
 
 ```text
-===================
-      | base  scale
--------------------
-a     | 4     1000 
-b     | 9     8000 
-c     | 16    27000
--------------------
+==================
+     | base  scale
+------------------
+a    | 4     1000 
+b    | 9     8000 
+c    | 16    27000
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -131,7 +131,7 @@ gets `^1`, row `b` gets `^2`, row `c` gets `^3`, applied across every feature in
 row.
 
 ```cpp
-auto per_case_exp = Slate(pluss::make_series({1.0, 2.0, 3.0}));
+auto per_case_exp = Shelf(pluss::make_series({1.0, 2.0, 3.0}));
 auto out = values.pow(per_case_exp, Axis::Case);
 std::cout << out;
 ```
@@ -139,13 +139,13 @@ std::cout << out;
 ### Output
 
 ```text
-===================
-      | base  scale
--------------------
-a     | 2     10   
-b     | 9     400  
-c     | 64    27000
--------------------
+==================
+     | base  scale
+------------------
+a    | 2     10   
+b    | 9     400  
+c    | 64    27000
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -154,9 +154,9 @@ overload — a plain positional pairing that ignores both frames' case labels.
 
 ```cpp
 auto exponents = DataFrame({
-    {"col1", Slate(pluss::make_series({3.0, 1.0, 2.0}))},
-    {"col2", Slate(pluss::make_series({1.0, 2.0, 1.0}))},
-}, Slate(pluss::make_note({"x", "y", "z"})));
+    {"col1", Shelf(pluss::make_series({3.0, 1.0, 2.0}))},
+    {"col2", Shelf(pluss::make_series({1.0, 2.0, 1.0}))},
+}, Shelf(pluss::make_note({"x", "y", "z"})));
 std::cout << exponents;
 
 auto out = values.pow(exponents);
@@ -166,26 +166,26 @@ std::cout << out;
 ### Output (exponents)
 
 ```text
-==================
-      | col1  col2
-------------------
-x     | 3     1   
-y     | 1     2   
-z     | 2     1   
-------------------
+=================
+     | col1  col2
+-----------------
+x    | 3     1   
+y    | 1     2   
+z    | 2     1   
+-----------------
 [3 cs x 2 feat]
 ```
 
 ### Output (values.pow(exponents))
 
 ```text
-===================
-      | base  scale
--------------------
-a     | 8     10   
-b     | 3     400  
-c     | 16    30   
--------------------
+==================
+     | base  scale
+------------------
+a    | 8     10   
+b    | 3     400  
+c    | 16    30   
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -201,9 +201,9 @@ physical position.
 
 ```cpp
 auto exponents_by_label = DataFrame({
-    {"col1", Slate(pluss::make_series({3.0, 1.0, 2.0}))},
-    {"col2", Slate(pluss::make_series({1.0, 2.0, 1.0}))},
-}, Slate(pluss::make_note({"c", "a", "b"})));
+    {"col1", Shelf(pluss::make_series({3.0, 1.0, 2.0}))},
+    {"col2", Shelf(pluss::make_series({1.0, 2.0, 1.0}))},
+}, Shelf(pluss::make_note({"c", "a", "b"})));
 std::cout << exponents_by_label;
 
 auto out = values.pow(exponents_by_label, AlignOptions{.align = AlignBy::Caselbl});

@@ -278,7 +278,7 @@ PriceResult bs_price_analytic_(const Vanilla& inst,
   const Series intrinsic_call = spot.sub(strike).clamp_min(0.0);
   const Series intrinsic_put = strike.sub(spot).clamp_min(0.0);
   const Series intrinsic = intrinsic_call.mul(is_call_mask).add(intrinsic_put.mul(is_put_mask));
-  price = maturity_mask.where(intrinsic, price);
+  price = pluss::series::where(maturity_mask, intrinsic, price);
 
   PriceResult out;
   out.price = price;
@@ -311,18 +311,18 @@ PriceResult bs_price_analytic_(const Vanilla& inst,
   const Series theta = call_theta.mul(is_call_mask).add(put_theta.mul(is_put_mask));
   const Series rho = call_rho.mul(is_call_mask).add(put_rho.mul(is_put_mask));
 
-  Series delta_call_0 = spot.gt(strike).where(ones, zeros);
-  delta_call_0 = spot.eq(strike).where(half, delta_call_0);
-  Series delta_put_0 = spot.lt(strike).where(neg_ones, zeros);
-  delta_put_0 = spot.eq(strike).where(neg_half, delta_put_0);
+  Series delta_call_0 = pluss::series::where(spot.gt(strike), ones, zeros);
+  delta_call_0 = pluss::series::where(spot.eq(strike), half, delta_call_0);
+  Series delta_put_0 = pluss::series::where(spot.lt(strike), neg_ones, zeros);
+  delta_put_0 = pluss::series::where(spot.eq(strike), neg_half, delta_put_0);
   const Series delta_0 = delta_call_0.mul(is_call_mask).add(delta_put_0.mul(is_put_mask));
-  delta = maturity_mask.where(delta_0, delta);
+  delta = pluss::series::where(maturity_mask, delta_0, delta);
 
   out.delta = delta;
-  out.gamma = maturity_mask.where(zeros, gamma);
-  out.vega = maturity_mask.where(zeros, vega);
-  out.theta = maturity_mask.where(zeros, theta);
-  out.rho = maturity_mask.where(zeros, rho);
+  out.gamma = pluss::series::where(maturity_mask, zeros, gamma);
+  out.vega = pluss::series::where(maturity_mask, zeros, vega);
+  out.theta = pluss::series::where(maturity_mask, zeros, theta);
+  out.rho = pluss::series::where(maturity_mask, zeros, rho);
   return out;
 }
 
@@ -426,7 +426,7 @@ PriceResult bs_price_mc_(const Vanilla& inst,
   // options at expiry: the price is the payoff, delta is the exercise indicator and the other Greeks vanish
   const Series expired = tau.reshape({n}).le(1e-12);
   const Series zero = pluss::series::zeros({n}, out_cfg);
-  const auto live = [&](const Series& x) { return expired.where(zero, x).reshape(ref.sizes()); };
+  const auto live = [&](const Series& x) { return pluss::series::where(expired, zero, x).reshape(ref.sizes()); };
   out.delta = parts[1].reshape(ref.sizes());
   out.gamma = live(parts[2]);
   out.vega = live(parts[3]);

@@ -326,9 +326,9 @@ inline Raw convex_mix(const Raw &low, const Raw &high, const Series &weight,
   const Series use_high = weight.eq(1.0);
   const Series vector_low = use_low.unsqueeze(component);
   const Series vector_high = use_high.unsqueeze(component);
-  return {use_low.where(low.rho, use_high.where(high.rho, mixed_rho)),
-          vector_low.where(low.mom, vector_high.where(high.mom, mixed_mom)),
-          use_low.where(low.energy, use_high.where(high.energy, mixed_energy))};
+  return {pluss::series::where(use_low, low.rho, pluss::series::where(use_high, high.rho, mixed_rho)),
+          pluss::series::where(vector_low, low.mom, pluss::series::where(vector_high, high.mom, mixed_mom)),
+          pluss::series::where(use_low, low.energy, pluss::series::where(use_high, high.energy, mixed_energy))};
 }
 
 template <class Grid>
@@ -339,8 +339,7 @@ inline Series admissible_fraction(const Raw &low, const Raw &high,
   if (high_valid.all().template item<bool>())
     return pluss::series::ones_like(high.rho);
 
-  Series lower = high_valid.where(pluss::series::ones_like(high.rho),
-                                  pluss::series::zeros_like(high.rho));
+  Series lower = pluss::series::where(high_valid, pluss::series::ones_like(high.rho), pluss::series::zeros_like(high.rho));
   Series upper = pluss::series::ones_like(high.rho);
   const int iterations =
       high.rho.scalar_type() == ScalarType::Float32 ? 24 : 52;
@@ -348,8 +347,8 @@ inline Series admissible_fraction(const Raw &low, const Raw &high,
     const Series middle = lower.add(upper).mul(0.5);
     const Series middle_valid =
         valid(convex_mix(low, high, middle, component), grid, model);
-    lower = middle_valid.where(middle, lower);
-    upper = middle_valid.where(upper, middle);
+    lower = pluss::series::where(middle_valid, middle, lower);
+    upper = pluss::series::where(middle_valid, upper, middle);
   }
   return lower;
 }
@@ -374,8 +373,7 @@ inline void require_valid(const Raw &state, const Grid &grid,
 
 inline Series minmod(const Series &back, const Series &forward) {
   const Series same_sign = back.mul(forward).gt(0.0);
-  return same_sign.where(back.sgn().mul(back.abs().minimum(forward.abs())),
-                         pluss::series::zeros_like(back));
+  return pluss::series::where(same_sign, back.sgn().mul(back.abs().minimum(forward.abs())), pluss::series::zeros_like(back));
 }
 
 inline Series limited_slope(const Series &back, const Series &forward,
@@ -392,9 +390,8 @@ inline Series limited_slope(const Series &back, const Series &forward,
     const Series same_sign = back.mul(forward).gt(0.0);
     const Series denominator = back.add(forward);
     const Series safe =
-        same_sign.where(denominator, pluss::series::ones_like(denominator));
-    return same_sign.where(back.mul(forward).mul(2.0).div(safe),
-                           pluss::series::zeros_like(back));
+        pluss::series::where(same_sign, denominator, pluss::series::ones_like(denominator));
+    return pluss::series::where(same_sign, back.mul(forward).mul(2.0).div(safe), pluss::series::zeros_like(back));
   }
   case Recon::Weno5:
     throw std::invalid_argument(
@@ -604,7 +601,7 @@ inline Flux hllc_flux(const Raw &left_state, const Raw &right_state,
   const Series scale = left_term.abs().add(right_term.abs()).clamp_min(1.0);
   Series valid = denominator.abs().gt(scale.mul(tolerance));
   const Series one = pluss::series::ones_like(denominator);
-  const Series safe_denominator = valid.where(denominator, one);
+  const Series safe_denominator = pluss::series::where(valid, denominator, one);
   const Series contact = right_pressure.sub(left_pressure)
                              .add(left_term.mul(left_normal))
                              .sub(right_term.mul(right_normal))
@@ -614,8 +611,8 @@ inline Flux hllc_flux(const Raw &left_state, const Raw &right_state,
   valid = valid.logical_and(left_gap.abs().gt(scale.mul(tolerance)))
               .logical_and(right_gap.abs().gt(scale.mul(tolerance)))
               .logical_and(contact.isfinite());
-  const Series safe_left_gap = valid.where(left_gap, one);
-  const Series safe_right_gap = valid.where(right_gap, one);
+  const Series safe_left_gap = pluss::series::where(valid, left_gap, one);
+  const Series safe_right_gap = pluss::series::where(valid, right_gap, one);
   const Raw left_star =
       hllc_star(left_state, left_pressure, left_normal, left_wave, contact,
                 safe_left_gap, component, axis);
@@ -651,27 +648,22 @@ inline Flux hllc_flux(const Raw &left_state, const Raw &right_state,
   const Series use_right_star = contact.lt(0.0).logical_and(right_wave.gt(0.0));
   const auto select_scalar = [&](const Series &a, const Series &b,
                                  const Series &c, const Series &d) {
-    return use_left.where(a,
-                          use_left_star.where(b, use_right_star.where(c, d)));
+    return pluss::series::where(use_left, a, pluss::series::where(use_left_star, b, pluss::series::where(use_right_star, c, d)));
   };
   const Series vector_left = use_left.unsqueeze(component);
   const Series vector_left_star = use_left_star.unsqueeze(component);
   const Series vector_right_star = use_right_star.unsqueeze(component);
   Flux result{select_scalar(left.mass, left_star_flux.mass,
                             right_star_flux.mass, right.mass),
-              vector_left.where(left.momentum, vector_left_star.where(
-                                                   left_star_flux.momentum,
-                                                   vector_right_star.where(
-                                                       right_star_flux.momentum,
-                                                       right.momentum))),
+              pluss::series::where(vector_left, left.momentum, pluss::series::where(vector_left_star, left_star_flux.momentum, pluss::series::where(vector_right_star, right_star_flux.momentum, right.momentum))),
               select_scalar(left.energy, left_star_flux.energy,
                             right_star_flux.energy, right.energy),
               left.wave.maximum(right.wave)};
   const Flux fallback =
       rusanov_flux(left_state, right_state, component, axis, model);
-  return {valid.where(result.mass, fallback.mass),
-          valid.unsqueeze(component).where(result.momentum, fallback.momentum),
-          valid.where(result.energy, fallback.energy), result.wave};
+  return {pluss::series::where(valid, result.mass, fallback.mass),
+          pluss::series::where(valid.unsqueeze(component), result.momentum, fallback.momentum),
+          pluss::series::where(valid, result.energy, fallback.energy), result.wave};
 }
 
 inline Series roe_abs(const Series &value, const Series &left,
@@ -682,9 +674,9 @@ inline Series roe_abs(const Series &value, const Series &left,
       value.sub(left).maximum(right.sub(value)).clamp_min(0.0);
   const Series width = transonic.maximum(scale.mul(entropy));
   const Series smooth = width.gt(0.0).logical_and(magnitude.lt(width));
-  const Series safe = smooth.where(width, pluss::series::ones_like(width));
+  const Series safe = pluss::series::where(smooth, width, pluss::series::ones_like(width));
   const Series repaired = value.square().add(safe.square()).div(safe.mul(2.0));
-  return smooth.where(repaired, magnitude);
+  return pluss::series::where(smooth, repaired, magnitude);
 }
 
 inline Flux roe_flux(const Raw &left_state, const Raw &right_state,
@@ -728,7 +720,7 @@ inline Flux roe_flux(const Raw &left_state, const Raw &right_state,
       roe_enthalpy.sub(speed2.mul(0.5)).mul(model.gamma - 1.0);
   Series valid = sound2.gt(0.0).logical_and(sound2.isfinite());
   const Series safe_sound2 =
-      valid.where(sound2, pluss::series::ones_like(sound2));
+      pluss::series::where(valid, sound2, pluss::series::ones_like(sound2));
   const Series sound = safe_sound2.sqrt();
   const Series normal = roe_velocity.select(component, axis);
   const Series roe_density = left_root.mul(right_root);
@@ -807,9 +799,9 @@ inline Flux roe_flux(const Raw &left_state, const Raw &right_state,
   valid = valid.logical_and(result.mass.isfinite())
               .logical_and(result.momentum.isfinite().all(component, false))
               .logical_and(result.energy.isfinite());
-  return {valid.where(result.mass, fallback.mass),
-          valid.unsqueeze(component).where(result.momentum, fallback.momentum),
-          valid.where(result.energy, fallback.energy), result.wave};
+  return {pluss::series::where(valid, result.mass, fallback.mass),
+          pluss::series::where(valid.unsqueeze(component), result.momentum, fallback.momentum),
+          pluss::series::where(valid, result.energy, fallback.energy), result.wave};
 }
 
 inline Series roe_eta(const Face &states, std::int64_t component,
@@ -1125,12 +1117,9 @@ inline Raw visc_rate(const Raw &state, const spatial::PeriodicGrid &grid,
     const Series next_conductivity = conductivity.roll(-1, scalar_axis);
     const Series conductivity_sum = conductivity.add(next_conductivity);
     const Series conducting = conductivity_sum.gt(0.0);
-    const Series conductivity_face = conducting.where(
-        conductivity.mul(next_conductivity)
+    const Series conductivity_face = pluss::series::where(conducting, conductivity.mul(next_conductivity)
             .mul(2.0)
-            .div(conducting.where(conductivity_sum,
-                                  pluss::series::ones_like(conductivity_sum))),
-        pluss::series::zeros_like(conductivity_sum));
+            .div(pluss::series::where(conducting, conductivity_sum, pluss::series::ones_like(conductivity_sum))), pluss::series::zeros_like(conductivity_sum));
     const Series heat_face =
         temp.roll(-1, scalar_axis).sub(temp).div(width).mul(conductivity_face);
     const Series energy_face = work_face.add(heat_face);
@@ -1477,10 +1466,8 @@ limits(const State &state, const spatial::PeriodicGrid &grid,
   const Series diff_rate = max_diff.mul(inverse_h2);
   const Series infinite = pluss::series::full_like(
       diff_rate, std::numeric_limits<double>::infinity());
-  const Series diff = diff_rate.gt(0.0).where(
-      pluss::codem::make_scalar_like(diff_rate, diffusion)
-          .div(diff_rate.add(diff_rate.eq(0.0).to(diff_rate.scalar_type()))),
-      infinite);
+  const Series diff = pluss::series::where(diff_rate.gt(0.0), pluss::codem::make_scalar_like(diff_rate, diffusion)
+          .div(diff_rate.add(diff_rate.eq(0.0).to(diff_rate.scalar_type()))), infinite);
   const Series allowed = acoustic.minimum(diff);
   return {common::SeriesQuantity<common::Time>::from_si(acoustic),
           common::SeriesQuantity<common::Time>::from_si(diff),

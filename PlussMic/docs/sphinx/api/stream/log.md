@@ -14,7 +14,7 @@ Stream Stream::log() const
 ## What It Does
 
 Applies the elementwise natural logarithm to a `Series`-kind stream. Delegates to
-`Slate::log()`, so it's `Series`-only, same as
+`Shelf::log()`, so it's `Series`-only, same as
 [`abs()`](abs.md)/[`clip()`](clip.md)/[`exp()`](exp.md). Follows ordinary IEEE-754
 floating-point rules rather than throwing for out-of-domain input: `log(0)` is `-inf`, and
 `log` of a negative value is `nan` — neither raises an exception.
@@ -71,7 +71,7 @@ label=no  mask=no  meta=0
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
 0            | -inf                                                                                                     
-1            | nan                                                                                                      
+1            | NaN                                                                                                      
 2            | 0.69314718056                                                                                            
 ========================================================================================================================
 ```
@@ -84,15 +84,15 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.log();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 44);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 44);
 }
 ```
 
 ### Output
 
 ```text
-Slate::log is only valid for Series payload
+Shelf::log is only valid for Series payload
 ```
 
 ## Notes
@@ -115,8 +115,8 @@ Slate::log is only valid for Series payload
     <span class="label">Previous</span>
     <span class="title">lbl</span>
   </a>
-  <a class="next-link" href="max.html">
+  <a class="next-link" href="map.html">
     <span class="label">Next</span>
-    <span class="title">max</span>
+    <span class="title">map</span>
   </a>
 </div>

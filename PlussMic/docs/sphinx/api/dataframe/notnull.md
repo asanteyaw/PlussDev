@@ -47,8 +47,8 @@ Example 1. Build a mask of which `unit_price` values are usable.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
 });
 
 auto price_observed = orders.notnull({"unit_price"});
@@ -79,6 +79,7 @@ sentinel value.
 
 ## Notes
 
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - `notnull()` and `isnull()` are exact complements: for any cell,
   `notnull()` reports `true` exactly where `isnull()` reports `false`.
 - Some codebases spell this `notna()`; in PlussMic, `notnull()` is the name, and it does
@@ -94,12 +95,12 @@ sentinel value.
 - [`DataFrame::filter`](filter.md): use a `notnull()`/`isnull()` mask to select rows.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="note.html">
+  <a class="prev-link" href="notnan.html">
     <span class="label">Previous</span>
-    <span class="title">note</span>
+    <span class="title">notnan</span>
   </a>
-  <a class="next-link" href="observe.html">
+  <a class="next-link" href="nt.html">
     <span class="label">Next</span>
-    <span class="title">observe</span>
+    <span class="title">nt</span>
   </a>
 </div>

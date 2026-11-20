@@ -16,7 +16,7 @@ The order-statistic median of the usable (non-null) related values of
 `source` for each root record -- the middle value for an odd count, the
 average of the two middle values for an even count. Requires a numeric
 stream; see [`sum`](sum.md) for the shared null-for-empty and
-`NaN`-exclusion rules. Omitting `alias` derives one from the source:
+missing-value rules. Omitting `alias` derives one from the source:
 `"events.spend"` becomes `"events_spend_median"`.
 
 ## Parameters
@@ -79,4 +79,4 @@ text median: Stream::reduce_groups: this reduction needs a numeric Series stream
 
 - [`mean`](mean.md): the arithmetic center, instead of the order-statistic
   one.
-- [`sum`](sum.md): the shared null-for-empty and `NaN`-exclusion rules.
+- [`sum`](sum.md): the shared null-for-empty and missing-value rules.

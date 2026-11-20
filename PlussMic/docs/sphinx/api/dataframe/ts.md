@@ -37,11 +37,11 @@ use its left sidebar to jump straight to any method (`lag`, `diff`, `rolling`,
 
 **options** (`const TsOptions&`, optional)
 
-- **`axis`** (`Slate`, default undefined): an explicit time axis (typically a
+- **`axis`** (`Shelf`, default undefined): an explicit time axis (typically a
   `Timeline`) to align duration-based windows against, instead of plain row order.
 - **`group`** (`TsGroup`, default empty): grouping keys for panel-style time series,
   so window/lag operations don't cross group boundaries.
-- **`anchor`** (`Slate`, default undefined): a reference point for anchored
+- **`anchor`** (`Shelf`, default undefined): a reference point for anchored
   resampling operations.
 
 ## Returns
@@ -59,8 +59,8 @@ after selecting it first.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 std::cout << readings;
 ```
@@ -120,9 +120,9 @@ std::cout << changes;
      | load
 -----------
 0    | NULL
-1    | 10  
+1    |  10 
 2    | -5  
-3    | 15  
+3    |  15 
 -----------
 [4 cs x 1 feat]
 ```

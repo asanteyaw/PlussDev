@@ -4,7 +4,7 @@
 
 Most contingency, congestion and market studies need many power flows, quickly, and do not need the voltage magnitudes. The DC power flow gives the active-power flows from a single linear solve. This page explains what the approximation assumes, solves a network whose flows can be found by hand, compares the answer with the full AC solution, shows that the solution scales with the load, and shows the networks for which the approximation fails.
 
-## The mental model
+## How it works
 
 The DC power flow keeps three assumptions about the AC equations. Every voltage magnitude is `1.0` per unit. Every line is lossless, so only its reactance `x` matters. And the angle differences across the lines are small, so `sin(difference)` is the difference. Active power on a line from bus `i` to bus `j` is then `(theta_i - theta_j) / x`, the same form as a current through a resistor, and the balance of power at each bus is a linear system for the angles,
 

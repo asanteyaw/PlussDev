@@ -48,7 +48,7 @@ ok.learn_(x_train, y_train);      // valid
 ### API Signature
 
 - `prep::<Transformer>::learn(frame: DataFrame, ...) -> Transformer&`
-- `Workflow::learn_(x: DataFrame, y: Series|Slate, ...) -> Workflow&`
+- `Workflow::learn_(x: DataFrame, y: Series|Shelf, ...) -> Workflow&`
 
 ### Notes
 

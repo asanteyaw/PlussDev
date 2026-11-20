@@ -13,7 +13,7 @@
 #include "kindle/Archive.h"
 #include "kindle/Stream.h"
 #include "kindle/catalog.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include "table/display/Display.h"
 #include <pluss/tils/kit/output.h>
 
@@ -109,15 +109,20 @@ std::string kind_name(StreamKind kind) {
   return "Unknown";
 }
 
-std::string slate_value_at(const pluss::table::Slate& slate, std::int64_t row, std::int64_t max_width) {
-  if (pluss::table::detail::has_validity_mask(slate)) {
-    const auto valid = pluss::table::detail::validity_mask(slate)->host<bool>();
+std::string shelf_value_at(const pluss::table::Shelf& shelf, std::int64_t row, std::int64_t max_width) {
+  if (pluss::table::detail::has_validity_mask(shelf)) {
+    const auto valid = pluss::table::detail::validity_mask(shelf)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
-      return "NA";
+      return "NULL";  // a missing cell, spelled the same way every PlussMic type spells it
     }
   }
-  const auto note = slate.cast().note().as_note();
-  return clip_text(note.at(row), max_width);
+  const auto note = shelf.cast().note().as_note();
+  const std::string_view text = note.at(row);
+  // NaN is a value (not a missing cell) and prints as NaN, like every other PlussMic type; inf and -inf already match.
+  if (text == "nan" || text == "-nan") {
+    return "NaN";
+  }
+  return clip_text(text, max_width);
 }
 
 std::string stream_preview(const Stream& stream, const EffectiveOptions& options, std::int64_t max_width) {
@@ -132,7 +137,7 @@ std::string stream_preview(const Stream& stream, const EffectiveOptions& options
       1,
       ellipsis);
 
-  const auto slate = stream.to_slate();
+  const auto shelf = stream.to_shelf();
   std::vector<std::string> parts;
   parts.reserve(static_cast<std::size_t>(idx.size()) + (ellipsis ? 1u : 0u));
 
@@ -140,7 +145,7 @@ std::string stream_preview(const Stream& stream, const EffectiveOptions& options
     if (ellipsis && i == static_cast<std::size_t>(std::max<std::int64_t>(1, options.preview_values - 1))) {
       parts.emplace_back("...");
     }
-    parts.emplace_back(slate_value_at(slate, idx[i], std::max<std::int64_t>(8, max_width / 2)));
+    parts.emplace_back(shelf_value_at(shelf, idx[i], std::max<std::int64_t>(8, max_width / 2)));
   }
 
   return clip_text(pluss::tils::OutputEngine::format("[{}]", pluss::tils::OutputEngine::join(parts, ", ")), max_width);
@@ -197,7 +202,7 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
       << "\n";
   oss << frame_rule('-', width) << "\n";
 
-  const auto slate = stream.to_slate();
+  const auto shelf = stream.to_shelf();
   std::int64_t body_budget = std::max<std::int64_t>(3, options.terminal_height - 8);
   const auto head = std::max<std::int64_t>(1, std::min<std::int64_t>(options.edge_items, body_budget - 1));
   const auto tail = std::max<std::int64_t>(1, std::min<std::int64_t>(options.tail_items, body_budget - head - 1));
@@ -218,11 +223,11 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
     const auto row = idx[i];
     std::string case_cell;
     if (stream.has_label()) {
-      case_cell = slate_value_at(stream.label()->cast().note(), row, case_w);
+      case_cell = shelf_value_at(stream.label()->cast().note(), row, case_w);
     } else {
       case_cell = std::to_string(row);
     }
-    const auto value_cell = slate_value_at(slate, row, value_w);
+    const auto value_cell = shelf_value_at(shelf, row, value_w);
     oss << right_pad(case_cell, case_w) << " | " << right_pad(value_cell, value_w) << "\n";
   }
 
@@ -354,9 +359,9 @@ std::string render_archive_frame(const pluss::kindle::Archive& archive,
   bool ellipsis = false;
   const auto idx = visible_indices(archive.depth(), head, tail, ellipsis);
 
-  std::optional<pluss::table::Slate> label_slate = std::nullopt;
+  std::optional<pluss::table::Shelf> label_shelf = std::nullopt;
   if (archive.label().has()) {
-    label_slate = archive.label().values().to_slate().cast().note();
+    label_shelf = archive.label().values().to_shelf().cast().note();
   }
 
   for (std::size_t i = 0; i < idx.size(); ++i) {
@@ -389,7 +394,7 @@ std::string render_archive_frame(const pluss::kindle::Archive& archive,
 
     std::string line = right_pad(std::to_string(row), frame_w);
     if (show_label) {
-      auto lbl = slate_value_at(*label_slate, row, label_w);
+      auto lbl = shelf_value_at(*label_shelf, row, label_w);
       line += " | " + right_pad(lbl, label_w);
     }
     line += " | " + right_pad(std::to_string(cat.nkeys()), nkeys_w);

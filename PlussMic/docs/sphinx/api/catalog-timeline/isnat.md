@@ -20,7 +20,7 @@ each `Timeline`-kind key with a `Bool` `Series` key.
 Every method on this accessor — not just `isnat()` — routes through `Stream::tl()`
 for each bound key. `tl()` requires every bound key to be `Timeline`-kind; if any
 bound key is not (`Series`, `Note`, `Mixed`, `Null`, or `Empty`), the call throws
-`"Slate::tl: expected Timeline payload"`.
+`"Shelf::tl: expected Timeline payload"`.
 Since [`Catalog::tl()`](../catalog/tl.md) binds *every* key of the catalog by
 default, project down to just the timestamp keys first with
 [`Catalog::keys(names)`](../catalog/keys.md) or
@@ -80,7 +80,7 @@ auto ct = pluss::kindle::Catalog({
 try {
   auto out = ct.tl().isnat();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -88,7 +88,7 @@ try {
 ### Output
 
 ```text
-Slate::tl: expected Timeline payload
+Shelf::tl: expected Timeline payload
 ```
 
 ## Notes

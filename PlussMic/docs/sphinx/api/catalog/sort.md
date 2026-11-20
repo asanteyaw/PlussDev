@@ -156,8 +156,8 @@ metric                   | Series       | Series[float64]  | 4       | [40, 30, 
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="stats.html">
+  <a class="next-link" href="stamp.html">
     <span class="label">Next</span>
-    <span class="title">stats</span>
+    <span class="title">stamp</span>
   </a>
 </div>

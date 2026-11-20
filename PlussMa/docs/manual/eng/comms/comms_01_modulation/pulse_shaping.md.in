@@ -4,7 +4,7 @@
 
 Symbols are numbers; a transmitter sends a waveform. Putting symbols straight onto a waveform as short pulses needs unlimited bandwidth, so they are shaped into a smooth pulse that fits a band, and the receiver filters with the matching pulse before sampling. This page designs a root-raised-cosine pulse, shapes a stream, recovers the symbols with the matched filter, and checks the whole chain, with noise, against theory.
 
-## The mental model
+## How it works
 
 `rrc(rolloff, samples_per_symbol, span)` returns the taps of a root-raised-cosine pulse, `span * samples_per_symbol + 1` of them, scaled to unit energy. Used at both ends, transmitter and receiver, the pair makes a **raised-cosine** response that is exactly zero at every other symbol instant: no intersymbol interference. `shape(symbols, taps, samples_per_symbol)` places each symbol every `samples_per_symbol` samples and filters with the taps; `match(waveform, taps, samples_per_symbol, count)` filters with the time-reversed taps and keeps `count` samples at the symbol instants, which start after the combined delay of the two filters, `taps - 1` samples.
 

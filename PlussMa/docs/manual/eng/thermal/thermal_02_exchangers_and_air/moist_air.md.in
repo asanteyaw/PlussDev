@@ -4,7 +4,7 @@
 
 Air in a building carries water vapour, and the water matters for comfort, for condensation and for the energy it takes to cool: a good part of a cooling coil's load is latent. This page computes the state of moist air from dry-bulb temperature, humidity and pressure, finds its dew point and wet bulb, splits a load into sensible and latent parts, and mixes streams.
 
-## The mental model
+## How it works
 
 Moist air is a mixture of dry air and water vapour, and its state is fixed by three numbers: the dry-bulb temperature `t` (degrees Celsius), the humidity ratio `w` (kilograms of water per kilogram of dry air) and the total pressure `p` (pascals). Everything else follows: relative humidity compares the vapour pressure with the saturation pressure at `t`; enthalpy is per kilogram of **dry** air; the dew point is the temperature at which the saturation pressure equals the vapour pressure. The reference state of the enthalpy is dry air at 0 degrees and liquid water at 0 degrees, both zero. These functions use degrees Celsius and pascals; the property provider on the next page uses kelvin.
 

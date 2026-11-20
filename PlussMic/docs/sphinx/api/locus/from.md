@@ -90,7 +90,12 @@ cost does not depend on record count. Alignment, path execution, and output
 allocation belong to `LocusTraverse::collect()`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../locus_api_reference.html"><span class="label">Previous</span><span class="title">Locus API Reference</span></a>
-  <a class="next-link" href="pull.html"><span class="label">Next</span><span class="title">pull</span></a>
+  <a class="prev-link" href="flow.html">
+    <span class="label">Previous</span>
+    <span class="title">flow</span>
+  </a>
+  <a class="next-link" href="grain_audit.html">
+    <span class="label">Next</span>
+    <span class="title">grain_audit</span>
+  </a>
 </div>
-

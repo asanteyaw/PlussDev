@@ -73,4 +73,8 @@ Same value `nfeatures()` would give, and the same `2` that appears in `scores`'s
     <span class="label">Previous</span>
     <span class="title">where</span>
   </a>
+  <a class="next-link" href="zoom.html">
+    <span class="label">Next</span>
+    <span class="title">zoom</span>
+  </a>
 </div>

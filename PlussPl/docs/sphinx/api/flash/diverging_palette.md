@@ -37,20 +37,69 @@ midpoint.
 
 ## Examples
 
-Example 1. Red-to-blue diverging ramp, 7 stops; the midpoint stop is near-white.
+The examples share one small helper that prints the number of stops and the first and last colour of a ramp as red, green, blue between 0 and 255.
 
 ```cpp
 using namespace pluss::pl;
 
-auto div = flash::diverging_palette(Rgba::from_u8(200, 30, 30), Rgba::from_u8(30, 30, 200), 7);
-std::cout << "diverging_palette stops=" << div.stops().size() << " mid(white-ish)="
-          << (div.stops()[3].red > 0.85 && div.stops()[3].green > 0.85 && div.stops()[3].blue > 0.85) << "\n";
+auto describe = [](const PaletteRamp &ramp) {
+  auto c = [](const Rgba &x) {
+    return "(" + std::to_string(static_cast<int>(x.red * 255 + 0.5)) + ", " + std::to_string(static_cast<int>(x.green * 255 + 0.5)) + ", " +
+           std::to_string(static_cast<int>(x.blue * 255 + 0.5)) + ")";
+  };
+  const auto &s = ramp.stops();
+  std::cout << s.size() << " stops; first " << c(s.front()) << ", last " << c(s.back()) << "\n";
+};
+const auto blue = Rgba::from_u8(30, 80, 200);
+const auto red = Rgba::from_u8(200, 40, 40);
+```
+
+Example 1. The default seven stops between two colours, passing through a light midpoint.
+
+```cpp
+describe(flash::diverging_palette(blue, red));
 ```
 
 Output:
 
 ```text
-diverging_palette stops=7 mid(white-ish)=1
+7 stops; first (30, 80, 200), last (200, 40, 40)
+```
+
+Example 2. The minimum of three stops: both ends and the midpoint.
+
+```cpp
+describe(flash::diverging_palette(blue, red, 3));
+```
+
+Output:
+
+```text
+3 stops; first (30, 80, 200), last (200, 40, 40)
+```
+
+Example 3. Swapping the colours reverses the ramp; eleven stops.
+
+```cpp
+describe(flash::diverging_palette(red, blue, 11));
+```
+
+Output:
+
+```text
+11 stops; first (200, 40, 40), last (30, 80, 200)
+```
+
+Example 4. Fewer than three stops is refused.
+
+```cpp
+try { flash::diverging_palette(blue, red, 2); } catch (const pluss::Error &e) { std::cout << e.message() << "\n"; }
+```
+
+Output:
+
+```text
+flash::diverging_palette: n must be at least 3
 ```
 
 ## Notes

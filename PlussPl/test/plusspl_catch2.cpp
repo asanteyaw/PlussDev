@@ -778,3 +778,148 @@ TEST_CASE("PlussPl projects volume z ticks without screen-space pinning", "[plus
   const auto [min_it, max_it] = std::minmax_element(xs.begin(), xs.end());
   REQUIRE(std::abs(*max_it - *min_it) > 0.05);
 }
+
+TEST_CASE("PlussPl matrix pairplot rejects a wrong number of feature names", "[plusspl][validation][flash]") {
+  auto matrix = pluss::series::linspace(0.0, 1.0, 40, pluss::ScalarType::Float64).reshape({10, 4});
+  pluss::pl::flash::MatrixFrameOptions options;
+  options.feature_names = {"a", "b", "c"};
+  auto fig = pluss::pl::studio("names");
+  REQUIRE_THROWS_AS(pluss::pl::flash::pairplot(fig, matrix, options), pluss::Error);
+}
+
+TEST_CASE("PlussPl show records the figure when PLUSSPL_CAPTURE_DIR is set", "[plusspl][export]") {
+  const auto dir = std::filesystem::temp_directory_path() / "plusspl_capture_test";
+  std::filesystem::create_directories(dir);
+  setenv("PLUSSPL_CAPTURE_DIR", dir.string().c_str(), 1);
+  auto fig = pluss::pl::studio("captured_figure");
+  auto x = pluss::series::linspace(0.0, 1.0, 5, pluss::ScalarType::Float64);
+  fig.pane2("p").trend(x, x);
+  REQUIRE(fig.show());
+  unsetenv("PLUSSPL_CAPTURE_DIR");
+  REQUIRE(std::filesystem::exists(dir / "captured_figure.svg"));
+  std::filesystem::remove_all(dir);
+}
+
+TEST_CASE("PlussPl custom tick labels are not reformatted as numbers", "[plusspl][render]") {
+  auto fig = pluss::pl::studio("ticks");
+  auto& pane = fig.pane2("p");
+  auto x = pluss::series::linspace(0.0, 6.0, 7, pluss::ScalarType::Float64);
+  pane.trend(x, x);
+  pane.x_ticks(pluss::make_series(std::vector<double>{1.5, 4.5}), {"alpha", "beta"});
+  const auto svg = fig.to_svg();
+  REQUIRE(svg.find(">alpha<") != std::string::npos);
+  REQUIRE(svg.find(">beta<") != std::string::npos);
+}
+
+TEST_CASE("PlussPl heatmap mask hides the cells where the mask is zero and leaves a gap", "[plusspl][render][flash]") {
+  auto fig = pluss::pl::studio("masked");
+  auto z = pluss::make_series(std::vector<double>{1, 2, 3, 4}).reshape({2, 2});
+  auto axis = pluss::make_series(std::vector<double>{0, 1});
+  pluss::pl::flash::HeatmapOptions options;
+  options.annotate_levels = true;
+  options.mask = pluss::make_series(std::vector<double>{1, 1, 1, 0}).reshape({2, 2});
+  pluss::pl::flash::heatmap(fig.pane2("m"), axis, axis, z, options);
+  const auto svg = fig.to_svg();
+  REQUIRE(svg.find(">3<") != std::string::npos);      // a kept cell is annotated
+  REQUIRE(svg.find(">4<") == std::string::npos);      // the masked cell is not
+  REQUIRE(svg.find("rgb(0,0,0)") == std::string::npos); // and is not drawn as a black cell
+}
+
+TEST_CASE("PlussPl palette lookups reject unknown names and an empty blend", "[plusspl][flash][validation]") {
+  using namespace pluss::pl::flash;
+  REQUIRE_THROWS_AS(color_palette("thermall"), pluss::Error);
+  REQUIRE_THROWS_AS(mpl_palette("jet"), pluss::Error);
+  REQUIRE_THROWS_AS(blend_palette({}), pluss::Error);
+  REQUIRE(!color_palette("lagoon").empty());
+  REQUIRE(!mpl_palette("plasma").empty());
+  REQUIRE(!blend_palette({pluss::pl::Rgba::from_u8(1, 2, 3)}).empty()); // one colour is a valid constant ramp
+}
+
+TEST_CASE("PlussPl flash_palette rejects names it does not know", "[plusspl][flash][validation]") {
+  REQUIRE_THROWS_AS(pluss::pl::flash::flash_palette(std::string_view("Deep")), pluss::Error);
+  REQUIRE(!pluss::pl::flash::flash_palette(std::string_view("deep")).empty());
+}
+
+TEST_CASE("PlussPl flash heatmap vmin and vmax fix the colour scale, not just the data", "[plusspl][flash][heatmap]") {
+  using namespace pluss::pl;
+  auto axis = pluss::series::arange(0, 3, pluss::ScalarType::Float64);
+  auto z = pluss::make_series(std::vector<double>{-0.2, 0.1, 0.3, 0.0, 0.5, 0.2, 0.1, -0.1, 0.4}, {3, 3});
+  Studio book("heat-scale");
+  flash::HeatmapOptions options;
+  options.vmin = -1.0;
+  options.vmax = 1.0;
+  flash::heatmap(book.pane2("scale"), axis, axis, z, options);
+  const std::string svg = book.to_svg();
+  // The colour bar spans -1 .. 1 although no cell reaches either end.
+  REQUIRE(svg.find(">-1</text>") != std::string::npos);
+  REQUIRE(svg.find(">1</text>") != std::string::npos);
+}
+
+TEST_CASE("PlussPl flash average-linkage order puts similar rows next to each other", "[plusspl][flash][clustermap]") {
+  using namespace pluss::pl;
+  // Rows 0 and 2 are near (0, 0); rows 1 and 3 are near (10, 10).
+  auto points = pluss::make_series(std::vector<double>{0.0, 0.0, 10.0, 10.0, 0.1, 0.1, 10.1, 10.1}, {4, 2});
+  const auto order = flash::detail::average_linkage_order(points);
+  REQUIRE(order.size() == 4);
+  const auto position = [&](std::size_t row) {
+    return std::distance(order.begin(), std::find(order.begin(), order.end(), row));
+  };
+  REQUIRE(std::abs(position(0) - position(2)) == 1);
+  REQUIRE(std::abs(position(1) - position(3)) == 1);
+}
+
+TEST_CASE("PlussPl draws a dense monotone line from its envelope, and turns then thins crowded category labels", "[plusspl][flash][scale]") {
+  using namespace pluss::pl;
+  {
+    const std::int64_t n = 300000;
+    auto x = pluss::series::linspace(0.0, 100.0, n, pluss::ScalarType::Float64);
+    auto y = x.sin();
+    Studio book("dense-line");
+    flash::lineplot(book.pane2("line"), x, y);
+    // 300000 vertices written out would be several megabytes; the envelope is a few thousand.
+    REQUIRE(book.to_svg().size() < 400000);
+  }
+  {
+    // 40 groups: the labels no longer fit upright, so they turn (MATLAB's boxchart turns them) and all stay.
+    std::vector<std::string> names;
+    std::vector<double> values;
+    for (int i = 0; i < 400; ++i) {
+      names.push_back("group_" + std::to_string(i % 40));
+      values.push_back(static_cast<double>(i % 7));
+    }
+    Studio book("rotated-labels");
+    flash::boxplot(book.pane2("box"), pluss::make_note(names), pluss::make_series(values, {400}));
+    const std::string svg = book.to_svg();
+    std::size_t shown = 0;
+    for (std::size_t at = svg.find(">group_"); at != std::string::npos; at = svg.find(">group_", at + 1)) ++shown;
+    REQUIRE(svg.find("rotate(") != std::string::npos);
+    REQUIRE(shown == 40);
+  }
+  {
+    // 600 groups: even a vertical label has no room for its own slot, so the turned labels are thinned as well.
+    std::vector<std::string> names;
+    std::vector<double> values;
+    for (int i = 0; i < 1200; ++i) {
+      names.push_back("g" + std::to_string(i % 600));
+      values.push_back(static_cast<double>(i % 7));
+    }
+    Studio book("thinned-labels");
+    flash::boxplot(book.pane2("box"), pluss::make_note(names), pluss::make_series(values, {1200}));
+    const std::string svg = book.to_svg();
+    std::size_t shown = 0;
+    for (std::size_t at = svg.find(">g"); at != std::string::npos; at = svg.find(">g", at + 1)) ++shown;
+    REQUIRE(shown > 1);
+    REQUIRE(shown < 600);
+  }
+}
+
+TEST_CASE("PlussPl caps the markers of a very dense scatter at what is visible", "[plusspl][flash][scale]") {
+  using namespace pluss::pl;
+  const std::int64_t n = 200000;
+  auto x = pluss::series::randn({n}, pluss::ScalarType::Float64);
+  auto y = x * 0.5 + pluss::series::randn({n}, pluss::ScalarType::Float64) * 0.8;
+  Studio book("dense-scatter");
+  flash::scatterplot(book.pane2("scatter"), x, y);
+  // 200000 circles written out are tens of megabytes; one marker per cell of the plot stays well under half that.
+  REQUIRE(book.to_svg().size() < 12000000);
+}

@@ -1,5 +1,7 @@
 # `signal::PhaseOpts`
 
+The axis, extension length and pad mode of `zero_phase`.
+
 ## Signature
 
 ```cpp
@@ -8,45 +10,49 @@ signal::PhaseOpts options{};
 
 ## What It Does
 
-Controls the axis and endpoint conditioning used by forward-backward zero-phase filtering.
+Groups the three settings of a zero-phase pass: which axis to filter along, how many samples to extend the signal by at each end, and how to extend it.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `dim` | `-1` | Axis containing ordered samples; `-1` selects the final dimension. |
-| `edge` | `-1` | Extension length. `-1` asks the implementation to choose from filter order and available samples. |
-| `pad` | `PadMode::Odd` | Endpoint extension policy. |
+| Field | Meaning | Default |
+|---|---|---|
+| `dim` | The axis to filter along. | `-1` |
+| `edge` | Extension length in samples; `-1` chooses three times the filter order. | `-1` |
+| `pad` | A `PadMode`. | `Odd` |
 
 ## Returns
 
-Pass this object to either `zero_phase` overload.
+Argument of `zero_phase`.
 
 ## Errors
 
-Rejects an invalid axis, negative edge values other than the `-1` sentinel, and edge lengths that cannot be formed from the input.
+An invalid axis, an `edge` below `-1` and an extension at least as long as the axis throw `pluss::Error`.
+
+## Interpretation and Use
+
+The automatic edge is `3 *` the filter order; the first example checks that it equals an explicit edge of 6 for a second-order filter. Build the options with designated initializers: `{.dim = 0, .edge = 3}`.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The defaults, and the automatic edge against an explicit one.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_phaseopts_defaults.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+Filtering along the second axis of a batch.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_phaseopts_axis.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused value.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_phaseopts_errors.cpp@@
 
 ## See Also
 

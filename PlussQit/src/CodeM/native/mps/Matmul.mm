@@ -66,6 +66,25 @@ kernel void strict_matmul_i32(
   out[row * meta.n + col] = acc;
 }
 
+kernel void strict_matmul_i64(
+    const device long* a [[buffer(0)]],
+    const device long* b [[buffer(1)]],
+    device long* out [[buffer(2)]],
+    constant MatmulMeta& meta [[buffer(3)]],
+    uint2 gid [[thread_position_in_grid]]) {
+  const uint col = gid.x;
+  const uint row = gid.y;
+  if (row >= meta.m || col >= meta.n) {
+    return;
+  }
+
+  long acc = 0;
+  for (uint t = 0; t < meta.k; ++t) {
+    acc += a[row * meta.k + t] * b[t * meta.n + col];
+  }
+  out[row * meta.n + col] = acc;
+}
+
 struct c64 {
   float re;
   float im;
@@ -112,6 +131,7 @@ struct StrictContext {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> strict_f32{nil};
   id<MTLComputePipelineState> strict_i32{nil};
+  id<MTLComputePipelineState> strict_i64{nil};
   id<MTLComputePipelineState> strict_c64{nil};
   std::string error{};
 };
@@ -228,6 +248,18 @@ StrictContext& strict_ctx_(id<MTLDevice> device) {
         return;
       }
 
+      NSError* p_err_i64 = nil;
+      id<MTLFunction> fn_i64 = [ctx.library newFunctionWithName:@"strict_matmul_i64"];
+      if (fn_i64 == nil) {
+        ctx.error = "strict matmul init failed: missing kernel strict_matmul_i64";
+        return;
+      }
+      ctx.strict_i64 = [device newComputePipelineStateWithFunction:fn_i64 error:&p_err_i64];
+      if (ctx.strict_i64 == nil) {
+        ctx.error = "strict matmul init failed: pipeline creation error";
+        return;
+      }
+
       NSError* p_err_c64 = nil;
       id<MTLFunction> fn_c64 = [ctx.library newFunctionWithName:@"strict_matmul_c64"];
       if (fn_c64 == nil) {
@@ -250,7 +282,7 @@ StrictContext& strict_ctx_(id<MTLDevice> device) {
 }
 
 bool matmul_dtype_supported_(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32 || dt == ScalarType::Int32 || dt == ScalarType::Complex64;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32 || dt == ScalarType::Int64 || dt == ScalarType::Complex64;
 }
 
 [[noreturn]] void fail_(const std::string& msg) {
@@ -262,7 +294,7 @@ void check_series_(const Series& s, const char* op) {
   if (s.platform() != Platform::MPS) fail_(std::string(op) + ": expected MPS Series");
   if (!s.is_contiguous()) fail_(std::string(op) + ": currently requires contiguous Series");
   if (!matmul_dtype_supported_(s.scalar_type())) {
-    fail_(std::string(op) + ": currently supports float32/int32 only");
+    fail_(std::string(op) + ": currently supports float32/int32/int64/complex64 only");
   }
 }
 
@@ -314,7 +346,9 @@ Series matmul(const Series& a, const Series& b) {
   Series out = Series::empty({m64, n64}, dt, Platform::MPS);
   @autoreleasepool {
     const std::size_t elem_bytes =
-        (dt == ScalarType::Int32) ? sizeof(std::int32_t) : (dt == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float));
+        (dt == ScalarType::Int32)   ? sizeof(std::int32_t)
+        : (dt == ScalarType::Int64) ? sizeof(std::int64_t)
+                                    : (dt == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float));
     const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
     const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * elem_bytes;
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
@@ -375,7 +409,7 @@ Series matmul(const Series& a, const Series& b) {
     }
 
     auto& sctx = strict_ctx_(c.device);
-    if (!sctx.ready || sctx.strict_f32 == nil || sctx.strict_i32 == nil || sctx.strict_c64 == nil) {
+    if (!sctx.ready || sctx.strict_f32 == nil || sctx.strict_i32 == nil || sctx.strict_i64 == nil || sctx.strict_c64 == nil) {
       fail_("mps::matmul(strict): backend unavailable (" + sctx.error + ")");
     }
 
@@ -388,7 +422,9 @@ Series matmul(const Series& a, const Series& b) {
       fail_("mps::matmul(strict): failed to create compute encoder");
     }
     id<MTLComputePipelineState> pso =
-        (dt == ScalarType::Int32) ? sctx.strict_i32 : (dt == ScalarType::Complex64 ? sctx.strict_c64 : sctx.strict_f32);
+        (dt == ScalarType::Int32)   ? sctx.strict_i32
+        : (dt == ScalarType::Int64) ? sctx.strict_i64
+                                    : (dt == ScalarType::Complex64 ? sctx.strict_c64 : sctx.strict_f32);
     [enc setComputePipelineState:pso];
     [enc setBuffer:a_buf offset:0 atIndex:0];
     [enc setBuffer:b_buf offset:0 atIndex:1];

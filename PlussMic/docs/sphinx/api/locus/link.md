@@ -105,8 +105,8 @@ dup.keys = {{"cust_id", "id"}};
 try {
   (void)shop.link(dup);
   std::cout << "duplicate link: did not throw\n";
-} catch (const std::exception& e) {
-  std::string msg = e.what();
+} catch (const pluss::Error& e) {
+  std::string msg = e.message();
   std::cout << "duplicate link threw: " << msg.substr(0, msg.find('\n')) << '\n';
 }
 
@@ -164,3 +164,14 @@ for genuinely unreachable tables, like `island` (linked to nothing).
 - [`audit`](audit.md): checking a declared link's cardinality and orphan rows against
   the real data.
 - [`join`](join.md): where a link's declared keys and cardinality actually get used.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="join.html">
+    <span class="label">Previous</span>
+    <span class="title">join</span>
+  </a>
+  <a class="next-link" href="materialize.html">
+    <span class="label">Next</span>
+    <span class="title">materialize</span>
+  </a>
+</div>

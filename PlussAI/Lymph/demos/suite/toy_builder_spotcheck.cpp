@@ -8,12 +8,12 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-4.0, 4.0, 80, ScalarType::Float64);
   const Series z = x.sin().add(x.mul(0.5).cos());
   const Series y = z.gt(0.0).to(ScalarType::Float64);
-  const DataFrame raw({{"x", Slate(x)}, {"z", Slate(z)}, {"y", Slate(y)}});
+  const DataFrame raw({{"x", Shelf(x)}, {"z", Shelf(z)}, {"y", Shelf(y)}});
 
   lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "z"}).label("y");
   lymph::Workflow design = lymph::workflow::make(

@@ -79,8 +79,8 @@ auto ct = pluss::kindle::Catalog({
 try {
   Catalog::QueryFn empty_fn;
   auto out = ct.query(empty_fn);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -106,12 +106,12 @@ Catalog::query: query function is empty
 - [`Catalog::keys`](keys.md): the usual way to reach a stream (`keys(key)`) inside the callback.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nrows.html">
+  <a class="prev-link" href="plot3d.html">
     <span class="label">Previous</span>
-    <span class="title">nrows</span>
+    <span class="title">plot3d</span>
   </a>
-  <a class="next-link" href="rename.html">
+  <a class="next-link" href="reduce.html">
     <span class="label">Next</span>
-    <span class="title">rename</span>
+    <span class="title">reduce</span>
   </a>
 </div>

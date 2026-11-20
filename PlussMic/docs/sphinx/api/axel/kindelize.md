@@ -55,9 +55,9 @@ std::cout << archive.depth();
   Kindle back into the scribble model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="labels.html">
     <span class="label">Next</span>

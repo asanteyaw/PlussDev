@@ -4,7 +4,7 @@
 
 Events do not arrive at regular intervals, yet reports are hourly. This page turns raw event timestamps and their values into per-hour totals, a rolling average whose window is a length of time rather than a number of rows, and a lookup of the latest reading at any moment.
 
-## The mental model
+## How it works
 
 A `Timeline` becomes an **axis** with `index()`: the call checks that it is one-dimensional, free of missing values and sorted, and returns an accessor whose operations take a value `Series` of the same length. The accessor does the clock arithmetic: `resample_sum(values, "1h")` assigns each value to its hour and adds, `rolling_mean(values, window)` averages the values inside a window given as a `Duration`, and `asof(moment)` finds the last event at or before a moment. The values stay an ordinary `Series`.
 

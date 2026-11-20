@@ -145,12 +145,12 @@ int main() {
   namespace ice = pluss::ai::ice;
   namespace nn = pluss::nn;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const DataFrame df({
-      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
-      {"label", Slate(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
+      {"a", Shelf(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Shelf(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"label", Shelf(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
   });
 
   ice::Outline model(nn::Fusion(2, 1));

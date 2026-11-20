@@ -106,12 +106,12 @@ false
   to be confused with this method's storage-sharing check.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transform.html">
+  <a class="prev-link" href="ts.html">
     <span class="label">Previous</span>
-    <span class="title">transform</span>
+    <span class="title">ts</span>
   </a>
-  <a class="next-link" href="where.html">
+  <a class="next-link" href="var.html">
     <span class="label">Next</span>
-    <span class="title">where</span>
+    <span class="title">var</span>
   </a>
 </div>

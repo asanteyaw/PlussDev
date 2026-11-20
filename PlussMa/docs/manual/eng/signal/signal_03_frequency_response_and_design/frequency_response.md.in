@@ -4,7 +4,7 @@
 
 You have a filter, as coefficients or as sections, and you want to know what it does to each frequency: how much it passes, and how much it shifts the phase. `freqz` evaluates the response at the frequencies you choose, so you can check a design against its specification before it touches any data, and compare two filters on one grid.
 
-## The mental model
+## How it works
 
 The **frequency response** of a filter with coefficients `b` and `a` at the angular frequency `w` (radians per sample, from `0` to `pi`, where `pi` is the Nyquist frequency) is the ratio of two polynomials in `e^{-jw}`:
 

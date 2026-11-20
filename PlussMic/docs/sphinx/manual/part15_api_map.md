@@ -31,7 +31,7 @@ reference; it tells you where to look.
 
 See [DataFrame API Reference](../dataframe_api_reference.md).
 
-## Slate API areas
+## Shelf API areas
 
 | Task | Methods |
 | --- | --- |
@@ -46,7 +46,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Payload | `as_series`, `as_note`, `as_timeline`, `as_timeindex` |
 | Display | `show`, `with_display_labels`, `name`, `named`, `unname` |
 
-See [Slate API Reference](../slate_api_reference.md).
+See [Shelf API Reference](../shelf_api_reference.md).
 
 ## Loader API areas
 
@@ -68,7 +68,7 @@ See [Slate API Reference](../slate_api_reference.md).
 | Access | `frame`, `dloc`, `loc`, `frames`, `axis0_labels` |
 | Slice depth | `head`, `tail`, `slice_frames`, `sort_depth` |
 | Align depth | `relabel_depth`, `align_depth` |
-| Transform | `map_frames`, `aggregate_over_frames` |
+| Transform | `map_frames`, `aggregate_depth` |
 | Convert | `kindelize`, `tabelize`, `squeeze` |
 | Plot | `plot` |
 

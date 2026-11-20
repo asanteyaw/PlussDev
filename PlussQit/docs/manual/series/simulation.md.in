@@ -4,7 +4,7 @@
 
 When there is no formula, simulate. This page prices an option whose payoff depends on the whole price path, with fifty thousand paths generated at once, and reports the answer with its Monte Carlo error.
 
-## The mental model
+## How it works
 
 A simulation is an array of random numbers with one axis for the *scenario* and one for *time*, followed by a few array operations that turn shocks into prices and prices into payoffs. `cumsum` along the time axis turns a series of steps into a path; reductions along the scenario axis turn many payoffs into one estimate and its error. No loop over scenarios is ever written.
 

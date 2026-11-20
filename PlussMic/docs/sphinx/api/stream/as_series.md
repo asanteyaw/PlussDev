@@ -15,7 +15,7 @@ const pluss::Series& Stream::as_series() const
 
 Returns the stream's underlying `pluss::Series` payload by `const` reference — a raw escape
 hatch, only valid when the stream is `Series`-kind. Requires no copy; unlike
-[`to_slate()`](to_slate.md), this doesn't round-trip through `Slate` — it just exposes
+[`to_shelf()`](to_shelf.md), this doesn't round-trip through `Shelf` — it just exposes
 the raw typed payload the `Stream` already wraps.
 
 ```{important} Kind-specific — throws if the stream isn't Series-kind
@@ -57,8 +57,8 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.as_series();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 26);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 26);
 }
 ```
 
@@ -83,7 +83,7 @@ Stream payload is not Seri
 
 - [`Stream::as_note`](as_note.md) / [`Stream::as_timeline`](as_timeline.md): the equivalent escape hatch for the other
   three payload kinds.
-- [`Stream::to_slate`](to_slate.md): converts to a `Slate` instead of exposing the raw
+- [`Stream::to_shelf`](to_shelf.md): converts to a `Shelf` instead of exposing the raw
   tensor-level payload.
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 
@@ -91,5 +91,9 @@ Stream payload is not Seri
   <a class="prev-link" href="as_note.html">
     <span class="label">Previous</span>
     <span class="title">as_note</span>
+  </a>
+  <a class="next-link" href="as_timeline.html">
+    <span class="label">Next</span>
+    <span class="title">as_timeline</span>
   </a>
 </div>

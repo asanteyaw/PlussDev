@@ -2,7 +2,7 @@
 
 A stochastic differential equation is rarely solvable in closed form, so you simulate it and ask two questions: how close is the simulation, and how does an answer change with a parameter? This chapter answers both with the library's solver, `fluctua`, and its pathwise adjoint. After it you can choose a scheme with a reason, read its convergence from a table, and compute the sensitivity of a payoff to a parameter in one backward sweep.
 
-## The mental model
+## How it works
 
 `fluctua(mu, sigma, y0, t0, t1, theta, options)` advances `dY = μ(t, Y, θ) dt + σ(t, Y, θ) dW` from `y0` over `options.steps` steps and returns the state at `t1`, with the realized `W(t1) − W(t0)`. `y0` has the batch shape: every entry is an independent path, and the whole batch is stepped in one call.
 

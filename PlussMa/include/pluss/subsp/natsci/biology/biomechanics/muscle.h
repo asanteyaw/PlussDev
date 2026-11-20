@@ -120,12 +120,12 @@ namespace detail {
     const Series g = active_force.mul(fv(p, v)).add(beta.mul(v)).sub(rhs);
     if (it % 3 == 2 && g.abs().max().item<double>() < 1e-14 * (1.0 + rhs.abs().max().item<double>())) break;
     const Series above = g.gt(0.0);
-    hi = above.where(v, hi);
-    lo = above.where(lo, v);
+    hi = pluss::series::where(above, v, hi);
+    lo = pluss::series::where(above, lo, v);
     const Series slope = active_force.mul(fv_slope(p, v)).add(beta);
     const Series newton = v.sub(g.div(slope.clamp(1e-12, 1e300)));
     const Series usable = fv_slope(p, v).ge(0.0).logical_and(newton.gt(lo)).logical_and(newton.lt(hi));
-    v = usable.where(newton, lo.add(hi).mul(0.5));
+    v = pluss::series::where(usable, newton, lo.add(hi).mul(0.5));
   }
   return v;
 }
@@ -185,8 +185,8 @@ inline Equilibrium isometric_equilibrium(const Series &activation, const Series 
   for (int i = 0; i < iterations; ++i) {
     const Series mid = lo.add(hi).mul(0.5);
     const Series positive = residual_at(mid).gt(0.0);
-    hi = positive.where(mid, hi);
-    lo = positive.where(lo, mid);
+    hi = pluss::series::where(positive, mid, hi);
+    lo = pluss::series::where(positive, lo, mid);
   }
   Equilibrium e;
   e.norm_tendon_force = lo.add(hi).mul(0.5);

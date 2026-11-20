@@ -4,7 +4,7 @@
 
 A network has several generators with different costs, a demand to meet, and lines that can carry only so much. Economic dispatch chooses the output of every generator that meets the demand at the least total cost without overloading a line. `power::dispatch` solves that problem for the DC network model as a quadratic program. This page explains the cost model, finds the optimum of a network by hand and checks the solver against it, binds a line rating and generator limits, handles several demand scenarios in one call, and shows how accurate the default solver is and how to tighten it.
 
-## The mental model
+## How it works
 
 Every generator has a cost curve, a quadratic function of its active output `g`, `a g^2 + b g`, with the quadratic coefficient `a` and the linear coefficient `b` in cost per per-unit squared and cost per per-unit. The dispatch minimises the total cost over all generators subject to three kinds of constraint:
 

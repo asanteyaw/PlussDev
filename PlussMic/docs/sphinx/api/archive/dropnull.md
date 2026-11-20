@@ -62,6 +62,7 @@ city                     | Note         | Note             | 2       | [Accra, K
 
 ## Notes
 
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Runs per-catalog independently — catalogs with different `NULL` patterns can end up with
   different record counts, making the archive newly ragged even if it wasn't before.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
@@ -75,12 +76,12 @@ city                     | Note         | Note             | 2       | [Accra, K
   applies to every catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">drop</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

@@ -4,7 +4,7 @@
 
 A floor can push a body up but never pull it down. This page models that: frictionless unilateral contacts of points fixed to links with planes. It finds the force a floor carries as a function of the pull on a slider, the difference between resting, being pulled free and falling, the effect of the contact threshold, and how to locate contact points.
 
-## The mental model
+## How it works
 
 `robot::Contacts` gives the contact points (`link` and `point` in the link frame), the plane normal (a unit vector in the world) and `offset`, so the point must stay in `n . x >= offset`. The **gap** `n . x - offset` is the distance above the plane. A contact acts while its gap is at most `ConstraintOptions::contact_threshold`.
 

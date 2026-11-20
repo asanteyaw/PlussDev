@@ -91,8 +91,7 @@ inline Series binomial_pmf(std::int64_t n, const Series &p) {
   const Series full = p.ge(1.0).unsqueeze(-1);
   const Series at0 = k.eq(0.0);
   const Series atn = k.eq(static_cast<double>(n));
-  return zero.where(at0.to(p.scalar_type()).add(pmf.mul(0.0)),
-                    full.where(atn.to(p.scalar_type()).add(pmf.mul(0.0)), pmf));
+  return pluss::series::where(zero, at0.to(p.scalar_type()).add(pmf.mul(0.0)), pluss::series::where(full, atn.to(p.scalar_type()).add(pmf.mul(0.0)), pmf));
 }
 
 // Exact binomial draw per lane via inverse CDF.
@@ -155,9 +154,9 @@ inline Series transition_matrix(std::int64_t population, const Fitness &w,
 inline Series kimura_fixation(const Series &p, const Coeff &ne, const Coeff &s) {
   const Series a = ne.on(p).mul(s.on(p)).mul(4.0);
   const Series tiny = a.abs().lt(1e-12);
-  const Series safe = tiny.where(a.mul(0.0).add(1.0), a);
+  const Series safe = pluss::series::where(tiny, a.mul(0.0).add(1.0), a);
   const Series ratio = p.mul(safe.neg()).expm1().div(safe.neg().expm1());
-  return tiny.where(p, ratio);
+  return pluss::series::where(tiny, p, ratio);
 }
 
 } // namespace pluss::subsp::natsci::biology::genetics

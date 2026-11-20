@@ -6,7 +6,7 @@ The dense solver of the previous chapters keeps every entry of the constraint ma
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 A sparse model is an `lp::Model`: a cost vector, a sparse matrix, bounds on the rows and bounds on the columns.
 

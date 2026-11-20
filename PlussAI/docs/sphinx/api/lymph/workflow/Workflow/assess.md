@@ -16,7 +16,7 @@ MetricReport Workflow::assess(
 MetricReport Workflow::assess(
     const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;
 MetricReport Workflow::assess(
-    const pluss::table::DataFrame& x, const pluss::table::Slate& y, const AssessOptions& options = {}) const;
+    const pluss::table::DataFrame& x, const pluss::table::Shelf& y, const AssessOptions& options = {}) const;
 MetricReport Workflow::assess(const Payload& payload, const AssessOptions& options = {}) const;
 ```
 
@@ -38,7 +38,7 @@ for the "only populated if requested" rule.
 Four of the five shapes are identical to `Model::assess`'s — see
 [Input Shapes there](../../models/Model/assess.md#input-shapes). Named here:
 `batch` (a pre-assembled `LabeledBatch`, skips `Policy`), `raw_frame` with
-`data_options`, and `x`/`y` (a `Series` or `Slate` label). The fifth is
+`data_options`, and `x`/`y` (a `Series` or `Shelf` label). The fifth is
 `Workflow`-only:
 
 `payload`
@@ -59,7 +59,7 @@ requested metric, each a one-element `Series`.
 
 ## Errors
 
-- The `(x, Series y)` / `(x, Slate y)` overloads (including a `Payload`
+- The `(x, Series y)` / `(x, Shelf y)` overloads (including a `Payload`
   routed through them) throw if this `Workflow`'s `Policy` has `filter_nulls`
   set — the same restriction [`learn`](learn.md#errors) has, for the same
   reason: dropping a row from `x` alone would desynchronize it from the
@@ -86,15 +86,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -137,14 +137,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
 
@@ -183,14 +183,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 

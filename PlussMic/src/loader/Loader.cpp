@@ -469,7 +469,7 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
   return options;
 }
 
-pluss::table::Slate infer_padded_slate_from_raw(const CsvRawColumn& column,
+pluss::table::Shelf infer_padded_shelf_from_raw(const CsvRawColumn& column,
                                                   const ReadCsvOptions& options,
                                                   std::int64_t target_len) {
   if (column.note_values.has_value()) {
@@ -481,14 +481,14 @@ pluss::table::Slate infer_padded_slate_from_raw(const CsvRawColumn& column,
     if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
       values.resize(static_cast<std::size_t>(target_len));
     }
-    return pluss::table::detail::infer_slate_from_raw_csv_column(
+    return pluss::table::detail::infer_shelf_from_raw_csv_column(
         column.name, column.source_index, values, options);
   }
   std::vector<std::string> values = column.values;
   if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
     values.resize(static_cast<std::size_t>(target_len));
   }
-  return pluss::table::detail::infer_slate_from_raw_csv_column(
+  return pluss::table::detail::infer_shelf_from_raw_csv_column(
       column.name, column.source_index, values, options);
 }
 
@@ -505,15 +505,15 @@ pluss::table::DataFrame dataframe_from_raw_batch_padded(const CsvRawBatch& raw,
     target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(*raw.cases)));
   }
 
-  std::vector<std::pair<std::string, pluss::table::Slate>> cols;
+  std::vector<std::pair<std::string, pluss::table::Shelf>> cols;
   cols.reserve(raw.features.size());
   for (const auto& col : raw.features) {
-    cols.emplace_back(col.name, infer_padded_slate_from_raw(col, options, target_len));
+    cols.emplace_back(col.name, infer_padded_shelf_from_raw(col, options, target_len));
   }
 
-  std::optional<pluss::table::Slate> cases = std::nullopt;
+  std::optional<pluss::table::Shelf> cases = std::nullopt;
   if (raw.cases.has_value()) {
-    cases = infer_padded_slate_from_raw(*raw.cases, options, target_len);
+    cases = infer_padded_shelf_from_raw(*raw.cases, options, target_len);
   }
 
   return pluss::table::DataFrame(std::move(cols), std::move(cases));
@@ -1533,7 +1533,7 @@ std::int64_t duration_value_to_nanos(
   return static_cast<std::int64_t>(scaled);
 }
 
-pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& array) {
+pluss::table::Shelf shelf_from_arrow_array(const std::shared_ptr<arrow::Array>& array) {
   const auto valid = arrow_validity(array);
   const auto n = static_cast<std::int64_t>(array->length());
   const auto type_id = array->type_id();
@@ -1544,7 +1544,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
       auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
       for (std::int64_t i = 0; i < n; ++i) p[i] = valid[static_cast<std::size_t>(i)] ? a->Value(i) : false;
-      return pluss::table::Slate(s, validity_mask_from_valid(valid));
+      return pluss::table::Shelf(s, validity_mask_from_valid(valid));
     }
     case arrow::Type::INT8:
     case arrow::Type::INT16:
@@ -1582,7 +1582,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
             break;
         }
       }
-      return pluss::table::Slate(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Shelf(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::UINT64:
     case arrow::Type::HALF_FLOAT:
@@ -1608,7 +1608,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
             break;
         }
       }
-      return pluss::table::Slate(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Shelf(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::DATE32:
     case arrow::Type::DATE64:
@@ -1628,7 +1628,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
           ticks[static_cast<std::size_t>(i)] = base * time_unit_to_nanos(ts_type->unit());
         }
       }
-      return pluss::table::Slate(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Shelf(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::DURATION: {
       const auto* duration_type =
@@ -1642,7 +1642,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
         nanos[static_cast<std::size_t>(i)] =
             duration_value_to_nanos(values->Value(i), duration_type->unit());
       }
-      return pluss::table::Slate(
+      return pluss::table::Shelf(
           pluss::duration::nanos(std::move(nanos), {n}),
           validity_mask_from_valid(valid));
     }
@@ -1657,7 +1657,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
           out[static_cast<std::size_t>(i)] = std::static_pointer_cast<arrow::LargeStringArray>(array)->GetString(i);
         }
       }
-      return pluss::table::Slate(pluss::make_note(out), validity_mask_from_valid(valid));
+      return pluss::table::Shelf(pluss::make_note(out), validity_mask_from_valid(valid));
     }
     default: {
       std::vector<std::string> out(static_cast<std::size_t>(n));
@@ -1668,7 +1668,7 @@ pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& 
           out[static_cast<std::size_t>(i)] = (*scalar)->ToString();
         }
       }
-      return pluss::table::Slate(pluss::make_note(out), validity_mask_from_valid(valid));
+      return pluss::table::Shelf(pluss::make_note(out), validity_mask_from_valid(valid));
     }
   }
 }
@@ -1708,21 +1708,21 @@ std::vector<std::string> raw_strings_from_arrow_array(const std::shared_ptr<arro
   return out;
 }
 
-std::vector<bool> slate_validity(const pluss::table::Slate& slate) {
-  const auto n = static_cast<std::size_t>(slate.size());
-  if (!pluss::table::detail::has_validity_mask(slate)) {
+std::vector<bool> shelf_validity(const pluss::table::Shelf& shelf) {
+  const auto n = static_cast<std::size_t>(shelf.size());
+  if (!pluss::table::detail::has_validity_mask(shelf)) {
     return std::vector<bool>(n, true);
   }
-  auto valid = pluss::table::detail::validity_mask(slate)->host<bool>();
-  PLUSS_CHECK(valid.size() == n, "loader::save_parquet: slate validity mask size mismatch");
+  auto valid = pluss::table::detail::validity_mask(shelf)->host<bool>();
+  PLUSS_CHECK(valid.size() == n, "loader::save_parquet: shelf validity mask size mismatch");
   return valid;
 }
 
-std::shared_ptr<arrow::Array> note_slate_to_arrow_string_array(const pluss::table::Slate& slate) {
-  const auto valid = slate_validity(slate);
-  const auto note = slate.as_note();
+std::shared_ptr<arrow::Array> note_shelf_to_arrow_string_array(const pluss::table::Shelf& shelf) {
+  const auto valid = shelf_validity(shelf);
+  const auto note = shelf.as_note();
   PLUSS_CHECK(static_cast<std::size_t>(note.numel()) == valid.size(),
-              "loader::save_parquet: Note slate length mismatch");
+              "loader::save_parquet: Note shelf length mismatch");
   arrow::StringBuilder builder;
   for (std::int64_t i = 0; i < note.numel(); ++i) {
     const auto idx = static_cast<std::size_t>(i);
@@ -1735,11 +1735,11 @@ std::shared_ptr<arrow::Array> note_slate_to_arrow_string_array(const pluss::tabl
   return out;
 }
 
-std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Slate& slate) {
-  const auto valid = slate_validity(slate);
-  const auto series = slate.as_series();
+std::shared_ptr<arrow::Array> series_shelf_to_arrow_array(const pluss::table::Shelf& shelf) {
+  const auto valid = shelf_validity(shelf);
+  const auto series = shelf.as_series();
   const auto n = static_cast<std::size_t>(series.numel());
-  PLUSS_CHECK(n == valid.size(), "loader::save_parquet: Series slate length mismatch");
+  PLUSS_CHECK(n == valid.size(), "loader::save_parquet: Series shelf length mismatch");
 
   auto finish_or_throw = [](auto& builder, std::string_view what) -> std::shared_ptr<arrow::Array> {
     std::shared_ptr<arrow::Array> out;
@@ -1852,14 +1852,14 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Float64");
     }
     default:
-      return note_slate_to_arrow_string_array(slate.cast().note());
+      return note_shelf_to_arrow_string_array(shelf.cast().note());
   }
 }
 
-std::shared_ptr<arrow::Array> timeline_slate_to_arrow_array(const pluss::table::Slate& slate) {
-  const auto valid = slate_validity(slate);
-  const auto ticks = slate.as_timeline().ticks();
-  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline slate length mismatch");
+std::shared_ptr<arrow::Array> timeline_shelf_to_arrow_array(const pluss::table::Shelf& shelf) {
+  const auto valid = shelf_validity(shelf);
+  const auto ticks = shelf.as_timeline().ticks();
+  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline shelf length mismatch");
   arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < ticks.size(); ++i) {
     auto st = valid[i] ? builder.Append(ticks[i]) : builder.AppendNull();
@@ -1871,12 +1871,12 @@ std::shared_ptr<arrow::Array> timeline_slate_to_arrow_array(const pluss::table::
   return out;
 }
 
-std::shared_ptr<arrow::Array> duration_slate_to_arrow_array(
-    const pluss::table::Slate& slate) {
-  const auto valid = slate_validity(slate);
-  const auto nanos = slate.as_duration().host();
+std::shared_ptr<arrow::Array> duration_shelf_to_arrow_array(
+    const pluss::table::Shelf& shelf) {
+  const auto valid = shelf_validity(shelf);
+  const auto nanos = shelf.as_duration().host();
   PLUSS_CHECK(nanos.size() == valid.size(),
-              "loader::save_parquet: Duration slate length mismatch");
+              "loader::save_parquet: Duration shelf length mismatch");
   arrow::DurationBuilder builder(
       arrow::duration(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < nanos.size(); ++i) {
@@ -1894,18 +1894,18 @@ std::shared_ptr<arrow::Array> duration_slate_to_arrow_array(
   return out;
 }
 
-std::shared_ptr<arrow::Array> slate_to_arrow_array(const pluss::table::Slate& slate) {
-  switch (slate.kind()) {
-    case pluss::table::SlateKind::Series:
-      return series_slate_to_arrow_array(slate);
-    case pluss::table::SlateKind::Note:
-      return note_slate_to_arrow_string_array(slate);
-    case pluss::table::SlateKind::Timeline:
-      return timeline_slate_to_arrow_array(slate);
-    case pluss::table::SlateKind::Duration:
-      return duration_slate_to_arrow_array(slate);
+std::shared_ptr<arrow::Array> shelf_to_arrow_array(const pluss::table::Shelf& shelf) {
+  switch (shelf.kind()) {
+    case pluss::table::ShelfKind::Series:
+      return series_shelf_to_arrow_array(shelf);
+    case pluss::table::ShelfKind::Note:
+      return note_shelf_to_arrow_string_array(shelf);
+    case pluss::table::ShelfKind::Timeline:
+      return timeline_shelf_to_arrow_array(shelf);
+    case pluss::table::ShelfKind::Duration:
+      return duration_shelf_to_arrow_array(shelf);
   }
-  PLUSS_FAIL("loader::save_parquet: unsupported Slate kind");
+  PLUSS_FAIL("loader::save_parquet: unsupported Shelf kind");
 }
 
 parquet::Compression::type parquet_compression_from_config(const Config& config) {
@@ -1946,7 +1946,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
 
   auto names = frame.features();
-  std::vector<pluss::table::Slate> columns;
+  std::vector<pluss::table::Shelf> columns;
   columns.reserve(names.size());
   for (const auto& name : names) {
     columns.push_back(frame.features(name));
@@ -1975,7 +1975,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
       name = pluss::tils::OutputEngine::format("{}_{}", name, nth);
     }
 
-    auto array = slate_to_arrow_array(columns[i]);
+    auto array = shelf_to_arrow_array(columns[i]);
     PLUSS_CHECK(array != nullptr, "loader::save_parquet: failed to build arrow array for column '" + name + "'");
     fields.emplace_back(arrow::field(name, array->type(), array->null_count() > 0));
     arrays.emplace_back(std::move(array));
@@ -2146,7 +2146,7 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
     table = *combined;
   }
 
-  std::vector<std::pair<std::string, pluss::table::Slate>> features;
+  std::vector<std::pair<std::string, pluss::table::Shelf>> features;
   features.reserve(static_cast<std::size_t>(table->num_columns()));
   for (int i = 0; i < table->num_columns(); ++i) {
     const auto& col = table->column(i);
@@ -2157,10 +2157,10 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
     } else {
       array = col->chunk(0);
     }
-    features.emplace_back(table->field(i)->name(), slate_from_arrow_array(array));
+    features.emplace_back(table->field(i)->name(), shelf_from_arrow_array(array));
   }
 
-  std::optional<pluss::table::Slate> cases = std::nullopt;
+  std::optional<pluss::table::Shelf> cases = std::nullopt;
   if (const auto* v = find_config(config, {"casecol", "case", "caseindex"})) {
     if (auto idx = parse_int_value(*v); idx.has_value()) {
       PLUSS_CHECK(*idx >= 0 && *idx < static_cast<std::int64_t>(features.size()),
@@ -2730,41 +2730,41 @@ std::string series_json_scalar_token(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string slate_json_scalar_token(const pluss::table::Slate& slate,
+std::string shelf_json_scalar_token(const pluss::table::Shelf& shelf,
                                      const std::optional<std::vector<bool>>& valid_mask,
                                      const std::optional<pluss::Note>& note_cache,
                                      std::int64_t row) {
   if (valid_mask.has_value() && !(*valid_mask)[static_cast<std::size_t>(row)]) {
     return "null";
   }
-  if (slate.kind() == pluss::table::SlateKind::Duration &&
-      slate.as_duration().host()[static_cast<std::size_t>(row)] ==
+  if (shelf.kind() == pluss::table::ShelfKind::Duration &&
+      shelf.as_duration().host()[static_cast<std::size_t>(row)] ==
           pluss::Duration::kNaT) {
     return "null";
   }
 
-  switch (slate.kind()) {
-    case pluss::table::SlateKind::Series:
-      return series_json_scalar_token(slate.as_series(), row);
-    case pluss::table::SlateKind::Note: {
+  switch (shelf.kind()) {
+    case pluss::table::ShelfKind::Series:
+      return series_json_scalar_token(shelf.as_series(), row);
+    case pluss::table::ShelfKind::Note: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
-        const auto local = slate.as_note();
+        const auto local = shelf.as_note();
         return json_string_token(local.at(row));
       }
       return json_string_token(note->at(row));
     }
-    case pluss::table::SlateKind::Timeline: {
+    case pluss::table::ShelfKind::Timeline: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
-        const auto local = slate.cast().note().as_note();
+        const auto local = shelf.cast().note().as_note();
         return json_string_token(local.at(row));
       }
       return json_string_token(note->at(row));
     }
-    case pluss::table::SlateKind::Duration:
+    case pluss::table::ShelfKind::Duration:
       return json_string_token(pluss::tils::OutputEngine::format(
-          "{}", slate.as_duration().host()[static_cast<std::size_t>(row)]));
+          "{}", shelf.as_duration().host()[static_cast<std::size_t>(row)]));
   }
   return "null";
 }
@@ -2827,9 +2827,9 @@ std::vector<std::string> json_column_names_with_cases(const pluss::table::DataFr
   return names;
 }
 
-std::vector<pluss::table::Slate> json_columns_with_cases(const pluss::table::DataFrame& frame,
+std::vector<pluss::table::Shelf> json_columns_with_cases(const pluss::table::DataFrame& frame,
                                                           bool add_cases) {
-  std::vector<pluss::table::Slate> columns;
+  std::vector<pluss::table::Shelf> columns;
   const auto& names = frame.features();
   columns.reserve(names.size() + (add_cases ? 1 : 0));
   for (const auto& name : names) {
@@ -2899,7 +2899,7 @@ void save_json(const pluss::table::DataFrame& frame,
     if (pluss::table::detail::has_validity_mask(columns[j])) {
       valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->host<bool>();
     }
-    if (columns[j].kind() != pluss::table::SlateKind::Series) {
+    if (columns[j].kind() != pluss::table::ShelfKind::Series) {
       note_cache[j] = columns[j].cast().note().as_note();
     }
   }
@@ -2919,7 +2919,7 @@ void save_json(const pluss::table::DataFrame& frame,
       for (std::int64_t r = 0; r < nrows; ++r) {
         if (r != 0) out << ",";
         if (pretty) out << " ";
-        out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+        out << shelf_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       }
       out << "]";
       if (j + 1 < columns.size()) out << ",";
@@ -2944,7 +2944,7 @@ void save_json(const pluss::table::DataFrame& frame,
       for (std::size_t j = 0; j < columns.size(); ++j) {
         if (j != 0) out << ",";
         if (pretty) out << " ";
-        out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+        out << shelf_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       }
       out << "]";
       if (r + 1 < nrows) out << ",";
@@ -2961,7 +2961,7 @@ void save_json(const pluss::table::DataFrame& frame,
     out << i1 << "{" << newline;
     for (std::size_t j = 0; j < columns.size(); ++j) {
       out << i2 << json_string_token(names[j]) << ":" << (pretty ? " " : "");
-      out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+      out << shelf_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       if (j + 1 < columns.size()) out << ",";
       out << newline;
     }

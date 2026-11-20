@@ -65,7 +65,7 @@ auto df = reader.read_mixed("file.csv", progress);
 - **500MB-2GB**: `chunk_size = 250000` (250K rows)
 - **>2GB**: `chunk_size = 500000` (500K rows)
 
-### Slate Count
+### Shelf Count
 - **Default**: `num_threads = 0` (auto-detect)
 - **CPU-bound**: Set to physical core count
 - **I/O-bound**: Set to 2x physical core count
@@ -195,4 +195,4 @@ auto progress = [](size_t proc, size_t total) {
 
 - [examples/parallel_csv_example.cpp](../examples/parallel_csv_example.cpp) - Comprehensive examples
 - [test/us_accidents_analysis_test.cpp](../test/us_accidents_analysis_test.cpp) - Real-world usage
-- [docs/SLATE_API_GUIDE.md](SLATE_API_GUIDE.md) - Full API documentation
+- [docs/SHELF_API_GUIDE.md](SHELF_API_GUIDE.md) - Full API documentation

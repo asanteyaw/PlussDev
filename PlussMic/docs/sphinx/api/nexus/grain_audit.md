@@ -59,8 +59,8 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy", "Cy2"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy", "Cy2"}))},
 });
 
 auto biz = Nexus({{"customers", customers}});
@@ -89,8 +89,8 @@ Example 2. Calling `grain_audit()` on a table with no declared key sets throws.
 ```cpp
 try {
   auto bad = biz.grain_audit("customers");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -119,12 +119,12 @@ Nexus::grain_audit: no metadata declared for table 'customers'
   auditing them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="graph.html">
+  <a class="prev-link" href="get.html">
     <span class="label">Previous</span>
-    <span class="title">graph</span>
+    <span class="title">get</span>
   </a>
-  <a class="next-link" href="has.html">
+  <a class="next-link" href="graph.html">
     <span class="label">Next</span>
-    <span class="title">has</span>
+    <span class="title">graph</span>
   </a>
 </div>

@@ -1,0 +1,65 @@
+# Distributions and groups
+
+[Back to PlussPl by example](../guide.md)
+
+A mean hides the shape of the data. This page shows the shape of one variable six ways (an exam), compares a variable across groups five ways (manufactured batches by plant), and then counts and shares of categories (a commuting survey).
+
+## How it works
+
+A distribution of one variable is a histogram (`histplot`, `displot` or the native `bucket`), a smoothed density (`kdeplot`), a cumulative curve (`ecdfplot`), or the raw values along an axis (`rugplot`). Across groups the choices are the box (`boxplot`, the native `quartet`), the letter-value box (`boxenplot`), the density shape (`violinplot`, the native `violin`), and the individual points (`stripplot`, `swarmplot`). For categories, `countplot` counts, `barplot` plots a value per category, `pieplot` and the native `wedge` show shares, and `catplot` chooses the plot kind by name.
+
+## One exam, six views
+
+A hundred and eighty final-exam scores.
+
+@@example exam_scores.cpp@@
+
+![The final-exam scores as a histogram, a distribution plot, a kernel density, an empirical CDF, a rug plot and a bucket trace](assets/exam_scores.svg)
+
+The scores have a mean of `81.4`, a median of `81.5` and a standard deviation of `5.4`; the quartiles are `77.9`, `81.6` and `85.1`. The empirical CDF is the picture to read quantities from, and the program reads the same quantities from the data: `1.7 %` scored below 70, `12.8 %` below 75 and `37.8 %` below 80. The correlation with the first midterm is `0.65`, a clear but not overwhelming relationship. The six panes show that the histogram, the distribution plot and the native bucket draw the same binning, while the density smooths it and the rug shows every score as a tick.
+
+## Thickness by plant
+
+Two thousand manufactured batches from three plants. The program prints the per-plant statistics and then draws the five group views.
+
+@@example quality_control.cpp@@
+
+![Thickness by plant as a box plot, a boxen plot, a violin plot, a strip plot, a swarm plot and a quartet trace](assets/quality_control.svg)
+
+![The native violin trace with a narrower width and quartile marks](assets/quality_violin.svg)
+
+The table is the first thing to read: the three plants have the same mean thickness, `1.050`, `1.051` and `1.050`, and the same standard deviation near `0.037`. When the summary statistics agree, the shape plots are the only way to tell whether the plants really are alike, and here they are: the box, violin and strip plots all show three overlapping populations. The native `violin` trace takes numeric group codes and a `ViolinOptions` (width, bandwidth adjustment, what to draw inside), shown in the second figure.
+
+## How we commute
+
+A survey of three thousand commuters: how many use each mode, the share, the mean duration and cost.
+
+@@example commute_survey.cpp@@
+
+![Respondents per mode, their shares, the native wedge, mean duration, mean cost and a catplot box plot of cost](assets/commute_survey.svg)
+
+The survey has `750` respondents per mode, so the counts and the shares are equal by design. The summary table carries the substance: cycling takes the longest (`51.5` minutes) and costs the least (`1.97`), driving is fast (`30.2` minutes) and expensive (`17.1`), and rail is the fastest (`24.7` minutes) at a middling cost. The panes show counts (`countplot`), shares (`pieplot` and the native `wedge`), a value per category (`barplot`), horizontal columns (`columns_h`) and a distribution per category chosen by name (`catplot` with `"box"`).
+
+## Decisions
+
+- **Histogram or density:** a histogram shows the data's own bins; a density is smoother and hides small features.
+- **Box, violin or points:** a box for a quick comparison, a violin for shape, points when there are few observations.
+- **Summaries first:** print the means and counts; when they agree, the shape plots answer the question.
+- **Pie or bars:** a pie for a few shares that add to a whole; bars for anything else.
+
+## Pitfalls
+
+The program below makes 4 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_distributions_and_groups.cpp@@
+
+- **A histogram of an empty series:** Filter first, then check `numel()` before drawing.
+- **A histogram with no bins:** The bin count must be positive.
+- **Three groups for five values:** The group labels and the values must have one entry each; build both from the same table.
+- **A plot kind that does not exist:** The message lists the valid kinds.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`flash::histplot`](../api/flash/histplot.md), [`flash::displot`](../api/flash/displot.md), [`flash::kdeplot`](../api/flash/kdeplot.md), [`flash::ecdfplot`](../api/flash/ecdfplot.md), [`flash::rugplot`](../api/flash/rugplot.md), [`flash::boxplot`](../api/flash/boxplot.md), [`flash::boxenplot`](../api/flash/boxenplot.md), [`flash::violinplot`](../api/flash/violinplot.md), [`flash::stripplot`](../api/flash/stripplot.md), [`flash::swarmplot`](../api/flash/swarmplot.md), [`flash::countplot`](../api/flash/countplot.md), [`flash::barplot`](../api/flash/barplot.md), [`flash::pieplot`](../api/flash/pieplot.md), [`flash::catplot`](../api/flash/catplot.md), [`Pane::bucket`](../api/pane/bucket.md), [`Pane::quartet`](../api/pane/quartet.md), [`Pane::violin`](../api/pane/violin.md), [`Pane::wedge`](../api/pane/wedge.md), [`Pane::columns_h`](../api/pane/columns_h.md), [`ViolinOptions`](../api/types/ViolinOptions.md). Next: [Matrices and many variables](matrices_and_many_variables.md).

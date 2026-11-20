@@ -183,6 +183,17 @@ kernel void scatter_set_i32_i64(
   out[off] = src[gid];
 }
 
+kernel void scatter_set_i64_i64(
+    const device long* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device long* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  out[off] = src[gid];
+}
+
 kernel void scatter_set_c64_i64(
     const device Complex64* src [[buffer(0)]],
     const device long* index [[buffer(1)]],
@@ -264,6 +275,7 @@ struct Context {
   id<MTLComputePipelineState> scatter_amax_f32_i64{nil};
   id<MTLComputePipelineState> scatter_amin_f32_i64{nil};
   id<MTLComputePipelineState> scatter_set_i32_i64{nil};
+  id<MTLComputePipelineState> scatter_set_i64_i64{nil};
   id<MTLComputePipelineState> scatter_add_i32_i64{nil};
   id<MTLComputePipelineState> scatter_amax_i32_i64{nil};
   id<MTLComputePipelineState> scatter_amin_i32_i64{nil};
@@ -340,6 +352,7 @@ Context& ctx_() {
       if (!make_pipeline("scatter_amax_f32_i64", &ctx.scatter_amax_f32_i64)) return;
       if (!make_pipeline("scatter_amin_f32_i64", &ctx.scatter_amin_f32_i64)) return;
       if (!make_pipeline("scatter_set_i32_i64", &ctx.scatter_set_i32_i64)) return;
+      if (!make_pipeline("scatter_set_i64_i64", &ctx.scatter_set_i64_i64)) return;
       if (!make_pipeline("scatter_add_i32_i64", &ctx.scatter_add_i32_i64)) return;
       if (!make_pipeline("scatter_amax_i32_i64", &ctx.scatter_amax_i32_i64)) return;
       if (!make_pipeline("scatter_amin_i32_i64", &ctx.scatter_amin_i32_i64)) return;
@@ -371,6 +384,7 @@ void validate_inputs_(const Series& out,
   }
   if (out.scalar_type() != ScalarType::Float32 &&
       out.scalar_type() != ScalarType::Int32 &&
+      out.scalar_type() != ScalarType::Int64 &&
       out.scalar_type() != ScalarType::Complex64) {
     fail_(std::string(op) + ": only float32/int32/complex64 is supported on current MPS path");
   }
@@ -438,7 +452,7 @@ void encode_scatter_(id<MTLComputePipelineState> pso,
   @autoreleasepool {
     const std::size_t elem_bytes = (out.scalar_type() == ScalarType::Int32)
         ? sizeof(std::int32_t)
-        : (out.scalar_type() == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float));
+        : (out.scalar_type() == ScalarType::Int64) ? sizeof(std::int64_t) : (out.scalar_type() == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float));
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     const std::size_t idx_bytes = static_cast<std::size_t>(index.numel()) * sizeof(std::int64_t);
     const std::size_t src_bytes = static_cast<std::size_t>(src.numel()) * elem_bytes;
@@ -477,6 +491,7 @@ void encode_scatter_(id<MTLComputePipelineState> pso,
 } // namespace
 
 bool supports_scatter(ScalarType out_dt, ScalarType index_dt, ScalarType src_dt) noexcept {
+  if (out_dt == ScalarType::Int64 && src_dt == ScalarType::Int64 && index_dt == ScalarType::Int64) return true;
   const bool dt_ok =
       (out_dt == ScalarType::Float32 || out_dt == ScalarType::Int32 || out_dt == ScalarType::Complex64) &&
       (src_dt == ScalarType::Float32 || src_dt == ScalarType::Int32 || src_dt == ScalarType::Complex64);
@@ -502,6 +517,8 @@ void scatter_set_(Series& out, std::int64_t dim, const Series& index, const Seri
   id<MTLComputePipelineState> pso = c.scatter_set_f32_i64;
   if (out.scalar_type() == ScalarType::Int32) {
     pso = c.scatter_set_i32_i64;
+  } else if (out.scalar_type() == ScalarType::Int64) {
+    pso = c.scatter_set_i64_i64;
   } else if (out.scalar_type() == ScalarType::Complex64) {
     pso = c.scatter_set_c64_i64;
   }

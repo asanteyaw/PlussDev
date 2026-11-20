@@ -43,6 +43,7 @@ This set follows the same usage-first API pattern used across the other Pluss do
 :maxdepth: 2
 :hidden:
 
+guide
 api_reference
 studio_api_reference
 pane_api_reference

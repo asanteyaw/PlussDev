@@ -1010,7 +1010,7 @@ namespace pluss::series {
               && out.scalar_type() == pluss::ScalarType::Bool) {
             return cond.logical_and(choice).logical_or(cond.logical_not().logical_and(out));
           }
-          return cond.where(choice, out);
+          return choice.where(cond, out);
         });
   }
 
@@ -1131,6 +1131,21 @@ namespace pluss::series {
 
   inline pluss::Series pile(pluss::msharp::Lister::Series values, std::int64_t dim = 0) {
     return ::pluss::pile(values, dim);
+  }
+
+  // where(condition, a, b): `a` where the condition is true, `b` elsewhere (condition of any dtype; non-zero is true; all three
+  // broadcast). The method form `a.where(condition, b)` is the same operation with `a` as the receiver.
+  inline pluss::Series where(const Series& condition, const Series& a, const Series& b) { return a.where(condition, b); }
+  inline pluss::Series where(const Series& condition, const Series& a, double b) { return a.where(condition, b); }
+  inline pluss::Series where(const Series& condition, double a, const Series& b) {
+    const ScalarType dt = (b.scalar_type() == ScalarType::Bool || pluss::codem::dtype_of(b.scalar_type()).is_integral()) && std::trunc(a) != a
+                              ? ScalarType::Float64
+                              : b.scalar_type();
+    return pluss::series::full_like(b, a, dt).where(condition, b);
+  }
+  inline pluss::Series where(const Series& condition, double a, double b) {
+    const Series one = pluss::series::ones_like(condition, ScalarType::Float64);
+    return one.mul(a).where(condition, one.mul(b));
   }
 
   inline pluss::Series unite(std::initializer_list<Series> values,

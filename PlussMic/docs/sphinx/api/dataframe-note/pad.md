@@ -57,7 +57,7 @@ the rendered table; the practical zero-padding example (Example 2) uses
 
 **width** (`std::int64_t`)
     The target character width. Must be `>= 0` — `pad(-1)` throws
-    `"Slate::pad: width must be >= 0"`.
+    `"Shelf::pad: width must be >= 0"`.
 
 **align** (`TextAlign`, default `TextAlign::Left`)
     Where the fill characters go: `Left` pads on the right, `Right` pads
@@ -84,7 +84,7 @@ character so the padding itself is visible in the rendered table.
 using namespace pluss::table;
 
 auto codes = DataFrame({
-    {"code", Slate(pluss::make_note({"A", "BB", "CCCC"}),
+    {"code", Shelf(pluss::make_note({"A", "BB", "CCCC", ""}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 std::cout << codes;
@@ -162,7 +162,7 @@ numeric-looking codes to a fixed width.
 
 ```cpp
 auto ids = DataFrame({
-    {"id", Slate(pluss::make_note({"7", "42", "103"}),
+    {"id", Shelf(pluss::make_note({"7", "42", "103", ""}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 std::cout << ids;
@@ -217,8 +217,8 @@ std::cout << unchanged;
 ===========
      | code
 -----------
-0    | A...
-1    | BB..
+0    | A.. 
+1    | BB. 
 2    | CCCC
 3    | NULL
 -----------
@@ -234,15 +234,15 @@ Example 4. A negative `width` throws immediately.
 ```cpp
 try {
   auto bad = codes.nt().pad(-1);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::pad: width must be >= 0
+Shelf::pad: width must be >= 0
 ```
 
 ## Notes
@@ -258,7 +258,7 @@ Slate::pad: width must be >= 0
 - A space fill (the default) is visually indistinguishable from the
   rendered table's own column-alignment padding — see the tip above.
 - A null cell on input stays null on output.
-- `width < 0` throws `"Slate::pad: width must be >= 0"`.
+- `width < 0` throws `"Shelf::pad: width must be >= 0"`.
 
 ## See Also
 

@@ -80,8 +80,8 @@ Example 3 (edge case). A span-only unit throws.
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z"}));
 try {
   auto out = stream.tl().epoch(pluss::table::TimeUnit::Weeks);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -89,14 +89,14 @@ try {
 ### Output
 
 ```text
-Slate::tl().epoch: unit is span-only; use Slate::tl().span
+Shelf::tl().epoch: unit is span-only; use Shelf::tl().span
 ```
 
 ## Notes
 
 - See the important callouts above — the default unit is `Nanos`.
 - Only fixed-duration units are accepted; passing `Weeks`, `Months`, `Years`,
-  or `BusinessDays` throws. The throw message references `Slate::tl().span`,
+  or `BusinessDays` throws. The throw message references `Shelf::tl().span`,
   a suggestion that comes from the shared underlying engine — `Stream`'s
   `tl()` accessor has no `span()` method of its own.
 

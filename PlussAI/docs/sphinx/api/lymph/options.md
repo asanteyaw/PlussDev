@@ -28,7 +28,7 @@ Set two training fields on a default options struct, then train a logistic regre
 
 namespace lymph = pluss::ai::lymph;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
   const pluss::Series x = pluss::make_series(std::vector<double>{
@@ -79,7 +79,7 @@ a `DataFrame` instead of an `(x, y)` pair.
 | `label_feature` | `std::optional<std::string>` | `std::nullopt` | Column holding the target. Leave unset for unsupervised / inference-only calls. |
 | `sample_weight_feature` | `std::optional<std::string>` | `std::nullopt` | Column of per-row weights. |
 | `layout` | `ObservationLayout` | `Rows` | `Rows` = one sample per row; `Columns` = transposed. |
-| `slate_policy` | `DataSlatePolicy` | `CastTemporalToSeries` | How temporal columns are coerced into numeric features. |
+| `shelf_policy` | `DataShelfPolicy` | `CastTemporalToSeries` | How temporal columns are coerced into numeric features. |
 | `note_policy` | `DataNotePolicy` | `Reject` | What to do with text columns: `Reject`, or `Factorize` to integer-code them. |
 | `note_hash_seed` | `std::uint64_t` | `1469598103934665603` | Seed used only when `note_policy == Factorize`. |
 | `factorize_unknown_categorical` | `UnknownCategoryPolicy` | `MissingBucket` | Fate of a category unseen at fit time on a reused map: `Error`, `MissingBucket`, `Ignore`. |
@@ -535,17 +535,17 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame frame({
-      {"income", Slate(pluss::make_series(
+      {"income", Shelf(pluss::make_series(
           {1.0, 1.2, 1.4, 1.1, 3.0, 3.2, 3.4, 3.1}, {8}, f64))},
-      {"balance", Slate(pluss::make_series(
+      {"balance", Shelf(pluss::make_series(
           {0.5, 0.7, 0.6, 0.8, 2.5, 2.7, 2.6, 2.8}, {8}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   lymph::options::DFBatch batch{};
@@ -599,17 +599,17 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}, {10}, f64))},
+      {"x", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}, {10}, f64))},
   });
   const Series y = pluss::make_series(
       {10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}, {10}, f64);
-  const DataFrame probe({{"x", Slate(pluss::make_series({10.0}, {1}, f64))}});
+  const DataFrame probe({{"x", Shelf(pluss::make_series({10.0}, {1}, f64))}});
 
   lymph::options::Linear light{};
   light.regularization = lymph::RegularizationKind::L2;
@@ -657,13 +657,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame frame({
-      {"score", Slate(pluss::make_series(
+      {"score", Shelf(pluss::make_series(
           {1.0, 2.0, std::nan(""), 4.0, 5.0}, {5}, f64))},
   });
 

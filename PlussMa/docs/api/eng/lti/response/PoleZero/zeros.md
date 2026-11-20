@@ -1,0 +1,123 @@
+<!-- generated from zeros.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ae68ba38fe77 -->
+
+# `lti::PoleZero::zeros`
+
+[Back to `lti::PoleZero`](../PoleZero.md)
+
+The zeros of the transfer function.
+
+## Signature
+
+```cpp
+const pluss::Series& lti::PoleZero::zeros() const noexcept;
+```
+
+## What It Does
+
+Returns the zeros, the values at which the transfer function is zero, as a `Series` with one entry per zero (the last axis). A system without zeros has an empty series. Zeros of a real system come in conjugate pairs, so complex values appear in pairs.
+
+## Returns
+
+A reference to the stored zeros.
+
+## Practical Examples
+
+### Example 1
+
+The plant has one zero at `-1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("zeros =", plant().zeros().items<double>());
+}
+```
+
+Output
+
+```text
+zeros = [-1.0000]
+```
+
+### Example 2
+
+A system with no zeros stores an empty series.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::PoleZero g = lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({-1.0}), pluss::make_series(1.0));
+  out.writeln("number of zeros =", g.zeros().numel());
+}
+```
+
+Output
+
+```text
+number of zeros = 0
+```
+
+### Example 3
+
+Two zeros, read back in the order given.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::PoleZero g = lti::zpk(pluss::make_series({-4.0, -0.5}), pluss::make_series({-1.0, -2.0, -3.0}), pluss::make_series(1.0));
+  out.writeln("zeros =", g.zeros().items<double>());
+}
+```
+
+Output
+
+```text
+zeros = [-4.0000, -0.5000]
+```
+
+## See Also
+
+- [`poles`](poles.md): the poles
+- [`gain`](gain.md): the gain
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sample_time.html">
+    <span class="label">Previous</span>
+    <span class="title">sample_time</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

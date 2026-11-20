@@ -67,9 +67,9 @@ the column labels.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto facets = df.contingency({"city", "channel", "weekend"})
@@ -80,8 +80,8 @@ std::cout << facets;
 ### Output
 
 ```text
-=============================
-[0] weekend=no
+Atlas(depth=2, rows=2, cols=3)
+frame[0] case=weekend=no
 =======================
      | city  Card  Cash
 -----------------------
@@ -89,9 +89,7 @@ std::cout << facets;
 1    | B     0     1   
 -----------------------
 [2 cs x 3 feat]
-
-=============================
-[1] weekend=yes
+frame[1] case=weekend=yes
 =======================
      | city  Card  Cash
 -----------------------

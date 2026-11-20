@@ -16,12 +16,11 @@ Stream Stream::dropnull() const
 Returns a new stream with every row that has an explicit **validity-mask** `NULL` removed,
 preserving order for the remaining rows.
 
-```{important} dropnull() only removes mask-marked NULLs — not unmarked NaN
-`dropnull()` does **not** agree with [`isnull()`](isnull.md)/[`invalid()`](invalid.md) in
-every case: those two report an unmarked `NaN` in a numeric stream as invalid (`true`), but
-`dropnull()` leaves that row in place — it only removes rows carrying an explicit validity
-mask. If you need to drop unmarked `NaN` rows too, filter explicitly with
-`stream.filter(stream.notnull().as_series())` instead of relying on `dropnull()` alone.
+```{important} dropnull() removes missing records only — a NaN is a value and stays
+`dropnull()` removes exactly the records [`isnull()`](isnull.md) flags: the ones the validity
+mask marks missing. A `NaN` or an infinity is a value, so it stays. Use
+[`dropnan()`](dropnan.md), [`dropinf()`](dropinf.md) or [`dropinvalid()`](dropinvalid.md) to
+remove those.
 ```
 
 ## Parameters
@@ -58,28 +57,28 @@ label        | value
 ========================================================================================================================
 ```
 
-Example 2. An unmarked `NaN` (no validity mask at all) is *not* removed by `dropnull()`,
-even though [`isnull()`](isnull.md) reports it as `true` — see the important callout above.
+Example 2. A `NaN` is *not* removed by `dropnull()`, because it is a value and not a missing
+record; [`isnull()`](isnull.md) is `false` for it too.
 
 ```cpp
-double nan_value = std::numeric_limits<double>::quiet_NaN();
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, nan_value, 30.0}));
+const double nan = std::numeric_limits<double>::quiet_NaN();
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, nan, 30.0}));
 
-std::cout << "isnull reports it invalid: " << stream.isnull();
+std::cout << "isnull is false for the NaN: " << stream.isnull();
 std::cout << "dropnull size (unchanged): " << stream.dropnull().size();
 ```
 
 ### Output
 
 ```text
-isnull reports it invalid: ========================================================================================================================
+isnull is false for the NaN: ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[bool]  records=3
 label=no  mask=no  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
 0            | false                                                                                                    
-1            | true                                                                                                     
+1            | false                                                                                                    
 2            | false                                                                                                    
 ========================================================================================================================
 dropnull size (unchanged): 3
@@ -87,28 +86,28 @@ dropnull size (unchanged): 3
 
 ## Notes
 
-- Only removes mask-marked `NULL` rows — see the important callout above for the
-  discrepancy with `isnull()`/`invalid()` on unmarked `NaN`.
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
+- Only removes records that [`isnull()`](isnull.md) flags; it agrees with `isnull()` in every
+  case (a `NaN` is neither flagged nor removed).
 - Preserves the relative order of the remaining rows.
 - Requires a defined stream; throws `"Stream: undefined handle"` on a default-constructed
   `Stream()`.
 
 ## See Also
 
-- [`Stream::isnull`](isnull.md) / [`Stream::invalid`](invalid.md): the broader validity
-  checks this method does *not* fully agree with — see the important callout above.
-- [`Stream::filter`](filter.md): the general-purpose tool to reproduce a stricter drop
-  (including unmarked `NaN`) via `stream.filter(stream.notnull().as_series())`.
+- [`Stream::isnull`](isnull.md): flags exactly the records this method removes;
+  [`Stream::invalid`](invalid.md) is the broader check that also flags `NaN` and infinities.
+- [`Stream::dropinvalid`](dropinvalid.md): remove missing records, `NaN` and infinities together.
 - [`Stream::fillnull`](fillnull.md) / [`Stream::ffill`](ffill.md) / [`Stream::bfill`](bfill.md):
   fill mask-marked `NULL`s instead of removing their rows.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop_meta_.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">drop_meta_</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="dtype.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">dtype</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

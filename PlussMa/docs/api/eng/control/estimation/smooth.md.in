@@ -1,6 +1,6 @@
 # `control::smooth`
 
-Runs forward filtering followed by backward smoothing.
+Runs a Kalman filter and then a backward smoothing pass.
 
 ## Signature
 
@@ -27,73 +27,65 @@ control::SmoothResult control::smooth(
 
 ## What It Does
 
-`smooth` first delegates to the forward filter and then conditions each earlier state on all later observations. Smoothed estimates can therefore differ from filtered estimates even though both use the same model and options.
+Computes the filter of `kalman` and then runs a smoothing pass backwards, so that every estimate uses all the observations, not only the earlier ones. It returns the embedded `KalmanResult` along with the smoothed mean and covariance and the smoother gains.
 
 ## Parameters
 
 `system`
-: A discrete state-space model. Filtering advances one model step per observation.
+: A `StateSpace`, usually discrete (the filter steps once per observation).
 
 `observations`
-: Observation trajectory with time on its penultimate structural axis.
+: `[time, outputs]`, one row per sample. A NaN entry marks a missing observation.
+
+`process_cov`, `noise_cov`
+: The covariances `Q` of the state disturbance and `R` of the measurement noise, symmetric and positive semidefinite.
+
+`initial_mean`, `initial_cov`
+: The mean and covariance of the state before the first observation.
 
 `input`
-: Optional known input trajectory aligned to the observations.
-
-`process_cov`
-: Process-noise covariance `Q`.
-
-`noise_cov`
-: Measurement-noise covariance `R`.
-
-`initial_mean`
-: Prior state mean before the first prediction/update.
-
-`initial_cov`
-: Prior state covariance.
+: Optional known input (second overload).
 
 `options`
-: Information threshold and covariance jitter controls.
+: `KalmanOptions`.
 
 ## Returns
 
-A `SmoothResult` containing the forward filter and the Rauch-Tung-Striebel backward trajectory.
+A `SmoothResult`.
 
 ## Errors
 
-Throws under the same model, shape, covariance, and numerical conditions as `kalman`.
+The errors of `kalman`.
 
 ## Interpretation and Use
 
-Smoothing performs a complete forward filter before the backward pass, so its memory cost includes trajectory covariances. Use it only when the full observation block is available. For streaming or causal decisions, retain `kalman` instead.
+The smoothed covariance never exceeds the filtered covariance and the two agree at the last sample, where the smoother has no later data to use (the first and third examples). The accuracy gain is visible: against a true state of 1 the smoothed estimate has a root-mean-square error of 0.063 while the filtered one has 0.113 (the second example). Smooth when the whole record is available offline; filter when estimates are needed as the data arrive.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Run the smoother and inspect its retrospective correction.
+The smoothed covariance against the filtered one.
 
-@@example Eng/api/control_smooth.cpp@@
+@@example Eng/api/control_smooth_variance.cpp@@
 
 ### Example 2
 
-Compare against the causal forward-filter output.
+The error of the smoothed against the filtered estimate.
 
-@@example Eng/api/control_estimation.cpp@@
+@@example Eng/api/control_smooth_accuracy.cpp@@
 
 ### Example 3
 
-Review validation inherited from the forward pass.
+The last sample and the smoother gains.
 
-@@example Eng/api/control_estimation_errors.cpp@@
+@@example Eng/api/control_smooth_last.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="kalman.html">
-    <span class="label">Previous</span>
-    <span class="title">kalman</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused argument.
+
+@@example Eng/api/control_smooth_errors.cpp@@
+

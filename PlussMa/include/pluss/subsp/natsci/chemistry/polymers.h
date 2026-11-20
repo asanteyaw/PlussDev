@@ -53,7 +53,7 @@ inline Series wlc_mean_square_end_to_end(const Series &contour_length, const Coe
   const Series term = x.mul(-1.0).expm1().mul(-1.0).div(x); // (1 - e^-x)/x
   const Series exact = p.mul(big_l).mul(2.0).mul(term.mul(-1.0).add(1.0));
   const Series series = big_l.square().mul(x.mul(-1.0 / 3.0).add(1.0).add(x.square().mul(1.0 / 12.0)).sub(x.pow(3.0).mul(1.0 / 60.0)));
-  return x.lt(1e-3).where(series, exact);
+  return pluss::series::where(x.lt(1e-3), series, exact);
 }
 
 inline Series wlc_radius_of_gyration_squared(const Series &contour_length, const Coeff &persistence_length) {
@@ -70,7 +70,7 @@ inline Series wlc_radius_of_gyration_squared(const Series &contour_length, const
     series = series.add(x.pow(static_cast<double>(m - 4)).mul(2.0 * ((m % 2) ? -1.0 : 1.0) / fact));
     fact *= static_cast<double>(m + 1);
   }
-  return x.lt(0.2).where(series, direct).mul(big_l.square());
+  return pluss::series::where(x.lt(0.2), series, direct).mul(big_l.square());
 }
 
 // fractional extension x/L of a freely-jointed chain under force f: Langevin function of a = f b / kT
@@ -81,8 +81,8 @@ inline Series fjc_extension(const Series &force, const Coeff &kuhn_length, const
   const Series cosh_a = aa.clamp(1e-12, 300.0).cosh();
   const Series large = cosh_a.div(sinh_a).sub(aa.clamp(1e-12, 300.0).reciprocal());
   const Series small = aa.mul(1.0 / 3.0).sub(aa.pow(3.0).mul(1.0 / 45.0)).add(aa.pow(5.0).mul(2.0 / 945.0)).sub(aa.pow(7.0).mul(1.0 / 4725.0));
-  const Series magnitude = aa.lt(0.05).where(small, large);
-  return a.lt(0.0).where(magnitude.mul(-1.0), magnitude);
+  const Series magnitude = pluss::series::where(aa.lt(0.05), small, large);
+  return pluss::series::where(a.lt(0.0), magnitude.mul(-1.0), magnitude);
 }
 
 // Marko-Siggia interpolation: force at fractional extension z in [0, 1)
@@ -283,8 +283,8 @@ inline FloryHugginsPair fh_spinodal_compositions(const Series &chi, const Series
   const Series disc = bq.square().sub(aq.mul(cq).mul(4.0)).clamp(0.0, 1e300).sqrt();
   const Series r1 = bq.mul(-1.0).add(disc).div(aq.mul(2.0)), r2 = bq.mul(-1.0).sub(disc).div(aq.mul(2.0));
   FloryHugginsPair out;
-  out.low = r1.lt(r2).where(r1, r2);
-  out.high = r1.lt(r2).where(r2, r1);
+  out.low = pluss::series::where(r1.lt(r2), r1, r2);
+  out.high = pluss::series::where(r1.lt(r2), r2, r1);
   return out;
 }
 // Binodal (coexisting) compositions for chi above critical: damped batched Newton on mu1(a) = mu1(b), mu2(a) = mu2(b),
@@ -317,16 +317,16 @@ inline FloryHugginsPair fh_binodal(const Series &chi, const Series &n1, const Se
       const Series j11 = d1b.sub(d1a).div(g2), j21 = d2b.sub(d2a).div(g2);          // dF/dc
       const Series j12 = d1a.add(d1b).div(g2).sub(f1.div(g)), j22 = d2a.add(d2b).div(g2).sub(f2.div(g)); // dF/dg
       const Series det0 = j11.mul(j22).sub(j12.mul(j21));
-      const Series det = det0.abs().lt(1e-300).where(det0.mul(0.0).add(1e-300), det0);
+      const Series det = pluss::series::where(det0.abs().lt(1e-300), det0.mul(0.0).add(1e-300), det0);
       const Series dc = f1.mul(j22).sub(f2.mul(j12)).div(det);
       const Series dg = j11.mul(f2).sub(j21.mul(f1)).div(det);
       // damped step: keep g > 0 and both compositions inside (0, 1)
       Series nc = c.sub(dc).clamp(1e-12, 1.0 - 1e-12), ng = g.sub(dg);
       const Series low_bound = g.mul(0.2), high_bound = g.mul(5.0); // relative step control on the gap
-      ng = ng.lt(low_bound).where(low_bound, ng);
-      ng = ng.gt(high_bound).where(high_bound, ng);
-      const Series room = nc.lt(half).where(nc, nc.mul(-1.0).add(1.0)).mul(1.0 - 1e-9); // both compositions stay inside (0, 1)
-      ng = ng.gt(room).where(room, ng);
+      ng = pluss::series::where(ng.lt(low_bound), low_bound, ng);
+      ng = pluss::series::where(ng.gt(high_bound), high_bound, ng);
+      const Series room = pluss::series::where(nc.lt(half), nc, nc.mul(-1.0).add(1.0)).mul(1.0 - 1e-9); // both compositions stay inside (0, 1)
+      ng = pluss::series::where(ng.gt(room), room, ng);
       c = nc;
       g = ng;
     }

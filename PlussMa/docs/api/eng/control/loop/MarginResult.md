@@ -2,7 +2,7 @@
 
 # `control::MarginResult`
 
-Classical loop margins and the frequencies where they occur.
+The gain, phase and stability margins with their frequencies.
 
 ## Signature
 
@@ -12,185 +12,209 @@ control::MarginResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Returned by `margin`. Each margin is paired with the frequency at which it occurs; infinity means the corresponding crossover does not exist on the grid.
 
 ## Fields
 
-### `gain`
-
-Gain margin as a multiplicative factor, not decibels.
-
-### `phase`
-
-Phase margin in degrees.
-
-### `stability`
-
-Minimum sampled/interpolated Nyquist distance to `-1`.
-
-### `gain_freq`
-
-Angular frequency of the phase crossover used for gain margin.
-
-### `phase_freq`
-
-Angular frequency of the gain crossover used for phase margin.
-
-### `stability_freq`
-
-Angular frequency of the minimum Nyquist distance.
+| Field | Meaning |
+|---|---|
+| `gain` | Gain margin: a linear factor, greater than one for a stable loop. |
+| `phase` | Phase margin in degrees. |
+| `stability` | The smallest `|1 + L|` over the grid. |
+| `gain_freq` | Frequency of the gain margin (the phase crossover), rad/s. |
+| `phase_freq` | Frequency of the phase margin (the gain crossover), rad/s. |
+| `stability_freq` | Frequency of the closest approach to `-1`, rad/s. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `margin`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-`gain` is multiplicative rather than decibels, `phase` is degrees, and every frequency is angular. Infinite margins are meaningful when no relevant crossover exists. Stability margin complements classical margins by measuring the closest Nyquist approach to `-1`.
+A stable loop has a gain margin above one and a positive phase margin; the second example of `margin` shows both turning bad together as the gain grows (a negative phase margin at `k = 7`). The stability margin is the more honest robustness number: it is the minimum of `|1 + L|` over the grid, which the second example here reproduces independently (0.6376). As a common rule of thumb, look for a gain margin above 2, a phase margin above 30 degrees and a stability margin above about 0.5.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Print every classical margin and its crossover frequency.
+The six fields for a third-order loop.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// L(s) = k / (s (s + 1) (s + 2)).
+static lti::PoleZero loop_gain(double k = 1.0) { return lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({0.0, -1.0, -2.0}), pluss::make_series(k)); }
+// A logarithmic frequency grid from 0.01 to 100 rad/s.
+static pluss::Series grid(int n = 2000) {
+  std::vector<double> w;
+  for (int i = 0; i < n; ++i) w.push_back(std::pow(10.0, -2.0 + 4.0 * i / (n - 1)));
+  return pluss::make_series(w);
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::PoleZero plant = lti::zpk(
-      pluss::series::empty({0}, pluss::ScalarType::Float64),
-      pluss::make_series({0.0, -1.0, -2.0}), pluss::make_series(1.0));
-  const pluss::Series omega = pluss::series::logspace(
-      -3.0, 3.0, 20001, 10.0,
-      pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
-  const control::MarginResult result = control::margin(plant, omega);
-
-  out.writeln("gain margin =", result.gain.item<double>());
-  out.writeln("gain frequency =", result.gain_freq.item<double>());
-  out.writeln("phase margin =", result.phase.item<double>());
-  out.writeln("phase frequency =", result.phase_freq.item<double>());
-  out.writeln("stability margin =", result.stability.item<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::MarginResult m = ctl::margin(loop_gain(), grid());
+  out.writeln("gain", m.gain.item<double>(), "at", m.gain_freq.item<double>());
+  out.writeln("phase", m.phase.item<double>(), "at", m.phase_freq.item<double>());
+  out.writeln("stability", m.stability.item<double>(), "at", m.stability_freq.item<double>());
 }
 ```
 
 Output
 
 ```text
-gain margin = 6.000002
-gain frequency = 1.414214
-phase margin = 53.410787
-phase frequency = 0.445748
-stability margin = 0.637600
+gain 6.0001 at 1.4142
+phase 53.4108 at 0.4457
+stability 0.6376 at 0.7260
 ```
 ### Example 2
 
-Inspect the response from which margins are derived.
+The stability margin against the minimum of `|1 + L|`.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// L(s) = k / (s (s + 1) (s + 2)).
+static lti::PoleZero loop_gain(double k = 1.0) { return lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({0.0, -1.0, -2.0}), pluss::make_series(k)); }
+// A logarithmic frequency grid from 0.01 to 100 rad/s.
+static pluss::Series grid(int n = 2000) {
+  std::vector<double> w;
+  for (int i = 0; i < n; ++i) w.push_back(std::pow(10.0, -2.0 + 4.0 * i / (n - 1)));
+  return pluss::make_series(w);
+}
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const control::LoopResult result =
-      control::loop(plant, pluss::make_series({0.0, 1.0}));
-
-  out.writeln("response =",
-              result.response.flatten().items<std::complex<double>>());
-  out.writeln("sensitivity =",
-              result.sens.flatten().items<std::complex<double>>());
-  out.writeln("complementary =",
-              result.comp.flatten().items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // The stability margin is the closest approach of the Nyquist curve to -1: the smallest |1 + L|.
+  const pluss::Series omega = grid();
+  const pluss::Series l = lti::freqresp(loop_gain(), omega);
+  const auto d = l.add(1.0).abs().items<double>();
+  const ctl::MarginResult m = ctl::margin(l, omega);
+  out.writeln("minimum of |1 + L| over the grid =", *std::min_element(d.begin(), d.end()), " reported stability margin =", m.stability.item<double>());
 }
 ```
 
 Output
 
 ```text
-response = [(1,0), (0.5,-0.5)]
-sensitivity = [(0.5,0), (0.6,0.2)]
-complementary = [(0.5,0), (0.4,-0.2)]
+minimum of |1 + L| over the grid = 0.6376  reported stability margin = 0.6376
 ```
 ### Example 3
 
-Reject unsuitable MIMO and real-only response inputs.
+A batch of three loops with different gains.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// L(s) = k / (s (s + 1) (s + 2)).
+static lti::PoleZero loop_gain(double k = 1.0) { return lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({0.0, -1.0, -2.0}), pluss::make_series(k)); }
+// A logarithmic frequency grid from 0.01 to 100 rad/s.
+static pluss::Series grid(int n = 2000) {
+  std::vector<double> w;
+  for (int i = 0; i < n; ++i) w.push_back(std::pow(10.0, -2.0 + 4.0 * i / (n - 1)));
+  return pluss::make_series(w);
+}
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace mimo = lti::state(
-      pluss::make_series({{-1.0, 0.0}, {0.0, -2.0}}),
-      pluss::series::eye(2, pluss::ScalarType::Float64),
-      pluss::series::eye(2, pluss::ScalarType::Float64),
-      pluss::series::zeros({2, 2}, pluss::ScalarType::Float64));
-  try {
-    static_cast<void>(control::margin(mimo, pluss::make_series({0.1, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("MIMO margin rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::margin(
-        pluss::make_series({1.0, 0.5}), pluss::make_series({0.1, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("real response rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A batch of loops: one margin per loop.
+  std::vector<std::complex<double>> rows;
+  const pluss::Series omega = grid(400);
+  const pluss::Series a = lti::freqresp(loop_gain(0.5), omega), b = lti::freqresp(loop_gain(1.0), omega), c = lti::freqresp(loop_gain(2.0), omega);
+  const ctl::MarginResult m = ctl::margin(pluss::series::pile({a, b, c}, 0), omega);
+  out.writeln("gain margins of k = 0.5, 1, 2:", m.gain.items<double>(), " exact 12, 6, 3");
 }
 ```
 
 Output
 
 ```text
-MIMO margin rejected = eng::control::margin: classical margins require a SISO system
-real response rejected = eng::control::margin: response must have a complex dtype
+gain margins of k = 0.5, 1, 2: [12.0046, 6.0023, 3.0012]  exact 12, 6, 3
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="LoopResult.html">
-    <span class="label">Previous</span>
-    <span class="title">LoopResult</span>
-  </a>
-  <a class="next-link" href="loop.html">
-    <span class="label">Next</span>
-    <span class="title">loop</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

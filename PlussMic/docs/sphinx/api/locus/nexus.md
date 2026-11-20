@@ -59,3 +59,14 @@ nexus ntables=3 nexus relationships=2
 - [`alignment_cache_stats`](alignment_cache_stats.md): what `nexus()`
   reuses, and when.
 - [`query`](query.md): SQL over the same aligned view.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="meta.html">
+    <span class="label">Previous</span>
+    <span class="title">meta</span>
+  </a>
+  <a class="next-link" href="notinf.html">
+    <span class="label">Next</span>
+    <span class="title">notinf</span>
+  </a>
+</div>

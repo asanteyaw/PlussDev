@@ -7,7 +7,7 @@
 
 This page covers the `Payload` setters that are not big enough for their own
 page: `features(...)` (which columns are features), `groups(...)` (the
-grouping key for grouped cross-validation), and `note` / `layout` / `slate`
+grouping key for grouped cross-validation), and `note` / `layout` / `shelf`
 (shortcuts into the `DataFrameBatchOptions` data-conversion policy).
 
 ## Signature
@@ -17,7 +17,7 @@ lymph::workflow::Payload& lymph::workflow::Payload::features(std::vector<std::st
 lymph::workflow::Payload& lymph::workflow::Payload::groups(pluss::Series groups);
 lymph::workflow::Payload& lymph::workflow::Payload::note(lymph::DataNotePolicy policy);
 lymph::workflow::Payload& lymph::workflow::Payload::layout(lymph::ObservationLayout layout);
-lymph::workflow::Payload& lymph::workflow::Payload::slate(lymph::DataSlatePolicy policy);
+lymph::workflow::Payload& lymph::workflow::Payload::shelf(lymph::DataShelfPolicy policy);
 
 bool lymph::workflow::Payload::has_groups() const;
 const pluss::Series& lymph::workflow::Payload::groups() const;
@@ -25,7 +25,7 @@ const pluss::Series& lymph::workflow::Payload::groups() const;
 
 ## What It Does
 
-This page covers the payload setters too small for their own page. `features` names the feature columns, `groups` names the key for grouped cross-validation, and `note`, `layout`, and `slate` set the data conversion policy as shortcuts.
+This page covers the payload setters too small for their own page. `features` names the feature columns, `groups` names the key for grouped cross-validation, and `note`, `layout`, and `shelf` set the data conversion policy as shortcuts.
 
 ## Parameters
 
@@ -45,9 +45,9 @@ This page covers the payload setters too small for their own page. `features` na
   materialized. The default (`Reject`) refuses them; `Factorize` turns them
   into integer codes (Example 3). Shortcut for `data().note_policy`.
 
-`lymph::ObservationLayout layout` (`layout`) · `lymph::DataSlatePolicy policy` (`slate`)
+`lymph::ObservationLayout layout` (`layout`) · `lymph::DataShelfPolicy policy` (`shelf`)
 : Shortcuts for `data().layout` (whether observations run down rows or
-  across columns) and `data().slate_policy` (how `Slate`-typed columns
+  across columns) and `data().shelf_policy` (how `Shelf`-typed columns
   convert). Rarely set; the defaults are correct for a row-major frame.
 
 ## Returns
@@ -81,16 +81,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
-      {"audit_note", Slate(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0, 9.0}, {6}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Shelf(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"audit_note", Shelf(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0, 9.0}, {6}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
 
   const workflow::Payload pinned = workflow::payload::make(raw)
@@ -130,15 +130,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"x1", Slate(pluss::make_series({1.0, 1.2, 3.0, 3.2, 5.0, 5.2, 7.0, 7.2}, {8}, f64))},
-      {"x2", Slate(pluss::make_series({0.5, 0.7, 2.5, 2.7, 4.5, 4.7, 6.5, 6.7}, {8}, f64))},
-      {"y",  Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"x1", Shelf(pluss::make_series({1.0, 1.2, 3.0, 3.2, 5.0, 5.2, 7.0, 7.2}, {8}, f64))},
+      {"x2", Shelf(pluss::make_series({0.5, 0.7, 2.5, 2.7, 4.5, 4.7, 6.5, 6.7}, {8}, f64))},
+      {"y",  Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
   const pluss::Series groups = pluss::make_series({0, 0, 1, 1, 2, 2, 3, 3}, {8}, f64);
 
@@ -183,16 +183,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"region", Slate(pluss::make_note(std::vector<std::string>{
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"region", Shelf(pluss::make_note(std::vector<std::string>{
           "n", "s", "n", "s", "e", "w"}))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
 
   const workflow::Payload no_policy =

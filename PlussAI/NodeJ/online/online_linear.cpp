@@ -234,9 +234,7 @@ struct BinaryLabelEncoding {
   const Series pred = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series residual = pred.sub(y);
   const Series abs_residual = residual.abs();
-  const Series clipped_grad = abs_residual.le(robust_transition).where(
-      residual,
-      residual.sign().mul(robust_transition));
+  const Series clipped_grad = pluss::series::where(abs_residual.le(robust_transition), residual, residual.sign().mul(robust_transition));
   Series grad = design.transpose(0, 1).matmul(clipped_grad.reshape({n, 1})).div(static_cast<double>(n)).reshape({weights.numel()});
 
   if (lambda > 0.0) {
@@ -281,12 +279,10 @@ struct BinaryLabelEncoding {
   const Series fn = yb.mul(yhb.mul(-1.0).add(1.0)).sum();
   const Series accuracy = yb.eq(yhb).to(ScalarType::Float64).mean();
   const Series zero = pluss::series::zeros_like(tp, ScalarType::Float64);
-  const Series recall = tp.add(fn).gt(0.0).where(tp.div(tp.add(fn)), zero);
-  const Series precision = tp.add(fp).gt(0.0).where(tp.div(tp.add(fp)), zero);
-  const Series f1 = precision.add(recall).gt(0.0).where(
-      precision.mul(recall).mul(2.0).div(precision.add(recall)),
-      zero);
-  const Series specificity = tn.add(fp).gt(0.0).where(tn.div(tn.add(fp)), zero);
+  const Series recall = pluss::series::where(tp.add(fn).gt(0.0), tp.div(tp.add(fn)), zero);
+  const Series precision = pluss::series::where(tp.add(fp).gt(0.0), tp.div(tp.add(fp)), zero);
+  const Series f1 = pluss::series::where(precision.add(recall).gt(0.0), precision.mul(recall).mul(2.0).div(precision.add(recall)), zero);
+  const Series specificity = pluss::series::where(tn.add(fp).gt(0.0), tn.div(tn.add(fp)), zero);
   const Series balanced = recall.add(specificity).mul(0.5);
   const Series geometric = recall.mul(specificity).clamp_min(0.0).sqrt();
   const Series balance_quality = geometric.square().mul(recall.sub(specificity).mul(0.1).add(1.0)).clamp_min(0.0);
@@ -294,14 +290,14 @@ struct BinaryLabelEncoding {
   const Series brier = p.sub(yb).square().mean().reshape({1});
   const Series mcc_num = tp.mul(tn).sub(fp.mul(fn));
   const Series mcc_den = tp.add(fp).mul(tp.add(fn)).mul(tn.add(fp)).mul(tn.add(fn)).clamp_min(0.0).sqrt();
-  const Series mcc = mcc_den.gt(0.0).where(mcc_num.div(mcc_den.clamp_min(1.0)), zero).reshape({1});
+  const Series mcc = pluss::series::where(mcc_den.gt(0.0), mcc_num.div(mcc_den.clamp_min(1.0)), zero).reshape({1});
   const Series n_total = tp.add(tn).add(fp).add(fn);
   const Series kappa_pe =
       tp.add(fp).mul(tp.add(fn)).add(tn.add(fn).mul(tn.add(fp))).div(n_total.mul(n_total).clamp_min(1.0));
   const Series kappa_den = kappa_pe.mul(-1.0).add(1.0);
-  const Series kappa_den_safe = kappa_den.add(kappa_den.gt(0.0).where(zero, zero.add(1.0)));  // +1 only when den==0
+  const Series kappa_den_safe = kappa_den.add(pluss::series::where(kappa_den.gt(0.0), zero, zero.add(1.0)));  // +1 only when den==0
   const Series cohen_kappa =
-      kappa_den.gt(0.0).where(accuracy.reshape({1}).sub(kappa_pe).div(kappa_den_safe), zero).reshape({1});
+      pluss::series::where(kappa_den.gt(0.0), accuracy.reshape({1}).sub(kappa_pe).div(kappa_den_safe), zero).reshape({1});
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -374,7 +370,7 @@ struct BinaryLabelEncoding {
   const Series sst = y.sub(y_mean).square().sum();
   const Series one = pluss::series::ones({1}, f64_on(y.platform()));
   const Series zero = pluss::series::zeros({1}, f64_on(y.platform()));
-  const Series r2 = sst.gt(0.0).where(one.sub(sse.div(sst)), zero);
+  const Series r2 = pluss::series::where(sst.gt(0.0), one.sub(sse.div(sst)), zero);
 
   std::vector<Series> out{};
   out.reserve(requested.size());

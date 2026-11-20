@@ -59,9 +59,9 @@ every other.
 using namespace pluss::table;
 
 auto metrics = DataFrame({
-    {"revenue",  Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
-    {"cost",     Slate(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
-    {"headcount", Slate(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
+    {"revenue",  Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
+    {"cost",     Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
+    {"headcount", Shelf(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
 });
 
 auto chart = metrics.plot().corr_heatmap();
@@ -110,14 +110,14 @@ Example 4. A feature that isn't numeric throws, same as every method sharing thi
 
 ```cpp
 auto tagged = DataFrame({
-    {"revenue", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"region",  Slate(pluss::make_note({"East", "West", "East"}))},
+    {"revenue", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"region",  Shelf(pluss::make_note({"East", "West", "East"}))},
 });
 
 try {
   auto bad = tagged.plot().corr_heatmap({"revenue", "region"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

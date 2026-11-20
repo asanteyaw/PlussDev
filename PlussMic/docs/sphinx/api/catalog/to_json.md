@@ -170,9 +170,9 @@ check `"validity"` to know which entries actually matter.
   distinct text representation.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tfidf.html">
+  <a class="prev-link" href="tl.html">
     <span class="label">Previous</span>
-    <span class="title">tfidf</span>
+    <span class="title">tl</span>
   </a>
   <a class="next-link" href="to_string.html">
     <span class="label">Next</span>

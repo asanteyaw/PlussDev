@@ -16,12 +16,12 @@ This page documents the public `ColumnRef` helper returned by DataFrame column-r
 #### Signature
 
 ```cpp
-Slate ColumnRef::head(std::int64_t n)
+Shelf ColumnRef::head(std::int64_t n)
 ```
 
 #### What It Does
 
-Returns the first `n` values from the referenced column as a slate.
+Returns the first `n` values from the referenced column as a shelf.
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Returns the first `n` values from the referenced column as a slate.
 
 #### Returns
 
-`Slate`
+`Shelf`
     Value produced by this call.
 
 #### Examples
@@ -39,9 +39,9 @@ Example 1. Inspect the first part of the current object without changing the sou
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -89,9 +89,9 @@ Example 1. Compute `mean` and inspect the resulting summary value or summary obj
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -143,9 +143,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -162,25 +162,25 @@ sales
     <span class="label">Previous</span>
     <span class="title">mean</span>
   </a>
-  <a class="next-link" href="#slate">
+  <a class="next-link" href="#shelf">
     <span class="label">Next</span>
-    <span class="title">slate</span>
+    <span class="title">shelf</span>
   </a>
 </div>
 
 ## S
 
-### `slate`
+### `shelf`
 
 #### Signature
 
 ```cpp
-const Slate& ColumnRef::slate()
+const Shelf& ColumnRef::shelf()
 ```
 
 #### What It Does
 
-Returns the referenced column as a `Slate` object.
+Returns the referenced column as a `Shelf` object.
 
 #### Parameters
 
@@ -188,7 +188,7 @@ Returns the referenced column as a `Slate` object.
 
 #### Returns
 
-`const Slate&`
+`const Shelf&`
     Value produced by this call.
 
 #### Examples
@@ -197,13 +197,13 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
-auto out = ref.slate();
+auto out = ref.shelf();
 ```
 
 ##### Output
@@ -214,8 +214,8 @@ auto out = ref.slate();
 
 #### Practical Behavior
 
-- `slate()` gives you the exact referenced column payload without copying it into a new frame.
-- Use this when you want to switch into `Slate` operations such as comparisons, casting, or text cleanup.
+- `shelf()` gives you the exact referenced column payload without copying it into a new frame.
+- Use this when you want to switch into `Shelf` operations such as comparisons, casting, or text cleanup.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#name">
@@ -235,7 +235,7 @@ auto out = ref.slate();
 #### Signature
 
 ```cpp
-SlateValue ColumnRef::value()
+ShelfValue ColumnRef::value()
 ```
 
 #### What It Does
@@ -248,7 +248,7 @@ Returns one scalar-like wrapper for the first referenced value, which is useful 
 
 #### Returns
 
-`SlateValue`
+`ShelfValue`
     Value produced by this call.
 
 #### Examples
@@ -257,9 +257,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -274,13 +274,13 @@ auto out = ref.value();
 
 #### Practical Behavior
 
-- `value()` returns a `SlateValue` wrapper over the first element of the referenced column.
-- Use this when you need typed scalar extraction rather than a whole-column slate.
+- `value()` returns a `ShelfValue` wrapper over the first element of the referenced column.
+- Use this when you need typed scalar extraction rather than a whole-column shelf.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#slate">
+  <a class="prev-link" href="#shelf">
     <span class="label">Previous</span>
-    <span class="title">slate</span>
+    <span class="title">shelf</span>
   </a>
   <a class="next-link" href="#values">
     <span class="label">Next</span>
@@ -293,12 +293,12 @@ auto out = ref.value();
 #### Signature
 
 ```cpp
-Slate ColumnRef::values()
+Shelf ColumnRef::values()
 ```
 
 #### What It Does
 
-Materializes the full referenced column as a standalone `Slate` so you can reuse it outside the parent frame.
+Materializes the full referenced column as a standalone `Shelf` so you can reuse it outside the parent frame.
 
 #### Parameters
 
@@ -306,7 +306,7 @@ Materializes the full referenced column as a standalone `Slate` so you can reuse
 
 #### Returns
 
-`Slate`
+`Shelf`
     Value produced by this call.
 
 #### Examples
@@ -315,9 +315,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -332,8 +332,8 @@ auto out = ref.values();
 
 #### Practical Behavior
 
-- `values()` materializes the referenced feature as a standalone `Slate`.
-- Use this when you want to pass the column into another API that expects a slate rather than a column reference.
+- `values()` materializes the referenced feature as a standalone `Shelf`.
+- Use this when you want to pass the column into another API that expects a shelf rather than a column reference.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#value">

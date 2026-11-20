@@ -1,7 +1,7 @@
 DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool render) const {
   PLUSS_CHECK(!specs.empty(), "DataFrame::summarize: no SummarySpec supplied");
 
-  std::vector<std::pair<std::string, Slate>> out_cols;
+  std::vector<std::pair<std::string, Shelf>> out_cols;
   out_cols.reserve(specs.size());
 
   std::unordered_set<std::string> names_seen;
@@ -15,18 +15,18 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
     PLUSS_CHECK(names_seen.insert(out_name).second, "DataFrame::summarize: duplicate output name '" + out_name + "'");
 
     if (spec.op == SummaryOp::Count) {
-      out_cols.emplace_back(out_name, make_i64_slate({non_null_count(feature_value)}));
+      out_cols.emplace_back(out_name, make_i64_shelf({non_null_count(feature_value)}));
       continue;
     }
     if (spec.op == SummaryOp::Ndistinct) {
-      out_cols.emplace_back(out_name, make_i64_slate({distinct_non_null_count(feature_value)}));
+      out_cols.emplace_back(out_name, make_i64_shelf({distinct_non_null_count(feature_value)}));
       continue;
     }
-    out_cols.emplace_back(out_name, make_f64_slate({numeric_reduce_value(feature_value, spec.op)}));
+    out_cols.emplace_back(out_name, make_f64_shelf({numeric_reduce_value(feature_value, spec.op)}));
   }
 
   (void)render;
-  return DataFrame(std::move(out_cols), make_note_slate({"summary"}));
+  return DataFrame(std::move(out_cols), make_note_shelf({"summary"}));
 }
 
 DataFrame DataFrame::summarize(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render) const {
@@ -59,16 +59,16 @@ std::vector<std::string> contingency_names_(const DataFrame& frame,
   return names;
 }
 
-std::string contingency_token_(const Slate& key,
+std::string contingency_token_(const Shelf& key,
                                std::int64_t row,
                                std::string_view null_label) {
   return detail::valid_at(key, row)
-      ? slate_scalar_string_at(key, row)
+      ? shelf_scalar_string_at(key, row)
       : std::string(null_label);
 }
 
 std::string contingency_column_name_(std::span<const std::string> names,
-                                     std::span<const Slate> keys,
+                                     std::span<const Shelf> keys,
                                      std::int64_t row,
                                      std::string_view separator,
                                      std::string_view null_label) {
@@ -91,7 +91,7 @@ std::string contingency_column_name_(std::span<const std::string> names,
 
 struct ContingencyTensor_ {
   std::vector<std::string> dims{};
-  std::vector<Slate> levels{};
+  std::vector<Shelf> levels{};
   pluss::Series counts = pluss::series::undefined();
 };
 
@@ -117,9 +117,9 @@ std::int64_t contingency_checked_product_(std::span<const std::int64_t> shape,
   return product;
 }
 
-bool contingency_host_equal_(const SlateValue::HostAny& lhs,
-                             const SlateValue::HostAny& rhs) {
-  using Kind = SlateValue::HostAny::Kind;
+bool contingency_host_equal_(const ShelfValue::HostAny& lhs,
+                             const ShelfValue::HostAny& rhs) {
+  using Kind = ShelfValue::HostAny::Kind;
   if (lhs.kind() == Kind::String || rhs.kind() == Kind::String) {
     return lhs.kind() == Kind::String &&
            rhs.kind() == Kind::String &&
@@ -143,9 +143,9 @@ bool contingency_host_equal_(const SlateValue::HostAny& lhs,
   return lhs.to_str() == rhs.to_str();
 }
 
-SlateValue::HostAny contingency_level_host_(const Slate& levels, std::int64_t index) {
+ShelfValue::HostAny contingency_level_host_(const Shelf& levels, std::int64_t index) {
   const std::array<std::int64_t, 1> positions{index};
-  return SlateValue(levels.take(std::span<const std::int64_t>(positions.data(), positions.size()))).host();
+  return ShelfValue(levels.take(std::span<const std::int64_t>(positions.data(), positions.size()))).host();
 }
 
 std::vector<std::string> contingency_filtered_dims_(std::span<const std::string> dims,
@@ -168,7 +168,7 @@ ContingencyTensor_ contingency_build_tensor_(
     std::string_view where) {
   PLUSS_CHECK(!dims.empty(), std::string(where) + ": expected at least one contingency dimension");
 
-  std::vector<Slate> keys;
+  std::vector<Shelf> keys;
   keys.reserve(dims.size());
   std::vector<GroupFactorization_> factors;
   factors.reserve(dims.size());
@@ -180,9 +180,9 @@ ContingencyTensor_ contingency_build_tensor_(
     const auto key = frame.features(dim);
     keys.push_back(key);
     auto factor = factor_group_keys_(
-        std::span<const Slate>(&keys.back(), 1),
+        std::span<const Shelf>(&keys.back(), 1),
         frame.ncases(),
-        SlateGroupOptions{.dropnull = options.dropnull, .sort = options.sort},
+        ShelfGroupOptions{.dropnull = options.dropnull, .sort = options.sort},
         where);
     shape.push_back(factor.ngroups);
     for (std::int64_t row = 0; row < frame.ncases(); ++row) {
@@ -332,7 +332,7 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
   const auto key_names = normalize_name_list(keys);
   std::unordered_set<std::string> key_seen;
   key_seen.reserve(key_names.size());
-  std::vector<Slate> key_columns;
+  std::vector<Shelf> key_columns;
   key_columns.reserve(key_names.size());
   for (const auto& key : key_names) {
     PLUSS_CHECK(key_seen.insert(key).second, "DataFrame::group: duplicate key '" + key + "'");
@@ -340,10 +340,10 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
   }
 
   const auto state = build_group_state_(
-      std::span<const Slate>(key_columns.data(), key_columns.size()),
+      std::span<const Shelf>(key_columns.data(), key_columns.size()),
       std::span<const std::string>(key_names.data(), key_names.size()),
       ncases(),
-      SlateGroupOptions{.dropnull = dropnull_keys, .sort = sort_groups},
+      ShelfGroupOptions{.dropnull = dropnull_keys, .sort = sort_groups},
       "DataFrame::group");
 
   auto out_cols = group_key_columns_(state);
@@ -363,24 +363,24 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
         out_seen.insert(out_name).second,
         "DataFrame::group: duplicate output feature '" + out_name + "'");
 
-    Slate out;
+    Shelf out;
     if (!has_feature) {
       PLUSS_CHECK(spec.op == GroupOp::Count,
                   "DataFrame::group: feature is required for non-count aggregations");
-      out = group_count_slate_(state);
+      out = group_count_shelf_(state);
     } else {
       const auto value_column = features(spec.feature);
       switch (spec.op) {
         case GroupOp::Count:
-          out = group_count_slate_(state, value_column);
+          out = group_count_shelf_(state, value_column);
           break;
         case GroupOp::Ndistinct:
-          out = group_ndistinct_slate_(value_column, state);
+          out = group_ndistinct_shelf_(value_column, state);
           break;
         case GroupOp::Mode:
-          out = value_column.kind() == SlateKind::Note
-              ? group_note_mode_slate_(value_column, state)
-              : group_numeric_slate_(value_column, state, spec.op);
+          out = value_column.kind() == ShelfKind::Note
+              ? group_note_mode_shelf_(value_column, state)
+              : group_numeric_shelf_(value_column, state, spec.op);
           break;
         case GroupOp::Sum:
         case GroupOp::Mean:
@@ -389,7 +389,7 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
         case GroupOp::Max:
         case GroupOp::Std:
         case GroupOp::Var:
-          out = group_numeric_slate_(value_column, state, spec.op);
+          out = group_numeric_shelf_(value_column, state, spec.op);
           break;
       }
     }
@@ -462,14 +462,14 @@ std::vector<std::string_view> pivot_string_views_(std::span<const std::string> n
   return out;
 }
 
-bool pivot_supports_feature_(const Slate& value, DataFrame::GroupOp op) {
+bool pivot_supports_feature_(const Shelf& value, DataFrame::GroupOp op) {
   switch (op) {
     case DataFrame::GroupOp::Count:
     case DataFrame::GroupOp::Ndistinct:
       return true;
     case DataFrame::GroupOp::Mode:
-      return value.kind() == SlateKind::Note ||
-          (value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()));
+      return value.kind() == ShelfKind::Note ||
+          (value.kind() == ShelfKind::Series && is_numeric_series_type(value.as_series()));
     case DataFrame::GroupOp::Sum:
     case DataFrame::GroupOp::Mean:
     case DataFrame::GroupOp::Median:
@@ -477,7 +477,7 @@ bool pivot_supports_feature_(const Slate& value, DataFrame::GroupOp op) {
     case DataFrame::GroupOp::Max:
     case DataFrame::GroupOp::Std:
     case DataFrame::GroupOp::Var:
-      return value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series());
+      return value.kind() == ShelfKind::Series && is_numeric_series_type(value.as_series());
   }
   return false;
 }
@@ -593,16 +593,16 @@ PivotResolvedPlan_ pivot_resolve_plan_(const DataFrame& frame,
   return plan;
 }
 
-Slate pivot_make_note_slate_(const std::vector<std::string>& values,
+Shelf pivot_make_note_shelf_(const std::vector<std::string>& values,
                                const std::vector<bool>& valid) {
   const bool all_valid = std::all_of(valid.begin(), valid.end(), [](bool v) { return v; });
   return all_valid
-      ? make_note_slate(values)
-      : Slate(pluss::make_note(values), bool_series_from_keep(valid));
+      ? make_note_shelf(values)
+      : Shelf(pluss::make_note(values), bool_series_from_keep(valid));
 }
 
-Slate pivot_fill_numeric_column_(const Slate& source,
-                                  const SlateValue::HostAny& fill_value,
+Shelf pivot_fill_numeric_column_(const Shelf& source,
+                                  const ShelfValue::HostAny& fill_value,
                                   bool integral_fill) {
   auto valid = detail::validity_mask(source)->host<bool>();
   if (integral_fill) {
@@ -614,7 +614,7 @@ Slate pivot_fill_numeric_column_(const Slate& source,
         valid[i] = true;
       }
     }
-    return make_i64_slate(values, valid);
+    return make_i64_shelf(values, valid);
   }
   auto values = source.as_series().host<double>();
   const auto fill = fill_value.to_dbl();
@@ -624,10 +624,10 @@ Slate pivot_fill_numeric_column_(const Slate& source,
       valid[i] = true;
     }
   }
-  return make_f64_slate(values, valid);
+  return make_f64_shelf(values, valid);
 }
 
-Slate pivot_fill_note_column_(const Slate& source, const SlateValue::HostAny& fill_value) {
+Shelf pivot_fill_note_column_(const Shelf& source, const ShelfValue::HostAny& fill_value) {
   const auto raw = source.as_note().vector();
   std::vector<std::string> values;
   values.reserve(raw.size());
@@ -642,22 +642,22 @@ Slate pivot_fill_note_column_(const Slate& source, const SlateValue::HostAny& fi
       valid[i] = true;
     }
   }
-  return pivot_make_note_slate_(values, valid);
+  return pivot_make_note_shelf_(values, valid);
 }
 
-Slate pivot_make_duration_slate_(const std::vector<std::int64_t>& values,
+Shelf pivot_make_duration_shelf_(const std::vector<std::int64_t>& values,
                                    const std::vector<bool>& valid) {
   const auto duration =
       pluss::duration::nanos(values, {static_cast<std::int64_t>(values.size())});
   const bool all_valid =
       std::all_of(valid.begin(), valid.end(), [](const bool value) { return value; });
-  return all_valid ? Slate(duration) : Slate(duration, bool_series_from_keep(valid));
+  return all_valid ? Shelf(duration) : Shelf(duration, bool_series_from_keep(valid));
 }
 
-Slate pivot_fill_duration_column_(
-    const Slate& source,
-    const SlateValue::HostAny& fill_value) {
-  PLUSS_CHECK(fill_value.kind() == SlateValue::HostAny::Kind::Duration,
+Shelf pivot_fill_duration_column_(
+    const Shelf& source,
+    const ShelfValue::HostAny& fill_value) {
+  PLUSS_CHECK(fill_value.kind() == ShelfValue::HostAny::Kind::Duration,
               "DataFrame::pivot_table: Duration output requires a Duration fill_value");
   const auto fill = fill_value.to_int();
   PLUSS_CHECK(fill != pluss::Duration::kNaT,
@@ -670,37 +670,37 @@ Slate pivot_fill_duration_column_(
       valid[i] = true;
     }
   }
-  return pivot_make_duration_slate_(values, valid);
+  return pivot_make_duration_shelf_(values, valid);
 }
 
-Slate pivot_apply_fill_(const Slate& source,
-                         const std::optional<SlateValue::HostAny>& fill_value,
+Shelf pivot_apply_fill_(const Shelf& source,
+                         const std::optional<ShelfValue::HostAny>& fill_value,
                          bool integral_fill) {
   if (!fill_value.has_value() || !detail::has_validity_mask(source)) {
     return source;
   }
   switch (source.kind()) {
-    case SlateKind::Series:
+    case ShelfKind::Series:
       return pivot_fill_numeric_column_(source, *fill_value, integral_fill);
-    case SlateKind::Note:
+    case ShelfKind::Note:
       return pivot_fill_note_column_(source, *fill_value);
-    case SlateKind::Timeline:
+    case ShelfKind::Timeline:
       PLUSS_FAIL("DataFrame::pivot_table: fill_value does not support timeline-like pivot outputs");
-    case SlateKind::Duration:
+    case ShelfKind::Duration:
       return pivot_fill_duration_column_(source, *fill_value);
   }
   PLUSS_FAIL("DataFrame::pivot_table: unsupported pivot fill dispatch");
 }
 
-std::string pivot_level_key_(const Slate& key, std::int64_t row) {
+std::string pivot_level_key_(const Shelf& key, std::int64_t row) {
   if (!detail::valid_at(key, row)) {
     return "0;";
   }
-  const auto token = slate_scalar_string_at(key, row);
+  const auto token = shelf_scalar_string_at(key, row);
   return pluss::tils::OutputEngine::format("1{}:{};", token.size(), token);
 }
 
-std::string pivot_combo_key_(std::span<const Slate> keys, std::int64_t row) {
+std::string pivot_combo_key_(std::span<const Shelf> keys, std::int64_t row) {
   std::string out;
   for (const auto& key : keys) {
     out += pivot_level_key_(key, row);
@@ -708,12 +708,12 @@ std::string pivot_combo_key_(std::span<const Slate> keys, std::int64_t row) {
   return out;
 }
 
-std::string pivot_feature_level_display_(const Slate& key, std::int64_t row) {
-  return detail::valid_at(key, row) ? slate_scalar_string_at(key, row) : std::string("<NULL>");
+std::string pivot_feature_level_display_(const Shelf& key, std::int64_t row) {
+  return detail::valid_at(key, row) ? shelf_scalar_string_at(key, row) : std::string("<NULL>");
 }
 
 std::string pivot_column_display_(std::span<const std::string> names,
-                                  std::span<const Slate> keys,
+                                  std::span<const Shelf> keys,
                                   std::int64_t row,
                                   std::string_view separator) {
   PLUSS_CHECK(names.size() == keys.size(),
@@ -761,7 +761,7 @@ DataFrame pivot_group_optional_keys_(const DataFrame& frame,
   }
 
   const std::string synthetic_name = "__pivot_all__";
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   const auto names = frame.features();
   columns.reserve(names.size() + 1);
   for (const auto& name : names) {
@@ -769,7 +769,7 @@ DataFrame pivot_group_optional_keys_(const DataFrame& frame,
   }
   columns.emplace_back(
       synthetic_name,
-      make_note_slate(std::vector<std::string>(static_cast<std::size_t>(frame.ncases()), "__all__")));
+      make_note_shelf(std::vector<std::string>(static_cast<std::size_t>(frame.ncases()), "__all__")));
   auto keyed = DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   return keyed.group(group_options)
       .by({synthetic_name})
@@ -840,15 +840,15 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
                                             options.sort,
                                             "DataFrame::pivot_table");
 
-  std::vector<Slate> row_key_slates;
-  std::vector<Slate> column_key_slates;
-  row_key_slates.reserve(plan.index.size());
-  column_key_slates.reserve(plan.columns.size());
+  std::vector<Shelf> row_key_shelves;
+  std::vector<Shelf> column_key_shelves;
+  row_key_shelves.reserve(plan.index.size());
+  column_key_shelves.reserve(plan.columns.size());
   for (const auto& name : plan.index) {
-    row_key_slates.push_back(grouped.features(name));
+    row_key_shelves.push_back(grouped.features(name));
   }
   for (const auto& name : plan.columns) {
-    column_key_slates.push_back(grouped.features(name));
+    column_key_shelves.push_back(grouped.features(name));
   }
 
   std::unordered_map<std::string, std::size_t> row_map;
@@ -874,7 +874,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
   for (std::int64_t row = 0; row < grouped.ncases(); ++row) {
     const auto row_key = plan.index.empty()
         ? std::string()
-        : pivot_combo_key_(std::span<const Slate>(row_key_slates.data(), row_key_slates.size()), row);
+        : pivot_combo_key_(std::span<const Shelf>(row_key_shelves.data(), row_key_shelves.size()), row);
     const auto [row_it, row_inserted] = row_map.emplace(row_key, row_map.size());
     if (row_inserted) {
       row_first_rows.push_back(row);
@@ -884,7 +884,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
 
     const auto col_key = plan.columns.empty()
         ? std::string()
-        : pivot_combo_key_(std::span<const Slate>(column_key_slates.data(), column_key_slates.size()), row);
+        : pivot_combo_key_(std::span<const Shelf>(column_key_shelves.data(), column_key_shelves.size()), row);
     const auto [col_it, col_inserted] = col_map.emplace(col_key, col_map.size());
     if (col_inserted) {
       col_first_rows.push_back(row);
@@ -904,7 +904,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
     }
     return pivot_column_display_(
         std::span<const std::string>(plan.columns.data(), plan.columns.size()),
-        std::span<const Slate>(column_key_slates.data(), column_key_slates.size()),
+        std::span<const Shelf>(column_key_shelves.data(), column_key_shelves.size()),
         col_first_rows[combo],
         options.column_separator);
   };
@@ -926,7 +926,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
     }
   };
 
-  std::vector<std::pair<std::string, Slate>> out_cols;
+  std::vector<std::pair<std::string, Shelf>> out_cols;
   out_cols.reserve(plan.index.size() + plan.specs.size() * std::max<std::size_t>(1, col_first_rows.size()));
 
   const auto out_rows = std::max<std::size_t>(row_first_rows.size(), row_map.empty() ? 0 : row_map.size());
@@ -950,7 +950,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           options.dropna,
           options.sort,
           "DataFrame::pivot_table");
-      std::vector<Slate> total_keys;
+      std::vector<Shelf> total_keys;
       total_keys.reserve(plan.index.size());
       for (const auto& name : plan.index) {
         total_keys.push_back(row_totals->features(name));
@@ -958,7 +958,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       for (std::int64_t row = 0; row < row_totals->ncases(); ++row) {
         const auto key = plan.index.empty()
             ? std::string()
-            : pivot_combo_key_(std::span<const Slate>(total_keys.data(), total_keys.size()), row);
+            : pivot_combo_key_(std::span<const Shelf>(total_keys.data(), total_keys.size()), row);
         row_total_source_row.emplace(key, row);
       }
     }
@@ -970,7 +970,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           options.dropna,
           options.sort,
           "DataFrame::pivot_table");
-      std::vector<Slate> total_keys;
+      std::vector<Shelf> total_keys;
       total_keys.reserve(plan.columns.size());
       for (const auto& name : plan.columns) {
         total_keys.push_back(col_totals->features(name));
@@ -978,7 +978,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       for (std::int64_t row = 0; row < col_totals->ncases(); ++row) {
         const auto key = plan.columns.empty()
             ? std::string()
-            : pivot_combo_key_(std::span<const Slate>(total_keys.data(), total_keys.size()), row);
+            : pivot_combo_key_(std::span<const Shelf>(total_keys.data(), total_keys.size()), row);
         col_total_source_row.emplace(key, row);
       }
     }
@@ -1002,14 +1002,14 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       if (!detail::valid_at(source, src_row)) {
         continue;
       }
-      values[row_idx] = slate_scalar_string_at(source, src_row);
+      values[row_idx] = shelf_scalar_string_at(source, src_row);
       valid[row_idx] = true;
     }
     if (add_margin_row) {
       values[out_rows] = key_idx == 0 ? options.margins_name : "";
       valid[out_rows] = true;
     }
-    out_cols.emplace_back(plan.index[key_idx], pivot_make_note_slate_(values, valid));
+    out_cols.emplace_back(plan.index[key_idx], pivot_make_note_shelf_(values, valid));
   }
 
   for (const auto& spec : plan.specs) {
@@ -1028,7 +1028,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         return make_unique_name(spec.display + options.value_separator + combo_label);
       }();
 
-      if (source.kind() == SlateKind::Note) {
+      if (source.kind() == ShelfKind::Note) {
         std::vector<std::string> values(final_rows, "");
         std::vector<bool> valid(final_rows, false);
         for (std::int64_t row = 0; row < grouped.ncases(); ++row) {
@@ -1039,13 +1039,13 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           if (!detail::valid_at(source, row)) {
             continue;
           }
-          values[out_row] = slate_scalar_string_at(source, row);
+          values[out_row] = shelf_scalar_string_at(source, row);
           valid[out_row] = true;
         }
         if (add_margin_row) {
           if (plan.columns.empty()) {
             if (grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-              values[out_rows] = slate_scalar_string_at(grand_totals->features(spec.group_output), 0);
+              values[out_rows] = shelf_scalar_string_at(grand_totals->features(spec.group_output), 0);
               valid[out_rows] = true;
             }
           } else {
@@ -1054,7 +1054,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
               const auto total_row = it->second;
               const auto total_source = col_totals->features(spec.group_output);
               if (detail::valid_at(total_source, total_row)) {
-                values[out_rows] = slate_scalar_string_at(total_source, total_row);
+                values[out_rows] = shelf_scalar_string_at(total_source, total_row);
                 valid[out_rows] = true;
               }
             }
@@ -1062,8 +1062,8 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(pivot_make_note_slate_(values, valid), options.fill_value, false));
-      } else if (source.kind() == SlateKind::Duration) {
+            pivot_apply_fill_(pivot_make_note_shelf_(values, valid), options.fill_value, false));
+      } else if (source.kind() == ShelfKind::Duration) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
         const auto source_values = source.as_duration().host();
@@ -1104,7 +1104,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(pivot_make_duration_slate_(values, valid),
+            pivot_apply_fill_(pivot_make_duration_shelf_(values, valid),
                               options.fill_value,
                               false));
       } else if (integral_output) {
@@ -1139,7 +1139,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(make_i64_slate(values, valid), options.fill_value, true));
+            pivot_apply_fill_(make_i64_shelf(values, valid), options.fill_value, true));
       } else {
         std::vector<double> values(final_rows, std::numeric_limits<double>::quiet_NaN());
         std::vector<bool> valid(final_rows, false);
@@ -1172,7 +1172,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(make_f64_slate(values, valid), options.fill_value, false));
+            pivot_apply_fill_(make_f64_shelf(values, valid), options.fill_value, false));
       }
     }
 
@@ -1182,7 +1182,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           : make_unique_name(spec.display + options.value_separator + options.margins_name);
 
       const auto total_source = row_totals->features(spec.group_output);
-      if (total_source.kind() == SlateKind::Note) {
+      if (total_source.kind() == ShelfKind::Note) {
         std::vector<std::string> values(final_rows, "");
         std::vector<bool> valid(final_rows, false);
         for (std::size_t row_idx = 0; row_idx < out_rows; ++row_idx) {
@@ -1193,17 +1193,17 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           if (!detail::valid_at(total_source, it->second)) {
             continue;
           }
-          values[row_idx] = slate_scalar_string_at(total_source, it->second);
+          values[row_idx] = shelf_scalar_string_at(total_source, it->second);
           valid[row_idx] = true;
         }
         if (add_margin_row && grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-          values[out_rows] = slate_scalar_string_at(grand_totals->features(spec.group_output), 0);
+          values[out_rows] = shelf_scalar_string_at(grand_totals->features(spec.group_output), 0);
           valid[out_rows] = true;
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(pivot_make_note_slate_(values, valid), options.fill_value, false));
-      } else if (total_source.kind() == SlateKind::Duration) {
+            pivot_apply_fill_(pivot_make_note_shelf_(values, valid), options.fill_value, false));
+      } else if (total_source.kind() == ShelfKind::Duration) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
         const auto total_values = total_source.as_duration().host();
@@ -1232,7 +1232,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(pivot_make_duration_slate_(values, valid),
+            pivot_apply_fill_(pivot_make_duration_shelf_(values, valid),
                               options.fill_value,
                               false));
       } else if (integral_output) {
@@ -1253,7 +1253,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(make_i64_slate(values, valid), options.fill_value, true));
+            pivot_apply_fill_(make_i64_shelf(values, valid), options.fill_value, true));
       } else {
         std::vector<double> values(final_rows, std::numeric_limits<double>::quiet_NaN());
         std::vector<bool> valid(final_rows, false);
@@ -1272,7 +1272,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         }
         out_cols.emplace_back(
             output_name,
-            pivot_apply_fill_(make_f64_slate(values, valid), options.fill_value, false));
+            pivot_apply_fill_(make_f64_shelf(values, valid), options.fill_value, false));
       }
     }
   }
@@ -1291,27 +1291,27 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
 
 ContingencyTable::SliceSpec::SliceSpec(std::string_view dim_name, std::string_view level)
     : dim(dim_name),
-      value(SlateValue::HostAny::string(std::string(level))) {}
+      value(ShelfValue::HostAny::string(std::string(level))) {}
 
 ContingencyTable::SliceSpec::SliceSpec(std::string_view dim_name, const char* level)
     : SliceSpec(dim_name, std::string_view{level != nullptr ? level : ""}) {}
 
 ContingencyTable::SliceSpec::SliceSpec(std::string_view dim_name, bool level)
     : dim(dim_name),
-      value(SlateValue::HostAny::boolean(level)) {}
+      value(ShelfValue::HostAny::boolean(level)) {}
 
 ContingencyTable::SliceSpec::SliceSpec(std::string_view dim_name, std::int64_t level)
     : dim(dim_name),
-      value(SlateValue::HostAny::integer(level)) {}
+      value(ShelfValue::HostAny::integer(level)) {}
 
 ContingencyTable::SliceSpec::SliceSpec(std::string_view dim_name, double level)
     : dim(dim_name),
-      value(SlateValue::HostAny::floating(level)) {}
+      value(ShelfValue::HostAny::floating(level)) {}
 
 ContingencyTable::ContingencyTable() = default;
 
 ContingencyTable::ContingencyTable(std::vector<std::string> dims,
-                                   std::vector<Slate> levels,
+                                   std::vector<Shelf> levels,
                                    pluss::Series counts,
                                    DataFrame::ContingencyOptions options,
                                    std::vector<std::string> default_row_dims,
@@ -1437,7 +1437,7 @@ std::vector<std::string> ContingencyTable::render_column_dims_(
 }
 
 std::int64_t ContingencyTable::level_index_(std::size_t dim_index,
-                                            const SlateValue::HostAny& value,
+                                            const ShelfValue::HostAny& value,
                                             std::string_view where) const {
   const auto& levels = levels_.at(dim_index);
   for (std::int64_t index = 0; index < levels.size(); ++index) {
@@ -1705,7 +1705,7 @@ DataFrame ContingencyTable::to_frame(
   values = values.contiguous().reshape({row_count, col_count});
   const auto matrix = values.to(pluss::codem::Platform::CPU).contiguous();
 
-  std::vector<std::pair<std::string, Slate>> out_cols;
+  std::vector<std::pair<std::string, Shelf>> out_cols;
   out_cols.reserve(row_names.size() + static_cast<std::size_t>(col_count) + (options.totals ? 1U : 0U));
 
   const auto extra_row = options.totals ? 1 : 0;
@@ -1729,7 +1729,7 @@ DataFrame ContingencyTable::to_frame(
     if (options.totals) {
       labels[out_rows - 1] = i == 0 ? std::string("Total") : std::string{};
     }
-    out_cols.emplace_back(row_names[i], make_note_slate(labels));
+    out_cols.emplace_back(row_names[i], make_note_shelf(labels));
   }
 
   std::unordered_set<std::string> used_names(row_names.begin(), row_names.end());
@@ -1808,7 +1808,7 @@ DataFrame ContingencyTable::to_frame(
       if (options.totals) {
         values_host[out_rows - 1] = col_totals[static_cast<std::size_t>(col)];
       }
-      out_cols.emplace_back(build_column_name(col), make_i64_slate(values_host));
+      out_cols.emplace_back(build_column_name(col), make_i64_shelf(values_host));
     }
     if (options.totals) {
       std::vector<std::int64_t> values_host(out_rows, 0);
@@ -1816,7 +1816,7 @@ DataFrame ContingencyTable::to_frame(
         values_host[static_cast<std::size_t>(row)] = row_totals[static_cast<std::size_t>(row)];
       }
       values_host[out_rows - 1] = grand_total;
-      out_cols.emplace_back(make_unique_name("Total"), make_i64_slate(values_host));
+      out_cols.emplace_back(make_unique_name("Total"), make_i64_shelf(values_host));
     }
   } else {
     const auto* raw = reinterpret_cast<const double*>(matrix.raw_data());
@@ -1839,7 +1839,7 @@ DataFrame ContingencyTable::to_frame(
       if (options.totals) {
         values_host[out_rows - 1] = col_totals[static_cast<std::size_t>(col)];
       }
-      out_cols.emplace_back(build_column_name(col), make_f64_slate(values_host));
+      out_cols.emplace_back(build_column_name(col), make_f64_shelf(values_host));
     }
     if (options.totals) {
       std::vector<double> values_host(out_rows, 0.0);
@@ -1847,7 +1847,7 @@ DataFrame ContingencyTable::to_frame(
         values_host[static_cast<std::size_t>(row)] = row_totals[static_cast<std::size_t>(row)];
       }
       values_host[out_rows - 1] = grand_total;
-      out_cols.emplace_back(make_unique_name("Total"), make_f64_slate(values_host));
+      out_cols.emplace_back(make_unique_name("Total"), make_f64_shelf(values_host));
     }
   }
 
@@ -1964,7 +1964,7 @@ Atlas ContingencyTable::facet(
     labels.push_back(std::move(joined));
     frames.push_back(sliced.to_frame(row_dims, column_dims, options));
   }
-  return Atlas(std::move(frames), make_note_slate(labels));
+  return Atlas(std::move(frames), make_note_shelf(labels));
 }
 
 DataFrame DataFrame::combine(const DataFrame& other) const {
@@ -1979,7 +1979,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
   const auto& left = matched.left.impl_ref_();
 
   std::vector<std::string> out_names;
-  std::vector<Slate> out_cols;
+  std::vector<Shelf> out_cols;
   out_names.reserve(features().size() + other.features().size());
   out_cols.reserve(features().size() + other.features().size());
   for (const auto& name : features()) {
@@ -2018,7 +2018,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
       const auto& left_col = out_cols[it->second];
       const auto write_mask = spec.overwrite
           ? right_col.notnull()
-          : Slate(
+          : Shelf(
                 left_col.isnull().as_series().logical_and(
                     right_col.notnull().as_series()));
       out_cols[it->second] = left_col.put(write_mask, right_col);
@@ -2040,7 +2040,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
     out_cols.push_back(right_col);
   }
 
-  std::vector<std::pair<std::string, Slate>> pairs;
+  std::vector<std::pair<std::string, Shelf>> pairs;
   pairs.reserve(out_names.size());
   for (std::size_t i = 0; i < out_names.size(); ++i) {
     pairs.emplace_back(out_names[i], out_cols[i]);
@@ -2053,7 +2053,7 @@ Atlas DataFrame::unsqueeze() const {
   return Atlas({*this});
 }
 
-Atlas DataFrame::unsqueeze(const Slate& depth_labels) const {
+Atlas DataFrame::unsqueeze(const Shelf& depth_labels) const {
   PLUSS_CHECK(defined(), "DataFrame::unsqueeze requires a defined DataFrame");
   PLUSS_CHECK(depth_labels.defined(), "DataFrame::unsqueeze: depth labels are undefined");
   PLUSS_CHECK(depth_labels.size() == 1, "DataFrame::unsqueeze: depth labels must have size 1");

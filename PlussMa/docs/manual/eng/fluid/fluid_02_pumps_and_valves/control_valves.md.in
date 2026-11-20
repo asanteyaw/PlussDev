@@ -4,7 +4,7 @@
 
 A pump adds head to the water; a valve takes it away on purpose. Valves cap the pressure in a low-lying district, hold the flow into a treatment plant to a set rate, keep a high zone from being drained, and throttle one branch so that another receives its share. `Net::valves` describes four kinds of valve, and each is a different equation. This page explains what each kind demands of the network, solves each against a result you can check, and shows the settings the network cannot satisfy, which the solver refuses.
 
-## The mental model
+## How it works
 
 A valve is a link from an upstream node to a downstream node, numbered after the pipes and the pumps. A valve never adds head: the head across it, `h_from - h_to`, is zero or positive, and it is reported in `SteadyResult::head_loss` like any other link. What distinguishes the four `ValveKind`s is which equation replaces the ordinary head-loss law of the link.
 

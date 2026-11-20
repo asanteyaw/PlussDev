@@ -2,6 +2,8 @@
 
 # `lti::obsv`
 
+Builds the observability matrix.
+
 ## Signature
 
 ```cpp
@@ -10,147 +12,171 @@ pluss::Series lti::obsv(const lti::StateSpace& system);
 
 ## What It Does
 
-Builds the vertical stack `[C; CA; CA²; ...]` through power `states - 1`. Full column rank means the internal state can be reconstructed from output history.
+Returns the stack `[C; C A; C A^2; ...; C A^{n-1}]`, an `[n p, n]` matrix. The initial state can be recovered from the outputs exactly when this matrix has full column rank `n`.
 
 ## Parameters
 
 `system`
-: Valid state-space system. Continuous and discrete systems use the same algebraic observability matrix.
+: A `StateSpace`.
 
 ## Returns
 
-A `Series` with matrix tail `[states * outputs, states]` and the system batch axes.
+A `Series` with matrix shape `[n p, n]` and the batch axes of the system.
 
 ## Errors
 
-The call has no separate options. Numerical rank should be judged with a tolerance appropriate to the dtype and scaling.
+Construction errors are raised by `state`; judging the rank is left to the caller.
+
+## Interpretation and Use
+
+Observability is the dual of controllability: the observability matrix of `(A, C)` is the transpose of the controllability matrix of `(A', C')` (the third example). A state that the output does not depend on, directly or through the dynamics, makes the determinant zero (the first example).
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+A system whose states are all visible and one with an invisible state.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <iostream>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-      pluss::make_series({0.0, 1.0}, {2, 1}),
-      pluss::make_series({{1.0, 0.0}}),
-      pluss::make_series({0.0}, {1, 1}));
-
-  std::cout << "states = " << system.states()
-            << ", inputs = " << system.inputs()
-            << ", outputs = " << system.outputs() << "\n";
-  out.writeln("continuous =", system.is_cont());
-  out.writeln("controllability =", lti::ctrb(system).flatten().items<double>());
-  out.writeln("observability =", lti::obsv(system).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-states = 2, inputs = 1, outputs = 1
-continuous = true
-controllability = [0.0000, 1.0000, 1.0000, -3.0000]
-observability = [1.0000, 0.0000, 0.0000, 1.0000]
-```
-### Example 2
-
-Compare energy Gramians across continuous and discrete timebases.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({3.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::StateSpace discrete = lti::state(
-      pluss::make_series({0.5}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), 0.25);
-
-  out.writeln("continuous reach gram =",
-              lti::gram(continuous, lti::Gram::Reach).flatten().items<double>());
-  out.writeln("continuous observe gram =",
-              lti::gram(continuous, lti::Gram::Observe).flatten().items<double>());
-  out.writeln("discrete reach gram =",
-              lti::gram(discrete, lti::Gram::Reach).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-continuous reach gram = [2.0000]
-continuous observe gram = [4.5000]
-discrete reach gram = [1.3333]
-```
-### Example 3
-
-Exercise matrix-shape and sample-time validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({{1.0, 0.0}, {0.0, 1.0}}),
-        pluss::make_series({1.0, 0.0}, {2, 1}),
-        pluss::make_series({{1.0, 0.0}}),
-        pluss::make_series({{0.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("bad feedthrough rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), -0.1));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative sample time rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto det2 = [](const pluss::Series &m) { const auto v = m.flatten().items<double>(); return v[0] * v[3] - v[1] * v[2]; };
+  const lti::StateSpace observable = oscillator();
+  out.writeln("observability matrix [C; CA] =", lti::obsv(observable).flatten().items<double>(), " determinant", det2(lti::obsv(observable)));
+  // Only the first state is measured and it does not depend on the second: the second is invisible.
+  const lti::StateSpace hidden = lti::state(mat({-1.0, 0.0, 0.0, -2.0}, 2, 2), mat({1.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1));
+  out.writeln("invisible state: [C; CA] =", lti::obsv(hidden).flatten().items<double>(), " determinant", det2(lti::obsv(hidden)), "(zero: not observable)");
 }
 ```
 
 Output
 
 ```text
-bad feedthrough rejected = eng::lti::state: D must have shape [outputs, inputs]
-negative sample time rejected = eng::lti::state: sample_time must be finite and non-negative
+observability matrix [C; CA] = [1.0000, 0.0000, 0.0000, 1.0000]  determinant 1.0000
+invisible state: [C; CA] = [1.0000, 0.0000, -1.0000, 0.0000]  determinant 0.0000 (zero: not observable)
+```
+### Example 2
+
+The shape for one and for several outputs.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace siso = oscillator();
+  const pluss::Series o1 = lti::obsv(siso);
+  out.writeln("two states, one output:", o1.size(0), "x", o1.size(1));
+  const lti::StateSpace two_outputs = lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0, 0.0, 1.0}, 2, 2), mat({0.0, 0.0}, 2, 1));
+  const pluss::Series o2 = lti::obsv(two_outputs);
+  out.writeln("two states, two outputs:", o2.size(0), "x", o2.size(1), "(states times outputs by states)");
+}
+```
+
+Output
+
+```text
+two states, one output: 2 x 2
+two states, two outputs: 4 x 2 (states times outputs by states)
+```
+### Example 3
+
+The duality with `ctrb`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // Observability of (A, C) is controllability of (A', C'): the observability matrix is the transpose of the controllability matrix of the dual.
+  const lti::StateSpace s = oscillator();
+  const lti::StateSpace dual = lti::state(s.a().transpose(0, 1), s.c().transpose(0, 1), s.b().transpose(0, 1), s.d().transpose(0, 1));
+  out.writeln("obsv(system)       =", lti::obsv(s).flatten().items<double>());
+  out.writeln("ctrb(dual)^T       =", lti::ctrb(dual).transpose(0, 1).flatten().items<double>());
+}
+```
+
+Output
+
+```text
+obsv(system)       = [1.0000, 0.0000, 0.0000, 1.0000]
+ctrb(dual)^T       = [1.0000, 0.0000, 0.0000, 1.0000]
 ```
 ## See Also
 

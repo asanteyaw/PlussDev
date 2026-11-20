@@ -37,12 +37,12 @@ Example 1. Every quarter in the stack has the same two features.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"sales",  Slate(pluss::make_series({100.0, 120.0}))},
-    {"orders", Slate(pluss::make_series({12.0, 15.0}))},
+    {"sales",  Shelf(pluss::make_series({100.0, 120.0}))},
+    {"orders", Shelf(pluss::make_series({12.0, 15.0}))},
 });
 auto q2 = DataFrame({
-    {"sales",  Slate(pluss::make_series({110.0, 90.0}))},
-    {"orders", Slate(pluss::make_series({14.0, 9.0}))},
+    {"sales",  Shelf(pluss::make_series({110.0, 90.0}))},
+    {"orders", Shelf(pluss::make_series({14.0, 9.0}))},
 });
 auto atlas = Atlas({q1, q2});
 
@@ -62,15 +62,15 @@ construction.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"sales",  Slate(pluss::make_series({100.0, 120.0}))},
-    {"orders", Slate(pluss::make_series({12.0, 15.0}))},
+    {"sales",  Shelf(pluss::make_series({100.0, 120.0}))},
+    {"orders", Shelf(pluss::make_series({12.0, 15.0}))},
 });
-auto q2_wrong_shape = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q2_wrong_shape = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 
 try {
   auto atlas = Atlas({q1, q2_wrong_shape});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -100,8 +100,8 @@ Atlas: all frames must have identical feature count
     <span class="label">Previous</span>
     <span class="title">ncases</span>
   </a>
-  <a class="next-link" href="plot.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">plot</span>
+    <span class="title">notinf</span>
   </a>
 </div>

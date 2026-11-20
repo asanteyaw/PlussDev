@@ -6,7 +6,7 @@ Sequential QP is the default algorithm of `optima(...)`, and on most smooth cons
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Each iteration does four things.
 

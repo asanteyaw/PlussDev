@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
+Shelf DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
 ```
 
 ## What It Does
 
 Selects case-label values at the given positions, in the order given —
 positions may repeat or appear out of order. Returns the selected **values**
-as a bare `Slate`, not the corresponding `DataFrame` rows.
+as a bare `Shelf`, not the corresponding `DataFrame` rows.
 
 ## Parameters
 
@@ -25,7 +25,7 @@ Positions to select, in the order you want them back.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The case-label values at those positions, plain default integer index.
 
 ## Examples
@@ -36,8 +36,8 @@ Example 1. Select positions out of order, including a repeat-free selection.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().take({2, 0, 3});

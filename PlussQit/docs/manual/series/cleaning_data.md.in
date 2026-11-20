@@ -4,13 +4,21 @@
 
 Data arrives with holes, spikes and columns on wildly different scales. This page takes two raw inputs, a sensor log and a feature table, and turns them into something you can trust: unusable values found and replaced, columns put on a common scale, outliers flagged. The programs are complete; every output below was printed by the program above it.
 
-## The mental model
+## How it works
 
 A `Series` is a rectangular block of numbers or booleans with a **shape** and a **dtype**. Every operation works on the whole block at once, so you describe *what* you want for all elements and never write the loop. The idioms of data cleaning are three:
 
 - a **comparison** such as `lt`, `gt` or `isnan` produces a Boolean `Series` of the same shape, the **mask**;
 - masks combine with `logical_or`, `logical_and` and `logical_not`;
 - a mask then **selects** (`masked_select`, which returns only the chosen values), **replaces** (`where`, `masked_fill`) or **counts** (`sum`, because `true` counts as one).
+
+## Operators and methods
+
+Arithmetic and comparison can be written with operators or with methods, and the two are the same operations: `x + y` is `x.add(y)`, `-x` is `x.neg()`, `x > 2` is `x.gt(2)`, and `+=` is `add_`. The guide uses both on purpose: operators for expressions that read like the formula on paper, methods where a call has more to say than an operator can (a power, a clamp, a reduction along an axis) or where it chains naturally with other methods. Mix them freely.
+
+@@example series/operators_and_methods.cpp@@
+
+The first five lines show that each operator and its method agree. A number may be on either side (`2 * x + 1`, `1 / x`), and an expression such as `(y - x) / x` needs no intermediate names. A comparison gives a Boolean `Series` whichever way you write it. The in-place forms change the `Series` they are applied to: `a += y` and `b.add_(y)` both leave `[11, 22, 33, 44]`. The last block is what only the methods can do: `pow`, `clamp_max`, and `addcmul`, which computes `x + 0.1 * x * y` in one call. From here on the programs use whichever form reads best.
 
 ## A sensor log, start to finish
 
@@ -20,7 +28,7 @@ One reading a minute from a room thermometer. Two readings are missing, one is a
 
 Four of twelve readings are unusable: the two NaNs, the spike and the fault. The median of the eight usable readings is 22.0 and, unlike the mean, it would not have moved had the spike been 850. Replacing with it gives a mean of 21.99 and a standard deviation of 0.27, which describes the room; the raw log's mean would have been NaN, and with the NaNs removed it would still have been dragged to 22.09 by the spike and fault. The quartiles on the last line are the numbers you would put on a chart.
 
-Two details of the program matter in practice. `where` keeps the receiver where the condition is **false** and takes the replacement where it is true, so `log.where(unusable, centre)` reads "in `log`, put `centre` where it is unusable". And the comparison `log.gt(50.0)` on a NaN is false, which is why the missing values needed their own `isnan` test.
+Two details of the program matter in practice. `pluss::series::where(unusable, centre, log)` reads "where it is unusable, take `centre`, otherwise keep `log`"; the method form keeps the receiver where the condition is true, so the same repair is `log.where(unusable.logical_not(), centre)`. And the comparison `log.gt(50.0)` on a NaN is false, which is why the missing values needed their own `isnan` test.
 
 ## Putting columns on one scale
 
@@ -39,12 +47,12 @@ Dimension 0 runs down the rows, so `standardize(0)` and `amin(0, true)` work col
 
 ## Pitfalls
 
-`where` is the one that catches people. The program below asks four ways for "x where it is big, otherwise 0":
+`where` has one mistake that actually happens: a condition that does not line up with the data. The program below shows the two equivalent spellings of "`x` where it is big, otherwise 0" and then a condition with the wrong length:
 
 @@example series/pitfall_where.cpp@@
 
-`x.where(big, 0)` returned `[1, 2, 0, 0]`: it zeroed the values that were big, the opposite of the intention. Negate the condition (`x.where(big.logical_not(), 0)`), use `masked_fill`, which says what it does, or put the Boolean first, where `big.where(x, 0)` reads naturally.
+Both spellings return `[0, 0, 3, 4]`. The five flags against four values cannot broadcast, so the call fails with a broadcast error instead of guessing: build the condition from the data it is meant for (`x.gt(2.5)`) rather than typing it separately.
 
 ## Where next
 
-Reference pages: [`isnan`](../../sphinx/api/series/isnan.md), [`masked_select`](../../sphinx/api/series/masked_select.md), [`masked_fill`](../../sphinx/api/series/masked_fill.md), [`where`](../../sphinx/api/series/where.md), [`median`](../../sphinx/api/series/median.md), [`quantile`](../../sphinx/api/series/quantile.md), [`standardize`](../../sphinx/api/series/standardize.md), [`amin`](../../sphinx/api/series/amin.md), [`amax`](../../sphinx/api/series/amax.md), [`corrcoef`](../../sphinx/api/series/corrcoef.md). Next: [Summaries, rankings and tables](summaries_and_tables.md).
+Reference pages: [`add`](../../sphinx/api/series/add.md), [`sub`](../../sphinx/api/series/sub.md), [`mul`](../../sphinx/api/series/mul.md), [`div`](../../sphinx/api/series/div.md), [`neg`](../../sphinx/api/series/neg.md), [`gt`](../../sphinx/api/series/gt.md), [`pow`](../../sphinx/api/series/pow.md), [`clamp_max`](../../sphinx/api/series/clamp_max.md), [`addcmul`](../../sphinx/api/series/addcmul.md), [`operators`](../../sphinx/api/series/operators.md), [`isnan`](../../sphinx/api/series/isnan.md), [`masked_select`](../../sphinx/api/series/masked_select.md), [`masked_fill`](../../sphinx/api/series/masked_fill.md), [`where`](../../sphinx/api/series/where.md), [`median`](../../sphinx/api/series/median.md), [`quantile`](../../sphinx/api/series/quantile.md), [`standardize`](../../sphinx/api/series/standardize.md), [`amin`](../../sphinx/api/series/amin.md), [`amax`](../../sphinx/api/series/amax.md), [`corrcoef`](../../sphinx/api/series/corrcoef.md). Next: [Summaries, rankings and tables](summaries_and_tables.md).

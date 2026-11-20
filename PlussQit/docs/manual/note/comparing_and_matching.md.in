@@ -4,7 +4,7 @@
 
 Two versions of a file, two listings of the same product: the question is how alike two texts are. This page diffs two configuration versions and finds near-duplicate product listings, with a threshold you can see and change.
 
-## The mental model
+## How it works
 
 Texts are compared at three levels: **lines** (what was added or removed), **words** (what changed inside a line) and **vocabulary** (how much of the word set is shared, the Jaccard similarity: shared words over all words, from 0 to 1). The first two come back as a ragged token batch of marked differences, the third as a number per pair.
 

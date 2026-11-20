@@ -14,7 +14,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -22,7 +22,7 @@ int main() {
   const pluss::Series ratio  = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}, {"region", Slate(region)}});
+  const DataFrame x({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}, {"region", Shelf(region)}});
 
   // where and names can describe the same selection. names reads better when the
   // set is small and stable; where earns its keep when the set follows a rule.

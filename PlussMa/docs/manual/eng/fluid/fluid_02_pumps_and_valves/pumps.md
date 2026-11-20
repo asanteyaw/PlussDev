@@ -6,7 +6,7 @@
 
 A pump puts head into the water. Where it sits in the network, how fast it turns and what it is pushing against decide how much water it delivers, and that last point is the whole difficulty: a pump does not deliver a flow you choose, it settles at the flow where its curve meets the demand of the system. This page explains the pump curve and the speed law, finds the operating point of a pump lifting water between two reservoirs and checks it against an independent solution of the curve, sweeps the speed, differentiates the result with respect to the speed, and shows the pump that cannot do its job.
 
-## The mental model
+## How it works
 
 A pump is a link from its suction node to its discharge node. Its **curve** says how much head it adds at a flow `q`:
 

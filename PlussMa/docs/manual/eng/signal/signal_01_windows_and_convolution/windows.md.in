@@ -4,7 +4,7 @@
 
 You have a finite record of samples and you are about to look at its spectrum, or to filter it, and the record starts and stops abruptly. A **window** is a vector of weights you multiply the record by so that the ends fade out. This page shows the five windows `signal` provides, how the two window modes differ, and what a window does to the spectrum of a sinusoid. Read it before the frequency-response and filter-design chapters, which use windows to shape their results.
 
-## The mental model
+## How it works
 
 A window `w` of length `N` multiplies sample `n` of your record by `w[n]`. Multiplying in time is convolving in frequency, so the spectrum you see is the true spectrum smeared by the spectrum of the window. Every window trades two properties of that smear:
 

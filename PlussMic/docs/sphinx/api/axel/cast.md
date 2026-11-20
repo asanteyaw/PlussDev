@@ -9,7 +9,7 @@
 
 ```cpp
 AxelCastAccessor Axel::cast() const
-AxelCastAccessor Axel::cast(const pluss::table::SlateCastOptions& options) const
+AxelCastAccessor Axel::cast(const pluss::table::ShelfCastOptions& options) const
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ of every frame. To cast only one field, chain
 
 ## Parameters
 
-**options** (`const pluss::table::SlateCastOptions&`, optional)
+**options** (`const pluss::table::ShelfCastOptions&`, optional)
     Cast behavior options (e.g. parse formats) forwarded to each
     frame's underlying `Registry::cast(options)` call. Omit for
     defaults.
@@ -75,10 +75,6 @@ std::cout << std::get<pluss::Note>(out.registry(0).fields("ids").at(0)).at(0);
   casting it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../axel_api_reference.html">
-    <span class="label">Previous</span>
-    <span class="title">Axel API</span>
-  </a>
   <a class="next-link" href="concat_depth.html">
     <span class="label">Next</span>
     <span class="title">concat_depth</span>

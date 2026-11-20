@@ -2,6 +2,8 @@
 
 # `signal::FilterRun`
 
+The output of a filter and the state that continues it.
+
 ## Signature
 
 ```cpp
@@ -10,155 +12,173 @@ signal::FilterRun run = signal::filter(input, numerator, denominator);
 
 ## What It Does
 
-Bundles one filter invocation's visible samples with the terminal recurrence state needed to continue the same filter on a later block.
+Returned by `filter` and `sos`. `values` is the filtered signal; `state` is the filter's delay line after the last sample, with shape `[lanes..., order]` for `filter` (and `[sections, 2]` for `sos` on a single lane).
 
 ## Fields
 
 | Field | Meaning |
 |---|---|
-| `values` | Filtered samples with the same processed-axis length as the input. |
-| `state` | Final direct-form or section state. Pass it to the stateful overload for exact block continuation. |
+| `values` | The output, with the shape of the input. |
+| `state` | The final state, to pass to the stateful overload of the same filter. |
 
 ## Returns
 
-A value object returned by `filter` and `sos`. It owns both `Series` payloads.
+Returned by `filter` and `sos`.
 
 ## Errors
 
-A saved state is valid only for compatible coefficients, axis, dtype, platform, and batch shape. Stateful overloads reject incompatible shapes.
+A state is accepted only for compatible coefficients: a length different from the filter order is rejected, and the lane axes must broadcast.
+
+## Interpretation and Use
+
+Carry the state between blocks to filter an unbounded stream: the second example filters twelve samples as three blocks of four and reproduces the single pass to rounding. Reset the state to start a new signal.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The fields of a run, and the state length for a second-order filter.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  const pluss::Series b = pluss::make_series({0.5, 0.3, 0.2});
+  const pluss::Series a = pluss::make_series({1.0, -0.4, 0.1});
+  const sig::FilterRun run = sig::filter(x, b, a);
+  out.writeln("values length", run.values.numel(), " state length", run.state.numel(), " for a filter of order 2");
+  out.writeln("values =", run.values.items<double>());
+  out.writeln("state  =", run.state.items<double>());
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+values length 4  state length 2  for a filter of order 2
+values = [0.5000, 1.5000, 2.8500, 4.2900]
+state  = [3.2310, 0.3710]
+```
+### Example 2
+
+Three blocks against one pass.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series b = pluss::make_series({0.5, 0.5});
+  const pluss::Series a = pluss::make_series({1.0, -0.5});
+  pluss::Series state;
+  std::vector<double> all;
+  for (int block = 0; block < 3; ++block) {
+    const pluss::Series chunk = pluss::make_series({1.0 + block * 4, 2.0 + block * 4, 3.0 + block * 4, 4.0 + block * 4});
+    const sig::FilterRun run = block == 0 ? sig::filter(chunk, b, a) : sig::filter(chunk, b, a, state);
+    state = run.state;
+    for (const double v : run.values.items<double>()) all.push_back(v);
+  }
+  const pluss::Series whole = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0});
+  const auto once = sig::filter(whole, b, a).values.items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < once.size(); ++i) worst = std::max(worst, std::abs(once[i] - all[i]));
+  out.writeln("three blocks of four samples against one pass of twelve, largest difference =", worst);
+}
+```
+
+Output
+
+```text
+three blocks of four samples against one pass of twelve, largest difference = 0.0000
+```
+### Example 3
+
+Which states are accepted and which are refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series b = pluss::make_series({0.5, 0.5});
+  const pluss::Series a = pluss::make_series({1.0, -0.5});
+  const pluss::Series b3 = pluss::make_series({0.5, 0.3, 0.2});
+  const sig::FilterRun first = sig::filter(pluss::make_series({1.0, 2.0, 3.0}), b, a);
+  refused(out, "a state from a filter of a different order", [&] { sig::filter(pluss::make_series({1.0, 2.0, 3.0}), b3, a, first.state); });
+  refused(out, "a state of the right order", [&] { sig::filter(pluss::make_series({4.0, 5.0, 6.0}), b, a, first.state); });
+  // One state is shared by every lane: it broadcasts over a batch of rows.
+  const sig::FilterRun rows = sig::filter(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({2, 3}), b, a, first.state, 1);
+  out.writeln("one state shared by two rows: state shape", rows.state.size(0), "x", rows.state.size(1));
+}
+```
+
+Output
+
+```text
+a state from a filter of a different order : eng::signal::filter: state length 1 does not match the filter order 2
+a state of the right order : accepted
+one state shared by two rows: state shape 2 x 1
 ```
 ## See Also
 

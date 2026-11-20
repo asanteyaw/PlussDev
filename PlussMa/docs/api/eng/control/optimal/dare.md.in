@@ -1,6 +1,6 @@
 # `control::dare`
 
-Solves a discrete algebraic Riccati equation.
+Solves the discrete-time algebraic Riccati equation of the linear-quadratic regulator.
 
 ## Signature
 
@@ -23,71 +23,62 @@ control::RiccatiResult control::dare(
 
 ## What It Does
 
-`dare` computes the infinite-horizon discrete regulator. It uses the same cost convention and batched shape contract as `care`, but stability is interpreted in the discrete unit disk.
+Finds the stabilising `P` of `P = A'PA - (A'PB + N)(R + B'PB)^{-1}(B'PA + N') + Q` and returns it with the optimal feedback `K = (R + B'PB)^{-1}(B'PA + N')` and the closed-loop matrix `A - B K`. The control `u[k] = -K x[k]` minimises `sum(x'Qx + 2x'Nu + u'Ru)`.
 
 ## Parameters
 
-`a`
-: The one-step state transition matrix `A`.
-
-`b`
-: The one-step input matrix `B`.
+`a`, `b`
+: The dynamics `[..., n, n]` and input matrix `[..., n, m]`.
 
 `q`
-: Hermitian positive-semidefinite state cost `Q`.
+: State weight, symmetric and positive semidefinite.
 
 `r`
-: Hermitian positive-definite input cost `R`.
+: Input weight, symmetric and positive definite.
 
 `cross`
-: Optional state-input cross cost `S`.
+: Optional cross-weight `N`, `[..., n, m]`.
 
 `options`
-: Numerical matrix-equation controls.
+: `MatrixEqOptions` of the underlying solver.
 
 ## Returns
 
-A `control::RiccatiResult` for the stabilizing discrete solution.
+A `RiccatiResult` with `value`, `gain` and `closed_loop`.
 
 ## Errors
 
-Throws for incompatible dimensions, invalid cost matrices, or failure to obtain a stabilizing solution.
+An `R` that is not positive definite, inconsistent shapes and a pair with no stabilising solution throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Use `dare` for sampled dynamics expressed directly as matrices. Its stability condition is discrete: closed-loop eigenvalues must lie inside the unit disk. The returned gain is a full-state law, not a controller with an observer or actuator limits.
+For `a = b = q = r = 1` the solution is the golden ratio `(1 + sqrt(5)) / 2`, the gain `p / (1 + p)` and the closed loop `1 / (1 + p)`, all of which the first example prints against their closed forms. The closed loop lies inside the unit circle. The second example checks the discrete Riccati equation for a sampled double integrator.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Solve `dare` directly and verify parity with discrete `lqr`.
+A scalar problem against its closed form.
 
-@@example Eng/api/control_optimal_modes.cpp@@
+@@example Eng/api/control_dare_scalar.cpp@@
 
 ### Example 2
 
-Contrast the continuous cross-cost convention shared by the Riccati family.
+The residual of the discrete Riccati equation for a sampled double integrator.
 
-@@example Eng/api/control_care_cross.cpp@@
+@@example Eng/api/control_dare_residual.cpp@@
 
 ### Example 3
 
-Review cost-matrix validation that also governs discrete synthesis.
+A cross-weight and its effect on the gain.
 
-@@example Eng/api/control_optimal_errors.cpp@@
+@@example Eng/api/control_dare_cross.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="care.html">
-    <span class="label">Previous</span>
-    <span class="title">care</span>
-  </a>
-  <a class="next-link" href="lqr.html">
-    <span class="label">Next</span>
-    <span class="title">lqr</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+@@example Eng/api/control_dare_errors.cpp@@
+

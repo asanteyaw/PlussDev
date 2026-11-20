@@ -18,10 +18,10 @@ replacing it with a `Bool` `Series` stream.
 
 ```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Every method on this accessor — not just `isnat()` — routes through
-`Slate::tl()` for the bound stream. `tl()` requires the stream to be
+`Shelf::tl()` for the bound stream. `tl()` requires the stream to be
 `Timeline`-kind; if it is not, the call throws
-`"Slate::tl: expected Timeline payload"`. Cast first with
-[`Stream::cast(SlateCastTarget::Timeline)`](../stream/cast.md) if the stream
+`"Shelf::tl: expected Timeline payload"`. Cast first with
+[`Stream::cast(ShelfCastTarget::Timeline)`](../stream/cast.md) if the stream
 isn't already a timestamp.
 ```
 
@@ -72,7 +72,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1, 2, 3}));
 try {
   auto out = stream.tl().isnat();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -80,7 +80,7 @@ try {
 ### Output
 
 ```text
-Slate::tl: expected Timeline payload
+Shelf::tl: expected Timeline payload
 ```
 
 ## Notes

@@ -78,8 +78,8 @@ auto mixed = pluss::scribble::Registry({
 
 try {
   mixed.save_csv("bad.csv");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

@@ -2,7 +2,7 @@
 
 # `control::PidRule`
 
-Discretization rule used by a sampled PID controller.
+How a discrete PID replaces the integral and the derivative.
 
 ## Signature
 
@@ -12,152 +12,186 @@ control::PidRule
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+A continuous integrator `1/s` and filtered derivative can be replaced by a difference equation in several ways. `Forward` uses the rectangle at the earlier sample, `Backward` the rectangle at the later sample and `Trapezoid` the average of the two. The rule decides the accuracy of the frequency response and which derivative settings are stable.
 
-The rule affects discrete controllers only. Continuous controllers retain their exact parallel-form expression.
+## Values
 
-## Fields
-
-### `Forward`
-
-Forward-Euler substitution. It is explicit and inexpensive but least damping-preserving.
-
-### `Backward`
-
-Backward-Euler substitution. It is implicit and generally more damping-preserving.
-
-### `Trapezoid`
-
-Bilinear/trapezoidal substitution, balancing frequency fidelity and numerical robustness.
+| Value | Integrator `1/s` becomes | Behaviour |
+|---|---|---|
+| `Forward` | `T / (z - 1)` | Magnitude slightly high; the phase lags by `omega T / 2`. |
+| `Backward` | `T z / (z - 1)` | The same magnitude as `Forward`; the phase leads by `omega T / 2`. |
+| `Trapezoid` | `(T / 2)(z + 1) / (z - 1)` | Exactly the ideal phase; magnitude low at high frequency. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Arguments `int_rule` and `diff_rule` of `pid`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Not every rule is admissible for the derivative: an unfiltered `Trapezoid` derivative and a `Forward` derivative with `sample_time >= 2 * filter` are rejected at construction.
 
 ## Interpretation and Use
 
-Rule choice matters only for sampled controllers. `Forward` is explicit, `Backward` is more damping-preserving, and `Trapezoid` usually offers better frequency fidelity. The integral and derivative rules may differ when implementation constraints demand it.
+The first example prints the response of a discrete integrator at three frequencies: `Forward` and `Backward` have equal magnitude and phase errors of equal size and opposite sign (at `omega = 10` and `T = 0.05` the phases are -1.82 and -1.32 against the ideal -1.57), while `Trapezoid` keeps the phase exactly and loses magnitude. Use `Trapezoid` when phase matters, `Backward` for the integrator when the delay of `Forward` must be avoided.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Select trapezoidal integration and backward differentiation explicitly.
+The integrator under each rule at three frequencies.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(1.5), pluss::make_series(0.4),
-      pluss::make_series(0.2), pluss::make_series(0.05), 0.1,
-      control::PidRule::Trapezoid, control::PidRule::Backward);
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 2.0}));
-
-  std::cout << std::boolalpha
-            << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  std::cout << "sample time = " << controller.sample_time()
-            << ", integral rule = " << static_cast<int>(controller.int_rule())
-            << ", derivative rule = " << static_cast<int>(controller.diff_rule())
-            << "\n";
-  out.writeln("discrete response =",
-              response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  for (const double w : {1.0, 10.0, 40.0}) {
+    const pluss::Series one = pluss::make_series({w});
+    out.writeln("omega", w, ": ideal magnitude", 1.0 / w, " phase", -std::acos(-1.0) / 2.0);
+    for (const auto [label, rule] : {std::pair{"Forward  ", ctl::PidRule::Forward}, {"Backward ", ctl::PidRule::Backward}, {"Trapezoid", ctl::PidRule::Trapezoid}}) {
+      const std::complex<double> g = ctl::freqresp(ctl::pid(s(0.0), s(1.0), s(0.0), s(0.0), 0.05, rule, ctl::PidRule::Backward), one).items<std::complex<double>>()[0];
+      out.writeln("   ", label, ": magnitude", std::abs(g), " phase", std::arg(g));
+    }
+  }
 }
 ```
 
 Output
 
 ```text
-continuous = false, discrete = true
-sample time = 0.1, integral rule = 2, derivative rule = 1
-discrete response = [(1.50499,-0.700062), (1.57742,0.18647)]
+omega 1.0000 : ideal magnitude 1.0000  phase -1.5708
+    Forward   : magnitude 1.0001  phase -1.5958
+    Backward  : magnitude 1.0001  phase -1.5458
+    Trapezoid : magnitude 0.9998  phase -1.5708
+omega 10.0000 : ideal magnitude 0.1000  phase -1.5708
+    Forward   : magnitude 0.1010  phase -1.8208
+    Backward  : magnitude 0.1010  phase -1.3208
+    Trapezoid : magnitude 0.0979  phase -1.5708
+omega 40.0000 : ideal magnitude 0.0250  phase -1.5708
+    Forward   : magnitude 0.0297  phase -2.5708
+    Backward  : magnitude 0.0297  phase -0.5708
+    Trapezoid : magnitude 0.0161  phase -1.5708
 ```
 ### Example 2
 
-Show that continuous PID ignores discrete substitution rules.
+Which derivative settings each rule accepts.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(2.0), pluss::make_series(3.0),
-      pluss::make_series(4.0), pluss::make_series(0.5));
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 1.0}));
-
-  std::cout << std::boolalpha << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  out.writeln("response =", response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  // The rule also decides which derivative settings are admissible at a given sample time.
+  for (const auto [label, rule] : {std::pair{"Forward  ", ctl::PidRule::Forward}, {"Backward ", ctl::PidRule::Backward}, {"Trapezoid", ctl::PidRule::Trapezoid}}) {
+    refused(out, label, [&] { ctl::pid(s(1.0), s(0.0), s(0.5), s(0.004), 0.01, ctl::PidRule::Backward, rule); });
+  }
 }
 ```
 
 Output
 
 ```text
-continuous = true, discrete = false
-response = [(2.47059,-4.11765), (3.6,0.2)]
+Forward   : eng::control::pid: forward derivative requires sample_time < 2*filter
+Backward  : accepted
+Trapezoid : accepted
 ```
 ### Example 3
 
-Review validation performed before rule evaluation.
+The unfiltered derivative under each rule.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <exception>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(control::place(
-        pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-        pluss::series::zeros({2, 1}, pluss::ScalarType::Float64),
-        pluss::make_series({std::complex<double>{-4.0, 0.0},
-                            std::complex<double>{-5.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("uncontrollable plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::pid(
-        pluss::make_series(1.0), pluss::make_series(0.0),
-        pluss::make_series(0.0), pluss::make_series(-0.1)));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative filter rejected =",
-                message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  for (const auto [label, rule] : {std::pair{"Forward  ", ctl::PidRule::Forward}, {"Backward ", ctl::PidRule::Backward}, {"Trapezoid", ctl::PidRule::Trapezoid}}) {
+    refused(out, label, [&] { ctl::pid(s(1.0), s(0.0), s(0.5), s(0.0), 0.01, ctl::PidRule::Backward, rule); });
   }
 }
 ```
@@ -165,18 +199,7 @@ int main() {
 Output
 
 ```text
-uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
-negative filter rejected = eng::control::pid: filter must be non-negative
+Forward   : accepted
+Backward  : accepted
+Trapezoid : eng::control::pid: an unfiltered trapezoidal derivative is unstable
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="PlaceResult.html">
-    <span class="label">Previous</span>
-    <span class="title">PlaceResult</span>
-  </a>
-  <a class="next-link" href="PidController.html">
-    <span class="label">Next</span>
-    <span class="title">Pid</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

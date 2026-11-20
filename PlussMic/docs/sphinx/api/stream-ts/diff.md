@@ -20,7 +20,7 @@ when `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever
 rather than throwing.
 
 ```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
-Every method on this accessor routes through `Slate::ts()` for the bound
+Every method on this accessor routes through `Shelf::ts()` for the bound
 stream. If the stream isn't a numeric `Series`, the call throws — e.g.
 `"TimeSeriesAccessor::diff: source must be Series"` for a `Note`-kind stream.
 ```
@@ -51,18 +51,18 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
+0            | NULL                                                                                                     
 1            | 10                                                                                                       
 2            | -5                                                                                                       
 3            | 15                                                                                                       
 ========================================================================================================================
 ```
 
-Position `0` has no prior position, so it's `nan`. Position `1` is
+Position `0` has no prior position, so it's `NULL`. Position `1` is
 `20 - 10 = 10`; position `2` is `15 - 20 = -5`; position `3` is
 `30 - 15 = 15`.
 
@@ -74,7 +74,7 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 try {
   auto out = stream.ts().diff(1);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -104,8 +104,8 @@ TimeSeriesAccessor::diff: source must be Series
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::diff`](../catalog-ts/diff.md): the
   whole-catalog equivalent.
-- [`TimeSeriesAccessor::diff`](../slate-ts/diff.md): the underlying
-  single-slate engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::diff`](../shelf-ts/diff.md): the underlying
+  single-shelf engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="calendar.html">

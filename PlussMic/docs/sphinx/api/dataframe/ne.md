@@ -12,16 +12,16 @@ DataFrame DataFrame::ne(double other) const
 DataFrame DataFrame::ne(std::string_view other) const
 DataFrame DataFrame::ne(const DataFrame& other) const
 DataFrame DataFrame::ne(const DataFrame& other, const AlignOptions& options) const
-DataFrame DataFrame::ne(const Slate& other, Axis axis = Axis::Feature) const
-DataFrame DataFrame::ne(const Slate& other, Axis axis, const AlignOptions& options) const
-DataFrame DataFrame::ne(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
+DataFrame DataFrame::ne(const Shelf& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::ne(const Shelf& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::ne(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does
 
 The negated counterpart of [`eq()`](eq.md): elementwise "not equal", returning a
 boolean-valued frame the same shape as the source. `ne()` shares the exact same
-overload shape as `eq()` — a scalar, a string, another `DataFrame`, or a `Slate`
+overload shape as `eq()` — a scalar, a string, another `DataFrame`, or a `Shelf`
 broadcast by `axis` — see `eq()`'s "What It Does" for the full explanation of the
 operand shapes and the `axis`/`options` parameters.
 
@@ -31,9 +31,9 @@ operand shapes and the `axis`/`options` parameters.
 
 The right-hand operand: `double` (numeric scalar), `std::string_view` (text value,
 `Note`-kind features only), `const DataFrame&` (aligned frame-to-frame), or `const
-Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for the full breakdown.
+Shelf&` (broadcast per `axis`). See [`eq()`](eq.md) for the full breakdown.
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -95,13 +95,13 @@ std::cout << out_names;
 ### Output
 
 ```text
-=============
-      | name 
--------------
-s1    | true 
-s2    | false
-s3    | true 
--------------
+============
+     | name 
+------------
+s1   | true 
+s2   | false
+s3   | true 
+------------
 [3 cs x 1 feat]
 ```
 
@@ -124,38 +124,38 @@ std::cout << out_frames;
 ### Output
 
 ```text
-====================
-      | quiz   final
---------------------
-s1    | false  false
-s2    | false  false
-s3    | true   false
---------------------
+===================
+     | quiz   final
+-------------------
+s1   | false  false
+s2   | false  false
+s3   | true   false
+-------------------
 [3 cs x 2 feat]
 ```
 
 Exactly one `true` cell — `s3`'s `quiz` (`84` vs. `83`) — the complement of what
 [`scores.eq(changed)`](eq.md) reports for the same two frames.
 
-Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
+Example 4. Compare against a `Shelf` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
-auto out_slate = scores.ne(thresholds);
-std::cout << out_slate;
+auto thresholds = Shelf(pluss::make_series({84.0, 88.0}));
+auto out_shelf = scores.ne(thresholds);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-====================
-      | quiz   final
---------------------
-s1    | false  true 
-s2    | true   false
-s3    | false  true 
---------------------
+===================
+     | quiz   final
+-------------------
+s1   | false  true 
+s2   | true   false
+s3   | false  true 
+-------------------
 [3 cs x 2 feat]
 ```
 

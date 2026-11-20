@@ -50,11 +50,11 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
+0            | NULL                                                                                                     
 1            | 10                                                                                                       
 2            | 20                                                                                                       
 3            | 15                                                                                                       
@@ -62,10 +62,10 @@ label        | value
 ```
 
 Each position now shows the previous position's value; position `0` has no
-predecessor, so it's `nan`.
+predecessor, so it's `NULL`.
 
 ```{important} No top-level Stream::shift(periods) — this accessor is the only path
-Unlike [`Slate::shift(periods)`](../slate/shift.md), which exists as a
+Unlike [`Shelf::shift(periods)`](../shelf/shift.md), which exists as a
 direct top-level method, `Stream` has no positional-shift method of its
 own outside this accessor — `Stream::shift(periods, freq)` is a completely
 different, unrelated method on [`StreamTimelineAccessor`](../stream-timeline/shift.md)
@@ -79,7 +79,7 @@ by row count.
 - `lag(periods)` with a negative `periods` is exactly `lead(-periods)`.
 - Vacated positions become `NULL`, values shifted past the far edge are
   dropped, not wrapped around — the same semantics as
-  [`Slate::shift(periods)`](../slate/shift.md), the table-layer primitive
+  [`Shelf::shift(periods)`](../shelf/shift.md), the table-layer primitive
   this method's underlying engine shares.
 - A pre-existing missing entry in the source stream is honored, not just the
   `NULL`s the shift itself introduces.
@@ -92,7 +92,7 @@ by row count.
   lags of the same stream at once, each as its own `DataFrame` column.
 - [`StreamTimelineAccessor::shift`](../stream-timeline/shift.md): an
   unrelated, calendar-duration shift — see the important callout above.
-- [`Slate::shift`](../slate/shift.md): the table-layer positional-shift
+- [`Shelf::shift`](../shelf/shift.md): the table-layer positional-shift
   primitive, which (unlike `Stream`) is reachable directly, not only through
   `ts()`.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.

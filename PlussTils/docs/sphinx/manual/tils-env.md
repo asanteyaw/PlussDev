@@ -8,7 +8,7 @@
 
 Most programs take some of their settings from the environment: the region a service runs in, the port it listens on, whether debug output is on. The environment is a set of named strings that the shell or the deployment provides before the program starts. This chapter shows how to read those strings safely, with a default when a name is missing, a typed value when a number or flag is needed, and a range when a value must stay within limits.
 
-## The mental model
+## How it works
 
 An environment variable is always a string, and it can be absent. The readers in this family ask one question each. `get` asks whether the variable is set and returns the string or nothing. `get_or` returns the string, or the default you give when the variable is not set. The typed readers convert the string to a number or a flag, and when the text is not a valid value they return the default instead of failing. The only call that refuses input is one that receives a bound which is not a finite number.
 

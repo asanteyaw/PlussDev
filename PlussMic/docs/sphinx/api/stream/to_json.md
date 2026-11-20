@@ -107,12 +107,12 @@ check `"validity"` to know which entries actually matter.
   method's output nests inside, one per stream.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="take.html">
+  <a class="prev-link" href="tl.html">
     <span class="label">Previous</span>
-    <span class="title">take</span>
+    <span class="title">tl</span>
   </a>
-  <a class="next-link" href="to_string.html">
+  <a class="next-link" href="to_shelf.html">
     <span class="label">Next</span>
-    <span class="title">to_string</span>
+    <span class="title">to_shelf</span>
   </a>
 </div>

@@ -42,9 +42,9 @@ Example 1. Get the rendered text and inspect it directly.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 std::string rendered = orders.to_string();
@@ -79,7 +79,7 @@ std::cout << (orders.to_string() == via_stream.str()) << "\n";
 ### Output
 
 ```text
-true
+1
 ```
 
 ## Notes

@@ -4,7 +4,7 @@
 
 A customer asks for a flow, but what they get depends on the pressure. When the pressure is high they get what they asked for; when the network is stressed, by a fire, a pump failure or a pipe burst, they get less, and at a leak the water leaves whatever anyone asked. `fluid::Options` chooses between two policies. The default holds every demand fixed, which is the right model while the network is healthy. The pressure-driven policy lets the delivered demand fall with the pressure, and emitters model leaks and sprinklers as flows that grow with the pressure. This page explains both, solves a stressed junction at the three degrees of stress and checks the delivered demand against the law, adds an emitter, and shows the mistakes the thresholds invite.
 
-## The mental model
+## How it works
 
 Under `DemandMode::Fixed` every junction delivers its full demand whatever the pressure, as in the previous chapters. This is a promise the network can break: when the demand is more than the pipes can carry at a decent pressure, the head falls below the ground, and the result is a negative pressure the solver reports without complaint.
 

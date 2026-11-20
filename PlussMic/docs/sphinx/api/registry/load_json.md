@@ -37,6 +37,12 @@ applied to the JSON values instead of parsed CSV text.
 
 Example 1. Load a JSON array of objects.
 
+Given `cities.json`:
+
+```text
+[{"city": "Accra", "population": 2500000}, {"city": "Tema", "population": 161000}, {"city": "Kumasi", "population": 3000000}]
+```
+
 ```cpp
 auto rg = pluss::scribble::Registry::load_json("cities.json");
 std::cout << rg;
@@ -48,14 +54,8 @@ std::cout << rg;
 {
   "_type": "Registry",
   "defined": true,
-  "nfields": 3,
+  "nfields": 2,
   "fields": {
-    "id": {
-      "size": 3,
-      "types": {
-        "Series": 3
-      }
-    },
     "city": {
       "size": 3,
       "types": {

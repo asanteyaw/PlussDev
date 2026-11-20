@@ -38,7 +38,7 @@
 namespace pluss::table {
 class Atlas;
 class DataFrame;
-class Slate;
+class Shelf;
 }
 
 namespace pluss::pl::flash {
@@ -77,7 +77,7 @@ struct TableColumns {
 
 template <class T>
 concept TableBackedValue =
-    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Slate> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Shelf> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::DataFrame> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
@@ -1087,7 +1087,33 @@ struct FieldmapGrid {
   const Series valid = flat_mask.ne(0.0).reshape(out.sizes());
   const Series fill =
       Series::full({out.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64).reshape(out.sizes());
-  return out.where(valid, fill);
+  // Mask as receiver: keep `out` where the mask is non-zero, the NaN fill elsewhere.
+  return pluss::series::where(valid, out, fill);
+}
+
+// vmin / vmax fix the colour scale itself, not just the data: a correlation map with vmin = -1 and vmax = 1 keeps the full
+// -1 .. 1 scale (and its colour bar) even when no cell reaches either end. A bound left unset follows the finite data.
+inline void apply_heatmap_color_limits(
+    Trace& trace,
+    const Series& z_values,
+    const std::optional<double>& vmin,
+    const std::optional<double>& vmax) {
+  if (!vmin.has_value() && !vmax.has_value()) {
+    return;
+  }
+  double lo = vmin.value_or(std::numeric_limits<double>::infinity());
+  double hi = vmax.value_or(-std::numeric_limits<double>::infinity());
+  if (!vmin.has_value() || !vmax.has_value()) {
+    for (const double value : z_values.contiguous().host<double>().array().data) {
+      if (std::isfinite(value)) {
+        if (!vmin.has_value()) lo = std::min(lo, value);
+        if (!vmax.has_value()) hi = std::max(hi, value);
+      }
+    }
+  }
+  if (std::isfinite(lo) && std::isfinite(hi) && lo < hi) {
+    trace.color_limits(Range1d{lo, hi});
+  }
 }
 
 [[nodiscard]] inline FieldmapGrid hist2d_grid(
@@ -1198,22 +1224,101 @@ struct FieldmapGrid {
   return ::pluss::make_series(std::move(curr)).reshape({rows, cols});
 }
 
-[[nodiscard]] inline std::vector<std::size_t> argsort_indices(const std::vector<double>& values) {
-  std::vector<std::size_t> order(values.size(), 0);
-  std::iota(order.begin(), order.end(), std::size_t{0});
-  std::stable_sort(order.begin(), order.end(), [&](const std::size_t a, const std::size_t b) {
-    return values[a] < values[b];
-  });
-  return order;
-}
-
 [[nodiscard]] inline std::vector<std::size_t> identity_indices(std::size_t count) {
   std::vector<std::size_t> order(count, 0);
   std::iota(order.begin(), order.end(), std::size_t{0});
   return order;
 }
 
-[[nodiscard]] inline FieldmapGrid cluster_grid_by_mean(
+// Leaf order of an average-linkage (UPGMA) dendrogram over the rows of `points` (euclidean distance), by the
+// nearest-neighbour-chain algorithm: O(n^2) time and memory. Of the two children of each merge, the one holding
+// the smaller original index goes first, so the order is deterministic and keeps the input order when the rows
+// are already grouped.
+[[nodiscard]] inline std::vector<std::size_t> average_linkage_order(const Series& points) {
+  const auto n = static_cast<std::size_t>(points.sizes()[0]);
+  if (n <= 2) {
+    return identity_indices(n);
+  }
+  const Series p = points.to(ScalarType::Float64).nan_to_num(0.0, 0.0, 0.0);
+  const Series sq = p.square().sum(1, true);
+  const Series d2 = (sq + sq.transpose(0, 1) - p.matmul(p.transpose(0, 1)) * 2.0).clamp_min(0.0);
+  std::vector<double> dist = d2.sqrt().contiguous().host<double>().array().data;
+
+  std::vector<double> size(n, 1.0);
+  std::vector<bool> active(n, true);
+  std::vector<std::vector<std::size_t>> leaves(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    leaves[i] = {i};
+  }
+  std::vector<std::size_t> chain;
+  chain.reserve(n);
+  std::size_t remaining = n;
+  std::size_t scan_from = 0;
+  while (remaining > 1) {
+    if (chain.empty()) {
+      while (!active[scan_from]) {
+        ++scan_from;
+      }
+      chain.push_back(scan_from);
+    }
+    const std::size_t a = chain.back();
+    const std::size_t previous = chain.size() >= 2 ? chain[chain.size() - 2] : n;
+    std::size_t best = n;
+    double best_distance = std::numeric_limits<double>::infinity();
+    for (std::size_t k = 0; k < n; ++k) {
+      if (!active[k] || k == a) {
+        continue;
+      }
+      const double d = dist[a * n + k];
+      if (d < best_distance || (d == best_distance && k == previous)) {
+        best_distance = d;
+        best = k;
+      }
+    }
+    if (best == previous) {
+      chain.pop_back();
+      chain.pop_back();
+      // Merge b = `best` into a (Lance-Williams update for average linkage).
+      const std::size_t b = best;
+      const double na = size[a];
+      const double nb = size[b];
+      for (std::size_t k = 0; k < n; ++k) {
+        if (!active[k] || k == a || k == b) {
+          continue;
+        }
+        const double merged = (na * dist[a * n + k] + nb * dist[b * n + k]) / (na + nb);
+        dist[a * n + k] = merged;
+        dist[k * n + a] = merged;
+      }
+      auto first = std::move(leaves[a]);
+      auto second = std::move(leaves[b]);
+      if (*std::min_element(second.begin(), second.end()) < *std::min_element(first.begin(), first.end())) {
+        std::swap(first, second);
+      }
+      first.insert(first.end(), second.begin(), second.end());
+      leaves[a] = std::move(first);
+      size[a] = na + nb;
+      active[b] = false;
+      --remaining;
+    } else {
+      chain.push_back(best);
+    }
+  }
+  for (std::size_t i = 0; i < n; ++i) {
+    if (active[i]) {
+      return leaves[i];
+    }
+  }
+  return identity_indices(n);
+}
+
+struct ClusteredGrid {
+  FieldmapGrid grid; // x and y are the cell positions 0 .. n-1, in the clustered order
+  std::vector<double> x_labels;
+  std::vector<double> y_labels;
+};
+
+[[nodiscard]] inline ClusteredGrid cluster_grid(
     const Series& x_values,
     const Series& y_values,
     const Series& z_values,
@@ -1234,64 +1339,50 @@ struct FieldmapGrid {
 
   const std::vector<double> x = to_f64_vector(sx);
   const std::vector<double> y = to_f64_vector(sy);
-  const std::vector<double> flat = sz.host<double>().array().data;
+  const std::vector<double> flat = sz.contiguous().host<double>().array().data;
+  const auto row_order = cluster_rows ? average_linkage_order(sz) : identity_indices(static_cast<std::size_t>(rows));
+  const auto col_order =
+      cluster_cols ? average_linkage_order(sz.transpose(0, 1).contiguous()) : identity_indices(static_cast<std::size_t>(cols));
 
-  std::vector<double> row_sum(static_cast<std::size_t>(rows), 0.0);
-  std::vector<double> row_cnt(static_cast<std::size_t>(rows), 0.0);
-  std::vector<double> col_sum(static_cast<std::size_t>(cols), 0.0);
-  std::vector<double> col_cnt(static_cast<std::size_t>(cols), 0.0);
-  for (const auto idx : std::views::iota(std::size_t{0}, flat.size())) {
-    const double value = flat[idx];
-    if (!std::isfinite(value)) {
-      continue;
-    }
-    const auto r = idx / static_cast<std::size_t>(cols);
-    const auto c = idx % static_cast<std::size_t>(cols);
-    row_sum[r] += value;
-    row_cnt[r] += 1.0;
-    col_sum[c] += value;
-    col_cnt[c] += 1.0;
-  }
-
-  std::vector<double> row_mean(row_sum.size(), 0.0);
-  std::vector<double> col_mean(col_sum.size(), 0.0);
-  std::transform(
-      row_sum.begin(),
-      row_sum.end(),
-      row_cnt.begin(),
-      row_mean.begin(),
-      [](const double sum, const double cnt) { return (cnt > 0.0) ? (sum / cnt) : std::numeric_limits<double>::infinity(); });
-  std::transform(
-      col_sum.begin(),
-      col_sum.end(),
-      col_cnt.begin(),
-      col_mean.begin(),
-      [](const double sum, const double cnt) { return (cnt > 0.0) ? (sum / cnt) : std::numeric_limits<double>::infinity(); });
-
-  const std::vector<std::size_t> row_order =
-      cluster_rows ? argsort_indices(row_mean) : identity_indices(row_mean.size());
-  const std::vector<std::size_t> col_order =
-      cluster_cols ? argsort_indices(col_mean) : identity_indices(col_mean.size());
-
-  std::vector<double> x_sorted(static_cast<std::size_t>(cols), 0.0);
-  std::vector<double> y_sorted(static_cast<std::size_t>(rows), 0.0);
-  std::transform(col_order.begin(), col_order.end(), x_sorted.begin(), [&](const std::size_t idx) { return x[idx]; });
-  std::transform(row_order.begin(), row_order.end(), y_sorted.begin(), [&](const std::size_t idx) { return y[idx]; });
+  ClusteredGrid out;
+  out.x_labels.reserve(col_order.size());
+  out.y_labels.reserve(row_order.size());
+  for (const auto idx : col_order) out.x_labels.push_back(x[idx]);
+  for (const auto idx : row_order) out.y_labels.push_back(y[idx]);
+  out.grid.x.resize(col_order.size());
+  out.grid.y.resize(row_order.size());
+  std::iota(out.grid.x.begin(), out.grid.x.end(), 0.0);
+  std::iota(out.grid.y.begin(), out.grid.y.end(), 0.0);
 
   std::vector<double> z_sorted(flat.size(), 0.0);
   for (const auto out_idx : std::views::iota(std::size_t{0}, z_sorted.size())) {
     const auto out_r = out_idx / static_cast<std::size_t>(cols);
     const auto out_c = out_idx % static_cast<std::size_t>(cols);
-    const auto src_r = row_order[out_r];
-    const auto src_c = col_order[out_c];
-    z_sorted[out_idx] = flat[src_r * static_cast<std::size_t>(cols) + src_c];
+    z_sorted[out_idx] = flat[row_order[out_r] * static_cast<std::size_t>(cols) + col_order[out_c]];
   }
-
-  FieldmapGrid out;
-  out.x = std::move(x_sorted);
-  out.y = std::move(y_sorted);
-  out.z = ::pluss::make_series(std::move(z_sorted)).reshape({rows, cols});
+  out.grid.z = ::pluss::make_series(std::move(z_sorted)).reshape({rows, cols});
   return out;
+}
+
+// At most `limit` evenly spaced tick positions with their labels, so a wide map keeps readable axes.
+inline void label_clustered_axis(Pane& pane, bool x_axis, const std::vector<double>& labels, std::size_t limit) {
+  const std::size_t n = labels.size();
+  const std::size_t step = std::max<std::size_t>(1, (n + limit - 1) / limit);
+  std::vector<double> positions;
+  std::vector<std::string> text;
+  for (std::size_t i = 0; i < n; i += step) {
+    positions.push_back(static_cast<double>(i));
+    std::ostringstream out;
+    out << labels[i];
+    text.push_back(out.str());
+  }
+  std::vector<std::string_view> views(text.begin(), text.end());
+  Series at = ::pluss::make_series(std::move(positions));
+  if (x_axis) {
+    pane.x_ticks(std::move(at), pluss::msharp::RangeView::Of<std::string_view>(views));
+  } else {
+    pane.y_ticks(std::move(at), pluss::msharp::RangeView::Of<std::string_view>(views));
+  }
 }
 
 } // namespace detail
@@ -2641,19 +2732,19 @@ struct BarPlotOptions {
   bool horizontal{false};
 };
 
-Trace& lineplot(Pane& pane, const ::pluss::table::Slate& values);
+Trace& lineplot(Pane& pane, const ::pluss::table::Shelf& values);
 Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& scatterplot(Pane& pane, const ::pluss::table::Slate& values);
+Trace& scatterplot(Pane& pane, const ::pluss::table::Shelf& values);
 Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& stepplot(Pane& pane, const ::pluss::table::Slate& values);
+Trace& stepplot(Pane& pane, const ::pluss::table::Shelf& values);
 Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& areaplot(Pane& pane, const ::pluss::table::Slate& values, double base = 0.0);
+Trace& areaplot(Pane& pane, const ::pluss::table::Shelf& values, double base = 0.0);
 Trace& areaplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2665,7 +2756,7 @@ Trace& areaplot(
     const TableColumns& columns = {},
     double base = 0.0);
 
-Trace& histplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
+Trace& histplot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& histplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2677,7 +2768,7 @@ Trace& histplot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& displot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
+Trace& displot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& displot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2689,7 +2780,7 @@ Trace& displot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& kdeplot(Pane& pane, const ::pluss::table::Slate& values, std::int64_t points = 128);
+Trace& kdeplot(Pane& pane, const ::pluss::table::Shelf& values, std::int64_t points = 128);
 Trace& kdeplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2701,11 +2792,11 @@ Trace& kdeplot(
     const TableColumns& columns = {},
     std::int64_t points = 128);
 
-Trace& ecdfplot(Pane& pane, const ::pluss::table::Slate& values);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Shelf& values);
 Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& rugplot(Pane& pane, const ::pluss::table::Slate& values, double height = 0.08);
+Trace& rugplot(Pane& pane, const ::pluss::table::Shelf& values, double height = 0.08);
 Trace& rugplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2717,7 +2808,7 @@ Trace& rugplot(
     const TableColumns& columns = {},
     double height = 0.08);
 
-Trace& countplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
+Trace& countplot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& countplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2731,7 +2822,7 @@ Trace& countplot(
 
 Trace& barplot(
     Pane& pane,
-    const ::pluss::table::Slate& values,
+    const ::pluss::table::Shelf& values,
     const BarPlotOptions& options = {});
 Trace& barplot(
     Pane& pane,
@@ -3111,6 +3202,7 @@ Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, const HeatmapOptions& options) {
       options.mask);
   auto& trace = pane.fieldmap(sx, sy, sz);
   trace.annotate_levels(options.annotate_levels);
+  detail::apply_heatmap_color_limits(trace, sz, options.vmin, options.vmax);
   pane.scale_guide(options.scale_guide);
   if (options.borderless) {
     pane.grid(GridStyle::None)
@@ -3174,13 +3266,17 @@ Trace& clustermap(Pane& pane, X&& x, Y&& y, Z&& z) {
 
 template <class X, class Y, class Z>
 Trace& clustermap(Pane& pane, X&& x, Y&& y, Z&& z, const ClusterMapOptions& options) {
-  const auto clustered = detail::cluster_grid_by_mean(
+  const auto clustered = detail::cluster_grid(
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)),
       detail::to_series(std::forward<Z>(z)),
       options.cluster_rows,
       options.cluster_cols);
-  return heatmap(pane, clustered.x, clustered.y, clustered.z, options.heatmap);
+  Trace& trace = heatmap(pane, clustered.grid.x, clustered.grid.y, clustered.grid.z, options.heatmap);
+  // The cells sit at positions 0 .. n-1 in the clustered order; the axes carry the original labels.
+  detail::label_clustered_axis(pane, true, clustered.x_labels, 24);
+  detail::label_clustered_axis(pane, false, clustered.y_labels, 24);
+  return trace;
 }
 
 enum class CatPlotKind : std::uint8_t {
@@ -3221,12 +3317,13 @@ struct CatPlotOptions {
 namespace detail {
 
 [[nodiscard]] inline CatPlotKind catplot_kind(std::string_view kind) {
+  if (kind == "strip") return CatPlotKind::Strip;
   if (kind == "swarm") return CatPlotKind::Swarm;
   if (kind == "box") return CatPlotKind::Box;
   if (kind == "violin") return CatPlotKind::Violin;
   if (kind == "bar") return CatPlotKind::Bar;
   if (kind == "count") return CatPlotKind::Count;
-  require_kind(kind, {"strip"}, "flash::catplot");
+  require_kind(kind, {"strip", "swarm", "box", "violin", "bar", "count"}, "flash::catplot");
   return CatPlotKind::Strip;
 }
 
@@ -3425,6 +3522,9 @@ inline Trace& catplot(
   std::vector<double> group_centers;
   group_centers.reserve(ng);
   const double spacing = use_dodge ? static_cast<double>(nh + 1) : 1.0;
+  // Groups sit at 1, 1 + spacing, ...; the axis spans them with half a slot of room on each side (no "nice" overshoot).
+  const double categorical_x_high =
+      1.0 + static_cast<double>(ng - 1) * spacing + (use_dodge ? static_cast<double>(nh - 1) : 0.0) + 0.5;
   for (const auto g : std::views::iota(std::size_t{0}, ng)) {
     const double left = 1.0 + static_cast<double>(g) * spacing;
     const double center = use_dodge ? (left + 0.5 * static_cast<double>(nh - 1)) : left;
@@ -3465,6 +3565,7 @@ inline Trace& catplot(
 
     const auto group_level_views = detail::label_views(group_levels);
     pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
+    pane.x_limits({0.5, categorical_x_high});
     Trace* last = nullptr;
     for (const auto h : std::views::iota(std::size_t{0}, nh)) {
       std::vector<double> x_vals;
@@ -3548,6 +3649,7 @@ inline Trace& catplot(
 
   const auto group_level_views = detail::label_views(group_levels);
   pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
+  pane.x_limits({0.5, categorical_x_high});
   Trace* last = nullptr;
   for (const auto h : std::views::iota(std::size_t{0}, nh)) {
     if (per_hue_x[h].empty()) {
@@ -4376,6 +4478,10 @@ inline Studio& pairplot(
       frame_options.feature_axis == Axis::Cols);
   auto pair_options = options;
   if (pair_options.labels.empty()) {
+    PLUSS_CHECK(
+        frame_options.feature_names.empty() || frame_options.feature_names.size() == columns.size(),
+        "flash: feature_names has " + std::to_string(frame_options.feature_names.size()) + " names for " +
+            std::to_string(columns.size()) + " features");
     if (frame_options.feature_names.size() == columns.size()) {
       pair_options.labels = frame_options.feature_names;
     } else {
@@ -4722,6 +4828,10 @@ inline Studio& triplot(
       frame_options.feature_axis == Axis::Cols);
   auto local_options = options;
   if (local_options.labels.empty()) {
+    PLUSS_CHECK(
+        frame_options.feature_names.empty() || frame_options.feature_names.size() == columns.size(),
+        "flash: feature_names has " + std::to_string(frame_options.feature_names.size()) + " names for " +
+            std::to_string(columns.size()) + " features");
     if (frame_options.feature_names.size() == columns.size()) {
       local_options.labels = frame_options.feature_names;
     } else {
@@ -5012,6 +5122,10 @@ inline Studio& parallelplot(
       frame_options.feature_axis == Axis::Cols);
   auto local_options = options;
   if (local_options.labels.empty()) {
+    PLUSS_CHECK(
+        frame_options.feature_names.empty() || frame_options.feature_names.size() == columns.size(),
+        "flash: feature_names has " + std::to_string(frame_options.feature_names.size()) + " names for " +
+            std::to_string(columns.size()) + " features");
     if (frame_options.feature_names.size() == columns.size()) {
       local_options.labels = frame_options.feature_names;
     } else {
@@ -5206,6 +5320,10 @@ inline Studio& andrews_curves(
       frame_options.feature_axis == Axis::Cols);
   auto local_options = options;
   if (local_options.labels.empty()) {
+    PLUSS_CHECK(
+        frame_options.feature_names.empty() || frame_options.feature_names.size() == columns.size(),
+        "flash: feature_names has " + std::to_string(frame_options.feature_names.size()) + " names for " +
+            std::to_string(columns.size()) + " features");
     if (frame_options.feature_names.size() == columns.size()) {
       local_options.labels = frame_options.feature_names;
     } else {
@@ -5439,6 +5557,10 @@ inline Studio& radviz(
       frame_options.feature_axis == Axis::Cols);
   auto local_options = options;
   if (local_options.labels.empty()) {
+    PLUSS_CHECK(
+        frame_options.feature_names.empty() || frame_options.feature_names.size() == columns.size(),
+        "flash: feature_names has " + std::to_string(frame_options.feature_names.size()) + " names for " +
+            std::to_string(columns.size()) + " features");
     if (frame_options.feature_names.size() == columns.size()) {
       local_options.labels = frame_options.feature_names;
     } else {
@@ -6076,10 +6198,10 @@ inline Studio& jointplot(
   const auto y = data.continuous(y_name);
   PLUSS_CHECK(
       x.has_value(),
-      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(x_name) + "'");
+      std::string("flash::jointplot(dataset): no numeric column named '") + std::string(x_name) + "'");
   PLUSS_CHECK(
       y.has_value(),
-      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(y_name) + "'");
+      std::string("flash::jointplot(dataset): no numeric column named '") + std::string(y_name) + "'");
   PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
   return jointplot(studio, *x, *y, kind);
 }
@@ -6094,10 +6216,10 @@ inline Studio& jointplot(
   const auto y = data.continuous(y_name);
   PLUSS_CHECK(
       x.has_value(),
-      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(x_name) + "'");
+      std::string("flash::jointplot(dataset): no numeric column named '") + std::string(x_name) + "'");
   PLUSS_CHECK(
       y.has_value(),
-      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(y_name) + "'");
+      std::string("flash::jointplot(dataset): no numeric column named '") + std::string(y_name) + "'");
   PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
   return jointplot(studio, *x, *y, options);
 }
@@ -6301,13 +6423,13 @@ inline Studio& jointplot(
   if (name == "lagoon") return PaletteRamp::lagoon();
   if (name == "meadow") return PaletteRamp::meadow();
   if (name == "neutral") return PaletteRamp::neutral();
-  return PaletteRamp::ocean();
+  if (name == "ocean") return PaletteRamp::ocean();
+  PLUSS_FAIL("flash::color_palette: unknown palette '" + std::string(name) +
+             "'; the palettes are deep, muted, pastel, bright, dark, colorblind, thermal, lagoon, meadow, neutral and ocean");
 }
 
 [[nodiscard]] inline PaletteRamp blend_palette(std::vector<Rgba> colors, std::string name = "blend") {
-  if (colors.empty()) {
-    colors = {Rgba::from_u8(42, 95, 153), Rgba::from_u8(229, 107, 111)};
-  }
+  PLUSS_CHECK(!colors.empty(), "flash::blend_palette: at least one colour is required");
   return PaletteRamp(std::move(name), std::move(colors));
 }
 
@@ -6372,9 +6494,8 @@ inline Studio& jointplot(
 [[nodiscard]] inline PaletteRamp mpl_palette(std::string_view name = "viridis") {
   // PlussPl only ships five built-in named ramps (see PaletteRamp), not a full
   // matplotlib colormap catalog, so this maps common mpl colormap-family names to
-  // their closest available ramp by hue progression, falling back to lagoon
-  // (viridis's own match: indigo -> blue -> teal -> green -> yellow) for anything
-  // unrecognized.
+  // their closest available ramp by hue progression; an unrecognized name is
+  // an error rather than a silent fallback.
   if (name == "viridis" || name == "cividis") return PaletteRamp::lagoon();
   if (name == "plasma" || name == "inferno" || name == "magma" || name == "hot" ||
       name == "afmhot") {
@@ -6387,7 +6508,9 @@ inline Studio& jointplot(
   if (name == "greys" || name == "gray" || name == "grey" || name == "binary") {
     return PaletteRamp::neutral();
   }
-  return PaletteRamp::lagoon();
+  PLUSS_FAIL("flash::mpl_palette: unknown colormap name '" + std::string(name) +
+             "'; the names are viridis, cividis, plasma, inferno, magma, hot, afmhot, blues, cool, winter, ocean, greens, summer, spring, "
+             "greys, gray, grey and binary");
 }
 
 [[nodiscard]] inline PaletteRamp xkcd_palette() {

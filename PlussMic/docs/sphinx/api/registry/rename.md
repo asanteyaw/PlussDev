@@ -114,8 +114,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.rename("city", "id");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

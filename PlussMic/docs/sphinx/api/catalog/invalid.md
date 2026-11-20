@@ -13,11 +13,12 @@ Catalog Catalog::invalid() const
 
 ## What It Does
 
-Reports per-cell validity across every stream — each stream's own `invalid()`, applied
-independently, returning a `Bool`-dtype result stream per key. `invalid()` and
-[`isnull()`](isnull.md) call different underlying methods on each stream (`invalid()` vs.
-`isnull()`), but in ordinary use — including a `NULL`-marked cell or an unmarked `NaN` in a
-numeric stream — they report the same rows as invalid.
+Reports, for every stream, which records are not ordinary numbers — each stream's own
+`invalid()`, applied independently, returning a `Bool`-dtype result stream per key. A record
+is invalid when it is missing (`NULL`), a `NaN`, or an infinity: `invalid()` is the union of
+[`isnull()`](isnull.md), [`isnan()`](isnan.md) and [`isinf()`](isinf.md). It therefore
+agrees with `isnull()` for a missing record and **also** flags a `NaN`, which `isnull()` does
+not, because a `NaN` is a value and not a missing record.
 
 ## Parameters
 
@@ -61,8 +62,8 @@ city                     | Series       | Series[bool]     | 3       | [false, f
 ========================================================================================================================
 ```
 
-Example 2. An unmarked `NaN` in a numeric stream (no explicit validity mask at all) is
-still reported as invalid.
+Example 2. A `NaN` in a numeric stream (no validity mask at all) is reported as invalid,
+even though it is not missing: `isnull()` is `false` for the same stream.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({
@@ -71,6 +72,7 @@ auto ct = pluss::kindle::Catalog({
 
 auto out = ct.invalid();
 std::cout << out;
+std::cout << ct.isnull();
 ```
 
 ### Output
@@ -84,10 +86,19 @@ key                      | kind         | dtype            | cs      | preview
 ------------------------------------------------------------------------------------------------------------------------
 id                       | Series       | Series[bool]     | 3       | [false, true, false]                             
 ========================================================================================================================
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [id]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[bool]     | 3       | [false, false, false]                            
+========================================================================================================================
 ```
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Every resulting stream is `Series[bool]`, regardless of the source stream's own payload
   kind.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
@@ -102,8 +113,8 @@ id                       | Series       | Series[bool]     | 3       | [false, t
     <span class="label">Previous</span>
     <span class="title">info</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

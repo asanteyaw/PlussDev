@@ -56,8 +56,8 @@ Example 1. A 2-element weighted moving average that favors the most recent value
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().weigh({0.25, 0.75});
@@ -107,8 +107,7 @@ std::cout << min_b;
 2    | 15  
 3    | 15  
 -----------
-[4 cs x 1 feat]
-===========
+[4 cs x 1 feat]===========
      | load
 -----------
 0    | 10  
@@ -129,15 +128,15 @@ Example 3. An empty `weights` list, and an out-of-range `min_count`, each throw.
 ```cpp
 try {
   auto out = readings.features({"load"}).ts().weigh({});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto out = readings.features({"load"}).ts().weigh({0.25, 0.75}, WindowStatistic::Mean, 3);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -145,8 +144,8 @@ try {
 ### Output
 
 ```text
-Slate::weigh: weights cannot be empty
-Slate::weigh: invalid min_count
+Shelf::weigh: weights cannot be empty
+Shelf::weigh: invalid min_count
 ```
 
 An empty weight kernel has no window width to speak of, so it's rejected

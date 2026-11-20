@@ -5,8 +5,8 @@ Return the coordinate of the maximum value along the requested axis.
 """
 
 returns = """
-`Slate`
-    Label/position slate describing where each maximum was found.
+`Shelf`
+    Label/position shelf describing where each maximum was found.
 """
 
 notes = [

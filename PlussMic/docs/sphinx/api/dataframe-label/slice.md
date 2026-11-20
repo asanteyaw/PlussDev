@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const
-Slate DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const
+Shelf DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const
+Shelf DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ Two different slicing conventions:
   both ends. If either value never occurs, or `start`'s position ends up after
   `stop`'s, it throws.
 
-Both overloads return the sliced case-label **values** as a bare `Slate` —
+Both overloads return the sliced case-label **values** as a bare `Shelf` —
 not a filtered `DataFrame`.
 
 ## Parameters
@@ -40,7 +40,7 @@ occurrence through `stop`'s **last** occurrence, inclusive.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The sliced case-label values, plain default integer index.
 
 ## Examples
@@ -51,8 +51,8 @@ Example 1. Positional slice — exclusive of `stop`.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().slice(1, 3);
@@ -84,7 +84,7 @@ std::cout << out2;
 0  east
 1  west
 2  east
-ptype: Note
+Name: slice, ptype: Note
 ```
 
 `start = "east"` matches the *first* `"east"` (row `0`); `stop = "east"`
@@ -98,22 +98,22 @@ Example 3. A `start` or `stop` value that doesn't occur throws, and so does a
 ```cpp
 try {
   auto out = labeled.labels().slice("missing", "east");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto out = labeled.labels().slice("east", "missing");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto out = labeled.labels().slice("north", "east");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -121,9 +121,9 @@ try {
 ### Output
 
 ```text
-Slate::label().slice: start label not found
-Slate::label().slice: stop label not found
-Slate::label().slice: start label occurs after stop label
+Shelf::label().slice: start label not found
+Shelf::label().slice: stop label not found
+Shelf::label().slice: start label occurs after stop label
 ```
 
 `"missing"` never occurs as either bound, so each throws its own not-found

@@ -112,8 +112,8 @@ std::cout << "]";
     <span class="label">Previous</span>
     <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="tail.html">
+  <a class="next-link" href="tabelize.html">
     <span class="label">Next</span>
-    <span class="title">sum</span>
+    <span class="title">tabelize</span>
   </a>
 </div>

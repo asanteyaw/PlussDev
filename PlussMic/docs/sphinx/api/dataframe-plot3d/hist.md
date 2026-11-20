@@ -89,8 +89,8 @@ for (int i = 0; i < 200; ++i) {
 }
 
 auto samples = DataFrame({
-    {"a", Slate(pluss::make_series(xs))},
-    {"b", Slate(pluss::make_series(ys))},
+    {"a", Shelf(pluss::make_series(xs))},
+    {"b", Shelf(pluss::make_series(ys))},
 });
 
 auto chart = samples.plot3d().hist("a", "b");

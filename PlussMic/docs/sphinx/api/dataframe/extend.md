@@ -71,15 +71,15 @@ an extra feature the other doesn't.
 using namespace pluss::table;
 
 auto jan = DataFrame({
-    {"id",     Slate(pluss::make_series({1, 2}))},
-    {"amount", Slate(pluss::make_series({100.0, 150.0}))},
-}, Slate(pluss::make_note({"a", "b"})));
+    {"id",     Shelf(pluss::make_series({1, 2}))},
+    {"amount", Shelf(pluss::make_series({100.0, 150.0}))},
+}, Shelf(pluss::make_note({"a", "b"})));
 
 auto feb = DataFrame({
-    {"id",     Slate(pluss::make_series({3, 4}))},
-    {"amount", Slate(pluss::make_series({200.0, 50.0}))},
-    {"bonus",  Slate(pluss::make_series({10.0, 20.0}))},
-}, Slate(pluss::make_note({"c", "d"})));
+    {"id",     Shelf(pluss::make_series({3, 4}))},
+    {"amount", Shelf(pluss::make_series({200.0, 50.0}))},
+    {"bonus",  Shelf(pluss::make_series({10.0, 20.0}))},
+}, Shelf(pluss::make_note({"c", "d"})));
 
 auto out = jan.extend(feb);
 std::cout << out;

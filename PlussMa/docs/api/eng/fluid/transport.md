@@ -263,7 +263,6 @@ UA 5000.0000 W/K: junction 334.1276 K, exact 334.1276 K, energy 24837837101.9181
 UA 20000.0000 W/K: junction 320.1985 K, exact 320.1982 K, energy 24245008735.7612 J, energy error -0.0004 J
 UA 80000.0000 W/K: junction 295.6448 K, exact 295.6440 K, energy 22860817189.1971 J, energy error 0.0001 J
 ```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

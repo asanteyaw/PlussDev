@@ -4,7 +4,7 @@
 
 You have a network of resistors, capacitors, inductors, sources and amplifiers, and you want its voltages and currents. `circuit::make` takes a description of the network, a `Net`, checks that it is well formed, and compiles it into a `Circuit` that the analysis functions solve. This page explains how a circuit is written down: the nodes, the element groups and their orientation, the sign conventions of the results, and the sweeps of component values that are written as batches.
 
-## The mental model
+## How it works
 
 A circuit is a set of **elements** connected between **nodes**. Nodes are numbered `0` to `nodes - 1`, and node `0` is always the **ground** (reference) node: its voltage is zero and it has no unknown. The analysis is **modified nodal analysis**: the unknowns are the voltages of the nodes `1, ..., nodes - 1`, plus a current for each element that cannot be written as a conductance (voltage sources, inductors, controlled voltage sources and op amps). Kirchhoff's current law at every node, and one equation for each extra current, give a linear system that is solved at once.
 

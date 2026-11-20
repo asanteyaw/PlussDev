@@ -65,15 +65,15 @@ auto ct = pluss::kindle::Catalog({
 
 try {
   ct.save_parquet("cities.parquet");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-loader::save_parquet: built without parquet-cpp support (install Arrow + Parquet C++ and reconfigure)
+
 ```
 
 ## Notes
@@ -95,8 +95,8 @@ loader::save_parquet: built without parquet-cpp support (install Arrow + Parquet
     <span class="label">Previous</span>
     <span class="title">save_json</span>
   </a>
-  <a class="next-link" href="save_txt.html">
+  <a class="next-link" href="save_streams.html">
     <span class="label">Next</span>
-    <span class="title">save_txt</span>
+    <span class="title">save_streams</span>
   </a>
 </div>

@@ -72,12 +72,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0}))},
 });
 
 auto biz = Nexus({
@@ -125,8 +125,8 @@ Example 3. Declaring a relationship with a name that's already in use throws.
 ```cpp
 try {
   auto dup = linked.add_relationship(rel);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -146,8 +146,8 @@ try {
   bad.right_table = "customers";
   bad.keys = {{"customer_id", "customer_id"}};
   auto x = biz.add_relationship(bad);
-} catch (const std::exception& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 
 try {
@@ -157,8 +157,8 @@ try {
   bad.right_table = "missing_table";
   bad.keys = {{"customer_id", "customer_id"}};
   auto x = biz.add_relationship(bad);
-} catch (const std::exception& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 
 try {
@@ -167,8 +167,8 @@ try {
   bad.left_table = "orders";
   bad.right_table = "customers";
   auto x = biz.add_relationship(bad);
-} catch (const std::exception& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 ```
 
@@ -237,10 +237,6 @@ std::cout << biz.nrelationships() << " " << mutable_biz.nrelationships();
   relationship actually holds against the current data.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../nexus_api_reference.html">
-    <span class="label">Previous</span>
-    <span class="title">Nexus API Reference</span>
-  </a>
   <a class="next-link" href="apply.html">
     <span class="label">Next</span>
     <span class="title">apply</span>

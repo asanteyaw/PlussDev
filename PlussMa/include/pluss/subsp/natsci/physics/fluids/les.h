@@ -93,7 +93,7 @@ inline Series wale(const std::vector<std::vector<Series>> &g, double delta, doub
     }
   const Series numerator = sd2.pow(1.5);
   const Series denominator = s2.pow(2.5).add(sd2.pow(1.25));
-  const Series safe = denominator.gt(0.0).where(denominator, denominator.mul(0.0).add(1.0));
+  const Series safe = pluss::series::where(denominator.gt(0.0), denominator, denominator.mul(0.0).add(1.0));
   return numerator.div(safe).mul(cw * cw * delta * delta);
 }
 
@@ -157,7 +157,7 @@ inline Series dynamic_smagorinsky(const Series &velocity, const std::vector<std:
     lm = spatial_mean(lm, d);
     mm = spatial_mean(mm, d);
   }
-  const Series safe = mm.gt(0.0).where(mm, mm.mul(0.0).add(1.0));
+  const Series safe = pluss::series::where(mm.gt(0.0), mm, mm.mul(0.0).add(1.0));
   Series cs2 = lm.div(safe).mul(mm.gt(0.0).to(mm.scalar_type()));
   if (closure.clip)
     cs2 = cs2.clamp_min(0.0);

@@ -42,13 +42,11 @@ The following programs isolate this symbol's normal contract, a materially diffe
 Courant one against four cells.
 
 @@example Eng/api/fluid_transport_decay.cpp@@
-
 ### Example 2
 
 A step and cells for a mixing front.
 
 @@example Eng/api/fluid_transport_mix.cpp@@
-
 ### Example 3
 
 Options that are refused.

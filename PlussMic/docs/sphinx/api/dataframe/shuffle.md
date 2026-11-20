@@ -43,9 +43,9 @@ Example 1. Shuffle row order, then verify the same rows are still all present.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -73,7 +73,7 @@ std::cout << shuffled.arrange({"id"}).equals(orders) << "\n";
 
 ```text
 3
-true
+1
 ```
 
 `shuffled` still has all `3` original rows — re-sorting it back by `id` ascending
@@ -93,7 +93,7 @@ std::cout << first.equals(second) << "\n";
 ### Output
 
 ```text
-true
+1
 ```
 
 Two calls with the identical seed `7` produce the identical row order on the same
@@ -117,9 +117,9 @@ permutation itself is not part of this API's portable contract.
   permuting the full set.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="show.html">
+  <a class="prev-link" href="shownull.html">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">shownull</span>
   </a>
   <a class="next-link" href="skew.html">
     <span class="label">Next</span>

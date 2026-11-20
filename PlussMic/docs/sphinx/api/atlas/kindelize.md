@@ -39,12 +39,12 @@ Example 1. Convert a two-frame atlas into an `Archive`.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({3.0, 4.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({3.0, 4.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Shelf(pluss::make_note({"jan", "feb"})));
 
 auto archive = atlas.kindelize();
 std::cout << "depth: " << archive.depth() << "\n";
@@ -85,9 +85,9 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
   applies to every frame.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="head.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="label.html">
     <span class="label">Next</span>

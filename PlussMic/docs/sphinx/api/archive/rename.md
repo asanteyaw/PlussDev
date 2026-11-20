@@ -113,8 +113,8 @@ auto ragged = pluss::kindle::Archive({c0, c1});
 
 try {
   ragged.rename("city", "location");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -137,12 +137,12 @@ Catalog::rename: unknown key 'city'
 - [`Archive::has`](has.md): confirm a key exists in every catalog before renaming it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nrecords.html">
+  <a class="prev-link" href="plot.html">
     <span class="label">Previous</span>
-    <span class="title">nrecords</span>
+    <span class="title">plot</span>
   </a>
-  <a class="next-link" href="shape.html">
+  <a class="next-link" href="scribbelize.html">
     <span class="label">Next</span>
-    <span class="title">shape</span>
+    <span class="title">scribbelize</span>
   </a>
 </div>

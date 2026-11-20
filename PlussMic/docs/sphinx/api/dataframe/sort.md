@@ -124,8 +124,8 @@ with `.yield()`.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city",  Slate(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
-    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {"city",  Shelf(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
+    {"sales", Shelf(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 
 auto out = df.sort().by("sales").yield();
@@ -252,8 +252,8 @@ builder equivalent of a per-level `ascending=[...]` style API.
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="sql.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">sql</span>
+    <span class="title">split</span>
   </a>
 </div>

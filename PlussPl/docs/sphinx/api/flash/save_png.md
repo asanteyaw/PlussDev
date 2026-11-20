@@ -54,6 +54,37 @@ Output:
 save_png wrote file exists: 1, non-empty: 1
 ```
 
+Example 2. A higher resolution gives a larger file for the same figure.
+
+```cpp
+auto fig = studio("flash_save_png_dpi");
+fig.pane2("curve").trend(x, y);
+flash::save_png(fig, low_path, 72);
+flash::save_png(fig, high_path, 216);
+std::cout << "the 216 dpi file is larger than the 72 dpi file: " << (fs::file_size(high_path) > fs::file_size(low_path)) << "\n";
+```
+
+Output:
+
+```text
+the 216 dpi file is larger than the 72 dpi file: 1
+```
+
+Example 3. The resolution argument is optional; without it the file is written at the default 144 dpi.
+
+```cpp
+auto fig = studio("flash_save_png_default");
+fig.pane2("curve").trend(x, y);
+flash::save_png(fig, path);
+std::cout << "default dpi, file written: " << fs::exists(path) << "\n";
+```
+
+Output:
+
+```text
+default dpi, file written: 1
+```
+
 ## Notes
 
 - Not `noexcept`.

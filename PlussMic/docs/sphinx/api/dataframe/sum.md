@@ -8,18 +8,18 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::sum(Axis axis = Axis::Case, bool skipnull = true) const
+Shelf DataFrame::sum(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does
 
-Reduces every numeric feature to a single total, returning one `Slate` whose entries
+Reduces every numeric feature to a single total, returning one `Shelf` whose entries
 line up with the frame's numeric feature names — a column-wise sum, one number per
 feature. Non-numeric features (`Note`, `Timeline`, `TimeIndex`) are skipped entirely
 rather than coerced into a total that wouldn't mean anything.
 
-Note the return type: `sum()` returns a `Slate`, not a `DataFrame`. It behaves like a
-labeled, one-dimensional result — printed the way a `Slate`/`Series` prints, with each
+Note the return type: `sum()` returns a `Shelf`, not a `DataFrame`. It behaves like a
+labeled, one-dimensional result — printed the way a `Shelf`/`Series` prints, with each
 feature name as its row label and a `ptype:` footer — not like the boxed, multi-column
 table that `DataFrame`-returning methods produce.
 
@@ -42,7 +42,7 @@ Controls how a missing value affects that feature's total:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's total.
 
@@ -54,10 +54,10 @@ Example 1. Sum every numeric feature, skipping missing values (the default).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto totals = orders.sum();
@@ -105,7 +105,7 @@ missing values to begin with.
 - `sum()`'s result is labeled by feature name, not by case — printing it looks like a
   small labeled `Series`, not like a row from the source frame.
 - Non-numeric features never appear in the result at all; they are not summed as `0` or
-  reported as an error, they are simply absent from the returned `Slate`.
+  reported as an error, they are simply absent from the returned `Shelf`.
 - For a summary that also frees you from committing to one specific statistic, see
   [`describe()`](describe.md), which reports `sum`-adjacent statistics (`mean`, `std`,
   quartiles) all at once.

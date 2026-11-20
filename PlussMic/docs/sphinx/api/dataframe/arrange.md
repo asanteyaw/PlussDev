@@ -73,12 +73,12 @@ Example 1. Sort by a single numeric feature, descending, with missing prices at 
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Shelf(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto by_price = orders.arrange({"unit_price"}, /*ascending=*/false, /*nulls_last=*/true);
@@ -143,12 +143,12 @@ std::cout << uniform_desc;
 ================================================================
      | order_id  city    product     units  unit_price  discount
 ----------------------------------------------------------------
-3    | 104       Tema    Monitor     3      320         0.08
-2    | 103       Tema    Laptop      1      1150        NULL
-5    | 106       Kumasi  Monitor     2      NULL        0.12
-4    | 105       Kumasi  Headphones  4      42          0.05
-1    | 102       Accra   Headphones  5      45.5        0.05
-0    | 101       Accra   Laptop      2      1200        0.1
+2    | 103       Tema    Laptop      1      1150        NULL    
+3    | 104       Tema    Monitor     3      320         0.08    
+4    | 105       Kumasi  Headphones  4      42          0.05    
+5    | 106       Kumasi  Monitor     2      NULL        0.12    
+0    | 101       Accra   Laptop      2      1200        0.1     
+1    | 102       Accra   Headphones  5      45.5        0.05    
 ----------------------------------------------------------------
 [6 cs x 6 feat]
 ```
@@ -167,3 +167,14 @@ mixed directions like "city ascending, price descending", you must use the
 - When you pass several feature names plus one `ascending` flag, that direction is
   shared by every key. Per-key direction requires `ArrangeSpec`.
 - If you need to sort case labels rather than feature values, use [`label().sort()`](labels.md).
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="any.html">
+    <span class="label">Previous</span>
+    <span class="title">any</span>
+  </a>
+  <a class="next-link" href="assign.html">
+    <span class="label">Next</span>
+    <span class="title">assign</span>
+  </a>
+</div>

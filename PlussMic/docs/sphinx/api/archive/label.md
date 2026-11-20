@@ -38,7 +38,7 @@ depth labels are not set"` if no depth labels have been set. Always check
 ```{important} align() throws on any unmatched target label — it does not fill with NULL
 `align(target_labels)` requires every label in `target_labels` to exist among the
 archive's own depth labels; a target label with no match throws `"Archive::label().align:
-label not found '<label>'"`. This is stricter than `Slate::align`/`Stream::lbl().align()`,
+label not found '<label>'"`. This is stricter than `Shelf::align`/`Stream::lbl().align()`,
 which fill unmatched positions with `NULL` (or a supplied `fill` value) instead of
 throwing.
 ```
@@ -67,8 +67,8 @@ auto archive = pluss::kindle::Archive({c0, c1});
 std::cout << "has(): " << archive.label().has() << "\n";
 try {
   archive.label().values();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -168,8 +168,8 @@ std::cout << "aligned catalog(0):\n" << aligned.catalog(0);
 
 try {
   archive.label().align(pluss::kindle::Stream(pluss::make_note({"a", "c"})));
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -195,7 +195,7 @@ Archive::label().align: label not found 'c'
 - `values()` throws rather than synthesizing a fallback when unlabeled — see the first
   important callout above. Check [`has()`](label.md) first.
 - `align()` throws on any unmatched target label rather than filling with `NULL` — see the
-  second important callout above. This is stricter than `Slate`/`Stream`'s own `align()`.
+  second important callout above. This is stricter than `Shelf`/`Stream`'s own `align()`.
 - `sort()`/`align()` both reorder the underlying catalogs together with the label stream —
   see Example 3.
 
@@ -206,9 +206,9 @@ Archive::label().align: label not found 'c'
 - [`Archive::catalog`](catalog.md): access a catalog by depth-index after sorting/aligning.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="kindelize.html">
+  <a class="prev-link" href="keys.html">
     <span class="label">Previous</span>
-    <span class="title">kindelize</span>
+    <span class="title">keys</span>
   </a>
   <a class="next-link" href="loc.html">
     <span class="label">Next</span>

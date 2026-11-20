@@ -1,0 +1,36 @@
+# `lti::StateSpace` Introduction
+
+Holds `A`, `B`, `C`, `D` and the sample time. The matrices keep the shapes they were built with; the counts of states, inputs and outputs are read from them. A `StateSpace` can only be created through `state`, which guarantees the shapes agree.
+
+Whether the model is stable depends on the eigenvalues of `A` (left half-plane for a continuous system, inside the unit circle for a discrete one). For a two-state oscillator the sum of the eigenvalues is the trace, so a negative trace means the oscillation decays (the second example).
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The four matrices and their shapes.
+
+@@example Eng/api/lti_statespace_accessors.cpp@@
+
+### Example 2
+
+The trace of `A` for a negative, zero and positive damping.
+
+@@example Eng/api/lti_statespace_stability.cpp@@
+
+### Example 3
+
+Constructor errors seen through the type.
+
+@@example Eng/api/lti_statespace_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="a.html">
+    <span class="label">Next</span>
+    <span class="title">a</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

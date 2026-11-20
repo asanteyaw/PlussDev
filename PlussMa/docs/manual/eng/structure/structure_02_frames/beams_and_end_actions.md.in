@@ -4,7 +4,7 @@
 
 A beam is the simplest frame: a straight line of members carrying loads across its length. This page solves a cantilever and a simply supported beam against the textbook formulas, shows how to read the bending-moment diagram from the member end actions, and applies uniform loads along the members.
 
-## The mental model
+## How it works
 
 `solve(frame, load, fix)` takes a `Frame`, a `load` of shape `[..., node, 3]` holding `(Fx, Fy, Mz)` at each node, and a `Fix` naming the supported degrees of freedom (axes `0`, `1`, `2` are x, y and rotation). It returns a `FrameResult`:
 

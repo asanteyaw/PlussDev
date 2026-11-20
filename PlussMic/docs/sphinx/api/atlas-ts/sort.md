@@ -45,12 +45,12 @@ different months.
 using namespace pluss::table;
 
 auto q1 = DataFrame(
-    {{"value", Slate(pluss::make_series({30.0, 10.0, 20.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({30.0, 10.0, 20.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-03T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"})));
 auto q2 = DataFrame(
-    {{"value", Slate(pluss::make_series({99.0, 55.0, 77.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({99.0, 55.0, 77.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-02-03T00:00:00Z", "2024-02-01T00:00:00Z", "2024-02-02T00:00:00Z"})));
 auto atlas = Atlas({q1, q2});
 
@@ -88,14 +88,14 @@ explicit `Timeline`, to see it throw.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
-auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
+auto q1 = DataFrame({{"load", Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
+auto q2 = DataFrame({{"load", Shelf(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
 auto atlas = Atlas({q1, q2});
 
 try {
     auto out = atlas.ts().sort();
-} catch (const std::exception& e) {
-    std::string msg(e.what());
+} catch (const pluss::Error& e) {
+    std::string msg(e.message());
     std::cout << "threw: " << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -103,7 +103,7 @@ try {
 ### Output
 
 ```text
-threw: DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
+threw: DataFrameTsAccessor::sort: cases must be Timeline. Use df.labels().set("date") first
 ```
 
 `atlas.ts()` binds per-frame accessors that delegate straight to

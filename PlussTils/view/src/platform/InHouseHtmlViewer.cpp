@@ -7,6 +7,8 @@
 #include <condition_variable>
 #include <cstdint>
 #include <cmath>
+#include <cstdio>
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -14,6 +16,7 @@
 #include <mutex>
 #include <optional>
 #include <sstream>
+#include <set>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -345,6 +348,219 @@ bool set_element_text(window::HtmlNode& node,
   return false;
 }
 
+[[nodiscard]] const window::HtmlNode* find_node_by_id(const window::HtmlNode& node,
+                                                       const std::string_view id) {
+  const auto* value = attribute_value(node, "id");
+  if (value != nullptr && *value == id) {
+    return &node;
+  }
+  for (const auto& child : node.children) {
+    if (const auto* found = find_node_by_id(child, id)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
+[[nodiscard]] window::HtmlNode* find_node_by_id_mut(window::HtmlNode& node, const std::string_view id) {
+  const auto* value = attribute_value(node, "id");
+  if (value != nullptr && *value == id) {
+    return &node;
+  }
+  for (auto& child : node.children) {
+    if (auto* found = find_node_by_id_mut(child, id)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
+// Generic tabs: <button class="tab" data-tab-group=G data-tab-target=PANEL_ID>
+// switches the matching <section class="tab-panel" data-tab-group=G id=PANEL_ID>.
+void apply_tab_selection(window::HtmlNode& node,
+                         const std::string_view group,
+                         const std::string_view button_id,
+                         const std::string_view panel_id) {
+  const auto* node_group = attribute_value(node, "data-tab-group");
+  if (node_group != nullptr && *node_group == group) {
+    const auto* id = attribute_value(node, "id");
+    const std::string_view node_id = id != nullptr ? std::string_view(*id) : std::string_view{};
+    if (has_class(node, "tab")) {
+      set_class(node, "active", node_id == button_id);
+    } else if (has_class(node, "tab-panel")) {
+      set_class(node, "active", node_id == panel_id);
+    }
+  }
+  for (auto& child : node.children) {
+    apply_tab_selection(child, group, button_id, panel_id);
+  }
+}
+
+void collect_view_options(const window::HtmlNode& node,
+                          std::vector<window::ShellMenuOption>& options) {
+  if (has_class(node, "tab") && attribute_value(node, "data-tab-group") != nullptr) {
+    const auto* id = attribute_value(node, "id");
+    if (id != nullptr) {
+      std::string label;
+      collect_plain_text(node, label);
+      options.push_back(window::ShellMenuOption{std::move(label), *id});
+    }
+  }
+  for (const auto& child : node.children) {
+    collect_view_options(child, options);
+  }
+}
+
+void hide_view_picker(window::HtmlNode& node) {
+  if (has_class(node, "view-picker")) {
+    set_class(node, "hidden", true);
+  }
+  for (auto& child : node.children) {
+    hide_view_picker(child);
+  }
+}
+
+// Switch to the panel of tab button `button_id`; mirrors a click on that button.
+// Fills a lazy view panel (data-lazy="<id>", still empty) with the HTML `render_panel` returns for
+// that id, by parsing it as a fragment and moving its nodes under the panel.
+bool fill_lazy_panel(window::HtmlNode& root,
+                     const std::string_view panel_id,
+                     const std::function<std::string(std::string_view)>& render_panel) {
+  if (!render_panel) {
+    return false;
+  }
+  auto* panel = find_node_by_id_mut(root, panel_id);
+  if (panel == nullptr || !panel->children.empty()) {
+    return false;
+  }
+  const auto* lazy = attribute_value(*panel, "data-lazy");
+  if (lazy == nullptr) {
+    return false;
+  }
+  const std::string html = render_panel(*lazy);
+  auto fragment = window::parse_html_document("<html><body>" + html + "</body></html>");
+  std::function<window::HtmlNode*(window::HtmlNode&)> find_body = [&](window::HtmlNode& node) -> window::HtmlNode* {
+    if (node.tag == "body") {
+      return &node;
+    }
+    for (auto& child : node.children) {
+      if (auto* found = find_body(child)) {
+        return found;
+      }
+    }
+    return nullptr;
+  };
+  auto* body = find_body(fragment.root);
+  if (body == nullptr) {
+    return false;
+  }
+  for (auto& child : body->children) {
+    panel->children.push_back(std::move(child));
+  }
+  return true;
+}
+
+// True when a table painted from the virtual model is currently on screen (its view is the
+// active one and nothing above it is hidden).
+bool virtual_table_visible(const window::HtmlNode& node) {
+  if (has_class(node, "hidden") || (has_class(node, "tab-panel") && !has_class(node, "active"))) {
+    return false;
+  }
+  if (node.tag == "table") {
+    const auto* attribute = attribute_value(node, "data-virtual-table");
+    return attribute != nullptr && *attribute == "true";
+  }
+  for (const auto& child : node.children) {
+    if (virtual_table_visible(child)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// ---- scripted events, for tests --------------------------------------------------------------
+// With PLUSSTILS_VIEW_SCRIPT set (semicolon-separated), the viewer plays commands through its
+// real event loop, a few frames apart, and prints what happened to stderr. Commands:
+//   note:<text>            a toolbar/menu event, e.g. note:view:tab-summary, note:theme:miami
+//   hover-border:<col>     move the pointer onto that column's border
+//   drag-border:<col>:<dx> press on the border, drag dx pixels, release
+//   dump                   print the active view, its table and the viewer's state
+//   close                  close the window
+std::deque<std::string> scripted_commands() {
+  std::deque<std::string> commands;
+  if (const char* raw = std::getenv("PLUSSTILS_VIEW_SCRIPT"); raw != nullptr) {
+    std::string text(raw);
+    std::size_t start = 0;
+    while (start <= text.size()) {
+      const auto end = text.find(';', start);
+      const auto piece = text.substr(start, end == std::string::npos ? std::string::npos : end - start);
+      if (!piece.empty()) {
+        commands.push_back(piece);
+      }
+      if (end == std::string::npos) {
+        break;
+      }
+      start = end + 1;
+    }
+  }
+  return commands;
+}
+
+void collect_active_panels(const window::HtmlNode& node, std::vector<std::string>& out) {
+  if (has_class(node, "tab-panel") && has_class(node, "active")) {
+    if (const auto* id = attribute_value(node, "id")) {
+      out.push_back(*id);
+    }
+  }
+  for (const auto& child : node.children) {
+    collect_active_panels(child, out);
+  }
+}
+
+std::size_t count_rows(const window::HtmlNode& node) {
+  std::size_t rows = node.tag == "tr" ? 1 : 0;
+  for (const auto& child : node.children) {
+    rows += count_rows(child);
+  }
+  return rows;
+}
+
+const window::HtmlNode* find_active_panel_node(const window::HtmlNode& node) {
+  if (has_class(node, "tab-panel") && has_class(node, "active")) {
+    return &node;
+  }
+  for (const auto& child : node.children) {
+    if (const auto* found = find_active_panel_node(child)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
+bool select_view_tab(window::HtmlNode& root, const std::string_view button_id) {
+  const auto* tab = find_node_by_id(root, button_id);
+  if (tab == nullptr || !has_class(*tab, "tab")) {
+    return false;
+  }
+  const auto* group = attribute_value(*tab, "data-tab-group");
+  const auto* panel = attribute_value(*tab, "data-tab-target");
+  if (group == nullptr || panel == nullptr) {
+    return false;
+  }
+  apply_tab_selection(root, *group, button_id, *panel);
+  if (const auto* label_id = attribute_value(*tab, "data-dropdown-label")) {
+    std::string label;
+    collect_plain_text(*tab, label);
+    (void)set_element_text(root, *label_id, label);
+    if (const auto* menu_id = attribute_value(*tab, "data-dropdown-menu")) {
+      if (auto* menu = find_node_by_id_mut(root, *menu_id)) {
+        set_class(*menu, "open", false);
+      }
+    }
+  }
+  return true;
+}
+
 void set_atlas_frame_visibility(window::HtmlNode& node, const std::optional<int> active_frame) {
   if (has_class(node, "atlas-panel")) {
     const auto* index = attribute_value(node, "data-frame-index");
@@ -442,7 +658,7 @@ void collect_export_tables(const window::HtmlNode& node,
                            ExportTables& tables) {
   const bool visible =
       ancestors_visible && !has_class(node, "hidden") &&
-      (!has_class(node, "atlas-panel") || has_class(node, "active"));
+      ((!has_class(node, "atlas-panel") && !has_class(node, "tab-panel")) || has_class(node, "active"));
   if (!visible) {
     return;
   }
@@ -714,7 +930,9 @@ bool show_inhouse_html_window(const std::string& title,
                               const std::string& svg_snapshot_name,
                               std::shared_ptr<const VirtualTableModel>
                                   virtual_table_model,
-                              const bool table_viewport_scroll_only) {
+                              const bool table_viewport_scroll_only,
+                              std::vector<HtmlMenu> menus,
+                              std::function<std::string(std::string_view)> render_panel) {
   if ((html.empty() && svg_payload.empty()) || !inhouse_html_viewer_available()) {
     return false;
   }
@@ -749,6 +967,19 @@ bool show_inhouse_html_window(const std::string& title,
   int table_sort_column = -1;
   bool table_sort_ascending = true;
   std::string table_sort_target;
+  // Column widths the user has set by dragging header borders (table target -> column -> px),
+  // and the drag in progress, if any.
+  std::unordered_map<std::string, std::unordered_map<int, int>> table_column_widths;
+  struct ResizeDrag {
+    bool active{false};
+    std::string target{};
+    int column{0};
+    int start_x{0};
+    int start_width{0};
+  } resize_drag;
+  std::string hover_resize_target;  // column border under the pointer
+  int hover_resize_column = -1;
+  std::set<std::pair<std::string, int>> fitted_columns;  // columns currently auto-fitted (double-click toggles)
   std::string active_input_target;
   std::unordered_map<std::string, std::string> input_values;
   double widget_scale = 1.0;
@@ -763,7 +994,49 @@ bool show_inhouse_html_window(const std::string& title,
     save_formats.push_back(window::ShellSaveFormat{"Excel workbook", "xlsx"});
   }
 
-  if (!shell->open(window::ShellConfig{document.title, size, std::move(save_formats)})) {
+  // Toolbar menus, left to right: the window-level ones (Theme, ...) and then "View". View
+  // lists the page's own view tabs plus any window menu marked `in_view_menu` (e.g.
+  // Format) as a cascading entry.
+  std::vector<window::ShellMenu> shell_menus;
+  if (shell->supports_menus()) {
+    window::ShellMenu view_menu{"view", "View", {}};
+    collect_view_options(document.root, view_menu.options);
+    const bool has_view_tabs = !view_menu.options.empty();
+    for (const auto& menu : menus) {
+      if (!menu.render || menu.options.empty()) {
+        continue;
+      }
+      window::ShellMenuOption cascade{menu.title, menu.id, {}};
+      for (const auto& option : menu.options) {
+        cascade.children.push_back(window::ShellMenuOption{option.label, option.id, {}});
+      }
+      if (menu.in_view_menu) {
+        view_menu.options.push_back(std::move(cascade));
+      } else {
+        window::ShellMenu shell_menu{menu.id, menu.title, std::move(cascade.children)};
+        shell_menus.push_back(std::move(shell_menu));
+      }
+    }
+    if (has_view_tabs) {
+      hide_view_picker(document.root);  // the native "View" menu replaces the in-page picker
+    }
+    if (!view_menu.options.empty()) {
+      shell_menus.push_back(std::move(view_menu));
+    }
+  }
+  std::string last_view_button;  // survives re-renders
+  // Selecting a view first fills its panel if that is still empty (views are computed on demand).
+  const auto select_view = [&](const std::string_view button_id) {
+    if (const auto* tab = find_node_by_id(document.root, button_id)) {
+      if (const auto* target = attribute_value(*tab, "data-tab-target")) {
+        (void)fill_lazy_panel(document.root, *target, render_panel);
+      }
+    }
+    return select_view_tab(document.root, button_id);
+  };
+
+  if (!shell->open(window::ShellConfig{document.title, size, std::move(save_formats),
+                                       std::move(shell_menus)})) {
     return false;
   }
   const double backing_scale = shell->backing_scale_factor();
@@ -809,6 +1082,9 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.table_sort_column = table_sort_column;
     render_cfg.table_sort_ascending = table_sort_ascending;
     render_cfg.table_sort_target = table_sort_target;
+    render_cfg.table_column_widths = &table_column_widths;
+    render_cfg.hover_resize_target = hover_resize_target;
+    render_cfg.hover_resize_column = hover_resize_column;
     render_cfg.active_input_target = active_input_target;
     render_cfg.show_input_caret = caret_visible;
     render_cfg.virtual_row_order =
@@ -916,7 +1192,7 @@ bool show_inhouse_html_window(const std::string& title,
       return shell->save_canvas_pdf(presented_canvas, path);
     }
     const auto export_tables =
-        virtual_table_model != nullptr
+        virtual_table_model != nullptr && virtual_table_visible(document.root)
             ? ExportTables{export_table_from_virtual_model(
                   *virtual_table_model,
                   virtual_row_order != nullptr ? virtual_row_order.get() : nullptr)}
@@ -943,6 +1219,16 @@ bool show_inhouse_html_window(const std::string& title,
     return !path.empty() && write_text_file(path, svg_payload);
   };
 
+  window::ShellCursor last_cursor = window::ShellCursor::Arrow;
+  const auto set_cursor_ = [&](const window::ShellCursor cursor) {
+    last_cursor = cursor;
+    shell->set_cursor(cursor);
+  };
+  std::deque<std::string> script = scripted_commands();
+  const auto script_started = std::chrono::steady_clock::now();
+  int script_wait = 0;
+  auto script_resume_at = std::chrono::steady_clock::now();
+
   auto animation_clock = std::chrono::steady_clock::now();
   bool render_pending = false;
   bool pending_damage_only = true;
@@ -952,7 +1238,112 @@ bool show_inhouse_html_window(const std::string& title,
     bool table_scroll_damage_only = true;
     window::SizeI next_size = size;
 
-    for (const auto& event : shell->poll_events()) {
+    std::vector<window::ShellEvent> events = shell->poll_events();
+    if (!script.empty() && std::chrono::steady_clock::now() >= script_resume_at && ++script_wait >= 4) {  // let a few frames render between steps
+      script_wait = 0;
+      const std::string command = script.front();
+      script.pop_front();
+      const auto find_border = [&](const int column) -> const window::HtmlHitRegion* {
+        for (const auto& region : hit_regions) {
+          if (region.action == "table.resize.column" && region.value == column) {
+            return &region;
+          }
+        }
+        return nullptr;
+      };
+      const auto centre = [](const window::HtmlHitRegion& region) {
+        return std::pair<double, double>{region.rect.x + region.rect.width / 2.0, region.rect.y + region.rect.height / 2.0};
+      };
+      if (command.rfind("sleep:", 0) == 0) {
+        // Pause the script (so a real pointer can be driven from outside meanwhile).
+        script_resume_at = std::chrono::steady_clock::now() + std::chrono::milliseconds(std::atoi(command.c_str() + 6));
+      } else if (command.rfind("note:", 0) == 0) {
+        window::ShellEvent e{};
+        e.kind = window::ShellEventKind::ShortcutCommand;
+        e.note = command.substr(5);
+        events.push_back(e);
+      } else if (command.rfind("hover-border:", 0) == 0) {
+        if (const auto* border = find_border(std::atoi(command.c_str() + 13))) {
+          const auto [x, y] = centre(*border);
+          window::ShellEvent e{};
+          e.kind = window::ShellEventKind::PointerMove;
+          e.x = x;
+          e.y = y;
+          events.push_back(e);
+        } else {
+          std::fprintf(stderr, "[view-script] %s: no such border\n", command.c_str());
+        }
+      } else if (command.rfind("drag-border:", 0) == 0) {
+        const int column = std::atoi(command.c_str() + 12);
+        const auto colon = command.rfind(':');
+        const double dx = colon != std::string::npos ? std::atof(command.c_str() + colon + 1) : 0.0;
+        if (const auto* border = find_border(column)) {
+          const auto [x, y] = centre(*border);
+          window::ShellEvent down{};
+          down.kind = window::ShellEventKind::PointerDown;
+          down.x = x;
+          down.y = y;
+          window::ShellEvent drag{};
+          drag.kind = window::ShellEventKind::PointerDrag;
+          drag.x = x + dx;
+          drag.y = y;
+          drag.delta_x = dx;
+          window::ShellEvent up{};
+          up.kind = window::ShellEventKind::PointerUp;
+          up.x = x + dx;
+          up.y = y;
+          events.push_back(down);
+          events.push_back(drag);
+          events.push_back(up);
+        } else {
+          std::fprintf(stderr, "[view-script] %s: no such border\n", command.c_str());
+        }
+      } else if (command == "dump") {
+        std::vector<std::string> active;
+        collect_active_panels(document.root, active);
+        const auto* panel = find_active_panel_node(document.root);
+        std::fprintf(stderr, "[view-script] t=%lldms dump: active panels=",
+                     static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                std::chrono::steady_clock::now() - script_started)
+                                                .count()));
+        for (const auto& id : active) {
+          std::fprintf(stderr, "%s ", id.c_str());
+        }
+        std::fprintf(stderr, "rows in active panel=%zu cursor=%s hover=%s/%d",
+                     panel != nullptr ? count_rows(*panel) : std::size_t{0},
+                     last_cursor == window::ShellCursor::ResizeColumn ? "resize-column" : "arrow",
+                     hover_resize_target.c_str(), hover_resize_column);
+        for (const auto& [table, widths] : table_column_widths) {
+          for (const auto& [column, width] : widths) {
+            std::fprintf(stderr, " width[%s][%d]=%d", table.c_str(), column, width);
+          }
+        }
+        for (const auto& region : hit_regions) {
+          if (region.action == "table.resize.column") {
+            std::fprintf(stderr, " border[%d]=%.0f,%.0f", region.value,
+                         region.rect.x + region.rect.width / 2.0, region.rect.y + region.rect.height / 2.0);
+          }
+        }
+        std::fprintf(stderr, "\n");
+      } else if (command.rfind("dblclick-border:", 0) == 0) {
+        if (const auto* border = find_border(std::atoi(command.c_str() + 16))) {
+          const auto [x, y] = centre(*border);
+          window::ShellEvent e{};
+          e.kind = window::ShellEventKind::PointerDown;
+          e.x = x;
+          e.y = y;
+          e.click_count = 2;
+          events.push_back(e);
+        } else {
+          std::fprintf(stderr, "[view-script] %s: no such border\n", command.c_str());
+        }
+      } else if (command == "close") {
+        window::ShellEvent e{};
+        e.kind = window::ShellEventKind::Closed;
+        events.push_back(e);
+      }
+    }
+    for (const auto& event : events) {
       if (event.kind == window::ShellEventKind::Closed) {
         closed = true;
       } else if (event.kind == window::ShellEventKind::ResizeRequested &&
@@ -963,9 +1354,38 @@ bool show_inhouse_html_window(const std::string& title,
       } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
                  event.note == "save_snapshot") {
         (void)save_as("png");
+      } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
+                 event.note.rfind("png-to:", 0) == 0) {
+        // Test hook: write the last presented frame to a file without a save dialog.
+        (void)window::save_canvas(presented_canvas, event.note.substr(7));
       } else if (event.kind == window::ShellEventKind::ShortcutCommand) {
         table_scroll_damage_only = false;
-        if (event.note.rfind("save_as:", 0) == 0) {
+        if (event.note.rfind("view:", 0) == 0) {
+          if (select_view(std::string_view(event.note).substr(5))) {
+            last_view_button = event.note.substr(5);
+            scroll_model.reset();
+            needs_render = true;
+          }
+        } else if (const auto colon = event.note.find(':'); colon != std::string::npos &&
+                   std::any_of(menus.begin(), menus.end(), [&](const HtmlMenu& menu) {
+                     return menu.id == std::string_view(event.note).substr(0, colon) && menu.render;
+                   })) {
+          // A window-level menu choice: re-render the page, then restore the current view.
+          const auto menu_id = std::string_view(event.note).substr(0, colon);
+          const auto menu = std::find_if(menus.begin(), menus.end(),
+                                         [&](const HtmlMenu& m) { return m.id == menu_id; });
+          const std::string rerendered = menu->render(std::string_view(event.note).substr(colon + 1));
+          if (!rerendered.empty()) {
+            document = window::parse_html_document(
+                rerendered, document.title.empty() ? std::string("PlussTilsView") : document.title);
+            layout_cache.clear();
+            hide_view_picker(document.root);
+            if (!last_view_button.empty()) {
+              (void)select_view(last_view_button);
+            }
+            needs_render = true;
+          }
+        } else if (event.note.rfind("save_as:", 0) == 0) {
           (void)save_as(event.note.substr(8));
         } else if (event.note == "zoom_in") {
           widget_scale = std::min(3.0, widget_scale + 0.1);
@@ -998,6 +1418,38 @@ bool show_inhouse_html_window(const std::string& title,
                 event.shift_modifier,
                 !event.precise_delta) ||
             needs_render;
+      } else if (event.kind == window::ShellEventKind::PointerMove) {
+        // Hover: over a column border the pointer becomes the resize cursor (and the border
+        // is highlighted), like a spreadsheet.
+        const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x)));
+        const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y)));
+        auto hover_idx = find_hit_region_index(hit_regions, px, py);
+        if (!hover_idx.has_value() && size.height > 0) {
+          const int py_flipped = clamp_nonneg_int64(
+              static_cast<std::int64_t>(std::llround(size.height)) - static_cast<std::int64_t>(py));
+          hover_idx = find_hit_region_index(hit_regions, px, py_flipped);
+        }
+        const bool over_border =
+            hover_idx.has_value() && hit_regions[*hover_idx].action == "table.resize.column";
+        const std::string next_target = over_border ? hit_regions[*hover_idx].target : std::string{};
+        const int next_column = over_border ? hit_regions[*hover_idx].value : -1;
+        if (next_target != hover_resize_target || next_column != hover_resize_column) {
+          hover_resize_target = next_target;
+          hover_resize_column = next_column;
+          table_scroll_damage_only = false;
+          needs_render = true;
+        }
+        set_cursor_(over_border || resize_drag.active ? window::ShellCursor::ResizeColumn
+                                                             : window::ShellCursor::Arrow);
+      } else if (event.kind == window::ShellEventKind::PointerDrag && resize_drag.active) {
+        // Dragging a header border: the column follows the pointer, wrapping live.
+        const int dx = static_cast<int>(std::lround(event.x)) - resize_drag.start_x;
+        if (dx != 0) fitted_columns.erase({resize_drag.target, resize_drag.column});
+        table_column_widths[resize_drag.target][resize_drag.column] =
+            std::clamp(resize_drag.start_width + dx, 48, 4000);
+        layout_cache.clear();
+        table_scroll_damage_only = false;
+        needs_render = true;
       } else if (event.kind == window::ShellEventKind::PointerDrag) {
         needs_render =
             scroll_model.pointer_drag(
@@ -1033,6 +1485,29 @@ bool show_inhouse_html_window(const std::string& title,
               table_sort_ascending = true;
             }
             needs_render = true;
+          } else if (hit.action == "table.resize.column") {
+            if (event.click_count >= 2) {
+              // Double-click on a border toggles that column: fit to its widest value (width 0 =
+              // auto-fit), then back to the default width, then fit again.
+              const std::pair<std::string, int> key{hit.target, hit.value};
+              if (fitted_columns.erase(key) > 0) {
+                table_column_widths[hit.target].erase(hit.value);
+              } else {
+                table_column_widths[hit.target][hit.value] = 0;
+                fitted_columns.insert(key);
+              }
+              layout_cache.clear();
+              table_scroll_damage_only = false;
+              needs_render = true;
+            } else {
+              resize_drag = ResizeDrag{true, hit.target, hit.value, px, hit.aux};
+            }
+          } else if (hit.action == "table.sort.asc" || hit.action == "table.sort.desc") {
+            // The up / down arrow on a column header: sort that column that way.
+            table_sort_column = hit.value;
+            table_sort_target = hit.target;
+            table_sort_ascending = hit.action == "table.sort.asc";
+            needs_render = true;
           } else if (hit.action == "button.click") {
             if (hit.target == "zoom-in") {
               widget_scale = std::min(3.0, widget_scale + 0.1);
@@ -1051,11 +1526,29 @@ bool show_inhouse_html_window(const std::string& title,
             } else if (hit.target == "download-svg") {
               (void)save_svg();
             } else if (hit.target == "reset-table-view") {
+              table_column_widths.clear();
+              fitted_columns.clear();
+              layout_cache.clear();
               input_values["table-search"].clear();
               active_input_target.clear();
               table_sort_column = -1;
               table_sort_target.clear();
               table_sort_ascending = true;
+              scroll_model.reset();
+              needs_render = true;
+            } else if (const auto* tab = find_node_by_id(document.root, hit.target);
+                       tab != nullptr && has_class(*tab, "view-toggle")) {
+              // Dropdown toggle: open/close the menu named by data-dropdown.
+              const auto* menu_id = attribute_value(*tab, "data-dropdown");
+              if (menu_id != nullptr) {
+                if (auto* menu = find_node_by_id_mut(document.root, *menu_id)) {
+                  set_class(*menu, "open", !has_class(*menu, "open"));
+                  scroll_model.reset();
+                  needs_render = true;
+                }
+              }
+            } else if (select_view(hit.target)) {
+              last_view_button = hit.target;
               scroll_model.reset();
               needs_render = true;
             } else if (hit.target == "atlas-show-all") {
@@ -1103,6 +1596,11 @@ bool show_inhouse_html_window(const std::string& title,
           needs_render = true;
         }
       } else if (event.kind == window::ShellEventKind::PointerUp) {
+        if (resize_drag.active) {
+          resize_drag.active = false;
+          set_cursor_(hover_resize_column >= 0 ? window::ShellCursor::ResizeColumn
+                                                      : window::ShellCursor::Arrow);
+        }
         scroll_model.pointer_up();
       } else if (event.kind == window::ShellEventKind::TextInput) {
         table_scroll_damage_only = false;

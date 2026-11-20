@@ -52,3 +52,14 @@ grain_audit ncases=1
   report at the relationship level.
 - [`audit`](audit.md): `validate_keys`, the single-key-set check this report
   runs over every declared key set at once.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from.html">
+    <span class="label">Previous</span>
+    <span class="title">from</span>
+  </a>
+  <a class="next-link" href="graph.html">
+    <span class="label">Next</span>
+    <span class="title">graph</span>
+  </a>
+</div>

@@ -210,7 +210,12 @@ Series fit_state(const Series &state, const std::vector<std::int64_t> &target,
   std::vector<std::int64_t> aligned(
       target.size() - static_cast<std::size_t>(state.dim()), 1);
   aligned.insert(aligned.end(), state.sizes().begin(), state.sizes().end());
-  for (std::size_t axis = 0; axis < target.size(); ++axis) {
+  // The lane axes may broadcast (one state shared by every lane); the state axis may not: a state shorter than the filter order
+  // would otherwise be silently repeated into the missing slots.
+  PLUSS_CHECK(aligned.back() == target.back(),
+              prefix + "state length " + std::to_string(aligned.back()) + " does not match the filter order " +
+                  std::to_string(target.back()));
+  for (std::size_t axis = 0; axis + 1 < target.size(); ++axis) {
     PLUSS_CHECK(aligned[axis] == 1 || aligned[axis] == target[axis],
                 prefix + "state is not broadcastable to the signal lanes");
   }

@@ -4,7 +4,7 @@
 
 Logs and reviews hold facts inside sentences. This page pulls fields out of a server log, selects the failing requests, finds the slowest one, and then tokenises product reviews to count what people talk about.
 
-## The mental model
+## How it works
 
 Parsing is replacement with intent: a regular expression with a capture group, replaced by `$1`, keeps only the part you want and discards the rest, for every cell at once. Tokenising is different: each cell becomes a *variable number* of words, which a rectangular `Note` cannot hold, so the result is a **token batch**, a flat `Note` of all the words plus an `offsets` array that says where each cell's words start and end. When you need to leave Pluss, say so: `host()` copies the cells into ordinary C++ values.
 

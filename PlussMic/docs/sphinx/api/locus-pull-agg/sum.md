@@ -17,7 +17,7 @@ LocusPullAgg& LocusPullAgg::sum(std::initializer_list<std::pair<std::string_view
 The scoped spelling of [`LocusPull::sum`](../locus-pull/sum.md):
 `scope.sum("spend", "total")` inside an `agg("events")` scope is exactly
 `pull.sum("events.spend", "total")`. Requires a numeric feature; see that
-page for the shared null-for-empty and `NaN`-exclusion rules every numeric
+page for the shared null-for-empty and missing-value rules every numeric
 reducer follows.
 
 ## Parameters
@@ -83,6 +83,6 @@ appended nothing.
 ## See Also
 
 - [`LocusPull::sum`](../locus-pull/sum.md): the unscoped spelling, and the
-  shared null-for-empty and `NaN`-exclusion rules.
+  shared null-for-empty and missing-value rules.
 - [`mean`](mean.md), [`median`](median.md), [`min`](min.md), [`max`](max.md),
   [`std`](std.md), [`var`](var.md): the other scoped numeric reducers.

@@ -77,9 +77,9 @@ true false
 - [`Nexus::frame`](frame.md): fetch the table directly, throwing on an unknown key.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="grain_audit.html">
+  <a class="prev-link" href="graph.html">
     <span class="label">Previous</span>
-    <span class="title">grain_audit</span>
+    <span class="title">graph</span>
   </a>
   <a class="next-link" href="has_relationship.html">
     <span class="label">Next</span>

@@ -45,8 +45,8 @@ inside the object, set by `learn`, read back only through `map` /
   **every** feature ends up with zero output columns (nothing left to encode
   at all), or if `max_categories < 0`.
 
-`learn(slate, options = {})`
-: The single-column convenience overload — `slate` is treated as a
+`learn(shelf, options = {})`
+: The single-column convenience overload — `shelf` is treated as a
   one-feature batch. Equivalent to wrapping it in a
   [`FeatureBatch`](../../data/FeatureBatch.md) yourself and calling the
   overload above.
@@ -64,10 +64,10 @@ inside the object, set by `learn`, read back only through `map` /
   leaves the row all-zero for that feature. `Status::precondition` if not
   yet trained.
 
-`map(slate, options = {})`
-: The single-column convenience overload, paired with `learn(slate, ...)`.
+`map(shelf, options = {})`
+: The single-column convenience overload, paired with `learn(shelf, ...)`.
 
-`learn_map(batch_or_slate, learn_options = {}, infer_options = {})`
+`learn_map(batch_or_shelf, learn_options = {}, infer_options = {})`
 : `learn` then `map` on the same data, in one call.
 
 `dump_state()` / `load_state(state)`
@@ -93,7 +93,7 @@ inside the object, set by `learn`, read back only through `map` /
 The default fit and its one-hot layout, the three `unknown_categorical`
 policies on a value `map` was never fit on, `include_unknown_bucket = false`
 narrowing the output width, the `SkipFeature` overflow policy alongside
-a second, unaffected feature, and the single-column `Slate` overload
+a second, unaffected feature, and the single-column `Shelf` overload
 proven equivalent to wrapping the same data in a `FeatureBatch`.
 
 ### Example 1
@@ -280,8 +280,8 @@ data=[[1, 0, 0]]
 
 ### Example 5
 
-The single-column `Slate` overload — the same training/probe values as
-Example 1, fit and mapped through `learn(slate, ...)`/`map(slate, ...)`
+The single-column `Shelf` overload — the same training/probe values as
+Example 1, fit and mapped through `learn(shelf, ...)`/`map(shelf, ...)`
 directly instead of wrapping them in a `FeatureBatch` first. Identical
 output either way, confirming the "equivalent to wrapping it in a
 `FeatureBatch` yourself" claim above.
@@ -294,16 +294,16 @@ output either way, confirming the "equivalent to wrapping it in a
 
 int main() {
   namespace cls = pluss::ai::classic;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const Slate train(pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64));
-  const Slate probe(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64));
+  const Shelf train(pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64));
+  const Shelf probe(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64));
 
-  cls::prep::OneHotEncoder via_slate;
-  via_slate.learn(train);
-  const pluss::Series slate_result = via_slate.map(probe).value();
+  cls::prep::OneHotEncoder via_shelf;
+  via_shelf.learn(train);
+  const pluss::Series shelf_result = via_shelf.map(probe).value();
 
   cls::FeatureBatch train_batch{};
   train_batch.x = pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64).reshape({5, 1});
@@ -314,8 +314,8 @@ int main() {
   via_batch.learn(train_batch);
   const pluss::Series batch_result = via_batch.map(probe_batch).value();
 
-  const double max_abs_diff = (slate_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
-  std::cout << "max abs diff between Slate and FeatureBatch forms = " << max_abs_diff << "\n";
+  const double max_abs_diff = (shelf_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
+  std::cout << "max abs diff between Shelf and FeatureBatch forms = " << max_abs_diff << "\n";
 
   return 0;
 }
@@ -324,12 +324,12 @@ int main() {
 Output
 
 ```text
-max abs diff between Slate and FeatureBatch forms = 0
+max abs diff between Shelf and FeatureBatch forms = 0
 ```
 
 ## Changelog
 
-- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Slate`
+- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Shelf`
   overloads), `max_categories`/`overflow`/`include_unknown_bucket`,
   `dump_state`/`load_state`.
 

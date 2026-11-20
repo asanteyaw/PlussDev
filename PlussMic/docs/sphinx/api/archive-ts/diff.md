@@ -41,7 +41,7 @@ diff is computed strictly from that catalog's own rows.
 
 ## Examples
 
-Example 1. Absolute change at each position, with a leading `NaN` where there
+Example 1. Absolute change at each position, with a leading `NULL` where there
 is no prior value to compare against.
 
 ```cpp
@@ -63,7 +63,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 10, -5, 15]                                
+metric                   | Series       | Series[float64]  | 4       | [NULL, 10, -5, 15]                               
 ========================================================================================================================
 ```
 

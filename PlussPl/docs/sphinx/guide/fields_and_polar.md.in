@@ -1,0 +1,41 @@
+# Fields and polar plots
+
+[Back to PlussPl by example](../guide.md)
+
+A field is a value at every point of a plane: temperature by month and hour, pressure over a map. This page turns 120 000 hourly readings into a field and draws it four ways: coloured cells, contour lines, filled bands and (for a cycle) a polar curve.
+
+## How it works
+
+A gridded field is a vector of x positions, a vector of y positions and a matrix of values. `fieldmap` colours each cell by its value; `contour` draws lines of equal value (given a level count or explicit levels); `isoband` fills the regions between levels; and `radial` draws a curve in polar coordinates from angles and radii. To make a field from raw readings you accumulate each reading into its cell and divide by the cell counts, which `Series::scatter_add` does without a loop.
+
+## Temperature by month and hour
+
+The program assigns each hourly reading to one of 12 x 24 cells, averages the cells, and draws the field. It then draws the mean demand at each hour of the day as a dial.
+
+@@example weather_fields.cpp@@
+
+![The field map, contour lines, filled bands and the polar demand curve](assets/weather_fields.svg)
+
+There are `120000` readings with a mean of `8.26` degrees. Across the field the warmest cell is `27.3` and the coldest `-11.2`, the summer afternoon and the winter night, and the three field panes show the same surface as cells, as lines and as bands. The fourth pane wraps the daily demand cycle around a clock: the angle is the hour and the radius the mean demand, which peaks at hour `23` and has its trough at hour `16`.
+
+## Decisions
+
+- **Cells, lines or bands:** cells when every value matters, lines for reading values off, bands for the shape.
+- **How many levels:** eight is a good start; more levels draw detail that the grid may not support.
+- **Polar for cycles:** use a dial only for quantities that repeat around a circle, such as the hour of day or the compass direction.
+
+## Pitfalls
+
+The program below makes 3 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_fields_and_polar.cpp@@
+
+- **A field from a flat z:** A field needs a matrix z; reshape the values to rows by columns first.
+- **Contour lines from a flat z:** Contours need the same matrix.
+- **An angle and a radius of different lengths:** Every trace needs matching lengths or a scalar to broadcast.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`Pane::fieldmap`](../api/pane/fieldmap.md), [`Pane::contour`](../api/pane/contour.md), [`Pane::isoband`](../api/pane/isoband.md), [`Pane::radial`](../api/pane/radial.md). Next: [Three dimensions](three_dimensions.md).

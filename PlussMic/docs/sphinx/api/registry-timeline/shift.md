@@ -71,8 +71,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.fields({"ts"}).tl().shift(1, "bogus");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

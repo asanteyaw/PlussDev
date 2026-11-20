@@ -15,6 +15,7 @@ Task-oriented guides to PlussMa, one per topic. Each guide is a short series of 
 | [Finance](finance.md) | Option pricing: Black-Scholes, implied volatility and stochastic-volatility models. | [API reference](../api/plussma_finance.md) |
 | [Actuarial mathematics](actuarial.md) | Mortality and life tables, contingent present values, aggregate losses, ratemaking and reserving. | [API reference](../api/plussma_actuarial.md) |
 | [Engineering](eng.md) | Signal processing, dynamic systems, controls, circuits, power, fluids and structures. | [API reference](../api/plussma_eng.md) |
+| [Natural sciences](natsci.md) | Biology, chemistry and physics models: populations, kinetics, flows and fields. | *coming* |
 
 ```{toctree}
 :maxdepth: 3
@@ -31,4 +32,5 @@ stochastic
 finance
 actuarial
 eng
+natsci
 ```

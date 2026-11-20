@@ -173,8 +173,7 @@ void test_reference_flux_and_contact() {
   constexpr std::int64_t n = 32;
   const auto grid = periodic1(n, 1.0 / n);
   const Series lane = pluss::series::arange(0, n, 1, ScalarType::Float64);
-  const Series rho = lane.lt(n / 2).where(pluss::series::ones_like(lane),
-                                          pluss::series::full_like(lane, 2.0));
+  const Series rho = pluss::series::where(lane.lt(n / 2), pluss::series::ones_like(lane), pluss::series::full_like(lane, 2.0));
   const auto state = primitive(rho, pluss::series::zeros({1, n}),
                                pluss::series::ones_like(rho), grid);
   gas::Options options;
@@ -293,10 +292,8 @@ void test_strong_jump_and_validation() {
   const auto grid = periodic1(n, 1.0 / n);
   const Series lane = pluss::series::arange(0, n, 1, ScalarType::Float64);
   const Series side = lane.lt(n / 2);
-  const Series rho = side.where(pluss::series::ones_like(lane),
-                                pluss::series::full_like(lane, 0.125));
-  const Series pressure = side.where(pluss::series::ones_like(lane),
-                                     pluss::series::full_like(lane, 0.1));
+  const Series rho = pluss::series::where(side, pluss::series::ones_like(lane), pluss::series::full_like(lane, 0.125));
+  const Series pressure = pluss::series::where(side, pluss::series::ones_like(lane), pluss::series::full_like(lane, 0.1));
   const auto state =
       primitive(rho, pluss::series::zeros({1, n}), pressure, grid);
   gas::Options options;
@@ -432,9 +429,7 @@ void test_h_correction() {
   const auto grid = periodic2(n, n, 1.0 / n);
   const Series row =
       pluss::series::arange(0, n, 1, ScalarType::Float64).unsqueeze(1);
-  const Series checker = row.fmod(2.0).eq(0.0).where(
-      pluss::series::ones({n, n}, ScalarType::Float64),
-      pluss::series::full({n, n}, 2.0, ScalarType::Float64));
+  const Series checker = pluss::series::where(row.fmod(2.0).eq(0.0), pluss::series::ones({n, n}, ScalarType::Float64), pluss::series::full({n, n}, 2.0, ScalarType::Float64));
   const auto state =
       primitive(checker, pluss::series::zeros({2, n, n}),
                 pluss::series::ones({n, n}, ScalarType::Float64), grid);
@@ -485,9 +480,7 @@ void test_h_correction() {
 
   Series amplitude = pluss::series::full({}, 0.1, ScalarType::Float64);
   amplitude.tracks_slope_(true);
-  const Series signed_rows = row.fmod(2.0).eq(0.0).where(
-      pluss::series::ones({n, n}, ScalarType::Float64),
-      pluss::series::full({n, n}, -1.0, ScalarType::Float64));
+  const Series signed_rows = pluss::series::where(row.fmod(2.0).eq(0.0), pluss::series::ones({n, n}, ScalarType::Float64), pluss::series::full({n, n}, -1.0, ScalarType::Float64));
   const auto tracked = primitive(
       signed_rows.mul(amplitude).add(1.5), pluss::series::zeros({2, n, n}),
       pluss::series::ones({n, n}, ScalarType::Float64), grid);

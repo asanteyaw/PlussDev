@@ -54,6 +54,52 @@ fig.show();
 
 ![Output of Example 1](img/flash-jointgrid-1-default.svg)
 
+Example 2. The call only lays out the grid; it creates no panes.
+
+```cpp
+auto fig = studio("grid_empty");
+flash::JointGrid(fig);
+std::cout << "panes after JointGrid: " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+panes after JointGrid: 0
+```
+
+Example 3. Filling the four cells yourself, with a custom gap.
+
+```cpp
+auto fig = studio("grid_fill");
+flash::JointGrid(fig, 20.0, 20.0);
+for (int i = 0; i < 4; ++i) fig.pane2("cell " + std::to_string(i)).trend(x, y);
+std::cout << "panes after filling the grid: " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+panes after filling the grid: 4
+```
+
+Example 4. It is exactly `mosaic(2, 2, gx, gy)`: the same figure comes out.
+
+```cpp
+auto a = studio("same");
+auto b = studio("same");
+flash::JointGrid(a, 20.0, 20.0);
+b.mosaic(2, 2, 20.0, 20.0);
+for (int i = 0; i < 4; ++i) { a.pane2("c").trend(x, y); b.pane2("c").trend(x, y); }
+std::cout << "JointGrid(fig, 20, 20) draws the same figure as mosaic(2, 2, 20, 20): " << (a.to_svg() == b.to_svg()) << "\n";
+```
+
+Output:
+
+```text
+JointGrid(fig, 20, 20) draws the same figure as mosaic(2, 2, 20, 20): 1
+```
+
 ## Notes
 
 - Not `noexcept`.

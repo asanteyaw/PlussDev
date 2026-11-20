@@ -62,6 +62,7 @@ city                     | Series       | Series[bool]     | 3       | [false, f
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction.
 - Every resulting stream is `Series[bool]`, regardless of its original kind.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
@@ -74,12 +75,12 @@ city                     | Series       | Series[bool]     | 3       | [false, f
   applies to every catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="keyaxis.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">keyaxis</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

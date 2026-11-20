@@ -2,6 +2,8 @@
 
 # `lti::freqresp`
 
+Evaluates a system's frequency response on a grid.
+
 ## Signature
 
 ```cpp
@@ -16,148 +18,234 @@ pluss::Series lti::freqresp(
 
 ## What It Does
 
-Evaluates complex frequency response without forcing representation conversion. State-space evaluation solves the resolvent; pole-zero evaluation forms root products. Both follow the same angular-frequency and timebase convention.
+Returns `G(j w)` for a continuous system or `G(e^{j w T})` for a discrete one with sample time `T`, for each angular frequency `w` in rad/s. There is an overload for a `StateSpace` (`C (j w I - A)^{-1} B + D`) and one for a `PoleZero`.
 
 ## Parameters
 
 `system`
-: State-space or pole-zero model. Continuous systems evaluate at `jω`; discrete systems evaluate at `exp(jωT)`.
+: A `StateSpace` or `PoleZero`.
 
 `omega`
-: Nonempty rank-one real floating angular-frequency grid on the same platform as the system.
+: A non-empty rank-one floating `Series` of angular frequencies, rad/s.
 
 ## Returns
 
-For pole-zero input, a complex vector over frequency. For state-space input, complex output/input response matrices with frequency on the final axis and batch axes preserved.
+For a `StateSpace`, a complex `Series` of shape `[outputs, inputs, omega]` (with batch axes); for a `PoleZero`, a complex `Series` with the shape of `omega`.
 
 ## Errors
 
-Rejects undefined, empty, scalar, integer, complex, or cross-platform frequency grids. Singular state-space resolvents may fail at poles.
+A scalar, empty or integer `omega` throws `pluss::Error`.
+
+## Interpretation and Use
+
+The first example compares `1 / (s + 1)` with `1 / (1 + j w)` at three frequencies. The third shows that the state-space and pole-zero forms of the same system agree to rounding. Take `abs()` for the gain and `arg()` for the phase; the gain in decibels is `20 log10 |G|`.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect stability, response, and second-order-section realization.
+A first-order system against its closed form.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::PoleZero system = lti::zpk(
-      pluss::make_series({0.0}), pluss::make_series({0.5}),
-      pluss::make_series(0.5), 1.0);
-  const pluss::Series response =
-      lti::freqresp(system, pluss::make_series({0.0, 3.141592653589793}));
-
-  std::cout << std::boolalpha << "discrete = " << system.is_disc()
-            << ", stable = " << system.is_stable() << "\n";
-  out.writeln("zeros =", system.zeros().items<std::complex<double>>());
-  out.writeln("poles =", system.poles().items<std::complex<double>>());
-  out.writeln("response =", response.items<std::complex<double>>());
-  out.writeln("sos =", lti::to_sos(system).flatten().items<double>());
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series omega = pluss::make_series({0.0, 1.0, 10.0});
+  const auto h = lti::freqresp(s, omega).flatten().items<std::complex<double>>();
+  for (std::size_t i = 0; i < h.size(); ++i) {
+    const double w = i == 0 ? 0.0 : (i == 1 ? 1.0 : 10.0);
+    const std::complex<double> exact = 1.0 / std::complex<double>(1.0, w);
+    out.writeln("omega", w, ": H =", h[i], " exact 1 / (1 + j omega) =", exact);
+  }
 }
 ```
 
 Output
 
 ```text
-discrete = true, stable = true
-zeros = [(0,0)]
-poles = [(0.5,0)]
-response = [(1,0), (0.333333,-1.36072e-17)]
-sos = [0.5000, 0.0000, 0.0000, 1.0000, -0.5000, 0.0000]
+omega 0.0000 : H = (1,0)  exact 1 / (1 + j omega) = (1,0)
+omega 1.0000 : H = (0.5,-0.5)  exact 1 / (1 + j omega) = (0.5,-0.5)
+omega 10.0000 : H = (0.00990099,-0.0990099)  exact 1 / (1 + j omega) = (0.00990099,-0.0990099)
 ```
 ### Example 2
 
-Compare frequency response across equivalent system representations.
+The shape for one and for several inputs and outputs.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-
-  const lti::StateSpace state_system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::PoleZero root_system = lti::zpk(
-      pluss::series::empty({0}, pluss::ScalarType::Float64),
-      pluss::make_series({-1.0}),
-      pluss::make_series(1.0));
-  const pluss::Series omega = pluss::make_series({0.0, 1.0, 2.0});
-
-  out.writeln("state response =",
-              lti::freqresp(state_system, omega).flatten().items<std::complex<double>>());
-  out.writeln("root response =",
-              lti::freqresp(root_system, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-state response = [(1,0), (0.5,-0.5), (0.2,-0.4)]
-root response = [(1,0), (0.5,-0.5), (0.2,-0.4)]
-```
-### Example 3
-
-Exercise frequency-grid and realization validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
-  const lti::PoleZero system = lti::zpk(
-      pluss::series::empty({0}, pluss::ScalarType::Float64),
-      pluss::make_series({-1.0}),
-      pluss::make_series(1.0));
-  try {
-    static_cast<void>(lti::freqresp(system, pluss::make_series({0, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer grid rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::to_sos(system));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous SOS rejected =", message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series omega = pluss::make_series({0.1, 1.0, 10.0});
+  const pluss::Series siso = lti::freqresp(oscillator(), omega);
+  out.writeln("one input, one output, three frequencies: shape", siso.size(0), "x", siso.size(1), "x", siso.size(2));
+  const lti::StateSpace mimo = lti::state(pluss::series::eye(3, pluss::ScalarType::Float64).mul(-1.0), pluss::series::ones({3, 2}, pluss::ScalarType::Float64), pluss::series::ones({2, 3}, pluss::ScalarType::Float64), pluss::series::zeros({2, 2}, pluss::ScalarType::Float64));
+  const pluss::Series m = lti::freqresp(mimo, omega);
+  out.writeln("two inputs, two outputs, three frequencies: shape", m.size(0), "x", m.size(1), "x", m.size(2));
 }
 ```
 
 Output
 
 ```text
-integer grid rejected = eng::lti::freqresp: omega must have a real floating dtype
-continuous SOS rejected = eng::lti::to_sos: only discrete systems can be realized by the delay-form SOS filter
+one input, one output, three frequencies: shape 1 x 1 x 3
+two inputs, two outputs, three frequencies: shape 2 x 2 x 3
+```
+### Example 3
+
+One system in both representations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // G(s) = 1 / (s + 1) as a state-space model and as a pole-zero model.
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const lti::PoleZero z = lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({-1.0}), pluss::make_series(1.0));
+  const pluss::Series omega = pluss::make_series({0.1, 1.0, 5.0});
+  const auto a = lti::freqresp(s, omega).flatten().items<std::complex<double>>();
+  const auto b = lti::freqresp(z, omega).items<std::complex<double>>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < a.size(); ++i) worst = std::max(worst, std::abs(a[i] - b[i]));
+  out.writeln("largest difference between the two representations =", worst);
+}
+```
+
+Output
+
+```text
+largest difference between the two representations = 0.0000
+```
+### Example 4
+
+Every refused grid.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "a scalar frequency grid", [] { lti::freqresp(oscillator(), pluss::make_series(1.0)); });
+  refused(out, "an integer frequency grid", [] { lti::freqresp(oscillator(), pluss::make_series({1, 2})); });
+  refused(out, "an empty frequency grid", [] { lti::freqresp(oscillator(), pluss::series::zeros({0}, pluss::ScalarType::Float64)); });
+}
+```
+
+Output
+
+```text
+a scalar frequency grid : eng::lti::freqresp: omega must be a non-empty vector
+an integer frequency grid : eng::lti::freqresp: omega must have a floating dtype
+an empty frequency grid : eng::lti::freqresp: omega must be a non-empty vector
 ```
 ## See Also
 

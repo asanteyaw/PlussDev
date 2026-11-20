@@ -60,8 +60,8 @@ template <class Fn>
 void print_error(std::string_view label, Fn&& fn) {
   try {
     fn();
-  } catch (const std::exception& e) {
-    std::string msg(e.what());
+  } catch (const pluss::Error& e) {
+    std::string msg(e.message());
     const auto nl = msg.find('\n');
     if (nl != std::string::npos) msg.resize(nl);
     std::cout << label << ": " << msg << "\n";

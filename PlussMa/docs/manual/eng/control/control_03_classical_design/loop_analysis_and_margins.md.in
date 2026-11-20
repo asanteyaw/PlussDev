@@ -4,7 +4,7 @@
 
 A feedback loop that is stable on paper can be one small change away from oscillating. The **margins** say how far: how much extra gain, or how much extra delay, the loop can take before it goes unstable. `control::loop` computes the loop transfer function and the sensitivity functions that govern disturbance rejection and noise, and `control::margin` reads the gain margin, the phase margin and the minimum distance to instability from the frequency response. This page works through a plant with a known answer, tunes a PID against its margins, and treats discrete loops.
 
-## The mental model
+## How it works
 
 Put a controller `C` and a plant `P` in a unity-feedback loop. The **loop transfer function** is `L = C P`. Three functions of `L` matter:
 

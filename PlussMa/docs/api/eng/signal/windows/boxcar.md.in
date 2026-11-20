@@ -1,5 +1,7 @@
 # `signal::boxcar`
 
+Creates the rectangular window: every coefficient is one.
+
 ## Signature
 
 ```cpp
@@ -10,15 +12,15 @@ pluss::Series signal::boxcar(
 
 ## What It Does
 
-Creates a rectangular window whose coefficients are all one. It preserves amplitude sample-for-sample and applies no taper, so it is useful as a neutral baseline but has strong sidelobes.
+The boxcar window leaves the data untouched, so selecting a frame with it is the same as not windowing. `symmetric` and `periodic` coincide because there is no taper to place.
 
 ## Parameters
 
 `size`
-: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+: Number of coefficients. Zero returns an empty rank-one `Series`; one returns the single coefficient `1`.
 
 `options`
-: Endpoint, dtype, and platform policy. The rectangular window is independent of endpoint mode because both conventions produce ones.
+: A `WindowOptions`: the endpoint convention (`mode`), the floating dtype and the platform. The default is a symmetric float64 window on the CPU.
 
 ## Returns
 
@@ -26,29 +28,40 @@ A rank-one floating `Series` of length `size`, allocated with the requested dtyp
 
 ## Errors
 
-Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+A negative `size`, a dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype (float64 on the MPS) throw `pluss::Error`.
+
+## Interpretation and Use
+
+Coherent gain and mean square are both one at every length. The window has the narrowest main lobe (1 bin) but the highest sidelobes: the fourth example measures the highest sidelobe at 13.25 dB below the main lobe, so a tone that does not fit the frame exactly leaks across many frequency bins. Use the boxcar window when the signal is exactly periodic in the frame, for transients that start and end inside it, or as the baseline against which a taper is judged.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+Eight coefficients in both modes, and the closed form.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_boxcar_values.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Coherent gain and mean square at three lengths.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_boxcar_gain.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Every refused input and the size-zero and size-one cases.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_boxcar_errors.cpp@@
+
+### Example 4
+
+The spectrum of a 64-point window: main-lobe width and highest sidelobe.
+
+@@example Eng/api/signal_boxcar_spectrum.cpp@@
+
 
 ## See Also
 

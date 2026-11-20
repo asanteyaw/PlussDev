@@ -4,14 +4,68 @@
     {
       "name": "plusspl-docs-preview",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8791", "--directory", "PlussPl/docs/sphinx/_build/html"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8791",
+        "--directory",
+        "PlussPl/docs/sphinx/_build/html"
+      ],
       "port": 8791
     },
     {
       "name": "plussai-api-docs",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8793", "--directory", "PlussAI/docs/sphinx/_build/html"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8793",
+        "--directory",
+        "PlussAI/docs/sphinx/_build/html"
+      ],
       "port": 8793
+    },
+    {
+      "name": "plussma-docs-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8795",
+        "--directory",
+        "PlussMa/docs/_build/html"
+      ],
+      "port": 8795
+    },
+    {
+      "name": "plussible-before",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/yawasante/software/cxx/plussible-before-plussii/frontend",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3218"
+      ],
+      "port": 3218
+    },
+    {
+      "name": "plussible-dev",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "NEXT_PUBLIC_DEFAULT_THEME=brown",
+        "npm",
+        "--prefix",
+        "/Users/yawasante/software/cxx/plussible copy/frontend",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3217"
+      ],
+      "port": 3217
     }
   ]
 }

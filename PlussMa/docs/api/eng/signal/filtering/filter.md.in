@@ -1,5 +1,7 @@
 # `signal::filter`
 
+Applies a rational filter by recursion and returns the state for continuation.
+
 ## Signature
 
 ```cpp
@@ -19,54 +21,55 @@ signal::FilterRun signal::filter(
 
 ## What It Does
 
-Applies a direct-form causal recurrence. The first overload starts from zero state; the second resumes from a previous `FilterRun::state`, enabling exact streaming across arbitrary block boundaries.
+Runs the difference equation `a[0] y[n] = sum b[k] x[n-k] - sum_{k>=1} a[k] y[n-k]` in transposed direct form II. The result is a `FilterRun`: the output and the final delay-line state, which the stateful overload accepts to continue the same filter on the next block of samples with no seam.
 
 ## Parameters
 
 `input`
-: Samples to process.
+: A floating or complex `Series`.
 
-`numerator`
-: Feed-forward coefficients.
-
-`denominator`
-: Feedback coefficients; the leading coefficient normalizes the recurrence and must be nonzero.
+`numerator`, `denominator`
+: Rank-one coefficient `Series` `b` and `a`. `a[0]` must be nonzero. The filter order is `max(len(b), len(a)) - 1`.
 
 `state`
-: Optional continuation state produced by a compatible prior run.
+: Optional initial state of shape `[lanes..., order]`; omitted means rest. Lane axes may broadcast; the state axis must equal the order.
 
 `dim`
-: Ordered sample axis.
+: The axis to filter along; default `-1`.
 
 ## Returns
 
-`FilterRun` containing same-length values and terminal continuation state.
+A `FilterRun` with `values` (the input shape) and `state` (`[lanes..., order]`).
 
 ## Errors
 
-Rejects invalid axes, coefficient or signal dtype/platform incompatibility, zero leading denominator, empty coefficients, and incompatible supplied state.
+An integer input, a zero `denominator[0]`, a state whose length is not the filter order, a state that does not broadcast to the lanes and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+The impulse response of `y[n] = x[n] + 0.5 y[n-1]` is `0.5^n`, which the first example checks. Processing a long recording in blocks with the carried state gives the same samples as one pass, to rounding.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The impulse response of a one-pole filter against its closed form.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_filter_recursion.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+Two blocks with a carried state against one pass.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_filter_blocks.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+A batch of rows filtered along an axis, with the per-row state.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_filter_batch.cpp@@
 
 ## See Also
 

@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::prod(Axis axis = Axis::Case, bool skipnull = true) const
+Shelf DataFrame::prod(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does
 
-Reduces every numeric feature to the product of its values, returning one `Slate`
+Reduces every numeric feature to the product of its values, returning one `Shelf`
 whose entries line up with the frame's numeric feature names — the same shape
 [`sum()`](sum.md) returns, but multiplying instead of adding. Non-numeric features are
 skipped entirely, the same rule every other single-statistic reducer in this family
@@ -39,7 +39,7 @@ Controls how a missing value affects that reduction's result:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature (`Axis::Case`) or per case
     (`Axis::Feature`), holding the product of that reduction's values.
 
@@ -52,10 +52,10 @@ default).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto products = orders.prod();
@@ -76,7 +76,7 @@ ptype: Series
 way [`mean()`](mean.md) and [`std()`](std.md) treat that column's missing value — the
 product runs over the remaining five prices only. Note the scientific notation on
 `order_id`, `unit_price`, and `discount`: `prod()`'s outputs grow (or shrink) fast, and
-the same `{:.10g}` formatting every `Slate`/`Series` render uses switches to
+the same `{:.10g}` formatting every `Shelf`/`Series` render uses switches to
 scientific notation once a value's magnitude crosses ten significant digits either way.
 
 Example 2. Disable null-skipping to see a missing value propagate.

@@ -140,7 +140,7 @@ Series blank_unavailable_(const Series& pred, const Series& valid_rows, Config c
   const Config out_cfg = work_cfg_(cfg);
   const std::int64_t rows = pred.sizes()[0];
   const Series keep = valid_rows.reshape({rows, 1}).gt(0.5);
-  return keep.where(pred, pluss::series::full({rows, pred.sizes()[1]}, std::numeric_limits<double>::quiet_NaN(), out_cfg));
+  return pluss::series::where(keep, pred, pluss::series::full({rows, pred.sizes()[1]}, std::numeric_limits<double>::quiet_NaN(), out_cfg));
 }
 
 Series concat_columns_(const std::vector<Series>& columns, std::int64_t rows, Config cfg) {

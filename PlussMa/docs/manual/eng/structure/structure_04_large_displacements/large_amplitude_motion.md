@@ -6,7 +6,7 @@
 
 A pendulum swinging through a large angle, a flexible arm whipping around, a cable-like member swaying widely: all move through large rotations while their members stay elastic. `motion` with `NonlinearMotionOptions` integrates the corotational frame through time. This page swings a rod pendulum through small and large angles and checks the period against the exact elliptic-integral result, and shows the one setting without which a large-amplitude run fails: some numerical damping.
 
-## The mental model
+## How it works
 
 The inputs are the same as for the linear [transient response](../structure_03_dynamics/transient_response.md): a load history `[time, node, 3]`, sample times, supports, an optional `MotionState` and an options structure. The difference is the options, `NonlinearMotionOptions`, and what they imply: the equations of motion are the nonlinear equations of the corotational model, solved at every step by Newton's method with a line search, and the generalised-alpha integrator takes its `spectral_radius` (default one) as in the linear case. The result is a `NonlinearMotionResult` with the same time histories of `displacement`, `velocity`, `acceleration`, `reaction`, `kinetic`, `strain_energy`, `residual_norm` and `converged` as the linear result, and `iterations` giving the largest Newton iteration count at each step.
 

@@ -4,7 +4,7 @@
 
 If `X` moves by `dX = μ dt + σ dW`, then a smooth function `g(X)` moves by `dg = (g'μ + ½ g''σ²) dt + g'σ dW`. The extra `½ g''σ²` is what the ordinary chain rule misses, and it exists because `dW²` is `dt`, not zero. This chapter computes such differentials for you: you give `g`, `μ` and `σ`, and the library differentiates `g` by autodiff, so no formula for `g'` or `g''` is ever typed. After it you can get the drift and diffusion of any function of a process, with one noise source or several, for products and quotients, with explicit time dependence, and in the Stratonovich convention.
 
-## The mental model
+## How it works
 
 The method is `x.calc.diff.ito(g, mu, sigma)`. The receiver `x` is the state; every element is an independent point, so a whole grid or a whole batch of paths is handled in one call. `g` maps a `Series` to a `Series` of the same shape; `mu` and `sigma` give the drift and volatility at each point. The result holds `drift` and `diffusion`, both with the shape of `x` (the diffusion gains a trailing axis when there are several noise sources).
 

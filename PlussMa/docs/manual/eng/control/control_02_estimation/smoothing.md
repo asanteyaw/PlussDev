@@ -6,7 +6,7 @@
 
 The Kalman filter estimates the state at time `t` from the measurements up to `t`. When the whole record is already in hand, which is usual in analysis, you can do better: the measurements after `t` also carry information about the state at `t`. `control::smooth` runs the filter forwards and then a backward pass, and returns the estimate of every state given *all* the data. It is more accurate than the filter everywhere except the last step, where the two agree.
 
-## The mental model
+## How it works
 
 The backward pass, the Rauch-Tung-Striebel recursion, corrects each filtered estimate with the next smoothed one:
 

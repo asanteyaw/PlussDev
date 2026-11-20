@@ -1,4 +1,4 @@
-Atlas::Atlas(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels)
+Atlas::Atlas(std::vector<DataFrame> frames, std::optional<Shelf> axis0_labels)
     : impl_(pluss::msharp::make_intrusive<detail::AtlasImpl>(std::move(frames), std::move(axis0_labels))) {}
 
 Atlas::Atlas() = default;
@@ -30,7 +30,7 @@ std::int64_t Atlas::ncases() const { return impl_ref_().nrows_; }
 std::int64_t Atlas::nfeatures() const { return impl_ref_().ncols_; }
 
 const std::vector<std::string>& Atlas::column_names() const { return impl_ref_().names_; }
-const std::optional<Slate>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }
+const std::optional<Shelf>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }
 const std::vector<DataFrame>& Atlas::frames() const { return impl_ref_().frames_; }
 
 DataFrame Atlas::frame(std::int64_t index) const {
@@ -72,7 +72,7 @@ AtlasLabelAccessor::AtlasLabelAccessor(Atlas atlas)
   PLUSS_CHECK(atlas_.defined(), "Atlas::label: atlas is undefined");
 }
 
-Slate AtlasLabelAccessor::values() const {
+Shelf AtlasLabelAccessor::values() const {
   const auto& src = atlas_.impl_ref_();
   if (src.axis0_labels_.has_value()) {
     return *src.axis0_labels_;
@@ -84,7 +84,7 @@ bool AtlasLabelAccessor::has() const {
   return atlas_.impl_ref_().axis0_labels_.has_value();
 }
 
-Atlas AtlasLabelAccessor::set(const Slate& labels) const {
+Atlas AtlasLabelAccessor::set(const Shelf& labels) const {
   return atlas_.relabel_depth(labels);
 }
 
@@ -100,44 +100,44 @@ Atlas AtlasLabelAccessor::sort(bool ascending, bool nulls_last) const {
   return atlas_.sort_depth(ascending, nulls_last);
 }
 
-Atlas AtlasLabelAccessor::align(const Slate& labels) const {
+Atlas AtlasLabelAccessor::align(const Shelf& labels) const {
   return atlas_.align_depth(labels);
 }
 
-Slate AtlasLabelAccessor::label_index_() const {
+Shelf AtlasLabelAccessor::label_index_() const {
   const auto labels = values();
   return labels.label().set(labels);
 }
 
-Slate AtlasLabelAccessor::unite(const Slate& other) const {
+Shelf AtlasLabelAccessor::unite(const Shelf& other) const {
   return label_index_().label().unite(other);
 }
 
-Slate AtlasLabelAccessor::intersect(const Slate& other) const {
+Shelf AtlasLabelAccessor::intersect(const Shelf& other) const {
   return label_index_().label().intersect(other);
 }
 
-Slate AtlasLabelAccessor::diff(const Slate& other) const {
+Shelf AtlasLabelAccessor::diff(const Shelf& other) const {
   return label_index_().label().diff(other);
 }
 
-Slate AtlasLabelAccessor::symdiff(const Slate& other) const {
+Shelf AtlasLabelAccessor::symdiff(const Shelf& other) const {
   return label_index_().label().symdiff(other);
 }
 
-Slate AtlasLabelAccessor::find(const Slate& targets) const {
+Shelf AtlasLabelAccessor::find(const Shelf& targets) const {
   return label_index_().label().find(targets);
 }
 
-Slate AtlasLabelAccessor::pos(double value) const {
+Shelf AtlasLabelAccessor::pos(double value) const {
   return label_index_().label().pos(value);
 }
 
-Slate AtlasLabelAccessor::pos(std::string_view value) const {
+Shelf AtlasLabelAccessor::pos(std::string_view value) const {
   return label_index_().label().pos(value);
 }
 
-Slate AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const {
+Shelf AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const {
   return label_index_().label().slice(start, stop);
 }
 
@@ -400,14 +400,14 @@ Atlas AtlasTimelineAccessor::epoch(TimeUnit unit) const {
 }
 
 Atlas AtlasTimelineAccessor::span(
-    const Slate& other,
+    const Shelf& other,
     const TimelineSpanOptions& options) const {
   return map_([this, other, options](const DataFrame& frame) {
     return atlas_frame_tl_(frame, features_).span(other, options);
   }, "Atlas::tl().span");
 }
 
-Atlas AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const {
+Atlas AtlasTimelineAccessor::span(const Shelf& other, TimeUnit unit) const {
   TimelineSpanOptions options;
   options.unit = unit;
   return span(other, options);
@@ -416,7 +416,7 @@ Atlas AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const {
 Atlas AtlasTimelineAccessor::span(
     const pluss::Timeline& other,
     const TimelineSpanOptions& options) const {
-  return span(Slate(other), options);
+  return span(Shelf(other), options);
 }
 
 Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const {
@@ -505,7 +505,7 @@ Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const {
     out_frames.push_back(src.frames_[static_cast<std::size_t>(i)]);
   }
 
-  std::optional<Slate> out_labels = std::nullopt;
+  std::optional<Shelf> out_labels = std::nullopt;
   if (src.axis0_labels_.has_value()) {
     out_labels = src.axis0_labels_->slice(s, e);
   }
@@ -533,18 +533,18 @@ Atlas Atlas::sort_depth(bool ascending, bool nulls_last) const {
     out_frames.push_back(src.frames_[static_cast<std::size_t>(i)]);
   }
 
-  std::optional<Slate> out_labels = std::nullopt;
+  std::optional<Shelf> out_labels = std::nullopt;
   if (src.axis0_labels_.has_value()) {
     out_labels = src.axis0_labels_->take(idx);
   }
   return Atlas(std::move(out_frames), std::move(out_labels));
 }
 
-Atlas Atlas::relabel_depth(const Slate& labels) const {
+Atlas Atlas::relabel_depth(const Shelf& labels) const {
   return Atlas(impl_ref_().frames_, labels);
 }
 
-Atlas Atlas::align_depth(const Slate& labels) const {
+Atlas Atlas::align_depth(const Shelf& labels) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(src.axis0_labels_.has_value(),
               "Atlas::align_depth: current atlas has no depth labels");
@@ -571,6 +571,122 @@ Atlas Atlas::align_depth(const Slate& labels) const {
   return Atlas(std::move(out_frames), out_labels);
 }
 
+Atlas Atlas::isnan() const {
+  return map_frames([](const DataFrame& frame) { return frame.isnan(); });
+}
+
+Atlas Atlas::notnan() const {
+  return map_frames([](const DataFrame& frame) { return frame.notnan(); });
+}
+
+Atlas Atlas::isinf() const {
+  return map_frames([](const DataFrame& frame) { return frame.isinf(); });
+}
+
+Atlas Atlas::isposinf() const {
+  return map_frames([](const DataFrame& frame) { return frame.isposinf(); });
+}
+
+Atlas Atlas::isneginf() const {
+  return map_frames([](const DataFrame& frame) { return frame.isneginf(); });
+}
+
+Atlas Atlas::notinf() const {
+  return map_frames([](const DataFrame& frame) { return frame.notinf(); });
+}
+
+// An Atlas is a strict cube: every frame has the same number of rows. A drop therefore works on rows ACROSS the stack: row r is removed
+// from every frame when ANY frame has a flagged cell anywhere in row r (flag = the frame's own isnull / isnan / isinf / ... answer), so
+// the frames stay the same height and keep lining up row by row.
+Atlas atlas_drop_rows_(const Atlas& atlas, const std::function<DataFrame(const DataFrame&)>& flag) {
+  std::optional<Shelf> drop;
+  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
+    const auto flagged = flag(atlas.frame(i));
+    if (flagged.nfeatures() == 0) {
+      continue;
+    }
+    const auto row_flag = flagged.any(Axis::Feature, false);
+    drop = drop.has_value() ? drop->lor(row_flag) : row_flag;
+  }
+  if (!drop.has_value()) {
+    return atlas;
+  }
+  const Shelf keep(drop->as_series().logical_not());
+  return atlas.map_frames([&keep](const DataFrame& frame) { return frame.filter(keep); });
+}
+
+Atlas Atlas::dropnan() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.isnan(); });
+}
+
+Atlas Atlas::dropinvalid() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.invalid(); });
+}
+
+Atlas Atlas::dropinf() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.isinf(); });
+}
+
+Atlas Atlas::dropposinf() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.isposinf(); });
+}
+
+Atlas Atlas::dropneginf() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.isneginf(); });
+}
+
+Atlas Atlas::fillnan(double value) const {
+  return map_frames([value](const DataFrame& frame) { return frame.fillnan(value); });
+}
+
+Atlas Atlas::fillinvalid(double value) const {
+  return map_frames([value](const DataFrame& frame) { return frame.fillinvalid(value); });
+}
+
+Atlas Atlas::fillinf(double value) const {
+  return map_frames([value](const DataFrame& frame) { return frame.fillinf(value); });
+}
+
+Atlas Atlas::fillposinf(double value) const {
+  return map_frames([value](const DataFrame& frame) { return frame.fillposinf(value); });
+}
+
+Atlas Atlas::fillneginf(double value) const {
+  return map_frames([value](const DataFrame& frame) { return frame.fillneginf(value); });
+}
+
+Atlas Atlas::isnull() const {
+  return map_frames([](const DataFrame& frame) { return frame.isnull(); });
+}
+
+Atlas Atlas::notnull() const {
+  return map_frames([](const DataFrame& frame) { return frame.notnull(); });
+}
+
+Atlas Atlas::invalid() const {
+  return map_frames([](const DataFrame& frame) { return frame.invalid(); });
+}
+
+Atlas Atlas::dropnull() const {
+  return atlas_drop_rows_(*this, [](const DataFrame& frame) { return frame.isnull(); });
+}
+
+Atlas Atlas::fillnull(double value) const {
+  return map_frames([&value](const DataFrame& frame) { return frame.fillnull(value); });
+}
+
+Atlas Atlas::fillnull(std::string_view value) const {
+  return map_frames([&value](const DataFrame& frame) { return frame.fillnull(value); });
+}
+
+Atlas Atlas::fillnull(const pluss::Timeline& value) const {
+  return map_frames([&value](const DataFrame& frame) { return frame.fillnull(value); });
+}
+
+Atlas Atlas::fillnull(const pluss::Duration& value) const {
+  return map_frames([&value](const DataFrame& frame) { return frame.fillnull(value); });
+}
+
 Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn), "Atlas::map_frames: mapper function is empty");
   const auto& src = impl_ref_();
@@ -584,7 +700,7 @@ Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) co
 }
 
 Atlas Atlas::map(
-    const std::function<SlateValue(const SlateValue&)>& fn) const {
+    const std::function<ShelfValue(const ShelfValue&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn),
               "Atlas::map: callback is empty");
   return map_frames(
@@ -602,9 +718,9 @@ Atlas Atlas::flow(
   return result;
 }
 
-DataFrame Atlas::aggregate_over_frames(
+DataFrame Atlas::aggregate_depth(
     const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const {
-  PLUSS_CHECK(static_cast<bool>(fn), "Atlas::aggregate_over_frames: reducer function is empty");
+  PLUSS_CHECK(static_cast<bool>(fn), "Atlas::aggregate_depth: reducer function is empty");
   const auto& src = impl_ref_();
   return fn(src.frames_);
 }
@@ -623,7 +739,7 @@ pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& po
 
   std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
   if (axis0_labels().has_value()) {
-    depth_labels = pluss::kindle::Stream::from_slate(*axis0_labels());
+    depth_labels = pluss::kindle::Stream::from_shelf(*axis0_labels());
   }
   return pluss::kindle::Archive(std::move(catalogs), std::move(depth_labels));
 }

@@ -7,12 +7,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Slate(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
-  const DataFrame later({{"region", Slate(pluss::make_series({30., 10., 20.}, {3}, f64))}});
+  const DataFrame train({{"region", Shelf(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
+  const DataFrame later({{"region", Shelf(pluss::make_series({30., 10., 20.}, {3}, f64))}});
 
   // OrdinalEncoder replaces each category with a small integer code. The column
   // count does not change -- one integer column in, one out, same name. Codes

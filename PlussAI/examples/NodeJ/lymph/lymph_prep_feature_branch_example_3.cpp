@@ -12,14 +12,14 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"a", Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"b", Slate(pluss::make_series({10., 20., 10., 20.}, {4}, f64))},
-      {"c", Slate(pluss::make_series({5., 5., 6., 6.}, {4}, f64))},
+      {"a", Shelf(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"b", Shelf(pluss::make_series({10., 20., 10., 20.}, {4}, f64))},
+      {"c", Shelf(pluss::make_series({5., 5., 6., 6.}, {4}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"a", "b", "c"}).feature_batch();

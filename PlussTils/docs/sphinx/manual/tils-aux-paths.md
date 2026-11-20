@@ -8,7 +8,7 @@
 
 A loader reads and writes files, and every path it uses should land inside the project it belongs to. The paths utilities resolve each relative path under a root, create directories when asked, refuse paths that climb out of the root, and keep URL and folder roots side by side. This chapter covers the global root and how to reset it, the per-call options, a team policy, names and joined paths, URL roots, and independent contexts, with a complete program for each.
 
-## The mental model
+## How it works
 
 There is one global root, and every relative path is resolved under it. Resolving a path computes its location and checks that it stays inside the root, but does not create anything unless you ask. Asking for a directory with `create_dirs` makes it at that moment. A policy holds the team's defaults for creation and canonicalization, and each call may still override them.
 

@@ -6,7 +6,7 @@
 
 Text columns are messy in predictable ways: stray spaces, inconsistent capitals, invalid addresses, duplicates, and personal data that must not leave the building. This page cleans a customer table and prepares support tickets for sharing, with complete programs and printed results.
 
-## The mental model
+## How it works
 
 A `Note` is to text what a `Series` is to numbers: a block of cells with a shape, processed as a whole. Every operation applies to every cell and returns a `Note`, so a cleaning pipeline is a chain of calls with no loop. Two properties are worth knowing before the first program.
 

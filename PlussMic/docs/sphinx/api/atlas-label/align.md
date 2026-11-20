@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas AtlasLabelAccessor::align(const Slate& labels) const
+Atlas AtlasLabelAccessor::align(const Shelf& labels) const
 ```
 
 ## What It Does
@@ -19,8 +19,8 @@ Returns a copy of the bound atlas whose frames are reordered (and subset) to mat
 Frames whose depth label doesn't appear in `labels` are dropped from the result.
 
 ```{important} Throws on a target label with no match — does not fill with NULL
-Unlike [`Slate::align`](../slate/align.md) or
-[`SlateLabelAccessor::align`](../slate-label/align.md), which fill unmatched target
+Unlike [`Shelf::align`](../shelf/align.md) or
+[`ShelfLabelAccessor::align`](../shelf-label/align.md), which fill unmatched target
 positions with NULL, `AtlasLabelAccessor::align` (via
 [`Atlas::align_depth`](../atlas/align_depth.md)) **throws** if `labels` contains a value
 that isn't one of the atlas's current depth labels. There is no depth-axis equivalent of
@@ -29,7 +29,7 @@ that isn't one of the atlas's current depth labels. There is no depth-axis equiv
 
 ## Parameters
 
-**labels** (`const Slate&`)
+**labels** (`const Shelf&`)
     The target depth-label order. Every value in `labels` must already exist among the
     atlas's current depth labels.
 
@@ -44,17 +44,17 @@ Example 1. Reorder and subset a 3-frame atlas down to 2, in a new order.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Shelf(pluss::make_note({"jan", "feb", "mar"})));
 
-auto aligned = atlas.label().align(pluss::table::Slate(pluss::make_note({"mar", "jan"})));
+auto aligned = atlas.label().align(pluss::table::Shelf(pluss::make_note({"mar", "jan"})));
 std::cout << aligned.label().values() << "\n";
 std::cout << "depth: " << aligned.depth();
 ```
@@ -73,17 +73,17 @@ Example 2. A target label absent from the current depth labels throws immediatel
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Shelf(pluss::make_note({"jan", "feb"})));
 
 try {
-    auto aligned = atlas.label().align(pluss::table::Slate(pluss::make_note({"jan", "dec"})));
-} catch (const std::exception& e) {
-    std::cout << "threw: " << e.what();
+    auto aligned = atlas.label().align(pluss::table::Shelf(pluss::make_note({"jan", "dec"})));
+} catch (const pluss::Error& e) {
+    std::cout << "threw: " << e.message();
 }
 ```
 

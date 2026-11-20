@@ -4,7 +4,7 @@
 
 You can measure some outputs of a system, but not its states, and the measurements are noisy. An **observer** reconstructs the states from the outputs, and the best linear observer for a given noise model is the Kalman filter. `control::lqe` computes the fixed gain that filter settles to when the system and noise statistics do not change: the steady-state estimator. It is the same mathematics as the LQR of the previous chapter, run on the dual system, and this page shows the identity and what the result means.
 
-## The mental model
+## How it works
 
 The discrete system is
 

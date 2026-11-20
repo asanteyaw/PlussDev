@@ -1,5 +1,7 @@
 # `lti::state`
 
+Builds a state-space model from its four matrices.
+
 ## Signature
 
 ```cpp
@@ -13,52 +15,62 @@ lti::StateSpace lti::state(
 
 ## What It Does
 
-Validates and normalizes four state-space matrices into one immutable system. It broadcasts compatible leading batch axes and promotes all matrices to one floating or complex dtype.
+Validates and bundles `A`, `B`, `C` and `D` into a `StateSpace` for `x' = A x + B u`, `y = C x + D u` (continuous) or `x[k+1] = A x[k] + B u[k]` (discrete). The matrices carry their last two axes as the matrix and any leading axes as a batch of systems that share one sample time.
 
 ## Parameters
 
 `a`
-: Dynamics matrix with tail `[states, states]`; it must be square.
+: `[..., n, n]`, the dynamics. Floating or complex.
 
 `b`
-: Input matrix with tail `[states, inputs]`.
+: `[..., n, m]`, the input matrix.
 
 `c`
-: Output matrix with tail `[outputs, states]`.
+: `[..., p, n]`, the output matrix.
 
 `d`
-: Direct-feedthrough matrix with tail `[outputs, inputs]`.
+: `[..., p, m]`, the feedthrough.
 
 `sample_time`
-: Zero for continuous time or a finite positive discrete sampling interval.
+: Zero (the default) for a continuous system, a positive number of seconds for a discrete one.
 
 ## Returns
 
-A `StateSpace` owning promoted, batch-expanded matrices on their shared platform.
+A `StateSpace` with `n` states, `m` inputs and `p` outputs.
 
 ## Errors
 
-Rejects undefined, nonmatrix, empty, integer, shape-incompatible, non-broadcastable, or cross-platform matrices, and negative/nonfinite sample time.
+A non-square `A`, a `B`, `C` or `D` whose shape does not match, a rank below two, an integer dtype and a negative or non-finite sample time throw `pluss::Error`.
+
+## Interpretation and Use
+
+The sizes are read from the matrices: the first example shows a one-input, one-output oscillator and a three-state, two-input, two-output system. A leading axis holds a family of systems (the third example builds four oscillators with different damping) so that one call analyses or simulates them all.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+The state, input and output counts of a single-input and a multi-input system.
 
-@@example Eng/api/lti_state.cpp@@
+@@example Eng/api/lti_state_dims.cpp@@
 
 ### Example 2
 
-Compare energy Gramians across continuous and discrete timebases.
+A continuous and a discrete model: how the sample time is read back.
 
-@@example Eng/api/lti_gram.cpp@@
+@@example Eng/api/lti_state_timebase.cpp@@
 
 ### Example 3
 
-Exercise matrix-shape and sample-time validation.
+A batch of four systems on a leading axis.
+
+@@example Eng/api/lti_state_batch.cpp@@
+
+### Example 4
+
+Every refused matrix and sample time.
 
 @@example Eng/api/lti_state_errors.cpp@@
 

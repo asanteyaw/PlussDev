@@ -75,7 +75,7 @@ The bridge preserves:
   unified Pluss include such as `<pluss/pluss.h>` so the PlussMic bridge definitions
   are present.
 - No plotting occurs here. The result is an intermediate dataset object.
-- The bridge supports `SlateKind::Series`, `SlateKind::Note` and `SlateKind::Timeline`.
+- The bridge supports `ShelfKind::Series`, `ShelfKind::Note` and `ShelfKind::Timeline`.
 - Columns with no missing values do not allocate a redundant all-true validity mask.
 
 ## Examples
@@ -94,9 +94,9 @@ ptr[1] = false;
 ptr[2] = true;
 
 auto grades = DataFrame({
-    {"city", Slate(make_note({"Accra", "", "Kumasi"}), mask)},
-    {"score", Slate(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
-    {"stamp", Slate(make_timeline({
+    {"city", Shelf(make_note({"Accra", "", "Kumasi"}), mask)},
+    {"score", Shelf(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
+    {"stamp", Shelf(make_timeline({
         "2026-01-01T00:00:00Z",
         "2026-01-02T00:00:00Z",
         "2026-01-03T00:00:00Z",

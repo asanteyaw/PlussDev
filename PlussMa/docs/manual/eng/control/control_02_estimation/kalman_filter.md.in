@@ -4,7 +4,7 @@
 
 You have a record of noisy measurements of a system and want, at each time, the best estimate of its state and how uncertain that estimate is. `control::kalman` runs the Kalman filter over the record. Unlike the steady-state estimator of the previous page, its gain changes with time: it starts by trusting the measurements when the initial guess is poor, and settles to the steady-state gain as the record grows. It also copes with missing measurements and with known inputs, and reports the likelihood of the data.
 
-## The mental model
+## How it works
 
 At each step the filter does two things. It **predicts**: from the filtered estimate at the previous step it computes the prior mean `A x^` and covariance `A P A^T + W` for the new state. It then **updates**: it compares the new measurement `y` with the predicted one `C x_pred`, and corrects the prediction by the gain times the innovation:
 

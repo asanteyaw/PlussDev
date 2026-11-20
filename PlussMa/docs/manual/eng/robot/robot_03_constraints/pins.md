@@ -6,7 +6,7 @@
 
 A pin holds a point of a link at rest in the world: the tip of an arm bolted to a wall, a joint to the ground. It removes three degrees of freedom and carries a force that the dynamics returns. This page pins the tip of the planar arm, shows that its accelerations no longer move the tip, reads the force the pin carries as the joint torque changes, and locates points with `locate`.
 
-## The mental model
+## How it works
 
 A pin on link `l` at `point` (in the link frame) is the constraint that the world acceleration of that point is zero: `J qdd + J' qd = 0`, where `J` is the point Jacobian and `J' qd` the bias acceleration (the acceleration of the point when the joint accelerations are zero). Its force is free in all three components. With the Delassus matrix of the pins the constraint force is solved together with the accelerations: `qdd = M^-1 (tau - bias + J^T f)`.
 

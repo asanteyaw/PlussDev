@@ -58,12 +58,12 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, nan]                                
+metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, NULL]                               
 ========================================================================================================================
 ```
 
 Each position now shows the next position's value; position `3` has no
-successor, so it's `nan` — the `nan` lands at the opposite end from
+successor, so it's `NULL` — the `NULL` lands at the opposite end from
 [`lag()`](lag.md).
 
 ## Notes
@@ -78,8 +78,8 @@ successor, so it's `nan` — the `nan` lands at the opposite end from
 
 - [`CatalogTimeSeriesAccessor::lag`](lag.md): the mirror-image shift.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lead`](../slate-ts/lead.md): the underlying
-  single-slate engine this method delegates to.
+- [`TimeSeriesAccessor::lead`](../shelf-ts/lead.md): the underlying
+  single-shelf engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lag.html">

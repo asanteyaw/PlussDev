@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "table/Slate.h"
+#include "table/Shelf.h"
 
 namespace pluss::kindle {
 

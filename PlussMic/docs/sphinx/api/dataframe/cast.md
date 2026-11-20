@@ -9,13 +9,13 @@
 
 ```cpp
 DataFrameCastAccessor DataFrame::cast() const
-DataFrameCastAccessor DataFrame::cast(const SlateCastOptions& options) const
+DataFrameCastAccessor DataFrame::cast(const ShelfCastOptions& options) const
 ```
 
 ## What It Does
 
 Enters a dedicated casting accessor bound to the current frame or subframe. `cast()`
-itself does not convert anything yet; it stores shared `SlateCastOptions`, and the
+itself does not convert anything yet; it stores shared `ShelfCastOptions`, and the
 actual conversion happens when you finish the chain with one of the accessor methods:
 
 - `series()`: cast every bound feature to `Series`
@@ -41,7 +41,7 @@ and use its left sidebar to jump straight to `series`, `note`, `timeline`, or
 
 ## Parameters
 
-**options** (`const SlateCastOptions&`, overload)
+**options** (`const ShelfCastOptions&`, overload)
 
 Shared cast controls for every feature currently bound on the frame:
 
@@ -49,7 +49,7 @@ Shared cast controls for every feature currently bound on the frame:
 - `format`: date/time parse pattern for `Timeline` or `TimeIndex` targets
 - `invalid`: `ParseInvalid::Raise` or `ParseInvalid::Null` for unparseable date text
 
-The zero-argument overload is shorthand for default `SlateCastOptions{}`.
+The zero-argument overload is shorthand for default `ShelfCastOptions{}`.
 
 ## Returns
 
@@ -66,12 +66,12 @@ inside `CastSpec`s.
 using namespace pluss::table;
 
 auto raw = DataFrame({
-    {"opened_at", Slate(pluss::make_note({"2024-01-01 08:00:00", "bad-date"}))},
-    {"closed_at", Slate(pluss::make_note({"2024-01-02 09:30:00", "2024-01-03 10:45:00"}))},
-    {"city",      Slate(pluss::make_note({"Accra", "Tema"}))},
+    {"opened_at", Shelf(pluss::make_note({"2024-01-01 08:00:00", "bad-date"}))},
+    {"closed_at", Shelf(pluss::make_note({"2024-01-02 09:30:00", "2024-01-03 10:45:00"}))},
+    {"city",      Shelf(pluss::make_note({"Accra", "Tema"}))},
 });
 
-SlateCastOptions options;
+ShelfCastOptions options;
 options.format = "%Y-%m-%d %H:%M:%S";
 options.invalid = ParseInvalid::Null;
 
@@ -82,12 +82,12 @@ std::cout << temporal;
 ### Output
 
 ```text
-========================================
-     | opened_at            closed_at   
-----------------------------------------
+===============================================
+     | opened_at            closed_at          
+-----------------------------------------------
 0    | 2024-01-01 08:00:00  2024-01-02 09:30:00
 1    | NULL                 2024-01-03 10:45:00
-----------------------------------------
+-----------------------------------------------
 [2 cs x 2 feat]
 ```
 
@@ -98,12 +98,12 @@ selected subframe.
 Example 2. Parse one selected text column into numeric `Series`.
 
 ```cpp
-SlateCastOptions numeric;
+ShelfCastOptions numeric;
 numeric.series_dtype = pluss::codem::ScalarType::Float64;
 
 auto amounts = DataFrame({
-    {"amount_text", Slate(pluss::make_note({"10.5", "oops"}))},
-    {"city",        Slate(pluss::make_note({"Accra", "Tema"}))},
+    {"amount_text", Shelf(pluss::make_note({"10.5", "oops"}))},
+    {"city",        Shelf(pluss::make_note({"Accra", "Tema"}))},
 });
 
 auto parsed = amounts.features({"amount_text"}).cast(numeric).series();
@@ -130,7 +130,7 @@ becomes `NULL`, matching the normal `Note -> Series` conversion path.
 - `cast()` does not select columns. Selection belongs on [`features(names)`](features.md).
 - If you need to preserve the full frame while replacing only one or more casted
   columns, compose `features(...).cast()` with [`set(...)`](set.md).
-- The accessor applies one shared `SlateCastOptions` scribble to every currently bound
+- The accessor applies one shared `ShelfCastOptions` scribble to every currently bound
   feature.
 - Calling `cast()` on a zero-feature frame is valid; the accessor methods simply
   return the same zero-feature frame.
@@ -142,7 +142,7 @@ becomes `NULL`, matching the normal `Note -> Series` conversion path.
 - [`DataFrame::astype`](astype.md): the dtype-only shorthand when the target is
   definitely `Series`.
 - [`DataFrameLabelAccessor::values`](../dataframe-label/values.md): pull the case-label
-  slate when you need to cast labels explicitly and then reattach them with
+  shelf when you need to cast labels explicitly and then reattach them with
   [`set(...)`](../dataframe-label/set.md).
 
 <div class="pluss-inline-prev-next">

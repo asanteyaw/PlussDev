@@ -58,14 +58,14 @@ int main() {
         for (std::size_t i = 0; i < values.size(); ++i) {
           p[i] = values[i] >= 50;
         }
-        return pluss::table::Slate(out);
+        return pluss::table::Shelf(out);
       },
   }});
   flagged.head(8);
 
   std::cout << "\ntransform: all numeric +1 (Note features pass-through)\n";
-  auto transformed_all = df.transform([](const pluss::table::Slate& feature) {
-    if (feature.kind() == pluss::table::SlateKind::Series) {
+  auto transformed_all = df.transform([](const pluss::table::Shelf& feature) {
+    if (feature.kind() == pluss::table::ShelfKind::Series) {
       return feature + 1.0;
     }
     return feature;
@@ -74,8 +74,8 @@ int main() {
 
   std::cout << "\ntransform: targeted per-feature transforms\n";
   auto transformed_targeted = df.transform({
-      {"age", [](const pluss::table::Slate& feature) { return feature * 2.0; }},
-      {"balance", [](const pluss::table::Slate& feature) { return feature + 100.0; }},
+      {"age", [](const pluss::table::Shelf& feature) { return feature * 2.0; }},
+      {"balance", [](const pluss::table::Shelf& feature) { return feature + 100.0; }},
   });
   transformed_targeted.head(8);
 
@@ -123,7 +123,7 @@ int main() {
              {{
                  "age_roll_mean",
                  "age",
-                 pluss::table::SlateWindowOp::RollingMean,
+                 pluss::table::ShelfWindowOp::RollingMean,
                  3,
                  2,
              }},
@@ -133,7 +133,7 @@ int main() {
              {{
                  "",
                  "duration",
-                 pluss::table::SlateWindowOp::RollingMax,
+                 pluss::table::ShelfWindowOp::RollingMax,
                  5,
                  1,
              }},

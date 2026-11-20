@@ -52,3 +52,14 @@ Both `items` (originally 5 rows) and `orders` (originally 4) are trimmed to
 - [`apply`](apply.md): the same transform, scoped to one named catalog.
 - [`flow`](flow.md): running an arbitrary function over the whole `Locus`,
   not just each catalog's data.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="apply.html">
+    <span class="label">Previous</span>
+    <span class="title">apply</span>
+  </a>
+  <a class="next-link" href="audit.html">
+    <span class="label">Next</span>
+    <span class="title">audit</span>
+  </a>
+</div>

@@ -1,6 +1,6 @@
 # `control::PidRule`
 
-Discretization rule used by a sampled PID controller.
+How a discrete PID replaces the integral and the derivative.
 
 ## Signature
 
@@ -10,67 +10,47 @@ control::PidRule
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+A continuous integrator `1/s` and filtered derivative can be replaced by a difference equation in several ways. `Forward` uses the rectangle at the earlier sample, `Backward` the rectangle at the later sample and `Trapezoid` the average of the two. The rule decides the accuracy of the frequency response and which derivative settings are stable.
 
-The rule affects discrete controllers only. Continuous controllers retain their exact parallel-form expression.
+## Values
 
-## Fields
-
-### `Forward`
-
-Forward-Euler substitution. It is explicit and inexpensive but least damping-preserving.
-
-### `Backward`
-
-Backward-Euler substitution. It is implicit and generally more damping-preserving.
-
-### `Trapezoid`
-
-Bilinear/trapezoidal substitution, balancing frequency fidelity and numerical robustness.
+| Value | Integrator `1/s` becomes | Behaviour |
+|---|---|---|
+| `Forward` | `T / (z - 1)` | Magnitude slightly high; the phase lags by `omega T / 2`. |
+| `Backward` | `T z / (z - 1)` | The same magnitude as `Forward`; the phase leads by `omega T / 2`. |
+| `Trapezoid` | `(T / 2)(z + 1) / (z - 1)` | Exactly the ideal phase; magnitude low at high frequency. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Arguments `int_rule` and `diff_rule` of `pid`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Not every rule is admissible for the derivative: an unfiltered `Trapezoid` derivative and a `Forward` derivative with `sample_time >= 2 * filter` are rejected at construction.
 
 ## Interpretation and Use
 
-Rule choice matters only for sampled controllers. `Forward` is explicit, `Backward` is more damping-preserving, and `Trapezoid` usually offers better frequency fidelity. The integral and derivative rules may differ when implementation constraints demand it.
+The first example prints the response of a discrete integrator at three frequencies: `Forward` and `Backward` have equal magnitude and phase errors of equal size and opposite sign (at `omega = 10` and `T = 0.05` the phases are -1.82 and -1.32 against the ideal -1.57), while `Trapezoid` keeps the phase exactly and loses magnitude. Use `Trapezoid` when phase matters, `Backward` for the integrator when the delay of `Forward` must be avoided.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Select trapezoidal integration and backward differentiation explicitly.
+The integrator under each rule at three frequencies.
 
-@@example Eng/api/control_pid_discrete.cpp@@
+@@example Eng/api/control_pidrule_integrator.cpp@@
 
 ### Example 2
 
-Show that continuous PID ignores discrete substitution rules.
+Which derivative settings each rule accepts.
 
-@@example Eng/api/control_pid.cpp@@
+@@example Eng/api/control_pidrule_stability.cpp@@
 
 ### Example 3
 
-Review validation performed before rule evaluation.
+The unfiltered derivative under each rule.
 
-@@example Eng/api/control_controller_errors.cpp@@
+@@example Eng/api/control_pidrule_unfiltered.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="PlaceResult.html">
-    <span class="label">Previous</span>
-    <span class="title">PlaceResult</span>
-  </a>
-  <a class="next-link" href="PidController.html">
-    <span class="label">Next</span>
-    <span class="title">Pid</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

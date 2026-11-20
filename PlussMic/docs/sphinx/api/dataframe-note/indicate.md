@@ -59,7 +59,7 @@ See Example 2 — this is the same category of surprise documented on
 
 **delimiter** (`std::string_view`, default `"|"`)
     The literal text to split each cell on before collecting tokens. Must
-    not be empty — `indicate("")` throws `"Slate::indicate: delimiter
+    not be empty — `indicate("")` throws `"Shelf::indicate: delimiter
     cannot be empty"`.
 
 **prefix** (`std::string`, default `""`)
@@ -83,7 +83,7 @@ behavior from the danger box above.
 using namespace pluss::table;
 
 auto tagged = DataFrame({
-    {"tags", Slate(pluss::make_note(
+    {"tags", Shelf(pluss::make_note(
         {"red|blue", "blue|green", "red", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -110,15 +110,15 @@ std::cout << out1;
 ### Output
 
 ```text
-==========================
-     | blue   green  red  
---------------------------
-0    | true   false  true 
-1    | true   true   false
-2    | false  false  true 
-3    | false  false  false
---------------------------
-[4 cs x 3 feat]
+=================================
+     | blue   green  red    x    
+---------------------------------
+0    | true   false  true   false
+1    | true   true   false  false
+2    | false  false  true   false
+3    | false  false  false  false
+---------------------------------
+[4 cs x 4 feat]
 ```
 
 Three distinct tokens appear across the valid rows — `"blue"`, `"green"`,
@@ -133,7 +133,7 @@ valid row ever uses.
 
 ```cpp
 auto langs = DataFrame({
-    {"langs", Slate(pluss::make_note(
+    {"langs", Shelf(pluss::make_note(
         {"python, rust", "python, go", "just-one-word", "mars"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -185,15 +185,15 @@ Example 3. An empty delimiter throws immediately.
 ```cpp
 try {
   auto bad = tagged.features({"tags"}).nt().indicate("");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::indicate: delimiter cannot be empty
+Shelf::indicate: delimiter cannot be empty
 ```
 
 ## Notes
@@ -206,7 +206,7 @@ Slate::indicate: delimiter cannot be empty
 - The level set is collected from every row's raw text regardless of
   validity, so an invalid row can introduce an all-false phantom column.
   See the warning above and Example 2.
-- An empty `delimiter` throws `"Slate::indicate: delimiter cannot be
+- An empty `delimiter` throws `"Shelf::indicate: delimiter cannot be
   empty"`.
 
 ## See Also

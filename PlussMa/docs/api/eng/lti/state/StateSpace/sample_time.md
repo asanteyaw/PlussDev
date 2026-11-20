@@ -1,0 +1,138 @@
+<!-- generated from sample_time.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a0fb3b12a68a -->
+
+# `lti::StateSpace::sample_time`
+
+[Back to `lti::StateSpace`](../StateSpace.md)
+
+The sample period in seconds; zero for a continuous-time system.
+
+## Signature
+
+```cpp
+double lti::StateSpace::sample_time() const noexcept;
+```
+
+## What It Does
+
+Returns the sample time given to `state`. Zero means the system is continuous, `x' = A x + B u`; a positive value is the period of a discrete system, `x[k+1] = A x[k] + B u[k]`. Functions that depend on the time domain, such as `freqresp`, `sim` and the Gramians, read it to choose between the two readings of `A`.
+
+## Returns
+
+The sample period in seconds, `0.0` for continuous time.
+
+## Practical Examples
+
+### Example 1
+
+A continuous system reports zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("sample time =", oscillator().sample_time());
+}
+```
+
+Output
+
+```text
+sample time = 0.0000
+```
+
+### Example 2
+
+A discrete system reports its period.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("sample time =", oscillator(0.05).sample_time());
+}
+```
+
+Output
+
+```text
+sample time = 0.0500
+```
+
+### Example 3
+
+The sample time and the two domain tests agree.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const double ts : {0.0, 0.1}) {
+    const lti::StateSpace s = oscillator(ts);
+    out.writeln("sample time", s.sample_time(), " continuous", s.is_cont(), " discrete", s.is_disc());
+  }
+}
+```
+
+Output
+
+```text
+sample time 0.0000  continuous true  discrete false
+sample time 0.1000  continuous false  discrete true
+```
+
+## See Also
+
+- [`is_cont`](is_cont.md): true for a continuous system
+- [`is_disc`](is_disc.md): true for a discrete system
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="outputs.html">
+    <span class="label">Previous</span>
+    <span class="title">outputs</span>
+  </a>
+  <a class="next-link" href="states.html">
+    <span class="label">Next</span>
+    <span class="title">states</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

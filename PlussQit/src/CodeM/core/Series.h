@@ -1935,6 +1935,8 @@ public:
   Series logical_xor(const Series &rhs) const;
   Series logical_not() const;
   Series &logical_not_();
+  // ATen semantics: x.where(condition, y) keeps x where the condition is true and takes y elsewhere (the condition may be any dtype;
+  // non-zero is true; all three broadcast). Free form: pluss::series::where(condition, x, y).
   Series where(const Series &condition, const Series &other) const;
   Series &where_(const Series &condition, const Series &other);
   Series where(const Series &condition, double other) const;

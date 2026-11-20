@@ -110,7 +110,7 @@ inline Series apply_mask_(const Series& logits, const Series& mask) {
   if (!mask.defined()) return logits;
   if (mask.scalar_type() == ScalarType::Bool) {
     const Series blocked = mask.to(logits.platform(), ScalarType::Bool);
-    return blocked.where(mask_penalty_like_(logits), logits);
+    return pluss::series::where(blocked, mask_penalty_like_(logits), logits);
   }
   return logits.add(mask.to(logits.platform(), logits.scalar_type()));
 }

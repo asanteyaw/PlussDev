@@ -91,7 +91,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -101,7 +101,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series ratio = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
+  const DataFrame x({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
 
@@ -115,10 +115,10 @@ int main() {
   std::cout << "trained     = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame review({
-      {"amount", Slate(amount)},
-      {"ratio", Slate(ratio)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(model.infer(x))},
+      {"amount", Shelf(amount)},
+      {"ratio", Shelf(ratio)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(model.infer(x))},
   });
   std::cout << review;
 
@@ -161,13 +161,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series price = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
-  const DataFrame frame({{"price", Slate(price)}});
+  const DataFrame frame({{"price", Shelf(price)}});
 
   // with_centering toggles whether the column mean is subtracted. The stage
   // factory and the standalone prep::StandardScaler take the identical option
@@ -235,13 +235,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series price = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
-  const DataFrame frame({{"price", Slate(price)}});
+  const DataFrame frame({{"price", Shelf(price)}});
 
   // with_scaling toggles the divide-by-spread step. Turn it off to centre the
   // column on zero without changing its unit of measure. Family-alias spelling
@@ -306,7 +306,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -316,9 +316,9 @@ int main() {
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
   const DataFrame x({
-      {"amount", Slate(amount)},
-      {"ratio", Slate(ratio)},
-      {"region", Slate(region)},
+      {"amount", Shelf(amount)},
+      {"ratio", Shelf(ratio)},
+      {"region", Shelf(region)},
   });
 
   // A standard-scaler stage is one step among several. Here it scales the two
@@ -333,11 +333,11 @@ int main() {
 
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
   const DataFrame review({
-      {"amount", Slate(amount)},
-      {"ratio", Slate(ratio)},
-      {"region", Slate(region)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(model.infer(x))},
+      {"amount", Shelf(amount)},
+      {"ratio", Shelf(ratio)},
+      {"region", Shelf(region)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(model.infer(x))},
   });
   std::cout << review;
 

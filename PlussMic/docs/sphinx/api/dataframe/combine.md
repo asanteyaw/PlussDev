@@ -72,14 +72,14 @@ name collision disambiguated by suffix, and case labels united across both sides
 using namespace pluss::table;
 
 auto left = DataFrame({
-    {"name", Slate(pluss::make_note({"Ama", "Kofi", "Efua"}))},
-    {"age",  Slate(pluss::make_series({30.0, std::numeric_limits<double>::quiet_NaN(), 28.0}))},
-}, Slate(pluss::make_note({"c1", "c2", "c3"})));
+    {"name", Shelf(pluss::make_note({"Ama", "Kofi", "Efua"}))},
+    {"age",  Shelf(pluss::make_series({30.0, 0.0, 28.0}), pluss::make_series(std::vector<bool>{true, false, true}))},
+}, Shelf(pluss::make_note({"c1", "c2", "c3"})));
 
 auto right = DataFrame({
-    {"age",   Slate(pluss::make_series({26.0, 40.0, 22.0}))},
-    {"score", Slate(pluss::make_series({88.0, 91.0, 75.0}))},
-}, Slate(pluss::make_note({"c2", "c3", "c4"})));
+    {"age",   Shelf(pluss::make_series({26.0, 40.0, 22.0}))},
+    {"score", Shelf(pluss::make_series({88.0, 91.0, 75.0}))},
+}, Shelf(pluss::make_note({"c2", "c3", "c4"})));
 
 auto out = left.combine(right);
 std::cout << out;
@@ -156,9 +156,9 @@ std::cout << filled;
      | name  age 
 -----------------
 c1   | Ama   30  
-c2   | Kofi  26  
+c2   | Kofi  NULL
 c3   | Efua  28  
-c4   | NULL  22  
+c4   | NULL  NULL
 -----------------
 [4 cs x 2 feat]
 ```
@@ -178,8 +178,8 @@ throws instead of silently overwriting or dropping either side's column.
 ```cpp
 try {
   auto out = left.combine(right, DataFrame::CombineSpec{.collision_suffix = ""});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

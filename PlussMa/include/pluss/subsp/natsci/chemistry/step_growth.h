@@ -42,7 +42,7 @@ inline Series conversion_imbalanced(const Series &t, const Coeff &k, const Coeff
   const Series e = rr.mul(-1.0).add(1.0).mul(kct).exp();
   const Series generic = e.sub(1.0).div(e.sub(rr));
   const Series equimolar = kct.div(kct.add(1.0)); // r -> 1
-  return rr.sub(1.0).abs().lt(1e-12).where(equimolar, generic);
+  return pluss::series::where(rr.sub(1.0).abs().lt(1e-12), equimolar, generic);
 }
 // closed moment equations of the equal-reactivity linear system: y = [M0, M1, M2, M3] (moments of the chain-length distribution)
 inline dynamics::RateFn linear_moment_rates(const Coeff &k) {
@@ -119,12 +119,12 @@ inline SolGel sol_gel(const Series &pa, const Series &r, const Coeff &f, const C
   for (int it = 0; it < iterations; ++it) {
     const Series mid = lo.add(hi).mul(0.5);
     const Series positive = h(mid).gt(0.0); // h(0) > 0: the root lies above `mid`
-    lo = positive.where(mid, lo);
-    hi = positive.where(hi, mid);
+    lo = pluss::series::where(positive, mid, lo);
+    hi = pluss::series::where(positive, hi, mid);
   }
   const Series root = lo.add(hi).mul(0.5);
   SolGel out;
-  out.f_a = gel.where(root, pa.mul(0.0).add(1.0));
+  out.f_a = pluss::series::where(gel, root, pa.mul(0.0).add(1.0));
   out.f_b = fb_of(out.f_a);
   // numbers of molecules: N_A = f n1, N_B = g n2 = N_A / r  =>  n2 / n1 = f / (r g)
   const Series n1 = pa.mul(0.0).add(1.0);

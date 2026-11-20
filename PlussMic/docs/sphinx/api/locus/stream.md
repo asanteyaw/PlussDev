@@ -75,3 +75,14 @@ with nothing added.
 ## See Also
 
 - [`link`](link.md): the relationships `to_string()`'s rendering names.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="store.html">
+    <span class="label">Previous</span>
+    <span class="title">store</span>
+  </a>
+  <a class="next-link" href="summary.html">
+    <span class="label">Next</span>
+    <span class="title">summary</span>
+  </a>
+</div>

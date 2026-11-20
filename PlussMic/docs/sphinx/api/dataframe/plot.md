@@ -52,8 +52,8 @@ Example 1. Enter the plotting accessor and draw a line chart with default option
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"month",  Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"amount", Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {"month",  Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
 });
 
 auto chart = sales.plot().line("amount", "month");

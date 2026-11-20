@@ -90,7 +90,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -98,7 +98,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.learn_(x, y);
@@ -146,16 +146,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"customer_id", Shelf(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   workflow::Policy policy{};
@@ -214,7 +214,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -222,7 +222,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.learn_(x, y);

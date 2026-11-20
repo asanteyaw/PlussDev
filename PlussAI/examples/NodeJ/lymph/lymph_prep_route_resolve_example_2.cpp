@@ -14,7 +14,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -22,7 +22,7 @@ int main() {
   const pluss::Series ratio  = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4, 0.8, 1.2}, {8}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2, 0, 1}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}, {"region", Slate(region)}});
+  const DataFrame x({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}, {"region", Shelf(region)}});
 
   // The vector has one entry per route name, in the route's own list order; each
   // entry is that name's position in the ordered space you resolve against.

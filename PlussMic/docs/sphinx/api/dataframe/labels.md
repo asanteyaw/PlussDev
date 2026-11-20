@@ -18,7 +18,7 @@ per-row index every frame carries alongside its features. `labels()` itself does
 nothing but bind the accessor to the current frame; the accessor exposes around
 thirty methods covering inspection (`.values()`, `.names()`, `.part()`), promoting a
 feature into the label axis and back (`.set()`, `.reset()`), reordering
-(`.sort()`, `.align()`), set-style operations between two label slates (`.unite()`,
+(`.sort()`, `.align()`), set-style operations between two label shelves (`.unite()`,
 `.intersect()`, `.diff()`, `.symdiff()`), positional lookup (`.find()`, `.pos()`), and
 distinct/duplicate inspection (`.distinct()`, `.duplicated()`, `.repeated()`,
 `.freq()`) — the label-axis counterparts of the same-named `DataFrame` methods, but
@@ -39,21 +39,21 @@ what it accepts.
 
 `DataFrameLabelAccessor`
     A lightweight accessor bound to the current frame. Methods that inspect labels
-    return a `Slate`, `bool`, or `std::vector<std::string>`; methods that transform
+    return a `Shelf`, `bool`, or `std::vector<std::string>`; methods that transform
     the label axis or the frame return a new `DataFrame`. The source frame is never
     mutated.
 
 ## Examples
 
-Example 1. Read the current case-label axis as a plain `Slate`.
+Example 1. Read the current case-label axis as a plain `Shelf`.
 
 ```cpp
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"units", Slate(pluss::make_series({10.0, 7.0, 12.0}))},
-}, Slate(pluss::make_note({"c1", "c2", "c3"})));
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"units", Shelf(pluss::make_series({10.0, 7.0, 12.0}))},
+}, Shelf(pluss::make_note({"c1", "c2", "c3"})));
 std::cout << sales;
 ```
 
@@ -84,16 +84,16 @@ std::cout << labels;
 ptype: Note
 ```
 
-`.values()` is the direct read of the case-label axis — the same slate `caselbl()`
+`.values()` is the direct read of the case-label axis — the same shelf `caselbl()`
 returns.
 
 Example 2. Promote a feature into the case-label axis, dropping it from the columns.
 
 ```cpp
 auto customers = DataFrame({
-    {"id",   Slate(pluss::make_series({1, 2, 3}))},
-    {"city", Slate(pluss::make_note({"Tema", "Accra", "Kumasi"}))},
-}, Slate(pluss::make_note({"c1", "c2", "c3"})));
+    {"id",   Shelf(pluss::make_series({1, 2, 3}))},
+    {"city", Shelf(pluss::make_note({"Tema", "Accra", "Kumasi"}))},
+}, Shelf(pluss::make_note({"c1", "c2", "c3"})));
 
 auto by_city = customers.labels().set("city", /*drop_feature=*/true);
 std::cout << by_city;

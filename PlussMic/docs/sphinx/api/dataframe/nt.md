@@ -48,8 +48,8 @@ Example 1. Lowercase a text feature — after selecting it first.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",   Slate(pluss::make_series({1, 2, 3}))},
-    {"city", Slate(pluss::make_note({"Accra", "TEMA", "Kumasi"}))},
+    {"id",   Shelf(pluss::make_series({1, 2, 3}))},
+    {"city", Shelf(pluss::make_note({"Accra", "TEMA", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -133,12 +133,12 @@ std::cout << lengths;
   `TimeIndex` features, instead of `Note` text.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nfeatures.html">
+  <a class="prev-link" href="notnull.html">
     <span class="label">Previous</span>
-    <span class="title">nfeatures</span>
-  </a>
-  <a class="next-link" href="notnull.html">
-    <span class="label">Next</span>
     <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="observe.html">
+    <span class="label">Next</span>
+    <span class="title">observe</span>
   </a>
 </div>

@@ -6,7 +6,7 @@
 
 Kindle is PlussMic's stream-first model. Where a `DataFrame` is a table, a `Catalog` is a named set of typed streams that you can transform one at a time, with reports on what every operation did. This page redoes the common table jobs the Kindle way: a sales report, an audited join, a text search, a file round trip, time-series features, feature preparation and change detection.
 
-## The mental model
+## How it works
 
 A `Stream` is one typed vector with an optional validity mask, labels and metadata. A `Catalog` is a set of streams with names, and its natural verbs are the stream verbs: `set` a stream, `keys` to pick some, `map` a function over streams, `group().by(key)` to split. Printing a catalog shows each stream's kind, dtype, length and a preview rather than a table; `tabelize()` converts to a `DataFrame` when you want rows and columns.
 
@@ -147,8 +147,8 @@ key                      | kind         | dtype            | cs      | preview
 ------------------------------------------------------------------------------------------------------------------------
 customer                 | Note         | Note             | 5       | [ada, ada, grace, ..., edsger]                   
 country                  | Note         | Note             | 5       | [UK, UK, US, ..., NL]                            
-order_id                 | Series       | Series[int64]    | 5       | [101, 103, 102, ..., NA]                         
-amount                   | Series       | Series[float64]  | 5       | [120, 40, 75.5, ..., NA]                         
+order_id                 | Series       | Series[int64]    | 5       | [101, 103, 102, ..., NULL]                       
+amount                   | Series       | Series[float64]  | 5       | [120, 40, 75.5, ..., NULL]                       
 ========================================================================================================================
 
 report: 5 output record(s); 4 matched pair(s). left: 1 of 4 record(s) without a partner (0 without a key), 0 omitted. right: 1 of 5 without a partner (0 without a key), 1 omitted.
@@ -277,8 +277,8 @@ keys: [sensor, reading, count]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 sensor                   | Note         | Note             | 6       | [A, B, A, ..., A]                                
-reading                  | Series       | Series[float64]  | 6       | [12.5, NA, 13.1, ..., 11.9]                      
-count                    | Series       | Series[int64]    | 6       | [3, 4, NA, ..., 1]                               
+reading                  | Series       | Series[float64]  | 6       | [12.5, NULL, 13.1, ..., 11.9]                    
+count                    | Series       | Series[int64]    | 6       | [3, 4, NULL, ..., 1]                             
 ========================================================================================================================
 
 rows kept after filling counts and dropping missing readings: 5 of 6
@@ -431,7 +431,7 @@ area: mean -7.40149e-17, std 1
 
 ## Detecting change
 
-Two loads of an inventory table. The program compares the streams and explains the difference, and then shows what a fingerprint is.
+Two loads of an inventory table. The program compares the catalogs by fingerprint, finds the stream that changed and explains the difference, and then shows how a stamp differs.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -446,21 +446,15 @@ static Catalog load(double stock_b) {
   return Catalog({"sku"_k = Stream(pluss::make_note({"A100", "B200", "C300"})), "stock"_k = Stream(pluss::make_series({40.0, stock_b, 7.0})), "price"_k = Stream(pluss::make_series({9.5, 20.0, 31.0}))});
 }
 
-// Equal content: same dtype and the same values in the same positions.
-static bool same_content(const Stream &a, const Stream &b) {
-  if (a.size() != b.size()) return false;
-  if (a.kind() == pluss::kindle::StreamKind::Note) return a.as_note().host().vector() == b.as_note().host().vector();
-  return a.as_series().eq(b.as_series()).all().item<bool>();
-}
-
 int main() {
   auto yesterday = load(12.0);
   auto today = load(9.0);
 
-  // 1. Compare every stream of the two loads.
+  // 1. Compare every stream of the two loads by fingerprint: a hash of the values, equal whenever the contents are equal.
+  std::cout << "whole catalogs differ: " << (yesterday.fingerprint() != today.fingerprint() ? "yes" : "no") << "\n";
   bool stock_changed = false, price_changed = false;
   for (const auto &name : yesterday) {
-    const bool same = same_content(yesterday.keys(name), today.keys(name));
+    const bool same = yesterday.keys(name).fingerprint() == today.keys(name).fingerprint();
     std::cout << "  " << name << ": " << (same ? "unchanged" : "CHANGED") << "\n";
     if (name == "stock") stock_changed = !same;
     if (name == "price") price_changed = !same;
@@ -473,35 +467,36 @@ int main() {
   // 3. Rebuild only what depends on a changed stream.
   std::cout << "reorder report must be rebuilt: " << (stock_changed ? "yes" : "no") << "; price list must be rebuilt: " << (price_changed ? "yes" : "no") << "\n";
 
-  // 4. A fingerprint identifies the stored data a catalog shares, not what it contains. A copy shares the storage and so the fingerprint;
-  //    a table built separately with the same content has its own.
+  // 4. A fingerprint follows the contents. A stamp identifies the stored data a catalog shares (it is a cache token): a copy shares the
+  //    storage and so the stamp, while a table built separately with the same content has its own stamp but the same fingerprint.
   auto copy = yesterday;
   auto rebuilt = load(12.0);
-  std::cout << "copy has the same fingerprint:    " << (copy.fingerprint() == yesterday.fingerprint() ? "yes" : "no") << "\n";
-  std::cout << "rebuilt has the same fingerprint: " << (rebuilt.fingerprint() == yesterday.fingerprint() ? "yes" : "no") << " (equal content: " << (same_content(rebuilt.keys("stock"), yesterday.keys("stock")) ? "yes" : "no") << ")\n";
+  std::cout << "copy has the same stamp:    " << (copy.stamp() == yesterday.stamp() ? "yes" : "no") << "\n";
+  std::cout << "rebuilt has the same stamp: " << (rebuilt.stamp() == yesterday.stamp() ? "yes" : "no") << " (equal content: " << (rebuilt.keys("stock").fingerprint() == yesterday.keys("stock").fingerprint() ? "yes" : "no") << ")\n";
 }
 ```
 
 Output
 
 ```text
+whole catalogs differ: yes
   sku: unchanged
   stock: CHANGED
   price: unchanged
 stock change: Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[0.0000, -3.0000, 0.0000]
 reorder report must be rebuilt: yes; price list must be rebuilt: no
-copy has the same fingerprint:    yes
-rebuilt has the same fingerprint: no (equal content: yes)
+copy has the same stamp:    yes
+rebuilt has the same stamp: no (equal content: yes)
 ```
-Comparing stream by stream finds that only `stock` changed, by `-3` for the second item, so only the reorder report needs rebuilding. The fingerprint lines are a different tool: a fingerprint identifies the *storage* a catalog shares. A copy has the same fingerprint, and a table built separately with identical content does not, so a fingerprint is a cache key and not a content check.
+The fingerprint is a hash of the values themselves, so equal contents give equal fingerprints however the catalog was built: the whole-catalog fingerprints differ, and comparing stream by stream finds that only `stock` changed, by `-3` for the second item, so only the reorder report needs rebuilding. The last two lines show the other tool, the stamp, which identifies the *storage* a catalog shares and is a cache token: a copy has the same stamp, while a table built separately with identical content has its own stamp (and the same fingerprint). Use `fingerprint()` to ask whether data changed and leave `stamp()` to caches, which use it because it never reads the data.
 
 ## Decisions
 
 - **Stream or table:** use a catalog when the unit of work is a stream (clean, filter, fill, join per stream); convert with `tabelize()` for row-oriented reports.
 - **Joins:** audit the keys first, state the relationship you expect, and read the report afterwards.
 - **Reductions give streams:** `mean()` and `std()` return one-record streams; read them as numbers before using them in arithmetic.
-- **Change detection:** compare content, not fingerprints.
+- **Change detection:** compare `fingerprint()`s (contents), not `stamp()`s (storage identity).
 
 ## Where next
 

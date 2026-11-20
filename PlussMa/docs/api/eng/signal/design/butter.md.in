@@ -1,5 +1,7 @@
 # `signal::butter`
 
+Designs a Butterworth filter, with the flattest possible passband.
+
 ## Signature
 
 ```cpp
@@ -16,48 +18,52 @@ lti::PoleZero signal::butter(
 
 ## What It Does
 
-Designs a Butterworth system with maximally flat passband magnitude. It is the neutral IIR prototype when ripple is not acceptable and transition sharpness is secondary to monotonic response.
+Returns the poles, zeros and gain of a Butterworth filter. Its magnitude is monotone and maximally flat at zero frequency, and at the cutoff it is exactly `1/sqrt(2)`, that is -3.01 dB, for every order. Raising the order sharpens the transition without adding ripple.
 
 ## Parameters
 
 `order`
-: Positive prototype order. Band-pass and band-stop transformations produce the corresponding doubled system order.
+: Positive prototype order. Band-pass and band-stop designs double it.
 
 `cutoff`
-: A finite positive scalar for low/high designs or an increasing positive pair for pass/stop designs. Digital cutoffs must remain below Nyquist.
+: A finite positive scalar for `Low` and `High`, or an increasing positive pair for `Pass` and `Stop`. In a digital design it is in the units of `sample_rate` and must be below the Nyquist frequency (half the sample rate).
 
 `options`
-: Band, sample-rate interpretation, dtype, and platform policy.
+: An `IirOptions`: band, sample rate, dtype and platform.
 
 ## Returns
 
-An `lti::PoleZero` system. Digital results are discrete and should have poles inside the unit circle; analog results are continuous and should have poles in the left half-plane.
+An `lti::PoleZero`: discrete when a sample rate is given, continuous otherwise. Its poles lie inside the unit circle (digital) or in the left half-plane (analog).
 
 ## Errors
 
-Rejects nonpositive order, invalid or unordered cutoffs, digital cutoffs at or above Nyquist, invalid prototype ripple/attenuation, and cutoff-form/band mismatches.
+A nonpositive order, a nonfinite or nonpositive cutoff, a digital cutoff at or above the Nyquist frequency, an unordered cutoff pair and a cutoff form that does not match the band throw `pluss::Error`.
+
+## Interpretation and Use
+
+Choose Butterworth when ripple is unacceptable in either band. The gain at the cutoff is -3.01 dB at every order (first and second examples), and each added pair of poles steepens the stopband by about 14 dB at twice the cutoff: -14.2 dB at order 2, -28.0 dB at order 4, -41.9 dB at order 6. Apply the design with `lti::to_sos` and `signal::sos`.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+The gain across the passband and stopband of a fourth-order low-pass, and its monotone passband.
 
-@@example Eng/api/signal_design.cpp@@
+@@example Eng/api/signal_butter_response.cpp@@
 
 ### Example 2
 
-Exercise band transformations and analog-versus-digital interpretation.
+Order 2, 4 and 6: the same gain at the cutoff and a steeper stopband.
 
-@@example Eng/api/signal_design_bands.cpp@@
+@@example Eng/api/signal_butter_orders.cpp@@
 
 ### Example 3
 
-Observe validation of cutoffs, ripple, and band/cutoff shape.
+Every refused argument.
 
-@@example Eng/api/signal_design_errors.cpp@@
+@@example Eng/api/signal_butter_errors.cpp@@
 
 ## See Also
 

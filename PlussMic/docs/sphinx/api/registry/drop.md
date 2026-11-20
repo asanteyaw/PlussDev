@@ -93,8 +93,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.drop("zzz");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -128,8 +128,8 @@ Registry::drop: unknown key 'zzz'
     <span class="label">Previous</span>
     <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

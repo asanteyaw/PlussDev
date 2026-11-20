@@ -1,5 +1,7 @@
 # `lti::Gram`
 
+Chooses which Gramian `gram` computes.
+
 ## Signature
 
 ```cpp
@@ -9,44 +11,48 @@ lti::Gram lti::Gram::Observe;
 
 ## What It Does
 
-Selects which energy Gramian `lti::gram` computes. The choice changes both the Lyapunov driver and, for observability, the orientation of the dynamics matrix.
+`Gram::Reach` solves the Lyapunov equation driven by `B B'` and measures how much input energy each state direction costs; `Gram::Observe` solves the equation driven by `C' C` and measures how much output energy each state direction produces.
 
-## Fields
+## Values
 
-| Field | Meaning |
-|---|---|
-| `Reach` | Reachability or controllability Gramian, driven by `B Bᴴ`. |
-| `Observe` | Observability Gramian, driven by `Cᴴ C`. |
+| Value | Equation (continuous) | Driven by |
+|---|---|---|
+| `Reach` | `A W + W A' + B B' = 0` | The input matrix. |
+| `Observe` | `A' W + W A + C' C = 0` | The output matrix. |
 
 ## Returns
 
-Pass one enumerator as the `side` argument to `lti::gram`; the enum does not allocate a matrix itself.
+Argument of `gram`.
 
 ## Errors
 
-Both choices require dynamics for which the corresponding continuous or discrete Lyapunov equation has a well-conditioned solution.
+The enum has no invalid values; `gram` reports unstable systems.
+
+## Interpretation and Use
+
+The two are dual: the observability Gramian of a system equals the reachability Gramian of its dual `(A', C', B', D')` (the first example). In the discrete case the Gramian is the sum of the energy of the impulse response (the second example sums a geometric series to `b^2 / (1 - a^2)`).
 
 ## Practical Examples
 
-These verified programs cover structural analysis, both Gramian choices, and state-space validation.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+The duality of the two sides.
 
-@@example Eng/api/lti_state.cpp@@
+@@example Eng/api/lti_gramside_duality.cpp@@
 
 ### Example 2
 
-Compute `Reach` and `Observe` Gramians and compare continuous and discrete results.
+The discrete equations against their geometric-series closed forms.
 
-@@example Eng/api/lti_gram.cpp@@
+@@example Eng/api/lti_gramside_discrete.cpp@@
 
 ### Example 3
 
-Exercise matrix-shape and sample-time validation before analysis begins.
+How the two sides scale with `b` and `c`.
 
-@@example Eng/api/lti_state_errors.cpp@@
+@@example Eng/api/lti_gramside_values.cpp@@
 
 ## See Also
 

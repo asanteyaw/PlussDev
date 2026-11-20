@@ -2,168 +2,77 @@
 
 # `signal::Band`
 
+Which part of the spectrum a designed filter passes.
+
 ## Signature
 
 ```cpp
-signal::Band signal::Band::Low;
-signal::Band signal::Band::High;
-signal::Band signal::Band::Pass;
-signal::Band signal::Band::Stop;
+enum class signal::Band { Low, High, Pass, Stop };
 ```
 
 ## What It Does
 
-Selects the frequency transformation applied to an analog low-pass prototype before optional digital conversion.
+The prototypes `butter`, `cheby1` and `cheby2` are low-pass filters. `Band` selects the transformation applied to the prototype: `Low` keeps it, `High` mirrors it to pass the highs, `Pass` keeps a band between two cutoffs and `Stop` removes one. The transformations that need two edges double the order.
 
-## Fields
+## Values
 
-| Value | Cutoff form | Meaning |
-|---|---|---|
-| `Low` | scalar | Retains frequencies below the edge. |
-| `High` | scalar | Retains frequencies above the edge. |
-| `Pass` | ordered pair | Retains frequencies between lower and upper edges. |
-| `Stop` | ordered pair | Rejects frequencies between lower and upper edges. |
-
-## Returns
-
-Stored in `IirOptions::band` and interpreted by `butter`, `cheby1`, and `cheby2`.
+| Value | Passes | Cutoff argument | Poles of an order-`n` design |
+|---|---|---|---|
+| `Low` | Below the cutoff. | One scalar. | `n` |
+| `High` | Above the cutoff. | One scalar. | `n` |
+| `Pass` | Between two cutoffs. | An increasing pair. | `2n` |
+| `Stop` | Outside two cutoffs. | An increasing pair. | `2n` |
 
 ## Errors
 
-Scalar and pair overloads enforce the corresponding band kinds; mismatches are rejected.
+A scalar cutoff with `Pass` or `Stop`, a pair with `Low` or `High`, and a pair with an edge at or above the Nyquist frequency throw `pluss::Error`.
+
+## Interpretation and Use
+
+Pick the band by what must survive: a low-pass removes noise above a frequency, a high-pass removes drift below one, a band-pass isolates a signal and a band-stop removes an interferer such as mains hum. The examples show the gain at the band edges and in the rejected region for each.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+Low-pass and high-pass at the same cutoff: opposite behaviour, the same gain at the edge.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-
-  const sig::IirOptions options{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  const lti::PoleZero butter = sig::butter(4, 100.0, options);
-  const lti::PoleZero cheby1 = sig::cheby1(4, 1.0, 100.0, options);
-  const lti::PoleZero cheby2 = sig::cheby2(4, 40.0, 100.0, options);
-
-  out.writeln("Butterworth poles =", butter.poles().numel());
-  out.writeln("Butterworth stable =", butter.is_stable());
-  out.writeln("Chebyshev I stable =", cheby1.is_stable());
-  out.writeln("Chebyshev II stable =", cheby2.is_stable());
-  out.writeln("SOS shape =", lti::to_sos(butter).sizes());
-}
-```
-
-Output
-
-```text
-Butterworth poles = 4
-Butterworth stable = true
-Chebyshev I stable = true
-Chebyshev II stable = true
-SOS shape = [2, 6]
-```
-### Example 2
-
-Exercise band transformations and analog-versus-digital interpretation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
+#include <algorithm>
 #include <cmath>
-#include <optional>
-
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::PoleZero pass = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Pass, .sample_rate = 1000.0});
-  const lti::PoleZero stop = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Stop, .sample_rate = 1000.0});
-  const lti::PoleZero analog = sig::butter(
-      3, 2.0,
-      {.band = sig::Band::Low, .sample_rate = std::nullopt});
-  const pluss::Series omega =
-      pluss::make_series({0.0, 150.0 * 2.0 * std::acos(-1.0)});
-
-  out.writeln("pass magnitude =", lti::freqresp(pass, omega).abs().items<double>());
-  out.writeln("stop magnitude =", lti::freqresp(stop, omega).abs().items<double>());
-  out.writeln("analog continuous =", analog.is_cont());
-  out.writeln("analog gain =", analog.gain().real().item<double>());
-}
-```
-
-Output
-
-```text
-pass magnitude = [0.0000, 1.0000]
-stop magnitude = [1.0000, 0.0015]
-analog continuous = true
-analog gain = 8.0000
-```
-### Example 3
-
-Observe validation of cutoffs, ripple, and band/cutoff shape.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
 
 int main() {
   OutputEngine out;
-  const sig::IirOptions low{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  try {
-    static_cast<void>(sig::butter(3, 500.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("Nyquist cutoff rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::cheby1(3, 0.0, 100.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero ripple rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::butter(
-        3, 100.0,
-        {.band = sig::Band::Pass, .sample_rate = 1000.0}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("scalar passband rejected =",
-                message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const std::pair<const char *, sig::Band> bands[] = {{"Low ", sig::Band::Low}, {"High", sig::Band::High}};
+  for (const auto &[label, band] : bands) {
+    const lti::PoleZero design = sig::butter(3, 100.0, {.band = band, .sample_rate = 1000.0});
+    out.writeln(label, ": poles", design.poles().numel(), " gain at 10 Hz", gain_db(design, 10.0), "dB, at 100 Hz", gain_db(design, 100.0), "dB, at 400 Hz", gain_db(design, 400.0), "dB");
   }
 }
 ```
@@ -171,9 +80,105 @@ int main() {
 Output
 
 ```text
-Nyquist cutoff rejected = eng::signal::butter: a digital cutoff must be below the Nyquist frequency
-zero ripple rejected = eng::signal::cheby1: ripple must be finite and positive
-scalar passband rejected = eng::signal::butter: a scalar cutoff requires Band::Low or Band::High
+Low  : poles 3  gain at 10 Hz -0.000 dB, at 100 Hz -3.010 dB, at 400 Hz -58.587 dB
+High : poles 3  gain at 10 Hz -60.869 dB, at 100 Hz -3.010 dB, at 400 Hz -0.000 dB
+```
+### Example 2
+
+Band-pass and band-stop between 100 and 200 Hz: complementary gains and doubled order.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const std::pair<const char *, sig::Band> bands[] = {{"Pass", sig::Band::Pass}, {"Stop", sig::Band::Stop}};
+  for (const auto &[label, band] : bands) {
+    const lti::PoleZero design = sig::butter(3, {100.0, 200.0}, {.band = band, .sample_rate = 1000.0});
+    out.writeln(label, ": poles", design.poles().numel(), " (a third-order prototype doubles); gain at 50 Hz", gain_db(design, 50.0), "dB, at 150 Hz", gain_db(design, 150.0), "dB, at 400 Hz", gain_db(design, 400.0), "dB");
+  }
+}
+```
+
+Output
+
+```text
+Pass : poles 6  (a third-order prototype doubles); gain at 50 Hz -31.246 dB, at 150 Hz -0.000 dB, at 400 Hz -52.407 dB
+Stop : poles 6  (a third-order prototype doubles); gain at 50 Hz -0.003 dB, at 150 Hz -56.342 dB, at 400 Hz -0.000 dB
+```
+### Example 3
+
+Every mismatch between a band and its cutoff.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  refused(out, "a scalar cutoff for a pass band", [] { sig::butter(3, 100.0, {.band = sig::Band::Pass, .sample_rate = 1000.0}); });
+  refused(out, "a scalar cutoff for a stop band", [] { sig::butter(3, 100.0, {.band = sig::Band::Stop, .sample_rate = 1000.0}); });
+  refused(out, "a cutoff pair for a low-pass", [] { sig::butter(3, {100.0, 200.0}, {.band = sig::Band::Low, .sample_rate = 1000.0}); });
+  refused(out, "a pair with an edge above the Nyquist frequency", [] { sig::butter(3, {100.0, 600.0}, {.band = sig::Band::Pass, .sample_rate = 1000.0}); });
+}
+```
+
+Output
+
+```text
+a scalar cutoff for a pass band : eng::signal::butter: a scalar cutoff requires Band::Low or Band::High
+a scalar cutoff for a stop band : eng::signal::butter: a scalar cutoff requires Band::Low or Band::High
+a cutoff pair for a low-pass : eng::signal::butter: two cutoffs require Band::Pass or Band::Stop
+a pair with an edge above the Nyquist frequency : eng::signal::butter: digital cutoffs must be below the Nyquist frequency
 ```
 ## See Also
 

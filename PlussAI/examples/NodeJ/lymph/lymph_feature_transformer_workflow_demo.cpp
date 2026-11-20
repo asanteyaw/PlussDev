@@ -9,13 +9,13 @@ int main() {
 
   const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const pluss::Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, f64);
-  const pluss::table::Slate cat = pluss::table::Slate(pluss::make_note({"red", "blue", "red", "blue", "red", "blue"}));
+  const pluss::table::Shelf cat = pluss::table::Shelf(pluss::make_note({"red", "blue", "red", "blue", "red", "blue"}));
   const pluss::Series y = x.mul(2.0).add(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {6}, f64));
 
   const pluss::table::DataFrame housing({
-      {"median_income", pluss::table::Slate(x)},
+      {"median_income", pluss::table::Shelf(x)},
       {"ocean_proximity", cat},
-      {"target", pluss::table::Slate(y)},
+      {"target", pluss::table::Shelf(y)},
   });
 
   const auto numeric = housing.feataxis().series().features();

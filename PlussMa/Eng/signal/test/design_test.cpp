@@ -212,5 +212,14 @@ int main() {
   }
   expect(nonfinite, "non-finite root was accepted");
 
+  bool on_mps = false;
+  try {
+    (void)eng_signal::butter(3, 0.2, {.platform = pluss::Platform::MPS});
+  } catch (const pluss::Error &error) {
+    // The message must say why, not surface a kernel failure.
+    on_mps = std::string(error.message()).find("float64 is unsupported on the MPS") != std::string::npos;
+  }
+  expect(on_mps, "a float64 design on the MPS was not refused with a clear message");
+
   return 0;
 }

@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const
-DataFrame DataFrame::take(const Slate& indices) const
+DataFrame DataFrame::take(const Shelf& indices) const
 ```
 
 ## What It Does
@@ -28,10 +28,10 @@ position (after negative normalization) is a validation error here, not silently
 clamped. Case labels on the result follow the same positions and order as `indices`:
 row `5` keeps its original label `5` even if it now appears first in the result.
 
-The second overload accepts the positions as a numeric `Slate` instead of a
-`RangeView` — convenient when the indices already exist as a computed `Slate`
+The second overload accepts the positions as a numeric `Shelf` instead of a
+`RangeView` — convenient when the indices already exist as a computed `Shelf`
 (the output of another selection or a boolean-to-position conversion) rather
-than a literal list. A non-numeric `Slate` (e.g. `Note`-kind) throws.
+than a literal list. A non-numeric `Shelf` (e.g. `Note`-kind) throws.
 
 ## Parameters
 
@@ -41,11 +41,11 @@ The case positions to select, in the exact order the result should have. Negativ
 values are interpreted relative to the end of the frame. The same position may appear
 more than once — the corresponding row is duplicated once per occurrence.
 
-**indices** (`const Slate&`, second overload)
+**indices** (`const Shelf&`, second overload)
 
-The same case positions, supplied as a numeric `Series`-kind `Slate` instead of a
-`RangeView`. Same negative-index and repetition rules apply. A non-numeric `Slate`
-throws `"DataFrame::take: indices slate must be a Series"`.
+The same case positions, supplied as a numeric `Series`-kind `Shelf` instead of a
+`RangeView`. Same negative-index and repetition rules apply. A non-numeric `Shelf`
+throws `"DataFrame::take: indices shelf must be a Series"`.
 
 ## Returns
 
@@ -62,12 +62,12 @@ Example 1. Reorder and duplicate rows in a single call.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Shelf(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto picked = orders.take({5, 0, 0, 2});
@@ -80,10 +80,10 @@ std::cout << picked;
 =============================================================
      | order_id  city    product  units  unit_price  discount
 -------------------------------------------------------------
-5    | 106       Kumasi  Monitor  2      nan         0.12    
+5    | 106       Kumasi  Monitor  2      NULL        0.12    
 0    | 101       Accra   Laptop   2      1200        0.1     
 0    | 101       Accra   Laptop   2      1200        0.1     
-2    | 103       Tema    Laptop   1      1150        nan     
+2    | 103       Tema    Laptop   1      1150        NULL    
 -------------------------------------------------------------
 [4 cs x 6 feat]
 ```
@@ -106,10 +106,10 @@ std::cout << reversed;
 ================================================================
      | order_id  city    product     units  unit_price  discount
 ----------------------------------------------------------------
-5    | 106       Kumasi  Monitor     2      nan         0.12    
+5    | 106       Kumasi  Monitor     2      NULL        0.12    
 4    | 105       Kumasi  Headphones  4      42          0.05    
 3    | 104       Tema    Monitor     3      320         0.08    
-2    | 103       Tema    Laptop      1      1150        nan     
+2    | 103       Tema    Laptop      1      1150        NULL    
 1    | 102       Accra   Headphones  5      45.5        0.05    
 0    | 101       Accra   Laptop      2      1200        0.1     
 ----------------------------------------------------------------
@@ -119,12 +119,12 @@ std::cout << reversed;
 Every row is present exactly once, but the case order — and the case labels — run
 from `5` down to `0`.
 
-Example 3. The second overload accepts the positions as a `Slate` instead
+Example 3. The second overload accepts the positions as a `Shelf` instead
 of a `RangeView` — the same selection as Example 1, expressed with an
-already-existing numeric `Slate` of indices.
+already-existing numeric `Shelf` of indices.
 
 ```cpp
-auto idx = Slate(pluss::make_series({5, 0, 0, 2}));
+auto idx = Shelf(pluss::make_series({5, 0, 0, 2}));
 auto picked2 = orders.take(idx);
 std::cout << picked2;
 ```
@@ -135,26 +135,26 @@ std::cout << picked2;
 =============================================================
      | order_id  city    product  units  unit_price  discount
 -------------------------------------------------------------
-5    | 106       Kumasi  Monitor  2      nan         0.12    
+5    | 106       Kumasi  Monitor  2      NULL        0.12    
 0    | 101       Accra   Laptop   2      1200        0.1     
 0    | 101       Accra   Laptop   2      1200        0.1     
-2    | 103       Tema    Laptop   1      1150        nan     
+2    | 103       Tema    Laptop   1      1150        NULL    
 -------------------------------------------------------------
 [4 cs x 6 feat]
 ```
 
-Same result as Example 1 — the `Slate` overload is a drop-in alternative
-when the indices are already wrapped in a `Slate` rather than a bare
+Same result as Example 1 — the `Shelf` overload is a drop-in alternative
+when the indices are already wrapped in a `Shelf` rather than a bare
 `RangeView`/`std::vector`.
 
-Example 4 (edge case). A non-numeric `Slate` throws.
+Example 4 (edge case). A non-numeric `Shelf` throws.
 
 ```cpp
-auto bad_idx = Slate(pluss::make_note({"a", "b"}));
+auto bad_idx = Shelf(pluss::make_note({"a", "b"}));
 try {
   auto bad = orders.take(bad_idx);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -162,7 +162,7 @@ try {
 ### Output
 
 ```text
-DataFrame::take: indices slate must be a Series
+DataFrame::take: indices shelf must be a Series
 ```
 
 ## Notes
@@ -175,8 +175,8 @@ DataFrame::take: indices slate must be a Series
 - Repeating a position produces a row-level duplicate in the result, including a
   duplicated case label — useful for bootstrapped resampling or building a synthetic
   frame from an existing one's rows.
-- The `Slate`-indices overload requires a numeric (`Series`-kind) `Slate`; a
-  `Note`/`Timeline`/`TimeIndex` slate throws `"DataFrame::take: indices slate
+- The `Shelf`-indices overload requires a numeric (`Series`-kind) `Shelf`; a
+  `Note`/`Timeline`/`TimeIndex` shelf throws `"DataFrame::take: indices shelf
   must be a Series"` — see Example 4.
 
 ## See Also

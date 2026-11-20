@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const
+Shelf DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does
@@ -48,7 +48,7 @@ The same structured policy [`var()`](var.md) and [`std()`](std.md) accept:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding
     that feature's standard error of the mean.
 
@@ -60,10 +60,10 @@ Example 1. Compute the standard error of the mean for each numeric feature.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto standard_errors = orders.se();
@@ -105,12 +105,12 @@ missing observation (case `5`), so their standard errors divide by `5`, not `6` 
   include the standard error directly.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="scan.html">
+  <a class="prev-link" href="scribbelize.html">
     <span class="label">Previous</span>
-    <span class="title">scan</span>
+    <span class="title">scribbelize</span>
   </a>
-  <a class="next-link" href="set.html">
+  <a class="next-link" href="select.html">
     <span class="label">Next</span>
-    <span class="title">set</span>
+    <span class="title">select</span>
   </a>
 </div>

@@ -57,12 +57,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+===============================
      | customer_id  total_spend
---------------------------------
-0    | 1            15
-1    | 2            14
-2    | 3            NULL
---------------------------------
+-------------------------------
+0    | 1            15         
+1    | 2            14         
+2    | 3            NULL       
+-------------------------------
 [3 cs x 2 feat]
 ```
 
@@ -79,7 +80,7 @@ auto pulled = nx.pull("customers")
         .sum({{"spend", "total_spend"}, {"event_id", "sum_event_id"}})
     .end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -98,7 +99,7 @@ auto pulled = nx.pull("customers")
     .take("customer_id")
     .agg("events").sum(fields).end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

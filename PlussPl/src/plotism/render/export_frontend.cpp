@@ -278,7 +278,7 @@ bool convert_svg_to_png_(const std::filesystem::path& svg_path,
   const auto dpi_s = std::to_string(std::max<std::int64_t>(dpi, 36));
 
   if (command_available_("rsvg-convert")) {
-    const std::string cmd = "rsvg-convert -w " + width_s + " -h " + height_s + " -o " + png_q + " " + svg_q + quiet;
+    const std::string cmd = "rsvg-convert --unlimited -w " + width_s + " -h " + height_s + " -o " + png_q + " " + svg_q + quiet;
     if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
       return true;
     }
@@ -320,7 +320,7 @@ bool convert_svg_to_pdf_(const std::filesystem::path& svg_path, const std::files
   const auto quiet = quiet_redirect_();
 
   if (command_available_("rsvg-convert")) {
-    const std::string cmd = "rsvg-convert -f pdf -o " + pdf_q + " " + svg_q + quiet;
+    const std::string cmd = "rsvg-convert --unlimited -f pdf -o " + pdf_q + " " + svg_q + quiet;
     if (run_command_(cmd) && std::filesystem::exists(pdf_path, ec)) {
       return true;
     }
@@ -494,9 +494,29 @@ void Studio::save_png(std::string_view path, std::int64_t dpi) const {
   }
 }
 
+// When PLUSSPL_CAPTURE_DIR names a directory, show() records the figure there as <studio name>.svg instead of opening a window, so
+// programs that call show() also run headlessly (the documentation build uses this to collect every figure).
+static bool capture_shown_svg_(const std::string& studio_name, const std::string& svg_payload) {
+  const char* dir = std::getenv("PLUSSPL_CAPTURE_DIR");
+  if (dir == nullptr || *dir == '\0') {
+    return false;
+  }
+  const auto name = studio_name.empty() ? std::string("plusspl_plot") : studio_name;
+  const auto path = std::filesystem::path(dir) / (name + ".svg");
+  std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!out.is_open()) {
+    PLUSS_FAIL("show(): unable to write captured figure: " + path.string());
+  }
+  out << svg_payload;
+  return true;
+}
+
 bool Studio::show(std::string_view title, std::int64_t width, std::int64_t height, bool launch) const {
   const auto window_title = title.empty() ? std::string(name_.empty() ? "PlussPl Plot" : name_) : std::string(title);
   const auto svg_payload = to_svg();
+  if (capture_shown_svg_(name_, svg_payload)) {
+    return true;
+  }
   const auto html = svg_embed_html(svg_payload, window_title, width, height);
   if (launch && show_html_window_(html, svg_payload, window_title, width, height)) {
     return true;
@@ -528,6 +548,9 @@ bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) co
   const auto fallback_title = name_.empty() ? std::string("PlussPl Plot") : name_;
   const auto window_title = options.title.empty() ? fallback_title : options.title;
   const auto svg_payload = to_svg();
+  if (capture_shown_svg_(name_, svg_payload)) {
+    return true;
+  }
   const auto window_width = std::max<std::int64_t>(640, options.width);
   const auto window_height = std::max<std::int64_t>(420, options.height);
   const auto html = svg_embed_html(svg_payload, window_title, window_width, window_height);

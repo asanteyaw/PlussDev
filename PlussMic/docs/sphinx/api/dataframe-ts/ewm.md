@@ -74,8 +74,8 @@ Example 1. The default (`adjusted = true`) exponentially weighted mean.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().ewm(0.5);
@@ -178,9 +178,9 @@ null gap.
 
 ```cpp
 auto readings_with_null = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series(
-        {10.0, std::numeric_limits<double>::quiet_NaN(), 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series(
+        {10.0, 0.0, 15.0, 30.0}), pluss::make_series(std::vector<bool>{true, false, true, true}))},
 });
 
 auto keep_gap = readings_with_null.features({"load"}).ts().ewm(0.5);
@@ -234,15 +234,15 @@ Example 5. `adjusted = false` on a feature with a null value, to see it throw.
 
 ```cpp
 auto readings_with_null = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series(
-        {10.0, std::numeric_limits<double>::quiet_NaN(), 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series(
+        {10.0, 0.0, 15.0, 30.0}), pluss::make_series(std::vector<bool>{true, false, true, true}))},
 });
 
 try {
   auto out = readings_with_null.features({"load"}).ts().ewm(0.5, WindowStatistic::Mean, false);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -250,7 +250,7 @@ try {
 ### Output
 
 ```text
-Slate::decay(adjusted=false): nullable input requires adjusted=true
+Shelf::decay(adjusted=false): nullable input requires adjusted=true
 ```
 
 The classic recursive form has no defined way to skip over a missing
@@ -262,8 +262,8 @@ Example 6. Pass a `statistic` other than `Mean`/`Var`/`Std`, to see it throw.
 ```cpp
 try {
   auto out = readings.features({"load"}).ts().ewm(0.5, static_cast<WindowStatistic>(-1));
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -271,7 +271,7 @@ try {
 ### Output
 
 ```text
-Slate::decay: only Mean, Var, and Std are supported
+Shelf::decay: only Mean, Var, and Std are supported
 ```
 
 `WindowStatistic` has other members used elsewhere (by [`rolling()`](rolling.md)

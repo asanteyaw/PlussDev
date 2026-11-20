@@ -47,7 +47,7 @@ not to unlock any fitted mapping).
   later `learn` on entirely different data changes nothing about how `map`
   will behave (only the recorded shape).
 
-`learn(slate, options = {})`
+`learn(shelf, options = {})`
 : The single-column convenience overload.
 
 `map(batch, options = {})`
@@ -64,10 +64,10 @@ not to unlock any fitted mapping).
   feature — the one deliberate exception to "every value hashes through the
   same formula," since `NaN` cannot equal any concrete bucket index.
 
-`map(slate, options = {})`
+`map(shelf, options = {})`
 : The single-column convenience overload.
 
-`learn_map(batch_or_slate, learn_options = {}, infer_options = {})`
+`learn_map(batch_or_shelf, learn_options = {}, infer_options = {})`
 : `learn` then `map` on the same data, in one call.
 
 `dump_state()` / `load_state(state)`
@@ -89,7 +89,7 @@ not to unlock any fitted mapping).
 
 The deterministic bucket assignment for a fixed `seed`, the same values
 reshuffled by a different `seed`, a missing value's all-zero row, and the
-single-column `Slate` overload proven equivalent to a `FeatureBatch`.
+single-column `Shelf` overload proven equivalent to a `FeatureBatch`.
 
 ### Example 1
 
@@ -231,8 +231,8 @@ data=[[0, 0, 1, 0],
 
 ### Example 4
 
-The single-column `Slate` overload — the same training/probe values as
-Example 1, fit and mapped through `learn(slate, ...)`/`map(slate, ...)`
+The single-column `Shelf` overload — the same training/probe values as
+Example 1, fit and mapped through `learn(shelf, ...)`/`map(shelf, ...)`
 directly instead of a `FeatureBatch`.
 
 ```cpp
@@ -243,18 +243,18 @@ directly instead of a `FeatureBatch`.
 
 int main() {
   namespace cls = pluss::ai::classic;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   cls::prep::HashingEncoderOptions options{};
   options.n_components = 4;
 
-  const Slate probe(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}, {5}, f64));
+  const Shelf probe(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}, {5}, f64));
 
-  cls::prep::HashingEncoder via_slate(options);
-  via_slate.learn(probe);
-  const pluss::Series slate_result = via_slate.map(probe).value();
+  cls::prep::HashingEncoder via_shelf(options);
+  via_shelf.learn(probe);
+  const pluss::Series shelf_result = via_shelf.map(probe).value();
 
   cls::FeatureBatch probe_batch{};
   probe_batch.x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}, {5}, f64).reshape({5, 1});
@@ -263,8 +263,8 @@ int main() {
   via_batch.learn(probe_batch);
   const pluss::Series batch_result = via_batch.map(probe_batch).value();
 
-  const double max_abs_diff = (slate_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
-  std::cout << "max abs diff between Slate and FeatureBatch forms = " << max_abs_diff << "\n";
+  const double max_abs_diff = (shelf_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
+  std::cout << "max abs diff between Shelf and FeatureBatch forms = " << max_abs_diff << "\n";
 
   return 0;
 }
@@ -273,12 +273,12 @@ int main() {
 Output
 
 ```text
-max abs diff between Slate and FeatureBatch forms = 0
+max abs diff between Shelf and FeatureBatch forms = 0
 ```
 
 ## Changelog
 
-- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Slate`
+- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Shelf`
   overloads), `n_components`/`seed`, `dump_state`/`load_state`.
 
 ## See Also

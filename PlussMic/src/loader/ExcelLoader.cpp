@@ -23,7 +23,7 @@
 #include "loader/CsvLoader.h"
 #include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include <pluss/tils/kit/output.h>
 
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
@@ -77,17 +77,15 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-bool slate_value_is_missing_for_io(const pluss::table::Slate& t, std::int64_t row) {
+bool shelf_value_is_missing_for_io(const pluss::table::Shelf& t, std::int64_t row) {
   if (pluss::table::detail::has_validity_mask(t)) {
     const auto valid = pluss::table::detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
   }
-  if (t.kind() == pluss::table::SlateKind::Series) {
-    return series_value_is_nan_for_io(t.as_series(), row);
-  }
-  if (t.kind() == pluss::table::SlateKind::Duration) {
+  // A floating NaN is a value, not a missing cell: it is written as the text NaN (see shelf_value_for_*), never as the null marker.
+  if (t.kind() == pluss::table::ShelfKind::Duration) {
     return t.as_duration().host()[static_cast<std::size_t>(row)] ==
            pluss::Duration::kNaT;
   }
@@ -99,24 +97,24 @@ bool series_all_zero_i64_for_io(const pluss::Series& s) {
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 
-pluss::table::Slate temporal_slate_for_io(const pluss::table::Slate& t) {
+pluss::table::Shelf temporal_shelf_for_io(const pluss::table::Shelf& t) {
   const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
                               || !series_all_zero_i64_for_io(timeline.minute())
                               || !series_all_zero_i64_for_io(timeline.hour());
   if (!has_clock_time) {
-    return pluss::table::Slate(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Shelf(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
   }
-  return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
+  return pluss::table::Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
 }
 
-pluss::table::Slate slate_for_excel_io(const pluss::table::Slate& t) {
-  if (t.kind() == pluss::table::SlateKind::Timeline) {
-    return temporal_slate_for_io(t);
+pluss::table::Shelf shelf_for_excel_io(const pluss::table::Shelf& t) {
+  if (t.kind() == pluss::table::ShelfKind::Timeline) {
+    return temporal_shelf_for_io(t);
   }
   return t;
 }
@@ -194,22 +192,25 @@ std::string scalar_for_excel(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string slate_value_for_excel(const pluss::table::Slate& t, std::int64_t row, std::string_view null_rep) {
-  if (slate_value_is_missing_for_io(t, row)) {
+std::string shelf_value_for_excel(const pluss::table::Shelf& t, std::int64_t row, std::string_view null_rep) {
+  if (shelf_value_is_missing_for_io(t, row)) {
     return std::string(null_rep);
   }
 
   switch (t.kind()) {
-    case pluss::table::SlateKind::Series:
+    case pluss::table::ShelfKind::Series:
+      if (series_value_is_nan_for_io(t.as_series(), row)) {
+        return "NaN";
+      }
       return scalar_for_excel(t.as_series(), row);
-    case pluss::table::SlateKind::Note:
+    case pluss::table::ShelfKind::Note:
       return std::string(t.as_note().at(row));
-    case pluss::table::SlateKind::Timeline:
+    case pluss::table::ShelfKind::Timeline:
       return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case pluss::table::SlateKind::Duration:
+    case pluss::table::ShelfKind::Duration:
       return pluss::tils::OutputEngine::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
-  PLUSS_FAIL("save_excel: unsupported Slate kind");
+  PLUSS_FAIL("save_excel: unsupported Shelf kind");
 }
 
 std::string column_letters(std::int64_t zero_based_col) {
@@ -1080,27 +1081,19 @@ Workbook load_excel_workbook(std::string_view filepath, const ReadExcelOptions& 
   return out;
 }
 
-void save_excel(const pluss::table::DataFrame& frame,
-                std::string_view filepath,
-                const WriteExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(frame.defined(), "save_excel: frame is undefined");
-  PLUSS_CHECK(!filepath.empty(), "save_excel: filepath is empty");
+namespace {
 
-  int err = 0;
-  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
-  PLUSS_CHECK(archive != nullptr, "save_excel: failed to create workbook");
-  auto guard = std::unique_ptr<zip_t, decltype(&zip_discard)>(archive, &zip_discard);
-
-  const auto sheet_name = options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name;
+// The XML of one worksheet: an optional header row, then one row per case.
+std::string worksheet_xml_for(const pluss::table::DataFrame& frame, const WriteExcelOptions& options) {
   const auto names = frame.features();
-  std::vector<pluss::table::Slate> cols;
+  std::vector<pluss::table::Shelf> cols;
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(slate_for_excel_io(frame.features(name)));
+    cols.push_back(shelf_for_excel_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
-  const auto case_values = include_cases ? slate_for_excel_io(frame.labels().values()) : pluss::table::Slate{};
+  const auto case_values = include_cases ? shelf_for_excel_io(frame.labels().values()) : pluss::table::Shelf{};
 
   std::string sheet_xml;
   sheet_xml += R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
@@ -1130,47 +1123,75 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(slate_value_for_excel(case_values, r, options.null_rep));
+      row.push_back(shelf_value_for_excel(case_values, r, options.null_rep));
     }
     for (const auto& c : cols) {
-      row.push_back(slate_value_for_excel(c, r, options.null_rep));
+      row.push_back(shelf_value_for_excel(c, r, options.null_rep));
     }
     emit_row(row);
   }
 
   sheet_xml += "</sheetData></worksheet>";
+  return sheet_xml;
+}
 
-  const std::string content_types =
+}  // namespace
+#endif
+
+void save_excel(const Workbook& workbook, std::string_view filepath, const WriteExcelOptions& options) {
+#if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
+  PLUSS_CHECK(!workbook.empty(), "save_excel: a workbook needs at least one sheet");
+  PLUSS_CHECK(!filepath.empty(), "save_excel: filepath is empty");
+  for (std::size_t i = 0; i < workbook.size(); ++i) {
+    PLUSS_CHECK(workbook[i].second.defined(), "save_excel: sheet '" + workbook[i].first + "' is undefined");
+    PLUSS_CHECK(!workbook[i].first.empty(), "save_excel: a sheet name is empty");
+    for (std::size_t j = 0; j < i; ++j) {
+      PLUSS_CHECK(workbook[i].first != workbook[j].first, "save_excel: duplicate sheet name '" + workbook[i].first + "'");
+    }
+  }
+
+  int err = 0;
+  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
+  PLUSS_CHECK(archive != nullptr, "save_excel: failed to create workbook");
+  auto guard = std::unique_ptr<zip_t, decltype(&zip_discard)>(archive, &zip_discard);
+
+  std::string content_types =
       R"(<?xml version="1.0" encoding="UTF-8"?>)"
       R"(<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">)"
       R"(<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>)"
       R"(<Default Extension="xml" ContentType="application/xml"/>)"
-      R"(<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>)"
-      R"(<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>)"
-      R"(</Types>)";
+      R"(<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>)";
+  std::string sheets_xml;
+  std::string rels_xml =
+      R"(<?xml version="1.0" encoding="UTF-8"?>)"
+      R"(<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">)";
+  std::vector<std::pair<std::string, std::string>> sheet_parts;
+  for (std::size_t i = 0; i < workbook.size(); ++i) {
+    const auto n = i + 1;
+    content_types += pluss::tils::OutputEngine::format(
+        R"(<Override PartName="/xl/worksheets/sheet{}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>)", n);
+    sheets_xml += pluss::tils::OutputEngine::format(R"(<sheet name="{}" sheetId="{}" r:id="rId{}"/>)", xml_escape(workbook[i].first), n, n);
+    rels_xml += pluss::tils::OutputEngine::format(
+        R"(<Relationship Id="rId{}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{}.xml"/>)", n, n);
+    sheet_parts.emplace_back(pluss::tils::OutputEngine::format("xl/worksheets/sheet{}.xml", n), worksheet_xml_for(workbook[i].second, options));
+  }
+  content_types += "</Types>";
+  rels_xml += "</Relationships>";
 
   const std::string rels_root =
       R"(<?xml version="1.0" encoding="UTF-8"?>)"
       R"(<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">)"
       R"(<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>)"
       R"(</Relationships>)";
-
   const std::string workbook_xml =
-      pluss::tils::OutputEngine::format(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
-                  R"(<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" )"
-                  R"(xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">)"
-                  R"(<sheets><sheet name="{}" sheetId="1" r:id="rId1"/></sheets></workbook>)",
-                  xml_escape(sheet_name));
-
-  const std::string workbook_rels =
-      R"(<?xml version="1.0" encoding="UTF-8"?>)"
-      R"(<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">)"
-      R"(<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>)"
-      R"(</Relationships>)";
+      R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
+      R"(<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" )"
+      R"(xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">)"
+      "<sheets>" + sheets_xml + "</sheets></workbook>";
 
   // Keep source buffers alive until zip_close() finalizes all entries.
   std::vector<std::string> zip_payloads;
-  zip_payloads.reserve(5);
+  zip_payloads.reserve(4 + sheet_parts.size());
   auto add_entry = [&](std::string_view path, std::string payload) {
     zip_payloads.push_back(std::move(payload));
     const auto& stable = zip_payloads.back();
@@ -1181,12 +1202,13 @@ void save_excel(const pluss::table::DataFrame& frame,
       PLUSS_FAIL("save_excel: failed to add zip entry '" + std::string(path) + "'");
     }
   };
-
   add_entry("[Content_Types].xml", content_types);
   add_entry("_rels/.rels", rels_root);
   add_entry("xl/workbook.xml", workbook_xml);
-  add_entry("xl/_rels/workbook.xml.rels", workbook_rels);
-  add_entry("xl/worksheets/sheet1.xml", sheet_xml);
+  add_entry("xl/_rels/workbook.xml.rels", rels_xml);
+  for (auto& [path, xml] : sheet_parts) {
+    add_entry(path, std::move(xml));
+  }
 
   if (zip_close(archive) < 0) {
     const char* zerr = zip_strerror(archive);
@@ -1194,11 +1216,17 @@ void save_excel(const pluss::table::DataFrame& frame,
   }
   guard.release();
 #else
-  (void)frame;
+  (void)workbook;
   (void)filepath;
   (void)options;
   PLUSS_FAIL("save_excel: Excel support not built (libzip not available)");
 #endif
+}
+
+void save_excel(const pluss::table::DataFrame& frame, std::string_view filepath, const WriteExcelOptions& options) {
+  PLUSS_CHECK(frame.defined(), "save_excel: frame is undefined");
+  // One frame is a workbook of one sheet, named by options.sheet_name.
+  save_excel(Workbook{{options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name, frame}}, filepath, options);
 }
 
 } // namespace pluss::loader

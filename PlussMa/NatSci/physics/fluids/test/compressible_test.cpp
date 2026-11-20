@@ -173,10 +173,8 @@ void test_sod_shock_tube() {
   const Series x =
       pluss::series::arange(0, n, 1, ScalarType::Float64).add(0.5).mul(dx);
   const Series left = x.lt(0.5);
-  const Series rho = left.where(pluss::series::full_like(x, 1.0),
-                                pluss::series::full_like(x, 0.125));
-  const Series pressure = left.where(pluss::series::full_like(x, 1.0),
-                                     pluss::series::full_like(x, 0.1));
+  const Series rho = pluss::series::where(left, pluss::series::full_like(x, 1.0), pluss::series::full_like(x, 0.125));
+  const Series pressure = pluss::series::where(left, pluss::series::full_like(x, 1.0), pluss::series::full_like(x, 0.1));
   const Series speed = pluss::series::zeros_like(x);
   const auto initial = primitive(rho, speed.unsqueeze(0), pressure, grid);
 
@@ -245,8 +243,7 @@ void test_hllc_contact_free_stream_and_reverse() {
   const auto grid = grid1(n, 1.0 / n);
   const Series lane = pluss::series::arange(0, n, 1, ScalarType::Float64);
   const Series left = lane.lt(n / 2);
-  const Series rho = left.where(pluss::series::full_like(lane, 1.0),
-                                pluss::series::full_like(lane, 2.0));
+  const Series rho = pluss::series::where(left, pluss::series::full_like(lane, 1.0), pluss::series::full_like(lane, 2.0));
   const Series pressure = pluss::series::ones_like(rho);
   const Series speed = pluss::series::zeros_like(rho).unsqueeze(0);
   const auto contact = primitive(rho, speed, pressure, grid);

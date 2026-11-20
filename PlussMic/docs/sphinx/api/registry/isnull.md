@@ -72,6 +72,7 @@ std::cout << out.fields("city").to_json();
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Unlike [`fillnull()`](fillnull.md), `isnull()` never throws on a field whose
   kind doesn't match a fill payload — it works identically on every kind.
 - The full per-value semantics (what counts as "null" for each domain kind) are
@@ -89,12 +90,12 @@ std::cout << out.fields("city").to_json();
   kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="keep.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">keep</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

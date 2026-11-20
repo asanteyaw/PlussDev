@@ -14,6 +14,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace pluss::codem::native::mps {
 namespace {
@@ -36,6 +37,12 @@ std::unordered_map<const SeriesImpl*, CacheEntry>& cache_() {
   static std::unordered_map<const SeriesImpl*, CacheEntry> map;
   return map;
 }
+// A superset of the entries whose device copy is newer than their host copy: filled when an entry is marked dirty,
+// pruned lazily when the scan finds it clean. Lets the view write-back look only at these instead of the whole cache.
+std::unordered_set<const SeriesImpl*>& maybe_dirty_() {
+  static std::unordered_set<const SeriesImpl*> set;
+  return set;
+}
 
 const SeriesImpl* impl_of_(const SeriesBase& s) noexcept {
   return s.unsafe_impl();
@@ -49,6 +56,41 @@ std::byte* host_ptr_mut_(const SeriesBase& s) noexcept {
 const std::byte* host_ptr_const_(const SeriesBase& s) noexcept {
   const auto* impl = s.unsafe_impl();
   return (impl == nullptr) ? nullptr : impl->raw_data();
+}
+
+void wait_pending_(CacheEntry& e);
+// A view (slice, narrow, reshape of a slice, ...) is its own Series handle with its own cache entry but shares host storage
+// with its base. If the base was last written on the device its host bytes are stale, so a view uploading from host would
+// read garbage. Before any host -> device upload, write back every other device-dirty entry whose host range overlaps it.
+// Called with cache_mu_() held.
+void sync_overlapping_dirty_entries_(const CacheEntry* self, const std::byte* host, std::size_t nbytes) {
+  auto& dirty = maybe_dirty_();
+  for (auto it = dirty.begin(); it != dirty.end();) {
+    const SeriesImpl* impl = *it;
+    auto found = cache_().find(impl);
+    if (found == cache_().end() || !found->second.device_dirty) {
+      it = dirty.erase(it);
+      continue;
+    }
+    ++it;
+    CacheEntry& other = found->second;
+    if (&other == self || other.buffer == nil || other.nbytes == 0) {
+      continue;
+    }
+    const std::byte* other_host = impl->raw_data();
+    if (other_host == nullptr) {
+      continue;
+    }
+    const bool overlaps = other_host < host + nbytes && host < other_host + other.nbytes;
+    if (!overlaps) {
+      continue;
+    }
+    wait_pending_(other);
+    std::memcpy(const_cast<std::byte*>(other_host), [other.buffer contents], other.nbytes);
+    other.device_dirty = false;
+    other.host_dirty = false;
+    other.device_valid = true;
+  }
 }
 
 void wait_pending_(CacheEntry& e) {
@@ -152,6 +194,11 @@ void* ensure_device_buffer_for_read(const SeriesBase& s, void* device_handle, st
     if (host == nullptr) {
       throw_error("MPS cache read: null host storage");
     }
+    // Only a handle whose storage another handle also holds (a view or alias) can be stale because of a device write made
+    // through that other handle; a sole owner's host bytes are only ever written through its own cache entry.
+    if (s.unsafe_impl()->storage().handle().use_count() > 2) {
+      sync_overlapping_dirty_entries_(&e, host, bytes);
+    }
     std::memcpy([e.buffer contents], host, bytes);
     e.host_dirty = false;
     e.device_dirty = false;
@@ -202,6 +249,7 @@ void mark_device_data_dirty(const SeriesBase& s, void* command_buffer_handle) no
   e.host_dirty = false;
   e.device_dirty = true;
   e.device_valid = true;
+  maybe_dirty_().insert(impl_of_(s));
 }
 
 void erase_series_entry(const SeriesImpl* impl) noexcept {
@@ -215,6 +263,7 @@ void erase_series_entry(const SeriesImpl* impl) noexcept {
   }
   wait_pending_(it->second);
   release_entry_buffer_(it->second);
+  maybe_dirty_().erase(impl);
   cache_().erase(it);
 }
 

@@ -112,16 +112,16 @@ DataFrame make_base_frame() {
       "2024-01-04T00:00:00Z",
       "2024-01-05T00:00:00Z",
   });
-  const auto cases = pluss::table::Slate(
+  const auto cases = pluss::table::Shelf(
       pluss::make_note(std::vector<std::string>{"cs_0", "cs_1", "cs_2", "cs_3", "cs_4"}, shape));
 
   return DataFrame({
-                       {"id", pluss::table::Slate(ids)},
-                       {"metric", pluss::table::Slate(metric, metric_mask)},
-                       {"city", pluss::table::Slate(city)},
-                       {"text", pluss::table::Slate(text)},
-                       {"timestamp", pluss::table::Slate(timeline)},
-                       {"time_index", pluss::table::Slate(indexed_timeline)},
+                       {"id", pluss::table::Shelf(ids)},
+                       {"metric", pluss::table::Shelf(metric, metric_mask)},
+                       {"city", pluss::table::Shelf(city)},
+                       {"text", pluss::table::Shelf(text)},
+                       {"timestamp", pluss::table::Shelf(timeline)},
+                       {"time_index", pluss::table::Shelf(indexed_timeline)},
                    },
                    cases);
 }
@@ -134,7 +134,7 @@ Stream labeled_series(std::vector<double> values, std::vector<std::string> label
   const auto n = static_cast<std::int64_t>(values.size());
   expect(static_cast<std::int64_t>(labels.size()) == n, "labeled_series label size mismatch");
   const std::array<std::int64_t, 1> shape{n};
-  auto label = pluss::table::Slate(pluss::make_note(std::move(labels), shape));
+  auto label = pluss::table::Shelf(pluss::make_note(std::move(labels), shape));
   return Stream(pluss::make_series(std::move(values), {n}), std::nullopt, std::move(label));
 }
 
@@ -142,7 +142,7 @@ Stream labeled_note(std::vector<std::string> values, std::vector<std::string> la
   const auto n = static_cast<std::int64_t>(values.size());
   expect(static_cast<std::int64_t>(labels.size()) == n, "labeled_note label size mismatch");
   const std::array<std::int64_t, 1> shape{n};
-  auto label = pluss::table::Slate(pluss::make_note(std::move(labels), shape));
+  auto label = pluss::table::Shelf(pluss::make_note(std::move(labels), shape));
   return Stream(pluss::make_note(std::move(values), shape), std::nullopt, std::move(label));
 }
 
@@ -183,7 +183,7 @@ void test_stream_methods() {
   const auto taken = metric.take(std::vector<std::int64_t>{0, 2, 4});
   expect(taken.size() == 3, "take size mismatch");
   const auto picked = Stream::select(
-      {pluss::table::Slate(bool_mask({true, false, true}))},
+      {pluss::table::Shelf(bool_mask({true, false, true}))},
       {labeled_series({10.0, 20.0, 30.0}, {"r0", "r1", "r2"})},
       labeled_series({1.0, 2.0, 3.0}, {"l0", "l1", "l2"}));
   expect(picked.as_series().host<double>() == std::vector<double>({10.0, 2.0, 30.0}),
@@ -602,8 +602,8 @@ void test_catalog_accessors() {
       {"date_text", Stream(pluss::make_note(std::vector<std::string>{"2024-03-01", "2024-03-02"}, shape2))},
   });
   const auto parsed = note_dates.cast(
-      pluss::table::SlateCastTarget::Timeline,
-      pluss::table::SlateCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
+      pluss::table::ShelfCastTarget::Timeline,
+      pluss::table::ShelfCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
   expect(parsed.keys("date_text").kind() == StreamKind::Timeline,
          "Catalog::cast({}, Timeline, options) should forward full parse options");
 }
@@ -685,6 +685,17 @@ Stream with_nulls_stream(const std::vector<double>& v, const std::vector<bool>& 
       dstream(v), pluss::make_series(mask, {static_cast<std::int64_t>(mask.size())}).to(pluss::codem::ScalarType::Bool));
 }
 
+// The randomized references below use NaN as shorthand for "no value here"; a NaN is a real value in a stream, so the streams under
+// test are built with a validity mask instead (the reference still skips the same positions).
+Stream nan_marked_null_stream(const std::vector<double>& v) {
+  std::vector<double> values = v;
+  std::vector<bool> valid(v.size(), true);
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (std::isnan(v[i])) { valid[i] = false; values[i] = 0.0; }
+  }
+  return with_nulls_stream(values, valid);
+}
+
 // Independent reference: reduce each position over the streams that have a usable value there.
 struct NaiveJagged {
   std::vector<double> value;
@@ -752,6 +763,12 @@ Catalog jagged_catalog(const std::vector<std::vector<double>>& cols) {
   return Catalog(std::move(streams));
 }
 
+Catalog jagged_catalog_nan_as_null(const std::vector<std::vector<double>>& cols) {
+  std::vector<std::pair<std::string, Stream>> streams;
+  for (std::size_t i = 0; i < cols.size(); ++i) streams.emplace_back("s" + std::to_string(i), nan_marked_null_stream(cols[i]));
+  return Catalog(std::move(streams));
+}
+
 Catalog reduce_by_name(const Catalog& c, const std::string& op, const CatalogReduceOptions& o) {
   if (op == "sum") return c.sum(o);
   if (op == "mean") return c.mean(o);
@@ -802,14 +819,22 @@ void test_catalog_jagged_reductions() {
   expect(near_all(stream_values(ragged.sum(inner).keys("sum")), {8.5, 5.9, 5.3}), "Align::Inner trims to the shortest stream");
 
   // Nulls inside a stream are skipped like missing positions; skipnull=false lets them poison the position.
-  const auto with_nan = jagged_catalog({{1.0, std::nan(""), 3.0}, {10.0, 20.0}});
-  expect(near_all(stream_values(with_nan.sum(ReduceAxis::Key).keys("sum")), {11.0, 20.0, 3.0}),
-         "a NaN is skipped like an absent value");
+  const auto with_null = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"s0", with_nulls_stream({1.0, 99.0, 3.0}, {true, false, true})}, {"s1", dstream({10.0, 20.0})}});
+  expect(near_all(stream_values(with_null.sum(ReduceAxis::Key).keys("sum")), {11.0, 20.0, 3.0}),
+         "a null is skipped like an absent value");
   CatalogReduceOptions keep_null = by_key;
   keep_null.skipnull = false;
-  const auto poisoned = with_nan.sum(keep_null).keys("sum");
+  const auto poisoned = with_null.sum(keep_null).keys("sum");
   expect(stream_valid(poisoned)[0] && !stream_valid(poisoned)[1] && stream_valid(poisoned)[2],
          "skipnull=false should null only the position that contains a null");
+
+  // NaN is a value, not a missing cell: it is not skipped, and it propagates through the position it sits in.
+  const auto with_nan = jagged_catalog({{1.0, std::nan(""), 3.0}, {10.0, 20.0}});
+  const auto nan_sum = with_nan.sum(ReduceAxis::Key).keys("sum");
+  expect(stream_valid(nan_sum) == std::vector<bool>({true, true, true}), "a NaN position is still a valid (non-null) position");
+  expect(stream_values(nan_sum)[0] == 11.0 && std::isnan(stream_values(nan_sum)[1]) && stream_values(nan_sum)[2] == 3.0,
+         "a NaN is not skipped: it propagates through its own position only");
 
   // Equal-length catalogs behave exactly as before.
   const auto even = jagged_catalog({{1.0, 2.0}, {3.0, 4.0}});
@@ -876,7 +901,7 @@ void test_catalog_jagged_reductions() {
       c.resize(1 + rng() % 60);
       for (auto& x : c) x = (rng() % 11 == 0) ? std::nan("") : static_cast<double>(static_cast<std::int64_t>(rng() % 2001) - 1000) / 7.0;
     }
-    const auto catalog = jagged_catalog(random_cols);
+    const auto catalog = jagged_catalog_nan_as_null(random_cols);
     for (const auto& op : ops) {
       for (const bool skipnull : {true, false}) {
         CatalogReduceOptions o = by_key;
@@ -1135,8 +1160,8 @@ void test_stream_reduce_groups_and_expand() {
   expect(stream_values(with_nulls.reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Count)) == std::vector<double>({2.0}) &&
              stream_values(with_nulls.reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Sum)) == std::vector<double>({4.0}),
          "null values are skipped by every reduction");
-  expect(stream_values(dstream({1.0, std::nan(""), 3.0}).reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Mean)) == std::vector<double>({2.0}),
-         "NaN is skipped");
+  expect(std::isnan(stream_values(dstream({1.0, std::nan(""), 3.0}).reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Mean))[0]),
+         "NaN is a value: a mean over it is NaN, not the mean of the other values");
   const auto var = values.reduce_groups(source, 0, offsets, GroupReduce::Var);
   expect(stream_valid(var) == std::vector<bool>({true, false, true, false}) && near_all({stream_values(var)[0], stream_values(var)[2]}, {1.0, 0.5}),
          "unbiased variance needs two values");
@@ -1169,7 +1194,7 @@ void test_stream_reduce_groups_and_expand() {
       for (std::size_t e = 0; e < len; ++e) src.push_back(static_cast<std::int64_t>(rng() % (n + 6)) - 3);
       offs.push_back(static_cast<std::int64_t>(src.size()));
     }
-    const Stream s = dstream(data);
+    const Stream s = nan_marked_null_stream(data);
     for (std::size_t o = 0; o < ops.size(); ++o) {
       const bool unb = (rng() % 2) == 0;
       const auto got = s.reduce_groups(src, shift, offs, kinds[o], unb);
@@ -1306,7 +1331,7 @@ void test_catalog_construction_and_selection() {
   auto replaced = base;
   replaced.set_("id", base.keys("id") + 100.0);
   const auto chosen = Catalog::select(
-      {pluss::table::Slate(bool_mask({true, false, true, false, false}))},
+      {pluss::table::Shelf(bool_mask({true, false, true, false, false}))},
       {replaced},
       base);
   expect(chosen.keys("id").as_series().host<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
@@ -1447,7 +1472,7 @@ void test_catalog_sort_group_missing() {
 
   const auto id_as_note = base.keys({"id"}).cast().note();
   const auto ts_as_series = base.keys({"timestamp"}).cast(
-      pluss::table::SlateCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
+      pluss::table::ShelfCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
   const auto id_as_f64 = base.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
   expect(id_as_note.keys("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
   expect(ts_as_series.keys("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
@@ -1492,7 +1517,7 @@ void test_catalog_and_archive_lvalue_name_ranges() {
 
   const auto f0 = make_base_frame().slice(0, 3);
   const auto f1 = make_base_frame().slice(2, 5);
-  const auto labels = pluss::table::Slate(
+  const auto labels = pluss::table::Shelf(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
   const auto archive = atlas.kindelize();
@@ -1704,7 +1729,7 @@ void test_archive_to_table_bridge() {
   const auto base = make_base_frame();
   const auto f0 = base.slice(0, 3);
   const auto f1 = base.slice(2, 5);
-  const auto labels = pluss::table::Slate(
+  const auto labels = pluss::table::Shelf(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
@@ -1726,7 +1751,7 @@ void test_archive_to_table_bridge() {
   expect(archive.slice_depth(0, 1).depth() == 1, "Archive::slice_depth mismatch");
 
   const auto sorted_desc = archive.label().sort(false);
-  const auto sorted_labels = sorted_desc.label().values().to_slate().cast().note().as_note();
+  const auto sorted_labels = sorted_desc.label().values().to_shelf().cast().note().as_note();
   expect(std::string(sorted_labels.at(0)) == "batch_b", "Archive::sort_depth(desc) label mismatch");
 
   const auto relabeled = archive.label().set(
@@ -1742,9 +1767,9 @@ void test_archive_to_table_bridge() {
 
   const auto mapped = archive.map_catalogs([](const Catalog& c) { return c.keys({"id", "city"}); });
   expect(mapped.catalog(0).nkeys() == 2, "Archive::map_catalogs should transform each catalog");
-  const auto reduced = archive.aggregate_over_catalogs([](const std::vector<Catalog>& cats) { return cats.front(); });
+  const auto reduced = archive.aggregate_depth([](const std::vector<Catalog>& cats) { return cats.front(); });
   expect(reduced.nkeys() == archive.catalog(0).nkeys(),
-         "Archive::aggregate_over_catalogs should return reducer output");
+         "Archive::aggregate_depth should return reducer output");
 
   const auto selected = archive.keys({"id", "city"});
   const auto dropped = archive.drop({"time_index"});
@@ -2200,12 +2225,12 @@ void test_join_build_side_cache() {
   spec.left_keys = {"k"};
   spec.right_keys = {"k"};
 
-  Catalog::clear_join_cache();
-  const auto before = Catalog::join_cache_stats();
+  Catalog::clear_cache();
+  const auto before = Catalog::cache_stats();
   const auto first = L.join_detailed(R, spec);
-  const auto mid = Catalog::join_cache_stats();
+  const auto mid = Catalog::cache_stats();
   const auto second = L.join_detailed(R, spec);
-  const auto after = Catalog::join_cache_stats();
+  const auto after = Catalog::cache_stats();
   expect(mid.second == before.second + 1 && after.first == mid.first + 1,
          "the second join on the same right side is served from the cache");
   expect(first.report.summary() == second.report.summary(), "a cached join reports exactly like a fresh one");
@@ -2213,7 +2238,7 @@ void test_join_build_side_cache() {
          "a cached join produces the same data");
 
   // Editing the right side in place must not serve stale results.
-  Catalog::clear_join_cache();
+  Catalog::clear_cache();
   const auto fresh = L.join_detailed(R, spec);
   expect(first.report.summary() == fresh.report.summary(), "cache-free result matches the cached one");
 
@@ -2221,11 +2246,11 @@ void test_join_build_side_cache() {
     spec.how = JoinHow::Left;
     auto shared_keys = pluss::make_series(rk, {static_cast<std::int64_t>(rk.size())});
     Catalog R3(std::vector<std::pair<std::string, Stream>>{{"k", Stream(shared_keys)}, {"b", dstream(rv)}});
-    Catalog::clear_join_cache();
+    Catalog::clear_cache();
     const auto pre = L.join_detailed(R3, spec);
     shared_keys.add_(5);
     const auto post_cached = L.join_detailed(R3, spec);
-    Catalog::clear_join_cache();
+    Catalog::clear_cache();
     const auto post_fresh = L.join_detailed(R3, spec);
     expect(post_cached.report.summary() == post_fresh.report.summary(),
            "an in-place edit of shared key storage is never answered from a stale cached table");
@@ -2244,11 +2269,65 @@ void test_join_build_side_cache() {
   for (const auto how : {JoinHow::Inner, JoinHow::Left, JoinHow::Right, JoinHow::Outer, JoinHow::LeftOnly,
                          JoinHow::RightOnly}) {
     spec.how = how;
-    Catalog::clear_join_cache();
+    Catalog::clear_cache();
     const auto cold = L.join_detailed(R, spec);
     const auto warm = L.join_detailed(R, spec);
     expect(cold.report.summary() == warm.report.summary(), "cold and warm joins agree for every join kind");
   }
+}
+
+void test_stream_meta_and_fingerprint() {
+  using pluss::kindle::Stream;
+  Stream raw(pluss::make_series({1.0, 2.0, 300.0, 4.0}), pluss::make_series({true, false, true, true}));
+  raw = raw.with_meta("unit", "celsius").with_meta("sensor", "roof-3");
+
+  // Operations that keep the meaning of the values carry the metadata of their source.
+  const auto keeps = [&](const char* name, const Stream& out) {
+    expect(out.meta("unit").value_or("") == "celsius", std::string(name) + " should keep the unit metadata");
+    expect(out.meta("sensor").value_or("") == "roof-3", std::string(name) + " should keep the sensor metadata");
+  };
+  keeps("clip", raw.clip(0.0, 60.0));
+  keeps("ffill", raw.ffill());
+  keeps("fillnull", raw.fillnull(0.0));
+  keeps("dropnull", raw.dropnull());
+  keeps("head", raw.head(2));
+  keeps("filter", raw.filter(pluss::make_series({true, true, false, true})));
+  keeps("astype", raw.astype(pluss::ScalarType::Float32));
+  keeps("stream + number", raw + 1.0);
+  keeps("number * stream", 2.0 * raw);
+  // Flags and reductions describe something else and do not inherit it.
+  expect(!raw.isnull().meta("unit").has_value(), "isnull is a flag and must not inherit the unit");
+  expect(!(raw > 3.0).meta("unit").has_value(), "a comparison is a flag and must not inherit the unit");
+
+  // fingerprint compares contents; stamp identifies shared storage (the cache token).
+  Stream a(pluss::make_series({1.0, 2.0, 3.0}));
+  Stream b(pluss::make_series({1.0, 2.0, 3.0}));
+  Stream c(pluss::make_series({1.0, 2.0, 4.0}));
+  expect(a.fingerprint() == b.fingerprint(), "equal contents must have equal fingerprints");
+  expect(a.fingerprint() != c.fingerprint(), "different contents must have different fingerprints");
+  expect(a.with_meta("k", "v").fingerprint() == a.fingerprint(), "metadata is not part of the content fingerprint");
+  Stream masked1(pluss::make_series({1.0, 99.0, 3.0}), pluss::make_series({true, false, true}));
+  Stream masked2(pluss::make_series({1.0, -5.0, 3.0}), pluss::make_series({true, false, true}));
+  expect(masked1.fingerprint() == masked2.fingerprint(), "values under a missing entry are not part of the content");
+  expect(a.stamp() == Stream(a).stamp(), "a copy shares its stamp");
+  expect(a.stamp() != b.stamp(), "separately built streams have separate stamps");
+  using namespace pluss::kindle::literals;
+  pluss::kindle::Catalog x({"v"_k = a}), y({"v"_k = b}), z({"v"_k = c});
+  expect(x.fingerprint() == y.fingerprint() && x.fingerprint() != z.fingerprint(), "catalog fingerprint follows the contents");
+  expect(x.stamp() != y.stamp(), "separately built catalogs have separate stamps");
+  expect(x.stamp() == pluss::kindle::Catalog(x).stamp(), "a copy of a catalog shares its stamp");
+}
+
+void test_fillnull_widens_for_fractions() {
+  using pluss::table::Shelf;
+  Shelf counts(pluss::make_series({4, 5, 0, 7}), pluss::make_series({true, true, false, true}));
+  const auto whole = counts.fillnull(9.0);
+  expect(whole.as_series().scalar_type() == pluss::ScalarType::Int64, "a whole-number fill keeps an integer column integer");
+  expect(whole.as_series().items<std::int64_t>()[2] == 9, "whole-number fill value");
+  const auto fractional = counts.fillnull(78.75);
+  expect(fractional.as_series().scalar_type() == pluss::ScalarType::Float64, "a fractional fill widens an integer column to Float64");
+  expect(std::abs(fractional.as_series().items<double>()[2] - 78.75) < 1e-12, "the fractional fill value must be stored exactly, not truncated");
+  expect(std::abs(fractional.as_series().items<double>()[0] - 4.0) < 1e-12, "present values are unchanged by widening");
 }
 
 } // namespace
@@ -2257,6 +2336,8 @@ int main() {
   ::setenv("PLUSS_ERROR_NATIVE_TRACE", "0", 0);
   try {
     test_stream_methods();
+    test_stream_meta_and_fingerprint();
+    test_fillnull_widens_for_fractions();
     test_stream_accessors();
     test_catalog_plot_accessor();
     test_catalog_plot3d_accessor();

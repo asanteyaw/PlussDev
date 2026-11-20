@@ -30,3 +30,13 @@ keys row-by-row (`ReduceAxis::Key`).
 - [`Catalog::std`](std.md)
 - [`Catalog::mean`](mean.md)
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="unique.html">
+    <span class="label">Previous</span>
+    <span class="title">unique</span>
+  </a>
+  <a class="next-link" href="where.html">
+    <span class="label">Next</span>
+    <span class="title">where</span>
+  </a>
+</div>

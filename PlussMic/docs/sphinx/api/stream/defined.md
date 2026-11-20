@@ -17,7 +17,7 @@ Reports whether the stream owns a concrete payload. A default-constructed `Strea
 none — `defined()` returns `false`, and calling most other methods on it (e.g.
 [`size()`](size.md)) throws `"Stream: undefined handle"`. Every `Stream` built from a
 `Series`/`Note`/`Timeline`/`TimeIndex` constructor, or from
-[`from_slate()`](from_slate.md), is defined immediately.
+[`from_shelf()`](from_shelf.md), is defined immediately.
 
 ## Parameters
 
@@ -53,8 +53,8 @@ std::cout << "defined: " << undef.defined() << "\n";
 
 try {
   undef.size();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 24);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 24);
 }
 ```
 

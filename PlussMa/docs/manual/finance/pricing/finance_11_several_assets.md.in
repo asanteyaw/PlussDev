@@ -4,7 +4,7 @@ A `Field` prices options on one asset. Real books hold options on many, each wit
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A `Chord` is a collection of `Field`s, not a bigger `Field`.** A `Field` stays one asset on one continuous process, so its methods are unambiguous; the `Chord` adds only what is about several.
 - **Every operation is the `Field`'s own operation, applied to each asset.** Each asset keeps its model and engine, and the result for an asset equals pricing it alone.

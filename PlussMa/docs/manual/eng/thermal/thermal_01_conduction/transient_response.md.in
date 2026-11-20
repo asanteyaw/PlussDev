@@ -4,7 +4,7 @@
 
 A cup of coffee cools, a room warms after the heating is switched on, a component heats up under load. This page adds thermal capacity to the network and follows the temperatures through time: a body cooling, a start from a given state, boundaries and heaters that change, and the choice of step.
 
-## The mental model
+## How it works
 
 A body that holds heat has a thermal capacity `C` in joules per kelvin. Heat flowing in raises its temperature at `Q / C`, so for one body losing heat through a conductance `G` to surroundings at `T_inf`,
 

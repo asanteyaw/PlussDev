@@ -14,7 +14,7 @@ Stream Stream::sum() const
 ## What It Does
 
 Returns the sum of a `Series`-kind stream's values, as a one-element `Stream` —
-`NULL`-marked rows are excluded from the computation. Delegates to `Slate::sum()`, so it's
+`NULL`-marked rows are excluded from the computation. Delegates to `Shelf::sum()`, so it's
 `Series`-only, same as [`mean()`](mean.md)/[`min()`](min.md)/[`max()`](max.md)/
 [`var()`](var.md)/[`std()`](std.md).
 
@@ -60,15 +60,15 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.sum();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 44);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 44);
 }
 ```
 
 ### Output
 
 ```text
-Slate::sum is only valid for Series payload
+Shelf::sum is only valid for Series payload
 ```
 
 ## Notes
@@ -92,8 +92,8 @@ Slate::sum is only valid for Series payload
     <span class="label">Previous</span>
     <span class="title">std</span>
   </a>
-  <a class="next-link" href="tail.html">
+  <a class="next-link" href="tabelize.html">
     <span class="label">Next</span>
-    <span class="title">tail</span>
+    <span class="title">tabelize</span>
   </a>
 </div>

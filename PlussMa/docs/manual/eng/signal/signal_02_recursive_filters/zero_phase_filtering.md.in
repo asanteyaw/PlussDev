@@ -4,7 +4,7 @@
 
 A causal filter delays what it smooths. A peak in the input comes out later, and different frequencies are delayed by different amounts, which distorts the shape of a pulse. When you have the whole record in hand and the timing of features matters, you can remove the delay completely by filtering twice: forwards, then backwards. This page shows `zero_phase`, what it does to the amplitude, and how it treats the two ends of the record, where the filter has nothing to run on.
 
-## The mental model
+## How it works
 
 Filtering a record forwards with a filter `H` multiplies its spectrum by `H(w)`, which has a magnitude and a phase. Reversing the output and filtering again, then reversing back, multiplies the spectrum by the *conjugate* `H*(w)`. The two together give `|H(w)|^2`: a real, non-negative factor with **zero phase**. A feature at sample 60 stays at sample 60.
 

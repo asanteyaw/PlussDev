@@ -68,9 +68,9 @@ depth=2 first_id=3
   `tail()` delegates to.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="tabelize.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">tabelize</span>
   </a>
   <a class="next-link" href="tl.html">
     <span class="label">Next</span>

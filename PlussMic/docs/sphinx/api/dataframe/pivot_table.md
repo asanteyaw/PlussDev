@@ -211,7 +211,7 @@ than a toy.
 | `values` | `std::vector<std::string>` | empty |
 | `aggfuncs` | `std::vector<GroupOp>` | `GroupOp::Mean` |
 | `specs` | `std::vector<PivotValueSpec>` | empty |
-| `fill_value` | `std::optional<SlateValue::HostAny>` | `std::nullopt` |
+| `fill_value` | `std::optional<ShelfValue::HostAny>` | `std::nullopt` |
 | `margins` | `bool` | `false` |
 | `margins_name` | `std::string` | `"All"` |
 | `dropna` | `bool` | `true` |
@@ -383,9 +383,9 @@ Example 1. Classic one-row-key, one-column-key pivot using the legacy overload.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"product", Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Phone"}))},
-    {"units",   Slate(pluss::make_series({2.0, 4.0, 1.0, 3.0, 5.0}))},
+    {"city",    Shelf(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Shelf(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Phone"}))},
+    {"units",   Shelf(pluss::make_series({2.0, 4.0, 1.0, 3.0, 5.0}))},
 });
 
 auto out = sales.pivot_table("city", "product", "units", DataFrame::GroupOp::Sum);
@@ -395,11 +395,11 @@ std::cout << out;
 ### Output
 
 ```text
-=============================
+=====================
       | Laptop  Phone
 ---------------------
-Accra | 6       1
-Tema  | 3       5
+Accra | 6       1    
+Tema  | 3       5    
 ---------------------
 [2 cs x 2 feat]
 ```
@@ -418,11 +418,11 @@ std::cout << avg;
 ### Output
 
 ```text
-=============================
+=====================
       | Laptop  Phone
 ---------------------
-Accra | 3       1
-Tema  | 3       5
+Accra | 3       1    
+Tema  | 3       5    
 ---------------------
 [2 cs x 2 feat]
 ```
@@ -434,11 +434,11 @@ Example 3. Multiple row keys and multiple value features with one uniform aggreg
 
 ```cpp
 auto detailed = DataFrame({
-    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"quarter", Slate(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
-    {"product", Slate(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
-    {"units",   Slate(pluss::make_series({2.0, 3.0, 4.0, 1.0, 5.0}))},
-    {"revenue", Slate(pluss::make_series({20.0, 30.0, 40.0, 10.0, 50.0}))},
+    {"city",    Shelf(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"quarter", Shelf(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+    {"product", Shelf(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"units",   Shelf(pluss::make_series({2.0, 3.0, 4.0, 1.0, 5.0}))},
+    {"revenue", Shelf(pluss::make_series({20.0, 30.0, 40.0, 10.0, 50.0}))},
 });
 
 DataFrame::PivotTableOptions options;
@@ -491,12 +491,12 @@ std::cout << rich;
 ### Output
 
 ```text
-=====================================================================================================================================================
-      | units_sum :: Laptop  units_mean :: Laptop  units_sum :: Phone  units_mean :: Phone  revenue_sum :: Laptop  revenue_mean :: Laptop  revenue_sum :: Phone  revenue_mean :: Phone
------------------------------------------------------------------------------------------------------------------------------------------------------
-Accra | 6                    3                     3                   3                    60                     30                       30                    30
-Tema  | 1                    1                     5                   5                    10                     10                       50                    50
------------------------------------------------------------------------------------------------------------------------------------------------------
+=================================================================================================
+      | units_sum :: Laptop  units_sum :: Phone  units_mean :: Laptop  ...  revenue_mean :: Phone
+-------------------------------------------------------------------------------------------------
+Accra | 6                    3                   3                     ...  30                   
+Tema  | 1                    5                   1                     ...  50                   
+-------------------------------------------------------------------------------------------------
 [2 cs x 8 feat]
 ```
 
@@ -507,10 +507,10 @@ Example 5. Use explicit `specs` when different value features need different red
 
 ```cpp
 auto events = DataFrame({
-    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Tema"}))},
-    {"channel", Slate(pluss::make_note({"Card", "Cash", "Card", "Card", "Cash"}))},
-    {"amount",  Slate(pluss::make_series({20.0, 35.0, 10.0, 50.0, 40.0}))},
-    {"status",  Slate(pluss::make_note({"ok", "ok", "retry", "ok", "retry"}))},
+    {"city",    Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Tema"}))},
+    {"channel", Shelf(pluss::make_note({"Card", "Cash", "Card", "Card", "Cash"}))},
+    {"amount",  Shelf(pluss::make_series({20.0, 35.0, 10.0, 50.0, 40.0}))},
+    {"status",  Shelf(pluss::make_note({"ok", "ok", "retry", "ok", "retry"}))},
 });
 
 DataFrame::PivotTableOptions mixed;
@@ -544,7 +544,7 @@ numeric aggregation.
 Example 6. `fill_value` and `margins` make the result closer to a spreadsheet pivot.
 
 ```cpp
-options.fill_value = SlateValue::HostAny::floating(0.0);
+options.fill_value = ShelfValue::HostAny::floating(0.0);
 options.margins = true;
 
 auto totaled = detailed.pivot_table(options);
@@ -554,15 +554,15 @@ std::cout << totaled;
 ### Output
 
 ```text
-=======================================================================================================================================
-           | units_sum :: Laptop  units_sum :: Phone  units_sum :: All  revenue_sum :: Laptop  revenue_sum :: Phone  revenue_sum :: All
----------------------------------------------------------------------------------------------------------------------------------------
-Accra / Q1 | 2                    3                   5                 20                     30                    50
-Accra / Q2 | 4                    0                   4                 40                     0                     40
-Tema / Q1  | 1                    0                   1                 10                     0                     10
-Tema / Q2  | 0                    5                   5                 0                      50                    50
-All /      | 7                    8                   15                70                     80                    150
----------------------------------------------------------------------------------------------------------------------------------------
+===============================================================================================
+           | units_sum :: Laptop  units_sum :: Phone  units_sum :: All  ...  revenue_sum :: All
+-----------------------------------------------------------------------------------------------
+Accra / Q1 | 2                    3                   5                 ...  50                
+Accra / Q2 | 4                    0                   4                 ...  40                
+Tema / Q1  | 1                    0                   1                 ...  10                
+Tema / Q2  | 0                    5                   5                 ...  50                
+All /      | 7                    8                   15                ...  150               
+-----------------------------------------------------------------------------------------------
 [5 cs x 6 feat]
 ```
 
@@ -575,9 +575,9 @@ Example 7. `dropna=false` keeps null key groups instead of discarding them.
 
 ```cpp
 auto null_keys = DataFrame({
-    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}), {true, false, true, true})},
-    {"product", Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Phone"}))},
-    {"units",   Slate(pluss::make_series({2.0, 4.0, 5.0, 1.0}))},
+    {"city",    Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}), pluss::make_series(std::vector<bool>{true, false, true, true}))},
+    {"product", Shelf(pluss::make_note({"Laptop", "Laptop", "Phone", "Phone"}))},
+    {"units",   Shelf(pluss::make_series({2.0, 4.0, 5.0, 1.0}))},
 });
 
 auto keep_null = null_keys.pivot_table("city",
@@ -591,12 +591,12 @@ std::cout << keep_null;
 ### Output
 
 ```text
-=============================
+=====================
       | Laptop  Phone
 ---------------------
-Accra | 2       NULL
-Tema  | NULL    6
-NULL  | 4       NULL
+Accra | 2       NULL 
+Tema  | NULL    6    
+NULL  | 4       NULL 
 ---------------------
 [3 cs x 2 feat]
 ```
@@ -623,12 +623,12 @@ std::cout << flattened;
 ### Output
 
 ```text
-===================================================================================================
-      | Q1 -> Laptop  Q1 -> Phone  Q2 -> Laptop  Q2 -> Phone
----------------------------------------------------------------------------------------------------
-Accra | 2            3            4             NULL
-Tema  | 1            NULL         NULL          5
----------------------------------------------------------------------------------------------------
+======================================================================================================
+      | quarter=Q1 -> product~  quarter=Q1 -> product~  quarter=Q2 -> product~  quarter=Q2 -> product~
+------------------------------------------------------------------------------------------------------
+Accra | 2                       3                       4                       NULL                  
+Tema  | 1                       NULL                    NULL                    5                     
+------------------------------------------------------------------------------------------------------
 [2 cs x 4 feat]
 ```
 
@@ -651,11 +651,11 @@ std::cout << counted;
 ### Output
 
 ```text
-=============================
+=====================
       | Laptop  Phone
 ---------------------
-Accra | 2       1
-Tema  | 1       1
+Accra | 2       1    
+Tema  | 1       1    
 ---------------------
 [2 cs x 2 feat]
 ```

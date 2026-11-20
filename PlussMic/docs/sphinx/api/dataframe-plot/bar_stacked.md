@@ -76,9 +76,9 @@ Example 1. A two-feature stack with an explicit categorical x-axis.
 using namespace pluss::table;
 
 auto breakdown = DataFrame({
-    {"city",         Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"sales",        Slate(pluss::make_series({320.0, 180.0, 240.0}))},
-    {"returns_cost", Slate(pluss::make_series({15.0, 8.0, 20.0}))},
+    {"city",         Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"sales",        Shelf(pluss::make_series({320.0, 180.0, 240.0}))},
+    {"returns_cost", Shelf(pluss::make_series({15.0, 8.0, 20.0}))},
 });
 
 auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city");
@@ -94,10 +94,10 @@ Example 2. Three features stacked, via a reusable `RangeView`.
 
 ```cpp
 auto parts_df = DataFrame({
-    {"city",    Slate(pluss::make_note({"Accra", "Tema"}))},
-    {"product", Slate(pluss::make_series({200.0, 120.0}))},
-    {"support", Slate(pluss::make_series({80.0, 40.0}))},
-    {"other",   Slate(pluss::make_series({15.0, 10.0}))},
+    {"city",    Shelf(pluss::make_note({"Accra", "Tema"}))},
+    {"product", Shelf(pluss::make_series({200.0, 120.0}))},
+    {"support", Shelf(pluss::make_series({80.0, 40.0}))},
+    {"other",   Shelf(pluss::make_series({15.0, 10.0}))},
 });
 
 std::vector<std::string_view> parts{"product", "support", "other"};

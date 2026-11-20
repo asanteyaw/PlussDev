@@ -1,0 +1,75 @@
+<!-- generated from firing_patterns.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Firing patterns
+
+[Back to Biology 9: Neurons](../bio_09_neurons.md)
+
+Real neurons do more than fire at a steady rate: some burst, some adapt, some respond best to a rhythm. The Izhikevich model reproduces these patterns with two variables and four parameters. This page runs four parameter sets under the same input and compares how each fires.
+
+## How it works
+
+The state is the membrane voltage `v` and a recovery variable `u`. When `v` reaches `30` mV the neuron fires, `v` is reset to `c` and `u` is increased by `d`; `a` and `b` set the speed and the sensitivity of the recovery. `simulate_izhikevich(state0, current, params, options)` runs the model with every parameter possibly an array, so the four neurons below are four lanes of a single call, and returns the spike counts and the spike times of every lane, with `-1` marking unused slots.
+
+## Four neurons, one input
+
+The four lanes use the usual parameter sets for a regular-spiking, a chattering, a low-threshold-spiking and a fast-spiking neuron, all driven by a constant current of `10` for `500` ms. The program prints the spike counts and the first six spike times of each.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace neuro = biology::neuroscience;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // Izhikevich neurons: v starts at -65 mV, u at b v. Four classic parameter sets, one lane each.
+  neuro::IzhikevichParams p;
+  p.a = vec({0.02, 0.02, 0.02, 0.1});
+  p.b = vec({0.2, 0.2, 0.25, 0.2});
+  p.c = vec({-65.0, -50.0, -65.0, -65.0});
+  p.d = vec({8.0, 2.0, 2.0, 2.0});
+  const auto v0 = vec({-65.0, -65.0, -65.0, -65.0});
+  const auto u0 = v0.mul(vec({0.2, 0.2, 0.25, 0.2}));
+  const auto state0 = v0.unsqueeze(-1).unite(std::vector<pluss::Series>{u0.unsqueeze(-1)}, -1);
+  neuro::SpikeOptions options;
+  options.dt = 0.1;
+  options.t_end = 500.0;
+  options.max_spikes = 200;
+  const auto run = neuro::simulate_izhikevich(state0, 10.0, p, options);
+  out.writeln("regular spiking, chattering, low-threshold spiking, fast spiking: spikes in 500 ms = ", flat(run.count));
+  const auto t = flat(run.times);
+  const std::vector<std::string> names = {"regular spiking", "chattering", "low-threshold spiking", "fast spiking"};
+  for (int lane = 0; lane < 4; ++lane) {
+    std::vector<double> first;
+    for (int k = 0; k < 6; ++k) first.push_back(t[lane * 200 + k]);
+    out.writeln(names[lane], ": first spike times (ms) ", first);
+  }
+}
+```
+
+Output
+
+```text
+regular spiking, chattering, low-threshold spiking, fast spiking: spikes in 500 ms = [12.0000, 47.0000, 41.0000, 69.0000]
+regular spiking: first spike times (ms) [3.1198, 26.2071, 71.0284, 115.8296, 160.6307, 205.4316]
+chattering: first spike times (ms) [3.1198, 4.5057, 6.0190, 7.7078, 9.6326, 11.9397]
+low-threshold spiking: first spike times (ms) [2.4602, 5.3212, 8.7757, 13.2016, 19.4326, 29.1932]
+fast spiking: first spike times (ms) [3.1438, 7.4226, 13.2748, 20.2761, 27.5720, 34.9045]
+```
+
+The same input gives four different behaviours. The regular-spiking neuron settles to about one spike per `45` ms after an initial delay (`26.21`, `71.03`, `115.83`, ...). The chattering neuron fires in a quick burst (spikes at `3.12`, `4.51`, `6.02`, `7.71`, `9.63`, ...) with gaps widening inside the burst; the low-threshold and fast-spiking neurons begin with short intervals that lengthen, and by the end of `500` ms the counts are `12`, `47`, `41` and `69` spikes.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="leaky_neuron.html">
+    <span class="label">Previous</span>
+    <span class="title">The leaky neuron</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

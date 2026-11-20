@@ -1,6 +1,6 @@
 # `control::LoopResult`
 
-The three canonical SISO feedback responses evaluated on one frequency grid.
+The loop response, sensitivity and complementary sensitivity on a frequency grid.
 
 ## Signature
 
@@ -10,63 +10,47 @@ control::LoopResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Returned by `loop`. Each field is a complex `Series` with one entry per frequency (and the outputs-by-inputs matrix axes for a multivariable loop).
 
 ## Fields
 
-### `response`
-
-The open-loop complex frequency response `L(jw)` or `L(z)`.
-
-### `sens`
-
-Sensitivity `S = 1 / (1 + L)`, measuring disturbance and uncertainty transmission.
-
-### `comp`
-
-Complementary sensitivity `T = L / (1 + L)`, satisfying `S + T = 1` samplewise.
+| Field | Meaning |
+|---|---|
+| `response` | The open-loop response `L(jw)`. |
+| `sens` | The sensitivity `S = (I + L)^{-1}`. |
+| `comp` | The complementary sensitivity `T = L (I + L)^{-1}`. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `loop`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-For unity negative feedback, `sens + comp` should equal one samplewise. Use that identity as a quick numerical check. Large sensitivity indicates disturbance/uncertainty amplification; complementary sensitivity describes reference tracking and high-frequency noise transmission.
+Plot or inspect `abs()` of the fields. A peak of `|S|` above one (the second example finds 2.31 for a loop gain of 2) means disturbances are amplified near that frequency; `|T|` near one at low frequency means good tracking and near zero at high frequency means noise rejection (the third example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect all three responses from a state-space plant.
+The shapes and dtype of the fields.
 
-@@example Eng/api/control_loop.cpp@@
+@@example Eng/api/control_loopresult_fields.cpp@@
 
 ### Example 2
 
-Verify `S + T = 1` through the pole-zero overload.
+The peaks of the two sensitivities for a loop gain of 2.
 
-@@example Eng/api/control_loop_polezero.cpp@@
+@@example Eng/api/control_loopresult_peak.cpp@@
 
 ### Example 3
 
-See why this result is restricted to SISO loops.
+Tracking at low frequency and noise rejection at high frequency.
 
-@@example Eng/api/control_loop_errors.cpp@@
+@@example Eng/api/control_loopresult_low.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="MarginResult.html">
-    <span class="label">Next</span>
-    <span class="title">MarginResult</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

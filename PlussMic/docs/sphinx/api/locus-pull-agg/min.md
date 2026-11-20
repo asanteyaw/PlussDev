@@ -17,7 +17,7 @@ LocusPullAgg& LocusPullAgg::min(std::initializer_list<std::pair<std::string_view
 The scoped spelling of [`LocusPull::min`](../locus-pull/min.md):
 `scope.min("spend", "low")` inside an `agg("events")` scope is exactly
 `pull.min("events.spend", "low")`. Requires a numeric feature; see
-[`sum`](sum.md) for the shared null-for-empty and `NaN`-exclusion rules.
+[`sum`](sum.md) for the shared null-for-empty and missing-value rules.
 
 ## Parameters
 

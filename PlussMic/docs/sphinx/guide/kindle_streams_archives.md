@@ -6,9 +6,9 @@
 
 The two other Kindle types: the `Stream` (one column with a mask, labels and metadata) and the `Archive` (a stack of catalogs, like an Atlas whose members may have different lengths). This page repairs a sensor stream, ranks named stations, scales train, validation and test sets and combines monthly catalogs of different sizes.
 
-## The mental model
+## How it works
 
-A stream is one vector with three optional extras: a validity mask, case labels and a metadata map. Every transformation returns a new stream; the mask and labels travel where they make sense, and the metadata does not (the first program shows it). An archive is a stack of catalogs addressed by a depth stream, and unlike an Atlas it allows catalogs of different record counts.
+A stream is one vector with three optional extras: a validity mask, case labels and a metadata map. Every transformation returns a new stream, and the mask, the labels and the metadata travel with the values wherever the operation keeps their meaning (clip, fill, slice, filter, cast, arithmetic). A flag derived from the stream, such as a comparison or `isnull`, is a different quantity and does not inherit the metadata, and neither does a reduction. An archive is a stack of catalogs addressed by a depth stream, and unlike an Atlas it allows catalogs of different record counts.
 
 ## Repairing a sensor stream
 
@@ -39,11 +39,12 @@ int main() {
   auto filled = capped.ffill();
   show("forward-filled", filled);
 
-  // 3. Metadata describes the stream you attached it to; a transformation returns a new stream without it. Look, then re-attach the
-  //    provenance and add a note of what was done, so the repaired stream explains itself later.
-  std::cout << "metadata after repair: sensor=" << filled.meta("sensor").value_or("(not carried over)") << "\n";
-  auto documented = filled.with_meta("sensor", raw.meta("sensor").value_or("?")).with_meta("unit", raw.meta("unit").value_or("?")).with_meta("repair", "clip 0-60, ffill");
-  std::cout << "re-attached: sensor=" << documented.meta("sensor").value_or("?") << ", unit=" << documented.meta("unit").value_or("?") << ", repair=" << documented.meta("repair").value_or("?") << "\n";
+  // 3. Metadata travels with the values: every step above kept the sensor and the unit. Add a note of what was done, so the repaired
+  //    stream explains itself later. A flag derived from the stream (a comparison, isnull) is a different quantity and does not inherit it.
+  std::cout << "metadata after repair: sensor=" << filled.meta("sensor").value_or("(missing)") << ", unit=" << filled.meta("unit").value_or("(missing)") << "\n";
+  auto documented = filled.with_meta("repair", "clip 0-60, ffill");
+  std::cout << "with the note: sensor=" << documented.meta("sensor").value_or("?") << ", unit=" << documented.meta("unit").value_or("?") << ", repair=" << documented.meta("repair").value_or("?") << "\n";
+  std::cout << "a comparison carries no unit: " << (!(raw > 30.0).meta("unit").has_value() ? "yes" : "no") << "\n";
 
   // 4. Keep only the trusted readings: those that were present and not above the limit.
   auto trusted_mask = raw.notnull().as_series().logical_and(raw.as_series().lt(60.0));
@@ -61,13 +62,14 @@ clipped: Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, co
 data=[20.5000, 20.7000, 0.0000, 21.0000, 60.0000, 21.3000, 0.0000, 21.6000]
 forward-filled: Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
 data=[20.5000, 20.7000, 20.7000, 21.0000, 60.0000, 21.3000, 21.3000, 21.6000]
-metadata after repair: sensor=(not carried over)
-re-attached: sensor=roof-3, unit=celsius, repair=clip 0-60, ffill
+metadata after repair: sensor=roof-3, unit=celsius
+with the note: sensor=roof-3, unit=celsius, repair=clip 0-60, ffill
+a comparison carries no unit: yes
 trusted readings only: Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[20.5000, 20.7000, 21.0000, 21.3000, 21.6000]
 trusted 5 of 8; mean 21.02
 ```
-`clip` caps the spike at the 60 limit and `ffill` carries the last good value over each dropout. The program then looks at the metadata after the repair and finds it gone: transformations return a stream without the metadata attached to the original, so the program re-attaches the sensor and unit and adds a note of what was done. The last block keeps only the trusted readings with `filter`, five of eight, with a mean of `21.02`.
+`clip` caps the spike at the 60 limit and `ffill` carries the last good value over each dropout. The sensor and the unit are still on the stream after both steps, and the program adds a note of what was done so that the repaired stream explains itself later; a comparison of the stream with a number is a flag and carries no unit. The last block keeps only the trusted readings with `filter`, five of eight, with a mean of `21.02`.
 
 ## Named records
 
@@ -79,11 +81,11 @@ A stream of wind speeds with a station name for each record.
 #include <iostream>
 
 using pluss::kindle::Stream;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 int main() {
   Stream wind(pluss::make_series({12.4, 31.0, 8.2, 25.7, 40.3, 19.9}));
-  auto named = wind.with_label(Slate(pluss::make_note({"harbour", "ridge", "valley", "airport", "summit", "coast"})));
+  auto named = wind.with_label(Shelf(pluss::make_note({"harbour", "ridge", "valley", "airport", "summit", "coast"})));
   std::cout << "labelled: " << (named.has_label() ? "yes" : "no") << ", records " << named.nrecords() << "\n";
   std::cout << named << "\n";
 
@@ -218,7 +220,7 @@ int main() {
   std::cout << "months " << year.depth() << ", products per month from " << year.minrecords() << " to " << year.maxrecords() << "\n";
 
   // 1. One line per month, computed across the whole archive.
-  auto totals = year.aggregate_over_catalogs([](const std::vector<Catalog> &catalogs) {
+  auto totals = year.aggregate_depth([](const std::vector<Catalog> &catalogs) {
     std::vector<double> units, revenue;
     for (const auto &c : catalogs) {
       units.push_back(c.keys("units").sum().as_series().items<double>()[0]);
@@ -275,15 +277,15 @@ units                    | Series       | Series[float64]  | 2       | [90, 60]
 revenue                  | Series       | Series[float64]  | 2       | [900, 1200]                                      
 ========================================================================================================================
 ```
-The archive holds `2` to `4` products per month. `aggregate_over_catalogs` sees all months and returns one row per month, units `240`, `305`, `150` and revenue `3600`, `4900`, `2100`. Intersecting the product names month by month finds the products sold in every month (`gizmo` and `widget`), and `loc` reads November alone.
+The archive holds `2` to `4` products per month. `aggregate_depth` sees all months and returns one row per month, units `240`, `305`, `150` and revenue `3600`, `4900`, `2100`. Intersecting the product names month by month finds the products sold in every month (`gizmo` and `widget`), and `loc` reads November alone.
 
 ## Decisions
 
 - **Stream or catalog:** a stream for one column's cleaning and provenance, a catalog for several.
-- **Metadata:** attach it last, after the transformations, or re-attach it as the program does.
+- **Metadata:** attach it once, at the source; it follows the values through the value-preserving operations, and `with_meta` adds a note of what was done.
 - **Archive or Atlas:** an archive when sizes differ; an Atlas when they must not.
 - **Leakage:** fit scalers on the training catalog only, then map them over every catalog.
 
 ## Where next
 
-Reference pages: [`clip`](../api/stream/clip.md), [`ffill`](../api/stream/ffill.md), [`with_meta`](../api/stream/with_meta.md), [`meta`](../api/stream/meta.md), [`filter`](../api/stream/filter.md), [`with_label`](../api/stream/with_label.md), [`clear_label`](../api/stream/clear_label.md), [`map_catalogs`](../api/archive/map_catalogs.md), [`aggregate_over_catalogs`](../api/archive/aggregate_over_catalogs.md), [`loc`](../api/archive/loc.md), [`minrecords`](../api/archive/minrecords.md), [`maxrecords`](../api/archive/maxrecords.md). Next: [Scribble](scribble.md).
+Reference pages: [`clip`](../api/stream/clip.md), [`ffill`](../api/stream/ffill.md), [`with_meta`](../api/stream/with_meta.md), [`meta`](../api/stream/meta.md), [`filter`](../api/stream/filter.md), [`with_label`](../api/stream/with_label.md), [`clear_label`](../api/stream/clear_label.md), [`map_catalogs`](../api/archive/map_catalogs.md), [`aggregate_depth`](../api/archive/aggregate_depth.md), [`loc`](../api/archive/loc.md), [`minrecords`](../api/archive/minrecords.md), [`maxrecords`](../api/archive/maxrecords.md). Next: [Scribble](scribble.md).

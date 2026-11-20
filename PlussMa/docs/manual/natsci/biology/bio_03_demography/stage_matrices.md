@@ -1,0 +1,82 @@
+<!-- generated from stage_matrices.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Stage matrices
+
+[Back to Biology 3: Demography and Extinction](../bio_03_demography.md)
+
+When individuals differ by stage, a population is a vector and a year of life is a matrix. This page takes a three-stage population (juvenile, subadult, adult), reads its long-run growth rate, stage mix and reproductive values off the matrix, ranks which entries matter most, and computes lifetime quantities and a parameter sensitivity.
+
+## How it works
+
+Column `j` of the projection matrix holds what a stage-`j` individual becomes in one year: the fertility entries in the top row are offspring, the others are survival and moves between stages. `structured::dominant(a)` returns the dominant eigenvalue `lambda`, the long-run yearly growth factor; `right`, the stable stage mix that sums to 1; and `left`, the reproductive values, which say how much one individual of each stage contributes to the future. `structured::elasticity(a, e)` returns, entry by entry, the proportional effect on `lambda` of a proportional change in that entry; the elasticities sum to 1. `demography::damping_ratio` is how fast a population settles onto the stable mix. Splitting the matrix into fertilities `F` and transitions `T`, `fundamental_matrix(T)` gives the expected time an individual spends in each stage and `net_reproductive_rate(a, F)` the offspring it leaves in a lifetime. `lambda_gradient` differentiates `lambda` with respect to parameters that the matrix is built from.
+
+## Reading a matrix
+
+The program builds the matrix, prints its dominant eigen-quantities, the elasticities (row by row), the damping ratio and the lifetime quantities, then differentiates `lambda` with respect to the adult survival entry at `0.8`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace population = biology::population;
+namespace structured = population::structured;
+namespace demography = population::demography;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static pluss::Series mat(std::initializer_list<std::initializer_list<double>> m) { return pluss::series::make(m).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // three stages: juvenile, subadult, adult. Column j holds what a stage-j individual becomes in one year.
+  const auto a = mat({{0.0, 0.0, 4.0}, {0.4, 0.3, 0.0}, {0.0, 0.5, 0.8}});
+  const auto e = structured::dominant(a);
+  out.writeln("growth rate lambda    = ", flat(e.lambda));
+  out.writeln("stable stage mix      = ", flat(e.right));
+  out.writeln("reproductive value    = ", flat(e.left));
+  out.writeln("elasticities (rows):  ", flat(structured::elasticity(a, e)));
+  out.writeln("damping ratio         = ", flat(demography::damping_ratio(a)));
+
+  // lifetime quantities: split A into fertilities F and transitions T
+  const auto fertility = mat({{0.0, 0.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}});
+  out.writeln("net reproductive rate = ", flat(demography::net_reproductive_rate(a, fertility)));
+  const auto transitions = a.sub(a.mul(fertility));
+  const auto fundamental = demography::fundamental_matrix(transitions);
+  out.writeln("expected lifetime (years, from each stage) = ", flat(fundamental.expected_lifetime));
+
+  // how does lambda respond to adult survival? the parameter is the adult-to-adult entry
+  const auto matrix_of = [&](const pluss::Series &theta) {
+    const auto base = mat({{0.0, 0.0, 4.0}, {0.4, 0.3, 0.0}, {0.0, 0.5, 0.0}}).to(theta.scalar_type());
+    const auto adult = mat({{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}}).to(theta.scalar_type());
+    return base.add(adult.mul(theta.select(-1, 0).unsqueeze(-1).unsqueeze(-1)));
+  };
+  out.writeln("d lambda / d adult survival = ", flat(demography::lambda_gradient(matrix_of, vec({0.8}))));
+}
+```
+
+Output
+
+```text
+growth rate lambda    = [1.3574]
+stable stage mix      = [0.5822, 0.2202, 0.1976]
+reproductive value    = [0.3640, 1.2352, 2.6121]
+elasticities (rows):  [0.0000, 0.0000, 0.2119, 0.2119, 0.0601, 0.0000, 0.0000, 0.2119, 0.3041]
+damping ratio         = [1.7681]
+net reproductive rate = [5.7143]
+expected lifetime (years, from each stage) = [3.0000, 5.0000, 5.0000]
+d lambda / d adult survival = [0.5161]
+```
+
+The population grows by a factor `1.3574` a year with a stable mix of `58%` juveniles, `22%` subadults and `20%` adults. The reproductive values are `0.3640`, `1.2352` and `2.6121`, so an adult contributes about seven times as much to the future as a juvenile. The elasticities add to `1`, and the largest, `0.3041`, belongs to adult survival, with `0.2119` for each of the entries on the main life path. The damping ratio `1.7681` says that the deviation from the stable mix shrinks by about that factor each year. Each individual leaves `5.7143` offspring in its lifetime; the expected lifetime is `3`, `5` and `5` years from the three stages, and `lambda` rises by `0.5161` for each unit rise in adult survival.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="extinction.html">
+    <span class="label">Next</span>
+    <span class="title">Extinction</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

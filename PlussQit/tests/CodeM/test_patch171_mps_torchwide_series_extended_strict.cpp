@@ -114,8 +114,8 @@ TEST_CASE("MPS strict torchwide extended float32 parity", "[mps][strict][torchwi
                  2e-4f,
                  "pile");
 
-  require_close_(x_mps.where(x_mps.gt(0.0), y_mps).to(pluss::pCPU).host<float>().array().data,
-                 x_cpu.where(x_cpu.gt(0.0), y_cpu).host<float>().array().data,
+  require_close_(pluss::series::where(x_mps.gt(0.0), y_mps, x_mps).to(pluss::pCPU).host<float>().array().data,
+                 pluss::series::where(x_cpu.gt(0.0), y_cpu, x_cpu).host<float>().array().data,
                  3e-4f,
                  "where");
   require_close_(x_mps.clamp_min(-1.0).to(pluss::pCPU).host<float>().array().data,
@@ -247,8 +247,8 @@ TEST_CASE("MPS strict torchwide extended int32 parity", "[mps][strict][torchwide
 
   const auto cond_cpu = x_cpu.gt(0);
   const auto cond_mps = cond_cpu.to(pluss::pMPS);
-  require_equal_i32_(x_mps.where(cond_mps, y_mps).to(pluss::pCPU).host<std::int32_t>().array().data,
-                     x_cpu.where(cond_cpu, y_cpu).host<std::int32_t>().array().data,
+  require_equal_i32_(pluss::series::where(cond_mps, y_mps, x_mps).to(pluss::pCPU).host<std::int32_t>().array().data,
+                     pluss::series::where(cond_cpu, y_cpu, x_cpu).host<std::int32_t>().array().data,
                      "where-i32");
   require_equal_i32_(x_mps.clamp_min(-1.0).to(pluss::pCPU).host<std::int32_t>().array().data,
                      x_cpu.clamp_min(-1.0).host<std::int32_t>().array().data,
@@ -256,4 +256,24 @@ TEST_CASE("MPS strict torchwide extended int32 parity", "[mps][strict][torchwide
   require_equal_i32_(x_mps.clamp_max(2.0).to(pluss::pCPU).host<std::int32_t>().array().data,
                      x_cpu.clamp_max(2.0).host<std::int32_t>().array().data,
                      "clamp_max-i32");
+}
+
+TEST_CASE("MPS complex64 product reduction matches the CPU", "[mps][complex][reduction]") {
+  if (!pluss::mps::is_ready()) {
+    SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  using C = std::complex<float>;
+  const auto cpu = pluss::make_series({C(3, 4), C(1, -2), C(-0.5f, 0.25f), C(2, 1)}).reshape({2, 2});
+  const auto mps = cpu.to(pluss::pMPS);
+  // Casting a complex value to Float32 drops its imaginary part, so a fallback that does so gives a wrong product.
+  const auto expected = cpu.prod(1).host<C>().array().data;
+  const auto got = mps.prod(1).to(pluss::pCPU).host<C>().array().data;
+  REQUIRE(got.size() == expected.size());
+  for (std::size_t i = 0; i < expected.size(); ++i) {
+    REQUIRE(std::abs(got[i] - expected[i]) < 1e-4f);
+  }
+  const auto all_cpu = cpu.prod().item<C>();
+  const auto all_mps = mps.prod().to(pluss::pCPU).item<C>();
+  REQUIRE(std::abs(all_cpu - all_mps) < 1e-3f);
 }

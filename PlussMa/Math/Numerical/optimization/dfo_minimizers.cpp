@@ -511,8 +511,8 @@ Series sample_population(
   if (bounds.enabled) {
     if (!std::isfinite(initial_radius)) {
       const Series box_is_finite = bounds.lower.abs().lt(1e100).logical_and(bounds.upper.abs().lt(1e100));
-      lb = box_is_finite.where(bounds.lower, lb);
-      ub = box_is_finite.where(bounds.upper, ub);
+      lb = pluss::series::where(box_is_finite, bounds.lower, lb);
+      ub = pluss::series::where(box_is_finite, bounds.upper, ub);
     }
     lb = lb.maximum(bounds.lower);
     ub = ub.minimum(bounds.upper);
@@ -742,14 +742,14 @@ PopulationSolverOutcome differential_evolution_minimizer(
         n_pop, n_dim, config.crossover_rate,
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
-    Series trial = cross.where(mutant, base);
+    Series trial = pluss::series::where(cross, mutant, base);
     Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    const Series base_next = improved_2d.where(trial, base);
-    const Series fit_next = improved.where(trial_fit, base_fit);
+    const Series base_next = pluss::series::where(improved_2d, trial, base);
+    const Series fit_next = pluss::series::where(improved, trial_fit, base_fit);
 
     pop = base_next.index_select(0, inv_perm);
     fit = fit_next.index_select(0, inv_perm);
@@ -1137,10 +1137,10 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
       const Series keep_a = fit_a.lt(fit_b);
       const Series keep_a_2d = keep_a.reshape({half, 1}).expand(std::vector<std::int64_t>{half, n_dim});
 
-      pop = keep_a_2d.where(pop_a, pop_b).contiguous();
-      fit = keep_a.where(fit_a, fit_b).contiguous();
-      f_vec = keep_a.where(f_a, f_b).contiguous();
-      cr_vec = keep_a.where(cr_a, cr_b).contiguous();
+      pop = pluss::series::where(keep_a_2d, pop_a, pop_b).contiguous();
+      fit = pluss::series::where(keep_a, fit_a, fit_b).contiguous();
+      f_vec = pluss::series::where(keep_a, f_a, f_b).contiguous();
+      cr_vec = pluss::series::where(keep_a, cr_a, cr_b).contiguous();
       n_pop = half;
       ++reductions_done;
 
@@ -1169,11 +1169,11 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     const Series adapt_new_f = pluss::series::rand({n_pop}, setup.work_cfg, rng.next())
         .mul(config.mutation_upper - config.mutation_lower)
         .add(config.mutation_lower);
-    f_vec = adapt_u_f.lt(config.tau_mutation).where(adapt_new_f, f_vec);
+    f_vec = pluss::series::where(adapt_u_f.lt(config.tau_mutation), adapt_new_f, f_vec);
 
     const Series adapt_u_cr = pluss::series::rand({n_pop}, setup.work_cfg, rng.next());
     const Series adapt_new_cr = pluss::series::rand({n_pop}, setup.work_cfg, rng.next());
-    cr_vec = adapt_u_cr.lt(config.tau_crossover).where(adapt_new_cr, cr_vec);
+    cr_vec = pluss::series::where(adapt_u_cr.lt(config.tau_crossover), adapt_new_cr, cr_vec);
 
     const Series perm = random_permutation(n_pop, setup.work_cfg, &rng);
     const Series inv_perm = inverse_permutation(perm, setup.idx_cfg);
@@ -1197,7 +1197,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     if (n_pop < 100) {
       const Series main_selector = pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next())
           .lt(config.random_main_strategy_probability);
-      mutant_main = main_selector.where(mutant_main_rand, mutant_main_best);
+      mutant_main = pluss::series::where(main_selector, mutant_main_rand, mutant_main_best);
     }
     const Series mutant_elite = best_best_expand.add(f_mat.mul(r1.sub(r2)));
 
@@ -1207,20 +1207,20 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
         .lt(split)
         .reshape({n_pop, 1})
         .expand(std::vector<std::int64_t>{n_pop, n_dim});
-    const Series mutant = group_main.where(mutant_main, mutant_elite);
+    const Series mutant = pluss::series::where(group_main, mutant_main, mutant_elite);
 
     const Series cross = crossover_mask_per_row_rate(
         n_pop, n_dim, cr_base,
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
-    Series trial = cross.where(mutant, base);
+    Series trial = pluss::series::where(cross, mutant, base);
     const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    const Series base_next = improved_2d.where(trial, base);
-    const Series fit_next = improved.where(trial_fit, base_fit);
+    const Series base_next = pluss::series::where(improved_2d, trial, base);
+    const Series fit_next = pluss::series::where(improved, trial_fit, base_fit);
 
     if (split > 0) {
       const Series main_idx = pluss::series::arange(0, split, setup.idx_cfg);
@@ -1592,8 +1592,8 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
     const Series improved = fit.lt(pbest_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-    pbest = improved_2d.where(pop, pbest);
-    pbest_fit = improved.where(fit, pbest_fit);
+    pbest = pluss::series::where(improved_2d, pop, pbest);
+    pbest_fit = pluss::series::where(improved, fit, pbest_fit);
 
     if (config.center_particle && evaluations < max_evaluations) {
       const Series center = pop.mean(0, false);
@@ -1846,26 +1846,26 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
         .add(rand_u.mul(config.social).mul(best_expand.sub(pop)));
 
     const Series apply_mask = pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).le(config.crossover_rate);
-    vel = apply_mask.where(v_prop, vel);
+    vel = pluss::series::where(apply_mask, v_prop, vel);
 
     Series trial = pop.add(vel);
     const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
     const Series improved = trial_fit.lt(fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    pop = improved_2d.where(trial, pop);
-    fit = improved.where(trial_fit, fit);
+    pop = pluss::series::where(improved_2d, trial, pop);
+    fit = pluss::series::where(improved, trial_fit, fit);
 
     const Series stagnation_inc = stagnation.add(1);
-    stagnation = improved.where(pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation_inc);
+    stagnation = pluss::series::where(improved, pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation_inc);
 
     const Series reset = stagnation.ge(config.stagnation_limit);
     const auto reset_host = reset.to(ScalarType::Bool).host<bool>();
     if (std::any_of(reset_host.begin(), reset_host.end(), [](bool v) { return v; })) {
       const Series reseed = region_min.add(pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).mul(region_max.sub(region_min)));
       const Series reset_2d = reset.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-      pop = reset_2d.where(reseed, pop);
-      stagnation = reset.where(pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation);
+      pop = pluss::series::where(reset_2d, reseed, pop);
+      stagnation = pluss::series::where(reset, pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation);
 
       for (std::int64_t i = 0; i < n_pop; ++i) {
         if (!reset_host[static_cast<std::size_t>(i)]) {

@@ -20,7 +20,7 @@ TEST_CASE("where broadcast + type promotion", "[indexing]") {
   auto* bp = reinterpret_cast<double*>(b.raw_data());
   bp[0]=1; bp[1]=2; bp[2]=3;
 
-  auto out = cond.where(a, b);
+  auto out = pluss::series::where(cond, a, b);
   REQUIRE(out.sizes()[0] == 2);
   REQUIRE(out.sizes()[1] == 3);
   auto* op = reinterpret_cast<const double*>(out.raw_data());
@@ -106,7 +106,7 @@ TEST_CASE("invalid mask and flat invalid_index", "[indexing][numeric-state]") {
   REQUIRE(picked.isinf().host<std::uint8_t>() == std::vector<std::uint8_t>{0, 1, 1});
 
   auto constant_repaired = values.clone();
-  constant_repaired.where_(constant_repaired.invalid(), -99.0);
+  constant_repaired.where_(constant_repaired.invalid().logical_not(), -99.0);
   REQUIRE(constant_repaired.host<double>() ==
           std::vector<double>{1.0, -99.0, 2.0, -99.0, -99.0, 5.0});
 
@@ -118,4 +118,25 @@ TEST_CASE("invalid mask and flat invalid_index", "[indexing][numeric-state]") {
   auto ints = pluss::make_series({1, 2, 3}, ScalarType::Int64);
   REQUIRE(ints.invalid().host<std::uint8_t>() == std::vector<std::uint8_t>{0, 0, 0});
   REQUIRE(ints.invalid_index().sizes() == std::vector<std::int64_t>{0});
+}
+
+TEST_CASE("pluss::series::where(condition, a, b) takes a where true and b where false", "[indexing][where]") {
+  auto a = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  auto b = pluss::make_series({10.0, 20.0, 30.0, 40.0});
+  auto mask = pluss::make_series({1.0, 0.0, 1.0, 0.0}); // not Bool: non-zero is true
+  auto out = pluss::series::where(mask, a, b);
+  REQUIRE(out.items<double>()[0] == 1.0);
+  REQUIRE(out.items<double>()[1] == 20.0);
+  REQUIRE(out.items<double>()[2] == 3.0);
+  REQUIRE(out.items<double>()[3] == 40.0);
+
+  auto with_scalar_b = pluss::series::where(a.gt(2.0), a, -1.0);
+  REQUIRE(with_scalar_b.items<double>()[0] == -1.0);
+  REQUIRE(with_scalar_b.items<double>()[3] == 4.0);
+  auto with_scalar_a = pluss::series::where(a.gt(2.0), 0.0, b);
+  REQUIRE(with_scalar_a.items<double>()[0] == 10.0);
+  REQUIRE(with_scalar_a.items<double>()[3] == 0.0);
+  auto both_scalar = pluss::series::where(a.gt(2.0), 1.0, 0.0);
+  REQUIRE(both_scalar.items<double>()[1] == 0.0);
+  REQUIRE(both_scalar.items<double>()[2] == 1.0);
 }

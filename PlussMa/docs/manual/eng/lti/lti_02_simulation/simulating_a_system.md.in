@@ -4,7 +4,7 @@
 
 You have a state-space model and an input signal, and you want the output and the states over time. `lti::sim` computes them. It does not step an approximate integrator: for a continuous model it uses the **exact** solution over each time interval for the input you describe, so the error is zero for inputs that follow the chosen holding rule, whatever the step size. This page shows the holds, discrete and continuous models, initial states, batches of inputs and systems, and the checks that protect you from a mismatched grid.
 
-## The mental model
+## How it works
 
 `sim(system, input, time)` takes an input of shape `[..., T, inputs]` sampled at the `T` instants in `time` (a strictly increasing vector) and returns a `SimRun` with two members: `values`, the outputs `[..., T, outputs]`, and `states`, the state history `[..., T, states]`. Row `k` of each is the value at `time[k]`; the first row is the initial condition.
 

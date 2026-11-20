@@ -82,8 +82,8 @@ timeline: Timeline
     <span class="label">Previous</span>
     <span class="title">plot</span>
   </a>
-  <a class="next-link" href="shape.html">
+  <a class="next-link" href="reduce_groups.html">
     <span class="label">Next</span>
-    <span class="title">shape</span>
+    <span class="title">reduce_groups</span>
   </a>
 </div>

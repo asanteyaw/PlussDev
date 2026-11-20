@@ -31,25 +31,69 @@ mirror of [`flash::light_palette`](light_palette.md).
 
 ## Examples
 
-Example 1. A ramp toward the same mid-tone blue as
-[`flash::light_palette`](light_palette.md)'s example — differs
-from it via direct stop comparison.
+The examples share one small helper that prints the number of stops and the first and last colour of a ramp as red, green, blue between 0 and 255.
 
 ```cpp
 using namespace pluss::pl;
 
-auto light = flash::light_palette(Rgba::from_u8(30, 80, 200), 6);
-auto dark = flash::dark_palette(Rgba::from_u8(30, 80, 200), 6);
-std::cout << "dark_palette stops=" << dark.stops().size() << " first(black-ish)=" << (dark.stops()[0].red < 0.1) << "\n";
-std::cout << "light_palette vs dark_palette differ: "
-          << (light.stops()[0].red != dark.stops()[0].red) << "\n";
+auto describe = [](const PaletteRamp &ramp) {
+  auto c = [](const Rgba &x) {
+    return "(" + std::to_string(static_cast<int>(x.red * 255 + 0.5)) + ", " + std::to_string(static_cast<int>(x.green * 255 + 0.5)) + ", " +
+           std::to_string(static_cast<int>(x.blue * 255 + 0.5)) + ")";
+  };
+  const auto &s = ramp.stops();
+  std::cout << s.size() << " stops; first " << c(s.front()) << ", last " << c(s.back()) << "\n";
+};
+const auto blue = Rgba::from_u8(30, 80, 200);
+const auto red = Rgba::from_u8(200, 40, 40);
+```
+
+Example 1. The default six stops, from black to the target colour.
+
+```cpp
+describe(flash::dark_palette(blue));
 ```
 
 Output:
 
 ```text
-dark_palette stops=6 first(black-ish)=1
-light_palette vs dark_palette differ: 1
+6 stops; first (0, 0, 0), last (30, 80, 200)
+```
+
+Example 2. Three stops.
+
+```cpp
+describe(flash::dark_palette(blue, 3));
+```
+
+Output:
+
+```text
+3 stops; first (0, 0, 0), last (30, 80, 200)
+```
+
+Example 3. A longer ramp toward a different colour.
+
+```cpp
+describe(flash::dark_palette(red, 10));
+```
+
+Output:
+
+```text
+10 stops; first (0, 0, 0), last (200, 40, 40)
+```
+
+Example 4. Fewer than two stops is refused.
+
+```cpp
+try { flash::dark_palette(blue, 1); } catch (const pluss::Error &e) { std::cout << e.message() << "\n"; }
+```
+
+Output:
+
+```text
+flash::dark_palette: n must be at least 2
 ```
 
 ## Notes

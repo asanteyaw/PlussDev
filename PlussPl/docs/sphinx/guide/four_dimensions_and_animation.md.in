@@ -1,0 +1,40 @@
+# Four dimensions and animation
+
+[Back to PlussPl by example](../guide.md)
+
+A fourth coordinate cannot be drawn directly, so it is shown through a projection that you can rotate. This page draws a helix in four dimensions, builds the frames of a rotation, exports them for an animation, and shows how to open the live viewers.
+
+## How it works
+
+The 4D functions take four series (x, y, z and w). `path4` draws a trajectory and `cloud4` a point cloud, each projected to three dimensions: the options choose the projection (orthographic, perspective along w, or a slice of w) and the rotation angle in each of the six planes. Rotating in a plane that includes w (for example x-w) moves the shape through the fourth dimension, which is how its structure is seen. `hyper_animation_sequence` lists the options of every frame of a full turn, `export4_frames` writes those frames to a folder, and `animate3` and `animate4` open a live viewer.
+
+## A helix in four dimensions
+
+A path made of two circles that turn at different speeds, drawn as a path and as a cloud with a rotation, then exported as frames.
+
+@@example hyper_dimensions.cpp@@
+
+![The helix as a 4D path and as a 4D cloud rotated in the x-w plane](assets/hyper_dimensions.svg)
+
+The path has `400` points. A full turn in the x-w plane is described by `12` frames, and frame 3 is at `90` degrees: the sequence divides the circle evenly. `export4_frames` wrote the six requested frames (as SVG here, PNG by default) into a folder, which a video tool can turn into an animation. The last line is deliberate: the live viewers open a window, so the program opens them only when `PLUSSPL_WINDOW` is set, and says so when it does not.
+
+## Decisions
+
+- **Projection:** perspective along w gives depth; orthographic is easier to read for a first look; a slice shows what is at one value of w.
+- **Which plane to rotate:** a plane containing w, since rotations among x, y and z only turn a 3D picture.
+- **Frames or a viewer:** export frames for a document or a video; use the viewers to explore.
+
+## Pitfalls
+
+The program below makes 2 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_four_dimensions_and_animation.cpp@@
+
+- **A path with coordinates of different lengths:** All four coordinates must have the same length.
+- **A cloud with no points:** A projection with nothing left to draw is an error, not an empty picture.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`flash::path4`](../api/flash/path4.md), [`flash::cloud4`](../api/flash/cloud4.md), [`flash::hyper_animation_sequence`](../api/flash/hyper_animation_sequence.md), [`flash::export4_frames`](../api/flash/export4_frames.md), [`flash::animate3`](../api/flash/animate3.md), [`flash::animate4`](../api/flash/animate4.md). Next: [Colour and style](colour_and_style.md).

@@ -1,0 +1,135 @@
+<!-- generated from is_disc.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fdbba6752553 -->
+
+# `control::Pid::is_disc`
+
+[Back to `control::Pid`](../PidController.md)
+
+Whether the controller is discrete-time.
+
+## Signature
+
+```cpp
+bool control::Pid::is_disc() const noexcept;
+```
+
+## What It Does
+
+True when `sample_time()` is positive, so the integral and derivative are formed with `int_rule()` and `diff_rule()`. It is the negation of [`is_cont`](is_cont.md).
+
+## Returns
+
+`true` for a discrete controller.
+
+## Practical Examples
+
+### Example 1
+
+A controller built without a period is not discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("discrete:", controller().is_disc());
+}
+```
+
+Output
+
+```text
+discrete: false
+```
+
+### Example 2
+
+A positive period makes it discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("discrete:", controller(0.02).is_disc());
+}
+```
+
+Output
+
+```text
+discrete: true
+```
+
+### Example 3
+
+The two tests are complementary.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const double ts : {0.0, 0.15}) {
+    const ctl::Pid c = controller(ts);
+    out.writeln("cont", c.is_cont(), " disc", c.is_disc());
+  }
+}
+```
+
+Output
+
+```text
+cont true  disc false
+cont false  disc true
+```
+
+## See Also
+
+- [`is_cont`](is_cont.md): its negation
+- [`sample_time`](sample_time.md): the period
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="is_cont.html">
+    <span class="label">Previous</span>
+    <span class="title">is_cont</span>
+  </a>
+  <a class="next-link" href="kd.html">
+    <span class="label">Next</span>
+    <span class="title">kd</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

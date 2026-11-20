@@ -2526,7 +2526,7 @@ inline Series project_direction_from_active_bounds_(const ConstrainedProblem& pr
       const Series at_lower = value.le(lower.add(tolerance));
       const Series push_out = dir.lt(0.0);
       const Series block_mask = at_lower.logical_and(push_out);
-      dir = dir.where(block_mask, zero);
+      dir = pluss::series::where(block_mask, zero, dir);
     }
     if (problem.bounds.upper.has_value()) {
       const Series upper =
@@ -2534,7 +2534,7 @@ inline Series project_direction_from_active_bounds_(const ConstrainedProblem& pr
       const Series at_upper = value.ge(upper.sub(tolerance));
       const Series push_out = dir.gt(0.0);
       const Series block_mask = at_upper.logical_and(push_out);
-      dir = dir.where(block_mask, zero);
+      dir = pluss::series::where(block_mask, zero, dir);
     }
 
     out_blocks.push_back(
@@ -2831,7 +2831,7 @@ inline Series smooth_working_set_multipliers_(const std::vector<FlatConstraintRo
   const Series has_history = previous.abs().gt(0.0);
   const Series apply = ineq_mask.logical_and(has_history);
   const Series blended = lambda.mul(1.0 - mix).add(previous.mul(mix));
-  return apply.where(blended, lambda).to(ScalarType::Float64).to(multipliers.platform());
+  return pluss::series::where(apply, blended, lambda).to(ScalarType::Float64).to(multipliers.platform());
 }
 
 inline std::vector<FlatConstraintRow> working_set_constraints_(const FlatConstraintSystem& system,
@@ -3032,9 +3032,9 @@ inline double max_step_to_bounds_(const ConstrainedProblem& problem,
     const Series lower = flatten_values(*problem.bounds.lower).to(ScalarType::Float64).to(platform).reshape({d.numel()});
     const Series mask = d.lt(-direction_noise);
     if (mask.any().item<bool>()) {
-      const Series safe_denom = mask.where(d.mul(-1.0), ones);
+      const Series safe_denom = pluss::series::where(mask, d.mul(-1.0), ones);
       Series candidate = x.sub(lower).div(safe_denom).mul(fraction_to_boundary);
-      candidate = mask.where(candidate, inf_fill);
+      candidate = pluss::series::where(mask, candidate, inf_fill);
       max_step = std::min(max_step, candidate.amin(0, false).item<double>());
     }
   }
@@ -3042,9 +3042,9 @@ inline double max_step_to_bounds_(const ConstrainedProblem& problem,
     const Series upper = flatten_values(*problem.bounds.upper).to(ScalarType::Float64).to(platform).reshape({d.numel()});
     const Series mask = d.gt(direction_noise);
     if (mask.any().item<bool>()) {
-      const Series safe_denom = mask.where(d, ones);
+      const Series safe_denom = pluss::series::where(mask, d, ones);
       Series candidate = upper.sub(x).div(safe_denom).mul(fraction_to_boundary);
-      candidate = mask.where(candidate, inf_fill);
+      candidate = pluss::series::where(mask, candidate, inf_fill);
       max_step = std::min(max_step, candidate.amin(0, false).item<double>());
     }
   }
@@ -3077,9 +3077,9 @@ inline double max_step_to_linearized_inequalities_(const FlatConstraintSystem& s
   }
   const Series ones = pluss::series::ones({residual.numel()}, ScalarType::Float64).to(platform);
   const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
-  const Series safe_denom = mask.where(directional, ones);
+  const Series safe_denom = pluss::series::where(mask, directional, ones);
   Series candidate = residual.mul(-1.0).div(safe_denom).mul(fraction_to_boundary);
-  candidate = mask.where(candidate, inf_fill);
+  candidate = pluss::series::where(mask, candidate, inf_fill);
   return candidate.amin(0, false).item<double>();
 }
 
@@ -3141,7 +3141,7 @@ inline void cleanup_working_set_multipliers_(const std::vector<FlatConstraintRow
                                  .to(ScalarType::Bool)
                                  .to(lambda.platform());
   const Series drop_mask = active_ineq.logical_and(lambda.lt(drop_multiplier_tolerance));
-  *multipliers = drop_mask.where(pluss::series::zeros_like(lambda, ScalarType::Float64).to(lambda.platform()), lambda)
+  *multipliers = pluss::series::where(drop_mask, pluss::series::zeros_like(lambda, ScalarType::Float64).to(lambda.platform()), lambda)
                      .to(ScalarType::Float64)
                      .to(multipliers->platform());
 }
@@ -4258,7 +4258,7 @@ inline double kkt_residual_(const Series& gradient,
                                    .to(ScalarType::Bool)
                                    .to(lambda_used.platform());
       const Series zeros = pluss::series::zeros_like(lambda_used, ScalarType::Float64).to(lambda_used.platform());
-      const Series ineq_lambdas = ineq_mask.where(lambda_used, zeros);
+      const Series ineq_lambdas = pluss::series::where(ineq_mask, lambda_used, zeros);
       multiplier_violation = std::max(0.0, -ineq_lambdas.amin(0, false).item<double>());
     }
   }
@@ -8424,13 +8424,13 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
     const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
     const Series slack_mask = slack_step.lt(0.0);
     if (slack_mask.any().item<bool>()) {
-      Series candidate = slack.div(slack_mask.where(slack_step.mul(-1.0), ones)).mul(options.fraction_to_boundary);
-      max_step = std::min(max_step, slack_mask.where(candidate, inf_fill).amin(0, false).item<double>());
+      Series candidate = slack.div(pluss::series::where(slack_mask, slack_step.mul(-1.0), ones)).mul(options.fraction_to_boundary);
+      max_step = std::min(max_step, pluss::series::where(slack_mask, candidate, inf_fill).amin(0, false).item<double>());
     }
     const Series dual_mask = dual_step.lt(0.0);
     if (dual_mask.any().item<bool>()) {
-      Series candidate = dual.div(dual_mask.where(dual_step.mul(-1.0), ones)).mul(options.fraction_to_boundary);
-      dual_step_limit = std::min(1.0, dual_mask.where(candidate, inf_fill).amin(0, false).item<double>());
+      Series candidate = dual.div(pluss::series::where(dual_mask, dual_step.mul(-1.0), ones)).mul(options.fraction_to_boundary);
+      dual_step_limit = std::min(1.0, pluss::series::where(dual_mask, candidate, inf_fill).amin(0, false).item<double>());
     }
   }
   if (!(max_step > 0.0) || !std::isfinite(max_step)) {
@@ -9206,11 +9206,11 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Pena
     stationarity = detail::projected_gradient_norm_(x, al.gradient, lower, upper);
     if (multipliers.lower_bounds.defined() && multipliers.lower_bounds.numel() == n) {
       multipliers.lower_bounds =
-          x.le(lower.add(1e-9)).where(al.gradient.clamp_min(0.0), pluss::series::zeros_like(al.gradient));
+          pluss::series::where(x.le(lower.add(1e-9)), al.gradient.clamp_min(0.0), pluss::series::zeros_like(al.gradient));
     }
     if (multipliers.upper_bounds.defined() && multipliers.upper_bounds.numel() == n) {
       multipliers.upper_bounds =
-          x.ge(upper.sub(1e-9)).where(al.gradient.mul(-1.0).clamp_min(0.0), pluss::series::zeros_like(al.gradient));
+          pluss::series::where(x.ge(upper.sub(1e-9)), al.gradient.mul(-1.0).clamp_min(0.0), pluss::series::zeros_like(al.gradient));
     }
   }
   OptimaState out{

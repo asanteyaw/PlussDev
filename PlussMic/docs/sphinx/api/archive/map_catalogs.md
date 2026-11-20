@@ -42,7 +42,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 
 auto out = archive.map_catalogs([](const pluss::kindle::Catalog& c) { return c.head(1); });
 std::cout << "out depth: " << out.depth() << "\n";
-std::cout << "out.catalog(0).nrecords(): " << out.catalog(0).nrecords() << "\n";
+std::cout << "out.catalog(0).maxrows(): " << out.catalog(0).maxrows() << "\n";
 std::cout << "depth labels preserved: " << out.label().has();
 ```
 
@@ -50,7 +50,7 @@ std::cout << "depth labels preserved: " << out.label().has();
 
 ```text
 out depth: 2
-out.catalog(0).nrecords(): 1
+out.catalog(0).maxrows(): 1
 depth labels preserved: 1
 ```
 
@@ -65,8 +65,8 @@ auto archive = pluss::kindle::Archive({c0});
 try {
   std::function<pluss::kindle::Catalog(const pluss::kindle::Catalog&)> empty_fn;
   archive.map_catalogs(empty_fn);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -89,7 +89,7 @@ Archive::map_catalogs: mapper function is empty
 
 ## See Also
 
-- [`Archive::aggregate_over_catalogs`](aggregate_over_catalogs.md): reduce every catalog
+- [`Archive::aggregate_depth`](aggregate_depth.md): reduce every catalog
   down to a single `Catalog`, instead of transforming each one independently.
 - [`Archive::keys`](keys.md): scope a transform to specific streams within every catalog,
   instead of a full per-catalog callback.

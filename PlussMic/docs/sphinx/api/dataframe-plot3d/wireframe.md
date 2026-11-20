@@ -79,9 +79,9 @@ rendered as edges instead of a filled mesh.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"depth_m", Slate(pluss::make_series({10.0, 10.0, 20.0, 20.0, 30.0, 30.0}))},
-    {"hour",    Slate(pluss::make_series({0.0, 12.0, 0.0, 12.0, 0.0, 12.0}))},
-    {"temp_c",  Slate(pluss::make_series({18.0, 20.0, 15.0, 16.5, 12.0, 12.5}))},
+    {"depth_m", Shelf(pluss::make_series({10.0, 10.0, 20.0, 20.0, 30.0, 30.0}))},
+    {"hour",    Shelf(pluss::make_series({0.0, 12.0, 0.0, 12.0, 0.0, 12.0}))},
+    {"temp_c",  Shelf(pluss::make_series({18.0, 20.0, 15.0, 16.5, 12.0, 12.5}))},
 });
 
 auto chart = readings.plot3d().wireframe("hour", "depth_m", "temp_c");
@@ -116,9 +116,9 @@ like [`surface()`](surface.md)'s Example 3.
 
 ```cpp
 auto tagged = DataFrame({
-    {"site",   Slate(pluss::make_note({"north", "north", "south", "south"}))},
-    {"depth_m", Slate(pluss::make_series({10.0, 20.0, 10.0, 20.0}))},
-    {"temp_c",  Slate(pluss::make_series({18.0, 15.0, 19.0, 16.0}))},
+    {"site",   Shelf(pluss::make_note({"north", "north", "south", "south"}))},
+    {"depth_m", Shelf(pluss::make_series({10.0, 20.0, 10.0, 20.0}))},
+    {"temp_c",  Shelf(pluss::make_series({18.0, 15.0, 19.0, 16.0}))},
 });
 
 auto chart = tagged.plot3d().wireframe("site", "depth_m", "temp_c");
@@ -131,9 +131,9 @@ Example 5. `Var` is now supported, producing a sample-variance mesh.
 
 ```cpp
 auto repeated = DataFrame({
-    {"depth_m", Slate(pluss::make_series({10.0, 10.0, 10.0, 10.0}))},
-    {"hour",    Slate(pluss::make_series({0.0, 0.0, 12.0, 12.0}))},
-    {"temp_c",  Slate(pluss::make_series({18.0, 20.0, 15.0, 19.0}))},
+    {"depth_m", Shelf(pluss::make_series({10.0, 10.0, 10.0, 10.0, 20.0, 20.0, 20.0, 20.0}))},
+    {"hour",    Shelf(pluss::make_series({0.0, 0.0, 12.0, 12.0, 0.0, 0.0, 12.0, 12.0}))},
+    {"temp_c",  Shelf(pluss::make_series({18.0, 20.0, 15.0, 19.0, 14.0, 15.0, 11.0, 13.0}))},
 });
 
 auto chart = repeated.plot3d().wireframe("hour", "depth_m", "temp_c", DataFrame::GroupOp::Var);

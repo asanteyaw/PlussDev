@@ -64,10 +64,10 @@ using namespace pluss::table;
 
 auto tx = DataFrame(
     {
-        {"account", Slate(pluss::make_note({"B", "A", "B", "A"}))},
-        {"amount", Slate(pluss::make_series({20.0, 10.0, 30.0, 40.0}))},
+        {"account", Shelf(pluss::make_note({"B", "A", "B", "A"}))},
+        {"amount", Shelf(pluss::make_series({20.0, 10.0, 30.0, 40.0}))},
     },
-    Slate(pluss::make_note({"r0", "r1", "r2", "r3"})));
+    Shelf(pluss::make_note({"r0", "r1", "r2", "r3"})));
 
 auto grouped = tx.group({.sort = true})
                  .by({"account"})
@@ -98,10 +98,10 @@ Example 2. Use `yield()` before a within-group `shift()`.
 using namespace pluss::table;
 
 auto tx = DataFrame({
-    {"account", Slate(pluss::make_note({"A", "A", "B", "B"}))},
-    {"date", Slate(pluss::make_timeline({"2024-01-01", "2024-01-05",
+    {"account", Shelf(pluss::make_note({"A", "A", "B", "B"}))},
+    {"date", Shelf(pluss::make_timeline({"2024-01-01", "2024-01-05",
                                           "2024-02-01", "2024-02-03"}))},
-    {"amount", Slate(pluss::make_series({10.0, 15.0, 20.0, 25.0}))},
+    {"amount", Shelf(pluss::make_series({10.0, 15.0, 20.0, 25.0}))},
 });
 
 auto grouped = tx.arrange({"account", "date"})

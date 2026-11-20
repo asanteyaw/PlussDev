@@ -6,7 +6,7 @@
 
 An estimate without an error bar is half a result. This page fits a line to noisy data with the linear-algebra accessor and reports how uncertain the coefficients are, then quantifies the uncertainty of an average by resampling, and ends with the numeric pitfalls that make estimates quietly wrong.
 
-## The mental model
+## How it works
 
 Everything is array arithmetic. A regression is a few matrix products; a bootstrap is a table in which each row is one resample, reduced along its axis. Random numbers come from factory functions that take a **seed**, so a result can be reproduced exactly. Matrix routines live behind an accessor: `x.linearalg().inverse()`.
 
@@ -26,8 +26,8 @@ int main() {
   const std::int64_t n = 200;
   // Synthetic truth: y = 3 + 2 x plus noise of standard deviation 1.5. A fixed seed makes the run repeatable.
   auto x = pluss::series::linspace(0.0, 10.0, n, ScalarType::Float64);
-  auto noise = pluss::series::randn({n}, ScalarType::Float64, 7).mul(1.5);
-  auto y = x.mul(2.0).add(3.0).add(noise);
+  auto noise = pluss::series::randn({n}, ScalarType::Float64, 7) * 1.5;
+  auto y = x * 2.0 + 3.0 + noise;
 
   // 1. Design matrix [1, x]: a column of ones for the intercept next to the column of x. Shape [n, 2].
   auto design = pluss::series::ones({n, 1}, ScalarType::Float64).unite({x.unsqueeze(1)}, 1);
@@ -39,15 +39,15 @@ int main() {
   show("beta (intercept, slope)", beta.squeeze(1));
 
   // 3. Residuals, noise level and standard errors of the coefficients.
-  auto residual = y.unsqueeze(1).sub(design.matmul(beta));
+  auto residual = y.unsqueeze(1) - design.matmul(beta);
   const double dof = static_cast<double>(n - 2);
   const double sigma2 = residual.square().sum().item<double>() / dof;
   std::cout << "residual standard deviation " << std::sqrt(sigma2) << " (true 1.5)\n";
-  show("standard errors", xtx_inv.diagonal().mul(sigma2).sqrt());
+  show("standard errors", (xtx_inv.diagonal() * sigma2).sqrt());
 
   // 4. R squared: the share of the variance of y that the line explains.
   const double ss_res = residual.square().sum().item<double>();
-  const double ss_tot = y.sub(y.mean()).square().sum().item<double>();
+  const double ss_tot = (y - y.mean()).square().sum().item<double>();
   std::cout << "R squared " << 1.0 - ss_res / ss_tot << "\n";
 
   // 5. Predict at new points.
@@ -86,7 +86,7 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 int main() {
   using pluss::ScalarType;
   // Fifty delivery times in minutes, skewed to the right as delivery times are.
-  auto times = pluss::series::randn({50}, ScalarType::Float64, 11).mul(0.5).exp().mul(20.0);
+  auto times = (pluss::series::randn({50}, ScalarType::Float64, 11) * 0.5).exp() * 20.0;
   std::cout << "sample mean " << times.mean().item<double>() << ", sample median " << times.median().item<double>() << "\n";
 
   // 1. 2000 resamples at once: each row of `pick` is one resample of 50 positions drawn with replacement.

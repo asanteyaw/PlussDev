@@ -10,13 +10,13 @@
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame train_frame({
-      {"income", Slate(pluss::make_series({1.0, 1.5, 2.0}, {3}, f64))},
-      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
+      {"income", Shelf(pluss::make_series({1.0, 1.5, 2.0}, {3}, f64))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north"}))},
   });
 
   cls::DataFrameBatchOptions options{};
@@ -28,8 +28,8 @@ int main() {
 
   // "west" never appeared during training.
   const DataFrame surprise_frame({
-      {"income", Slate(pluss::make_series({2.2}, {1}, f64))},
-      {"region", Slate(pluss::make_note({"west"}))},
+      {"income", Shelf(pluss::make_series({2.2}, {1}, f64))},
+      {"region", Shelf(pluss::make_note({"west"}))},
   });
 
   for (auto [name, policy] : {std::pair{"Error", cls::UnknownCategoryPolicy::Error},

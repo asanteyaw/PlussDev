@@ -1,0 +1,91 @@
+# The Taylor-Green vortex
+
+[Back to Physics 2: Fluids](../phys_02_fluids.md)
+
+A flow of water or air is described by its velocity at every point and by a pressure that keeps the fluid from compressing. This page runs an incompressible flow in a periodic box, in which an exact solution is known, and measures how the error falls as the grid is refined.
+
+## How it works
+
+A periodic grid is made with `spatial::make_periodic_grid(shape, spacing)`, and a flow state with `fluids::make_state(velocity, pressure, grid)`. `fluids::advance(state, grid, density, viscosity, time, dt, options)` takes one time step: it moves the velocity under advection and viscosity, then `fluids::project` removes the divergence by solving for the pressure that makes the velocity field divergence free. `options.rule` selects the time-stepping rule; `Rk3` is a third-order Runge-Kutta rule. The starting field is projected once before the run so that the first step does not start from a small divergence left by the grid.
+
+## Error against the exact solution
+
+The Taylor-Green vortex, `u = -cos x sin y e^{-2 nu t}`, `v = sin x cos y e^{-2 nu t}`, is an exact solution of the two-dimensional equations. The program starts it with viscosity `0.1`, runs to time `0.4` on grids of 8, 16 and 32 cells per side, and compares the velocity with the exact one and the kinetic energy with `exp(-4 nu t)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <numbers>
+
+using namespace pluss::tils;
+namespace natsci = pluss::ma::natsci;
+namespace common = natsci::common;
+namespace spatial = common::spatial;
+namespace fluids = natsci::physics::fluids;
+
+static constexpr double two_pi = 2.0 * std::numbers::pi;
+
+// cell-centred coordinate of every cell along one axis of a periodic 2-D grid
+static pluss::Series coordinate(const spatial::PeriodicGrid &grid, std::int64_t axis) {
+  const std::int64_t n = grid.shape()[static_cast<std::size_t>(axis)];
+  std::vector<std::int64_t> view(2, 1);
+  view[static_cast<std::size_t>(axis)] = n;
+  return pluss::series::arange(0, n, 1, pluss::ScalarType::Float64).add(0.5).mul(grid.spacing(axis).si_value()).reshape(view).expand(grid.shape(), true);
+}
+
+// the Taylor-Green vortex, an exact solution of the 2-D equations for a fluid of viscosity nu
+static pluss::Series velocity_at(const spatial::PeriodicGrid &grid, double nu, double t) {
+  const auto x = coordinate(grid, 0), y = coordinate(grid, 1);
+  const double decay = std::exp(-2.0 * nu * t);
+  const auto u = x.cos().neg().mul(y.sin()).mul(decay);
+  const auto v = x.sin().mul(y.cos()).mul(decay);
+  return u.unsqueeze(0).unite(std::vector<pluss::Series>{v.unsqueeze(0)}, 0);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const double nu = 0.1, end_time = 0.4;
+  const auto density = common::ScalarQuantity<fluids::Density>::from_si(1.0);
+  const auto viscosity = common::ScalarQuantity<fluids::KinematicViscosity>::from_si(nu);
+
+  fluids::StepOptions options;
+  options.rule = fluids::StepRule::Rk3;     // third-order Runge-Kutta in time
+  options.guard.enforce = false;            // this run picks its own step, far below the stability limit
+
+  double previous_error = 0.0;
+  for (std::int64_t n : {8, 16, 32}) {
+    const auto h = common::ScalarQuantity<common::Length>::from_si(two_pi / static_cast<double>(n));
+    const auto grid = spatial::make_periodic_grid({n, n}, {h, h});
+    const auto start = velocity_at(grid, nu, 0.0);
+    const auto pressure = start.select(0, 0).mul(0.0);
+    auto state = fluids::make_state(common::SeriesQuantity<common::Speed>::from_si(start),
+                                    common::SeriesQuantity<common::Pressure>::from_si(pressure), grid);
+    // the grid's discrete divergence of the starting field is small but not zero: project it once
+    state = fluids::project(state, grid, density, common::ScalarQuantity<common::Time>::from_si(1.0), options.projection).state;
+
+    const int steps = 40;
+    const double dt = end_time / steps;
+    for (int k = 0; k < steps; ++k)
+      state = fluids::advance(state, grid, density, viscosity, common::ScalarQuantity<common::Time>::from_si(k * dt),
+                              common::ScalarQuantity<common::Time>::from_si(dt), options).state;
+
+    const double error = state.velocity().si_value().sub(velocity_at(grid, nu, end_time)).abs().amax().item<double>();
+    const double energy_ratio = state.velocity().si_value().square().sum().item<double>() / start.square().sum().item<double>();
+    out.writeln(n, " x ", n, " cells: largest velocity error = ", error, ", kinetic energy ratio = ", energy_ratio);
+    if (previous_error > 0.0) out.writeln("    the error shrank by a factor of ", previous_error / error, " on the finer grid");
+    previous_error = error;
+  }
+  out.writeln("exact energy ratio exp(-4 nu t) = ", std::exp(-4.0 * nu * end_time));
+}
+```
+
+The largest velocity error falls from `0.003181` to `0.000909` to `0.000235` as the grid is refined, a factor of `3.50` and then `3.87` for each doubling: close to four, the factor expected from second-order accuracy in space. The kinetic energy ratio approaches the exact `0.852144` as the grid is refined (`0.859038`, `0.853889`, `0.852581`).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

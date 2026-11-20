@@ -33,10 +33,10 @@ range.
 Example 1. Set a label, then clear it back to unset.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}));
-auto labeled = stream.lbl().set(Slate(pluss::make_note({"a", "b", "c"})));
+auto labeled = stream.lbl().set(Shelf(pluss::make_note({"a", "b", "c"})));
 std::cout << "labeled has(): " << std::boolalpha << labeled.lbl().has() << "\n";
 
 auto back = labeled.lbl().reset();

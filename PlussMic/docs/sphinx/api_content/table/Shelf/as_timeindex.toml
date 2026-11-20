@@ -1,0 +1,44 @@
+summary = """
+Expose the underlying `pluss::TimeIndex` payload directly.
+
+`Shelf::as_timeindex()` is the indexed-temporal escape hatch for resampling, calendar bucketing, and time-index-specific kernels that live below the Shelf surface.
+"""
+
+returns = """
+`const pluss::TimeIndex&`
+    Reference to the underlying indexed temporal payload.
+"""
+
+see_also = [
+  "<a href=\"#as_timeline\"><code>Shelf::as_timeline</code></a>: expose a timeline payload instead of a time index.",
+  "<a href=\"dataframe_api_reference.html#ts\"><code>DataFrame::ts</code></a>: open the time-series surface for full-frame resampling."
+]
+
+notes = [
+  """
+This method is useful when the operation you want exists on `TimeIndex` but not on `Shelf`.
+""",
+  """
+Wrap the result back into `Shelf(...)` if a downstream table API expects a shelf again.
+"""
+]
+
+[[examples]]
+title = "Use the TimeIndex payload for daily resample counts and wrap the result back into a Shelf."
+code = """
+using namespace pluss::table;
+
+auto ticks = Shelf(pluss::timeindex::make({
+    "2024-01-01T00:10:00Z",
+    "2024-01-01T00:20:00Z",
+    "2024-01-01T01:10:00Z",
+    "2024-01-02T00:15:00Z",
+}, true));
+
+auto out = Shelf(ticks.as_timeindex().resample_count("D", 1));
+"""
+output = """
+0  3
+1  1
+ptype: Series
+"""

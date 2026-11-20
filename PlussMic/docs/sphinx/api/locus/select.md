@@ -65,3 +65,14 @@ unknown select: Locus::select: unknown catalog 'nope'
 - [`drop`](drop.md): the complementary operation -- remove named catalogs
   instead of keeping them.
 - [`head`](head.md): keep a slice by position instead of by name.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="schema.html">
+    <span class="label">Previous</span>
+    <span class="title">schema</span>
+  </a>
+  <a class="next-link" href="set_table_meta.html">
+    <span class="label">Next</span>
+    <span class="title">set_table_meta</span>
+  </a>
+</div>

@@ -35,7 +35,7 @@ class AtlasLabelAccessor;
 class Atlas {
 public:
   Atlas();
-  explicit Atlas(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels = std::nullopt);
+  explicit Atlas(std::vector<DataFrame> frames, std::optional<Shelf> axis0_labels = std::nullopt);
   Atlas(const Atlas& other);
   Atlas(Atlas&& other) noexcept;
   Atlas& operator=(const Atlas& other);
@@ -51,7 +51,7 @@ public:
   std::int64_t nfeatures() const;
 
   const std::vector<std::string>& column_names() const;
-  const std::optional<Slate>& axis0_labels() const;
+  const std::optional<Shelf>& axis0_labels() const;
   const std::vector<DataFrame>& frames() const;
 
   DataFrame frame(std::int64_t index) const;
@@ -78,14 +78,41 @@ public:
   Atlas tail(std::int64_t n = 5) const;
   Atlas slice_frames(std::int64_t start, std::int64_t stop) const;
   Atlas sort_depth(bool ascending = true, bool nulls_last = true) const;
-  Atlas relabel_depth(const Slate& labels) const;
-  Atlas align_depth(const Slate& labels) const;
+  Atlas relabel_depth(const Shelf& labels) const;
+  Atlas align_depth(const Shelf& labels) const;
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
+  // NaN / infinity family: applied to every frame by the DataFrame method of the same name (NaN and inf are values, never missing).
+  // Missing-cell family (NULL only; NaN and infinity are values): applied to every frame by the DataFrame method of the same name.
+  Atlas isnull() const;
+  Atlas notnull() const;
+  Atlas invalid() const;
+  Atlas dropnull() const;
+  Atlas fillnull(double value) const;
+  Atlas fillnull(std::string_view value) const;
+  Atlas fillnull(const char* value) const { return fillnull(std::string_view{value != nullptr ? value : ""}); }
+  Atlas fillnull(const pluss::Timeline& value) const;
+  Atlas fillnull(const pluss::Duration& value) const;
+  Atlas isnan() const;
+  Atlas notnan() const;
+  Atlas isinf() const;
+  Atlas isposinf() const;
+  Atlas isneginf() const;
+  Atlas notinf() const;
+  Atlas dropnan() const;
+  Atlas dropinvalid() const;
+  Atlas dropinf() const;
+  Atlas dropposinf() const;
+  Atlas dropneginf() const;
+  Atlas fillnan(double value) const;
+  Atlas fillinvalid(double value) const;
+  Atlas fillinf(double value) const;
+  Atlas fillposinf(double value) const;
+  Atlas fillneginf(double value) const;
   Atlas map(
-      const std::function<SlateValue(const SlateValue&)>& fn) const;
+      const std::function<ShelfValue(const ShelfValue&)>& fn) const;
   Atlas flow(const std::function<Atlas(const Atlas&)>& fn) const;
-  DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
+  DataFrame aggregate_depth(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
   pluss::kindle::Archive kindelize() const;
   pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
   pluss::scribble::Axel scribbelize() const;
@@ -111,27 +138,27 @@ class AtlasLabelAccessor {
 public:
   explicit AtlasLabelAccessor(Atlas atlas);
 
-  Slate values() const;
+  Shelf values() const;
   bool has() const;
-  Atlas set(const Slate& labels) const;
+  Atlas set(const Shelf& labels) const;
   Atlas range() const;
   Atlas reset() const;
   Atlas sort(bool ascending = true, bool nulls_last = true) const;
-  Atlas align(const Slate& labels) const;
-  Slate unite(const Slate& other) const;
-  Slate intersect(const Slate& other) const;
-  Slate diff(const Slate& other) const;
-  Slate symdiff(const Slate& other) const;
-  Slate find(const Slate& targets) const;
-  Slate pos(double value) const;
-  Slate pos(std::string_view value) const;
-  Slate pos(const char* value) const {
+  Atlas align(const Shelf& labels) const;
+  Shelf unite(const Shelf& other) const;
+  Shelf intersect(const Shelf& other) const;
+  Shelf diff(const Shelf& other) const;
+  Shelf symdiff(const Shelf& other) const;
+  Shelf find(const Shelf& targets) const;
+  Shelf pos(double value) const;
+  Shelf pos(std::string_view value) const;
+  Shelf pos(const char* value) const {
     return pos(std::string_view{value != nullptr ? value : ""});
   }
-  Slate slice(std::string_view start, std::string_view stop) const;
+  Shelf slice(std::string_view start, std::string_view stop) const;
 
 private:
-  Slate label_index_() const;
+  Shelf label_index_() const;
 
   Atlas atlas_{};
 };
@@ -161,8 +188,8 @@ public:
   Atlas fmt(std::string_view pattern) const;
   Atlas iso() const;
   Atlas epoch(TimeUnit unit = TimeUnit::Nanos) const;
-  Atlas span(const Slate& other, const TimelineSpanOptions& options = {}) const;
-  Atlas span(const Slate& other, TimeUnit unit) const;
+  Atlas span(const Shelf& other, const TimelineSpanOptions& options = {}) const;
+  Atlas span(const Shelf& other, TimeUnit unit) const;
   Atlas span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const;
   Atlas span(const pluss::Timeline& other, TimeUnit unit) const;
   Atlas floor(std::string_view unit) const;

@@ -1,0 +1,68 @@
+<!-- generated from progress_curves.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Progress curves
+
+[Back to Biology 5: Enzymes](../bio_05_enzymes.md)
+
+The rate laws describe an enzyme at one instant. A progress curve follows the substrate as it is used up. When the enzyme is much scarcer than the substrate, the curve has a closed form, and this page compares it with the full mass-action model of the same reaction.
+
+## How it works
+
+The full model is `E + S <-> C -> E + P`: enzyme and substrate form a complex that either falls apart or makes product. `mass_action_rates(k1, k_minus1, kcat)` returns the rates of the state `[S, E, C, P]`, and `dynamics::simulate` integrates them. When there is little enzyme, the complex settles quickly and the substrate obeys `dS/dt = -vmax S / (km + S)` with `vmax = kcat E` and `km = (k_minus1 + kcat) / k1`; `integrated_michaelis_menten(t, s0, vmax, km)` is the exact solution of that equation, written with the Lambert W function, so a whole curve is one call. It describes the total substrate, free plus the part held in the complex.
+
+## The closed form against the full model
+
+The program takes `10` for `k1`, `5` for `k_minus1` and `kcat`, `0.05` of enzyme and `2` of substrate, evaluates the closed form at five times and then integrates the full model to each of the same times, adding the free and the bound substrate.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace enzymes = biology::systems::enzymes;
+namespace dynamics = biology::dynamics;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // E + S <-> C -> E + P with k1 = 10, k-1 = 5, kcat = 5, a little enzyme (0.05) and substrate 2.0
+  const double k1 = 10.0, k_minus = 5.0, kcat = 5.0, e0 = 0.05, s0 = 2.0;
+  const double km = (k_minus + kcat) / k1, vmax = kcat * e0;
+  const auto times = vec({0.5, 1.0, 2.0, 4.0, 6.0});
+  out.writeln("time                                 ", flat(times));
+  out.writeln("closed-form substrate (Lambert W)    ", flat(enzymes::integrated_michaelis_menten(times, s0, vmax, km)));
+
+  // the full mass-action model, integrated to each of those times
+  const auto y0 = vec({s0, e0, 0.0, 0.0});
+  const auto rate = enzymes::mass_action_rates(k1, k_minus, kcat);
+  std::vector<double> full;
+  for (double t : flat(times)) {
+    const auto y = flat(dynamics::simulate(rate, y0, 0.0, t, 4000));
+    full.push_back(y[0] + y[2]);   // free substrate plus the substrate held in the complex
+  }
+  out.writeln("mass-action substrate (free + bound) ", full);
+}
+```
+
+Output
+
+```text
+time                                 [0.5000, 1.0000, 2.0000, 4.0000, 6.0000]
+closed-form substrate (Lambert W)    [1.9173, 1.8357, 1.6765, 1.3748, 1.0989]
+mass-action substrate (free + bound) [1.9231, 1.8419, 1.6833, 1.3830, 1.1083]
+```
+
+The two rows agree within about `0.01` at every time: `1.9173` against `1.9231` at time `0.5`, and `1.0989` against `1.1083` at time `6`. The remaining difference is the time that the real complex needs to form, which the closed form ignores. The closed form was a single call for all five times; the integration was a separate run for each.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rate_laws.html">
+    <span class="label">Previous</span>
+    <span class="title">Rate laws</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -2,7 +2,7 @@
 
 # `control::LqeResult`
 
-The complete steady-state linear-estimator design.
+The covariance, gain and estimator dynamics of `lqe`.
 
 ## Signature
 
@@ -12,172 +12,141 @@ control::LqeResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Returned by `lqe`. It holds the steady-state estimation covariance, the observer gain and the matrix `A - L C` that governs the estimation error.
 
 ## Fields
 
-### `covariance`
-
-The stabilizing estimator error covariance.
-
-### `gain`
-
-The steady-state estimator gain mapping innovations into state corrections.
-
-### `closed_loop`
-
-The estimator error dynamics after applying the gain.
+| Field | Meaning | Shape |
+|---|---|---|
+| `covariance` | The steady-state error covariance `P`. | `[..., n, n]` |
+| `gain` | The observer gain `L`. | `[..., n, p]` |
+| `closed_loop` | `A - L C` (discrete: the equivalent error dynamics). | `[..., n, n]` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `lqe`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-The covariance quantifies steady-state uncertainty, the gain determines innovation correction, and `closed_loop` records estimator error dynamics. Treat the three as one design artifact: gain magnitude alone does not establish a stable or well-conditioned estimator.
+The steady gain is the limit of the time-varying Kalman gain: after 40 samples the filter gain equals the `lqe` gain to four places (the second example). `closed_loop` has all its eigenvalues stable, which is the reason to use the steady gain in an observer.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect covariance, gain, and estimator pole from a successful design.
+The three fields for the scalar walk.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({-1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}, {1, 1}));
-  const control::LqeResult result = control::lqe(
-      plant, pluss::make_series({0.25}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}));
-
-  out.writeln("error covariance =", result.covariance.flatten().items<double>());
-  out.writeln("estimator gain =", result.gain.flatten().items<double>());
-  out.writeln("error pole =", result.closed_loop.flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::LqeResult l = ctl::lqe(walk(), mat({0.1}, 1, 1), mat({1.0}, 1, 1));
+  out.writeln("covariance", l.covariance.flatten().items<double>(), " gain", l.gain.flatten().items<double>(), " closed loop", l.closed_loop.flatten().items<double>());
 }
 ```
 
 Output
 
 ```text
-error covariance = [0.118034]
-estimator gain = [0.118034]
-error pole = [-1.118034]
+covariance [0.3702]  gain [0.2702]  closed loop [0.7298]
 ```
 ### Example 2
 
-Reject an invalid measurement-noise covariance.
+The `lqe` gain against the gain of a long Kalman run.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(control::kalman(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.1}, {1, 1}),
-        pluss::make_series({0.2}, {1, 1}), pluss::make_series({0.0}),
-        pluss::make_series({1.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous model rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::lqe(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("singular noise covariance rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // The steady Kalman gain from lqe is where the time-varying gain of kalman ends up.
+  const ctl::KalmanResult long_run = ctl::kalman(walk(), mat(readings(40), 40, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  const ctl::LqeResult l = ctl::lqe(walk(), mat({0.1}, 1, 1), mat({1.0}, 1, 1));
+  out.writeln("gain after 40 samples =", long_run.gain.flatten().items<double>().back(), " steady-state gain from lqe =", l.gain.flatten().items<double>()[0]);
 }
 ```
 
 Output
 
 ```text
-continuous model rejected = eng::control::kalman: the state-space model must be discrete
-singular noise covariance rejected = eng::control::lqe: noise_cov must be positive definite
+gain after 40 samples = 0.2702  steady-state gain from lqe = 0.2702
 ```
-### Example 3
-
-Contrast steady-state design with a time-varying forward filter.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace control = pluss::subsp::eng::control;
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace model = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.5}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      0.1);
-  const control::KalmanResult result = control::kalman(
-      model, pluss::make_series({2.0, 2.0, 2.0}, {3, 1}),
-      pluss::make_series({0.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}), pluss::make_series({1.0}, {1, 1}),
-      {.jitter = 0.0});
-
-  out.writeln("filtered mean =", result.filtered_mean.flatten().items<double>());
-  out.writeln("predicted observation =",
-              result.predicted_obs.flatten().items<double>());
-  out.writeln("log likelihood =", result.loglik.item<double>());
-}
-```
-
-Output
-
-```text
-filtered mean = [1.000000, 1.333333, 1.500000]
-predicted observation = [0.000000, 1.000000, 1.333333]
-log likelihood = -4.949963
-```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="KalmanOptions.html">
-    <span class="label">Next</span>
-    <span class="title">KalmanOptions</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

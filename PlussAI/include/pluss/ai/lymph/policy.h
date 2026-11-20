@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <optional>
 #include <string_view>
 #include <string>
 #include <utility>
@@ -146,16 +147,35 @@ struct Policy {
       out = out.drop(drop_columns);
     }
     if (!reject_missing.empty()) {
-      out = out.dropnull(reject_missing, false);
+      out = drop_missing_or_nan_(out, reject_missing, false);
     }
     if (filter_nulls) {
       const std::vector<std::string> features = legacy_null_filter_features_(out);
-      out = out.dropnull(features, drop_only_if_all_null);
+      out = drop_missing_or_nan_(out, features, drop_only_if_all_null);
     }
     return out;
   }
 
  private:
+  // A row-admission check for modelling: a cell the model cannot use is either missing (NULL) or a NaN. NaN is a value, not a missing cell, so
+  // DataFrame::dropnull alone would let it through; this drops on either. any (default) removes a row when ANY of the features is unusable,
+  // all removes it only when ALL of them are. An empty feature list means every feature.
+  [[nodiscard]] static pluss::table::DataFrame drop_missing_or_nan_(const pluss::table::DataFrame& frame,
+                                                                    const std::vector<std::string>& features,
+                                                                    bool all) {
+    const std::vector<std::string>& names = features.empty() ? frame.features() : features;
+    std::optional<pluss::table::Shelf> drop;
+    for (const auto& name : names) {
+      const auto column = frame.features(name);
+      const auto unusable = column.isnull().lor(column.isnan());
+      drop = drop.has_value() ? (all ? drop->land(unusable) : drop->lor(unusable)) : unusable;
+    }
+    if (!drop.has_value()) {
+      return frame;
+    }
+    return frame.filter(pluss::table::Shelf(drop->as_series().logical_not()));
+  }
+
   [[nodiscard]] static bool contains_(const std::vector<std::string>& names, std::string_view name) noexcept {
     return std::find_if(names.begin(), names.end(), [name](const std::string& value) {
              return value == name;

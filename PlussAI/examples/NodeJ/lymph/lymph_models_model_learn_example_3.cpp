@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -18,9 +18,9 @@ int main() {
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series defaulted = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
   const DataFrame frame({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
   });
 
   // The batch spells out the data contract: which columns are features and
@@ -36,10 +36,10 @@ int main() {
 
   // Inference takes the same frame and batch; only the feature columns are read.
   const DataFrame review({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
-      {"predicted", Slate(model.infer(frame, batch))},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
+      {"predicted", Shelf(model.infer(frame, batch))},
   });
   std::cout << review;
 

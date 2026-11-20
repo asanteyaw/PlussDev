@@ -20,7 +20,7 @@ int main() {
   using pluss::Series;
   using pluss::pCPU;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   pluss::tils::OutputEngine out;
   using Clock = std::chrono::steady_clock;
   auto secs = [](Clock::time_point a, Clock::time_point b) {
@@ -86,9 +86,9 @@ int main() {
   //========== Cell 5: Split X/Y + Numeric/Categorical Views ========
   // This is the explicit DataFrame split analogous to pandas X/y selection.
   const DataFrame train_x_raw = strat_train_set.drop({"median_house_value"});
-  const Slate train_y = strat_train_set.features("median_house_value");
+  const Shelf train_y = strat_train_set.features("median_house_value");
   const DataFrame test_x_raw = strat_test_set.drop({"median_house_value"});
-  const Slate test_y = strat_test_set.features("median_house_value");
+  const Shelf test_y = strat_test_set.features("median_house_value");
 
   const DataFrame train_num = train_x_raw.feataxis().series();
   const DataFrame test_num = test_x_raw.feataxis().series();
@@ -330,8 +330,8 @@ int main() {
 
   DataFrame prediction_frame({
       {"y_true", test_y},
-      {"y_pred", Slate(final_pred)},
-      {"y_pred_restored", Slate(restored_pred)},
+      {"y_pred", Shelf(final_pred)},
+      {"y_pred_restored", Shelf(restored_pred)},
   });
   prediction_frame.save_csv((output_dir / "housing_ch2_test_predictions.csv").string());
   out.writeln("saved predictions", (output_dir / "housing_ch2_test_predictions.csv").string());

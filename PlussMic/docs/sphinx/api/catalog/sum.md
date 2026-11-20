@@ -62,3 +62,13 @@ auto by_key = ct.sum(pluss::kindle::ReduceAxis::Key);
 - [`Catalog::var`](var.md)
 - [`Catalog::std`](std.md)
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="std.html">
+    <span class="label">Previous</span>
+    <span class="title">std</span>
+  </a>
+  <a class="next-link" href="tabelize.html">
+    <span class="label">Next</span>
+    <span class="title">tabelize</span>
+  </a>
+</div>

@@ -19,7 +19,7 @@ Workflow& Workflow::learn_(
     const pluss::table::DataFrame& x, const Series& y,
     const TrainOptions& options = {});
 Workflow& Workflow::learn_(
-    const pluss::table::DataFrame& x, const pluss::table::Slate& y,
+    const pluss::table::DataFrame& x, const pluss::table::Shelf& y,
     const TrainOptions& options = {});
 Workflow& Workflow::learn_(const Payload& payload, const TrainOptions& options = {});
 
@@ -34,7 +34,7 @@ Workflow Workflow::learn(
     const pluss::table::DataFrame& x, const Series& y,
     const TrainOptions& options = {}) const;
 Workflow Workflow::learn(
-    const pluss::table::DataFrame& x, const pluss::table::Slate& y,
+    const pluss::table::DataFrame& x, const pluss::table::Shelf& y,
     const TrainOptions& options = {}) const;
 Workflow Workflow::learn(const Payload& payload, const TrainOptions& options = {}) const;
 ```
@@ -71,7 +71,7 @@ treatment of each. Summarized here, with every signature parameter named:
   columns — `Policy::apply(raw_frame)` runs first.
 
 `x`, `y`
-: Feature columns in a frame, label as a standalone `Series` or `Slate`.
+: Feature columns in a frame, label as a standalone `Series` or `Shelf`.
   `Policy::apply(x)` runs first, subject to the `filter_nulls`-safety
   restriction in Errors below.
 
@@ -102,7 +102,7 @@ receiver untouched. Either way the returned/mutated `Workflow` keeps this
 
 ## Errors
 
-- The `(x, Series y)` / `(x, Slate y)` overloads (including a `Payload`
+- The `(x, Series y)` / `(x, Shelf y)` overloads (including a `Payload`
   routed through them) throw if this `Workflow`'s `Policy` has `filter_nulls`
   set — dropping a row from `x` alone would desynchronize it from the
   already-separate `y`. Use the `(frame, data_options)` overload instead
@@ -133,16 +133,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"customer_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   workflow::Policy policy{};
@@ -191,14 +191,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
 
@@ -244,14 +244,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 

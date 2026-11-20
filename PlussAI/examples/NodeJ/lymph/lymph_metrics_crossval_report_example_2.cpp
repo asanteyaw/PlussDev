@@ -10,7 +10,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -23,8 +23,8 @@ int main() {
        2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame frame({{"income", Slate(income)}, {"balance", Slate(balance)},
-                         {"target", Slate(y)}});
+  const DataFrame frame({{"income", Shelf(income)}, {"balance", Shelf(balance)},
+                         {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance"};

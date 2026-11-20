@@ -170,8 +170,8 @@ auto weather = pluss::kindle::Catalog({
 
 try {
   auto bad = weather.plot().scatter_matrix({"temp_c"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

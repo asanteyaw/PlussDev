@@ -26,6 +26,14 @@ Stream nums(std::initializer_list<double> values) {
   return Stream(pluss::make_series(owned, {static_cast<std::int64_t>(owned.size())}));
 }
 
+// A numeric stream with some positions missing (the value under a missing position is only a placeholder).
+Stream nums_with_gaps(std::initializer_list<double> values, std::initializer_list<bool> present) {
+  std::vector<double> owned(values);
+  std::vector<bool> mask(present);
+  return Stream(pluss::make_series(owned, {static_cast<std::int64_t>(owned.size())}),
+                pluss::make_series(mask, {static_cast<std::int64_t>(mask.size())}).to(pluss::codem::ScalarType::Bool));
+}
+
 Stream words(std::initializer_list<std::string_view> values) {
   std::vector<std::string> owned;
   owned.reserve(values.size());
@@ -63,8 +71,7 @@ Locus shop(bool ragged = false, bool metadata = true) {
       {"event_id", nums({101, 102, 103, 104, 105, 106, 107, 108})},
       {"customer_id", nums({1, 1, 1, 1, 2, 2, 2, 3})},
       {"spend", nums({2, 4, 6, 8, 5, 8, 9, 4})},
-      {"reading", nums({1, std::numeric_limits<double>::quiet_NaN(), 1, 2,
-                         std::numeric_limits<double>::quiet_NaN(), 5, 5})},
+      {"reading", nums_with_gaps({1, 0, 1, 2, 0, 5, 5}, {true, false, true, true, false, true, true})},
       {"tag", words({"web", "shop", "web", "shop", "web", "web", "shop", "shop"})},
       {"at", times({"2024-01-01T00:00:00Z", "2024-01-05T00:00:00Z",
                     "2024-01-12T00:00:00Z", "2024-01-18T00:00:00Z",
@@ -163,8 +170,8 @@ template <class Fn>
 void print_error(std::string_view label, Fn&& fn) {
   try {
     fn();
-  } catch (const std::exception& error) {
-    std::string message(error.what());
+  } catch (const pluss::Error& error) {
+    std::string message(error.message());
     const auto newline = message.find('\n');
     if (newline != std::string::npos) message.resize(newline);
     std::cout << label << ": " << message << "\n";

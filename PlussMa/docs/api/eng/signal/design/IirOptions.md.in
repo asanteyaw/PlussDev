@@ -17,7 +17,7 @@ Controls the band transformation, frequency interpretation, output precision, an
 | `band` | `Band::Low` | Chooses low-pass, high-pass, band-pass, or band-stop transformation. |
 | `sample_rate` | `2.0` | Present: digital design with cutoff in matching ordinary-frequency units. `std::nullopt`: continuous analog design with angular-frequency cutoffs. |
 | `dtype` | `ScalarType::Float64` | Real precision used to construct poles, zeros, and gain. |
-| `platform` | `Platform::CPU` | Storage and execution platform of the resulting pole-zero payload. |
+| `platform` | `Platform::CPU` | Storage and execution platform of the resulting pole-zero payload. On the MPS the dtype must be `Float32`, because the MPS has no 64-bit floats. |
 
 ## Returns
 
@@ -25,29 +25,33 @@ Pass by const reference to a design factory; the result is an `lti::PoleZero` ca
 
 ## Errors
 
-Rejects nonpositive/nonfinite sample rates, unsupported dtypes/platforms, or a band incompatible with the chosen cutoff overload.
+Rejects nonpositive or nonfinite sample rates, a dtype other than `Float32` or `Float64`, a `Float64` design on the MPS (the MPS has no 64-bit floats; use `Float32`), or a band incompatible with the chosen cutoff overload.
+
+## Interpretation and Use
+
+With a `sample_rate` the cutoffs are in hertz (or any unit consistent with the rate) and the result is discrete with sample time `1 / sample_rate`; with `std::nullopt` the cutoffs are angular frequencies in radians per second and the result is continuous. The default rate of 2 makes a cutoff of 1 the Nyquist frequency, the usual normalised convention. Set `dtype` to `Float32` to build the design in single precision.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+A digital design with a sample rate against an analog one without, and the default rate.
 
-@@example Eng/api/signal_design.cpp@@
+@@example Eng/api/signal_iiroptions_rate.cpp@@
 
 ### Example 2
 
-Exercise band transformations and analog-versus-digital interpretation.
+Float32 against Float64 poles: the dtype of the design and the same gain at the cutoff.
 
-@@example Eng/api/signal_design_bands.cpp@@
+@@example Eng/api/signal_iiroptions_dtype.cpp@@
 
 ### Example 3
 
-Observe validation of cutoffs, ripple, and band/cutoff shape.
+Every refused option.
 
-@@example Eng/api/signal_design_errors.cpp@@
+@@example Eng/api/signal_iiroptions_errors.cpp@@
 
 ## See Also
 

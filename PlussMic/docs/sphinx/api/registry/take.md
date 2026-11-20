@@ -86,8 +86,8 @@ auto rg = pluss::scribble::Registry({
 std::vector<std::int64_t> picks{99};
 try {
   auto out = rg.take(picks);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

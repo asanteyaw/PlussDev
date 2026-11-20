@@ -52,7 +52,7 @@ example per method, on [`prep::OneHotEncoder`](encoding/OneHotEncoder.md):
   (`feature_names` plus a `state` tensor vector).
 
 `OneHotEncoder`, `OrdinalEncoder`, `LabelEncoder` and `FrequencyEncoder` also
-carry **single-column overloads** — pass one `Slate`, get one `Series` back,
+carry **single-column overloads** — pass one `Shelf`, get one `Series` back,
 with no `features()` pin — and expose the learned layout through the public
 `categories_` / `mapped_names_` attributes.
 
@@ -71,7 +71,7 @@ an unknown category simply hashes somewhere, no policy needed.
 Every encoder here accepts either an integer-coded column or a text
 (note-backed) column. On the `DataFrame` path a text column's category identity
 is taken as a **hash**, so `mapped_names_` reads `region_<hash>`; feed
-integer-coded categories, or use the single-column `Slate` overload, to keep
+integer-coded categories, or use the single-column `Shelf` overload, to keep
 readable labels.
 
 <!-- apiref:toctree:start -->

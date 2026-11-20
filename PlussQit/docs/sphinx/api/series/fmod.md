@@ -212,6 +212,25 @@ data=[1, -2, -1]
 Each `da` entry is `1`. Each `db` entry is `-trunc(a / b)`:
 `-trunc(-5/3) = 1`, `-trunc(5.5/2) = -2`, `-trunc(7/4) = -1`.
 
+Example 7. An integer divisor of zero gives `NaN` too, and the result becomes a floating Series.
+
+```cpp
+pluss::series::print(
+    std::cout,
+    pluss::make_series({7, -7, 0, 5}).fmod(pluss::make_series({0, 0, 0, 3})));
+```
+
+### Output
+
+```text
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[nan, nan, nan, 2.0000]
+```
+
+The remainder by zero is `NaN` for every dividend (positive, negative and zero), and the last pair
+(`5 fmod 3`) is the ordinary `2`. An integer Series cannot hold `NaN`, so the result is a floating Series; with
+no zero divisor it stays an integer, as in Example 2.
+
 ## Gotchas And Failure Modes
 
 - `fmod()` follows the sign of `a`; [`remainder()`](remainder.md) follows the
@@ -227,7 +246,7 @@ Each `da` entry is `1`. Each `db` entry is `-trunc(a / b)`:
 
 - `a - trunc(a / b) * b`; `b` may be a `Series` or a scalar
 - broadcasts like `add()`; preserves integer dtype
-- `NaN` on divide-by-zero
+- `NaN` on divide-by-zero for floating operands and for integer operands alike. An integer remainder by a zero divisor is `NaN` for every dividend, and the result is then a floating Series (with no zero divisor it stays an integer); see [`floor_divide()`](floor_divide.md), Example 5
 - differentiable: `d/da = 1`, `d/db = -trunc(a / b)`, no flow through the jumps
 
 ## See Also

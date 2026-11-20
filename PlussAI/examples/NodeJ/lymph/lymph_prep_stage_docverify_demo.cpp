@@ -9,17 +9,17 @@ int main() {
   namespace reports = lymph::reports;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+      {"late", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"region", Shelf(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   options::Linear logistic_options{};
@@ -58,7 +58,7 @@ int main() {
           .metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1},
       });
   const DataFrame prediction_frame({
-      {"predicted", Slate(predicted)},
+      {"predicted", Shelf(predicted)},
   });
 
   std::cout << "== stage ==\n";

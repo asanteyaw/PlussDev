@@ -54,7 +54,7 @@ inline YieldEquilibria constant_yield_equilibria(const Coeff &r, const Coeff &k,
   const Series kk = k.on(like), rr = r.on(like), hh = h.on(like);
   const Series disc = hh.mul(4.0).div(rr.mul(kk)).neg().add(1.0);
   const Series ok = disc.ge(0.0);
-  const Series root = ok.where(disc, disc.mul(0.0)).sqrt();
+  const Series root = pluss::series::where(ok, disc, disc.mul(0.0)).sqrt();
   return {kk.mul(0.5).mul(root.add(1.0)), kk.mul(0.5).mul(root.neg().add(1.0)), ok.to(like.scalar_type())};
 }
 

@@ -1,0 +1,146 @@
+<!-- generated from states.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 53ecadc6ee62 -->
+
+# `control::mpc::Plan::states`
+
+[Back to `control::mpc::Plan`](../Plan.md)
+
+The number of states of the planned system.
+
+## Signature
+
+```cpp
+std::int64_t control::mpc::Plan::states() const noexcept;
+```
+
+## What It Does
+
+Returns `n`, the state dimension of the system the plan was built for. The initial state passed to a solve must have this many entries.
+
+## Returns
+
+The number of states.
+
+## Practical Examples
+
+### Example 1
+
+The integrator has one state.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace mpc = pluss::subsp::eng::control::mpc;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A discrete integrator x[k+1] = x[k] + u[k].
+static lti::StateSpace integrator() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// A discrete double integrator with a 0.1 s step: position and velocity, one force input.
+static lti::StateSpace cart() { return lti::state(mat({1.0, 0.1, 0.0, 1.0}, 2, 2), mat({0.005, 0.1}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), 0.1); }
+static mpc::Weights weights1() { return {mat({1.0}, 1, 1), mat({0.1}, 1, 1), mat({2.0}, 1, 1)}; }
+static mpc::Weights weights2() { return {mat({1.0, 0.0, 0.0, 1.0}, 2, 2), mat({0.1}, 1, 1), mat({2.0, 0.0, 0.0, 2.0}, 2, 2)}; }
+static mpc::Bounds limits() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options horizon(std::int64_t n) { mpc::Options o; o.horizon = n; return o; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("states =", mpc::build(integrator(), weights1(), limits(), horizon(4)).states());
+}
+```
+
+Output
+
+```text
+states = 1
+```
+
+### Example 2
+
+The double integrator has two.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace mpc = pluss::subsp::eng::control::mpc;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A discrete integrator x[k+1] = x[k] + u[k].
+static lti::StateSpace integrator() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// A discrete double integrator with a 0.1 s step: position and velocity, one force input.
+static lti::StateSpace cart() { return lti::state(mat({1.0, 0.1, 0.0, 1.0}, 2, 2), mat({0.005, 0.1}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), 0.1); }
+static mpc::Weights weights1() { return {mat({1.0}, 1, 1), mat({0.1}, 1, 1), mat({2.0}, 1, 1)}; }
+static mpc::Weights weights2() { return {mat({1.0, 0.0, 0.0, 1.0}, 2, 2), mat({0.1}, 1, 1), mat({2.0, 0.0, 0.0, 2.0}, 2, 2)}; }
+static mpc::Bounds limits() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options horizon(std::int64_t n) { mpc::Options o; o.horizon = n; return o; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("states =", mpc::build(cart(), weights2(), limits(), horizon(4)).states());
+}
+```
+
+Output
+
+```text
+states = 2
+```
+
+### Example 3
+
+The states match the sides of the weight matrices.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace mpc = pluss::subsp::eng::control::mpc;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A discrete integrator x[k+1] = x[k] + u[k].
+static lti::StateSpace integrator() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// A discrete double integrator with a 0.1 s step: position and velocity, one force input.
+static lti::StateSpace cart() { return lti::state(mat({1.0, 0.1, 0.0, 1.0}, 2, 2), mat({0.005, 0.1}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), 0.1); }
+static mpc::Weights weights1() { return {mat({1.0}, 1, 1), mat({0.1}, 1, 1), mat({2.0}, 1, 1)}; }
+static mpc::Weights weights2() { return {mat({1.0, 0.0, 0.0, 1.0}, 2, 2), mat({0.1}, 1, 1), mat({2.0, 0.0, 0.0, 2.0}, 2, 2)}; }
+static mpc::Bounds limits() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options horizon(std::int64_t n) { mpc::Options o; o.horizon = n; return o; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mpc::Plan p = mpc::build(cart(), weights2(), limits(), horizon(4));
+  out.writeln("states =", p.states(), ", state weight is", weights2().state.size(0), "x", weights2().state.size(1));
+}
+```
+
+Output
+
+```text
+states = 2 , state weight is 2 x 2
+```
+
+## See Also
+
+- [`inputs`](inputs.md): the number of inputs
+- [`horizon`](horizon.md): the prediction horizon
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="platform.html">
+    <span class="label">Previous</span>
+    <span class="title">platform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

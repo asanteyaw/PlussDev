@@ -70,8 +70,8 @@ Example 1. A single primary key, default ascending.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city",  Slate(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
-    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {"city",  Shelf(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
+    {"sales", Shelf(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 
 auto out = df.sort().by("sales").yield();
@@ -170,8 +170,8 @@ time — only when a terminal method executes the plan.
 ```cpp
 try {
   auto out5 = df.sort().by("nope").yield();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

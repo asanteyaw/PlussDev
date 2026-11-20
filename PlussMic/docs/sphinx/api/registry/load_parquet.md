@@ -51,15 +51,15 @@ since it was built without Arrow/Parquet C++.
 ```cpp
 try {
   auto rg = pluss::scribble::Registry::load_parquet("cities.parquet");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-loader::read_parquet_raw_batch: built without parquet-cpp support (install Arrow + Parquet C++ and reconfigure)
+Registry::load_parquet: file not found 'cities.parquet'
 ```
 
 Example 2. A path that doesn't exist at all throws a distinct, earlier message —
@@ -68,8 +68,8 @@ checked before the build-support requirement.
 ```cpp
 try {
   auto rg = pluss::scribble::Registry::load_parquet("does_not_exist.parquet");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

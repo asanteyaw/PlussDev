@@ -4,7 +4,7 @@
 
 A signal is a series ordered in time. This page smooths a noisy level and catches faulty readings with a moving statistic, then finds the tones hidden in a recording with the Fourier transform.
 
-## The mental model
+## How it works
 
 Two kinds of tool apply. **Moving statistics** (`stat().movmean`, `movstd`) slide a window along the series and describe the local level and local spread. **Spectral tools** (`rfft`, `irfft`) move between time and frequency: a tone is a spike in the spectrum, and removing the spike removes the tone.
 

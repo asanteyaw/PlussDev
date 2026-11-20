@@ -8,15 +8,15 @@
 ## Signature
 
 ```cpp
-Slate DataFrameSortBuilder::order() const
+Shelf DataFrameSortBuilder::order() const
 ```
 
 ## What It Does
 
-Executes the plan and materializes it as a `Slate` of `Int64` **row
+Executes the plan and materializes it as a `Shelf` of `Int64` **row
 positions** — the reusable permutation artifact, rather than the sorted
 frame itself. Feeding this into [`DataFrame::take`](../dataframe/take.md)
-(on the same frame, or any other frame/slate that shares its row
+(on the same frame, or any other frame/shelf that shares its row
 alignment) reproduces the sorted order.
 
 ```{important} A terminal method — this is where unknown-feature validation actually fires
@@ -32,8 +32,8 @@ supplied to an earlier `.by(...)`/`.then(...)` call only throws here. See
 
 ## Returns
 
-`Slate`
-    An `Int64` `Series`-kind slate of row positions, in sorted order.
+`Shelf`
+    An `Int64` `Series`-kind shelf of row positions, in sorted order.
 
 ## Examples
 
@@ -45,8 +45,8 @@ the exact same ordering.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city",  Slate(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
-    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {"city",  Shelf(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
+    {"sales", Shelf(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 
 auto ord = df.sort().by("sales").desc().order();

@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 80c891c41994 -->
+
+# `robot::Robot::dtype`
+
+[Back to `robot::Robot`](../RobotModel.md)
+
+The floating dtype of the compiled data.
+
+## Signature
+
+```cpp
+pluss::ScalarType robot::Robot::dtype() const noexcept;
+```
+
+## What It Does
+
+Returns the precision of the compiled model. Joint configurations passed to the kinematics and dynamics functions are converted to it.
+
+## Returns
+
+The `ScalarType`.
+
+## Practical Examples
+
+### Example 1
+
+A planar two-link arm with masses 1 kg and 2 kg.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, 0, 0, 1}, {2, 3});
+  links.translation = mat({0, 0, 0, 0.5, 0, 0}, {2, 3});
+  links.mass = vec({1.0, 2.0});
+  links.center = mat({0.25, 0, 0, 0.2, 0, 0}, {2, 3});
+  links.inertia = mat({0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+### Example 2
+
+A four-link branching tree with one prismatic joint and no mass properties.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 0, 2};
+  links.prismatic = {0, 0, 1, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0}, {4, 3});
+  links.translation = mat({0, 0, 0.3, 0.2, 0, 0.1, -0.2, 0, 0.1, 0, 0, 0.3}, {4, 3});
+  links.rpy = mat({0, 0, 0, 0.2, 0, 0.1, 0, -0.1, 0, 0.3, 0.2, 0}, {4, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+### Example 3
+
+A serial chain of three revolute joints, with no mass properties.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 1};
+  links.prismatic = {0, 0, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0}, {3, 3});
+  links.translation = mat({0, 0, 0.3, 0.3, 0, 0, 0.3, 0, 0}, {3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+## See Also
+
+- [`platform`](platform.md): the device
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="has_mass.html">
+    <span class="label">Next</span>
+    <span class="title">has_mass</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

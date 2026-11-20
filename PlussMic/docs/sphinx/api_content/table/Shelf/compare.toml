@@ -1,0 +1,95 @@
+summary = """
+Compare the current shelf against a scalar, a native pluss payload, or another shelf.
+
+This is the typed comparison surface behind scalar broadcasting and shelf-to-shelf comparison.
+"""
+
+returns = """
+`Shelf`
+    Boolean-style result shelf.
+"""
+
+notes = [
+  """
+Scalar-like inputs broadcast across the full shelf length.
+""",
+  """
+Shelf-to-shelf comparison requires compatible sizes after any supported broadcast or alignment rules are applied.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand comparison target.
+
+Supported forms include:
+- native text scalars such as `"BOLA"` or `std::string_view`,
+- numeric scalars such as `20.0`,
+- pluss payloads such as `Series`, `Note`, `Timeline`, and `TimeIndex`,
+- another `Shelf`.
+"""
+
+[[parameters]]
+name = "op"
+body = """
+Comparison operator.
+
+- `Eq`: equal
+- `Ne`: not equal
+- `Lt`: less than
+- `Le`: less than or equal
+- `Gt`: greater than
+- `Ge`: greater than or equal
+"""
+
+[[examples]]
+title = "Broadcast one numeric scalar across a numeric shelf."
+code = """
+using namespace pluss::table;
+
+auto scores = Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+
+auto out = scores.compare(20.0, ShelfBinaryCompareOp::Ge);
+"""
+output = """
+0  false
+1  true
+2  true
+3  true
+ptype: Series
+"""
+
+[[examples]]
+title = "Compare a note-backed shelf against one text literal."
+code = """
+using namespace pluss::table;
+
+auto names = Shelf(pluss::make_note({"Ada", "BOLA", "cHeN"}));
+
+auto out = names.compare("BOLA", ShelfBinaryCompareOp::Eq);
+"""
+output = """
+0  false
+1  true
+2  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Compare two numeric shelves element by element."
+code = """
+using namespace pluss::table;
+
+auto scores = Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Shelf(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.compare(other, ShelfBinaryCompareOp::Ne);
+"""
+output = """
+0  false
+1  true
+2  true
+3  true
+ptype: Series
+"""

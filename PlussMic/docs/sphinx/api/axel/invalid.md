@@ -55,6 +55,7 @@ false true
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - `invalid()` is a strictly broader check than `isnull()` — every null
   value is also invalid, but not every invalid value (e.g. `NaN`) is a
   null. Full per-kind semantics are documented on
@@ -72,8 +73,8 @@ false true
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

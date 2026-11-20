@@ -46,9 +46,9 @@ Example 1. List level names, then rename all of them at once.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
@@ -118,8 +118,8 @@ overload throw.
 ```cpp
 try {
   auto out = grouped.labels().names({"area"});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

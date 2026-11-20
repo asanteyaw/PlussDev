@@ -1,5 +1,7 @@
 # `signal::conv`
 
+Convolves a signal with a kernel along one axis.
+
 ## Signature
 
 ```cpp
@@ -12,51 +14,55 @@ pluss::Series signal::conv(
 
 ## What It Does
 
-Computes linear convolution along one axis while treating remaining dimensions as independent batches. Kernel reversal follows the mathematical convolution convention.
+Computes `y[n] = sum_m k[m] x[n - m]` along `dim` for every lane of the other axes. The mode chooses how much of the result is kept: `Full` keeps every overlap, `Same` keeps the part aligned with the input and `Valid` keeps only the positions where the kernel lies entirely inside the signal. Convolution is commutative, so exchanging the input and the kernel gives the same sequence.
 
 ## Parameters
 
 `input`
-: Floating or complex signal samples.
+: A floating or complex `Series`. Integer and Bool inputs are rejected.
 
 `kernel`
-: Rank-one or batch-compatible floating or complex convolution coefficients.
+: A rank-one floating or complex `Series`, the impulse response or weights.
 
 `dim`
-: Sample axis; negative dimensions count from the end.
+: The axis to convolve along. Negative values count from the end; the default `-1` is the last axis.
 
 `mode`
-: Output alignment and length policy.
+: A `ConvMode`: `Full` (default), `Same` or `Valid`.
 
 ## Returns
 
-A promoted floating or complex `Series` with batch dimensions preserved and processed-axis length determined by `mode`.
+A `Series` of the promoted dtype. Along `dim` its length is `N + K - 1` for `Full`, `N` for `Same` and `N - K + 1` for `Valid` (for input length `N` and kernel length `K`); other axes keep their shape.
 
 ## Errors
 
-Rejects integer signals, invalid axes, empty/incompatible kernels, incompatible batch shapes, dtypes, or platforms.
+An integer input, an empty input or kernel, and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+Use `conv` for FIR smoothing and differencing. The first and last `K - 1` samples of a `Full` result are start-up and shut-down transients where the kernel only partly overlaps the signal.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The three modes on a short signal, with the length each one returns.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_conv_modes.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+The result against the direct sum, the commutative property, and a batch of rows convolved along an axis.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_conv_direct.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_conv_errors.cpp@@
 
 ## See Also
 

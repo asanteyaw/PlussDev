@@ -73,8 +73,8 @@ auto ragged = pluss::kindle::Archive({c0, c1});
 
 try {
   ragged.nrecords();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -102,8 +102,8 @@ Archive::nrecords: catalogs have different record counts
     <span class="label">Previous</span>
     <span class="title">notnull</span>
   </a>
-  <a class="next-link" href="rename.html">
+  <a class="next-link" href="plot.html">
     <span class="label">Next</span>
-    <span class="title">rename</span>
+    <span class="title">plot</span>
   </a>
 </div>

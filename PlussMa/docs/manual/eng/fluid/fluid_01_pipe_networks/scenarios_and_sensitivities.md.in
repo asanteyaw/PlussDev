@@ -4,7 +4,7 @@
 
 A planner never solves a network once. They solve it for the peak hour and the night, for a pipe replaced by a larger one, for a hundred random demand patterns, and then ask which pipe to enlarge. This page shows how to solve a whole set of those networks in one call, by giving the arrays a leading scenario axis, and how to ask the solver for the derivative of any head with respect to any demand or any pipe diameter, so that the question "which pipe?" has a numerical answer.
 
-## The mental model
+## How it works
 
 Every physical array of the description ends in its node axis or its pipe axis, and may have any number of leading axes in front. Those leading axes are **scenarios**. All the arrays that have them must have the same shape in front, and an array without them is shared by every scenario, so a network whose pipes are fixed and whose demands vary needs a leading axis on the demands alone. The result arrays have the same leading axes: a `head` of shape `[scenario, node]`, a `flow` of shape `[scenario, link]`, a `converged` of shape `[scenario]`. Every scenario is solved in the same Newton iteration, and each is solved as if it were alone.
 

@@ -13,7 +13,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "MSharp/RangeView.h"
 #include "kindle/Ragged.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include "table/plot/DataFramePlot.h"
 
 namespace pluss::pl {
@@ -89,30 +89,34 @@ public:
   Stream();
   Stream(const pluss::Series& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Slate> cases = std::nullopt);
+         std::optional<pluss::table::Shelf> cases = std::nullopt);
   Stream(const pluss::Note& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Slate> cases = std::nullopt);
+         std::optional<pluss::table::Shelf> cases = std::nullopt);
   Stream(const pluss::Timeline& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Slate> cases = std::nullopt);
+         std::optional<pluss::table::Shelf> cases = std::nullopt);
   Stream(const pluss::Duration& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Slate> cases = std::nullopt);
+         std::optional<pluss::table::Shelf> cases = std::nullopt);
   Stream(const Stream& other);
   Stream(Stream&& other) noexcept;
   Stream& operator=(const Stream& other);
   Stream& operator=(Stream&& other) noexcept;
   ~Stream();
 
-  static Stream from_slate(const pluss::table::Slate& slate,
-                            std::optional<pluss::table::Slate> cases = std::nullopt);
+  static Stream from_shelf(const pluss::table::Shelf& shelf,
+                            std::optional<pluss::table::Shelf> cases = std::nullopt);
 
-  // Changes whenever the stream's contents can have changed: a different handle
-  // (edits clone), or an in-place edit of the shared Series storage (storage
-  // version). Only meaningful while a copy of the stream is kept alive, since it
-  // folds in the handle's address. Used by caches keyed on stream contents.
+  // Hash of the values themselves: kind, dtype, length, every present value, which entries are present and the labels. Equal for
+  // two streams with equal contents however they were built; metadata is not part of the content. Costs one pass over the data.
   std::uint64_t fingerprint() const;
+
+  // Cache token: identifies this stored data as of now, not what it contains. Changes whenever the contents can have changed (a
+  // different handle, since edits clone, or an in-place edit of the shared storage), so a copy of the stream has the same stamp while a
+  // stream rebuilt from equal values has its own. O(1). Only meaningful while a copy of the stream is kept alive, because it folds in the
+  // handle's address. Used by caches that must notice edits without reading the data.
+  std::uint64_t stamp() const;
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -124,12 +128,30 @@ public:
   std::string ptype() const;
   std::string dtype() const;
 
-  // Stream-native missing/predicate helpers (delegates to Slate).
+  // Stream-native missing/predicate helpers (delegates to Shelf).
   Stream isnull() const;
   Stream notnull() const;
   Stream invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h): isnull / dropnull / fillnull never touch them and
+  // these never touch a null.
+  Stream isnan() const;
+  Stream notnan() const;
+  Stream isinf() const;
+  Stream isposinf() const;
+  Stream isneginf() const;
+  Stream notinf() const;
+  Stream dropnan() const;
+  Stream dropinf() const;
+  Stream dropposinf() const;
+  Stream dropneginf() const;
+  Stream dropinvalid() const;
+  Stream fillinvalid(double value) const;
+  Stream fillnan(double value) const;
+  Stream fillinf(double value) const;
+  Stream fillposinf(double value) const;
+  Stream fillneginf(double value) const;
 
-  // Stream-native transforms (delegates to Slate where applicable).
+  // Stream-native transforms (delegates to Shelf where applicable).
   Stream fillnull(double value) const;
   Stream fillnull(std::string_view value) const;
   Stream fillnull(const char* value) const {
@@ -143,9 +165,9 @@ public:
   Stream exp() const;
 
   bool has_label() const;
-  const std::optional<pluss::table::Slate>& label() const;
-  Stream with_label(const pluss::table::Slate& label) const;
-  Stream& with_label_(const pluss::table::Slate& label);
+  const std::optional<pluss::table::Shelf>& label() const;
+  Stream with_label(const pluss::table::Shelf& label) const;
+  Stream& with_label_(const pluss::table::Shelf& label);
   Stream clear_label() const;
   Stream& clear_label_();
 
@@ -160,9 +182,9 @@ public:
   Stream drop_meta(std::string_view key) const;
   Stream& drop_meta_(std::string_view key);
 
-  pluss::table::Slate to_slate() const;
-  pluss::table::Slate to_slate(std::int64_t start, std::int64_t stop) const;
-  pluss::table::Slate tabelize() const;
+  pluss::table::Shelf to_shelf() const;
+  pluss::table::Shelf to_shelf(std::int64_t start, std::int64_t stop) const;
+  pluss::table::Shelf tabelize() const;
   pluss::scribble::Slot scribbelize() const;
 
   // 1D row-space operations.
@@ -203,25 +225,25 @@ public:
   Stream ndistinct(DistinctOptions options = {}) const;
   Stream map(const std::function<Stream(const Stream&)>& fn) const;
 
-  static Stream select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
+  static Stream select(pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
                        pluss::msharp::RangeView::Of<Stream> choices,
                        const Stream& default_value);
-  static Stream select(std::initializer_list<pluss::table::Slate> conditions,
+  static Stream select(std::initializer_list<pluss::table::Shelf> conditions,
                        std::initializer_list<Stream> choices,
                        const Stream& default_value) {
     return select(
-        pluss::msharp::RangeView::Of<pluss::table::Slate>(conditions),
+        pluss::msharp::RangeView::Of<pluss::table::Shelf>(conditions),
         pluss::msharp::RangeView::Of<Stream>(choices),
         default_value);
   }
 
   // Type conversion.
   StreamCastAccessor cast() const;
-  StreamCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
-  Stream cast(pluss::table::SlateCastTarget target,
+  StreamCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
+  Stream cast(pluss::table::ShelfCastTarget target,
               std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const;
-  Stream cast(pluss::table::SlateCastTarget target,
-              const pluss::table::SlateCastOptions& options) const;
+  Stream cast(pluss::table::ShelfCastTarget target,
+              const pluss::table::ShelfCastOptions& options) const;
   Stream astype(pluss::codem::ScalarType dtype) const;
 
   StreamNoteAccessor nt() const;
@@ -271,7 +293,7 @@ private:
 
 class StreamCastAccessor {
 public:
-  explicit StreamCastAccessor(Stream base, pluss::table::SlateCastOptions options = {});
+  explicit StreamCastAccessor(Stream base, pluss::table::ShelfCastOptions options = {});
 
   Stream series() const;
   Stream note() const;
@@ -280,7 +302,7 @@ public:
 
 private:
   Stream base_{};
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class StreamNoteAccessor {
@@ -449,12 +471,12 @@ public:
   Stream values() const;
   bool has() const;
   Stream set(const Stream& labels) const;
-  Stream set(const pluss::table::Slate& labels) const;
+  Stream set(const pluss::table::Shelf& labels) const;
   Stream range() const;
   Stream reset() const;
   Stream align(const Stream& target_labels,
                const pluss::table::AlignOptions& options = {}) const;
-  Stream align(const pluss::table::Slate& target_labels,
+  Stream align(const pluss::table::Shelf& target_labels,
                const pluss::table::AlignOptions& options = {}) const;
 
 private:

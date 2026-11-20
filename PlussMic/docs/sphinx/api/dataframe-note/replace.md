@@ -80,7 +80,7 @@ Example 1. The default: literal, case-sensitive, unlimited replacement.
 using namespace pluss::table;
 
 auto notes = DataFrame({
-    {"text", Slate(pluss::make_note(
+    {"text", Shelf(pluss::make_note(
         {"cat and cat", "Cat there", "no match", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -97,6 +97,14 @@ std::cout << out1;
      | text       
 ------------------
 0    | cat and cat
+1    | Cat there  
+2    | no match   
+3    | NULL       
+------------------
+[4 cs x 1 feat]==================
+     | text       
+------------------
+0    | dog and dog
 1    | Cat there  
 2    | no match   
 3    | NULL       
@@ -156,7 +164,7 @@ already consumed one match.
 
 ```cpp
 auto words = DataFrame({
-    {"word", Slate(pluss::make_note(
+    {"word", Shelf(pluss::make_note(
         {"banana", "aardvark", "xyz", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -174,6 +182,14 @@ std::cout << out3;
 ---------------
 0    | banana  
 1    | aardvark
+2    | xyz     
+3    | NULL    
+---------------
+[4 cs x 1 feat]===============
+     | word    
+---------------
+0    | bXnXna  
+1    | XXrdvark
 2    | xyz     
 3    | NULL    
 ---------------
@@ -206,7 +222,7 @@ using capture groups.
 
 ```cpp
 auto emails = DataFrame({
-    {"email", Slate(pluss::make_note(
+    {"email", Shelf(pluss::make_note(
         {"alice@example", "bob@test", "invalid", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -225,6 +241,14 @@ std::cout << out4;
 --------------------
 0    | alice@example
 1    | bob@test     
+2    | invalid      
+3    | NULL         
+--------------------
+[4 cs x 1 feat]====================
+     | email        
+--------------------
+0    | example#alice
+1    | test#bob     
 2    | invalid      
 3    | NULL         
 --------------------

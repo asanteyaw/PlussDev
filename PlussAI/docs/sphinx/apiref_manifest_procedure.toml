@@ -152,7 +152,7 @@ qualname = "pluss::ai::Artifact"
 kind = "class"
 family = "procedure/core"
 page = "api/procedure/core/Artifact.md"
-summary = "A named, type-erased value flowing between Steps -- a closed variant over every type a Procedure can carry (Series, DataFrame, Note, Slate, lymph/ice/nlp payloads and reports, plus a few scalar primitives)."
+summary = "A named, type-erased value flowing between Steps -- a closed variant over every type a Procedure can carry (Series, DataFrame, Note, Shelf, lymph/ice/nlp payloads and reports, plus a few scalar primitives)."
 methods = ["name", "named", "empty", "value", "is", "get"]
 
 [[symbol]]

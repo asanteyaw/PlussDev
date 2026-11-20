@@ -123,9 +123,9 @@ Example 1. Group by one key and aggregate explicitly.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city",   Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"units",  Slate(pluss::make_series({2, 5, 1, 3}))},
-    {"price",  Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
+    {"city",   Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"units",  Shelf(pluss::make_series({2, 5, 1, 3}))},
+    {"price",  Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
 });
 
 auto by_city = orders.group({.dropnull = true})
@@ -162,11 +162,11 @@ std::cout << means;
 ### Output
 
 ```text
-============================
+====================================
      | city   units_mean  price_mean
 ------------------------------------
-0    | Accra  3.5         622.75
-1    | Tema   2           735
+0    | Accra  3.5         622.75    
+1    | Tema   2           735       
 ------------------------------------
 [2 cs x 3 feat]
 ```
@@ -186,12 +186,12 @@ std::cout << rows;
 ### Output
 
 ```text
-================
-     | city  count
-----------------
-0    | Accra 2
-1    | Tema  2
-----------------
+===================
+     | city   count
+-------------------
+0    | Accra  2    
+1    | Tema   2    
+-------------------
 [2 cs x 2 feat]
 ```
 
@@ -209,14 +209,14 @@ std::cout << city_mean;
 ### Output
 
 ```text
-================
+=================
      | price_mean
-----------------
-0    | 622.75
-1    | 622.75
-2    | 735
-3    | 735
-----------------
+-----------------
+0    | 622.75    
+1    | 622.75    
+2    | 735       
+3    | 735       
+-----------------
 [4 cs x 1 feat]
 ```
 

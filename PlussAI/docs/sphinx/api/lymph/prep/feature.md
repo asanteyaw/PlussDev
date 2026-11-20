@@ -34,13 +34,13 @@ Build the same two-branch transformer as the lifecycle page, with an explicit pa
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame frame({
-      {"median_income", Slate(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 5.0}, {4}, cfg))},
-      {"ocean_proximity", Slate(pluss::make_note({"near", "inland", "near", "bay"}))},
-      {"target", Slate(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0}, {4}, cfg))},
+      {"median_income", Shelf(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 5.0}, {4}, cfg))},
+      {"ocean_proximity", Shelf(pluss::make_note({"near", "inland", "near", "bay"}))},
+      {"target", Shelf(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0}, {4}, cfg))},
   });
 
   lymph::prep::FeatureTransformer ft = lymph::prep::feature_transformer(

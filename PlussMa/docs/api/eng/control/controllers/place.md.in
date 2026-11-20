@@ -1,6 +1,6 @@
 # `control::place`
 
-Assigns state-feedback poles.
+Assigns the closed-loop poles of a state-feedback loop.
 
 ## Signature
 
@@ -19,68 +19,56 @@ control::PlaceResult control::place(
 
 ## What It Does
 
-`place` assigns the spectrum of `A - B K`. The state-space overload is a convenience coordinator over the same matrix kernel; it does not duplicate the placement algorithm.
+Finds a gain `K` such that the eigenvalues of `A - B K` are the requested `poles`. For a single input the gain is unique; with several inputs the freedom is used to make the closed-loop eigenvectors well conditioned, refining them over a few sweeps. There is an overload for `(A, B)` and one for a `StateSpace`.
 
 ## Parameters
 
-`a`
-: Square state matrix `A`.
-
-`b`
-: Input matrix `B`.
-
-`system`
-: State-space model whose `A` and `B` matrices are used.
+`a`, `b`
+: The dynamics and input matrix, or `system` for the `StateSpace` overload.
 
 `poles`
-: Desired closed-loop poles. Real systems require conjugate-paired complex poles.
+: One desired pole per state. For a real system, complex poles must come in conjugate pairs.
 
 `options`
-: Refinement, residual, and conditioning controls.
+: `PlaceOptions`: refinement sweeps, tolerance and condition limit.
 
 ## Returns
 
-A `PlaceResult` containing the gain, closed-loop matrix, and assignment diagnostics.
+A `PlaceResult`: `gain`, `closed_loop`, `basis`, `residual`, `condition` and `sweeps`.
 
 ## Errors
 
-Throws for uncontrollable systems, invalid pole counts or conjugacy, incompatible shapes, ill-conditioned bases, or residuals above tolerance.
+A pair that is not controllable, an unpaired complex pole for a real system, the wrong number of poles, a non-finite pole and an ill-conditioned eigenvector basis throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Use matrix overloads in synthesis code that already owns `A` and `B`; use the state-space overload to preserve model provenance and avoid extraction boilerplate. Desired poles are shared across leading batches and real matrices require conjugate pairs.
+For the double integrator `x'' = u` and poles at -2 and -3 the characteristic polynomial is `s^2 + 5 s + 6`, the gain `[6, 5]`, and the closed-loop trace and determinant are -5 and 6 (the first example). A conjugate pair at `-1 +- j` gives `[2, 2]` (the second). The `StateSpace` overload returns the same gain (the third).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Assign two real poles through the matrix overload.
+Two real poles for a double integrator.
 
-@@example Eng/api/control_place.cpp@@
+@@example Eng/api/control_place_poles.cpp@@
 
 ### Example 2
 
-Reject an uncontrollable input matrix.
+A conjugate pole pair.
 
-@@example Eng/api/control_controller_errors.cpp@@
+@@example Eng/api/control_place_complex.cpp@@
 
 ### Example 3
 
-Contrast prescribed poles with LQR-selected poles.
+The `StateSpace` overload against the matrix overload.
 
-@@example Eng/api/control_optimal.cpp@@
+@@example Eng/api/control_place_system.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="PidController.html">
-    <span class="label">Previous</span>
-    <span class="title">Pid</span>
-  </a>
-  <a class="next-link" href="pid.html">
-    <span class="label">Next</span>
-    <span class="title">pid</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+@@example Eng/api/control_place_errors.cpp@@
+

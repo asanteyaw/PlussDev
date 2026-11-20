@@ -1,0 +1,71 @@
+<!-- generated from flux_balance.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Flux balance
+
+[Back to Biology 4: Metabolism](../bio_04_metabolism.md)
+
+A cell converts nutrients into biomass through a network of reactions. Flux balance analysis asks what the network can do without knowing any rate laws, only which metabolites each reaction consumes and produces and how fast each reaction can run. This page builds a small network with a bypass, finds its best biomass flux, reads how much each flux can vary at that optimum, and knocks out each reaction in turn.
+
+## How it works
+
+A `metabolism::Network` holds the stoichiometric matrix `S`, with a row per metabolite and a column per reaction, and the lower and upper bound of every flux. The cell is at steady state, so `S v = 0` for the flux vector `v`: every metabolite is produced as fast as it is consumed. `flux_balance(net, objective)` maximises the linear objective, here the biomass flux, under that constraint and the bounds. `flux_variability` solves the range of each flux among all solutions that reach the optimum, and `single_knockouts` forces each reaction to zero in turn; all of the knockouts are solved as one batch.
+
+## A network with a bypass
+
+Metabolite `A` is taken up (at most `10`) and reaches `B` either directly (at most `6`) or through `C` (at most `8`); `B` becomes biomass. The program prints the optimum and its fluxes, the lowest and highest value of each flux among the optimal solutions, and the biomass left when each reaction is removed.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace metabolism = biology::metabolism;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static pluss::Series mat(std::initializer_list<std::initializer_list<double>> m) { return pluss::series::make(m).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // metabolites A, B, C; reactions: 0 uptake -> A, 1 A -> B, 2 A -> C, 3 C -> B, 4 B -> biomass
+  metabolism::Network net;
+  net.stoichiometry = mat({{1.0, -1.0, -1.0, 0.0, 0.0},    // A
+                           {0.0, 1.0, 0.0, 1.0, -1.0},     // B
+                           {0.0, 0.0, 1.0, -1.0, 0.0}});   // C
+  net.lower = vec({0.0, 0.0, 0.0, 0.0, 0.0});
+  net.upper = vec({10.0, 6.0, 100.0, 8.0, 100.0});         // A -> B is limited to 6, C -> B to 8
+  const auto biomass = vec({0.0, 0.0, 0.0, 0.0, 1.0});
+
+  const auto best = metabolism::flux_balance(net, biomass);
+  out.writeln("maximum biomass flux = ", flat(best.objective));
+  out.writeln("fluxes (uptake, A->B, A->C, C->B, biomass) = ", flat(best.flux));
+
+  const auto range = metabolism::flux_variability(net, biomass);
+  out.writeln("lowest flux of each reaction at the optimum  = ", flat(range.minimum));
+  out.writeln("highest flux of each reaction at the optimum = ", flat(range.maximum));
+
+  const auto ko = metabolism::single_knockouts(net, biomass);
+  out.writeln("biomass as each reaction is knocked out      = ", flat(ko.objective));
+  out.writeln("fraction of the wild-type biomass            = ", flat(ko.ratio));
+}
+```
+
+Output
+
+```text
+maximum biomass flux = [10.0000]
+fluxes (uptake, A->B, A->C, C->B, biomass) = [10.0000, 6.0000, 4.0000, 4.0000, 10.0000]
+lowest flux of each reaction at the optimum  = [10.0000, 2.0000, 4.0000, 4.0000, 10.0000]
+highest flux of each reaction at the optimum = [10.0000, 6.0000, 8.0000, 8.0000, 10.0000]
+biomass as each reaction is knocked out      = [0.0000, 8.0000, 6.0000, 6.0000, 0.0000]
+fraction of the wild-type biomass            = [0.0000, 0.8000, 0.6000, 0.6000, 0.0000]
+```
+
+The best biomass flux is `10`, the uptake limit, shared as `6` on the direct step and `4` through `C`. That split is not unique: the variability shows the direct step can carry anything from `2` to `6` and the route through `C` from `4` to `8`, while uptake and biomass are pinned at `10`. The knockouts show what each reaction is worth: removing the direct step leaves `8` (`0.8` of the optimum, carried entirely by the bypass), removing either step of the bypass leaves `6`, and removing uptake or biomass stops growth. Both routes are useful but neither is essential.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

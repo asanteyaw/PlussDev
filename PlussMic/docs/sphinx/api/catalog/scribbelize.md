@@ -99,7 +99,7 @@ try {
   pluss::kindle::Catalog undefined_catalog;
   undefined_catalog.scribbelize();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -135,12 +135,12 @@ Catalog::scribbelize: catalog undefined
 - [`Catalog::keys`](keys.md): what determines the field order this method preserves.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bfill.html">
+  <a class="prev-link" href="save_txt.html">
     <span class="label">Previous</span>
-    <span class="title">bfill</span>
+    <span class="title">save_txt</span>
   </a>
-  <a class="next-link" href="cast.html">
+  <a class="next-link" href="select.html">
     <span class="label">Next</span>
-    <span class="title">cast</span>
+    <span class="title">select</span>
   </a>
 </div>

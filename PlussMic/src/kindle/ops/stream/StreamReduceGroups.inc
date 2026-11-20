@@ -32,7 +32,7 @@ Stream Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64
   const auto usable = [&](std::int64_t p) {
     if (p < 0 || p >= n) return false;
     if (!validity.empty() && !validity[static_cast<std::size_t>(p)]) return false;
-    return k != StreamKind::Series || !std::isnan(numbers[static_cast<std::size_t>(p)]);
+    return true; // a NaN is a value, not a missing cell: only the validity mask excludes a position
   };
 
   std::vector<double> value(static_cast<std::size_t>(groups), 0.0);

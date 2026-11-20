@@ -57,3 +57,14 @@ auto out = nx.query().execute(
     "WITH named AS (SELECT customer_id, name FROM customers) "
     "SELECT DISTINCT name FROM named ORDER BY name");
 ```
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pull.html">
+    <span class="label">Previous</span>
+    <span class="title">pull</span>
+  </a>
+  <a class="next-link" href="read.html">
+    <span class="label">Next</span>
+    <span class="title">read</span>
+  </a>
+</div>

@@ -51,8 +51,8 @@ std::cout << out;
 =================
      | lag1  lag2
 -----------------
-0    | nan   nan 
-1    | 10    nan 
+0    | NULL  NULL
+1    | 10    NULL
 2    | 20    10  
 3    | 15    20  
 -----------------
@@ -68,8 +68,8 @@ Example 2 (edge case). An empty `lags` throws.
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 15.0, 30.0}));
 try {
   auto out = stream.ts().lag_block({});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -95,8 +95,8 @@ TimeSeriesAccessor::lag_block: expected at least one lag
 - [`StreamTimeSeriesAccessor::rolling_block`](rolling_block.md): the
   equivalent "several at once" pattern for rolling window statistics.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lag_block`](../slate-ts/lag_block.md): the
-  underlying single-slate engine.
+- [`TimeSeriesAccessor::lag_block`](../shelf-ts/lag_block.md): the
+  underlying single-shelf engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lag.html">

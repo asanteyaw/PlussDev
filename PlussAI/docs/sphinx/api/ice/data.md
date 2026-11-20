@@ -43,14 +43,14 @@ int main() {
   namespace ice = pluss::ai::ice;
   namespace data = ice::data;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto f32 = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
   const DataFrame df({
-      {"group", Slate(pluss::make_note({"g0", "g0", "g0", "g0", "g1", "g1", "g1", "g1"}))},
-      {"region", Slate(pluss::make_note({"north", "north", "north", "north", "south", "south", "south", "south"}))},
-      {"t", Slate(pluss::make_series({0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0}, f32))},
-      {"y", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, f32))},
+      {"group", Shelf(pluss::make_note({"g0", "g0", "g0", "g0", "g1", "g1", "g1", "g1"}))},
+      {"region", Shelf(pluss::make_note({"north", "north", "north", "north", "south", "south", "south", "south"}))},
+      {"t", Shelf(pluss::make_series({0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0}, f32))},
+      {"y", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, f32))},
   });
 
   data::TimeSeriesDataSetOptions options{};

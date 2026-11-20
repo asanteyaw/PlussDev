@@ -76,8 +76,8 @@ Example 3. Calling `nkeys()` on an undefined catalog throws.
 pluss::kindle::Catalog ct;
 try {
   auto n = ct.nkeys();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -107,8 +107,8 @@ Catalog: undefined handle
     <span class="label">Previous</span>
     <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="notnull.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">notnull</span>
+    <span class="title">notinf</span>
   </a>
 </div>

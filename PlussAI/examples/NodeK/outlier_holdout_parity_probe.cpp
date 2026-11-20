@@ -108,11 +108,11 @@ int main() {
   out_opts.contamination_auto = true;
 
   auto isolator = lymph::prep::outlier_isolator(out_opts);
-  auto labels_slate = isolator.learn_infer(train_df.feataxis().series());
-  auto scores_slate = isolator.score_samples(train_df.feataxis().series());
+  auto labels_shelf = isolator.learn_infer(train_df.feataxis().series());
+  auto scores_shelf = isolator.score_samples(train_df.feataxis().series());
 
-  auto labels = labels_slate.as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
-  auto scores = scores_slate.as_series().to(pluss::pCPU, ScalarType::Float64).host<double>();
+  auto labels = labels_shelf.as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  auto scores = scores_shelf.as_series().to(pluss::pCPU, ScalarType::Float64).host<double>();
 
   std::int64_t inliers = 0;
   std::int64_t outliers = 0;

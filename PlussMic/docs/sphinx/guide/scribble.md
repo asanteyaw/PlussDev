@@ -6,7 +6,7 @@
 
 Scribble is the model for data that is not one typed column per field: JSON whose fields change type, records that each hold a list, logs that mix text, times and durations, and configuration layers. A `Registry` is a set of named `Slot`s and each cell of a slot can be a whole `Series`, `Note`, `Timeline` or `Duration`, or null.
 
-## The mental model
+## How it works
 
 A `Slot` is a vector of values, and the values need not share a type or a size. A `Registry` is a named set of slots. You do the work on the cells, which are the ordinary Pluss types, and when the data is clean enough you cross to the typed world with `kindelize()` (to a catalog) and `tabelize()` (to a table). The crossing is a *contract check*: a field that is still mixed is refused.
 
@@ -143,8 +143,12 @@ int main() {
   // 3. When you want a rectangular table, the summaries become typed columns: the ragged detail has been reduced to numbers.
   std::vector<std::string> names;
   for (const auto &cell : patients.get("patient")->values()) names.push_back(std::string(std::get<pluss::Note>(cell).at(0)));
+  // A patient without readings has no mean and no peak to report: those cells are missing (NULL), so the columns carry a validity mask.
+  const auto has_readings = pluss::make_series(count).gt(0.0);
   auto summary = pluss::table::DataFrame({{"patient", pluss::make_note(names)},
-                                          {"readings", pluss::make_series(count)}, {"mean", pluss::make_series(mean)}, {"peak", pluss::make_series(peak)}});
+                                          {"readings", pluss::make_series(count)},
+                                          {"mean", pluss::table::Shelf(pluss::make_series(mean), has_readings)},
+                                          {"peak", pluss::table::Shelf(pluss::make_series(peak), has_readings)}});
   std::cout << summary.to_string() << "\n";
 }
 ```
@@ -171,7 +175,7 @@ data=[false, false, false, true]
 -------------------------------------------
 [4 cs x 4 feat]
 ```
-Each cell of the `glucose` field is a `Series`, so every record keeps its own length and nothing is padded. Per-record summaries use the ordinary `Series` vocabulary: readings per patient `3`, `1`, `5` and `0`, mean glucose `5.17`, `7.8`, `7.26` and `nan` for the patient without readings. The flags say that patient P-03 peaked above `7.8` and P-04 has no readings and needs a test. The final table has the ragged detail reduced to typed columns.
+Each cell of the `glucose` field is a `Series`, so every record keeps its own length and nothing is padded. Per-record summaries use the ordinary `Series` vocabulary: readings per patient `3`, `1`, `5` and `0`, mean glucose `5.17`, `7.8`, `7.26` and `nan` for the patient without readings (a bare `Series` has no missing value, so the mean of nothing prints as `nan`). The flags say that patient P-03 peaked above `7.8` and P-04 has no readings and needs a test. The final table has the ragged detail reduced to typed columns, and there the patient without readings has no mean and no peak, so those two cells are `NULL`: a record with nothing to summarise has a missing value, not an invalid one.
 
 ## An event log
 

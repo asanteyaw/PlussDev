@@ -63,8 +63,8 @@ pluss::kindle::Stream undef;
 
 try {
   undef.size();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 24);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 24);
 }
 ```
 

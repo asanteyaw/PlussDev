@@ -31,7 +31,7 @@ whether `learn` has succeeded yet.
 ## Methods
 
 Identical in every particular to [`OrdinalEncoder`](OrdinalEncoder.md#methods)
-— `learn`/`map`/`learn_map` (`FeatureBatch` and `Slate` overloads),
+— `learn`/`map`/`learn_map` (`FeatureBatch` and `Shelf` overloads),
 `dump_state`/`load_state` — down to the shared internal fit/map helpers.
 Only the type name in error messages and the `one_based` default differ.
 
@@ -63,12 +63,12 @@ would itself return.
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   // a raw text-free numeric label column, arriving as 10 / 20 / 30 rather than 0 / 1 / 2.
-  const Slate raw_labels(pluss::make_series({20.0, 10.0, 30.0, 20.0}, {4}, f64));
+  const Shelf raw_labels(pluss::make_series({20.0, 10.0, 30.0, 20.0}, {4}, f64));
 
   cls::prep::LabelEncoder encoder;
   const pluss::Series labels = encoder.learn_map(raw_labels).value();
@@ -176,7 +176,7 @@ data=[[2]]
 
 ## Changelog
 
-- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Slate`
+- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Shelf`
   overloads), `max_categories`/`overflow`/`include_unknown_bucket`/
   `one_based`, `dump_state`/`load_state`.
 

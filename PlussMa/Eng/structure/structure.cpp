@@ -1530,11 +1530,11 @@ BuckResult buckling(const Frame &frame, const Series &reference_load,
     try {
       return seed.linearalg.gen_eigh(apply_stiffness, apply_geometric,
                                      solve_stiffness, eig_options);
-    } catch (const std::exception &error) {
-      throw std::runtime_error(
+    } catch (const pluss::Error &error) {
+      PLUSS_FAIL(
           std::string(operation) + ": could not extract " +
           std::to_string(options.count) +
-          " positive buckling factors (" + error.what() +
+          " positive buckling factors (" + error.message() +
           "); ask for fewer modes, or check that the reference load "
           "compresses enough of the structure");
     }

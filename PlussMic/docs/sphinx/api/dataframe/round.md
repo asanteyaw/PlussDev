@@ -41,7 +41,7 @@ Example 1. Round to whole numbers with the default `decimals = 0`.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"reading", pluss::make_series({3.14159, 2.71828, std::numeric_limits<double>::quiet_NaN(), -1.4142})},
+    {"reading", Shelf(pluss::make_series({3.14159, 2.71828, 0.0, -1.4142}), pluss::make_series(std::vector<bool>{true, true, false, true}))},
 });
 
 std::cout << readings;
@@ -50,14 +50,14 @@ std::cout << readings;
 ### Output (before)
 
 ```text
-==============
-     | reading
---------------
-0    | 3.14159
-1    | 2.71828
-2    | NULL   
-3    | -1.4142
---------------
+===============
+     | reading 
+---------------
+0    |  3.14159
+1    |  2.71828
+2    | NULL    
+3    | -1.4142 
+---------------
 [4 cs x 1 feat]
 ```
 
@@ -72,8 +72,8 @@ std::cout << whole;
 ==============
      | reading
 --------------
-0    | 3      
-1    | 3      
+0    |  3     
+1    |  3     
 2    | NULL   
 3    | -1     
 --------------
@@ -96,8 +96,8 @@ std::cout << two_places;
 ==============
      | reading
 --------------
-0    | 3.14   
-1    | 2.72   
+0    |  3.14  
+1    |  2.72  
 2    | NULL   
 3    | -1.41  
 --------------

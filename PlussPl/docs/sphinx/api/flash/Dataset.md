@@ -98,6 +98,47 @@ text families=4
 temporal families=0
 ```
 
+Example 2. The bundled `tips` dataset keeps its numeric and text columns in separate families.
+
+```cpp
+const auto tips = *flash::load_dataset("tips");
+std::cout << "numeric columns " << tips.numeric_names->numel() << ", text columns " << tips.text_names->numel() << ", rows " << tips.nrows() << "\n";
+```
+
+Output:
+
+```text
+numeric columns 5, text columns 4, rows 240
+```
+
+Example 3. Lookup is by family: a text column is not found as numeric, and a missing name is an empty result.
+
+```cpp
+const auto tips = *flash::load_dataset("tips");
+std::cout << "numeric(\"tip\") found: " << tips.numeric("tip").has_value() << ", numeric(\"day\") found: " << tips.numeric("day").has_value()
+          << ", text(\"day\") found: " << tips.text("day").has_value() << ", numeric(\"nothing\") found: " << tips.numeric("nothing").has_value() << "\n";
+```
+
+Output:
+
+```text
+numeric("tip") found: 1, numeric("day") found: 0, text("day") found: 1, numeric("nothing") found: 0
+```
+
+Example 4. Wrapping a table of your own.
+
+```cpp
+auto frame = pluss::table::DataFrame({{"a", pluss::make_series({1.0, 2.0})}, {"b", pluss::make_series({3.0, 4.0})}});
+const auto wrapped = flash::Dataset::from_table(frame);
+std::cout << "wrapped table: " << wrapped.nrows() << " rows, " << wrapped.ncols() << " columns, numeric names " << wrapped.numeric_names->numel() << "\n";
+```
+
+Output:
+
+```text
+wrapped table: 2 rows, 2 columns, numeric names 2
+```
+
 ## Notes
 
 - `Dataset` is allowed to be ragged. That is why `nrows()` and `size()` are strict

@@ -26,7 +26,8 @@ std::vector<bool> join_validity_of(const Stream& stream) {
 }
 
 inline std::int64_t canonical_double_code(double v) {
-  if (std::isnan(v)) return kNoKey;
+  // NaN is a value, not a missing key: every NaN is the same key (distinct from kNoKey, which is a null).
+  if (std::isnan(v)) v = std::numeric_limits<double>::quiet_NaN();
   if (v == 0.0) v = 0.0;  // -0.0 and +0.0 are the same key
   std::int64_t bits;
   std::memcpy(&bits, &v, sizeof bits);
@@ -136,7 +137,7 @@ void encode_join_keys(const Catalog& left, const Catalog& right, const std::vect
 
 // Hashed right-hand sides reused across joins: the same dimension table joined
 // again (a pull over several hops, an audit then a join, repeated queries) skips
-// re-encoding and re-hashing its keys. Keyed on stream fingerprints, so an edit
+// re-encoding and re-hashing its keys. Keyed on stream stamps, so an edit
 // to the data is a different key; entries pin their catalog so addresses stay
 // unique. Bounded by entry count and bytes; least recently used goes first.
 class BuiltSideCache {
@@ -234,7 +235,7 @@ CatalogMatch compute_match(const Catalog& left, const Catalog& right, const std:
   if (cacheable) {
     std::string key = pluss::tils::OutputEngine::format("{}|{}|", out.right.domain(), static_cast<int>(ragged.alignment));
     for (std::size_t c = 0; c < rk.size(); ++c) {
-      key += pluss::tils::OutputEngine::format("{}:{}:{}:{};", right.keys(rk[c]).fingerprint(), static_cast<int>(modes[c]),
+      key += pluss::tils::OutputEngine::format("{}:{}:{}:{};", right.keys(rk[c]).stamp(), static_cast<int>(modes[c]),
                          shift_of(out.right, rk[c]), rk[c]);
     }
     auto built = built_side_cache().find(key);
@@ -426,5 +427,5 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
 }
 
 
-void Catalog::clear_join_cache() { built_side_cache().clear(); }
-std::pair<std::int64_t, std::int64_t> Catalog::join_cache_stats() { return built_side_cache().stats(); }
+void Catalog::clear_cache() { built_side_cache().clear(); }
+std::pair<std::int64_t, std::int64_t> Catalog::cache_stats() { return built_side_cache().stats(); }

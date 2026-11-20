@@ -74,9 +74,9 @@ std::cout << "(" << rows << ", " << cols << ")";
   element (key count) actually varies.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ptype.html">
+  <a class="prev-link" href="select.html">
     <span class="label">Previous</span>
-    <span class="title">ptype</span>
+    <span class="title">select</span>
   </a>
   <a class="next-link" href="show.html">
     <span class="label">Next</span>

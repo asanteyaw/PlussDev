@@ -41,9 +41,9 @@ sensor's own last reading.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sensor_id", Slate(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
-     {"value",     Slate(pluss::make_series({10.0, 20.0, 15.0, 5.0, 8.0, 12.0}))}},
-    Slate(pluss::make_timeline({
+    {{"sensor_id", Shelf(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
+     {"value",     Shelf(pluss::make_series({10.0, 20.0, 15.0, 5.0, 8.0, 12.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z",
         "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z", "2024-01-06T00:00:00Z"})));
 std::cout << readings;
@@ -95,10 +95,10 @@ on the accessor.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sensor_id", Slate(pluss::make_note({"A", "A", "B", "B"}))},
-     {"temp",      Slate(pluss::make_series({10.0, 20.0, 5.0, 8.0}))},
-     {"humidity",  Slate(pluss::make_series({40.0, 42.0, 55.0, 50.0}))}},
-    Slate(pluss::make_timeline({
+    {{"sensor_id", Shelf(pluss::make_note({"A", "A", "B", "B"}))},
+     {"temp",      Shelf(pluss::make_series({10.0, 20.0, 5.0, 8.0}))},
+     {"humidity",  Shelf(pluss::make_series({40.0, 42.0, 55.0, 50.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z",
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"})));
 std::cout << readings;
@@ -145,14 +145,14 @@ see it throw immediately — before `sum()` is even called.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({10.0, 20.0, 15.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({10.0, 20.0, 15.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z"})));
 
 try {
   auto windowed = readings.ts().window("2d");
-} catch (const std::exception& e) {
-  std::cout << std::string(e.what()).substr(0, 56) << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << std::string(e.message()).substr(0, 56) << "\n";
 }
 ```
 

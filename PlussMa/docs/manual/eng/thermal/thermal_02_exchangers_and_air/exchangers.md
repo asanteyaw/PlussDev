@@ -6,7 +6,7 @@
 
 Two streams pass on either side of a wall and one warms the other. You want to know what comes out, or how large the exchanger must be for a required outlet. This page rates an exchanger of given size, sizes one for a given duty, and relates both to the log-mean temperature difference.
 
-## The mental model
+## How it works
 
 The most heat a perfect, infinitely large exchanger could move is `Cmin (T_hot_in - T_cold_in)`, where `C = m cp` is the capacity rate of a stream and `Cmin` the smaller of the two. The **effectiveness** is the fraction a real exchanger achieves. It depends on only two numbers, the number of transfer units `NTU = UA / Cmin` (how big, in units of the weaker stream) and the capacity ratio `cr = Cmin / Cmax` (how unequal the streams are), and on the flow arrangement: parallel, counter, cross, shell-and-tube, or one stream boiling. `eff` evaluates the relation, `ntu` inverts it, and `rate` applies it to real streams.
 

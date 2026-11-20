@@ -95,16 +95,16 @@ std::cout << std::holds_alternative<pluss::Note>(slot.at(0)) << "\n";
 ```
 
 Example 3 (edge case, null preservation). A stream carrying a validity mask —
-built here via `Slate`'s explicit mask constructor and bridged in through
-[`Stream::from_slate`](from_slate.md) — converts masked-out positions to
+built here via `Shelf`'s explicit mask constructor and bridged in through
+[`Stream::from_shelf`](from_shelf.md) — converts masked-out positions to
 `std::monostate{}` rather than any placeholder `Series` value.
 
 ```cpp
 auto raw_series = pluss::make_series({1.0, 2.0, 3.0});
 std::vector<bool> mask_values{true, false, true};
 auto mask_series = pluss::make_series(mask_values);
-pluss::table::Slate slate_with_nulls(raw_series, mask_series);
-auto stream = pluss::kindle::Stream::from_slate(slate_with_nulls);
+pluss::table::Shelf shelf_with_nulls(raw_series, mask_series);
+auto stream = pluss::kindle::Stream::from_shelf(shelf_with_nulls);
 auto slot = stream.scribbelize();
 std::cout << std::holds_alternative<std::monostate>(slot.at(0)) << "\n";
 std::cout << std::holds_alternative<std::monostate>(slot.at(1)) << "\n";
@@ -126,7 +126,7 @@ try {
   pluss::kindle::Stream undefined_stream;
   undefined_stream.scribbelize();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -162,16 +162,16 @@ Stream::scribbelize: stream undefined
 - [`Catalog::scribbelize`](../catalog/scribbelize.md): the catalog-level sibling that calls
   this method once per key.
 - [`Stream::kind`](kind.md): what determines which conversion path runs.
-- [`Stream::tabelize`](tabelize.md) / [`Stream::to_slate`](to_slate.md): the sibling
+- [`Stream::tabelize`](tabelize.md) / [`Stream::to_shelf`](to_shelf.md): the sibling
   bridge from Kindle into the table model, instead of the scribble model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bfill.html">
+  <a class="prev-link" href="reduce_groups.html">
     <span class="label">Previous</span>
-    <span class="title">bfill</span>
+    <span class="title">reduce_groups</span>
   </a>
-  <a class="next-link" href="cast.html">
+  <a class="next-link" href="select.html">
     <span class="label">Next</span>
-    <span class="title">cast</span>
+    <span class="title">select</span>
   </a>
 </div>

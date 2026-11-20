@@ -82,8 +82,8 @@ The catalogs returned re-index from depth `0`, same as every other depth-selecti
     <span class="label">Previous</span>
     <span class="title">tabelize</span>
   </a>
-  <a class="next-link" href="to_string.html">
+  <a class="next-link" href="tl.html">
     <span class="label">Next</span>
-    <span class="title">to_string</span>
+    <span class="title">tl</span>
   </a>
 </div>

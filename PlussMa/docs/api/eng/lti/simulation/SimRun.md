@@ -2,6 +2,8 @@
 
 # `lti::SimRun`
 
+The result of `sim`.
+
 ## Signature
 
 ```cpp
@@ -10,141 +12,178 @@ lti::SimRun run = lti::sim(system, input, time);
 
 ## What It Does
 
-Owns both externally visible outputs and internal state history from one simulation, allowing diagnostics and chained analysis without rerunning dynamics.
+The output samples and the state trajectory. `values` has one row per time point and one column per output; `states` has one row per time point and one column per state. The first row of `states` is the initial state.
 
 ## Fields
 
-| Field | Meaning |
-|---|---|
-| `values` | Output history with shape `[..., time, outputs]`. |
-| `states` | State history with shape `[..., time, states]`, including the state associated with each output sample. |
+| Field | Meaning | Shape |
+|---|---|---|
+| `values` | `y = C x + D u` at every time point. | `[time, outputs]` |
+| `states` | The state at every time point. | `[time, states]` |
 
 ## Returns
 
-Returned by both `lti::sim` overloads.
+Returned by `sim`.
 
 ## Errors
 
-The result itself is valid by construction; errors occur during simulation before a `SimRun` is returned.
+Reading a field does not run again.
+
+## Interpretation and Use
+
+Because both are returned, the outputs can be recomputed from the states and the input: the second example reconstructs `C x + D u` and finds no difference at rounding. Pass the last row of `states` as `initial` to continue a simulation.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+The shapes and the initial state in the first row.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.2, 0.7, 1.5});
-  const pluss::Series input = pluss::make_series({1.0, 1.0, 1.0, 1.0}, {4, 1});
-  const lti::SimRun run = lti::sim(
-      system, input, time, {.hold = lti::Hold::Zero});
-
-  out.writeln("values =", run.values.flatten().items<double>());
-  out.writeln("states =", run.states.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-values = [0.0000, 0.1813, 0.5034, 0.7769]
-states = [0.0000, 0.1813, 0.5034, 0.7769]
-```
-### Example 2
-
-Compare hold policies with an explicit initial state.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.5, 1.0});
-  const pluss::Series ramp = pluss::make_series({0.0, 0.5, 1.0}, {3, 1});
-  const pluss::Series initial = pluss::make_series({2.0});
-  const lti::SimRun zero = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Zero});
-  const lti::SimRun linear = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Linear});
-
-  out.writeln("zero hold =", zero.values.flatten().items<double>());
-  out.writeln("linear hold =", linear.values.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-zero hold = [2.0000, 1.2131, 0.9325]
-linear hold = [2.0000, 1.3196, 1.1036]
-```
-### Example 3
-
-Exercise timestamp and input-shape validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}, {3, 1}),
-        pluss::make_series({0.0, 0.5, 0.5})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("repeated time rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}),
-        pluss::make_series({0.0, 0.5, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("rank-one input rejected =", message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0, 1.5, 2.0});
+  const lti::SimRun run = lti::sim(s, pluss::series::ones({5, 1}, pluss::ScalarType::Float64), t);
+  out.writeln("values", run.values.size(0), "x", run.values.size(1), "(time by outputs)   states", run.states.size(0), "x", run.states.size(1), "(time by states)");
+  out.writeln("the first row of states is the initial state:", run.states.select(0, 0).items<double>());
 }
 ```
 
 Output
 
 ```text
-repeated time rejected = eng::lti::sim: time values must be strictly increasing
-rank-one input rejected = eng::lti::sim: input must have shape [..., time, inputs]
+values 5 x 1 (time by outputs)   states 5 x 2 (time by states)
+the first row of states is the initial state: [0.0000, 0.0000]
+```
+### Example 2
+
+The outputs recomputed from the states and the input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // y = C x + D u at every sample: recompute the output from the returned states.
+  const lti::StateSpace s = lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.5}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0, 1.5});
+  const pluss::Series u = pluss::make_series({1.0, 1.0, 1.0, 1.0}, {4, 1});
+  const lti::SimRun run = lti::sim(s, u, t);
+  const pluss::Series recomputed = run.states.matmul(s.c().transpose(0, 1)) + u.matmul(s.d().transpose(0, 1));
+  out.writeln("largest difference between values and C x + D u =", (run.values - recomputed).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+largest difference between values and C x + D u = 0.0000
+```
+### Example 3
+
+An initial state of the wrong size.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0});
+  const lti::SimRun run = lti::sim(s, pluss::series::ones({3, 1}, pluss::ScalarType::Float64), t);
+  out.writeln("a run is a plain pair of Series: values", run.values.numel(), "samples, states", run.states.numel(), "samples");
+  refused(out, "continuing from a state with two entries for a one-state system", [&] { lti::sim(s, pluss::series::ones({3, 1}, pluss::ScalarType::Float64), t, pluss::make_series({1.0, 2.0})); });
+}
+```
+
+Output
+
+```text
+a run is a plain pair of Series: values 3 samples, states 3 samples
+continuing from a state with two entries for a one-state system : eng::lti::sim: initial state must have shape [..., states]
 ```
 ## See Also
 

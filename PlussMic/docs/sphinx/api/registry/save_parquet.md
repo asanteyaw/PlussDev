@@ -53,15 +53,15 @@ auto rg = pluss::scribble::Registry({
 
 try {
   rg.save_parquet("cities.parquet");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-loader::save_parquet: built without parquet-cpp support (install Arrow + Parquet C++ and reconfigure)
+
 ```
 
 ## Notes

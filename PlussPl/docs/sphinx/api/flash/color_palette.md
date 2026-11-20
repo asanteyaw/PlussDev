@@ -16,8 +16,8 @@ A single entry point covering **two** distinct
 sources by name: [`flash::flash_palette`](flash_palette.md)'s six categorical names
 (`"deep"`, `"muted"`, `"pastel"`, `"bright"`, `"dark"`, `"colorblind"`), plus four of
 `PaletteRamp`'s own built-in gradient ramps by name (`"thermal"`, `"lagoon"`,
-`"meadow"`, `"neutral"`) — falling back to `PaletteRamp::ocean()` for any other string,
-including its own default `"ocean"`.
+`"meadow"`, `"neutral"`) and `"ocean"` (the default). Any other string is an error that lists
+the valid names, so a mistyped name is reported instead of silently drawing the default ramp.
 
 ## Parameters
 
@@ -33,7 +33,8 @@ including its own default `"ocean"`.
 | `"lagoon"` | `PaletteRamp::lagoon()` |
 | `"meadow"` | `PaletteRamp::meadow()` |
 | `"neutral"` | `PaletteRamp::neutral()` |
-| anything else (including `"ocean"`, the default) | `PaletteRamp::ocean()` |
+| `"ocean"` (the default) | `PaletteRamp::ocean()` |
+| anything else | `pluss::Error` listing the valid names |
 
 ## Returns
 
@@ -63,23 +64,25 @@ color_palette("muted") name=muted
 color_palette("thermal") name=thermal
 ```
 
-Example 2 (edge case). The default and an unrecognized name both fall back to
-`"ocean"`.
+Example 2 (edge case). The default is `"ocean"`; a mistyped name is an error that lists the valid ones.
 
 ```cpp
 using namespace pluss::pl;
 
 auto c3 = flash::color_palette();
-auto c4 = flash::color_palette("totally-unknown-xyz");
 std::cout << "color_palette() default name=" << c3.name() << "\n";
-std::cout << "color_palette(unknown) falls back to name=" << c4.name() << "\n";
+try {
+  flash::color_palette("thermall");
+} catch (const pluss::Error &e) {
+  std::cout << e.message() << "\n";
+}
 ```
 
 Output:
 
 ```text
 color_palette() default name=ocean
-color_palette(unknown) falls back to name=ocean
+flash::color_palette: unknown palette 'thermall'; the palettes are deep, muted, pastel, bright, dark, colorblind, thermal, lagoon, meadow, neutral and ocean
 ```
 
 ## Notes

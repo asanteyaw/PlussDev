@@ -11,7 +11,7 @@
 DataFrame DataFrameCaseStudyAccessor::span(std::string_view start, std::string_view stop) const
 DataFrame DataFrameCaseStudyAccessor::span(std::int64_t start, std::int64_t stop) const
 DataFrame DataFrameCaseStudyAccessor::span(double start, double stop) const
-DataFrame DataFrameCaseStudyAccessor::span(const Slate& start, const Slate& stop) const
+DataFrame DataFrameCaseStudyAccessor::span(const Shelf& start, const Shelf& stop) const
 ```
 
 ## What It Does
@@ -28,17 +28,17 @@ the stop lies before the start, the result is an empty frame. If either endpoint
 absent, the call fails rather than guessing an insertion position.
 
 The numeric overloads format keys exactly as public numeric case labels are rendered.
-The `Slate` overload accepts one scalar value per endpoint and is useful when bounds
-already come from table operations; each endpoint Slate must be defined, strictly 1D,
+The `Shelf` overload accepts one scalar value per endpoint and is useful when bounds
+already come from table operations; each endpoint Shelf must be defined, strictly 1D,
 and contain exactly one value.
 
 ## Parameters
 
-**start** / **stop** (`std::string_view` / `std::int64_t` / `double` / `const Slate&`)
+**start** / **stop** (`std::string_view` / `std::int64_t` / `double` / `const Shelf&`)
     The inclusive interval endpoints, in the case axis's own key representation. The
-    `Slate` overload requires each argument to be a defined, 1D, single-element
-    slate (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
-    latter constructs a 0D payload that `Slate`'s own constructor rejects).
+    `Shelf` overload requires each argument to be a defined, 1D, single-element
+    shelf (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
+    latter constructs a 0D payload that `Shelf`'s own constructor rejects).
 
 ## Returns
 
@@ -53,8 +53,8 @@ Example 1. A plain label interval; both endpoints are included.
 
 ```cpp
 using namespace pluss::table;
-auto frame = DataFrame({{"v", Slate(pluss::make_series({1, 2, 3, 4, 5}))}})
-    .label().set(Slate(pluss::make_note({"A", "B", "B", "C", "D"})));
+auto frame = DataFrame({{"v", Shelf(pluss::make_series({1, 2, 3, 4, 5}))}})
+    .labels().set(Shelf(pluss::make_note({"A", "B", "B", "C", "D"})));
 
 auto window = frame.case_study().span("B", "C");
 std::cout << window;
@@ -96,8 +96,8 @@ B    | 3
 Example 3. Numeric labels can be passed without first converting them to strings.
 
 ```cpp
-auto numbered = DataFrame({{"v", Slate(pluss::make_series({4, 9, 16, 25}))}})
-    .label().set(Slate(pluss::make_series({10, 20, 30, 40})));
+auto numbered = DataFrame({{"v", Shelf(pluss::make_series({4, 9, 16, 25}))}})
+    .labels().set(Shelf(pluss::make_series({10, 20, 30, 40})));
 auto numeric = numbered.case_study().span(20, 30);
 std::cout << numeric;
 ```
@@ -114,13 +114,13 @@ std::cout << numeric;
 [2 cs x 1 feat]
 ```
 
-Example 4. Scalar Slates let computed bounds flow into the selection without leaving
+Example 4. Scalar Shelves let computed bounds flow into the selection without leaving
 the PlussMic value system. Each endpoint must be a strictly 1D, single-element Note —
 constructed with a one-element initializer list, not the bare-scalar overload.
 
 ```cpp
-Slate begin(pluss::make_note({"A"}));
-Slate end(pluss::make_note({"C"}));
+Shelf begin(pluss::make_note({"A"}));
+Shelf end(pluss::make_note({"C"}));
 auto computed = frame.case_study().span(begin, end).features({"v"});
 std::cout << computed;
 ```
@@ -157,8 +157,8 @@ Example 6. An unknown endpoint is not valid — both boundary labels must exist.
 ```cpp
 try {
   (void)frame.case_study().span("A", "missing");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -178,9 +178,9 @@ DataFrame::case_study: case label not found 'missing'
   of guessing an insertion position — the two failure modes are deliberately
   different.
 - `pluss::make_note("X")` (a single string argument, no braces) constructs a scalar
-  (0D) Note. The `Slate` overload's endpoints require a strictly 1D payload, so use
+  (0D) Note. The `Shelf` overload's endpoints require a strictly 1D payload, so use
   `pluss::make_note({"X"})` instead — a one-element initializer list — when building a
-  `Slate` endpoint directly.
+  `Shelf` endpoint directly.
 
 ## Choosing Between `span()` And `slice()`
 

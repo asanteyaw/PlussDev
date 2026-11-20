@@ -1,0 +1,39 @@
+# `structure::Frame` Introduction
+
+A `Frame` is what `structure::frame` returns: geometry, member lengths and directions, section properties and optional density of a validated plane frame, held immutably so the same model can be solved statically, for modes, for buckling, in time and in frequency. It has three public counts.
+
+A `Frame` cannot be default-constructed; build it with `frame`. It is cheap to copy. Loads, supports and results all use the order `(ux, uy, rz)` at each node.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counts and degrees of freedom of a portal frame.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 2
+
+Solving a compiled frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Natural frequencies of a compiled frame.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="dofs.html">
+    <span class="label">Next</span>
+    <span class="title">dofs</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

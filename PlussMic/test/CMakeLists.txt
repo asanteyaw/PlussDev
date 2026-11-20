@@ -6,8 +6,15 @@ get_filename_component(PLUSSMIC_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLU
 add_executable(plussmic_table_csv_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_csv_parser_tests.cpp
 )
+add_executable(plussmic_nonfinite_family_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/nonfinite_family_tests.cpp
+)
+target_link_libraries(plussmic_nonfinite_family_tests PRIVATE PlussMic)
 add_executable(plussmic_atlas_view_smoke
   ${CMAKE_CURRENT_SOURCE_DIR}/atlas_view_smoke.cpp
+)
+add_executable(plussmic_dataframe_summary_view_smoke
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_summary_view_smoke.cpp
 )
 add_executable(plussmic_kindle_catalog_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/kindle_catalog_tests.cpp
@@ -54,6 +61,7 @@ add_executable(plussmic_scribble_gap_benchmark
 
 target_link_libraries(plussmic_table_csv_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_atlas_view_smoke PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_summary_view_smoke PRIVATE PlussMic)
 target_link_libraries(plussmic_kindle_catalog_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_bundle_locus_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_scribble_model_tests PRIVATE PlussMic)
@@ -100,6 +108,7 @@ target_compile_definitions(plussmic_bi_serve_tests PRIVATE
 )
 
 add_test(NAME plussmic_table_csv COMMAND plussmic_table_csv_tests)
+add_test(NAME plussmic_nonfinite_family COMMAND plussmic_nonfinite_family_tests)
 add_test(NAME plussmic_kindle_catalog COMMAND plussmic_kindle_catalog_tests)
 add_test(NAME plussmic_bundle_locus COMMAND plussmic_bundle_locus_tests)
 add_test(NAME plussmic_scribble_model COMMAND plussmic_scribble_model_tests)

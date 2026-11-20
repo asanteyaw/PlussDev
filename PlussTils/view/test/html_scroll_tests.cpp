@@ -671,7 +671,9 @@ void test_form_control_alignment_and_caret() {
   expect(caret_command != nullptr &&
              caret_command->text_anchor.x > input->rect.x &&
              caret_command->text_anchor.x <= input->rect.x + 30 &&
-             caret_command->y1 - caret_command->y0 <= 20,
+             // "Short" means shorter than the input box. The caret is the glyph height plus a margin, and the glyph height comes from the
+             // installed font, so an absolute pixel limit would depend on the machine's fonts.
+             caret_command->y1 - caret_command->y0 < input->rect.height,
          "an empty search input should use a short caret at its left inset");
 
   config.show_input_caret = false;

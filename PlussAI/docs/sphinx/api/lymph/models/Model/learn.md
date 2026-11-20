@@ -29,7 +29,7 @@ lymph::models::Model& lymph::models::Model::learn_(
 
 lymph::models::Model& lymph::models::Model::learn_(
     const pluss::table::DataFrame& x,
-    const pluss::table::Slate& y,
+    const pluss::table::Shelf& y,
     const lymph::options::Train& options = {});
 
 // By value: `*this` is left untouched; the trained model is returned.
@@ -49,7 +49,7 @@ lymph::models::Model lymph::models::Model::learn(
 
 lymph::models::Model lymph::models::Model::learn(
     const pluss::table::DataFrame& x,
-    const pluss::table::Slate& y,
+    const pluss::table::Shelf& y,
     const lymph::options::Train& options = {}) const;
 ```
 
@@ -111,9 +111,9 @@ in how you have the data on hand.
   length. The lightest form; correct when the frame holds only features and the
   label lives in its own vector.
 
-`const pluss::table::DataFrame& x, const pluss::table::Slate& y`
-: Same, but the label is a `Slate` — typically one lifted from another frame
-  with `frame.features("col")`. Use it to avoid a `Slate`-to-`Series`
+`const pluss::table::DataFrame& x, const pluss::table::Shelf& y`
+: Same, but the label is a `Shelf` — typically one lifted from another frame
+  with `frame.features("col")`. Use it to avoid a `Shelf`-to-`Series`
   conversion at the call site.
 
 `const pluss::table::DataFrame& frame, const lymph::options::DFBatch& data_options`
@@ -246,7 +246,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -255,7 +255,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   // A logistic-regression template: an algorithm choice, nothing learned yet.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -268,10 +268,10 @@ int main() {
   // Inference reuses the same feature contract training saw.
   const pluss::Series predicted = model.infer(x);
   const DataFrame review({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(predicted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(predicted)},
   });
   std::cout << review;
 
@@ -318,7 +318,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -326,7 +326,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   // A template held by const: it must never become trained itself.
   const lymph::models::Model blueprint = lymph::models::logistic_regression();
@@ -349,9 +349,9 @@ int main() {
   // Hard predictions can agree while the underlying decision scores differ,
   // which is how you see the two fitted models really are distinct values.
   const DataFrame compare({
-      {"actual", Slate(y)},
-      {"score_800_iters", Slate(fitted_converged.infer_scores(x))},
-      {"score_2_iters", Slate(fitted_hurried.infer_scores(x))},
+      {"actual", Shelf(y)},
+      {"score_800_iters", Shelf(fitted_converged.infer_scores(x))},
+      {"score_2_iters", Shelf(fitted_hurried.infer_scores(x))},
   });
   std::cout << compare;
 
@@ -398,7 +398,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -409,9 +409,9 @@ int main() {
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series defaulted = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
   const DataFrame frame({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
   });
 
   // The batch spells out the data contract: which columns are features and
@@ -427,10 +427,10 @@ int main() {
 
   // Inference takes the same frame and batch; only the feature columns are read.
   const DataFrame review({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
-      {"predicted", Slate(model.infer(frame, batch))},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
+      {"predicted", Shelf(model.infer(frame, batch))},
   });
   std::cout << review;
 
@@ -460,7 +460,7 @@ trained = true
 
 ### Example 4
 
-The `DataFrame x, Slate y` overload, plus `class_weight = Balanced` for an
+The `DataFrame x, Shelf y` overload, plus `class_weight = Balanced` for an
 imbalanced label (one default in eight). The balanced fit gives the lone default
 a stronger pull: its score rises and the majority rows' scores relax toward the
 boundary.
@@ -475,7 +475,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -486,15 +486,15 @@ int main() {
   const pluss::Series balance = pluss::make_series({0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 1.6}, {8}, f64);
   const pluss::Series defaulted = pluss::make_series({0, 0, 0, 0, 0, 0, 0, 1}, {8}, f64);
 
-  // The label can be handed in as a Slate lifted straight from a frame
+  // The label can be handed in as a Shelf lifted straight from a frame
   // column -- the fourth accepted (features, label) input shape.
   const DataFrame frame({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
   });
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
-  const Slate y = frame.features("defaulted");
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
+  const Shelf y = frame.features("defaulted");
 
   const lymph::models::Model blueprint = lymph::models::logistic_regression();
 
@@ -511,11 +511,11 @@ int main() {
   // infer_scores is the raw decision score (log-odds); infer is its sign as
   // a 0/1 label.
   const DataFrame compare({
-      {"actual", Slate(defaulted)},
-      {"score_plain", Slate(plain.infer_scores(x))},
-      {"score_balanced", Slate(rebalanced.infer_scores(x))},
-      {"label_plain", Slate(plain.infer(x))},
-      {"label_balanced", Slate(rebalanced.infer(x))},
+      {"actual", Shelf(defaulted)},
+      {"score_plain", Shelf(plain.infer_scores(x))},
+      {"score_balanced", Shelf(rebalanced.infer_scores(x))},
+      {"label_plain", Shelf(plain.infer(x))},
+      {"label_balanced", Shelf(rebalanced.infer(x))},
   });
   std::cout << compare;
 
@@ -558,7 +558,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -566,7 +566,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   // The common mistake: assuming `learn` mutates the caller.
   lymph::models::Model candidate = lymph::models::logistic_regression();
@@ -601,10 +601,10 @@ int main() {
   one_shot.learn_(x, y, single);
 
   const DataFrame compare({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"two_warm_bursts", Slate(incremental.infer(x))},
-      {"one_100_iter_run", Slate(one_shot.infer(x))},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"two_warm_bursts", Shelf(incremental.infer(x))},
+      {"one_100_iter_run", Shelf(one_shot.infer(x))},
   });
   std::cout << compare;
 

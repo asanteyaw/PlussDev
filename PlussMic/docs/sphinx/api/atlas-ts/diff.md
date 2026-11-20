@@ -41,8 +41,8 @@ frames.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
-auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
+auto q1 = DataFrame({{"load", Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
+auto q2 = DataFrame({{"load", Shelf(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
 auto atlas = Atlas({q1, q2});
 
 auto out = atlas.ts().diff();
@@ -55,7 +55,7 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 ===========
      | load
 -----------
-0    |  nan
+0    | NULL
 1    |  10 
 2    | -5  
 3    |  15 
@@ -64,7 +64,7 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 ===========
      | load
 -----------
-0    |  nan
+0    | NULL
 1    |  6  
 2    | -4  
 3    |  14 

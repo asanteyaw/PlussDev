@@ -1,0 +1,129 @@
+<!-- generated from sample_time.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3623a284aa32 -->
+
+# `lti::PoleZero::sample_time`
+
+[Back to `lti::PoleZero`](../PoleZero.md)
+
+The sample period in seconds; zero for a continuous-time system.
+
+## Signature
+
+```cpp
+double lti::PoleZero::sample_time() const noexcept;
+```
+
+## What It Does
+
+Returns the sample time given to `zpk`. Zero means the poles and zeros are in the `s` plane; a positive value means a discrete system in the `z` plane, where stability is inside the unit circle rather than the left half-plane.
+
+## Returns
+
+The sample period in seconds, `0.0` for continuous time.
+
+## Practical Examples
+
+### Example 1
+
+A continuous plant reports zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("sample time =", plant().sample_time());
+}
+```
+
+Output
+
+```text
+sample time = 0.0000
+```
+
+### Example 2
+
+A discrete system reports its period.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("sample time =", plant(0.01).sample_time());
+}
+```
+
+Output
+
+```text
+sample time = 0.0100
+```
+
+### Example 3
+
+The period and the domain tests together.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const double ts : {0.0, 0.25}) {
+    const lti::PoleZero g = plant(ts);
+    out.writeln("sample time", g.sample_time(), " continuous", g.is_cont(), " discrete", g.is_disc());
+  }
+}
+```
+
+Output
+
+```text
+sample time 0.0000  continuous true  discrete false
+sample time 0.2500  continuous false  discrete true
+```
+
+## See Also
+
+- [`is_cont`](is_cont.md): true for a continuous system
+- [`is_disc`](is_disc.md): true for a discrete system
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="poles.html">
+    <span class="label">Previous</span>
+    <span class="title">poles</span>
+  </a>
+  <a class="next-link" href="zeros.html">
+    <span class="label">Next</span>
+    <span class="title">zeros</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -77,7 +77,7 @@ inline Routh routh(const Series &coeffs, double epsilon = 1e-9) {
     const Series row_zero = r1.abs().amax(-1, false).lt(epsilon * scale);
     marginal = marginal.add(tiny.logical_and(row_zero).to(coeffs.scalar_type())).clamp(0.0, 1.0);
     // epsilon method: a vanishing pivot becomes a small positive number
-    pivot = tiny.where(scale.mul(epsilon), pivot);
+    pivot = pluss::series::where(tiny, scale.mul(epsilon), pivot);
     r1 = pivot.unsqueeze(-1).unite(std::vector<Series>{r1.slice(-1, 1, width, 1)}, -1);
     // b_j = (r1[0] r0[j+1] - r0[0] r1[j+1]) / r1[0], the whole row at once
     const Series p = pivot.unsqueeze(-1);

@@ -53,8 +53,8 @@ namespace detail {
 inline Series vtrap(const Series &x, double y) {
   const Series z = x.div(y);
   const Series tiny = z.abs().lt(1e-7);
-  const Series safe = tiny.where(z.mul(0.0).add(1.0), z);
-  return tiny.where(x.mul(0.0).add(y).sub(x.mul(0.5)), x.div(safe.expm1()));
+  const Series safe = pluss::series::where(tiny, z.mul(0.0).add(1.0), z);
+  return pluss::series::where(tiny, x.mul(0.0).add(y).sub(x.mul(0.5)), x.div(safe.expm1()));
 }
 } // namespace detail
 

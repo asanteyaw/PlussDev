@@ -1,57 +1,57 @@
 # Part III: The Table Model
 
-This part explains how `Slate`, `DataFrame`, `DataFrameView`, and `Atlas`
+This part explains how `Shelf`, `DataFrame`, `DataFrameView`, and `Atlas`
 relate. Understanding these types makes the rest of PlussMic predictable.
 
-## Slate
+## Shelf
 
-A `Slate` is one typed column. It can hold one of four payload kinds:
+A `Shelf` is one typed column. It can hold one of four payload kinds:
 
 ```cpp
-pluss::table::Slate numeric(pluss::make_series({1.0, 2.0, 3.0}));
-pluss::table::Slate text(pluss::make_note({"red", "green", "blue"}));
-pluss::table::Slate dates(pluss::make_timeline({
+pluss::table::Shelf numeric(pluss::make_series({1.0, 2.0, 3.0}));
+pluss::table::Shelf text(pluss::make_note({"red", "green", "blue"}));
+pluss::table::Shelf dates(pluss::make_timeline({
     "2024-01-01T00:00:00Z",
     "2024-01-02T00:00:00Z",
     "2024-01-03T00:00:00Z",
 }));
 ```
 
-Inspect a slate:
+Inspect a shelf:
 
 ```cpp
-slate.defined();
-slate.size();
-slate.kind();
-slate.dtype();
-slate.info();
+shelf.defined();
+shelf.size();
+shelf.kind();
+shelf.dtype();
+shelf.info();
 ```
 
 Access the payload only after you know the kind:
 
 ```cpp
-if (slate.kind() == pluss::table::SlateKind::Series) {
-  auto values = slate.as_series();
+if (shelf.kind() == pluss::table::ShelfKind::Series) {
+  auto values = shelf.as_series();
 }
 ```
 
 ## Missingness and validity
 
-`Slate` can carry a validity mask. Loader-created columns use this to represent
+`Shelf` can carry a validity mask. Loader-created columns use this to represent
 missing values from input files.
 
 ```cpp
-auto missing = slate.isnull();
-auto present = slate.notnull();
-auto filled = slate.fillnull(0.0);
-auto complete = slate.dropnull();
+auto missing = shelf.isnull();
+auto present = shelf.notnull();
+auto filled = shelf.fillnull(0.0);
+auto complete = shelf.dropnull();
 ```
 
-Numeric slates also support `isnan` and `isfinite`.
+Numeric shelves also support `isnan` and `isfinite`.
 
 ## DataFrame
 
-A `DataFrame` is a set of named `Slate` features with an optional case axis.
+A `DataFrame` is a set of named `Shelf` features with an optional case axis.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -120,13 +120,13 @@ integer axis shown at the left. `features()` preserves insertion order:
 Feature selection:
 
 ```cpp
-auto sales = df.features("sales");                 // Slate
+auto sales = df.features("sales");                 // Shelf
 auto smaller = df.features({"region", "sales"});   // DataFrame
 auto numeric = df.feataxis().series();
 auto text = df.feataxis().note();
 ```
 
-`features("name")` returns a `Slate` with display labels from the frame's case
+`features("name")` returns a `Shelf` with display labels from the frame's case
 axis and a display name matching the feature. `features({"a", "b"})` returns a
 new `DataFrame` with the same case axis and the selected feature order.
 

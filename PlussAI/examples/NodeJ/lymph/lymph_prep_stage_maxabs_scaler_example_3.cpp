@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,7 +15,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
+  const DataFrame x({{"amount", Shelf(amount)}, {"region", Shelf(region)}});
 
   // maxabs on the numeric column, one-hot on the categorical one, chained.
   // Fully qualified factory spelling.
@@ -28,10 +28,10 @@ int main() {
 
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
   const DataFrame review({
-      {"amount", Slate(amount)},
-      {"region", Slate(region)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(model.infer(x))},
+      {"amount", Shelf(amount)},
+      {"region", Shelf(region)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(model.infer(x))},
   });
   std::cout << review;
 

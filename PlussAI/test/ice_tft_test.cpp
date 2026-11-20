@@ -33,7 +33,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 namespace models = pluss::ai::ice::models;
 namespace data = pluss::ai::ice::data;
 
@@ -386,14 +386,14 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
       }
     }
     return DataFrame({
-        {"series", Slate(pluss::make_note(series_col))},
-        {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-        {"level", Slate(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
+        {"series", Shelf(pluss::make_note(series_col))},
+        {"t", Shelf(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+        {"level", Shelf(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
         {"position",
-         Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+         Shelf(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
         {"noisy_level",
-         Slate(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, float_cfg()))},
-        {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
+         Shelf(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, float_cfg()))},
+        {"y", Shelf(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
     });
   };
 

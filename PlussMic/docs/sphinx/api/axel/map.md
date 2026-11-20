@@ -66,8 +66,8 @@ auto axel = pluss::scribble::Axel({
 try {
   std::function<pluss::scribble::Registry(const pluss::scribble::Registry&)> fn;
   axel.map(fn);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

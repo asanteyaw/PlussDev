@@ -65,11 +65,11 @@ Then cast:
 auto typed = df.astype({{"amount", pluss::codem::ScalarType::Float64}});
 auto text = typed.cast({
     pluss::table::DataFrame::CastSpec{
-        "category", pluss::table::SlateCastTarget::Note, {}},
+        "category", pluss::table::ShelfCastTarget::Note, {}},
 });
 auto dates = typed.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::SlateCastTarget::Timeline, {}},
+        "date", pluss::table::ShelfCastTarget::Timeline, {}},
 });
 ```
 
@@ -84,7 +84,7 @@ For missing values, the expected `fillnull` contract is:
 
 - existing non-null values remain unchanged;
 - null values in selected features are replaced;
-- the validity mask is cleared when all null values in the filled slate are
+- the validity mask is cleared when all null values in the filled shelf are
   resolved.
 
 When writing production code around missing values, keep a small regression

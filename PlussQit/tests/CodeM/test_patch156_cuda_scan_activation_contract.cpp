@@ -171,8 +171,8 @@ TEST_CASE("CUDA bridge parity covers activation and logical families", "[cuda][b
       x_cuda.logsumexp(1, false).to(pluss::pCPU).host<float>(),
       x_cpu.logsumexp(1, false).host<float>());
   require_close_(
-      x_cuda.where(mask_cuda, alt_cuda).to(pluss::pCPU).host<float>(),
-      x_cpu.where(mask_cpu, alt_cpu).host<float>());
+      pluss::series::where(mask_cuda, alt_cuda, x_cuda).to(pluss::pCPU).host<float>(),
+      pluss::series::where(mask_cpu, alt_cpu, x_cpu).host<float>());
   require_equal_u8_(
       mask_cuda.logical_and(mask_cuda.logical_not()).to(pluss::pCPU).host<std::uint8_t>(),
       mask_cpu.logical_and(mask_cpu.logical_not()).host<std::uint8_t>());
@@ -206,8 +206,8 @@ TEST_CASE("CUDA strict policy covers activation and logical families", "[cuda][b
   require_close_(x_cuda.gelu(false).to(pluss::pCPU).host<float>(), x_cpu.gelu(false).host<float>());
   require_close_(x_cuda.softmax(1).to(pluss::pCPU).host<float>(), x_cpu.softmax(1).host<float>());
   require_close_(
-      x_cuda.where(mask_cuda, y_cuda).to(pluss::pCPU).host<float>(),
-      x_cpu.where(mask_cpu, y_cpu).host<float>());
+      pluss::series::where(mask_cuda, y_cuda, x_cuda).to(pluss::pCPU).host<float>(),
+      pluss::series::where(mask_cpu, y_cpu, x_cpu).host<float>());
   require_equal_u8_(
       mask_cuda.logical_or(mask_cuda.logical_not()).to(pluss::pCPU).host<std::uint8_t>(),
       mask_cpu.logical_or(mask_cpu.logical_not()).host<std::uint8_t>());

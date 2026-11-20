@@ -89,9 +89,9 @@ north        | 1
   every catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fillnull.html">
+  <a class="prev-link" href="fillposinf.html">
     <span class="label">Previous</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillposinf</span>
   </a>
   <a class="next-link" href="has.html">
     <span class="label">Next</span>

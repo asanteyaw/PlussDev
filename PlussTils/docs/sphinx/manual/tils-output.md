@@ -8,7 +8,7 @@
 
 Every program writes something: a progress line, a report, a log entry, a dump of a value that is hard to read on its own. PlussTils's output engine handles all of these with one set of rules, so a log line and a report row look and behave the same way. This chapter shows the engine doing real work, from a run logger to a capture-to-string test, and explains the rules that make it predictable.
 
-## The mental model
+## How it works
 
 An output engine is an object that holds a destination, a separator, the level prefixes, a minimum level, and a set of default print options. Each call hands it some values. The engine renders each value to text, joins the pieces with the separator, and writes the line to the destination. A call may end with a `PrintOptions` value. That trailing value describes how to render the whole call, so it applies to every value on that line, not only the last one.
 

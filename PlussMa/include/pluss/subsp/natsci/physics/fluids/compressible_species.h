@@ -121,8 +121,8 @@ inline Series normalize_face(const Series &candidate, const Series &fallback,
   const Series clipped = candidate.clamp(0.0, 1.0);
   const Series total = clipped.sum(axis, true);
   const Series valid = total.gt(0.0).logical_and(total.isfinite());
-  const Series safe = valid.where(total, pluss::series::ones_like(total));
-  return valid.where(clipped.div(safe), fallback);
+  const Series safe = pluss::series::where(valid, total, pluss::series::ones_like(total));
+  return pluss::series::where(valid, clipped.div(safe), fallback);
 }
 
 inline Series advective_rate(const Series &partial, const Series &rho,
@@ -140,7 +140,7 @@ inline Series advective_rate(const Series &partial, const Series &rho,
     const Series right =
         normalize_face(faces.second, right_fallback, component);
     const Series &mass = fluxes[static_cast<std::size_t>(axis)].flux.mass;
-    const Series upwind = mass.ge(0.0).unsqueeze(component).where(left, right);
+    const Series upwind = pluss::series::where(mass.ge(0.0).unsqueeze(component), left, right);
     const Series face_flux = upwind.mul(mass.unsqueeze(component));
     result = result.sub(face_flux.sub(face_flux.roll(1, spatial_axis))
                             .div(grid.spacing(axis).si_value()));
@@ -192,9 +192,7 @@ inline Diffusion diffusion(const gas::detail::Raw &flow, const Series &partial,
     const Series d_sum = d.add(next_d);
     const Series positive = d_sum.gt(0.0);
     const Series face_d =
-        positive.where(d.mul(next_d).mul(2.0).div(positive.where(
-                           d_sum, pluss::series::ones_like(d_sum))),
-                       pluss::series::zeros_like(d_sum));
+        pluss::series::where(positive, d.mul(next_d).mul(2.0).div(pluss::series::where(positive, d_sum, pluss::series::ones_like(d_sum))), pluss::series::zeros_like(d_sum));
     const Series face_density =
         density.add(density.roll(-1, spatial_axis)).mul(0.5);
     Series flux = next_x.sub(x)
@@ -267,12 +265,11 @@ inline Series species_fraction(const Series &low, const Series &high,
   const Series finite = high.isfinite();
   const Series valid = finite.logical_and(high.ge(0.0));
   const Series denominator = low.sub(high);
-  const Series safe = denominator.ne(0.0).where(
-      denominator, pluss::series::ones_like(denominator));
+  const Series safe = pluss::series::where(denominator.ne(0.0), denominator, pluss::series::ones_like(denominator));
   const Series candidate = low.div(safe).clamp(0.0, 1.0);
   const Series one = pluss::series::ones_like(high);
   const Series zero = pluss::series::zeros_like(high);
-  const Series local = valid.where(one, finite.where(candidate, zero));
+  const Series local = pluss::series::where(valid, one, pluss::series::where(candidate, zero, finite));
   return reduce_trailing(local, grid.dim() + 1);
 }
 

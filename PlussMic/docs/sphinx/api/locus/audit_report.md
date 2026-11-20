@@ -53,3 +53,14 @@ audit_report ncases=5
   row, scoped to one named relationship.
 - [`schema`](schema.md), [`scan`](scan.md): the other reports built on this
   same combined diagnostics frame.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="audit.html">
+    <span class="label">Previous</span>
+    <span class="title">audit</span>
+  </a>
+  <a class="next-link" href="catalogs.html">
+    <span class="label">Next</span>
+    <span class="title">catalogs</span>
+  </a>
+</div>

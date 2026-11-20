@@ -9,7 +9,7 @@
 
 ```cpp
 const std::vector<std::string>& DataFrame::features() const
-Slate DataFrame::features(std::string_view name) const
+Shelf DataFrame::features(std::string_view name) const
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) const
 DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) const
 DataFrame DataFrame::features(StackArray<std::string_view> names) const
@@ -22,9 +22,9 @@ entirely by how many names you pass:
 
 - **No arguments** — `features()` returns the frame's ordered list of feature names,
   as a plain `const std::vector<std::string>&`.
-- **One name** — `features("sales")` extracts a *single* feature as a `Slate`, with
+- **One name** — `features("sales")` extracts a *single* feature as a `Shelf`, with
   its case labels and display name attached (so printing it shows a
-  `Name: sales, ptype: Series`-style footer, exactly like other named `Slate`
+  `Name: sales, ptype: Series`-style footer, exactly like other named `Shelf`
   results).
 - **Several names** — `features({"id", "sales"})` (or the equivalent range/
   `StackArray` overloads) projects the frame down to a **subset** `DataFrame`
@@ -37,7 +37,7 @@ Every non-trivial name lookup throws if the name doesn't exist on the frame.
 
 **name** (`std::string_view`, single-feature overload)
 
-The one feature to extract as a standalone `Slate`.
+The one feature to extract as a standalone `Shelf`.
 
 **names** (`initializer_list`/`RangeView`/`StackArray` of `std::string_view`,
 multi-feature overload)
@@ -50,7 +50,7 @@ follows this list, not the source frame's original order.
 `const std::vector<std::string>&` (no-argument overload)
     The frame's feature names, in their current order.
 
-`Slate` (single-name overload)
+`Shelf` (single-name overload)
     The named feature, with case labels and display name attached.
 
 `DataFrame` (multi-name overload)
@@ -98,7 +98,7 @@ for (const auto& name : orders.features()) {
 id sales city
 ```
 
-Example 2. Extract a single feature as a standalone `Slate`.
+Example 2. Extract a single feature as a standalone `Shelf`.
 
 ```cpp
 auto sales_col = orders.features("sales");
@@ -147,7 +147,7 @@ labels, in the order requested. Listing names in a different order (say,
 - The multi-name overload's result order follows the order you list names in, not the
   source frame's order — use this to reorder columns as a side effect of selecting
   them.
-- The single-name overload's returned `Slate` carries the source frame's case labels
+- The single-name overload's returned `Shelf` carries the source frame's case labels
   and the feature's own name for display; the no-argument overload returns a plain
   name list with no such attachment.
 
@@ -155,7 +155,7 @@ labels, in the order requested. Listing names in a different order (say,
 
 - [`DataFrame::nfeatures`](nfeatures.md): the count matching this list's length.
 - [`DataFrame::get`](get.md): a null-safe alternative to the single-name overload,
-  returning `std::optional<Slate>` instead of throwing on an unknown name.
+  returning `std::optional<Shelf>` instead of throwing on an unknown name.
 - [`DataFrame::drop`](drop.md): the complementary operation — remove named features
   instead of projecting down to them.
 

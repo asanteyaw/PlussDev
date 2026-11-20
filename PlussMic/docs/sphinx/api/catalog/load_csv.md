@@ -36,6 +36,15 @@ column, with the column's dtype inferred from its values (numeric columns become
 
 Example 1. Load a CSV file with default options.
 
+Given `cities.csv`:
+
+```text
+city,population
+Accra,2500000
+Tema,161000
+Kumasi,3000000
+```
+
 ```cpp
 auto ct = pluss::kindle::Catalog::load_csv("cities.csv");
 std::cout << ct;
@@ -45,14 +54,13 @@ std::cout << ct;
 
 ```text
 ========================================================================================================================
-kindle::Catalog  keys=3
-keys: [id, city, population]
+kindle::Catalog  keys=2
+keys: [city, population]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[int64]    | 3       | [1, 2, 3]                                        
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-population               | Series       | Series[int64]    | 3       | [2388000, 300000, 3348000]                       
+population               | Series       | Series[int64]    | 3       | [2500000, 161000, 3000000]                       
 ========================================================================================================================
 ```
 
@@ -77,8 +85,8 @@ becomes `Note`.
     <span class="label">Previous</span>
     <span class="title">load</span>
   </a>
-  <a class="next-link" href="load_labeled.html">
+  <a class="next-link" href="load_excel.html">
     <span class="label">Next</span>
-    <span class="title">load_labeled</span>
+    <span class="title">load_excel</span>
   </a>
 </div>

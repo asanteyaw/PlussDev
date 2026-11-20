@@ -1,5 +1,7 @@
 # `lti::obsv`
 
+Builds the observability matrix.
+
 ## Signature
 
 ```cpp
@@ -8,42 +10,46 @@ pluss::Series lti::obsv(const lti::StateSpace& system);
 
 ## What It Does
 
-Builds the vertical stack `[C; CA; CA²; ...]` through power `states - 1`. Full column rank means the internal state can be reconstructed from output history.
+Returns the stack `[C; C A; C A^2; ...; C A^{n-1}]`, an `[n p, n]` matrix. The initial state can be recovered from the outputs exactly when this matrix has full column rank `n`.
 
 ## Parameters
 
 `system`
-: Valid state-space system. Continuous and discrete systems use the same algebraic observability matrix.
+: A `StateSpace`.
 
 ## Returns
 
-A `Series` with matrix tail `[states * outputs, states]` and the system batch axes.
+A `Series` with matrix shape `[n p, n]` and the batch axes of the system.
 
 ## Errors
 
-The call has no separate options. Numerical rank should be judged with a tolerance appropriate to the dtype and scaling.
+Construction errors are raised by `state`; judging the rank is left to the caller.
+
+## Interpretation and Use
+
+Observability is the dual of controllability: the observability matrix of `(A, C)` is the transpose of the controllability matrix of `(A', C')` (the third example). A state that the output does not depend on, directly or through the dynamics, makes the determinant zero (the first example).
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+A system whose states are all visible and one with an invisible state.
 
-@@example Eng/api/lti_state.cpp@@
+@@example Eng/api/lti_obsv_rank.cpp@@
 
 ### Example 2
 
-Compare energy Gramians across continuous and discrete timebases.
+The shape for one and for several outputs.
 
-@@example Eng/api/lti_gram.cpp@@
+@@example Eng/api/lti_obsv_shape.cpp@@
 
 ### Example 3
 
-Exercise matrix-shape and sample-time validation.
+The duality with `ctrb`.
 
-@@example Eng/api/lti_state_errors.cpp@@
+@@example Eng/api/lti_obsv_duality.cpp@@
 
 ## See Also
 

@@ -2,6 +2,8 @@
 
 # `lti::SimOptions`
 
+The options of `sim`.
+
 ## Signature
 
 ```cpp
@@ -10,140 +12,179 @@ lti::SimOptions options{};
 
 ## What It Does
 
-Carries simulation interpolation policy without changing the state-space model itself.
+Currently one field: the hold used for the input between samples.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `hold` | `Hold::Auto` | Chooses automatic, zero-order, or linear input interpolation between continuous-time samples. |
+| Field | Meaning | Default |
+|---|---|---|
+| `hold` | A `Hold`. | `Auto` |
 
 ## Returns
 
-Pass by const reference to either `sim` overload.
+Argument of `sim`.
 
 ## Errors
 
-A hold policy incompatible with a discrete system is rejected when simulation begins.
+Invalid inputs are reported by `sim`.
+
+## Interpretation and Use
+
+Construct it with a designated initializer: `{.hold = lti::Hold::Zero}`. The default `Auto` matched `Linear` exactly in the first example and differed from `Zero` by 0.2341 on the ramp.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+The default and what it equals on a ramp.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.2, 0.7, 1.5});
-  const pluss::Series input = pluss::make_series({1.0, 1.0, 1.0, 1.0}, {4, 1});
-  const lti::SimRun run = lti::sim(
-      system, input, time, {.hold = lti::Hold::Zero});
-
-  out.writeln("values =", run.values.flatten().items<double>());
-  out.writeln("states =", run.states.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-values = [0.0000, 0.1813, 0.5034, 0.7769]
-states = [0.0000, 0.1813, 0.5034, 0.7769]
-```
-### Example 2
-
-Compare hold policies with an explicit initial state.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.5, 1.0});
-  const pluss::Series ramp = pluss::make_series({0.0, 0.5, 1.0}, {3, 1});
-  const pluss::Series initial = pluss::make_series({2.0});
-  const lti::SimRun zero = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Zero});
-  const lti::SimRun linear = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Linear});
-
-  out.writeln("zero hold =", zero.values.flatten().items<double>());
-  out.writeln("linear hold =", linear.values.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-zero hold = [2.0000, 1.2131, 0.9325]
-linear hold = [2.0000, 1.3196, 1.1036]
-```
-### Example 3
-
-Exercise timestamp and input-shape validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}, {3, 1}),
-        pluss::make_series({0.0, 0.5, 0.5})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("repeated time rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}),
-        pluss::make_series({0.0, 0.5, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("rank-one input rejected =", message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::SimOptions defaults;
+  out.writeln("the default hold is Auto:", defaults.hold == lti::Hold::Auto);
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0, 1.5, 2.0});
+  const pluss::Series ramp = pluss::make_series({0.0, 0.5, 1.0, 1.5, 2.0}, {5, 1});
+  const auto automatic = lti::sim(s, ramp, t).values.flatten().items<double>();
+  const auto linear = lti::sim(s, ramp, t, {.hold = lti::Hold::Linear}).values.flatten().items<double>();
+  const auto zero = lti::sim(s, ramp, t, {.hold = lti::Hold::Zero}).values.flatten().items<double>();
+  double to_linear = 0.0, to_zero = 0.0;
+  for (std::size_t i = 0; i < automatic.size(); ++i) { to_linear = std::max(to_linear, std::abs(automatic[i] - linear[i])); to_zero = std::max(to_zero, std::abs(automatic[i] - zero[i])); }
+  out.writeln("Auto against Linear, largest difference", to_linear, "; Auto against Zero", to_zero);
 }
 ```
 
 Output
 
 ```text
-repeated time rejected = eng::lti::sim: time values must be strictly increasing
-rank-one input rejected = eng::lti::sim: input must have shape [..., time, inputs]
+the default hold is Auto: true
+Auto against Linear, largest difference 0.0000 ; Auto against Zero 0.2341
+```
+### Example 2
+
+`Zero` and `Linear` on the same ramp.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 1.0, 2.0});
+  const pluss::Series ramp = pluss::make_series({0.0, 1.0, 2.0}, {3, 1});
+  for (const auto [label, hold] : {std::pair{"Zero  ", lti::Hold::Zero}, {"Linear", lti::Hold::Linear}}) out.writeln(label, "y =", lti::sim(s, ramp, t, {.hold = hold}).values.flatten().items<double>());
+}
+```
+
+Output
+
+```text
+Zero   y = [0.0000, 0.0000, 0.6321]
+Linear y = [0.0000, 0.3679, 1.1353]
+```
+### Example 3
+
+Arguments `sim` refuses under these options.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  refused(out, "a time vector that does not increase under Linear hold", [&] { lti::sim(s, pluss::series::ones({3, 1}, pluss::ScalarType::Float64), pluss::make_series({0.0, 1.0, 0.5}), {.hold = lti::Hold::Linear}); });
+  refused(out, "an input of the wrong width", [&] { lti::sim(s, pluss::series::ones({2, 3}, pluss::ScalarType::Float64), pluss::make_series({0.0, 1.0}), {.hold = lti::Hold::Zero}); });
+}
+```
+
+Output
+
+```text
+a time vector that does not increase under Linear hold : eng::lti::sim: time values must be strictly increasing
+an input of the wrong width : eng::lti::sim: input width must equal the system input count
 ```
 ## See Also
 

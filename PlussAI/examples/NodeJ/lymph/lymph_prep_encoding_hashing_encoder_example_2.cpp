@@ -6,9 +6,9 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
-  const DataFrame train({{"tag", Slate(pluss::make_note(
+  const DataFrame train({{"tag", Shelf(pluss::make_note(
       {"red", "green", "blue", "cyan", "black", "white"}))}});
 
   // seed perturbs the hash: the same categories land in a different bucket

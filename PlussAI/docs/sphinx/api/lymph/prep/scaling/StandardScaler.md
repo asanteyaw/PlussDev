@@ -75,16 +75,16 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series amount = pluss::make_series({10., 20., 30., 40., 50.}, {5}, f64);
   const pluss::Series ratio  = pluss::make_series({0.2, 0.4, 0.6, 0.8, 1.0}, {5}, f64);
-  const DataFrame train({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
-  const DataFrame later({{"amount", Slate(pluss::make_series({15., 35., 60.}, {3}, f64))},
-                        {"ratio",  Slate(pluss::make_series({0.3, 0.7, 1.2}, {3}, f64))}});
+  const DataFrame train({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}});
+  const DataFrame later({{"amount", Shelf(pluss::make_series({15., 35., 60.}, {3}, f64))},
+                        {"ratio",  Shelf(pluss::make_series({0.3, 0.7, 1.2}, {3}, f64))}});
 
   // The standalone object holds its fitted state. Pin the columns with
   // features(), fit with learn() (which returns *this so it chains), then apply
@@ -155,16 +155,16 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series amount = pluss::make_series({10., 20., 30., 40., 50.}, {5}, f64);
   const pluss::Series ratio  = pluss::make_series({0.2, 0.4, 0.6, 0.8, 1.0}, {5}, f64);
-  const DataFrame train({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
-  const DataFrame later({{"amount", Slate(pluss::make_series({15., 35., 60.}, {3}, f64))},
-                        {"ratio",  Slate(pluss::make_series({0.3, 0.7, 1.2}, {3}, f64))}});
+  const DataFrame train({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}});
+  const DataFrame later({{"amount", Shelf(pluss::make_series({15., 35., 60.}, {3}, f64))},
+                        {"ratio",  Shelf(pluss::make_series({0.3, 0.7, 1.2}, {3}, f64))}});
 
   // One fitted scaler, reused. Fit once on train; every later frame is
   // transformed against the same statistics -- the point of the object form
@@ -242,14 +242,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series amount = pluss::make_series({10., 20., 30., 40., 50.}, {5}, f64);
   const pluss::Series ratio  = pluss::make_series({0.2, 0.4, 0.6, 0.8, 1.0}, {5}, f64);
-  const DataFrame train({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
+  const DataFrame train({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}});
 
   // learn_map fits and applies in one call, returning the transformed frame.
   // With no features() call the scaler acts on every numeric column.
@@ -321,14 +321,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series amount = pluss::make_series({10., 20., 30., 40., 50.}, {5}, f64);
   const pluss::Series ratio  = pluss::make_series({0.2, 0.4, 0.6, 0.8, 1.0}, {5}, f64);
-  const DataFrame train({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
+  const DataFrame train({{"amount", Shelf(amount)}, {"ratio", Shelf(ratio)}});
 
   // summary() exposes the fitted parameters. StandardScaler's summary is a
   // dedicated struct with mean and scale as one-per-column Series.

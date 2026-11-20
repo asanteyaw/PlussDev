@@ -88,8 +88,8 @@ auto archive = pluss::kindle::Archive({c0});
 
 try {
   archive.catalog(5);
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 28);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 28);
 }
 ```
 

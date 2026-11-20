@@ -18,6 +18,7 @@
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
 #include "CodeM/native/cpu/SortingKernels.h"
 #include "CodeM/native/mps/BufferCache.h"
+#include "CodeM/native/mps/Elementwise.h"
 #include "CodeM/native/mps/Matmul.h"
 #include "CodeM/native/mps/Sorting.h"
 #include "CodeM/native/mps/Stochastic.h"
@@ -280,9 +281,11 @@ static Series mps_matmul_batched_dispatch_(const Series& a, const Series& b) {
 
   const std::int64_t batch = product_shape_(std::span<const std::int64_t>(out_batch.data(), out_batch.size()));
   if (batch == 1) {
+    // Restore the leading batch axes (all of size one): the product itself is a single [m, n] page.
     return native::mps::matmul(
-        aa.reshape({m, k}).contiguous(),
-        bb.reshape({k, n}).contiguous());
+               aa.reshape({m, k}).contiguous(),
+               bb.reshape({k, n}).contiguous())
+        .reshape(out_shape);
   }
 
   const Series aa_flat = aa.reshape({batch, m, k}).contiguous();
@@ -3375,7 +3378,22 @@ static void bind_trig_xform_backward_(
   series_tape::bind_source_link(out, std::move(link));
 }
 
+// Float64 host algorithms (MPS holds no float64): run `f` on the CPU, then hand the result back on MPS,
+// narrowing float64/complex128 results to float32/complex64.
+template <class F>
+static Series mps_host_bridge_(F&& f) {
+  Series r = pluss::series::undefined();
+  {
+    ops_internal::PlatformScope host_scope{Platform::CPU};
+    r = f();
+  }
+  if (r.scalar_type() == ScalarType::Float64) r = r.to(ScalarType::Float32);
+  else if (r.scalar_type() == ScalarType::Complex128) r = r.to(ScalarType::Complex64);
+  return r.to(Platform::MPS);
+}
+
 static Series trig_xform_impl(const Series& self, std::int64_t dim, TrigXform kind) {
+  if (self.platform() == Platform::MPS) return mps_host_bridge_([&] { return trig_xform_impl(self.to(Platform::CPU), dim, kind); });
   PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
               "dct/idct/dst/idst: complex input is not supported");
   dim = wrap_dim(dim, self.dim(), "dct/idct/dst/idst");
@@ -3780,6 +3798,26 @@ static Series logit_impl(const Series& self, std::optional<double> eps = std::nu
 }
 
 static Series nextafter_impl(const Series& self, const Series& other) {
+  if (self.platform() == Platform::MPS) {
+    // float32 kernel on the IEEE bit pattern (MPS has no float64).
+    const Series fa = self.to(ScalarType::Float32).contiguous();
+    const Series fb = other.to(ScalarType::Float32).contiguous();
+    Series out = Series::empty(SeriesIterator::broadcast_shape(fa.sizes(), fb.sizes()), ScalarType::Float32, Platform::MPS);
+    native::mps::nextafter(fa, fb, out);
+    return out;
+  }
+  // float32 inputs step in float32 (the neighbour one float32 ulp away), not in double.
+  if (self.scalar_type() == ScalarType::Float32 && other.scalar_type() == ScalarType::Float32) {
+    auto shape32 = SeriesIterator::broadcast_shape(self.sizes(), other.sizes());
+    auto fa = expand_impl(self, std::span<const std::int64_t>(shape32.data(), shape32.size())).contiguous();
+    auto fb = expand_impl(other, std::span<const std::int64_t>(shape32.data(), shape32.size())).contiguous();
+    auto out32 = Series::empty(shape32, ScalarType::Float32);
+    const auto* x = reinterpret_cast<const float*>(fa.raw_data());
+    const auto* y = reinterpret_cast<const float*>(fb.raw_data());
+    auto* z = reinterpret_cast<float*>(out32.raw_data());
+    for (std::int64_t i = 0; i < out32.numel(); ++i) z[i] = std::nextafter(x[i], y[i]);
+    return out32;
+  }
   auto a = self.to(ScalarType::Float64);
   auto b = other.to(ScalarType::Float64);
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
@@ -3988,6 +4026,7 @@ static ScalarType float_power_dtype_(ScalarType a, ScalarType b) {
   return ScalarType::Float64;
 }
 static Series float_power_impl_(const Series& a, const Series& b) {
+  if (a.platform() == Platform::MPS) return mps_host_bridge_([&] { return float_power_impl_(a.to(Platform::CPU), b.to(Platform::CPU)); });
   const auto dt = float_power_dtype_(a.scalar_type(), b.scalar_type());
   return ops_internal::pow(a.to(dt), b.to(dt));
 }
@@ -3995,6 +4034,11 @@ static Series float_power_impl_(const Series& a, const Series& b) {
 // floor_divide rounds the quotient toward negative infinity. With two integral
 // operands the result stays integral (promoted); otherwise it is floating.
 static Series floor_divide_impl_(const Series& a, const Series& b) {
+  if (ops_internal::has_zero_integer_divisor(a, b)) {
+    // Integers cannot hold +-inf or NaN, so floor(a / 0) = +-inf (0 // 0 = NaN) comes back as a floating result.
+    return ops_internal::floor(ops_internal::div(a, b));
+  }
+  if (ops_internal::mps_exact_int_pair(a, b)) return ops_internal::mps_int_floor_divide(a, b);
   Series q = ops_internal::floor(ops_internal::div(a, b));
   const bool ai = !is_floating_dtype(a.scalar_type()) && !is_complex_dtype(a.scalar_type());
   const bool bi = !is_floating_dtype(b.scalar_type()) && !is_complex_dtype(b.scalar_type());
@@ -4041,6 +4085,7 @@ static Series hardshrink_backward_impl(const Series& grad_out, const Series& inp
 }
 
 static Series heaviside_impl(const Series& self, const Series& values) {
+  if (self.platform() == Platform::MPS) return mps_host_bridge_([&] { return heaviside_impl(self.to(Platform::CPU), values.to(Platform::CPU)); });
   PLUSS_CHECK(!is_complex_dtype(self.scalar_type()) && !is_complex_dtype(values.scalar_type()),
               "heaviside: complex inputs are not supported");
   PLUSS_CHECK(self.scalar_type() == values.scalar_type(),
@@ -4073,6 +4118,7 @@ static Series aminmax_impl(const Series& self) {
 }
 
 static Series logcumsumexp_impl(const Series& self, std::int64_t dim) {
+  if (self.platform() == Platform::MPS) return mps_host_bridge_([&] { return logcumsumexp_impl(self.to(Platform::CPU), dim); });
   const Series x = self.to(ScalarType::Float64);
   if (x.dim() == 0 || x.numel() == 0) return self.clone();
   const std::int64_t d = wrap_dim(dim, x.dim(), "logcumsumexp");
@@ -4137,7 +4183,79 @@ static Series quantile_flat_impl(const Series& self, double q, bool ignore_nan) 
   return ops_internal::add(mul_scalar(below, 1.0 - weight), mul_scalar(above, weight));
 }
 
+static Series argsort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable);
+
+// median / nanmedian on the device (MPS): sort with NaN keyed to +inf, pick the (valid - 1) / 2 -th element, then resolve
+// NaN lanes. No float64 and no host copy; the selection index drives the backward exactly as on the CPU path.
+static Series median_flat_device_(const Series& self, bool ignore_nan) {
+  PLUSS_CHECK(dtype_of(self.scalar_type()).is_floating(), "median: input must have a floating dtype");
+  const Series x = self.flatten(0, -1).contiguous();
+  const auto n = x.numel();
+  PLUSS_CHECK(n > 0, "median: input must be non-empty");
+  Series out = pluss::series::undefined();
+  Series nan_result = pluss::series::undefined();
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series nan_mask = ops_internal::isnan(x);
+    const Series nan_count = ops_internal::sum(nan_mask.to(ScalarType::Float32));
+    const Series valid = ops_internal::sub(scalar_like(nan_count, static_cast<double>(n)), nan_count);
+    const Series keyed = ops_internal::where(nan_mask, scalar_like(x, std::numeric_limits<double>::infinity()), x);
+    const Series sorted = sort_values_only(keyed, 0, /*descending=*/false, /*stable=*/false);
+    const Series rank = ops_internal::clamp_min(
+                            ops_internal::floor(ops_internal::mul(ops_internal::sub(valid, scalar_like(valid, 1.0)), 0.5)), 0.0)
+                            .to(ScalarType::Int64)
+                            .reshape(std::vector<std::int64_t>{1});
+    const Series picked = sorted.take(rank).reshape(std::vector<std::int64_t>{});
+    nan_result = ignore_nan ? ops_internal::eq(valid, scalar_like(valid, 0.0)) : ops_internal::gt(nan_count, scalar_like(nan_count, 0.0));
+    out = ops_internal::where(nan_result, scalar_like(picked, std::numeric_limits<double>::quiet_NaN()), picked);
+  }
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(self)) return out;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = ignore_nan ? "nanmedian" : "median";
+  link->parents = {self};
+  link->propagate = [self, out, nan_result](const Series& out_sens) {
+    Series mask = ops_internal::where(nan_result, ops_internal::isnan(self), ops_internal::eq(self, out.to(self.scalar_type())));
+    Series weights = mask.to(self.scalar_type());
+    const Series count = ops_internal::sum(weights);
+    series_tape::accumulate_sensitivity(
+        self, ops_internal::div(ops_internal::mul(weights, out_sens.to(self.scalar_type())), count));
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
+}
+
+static Series median_dim_device_(const Series& self, std::int64_t dim, bool keepdim, bool ignore_nan) {
+  PLUSS_CHECK(dtype_of(self.scalar_type()).is_floating(), "median: input must have a floating dtype");
+  const Series x = self.contiguous();
+  dim = wrap_dim(dim, x.dim(), "median");
+  const auto n = x.sizes()[static_cast<std::size_t>(dim)];
+  PLUSS_CHECK(n > 0, "median: cannot reduce an empty dimension");
+  Series out = pluss::series::undefined();
+  Series index = pluss::series::undefined();
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series nan_mask = ops_internal::isnan(x);
+    const Series nan_count = nan_mask.to(ScalarType::Float32).sum(dim, true);
+    const Series valid = ops_internal::sub(scalar_like(nan_count, static_cast<double>(n)), nan_count);
+    const Series keyed = ops_internal::where(nan_mask, scalar_like(x, std::numeric_limits<double>::infinity()), x);
+    const Series order = argsort_values_only(keyed, dim, /*descending=*/false, /*stable=*/true);
+    const Series rank = ops_internal::clamp_min(
+                            ops_internal::floor(ops_internal::mul(ops_internal::sub(valid, scalar_like(valid, 1.0)), 0.5)), 0.0)
+                            .to(ScalarType::Int64);
+    const Series picked = order.gather(dim, rank); // original position of the median in each lane
+    const Series lane_nan = ignore_nan ? ops_internal::eq(valid, scalar_like(valid, 0.0))
+                                       : ops_internal::gt(nan_count, scalar_like(nan_count, 0.0));
+    const Series nan_position = ignore_nan ? picked.mul(0) : nan_mask.to(ScalarType::Float32).argmax(dim, true);
+    const Series chosen = ops_internal::where(lane_nan, nan_position, picked);
+    Series values = x.gather(dim, chosen);
+    index = keepdim ? chosen : chosen.squeeze(dim);
+    out = keepdim ? values : values.squeeze(dim);
+  }
+  return bind_selection_permutation_backward_(std::move(out), self, index, dim, ignore_nan ? "nanmedian" : "median");
+}
+
 static Series median_flat_impl(const Series& self, bool ignore_nan) {
+  if (self.platform() == Platform::MPS) return median_flat_device_(self, ignore_nan);
   PLUSS_CHECK(dtype_of(self.scalar_type()).is_floating(),
               "median: input must have a floating dtype");
   const Series x = self.to(ScalarType::Float64).flatten(0, -1);
@@ -4183,6 +4301,7 @@ static Series median_dim_impl(
     std::int64_t dim,
     bool keepdim,
     bool ignore_nan) {
+  if (self.platform() == Platform::MPS) return median_dim_device_(self, dim, keepdim, ignore_nan);
   PLUSS_CHECK(dtype_of(self.scalar_type()).is_floating(),
               "median: input must have a floating dtype");
   const Series x = self.to(ScalarType::Float64).contiguous();
@@ -4234,6 +4353,13 @@ static Series median_dim_impl(
 }
 
 static Series mode_flat_impl(const Series& self) {
+  if (self.platform() == Platform::MPS) {
+    Series r = pluss::series::undefined(); {
+      ops_internal::PlatformScope host_scope{Platform::CPU};
+      r = mode_flat_impl(self.to(Platform::CPU));
+    }
+    return r.to(self.scalar_type()).to(Platform::MPS);
+  }
   auto x = self.to(ScalarType::Float64).flatten(0, -1).contiguous();
   const auto n = x.numel();
   const auto* ip = reinterpret_cast<const double*>(x.raw_data());
@@ -5403,6 +5529,7 @@ static void bind_cum_extrema_backward_(
 }
 
 static Series cum_extrema_impl(const Series& self, std::int64_t dim, bool is_max) {
+  if (self.platform() == Platform::MPS) return mps_host_bridge_([&] { return cum_extrema_impl(self.to(Platform::CPU), dim, is_max); });
   auto x = self.to(ScalarType::Float64).contiguous();
   dim = wrap_dim(dim, x.dim(), is_max ? "cummax" : "cummin");
   auto out = Series::empty(x.sizes(), ScalarType::Float64);
@@ -5463,7 +5590,7 @@ static Series kron_impl(const Series& a, const Series& b) {
 // 1 / (num_observations - correction). Built through matmul_with_tape_ so the
 // whole thing is differentiable.
 static Series covariance_impl(const Series& self, std::int64_t correction = 1) {
-  auto x = self.to(ScalarType::Float64);
+  auto x = self.to(self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
   PLUSS_CHECK(x.dim() == 1 || x.dim() == 2, "cov: expected a 1D or 2D input");
   if (x.dim() == 1) {
     const double denom = static_cast<double>(x.numel()) - static_cast<double>(correction);
@@ -5483,7 +5610,7 @@ static Series covariance_impl(const Series& self, std::int64_t correction = 1) {
 // The (num_obs - correction) factor cancels in the ratio, so correction is
 // irrelevant here. Vectorized and differentiable.
 static Series corrcoef_impl(const Series& self) {
-  auto x = self.to(ScalarType::Float64);
+  auto x = self.to(self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
   PLUSS_CHECK(x.dim() == 1 || x.dim() == 2, "corrcoef: expected a 1D or 2D input");
   const bool was_1d = x.dim() == 1;
   if (was_1d) x = x.unsqueeze(0);           // one variable -> [1, N]
@@ -7015,9 +7142,9 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "histogram") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "pinverse") return pluss::subsp::linearalg::pinverse(self, 1e-12);
     if (op == "q_per_channel_axis" || op == "q_zero_point") return i64_scalar(0);
-    if (op == "q_scale") return Series::full({}, 1.0, ScalarType::Float64);
+    if (op == "q_scale") return Series::full({}, 1.0, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
     if (op == "qscheme") return i64_scalar(0);
-    if (op == "q_per_channel_scales") return Series::ones({1}, ScalarType::Float64);
+    if (op == "q_per_channel_scales") return Series::ones({1}, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
     if (op == "q_per_channel_zero_points") return Series::zeros({1}, ScalarType::Int64);
     if (op == "erfcinv")
       return bind_special_grad_(erfcinv_impl(self), self,
@@ -7730,7 +7857,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       // safe inefficiency rather than something worth the correctness risk.
       if (op == "add") return ops_internal::add(self, mul_scalar(other, s));
       if (op == "sub") return ops_internal::sub(self, mul_scalar(other, s));
-      if (op == "where") return self.where(other, s);
+      if (op == "where") return ops_internal::where(other, Series::full({}, s, self.scalar_type()).expand_as(self), self);
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, (std::int64_t)s);
       if (op == "cholesky_solve") return pluss::subsp::linearalg::cholesky_solve(other, self, s != 0.0);
       if (op == "triangular_solve") return pluss::subsp::linearalg::triangular_solve(other, self, s != 0.0, /*unitriangular=*/false);
@@ -7770,7 +7897,7 @@ if (is_numeric_scalar_arg(args[0]) &&
     if (std::holds_alternative<const Series*>(a0) && std::holds_alternative<const Series*>(a1)) {
       const Series& m = as_series(args[0]);
       const Series& s = as_series(args[1]);
-      if (op == "where") return self.where(m, s);
+      if (op == "where") return ops_internal::where(m, s, self);
       if (op == "masked_fill") return ops_internal::masked_fill(self, m, s);
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, m, 2.0);
       if (op == "addmm") {

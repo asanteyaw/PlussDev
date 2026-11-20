@@ -106,7 +106,7 @@ inline Series transformed_group_gibbs(const std::vector<Microspecies> &species, 
       acc = neg;
       initialised = true;
     } else {
-      const Series mx = acc.gt(neg).where(acc, neg);
+      const Series mx = pluss::series::where(acc.gt(neg), acc, neg);
       acc = mx.add(acc.sub(mx).exp().add(neg.sub(mx).exp()).log());
     }
   }

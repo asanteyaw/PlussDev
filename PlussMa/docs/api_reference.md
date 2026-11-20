@@ -15,6 +15,7 @@ One page per function, method, enumeration and options structure, grouped by top
 | [Finance](api/plussma_finance.md) | Option pricing: Black-Scholes, implied volatility and stochastic-volatility models. | [User guide](manual/finance.md) |
 | [Actuarial mathematics](api/plussma_actuarial.md) | Mortality and life tables, contingent present values, aggregate losses, ratemaking and reserving. | [User guide](manual/actuarial.md) |
 | [Engineering](api/plussma_eng.md) | Signal processing, dynamic systems, controls, circuits, power, fluids and structures. | [User guide](manual/eng.md) |
+| Natural sciences | Biology, chemistry and physics models: populations, kinetics, flows and fields. *(coming)* | [User guide](manual/natsci.md) |
 
 ```{toctree}
 :maxdepth: 4

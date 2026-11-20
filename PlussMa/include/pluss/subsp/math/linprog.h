@@ -167,7 +167,7 @@ inline Standard standardize(const Problem &p) {
   // feasible problems infeasible or NaN. Only the outward-pointing side is canonicalised (an inward 1e20+ bound is genuinely infeasible).
   const auto canonical = [&](const Series &v, bool lower_side) {
     const Series huge = lower_side ? v.le(-1e20) : v.ge(1e20);
-    return huge.where(zero_n.add(lower_side ? -inf : inf), v);
+    return pluss::series::where(huge, zero_n.add(lower_side ? -inf : inf), v);
   };
   const Series lower = p.lower ? canonical(lanes(p.lower->to(dt), n), true) : zero_n.add(-inf);
   const Series upper = p.upper ? canonical(lanes(p.upper->to(dt), n), false) : zero_n.add(inf);
@@ -206,8 +206,8 @@ inline Standard standardize(const Problem &p) {
     tmat = cat_cols(tmat, pluss::make_series(neg, {n, nfree}).to(dt).to(cfg.platform));
   }
   const std::int64_t nz = n + nfree;
-  const Series lower0 = lower.isfinite().where(lower, zero_n);
-  const Series upper0 = upper.isfinite().where(upper, zero_n);
+  const Series lower0 = pluss::series::where(lower.isfinite(), lower, zero_n);
+  const Series upper0 = pluss::series::where(upper.isfinite(), upper, zero_n);
   std::vector<double> flip(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t j = 0; j < n; ++j)
     flip[static_cast<std::size_t>(j)] = (!low_fin[static_cast<std::size_t>(j)] && up_fin[static_cast<std::size_t>(j)]) ? 1.0 : 0.0;
@@ -257,11 +257,11 @@ inline Standard standardize(const Problem &p) {
   Series row_scale = pluss::series::ones({m}, cfg), col_scale = pluss::series::ones({nn}, cfg);
   for (int sweep = 0; sweep < 12; ++sweep) {
     const Series rmax = a.abs().amax(1, false);
-    const Series rs = rmax.gt(0.0).where(rmax.clamp_min(1e-300).sqrt().reciprocal(), rmax.mul(0.0).add(1.0)); // empty rows keep scale 1
+    const Series rs = pluss::series::where(rmax.gt(0.0), rmax.clamp_min(1e-300).sqrt().reciprocal(), rmax.mul(0.0).add(1.0)); // empty rows keep scale 1
     a = a.mul(rs.unsqueeze(-1));
     row_scale = row_scale.mul(rs);
     const Series cmax = a.abs().amax(0, false);
-    const Series cs = cmax.gt(0.0).where(cmax.clamp_min(1e-300).sqrt().reciprocal(), cmax.mul(0.0).add(1.0)); // empty columns keep scale 1
+    const Series cs = pluss::series::where(cmax.gt(0.0), cmax.clamp_min(1e-300).sqrt().reciprocal(), cmax.mul(0.0).add(1.0)); // empty columns keep scale 1
     a = a.mul(cs.unsqueeze(0));
     col_scale = col_scale.mul(cs);
   }
@@ -348,8 +348,8 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
       const Series merit = pres.maximum(dres).maximum(gap);
       const Series improved = merit.lt(best_merit).logical_and(tau.gt(1e-12));
       // progress = merit at least halves; stalling is only meaningful close to convergence (slow early progress is normal)
-      stall = merit.lt(best_merit.mul(0.5)).logical_or(best_merit.gt(1e-4)).where(stall.mul(0.0), stall.add(1.0));
-      auto keep_best = [&](const Series &cur, const Series &old) { return improved.where(cur, old); };
+      stall = pluss::series::where(merit.lt(best_merit.mul(0.5)).logical_or(best_merit.gt(1e-4)), stall.mul(0.0), stall.add(1.0));
+      auto keep_best = [&](const Series &cur, const Series &old) { return pluss::series::where(improved, cur, old); };
       best_x = keep_best(x, best_x);
       best_s = keep_best(s, best_s);
       best_w = keep_best(w, best_w);
@@ -357,7 +357,7 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
       best_y = keep_best(y, best_y);
       best_tau = keep_best(tau, best_tau);
       best_kappa = keep_best(kappa, best_kappa);
-      best_merit = improved.where(merit, best_merit);
+      best_merit = pluss::series::where(improved, merit, best_merit);
       const Series optimal = pres.lt(opt.tolerance).logical_and(dres.lt(opt.tolerance)).logical_and(gap.lt(opt.tolerance))
                                  .logical_and(tau.gt(kappa.mul(1e-3)));
       const Series pinf = bty.gt(0.0).logical_and(amax_abs(y.matmul(a).add(s).sub(vm)).div(bty.clamp_min(1e-300)).lt(opt.ray_tolerance));
@@ -365,8 +365,8 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
                              .logical_and(amax_abs(x.mul(um)).div(ctx.neg().clamp_min(1e-300)).lt(opt.ray_tolerance));
       auto mark = [&](const Series &cond, Status st) {
         const Series hit = cond.logical_and(done.unsqueeze(-1).lt(0.5)).squeeze(-1);
-        status = hit.where(status.mul(0.0).add(static_cast<double>(st)), status);
-        done = hit.where(done.mul(0.0).add(1.0), done);
+        status = pluss::series::where(hit, status.mul(0.0).add(static_cast<double>(st)), status);
+        done = pluss::series::where(hit, done.mul(0.0).add(1.0), done);
       };
       mark(optimal, Status::Optimal);
       mark(pinf, Status::PrimalInfeasible);
@@ -384,7 +384,7 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
     // -- generalised scaling and normal equations
     const Series dtrue = x.div(s.add(vm.mul(x).div(w))); // D = 1 / (s/x + v/w)  (v/w term only on the bounded set)
     // finished lanes are frozen: give them a benign D so their (unused) normal equations stay well conditioned
-    const Series dvec = active.where(dtrue.div(dtrue.mul(opt.primal_regularization).add(1.0)), dtrue.mul(0.0).add(1.0));
+    const Series dvec = pluss::series::where(active, dtrue.div(dtrue.mul(opt.primal_regularization).add(1.0)), dtrue.mul(0.0).add(1.0));
     const Series gt = vm.mul(ubar).div(w);               // g~_j = v_j ubar_j / w_j (bounded set)
     const Series ceff = c_std.sub(gt);
     Series mraw = pluss::series::undefined();                                    // [B, m, m]  A D A^T
@@ -400,8 +400,8 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
       // give it a harmless matrix so the factorisation of the other lanes goes through
       const Series lane_ok = mraw.isfinite().to(dt).amin(-1, false).amin(-1, false).gt(0.5); // [B]
       if (!lane_ok.all().item<bool>()) {
-        mraw = lane_ok.unsqueeze(-1).unsqueeze(-1).where(mraw, eye_m.add(mraw.mul(0.0).nan_to_num(0.0, 0.0, 0.0)));
-        done = lane_ok.where(done, done.mul(0.0).add(1.0));
+        mraw = pluss::series::where(lane_ok.unsqueeze(-1).unsqueeze(-1), mraw, eye_m.add(mraw.mul(0.0).nan_to_num(0.0, 0.0, 0.0)));
+        done = pluss::series::where(lane_ok, done, done.mul(0.0).add(1.0));
       }
     }
     const Series diag_scale = mraw.mul(eye_m).sum(-1, true).amax(-2, true).add(1.0);
@@ -471,7 +471,7 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
       return d;
     };
     auto ratio = [&](const Series &val, const Series &dval, const Series &mask) {
-      return dval.lt(0.0).logical_and(mask.gt(0.5)).where(val.neg().div(dval.clamp_max(-1e-300)), dval.mul(0.0).add(1e30)).amin(-1, true);
+      return pluss::series::where(dval.lt(0.0).logical_and(mask.gt(0.5)), val.neg().div(dval.clamp_max(-1e-300)), dval.mul(0.0).add(1e30)).amin(-1, true);
     };
     auto max_step = [&](const Dir &d) {
       const Series ones = x.mul(0.0).add(1.0), one1 = tau.mul(0.0).add(1.0);
@@ -496,7 +496,7 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
     const Dir full = direction(rxs, rwv, rtk, sigma.neg().add(1.0));
     const Series alpha = max_step(full).mul(0.9995).clamp_max(1.0).mul(active.to(dt));
     // frozen lanes keep their iterate exactly (their direction may be NaN once x/s underflow; NaN * 0 would poison them)
-    auto advance = [&](const Series &val, const Series &dval) { return active.where(val.add(dval.mul(alpha)), val); };
+    auto advance = [&](const Series &val, const Series &dval) { return pluss::series::where(active, val.add(dval.mul(alpha)), val); };
     x = advance(x, full.dx);
     s = advance(s, full.ds);
     y = advance(y, full.dy);
@@ -509,10 +509,10 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
   // ---- unscale and map back to the original variables ----------------------------------------------
   {
     const Series near = status.eq(static_cast<double>(Status::NearOptimal)).unsqueeze(-1);
-    x = near.where(best_x, x);
-    y = near.where(best_y, y);
-    v = near.where(best_v, v);
-    tau = near.where(best_tau, tau);
+    x = pluss::series::where(near, best_x, x);
+    y = pluss::series::where(near, best_y, y);
+    v = pluss::series::where(near, best_v, v);
+    tau = pluss::series::where(near, best_tau, tau);
   }
   const Series zs_scaled = x.div(tau), ys = y.div(tau), vs = v.mul(um).div(tau);
   const Series zs = zs_scaled.mul(col_scale); // unscaled standard-form variables
@@ -1103,9 +1103,9 @@ inline Result solve_unchunked(const Problem &p_in, const Options &opt) {
     const Result f = solve_impl(q, o2);
     const Series infeasible = flagged.logical_and(f.status.eq(static_cast<double>(Status::PrimalInfeasible)));
     const Series unknown = flagged.logical_and(f.status.eq(static_cast<double>(Status::IterationLimit)));
-    r.status = infeasible.where(r.status.mul(0.0).add(static_cast<double>(Status::PrimalInfeasible)), r.status);
-    r.status = unknown.where(r.status.mul(0.0).add(static_cast<double>(Status::IterationLimit)), r.status);
-    r.farkas = infeasible.unsqueeze(-1).where(f.farkas, r.farkas);
+    r.status = pluss::series::where(infeasible, r.status.mul(0.0).add(static_cast<double>(Status::PrimalInfeasible)), r.status);
+    r.status = pluss::series::where(unknown, r.status.mul(0.0).add(static_cast<double>(Status::IterationLimit)), r.status);
+    r.farkas = pluss::series::where(infeasible.unsqueeze(-1), f.farkas, r.farkas);
   }
   return r;
 }

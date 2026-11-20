@@ -14,7 +14,7 @@ LocusPull& LocusPull::std(std::string_view source, std::string_view alias = {})
 
 The sample standard deviation of the usable (non-null) related values of
 `source` for each root record. Requires a numeric stream; see
-[`sum`](sum.md) for the shared `NaN`-exclusion rule. Unlike `sum`/`mean`/
+[`sum`](sum.md) for the shared missing-value rule. Unlike `sum`/`mean`/
 `median`/`min`/`max`, which are only null when a root record has *zero*
 related values, `std` (and [`var`](var.md)) is also null for exactly *one*
 related value -- sample variance is undefined for a single observation, not
@@ -78,5 +78,5 @@ text std: Stream::reduce_groups: this reduction needs a numeric Series stream
 ## See Also
 
 - [`var`](var.md): the matching sample variance (`std` squared).
-- [`sum`](sum.md): the `NaN`-exclusion rule, and the reducers that only null
+- [`sum`](sum.md): the missing-value rule, and the reducers that only null
   out at zero related values.

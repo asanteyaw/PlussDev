@@ -4,7 +4,7 @@
 
 You have a plant and you want a feedback law `u = -K x` that keeps its states small without spending too much effort on the input. The linear-quadratic regulator (LQR) gives the gain that minimises a quadratic cost, and it is found by solving an algebraic **Riccati equation**. `control::lqr` does it from a state-space model, and `care` and `dare` solve the continuous and discrete equations from the raw matrices. This page shows what the weights mean, how to read the result, and the checks that confirm the gain is optimal.
 
-## The mental model
+## How it works
 
 For a continuous plant `x' = A x + B u` the LQR minimises
 

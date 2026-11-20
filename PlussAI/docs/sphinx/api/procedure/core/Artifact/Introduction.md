@@ -5,7 +5,7 @@
 `Artifact` is the one value type every [`Step`](../Step.md) consumes and
 produces: a name plus a type-erased payload, drawn from a closed
 `std::variant` listing every type `procedure` knows how to carry --
-`Series`, `pluss::table::DataFrame`, `pluss::Note`, `pluss::table::Slate`,
+`Series`, `pluss::table::DataFrame`, `pluss::Note`, `pluss::table::Shelf`,
 every `lymph`/`ice`/`nlp` payload and report type, plus `std::string`,
 `std::vector<std::string>`, `double`, `std::int64_t`, and `bool`. A
 `Procedure` holds no artifacts of its own; [`Procedure::run`](../Procedure/run.md)

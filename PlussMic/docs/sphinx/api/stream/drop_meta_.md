@@ -66,8 +66,8 @@ has_meta after drop_meta_: 0
     <span class="label">Previous</span>
     <span class="title">drop_meta</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

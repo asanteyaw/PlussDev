@@ -78,8 +78,8 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), 8.0, pluss::series::nan()})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), 90.0})},
+    {"quiz",    Shelf(pluss::make_series({10.0, 0.0, 8.0, 0.0}), pluss::make_series(std::vector<bool>{true, false, true, false}))},
+    {"final",   Shelf(pluss::make_series({80.0, 75.0, 0.0, 90.0}), pluss::make_series(std::vector<bool>{true, true, false, true}))},
 });
 
 auto out = missing.dropnull({"quiz", "final"}, false);
@@ -109,8 +109,8 @@ using namespace pluss::table;
 
 auto missing = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), 8.0, pluss::series::nan()})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), 90.0})},
+    {"quiz",    Shelf(pluss::make_series({10.0, 0.0, 8.0, 0.0}), pluss::make_series(std::vector<bool>{true, false, true, false}))},
+    {"final",   Shelf(pluss::make_series({80.0, 75.0, 0.0, 90.0}), pluss::make_series(std::vector<bool>{true, true, false, true}))},
 });
 
 DataFrame::DropOptions options;
@@ -147,8 +147,8 @@ using namespace pluss::table;
 
 auto missing2 = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"quiz",    pluss::make_series({10.0, pluss::series::nan(), pluss::series::nan(), 5.0})},
-    {"final",   pluss::make_series({80.0, 75.0, pluss::series::nan(), pluss::series::nan()})},
+    {"quiz",    Shelf(pluss::make_series({10.0, 0.0, 0.0, 5.0}), pluss::make_series(std::vector<bool>{true, false, false, true}))},
+    {"final",   Shelf(pluss::make_series({80.0, 75.0, 0.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, false, false}))},
 });
 
 auto kept_any = missing2.dropnull({"quiz", "final"}, false);
@@ -194,6 +194,7 @@ case `2` stays a gap.
 
 ## Notes
 
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - The short overload is the common "drop rows with missing values in these columns"
   route; `DropOptions` is the more explicit route when the null policy — including
   `threshold` — needs to be written out field by field.
@@ -215,12 +216,12 @@ case `2` stays a gap.
   counterpart to this row-level operation.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop_duplicates.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">drop_duplicates</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="dtypes.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">dtypes</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

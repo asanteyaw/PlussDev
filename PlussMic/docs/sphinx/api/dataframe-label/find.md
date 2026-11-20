@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::find(const Slate& targets) const
+Shelf DataFrameLabelAccessor::find(const Shelf& targets) const
 ```
 
 ## What It Does
@@ -21,13 +21,13 @@ targets at once.
 
 ## Parameters
 
-**targets** (`const Slate&`)
+**targets** (`const Shelf&`)
 
 The values to look up, in the order you want positions back.
 
 ## Returns
 
-`Slate`
+`Shelf`
     One `Int64` position per target (`-1` if not found), `display_name`
     `"find"`, displayed against `targets` themselves.
 
@@ -39,11 +39,11 @@ Example 1. Look up three target values, one of which isn't present.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
-auto targets = Slate(pluss::make_note({"west", "north", "south"}));
+auto targets = Shelf(pluss::make_note({"west", "north", "south"}));
 auto out = labeled.labels().find(targets);
 std::cout << out;
 ```

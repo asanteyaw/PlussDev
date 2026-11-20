@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
@@ -33,6 +34,22 @@ void pump_app_events() {
     [NSApp sendEvent:event];
   }
   [NSApp updateWindows];
+}
+
+// macOS lets only the active app change the pointer shape, and a window opened from a background
+// launch (a script, an IDE terminal) can stay inactive until it is clicked. Ask for activation
+// every way AppKit still honours.
+void force_activation(NSWindow* window) {
+  if ([NSApp isActive] && [window isKeyWindow]) {
+    return;
+  }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  [NSApp activateIgnoringOtherApps:YES];
+  [[NSRunningApplication currentApplication] activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+#pragma clang diagnostic pop
+  [window makeKeyAndOrderFront:nil];
+  [window orderFrontRegardless];
 }
 
 NSBitmapImageRep* bitmap_rep_for_size(const pluss::view::window::SizeI size) {
@@ -123,11 +140,48 @@ NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
 }
 @end
 
+// The image view owns the pointer shape through a cursor rect: a bare [NSCursor set] is undone
+// by AppKit on the next mouse move, so the wanted cursor is held here and re-applied by AppKit.
+@interface PlussTilsViewCursorImageView : NSImageView
+@property(nonatomic, strong) NSCursor* wanted_cursor;
+@property(nonatomic, copy) void (^on_move)(NSEvent*);
+@end
+
+@implementation PlussTilsViewCursorImageView
+// A tracking area that is active whether or not the window is key yet, so hovering a column
+// border shows its cursor straight away instead of only after the first click.
+- (void)updateTrackingAreas {
+  [super updateTrackingAreas];
+  for (NSTrackingArea* area in [self.trackingAreas copy]) {
+    [self removeTrackingArea:area];
+  }
+  [self addTrackingArea:[[NSTrackingArea alloc]
+                            initWithRect:NSZeroRect
+                                 options:NSTrackingMouseMoved | NSTrackingActiveAlways | NSTrackingInVisibleRect |
+                                         NSTrackingCursorUpdate
+                                   owner:self
+                                userInfo:nil]];
+}
+- (void)mouseMoved:(NSEvent*)event {
+  if (self.on_move != nil) {
+    self.on_move(event);
+  }
+}
+- (void)cursorUpdate:(NSEvent*)event {
+  (void)event;
+  [(self.wanted_cursor != nil ? self.wanted_cursor : [NSCursor arrowCursor]) set];
+}
+- (void)resetCursorRects {
+  [self addCursorRect:self.bounds cursor:self.wanted_cursor != nil ? self.wanted_cursor : [NSCursor arrowCursor]];
+}
+@end
+
 @interface PlussTilsViewCocoaShellHost : NSObject
 @property(nonatomic, strong) NSWindow* window;
 @property(nonatomic, strong) NSView* toolbar;
 @property(nonatomic, strong) NSPopUpButton* save_button;
-@property(nonatomic, strong) NSImageView* image_view;
+@property(nonatomic, strong) NSMutableArray<NSPopUpButton*>* menu_buttons;
+@property(nonatomic, strong) PlussTilsViewCursorImageView* image_view;
 @property(nonatomic, strong) PlussTilsViewCocoaShellDelegate* delegate;
 @property(nonatomic, strong) NSMutableArray<NSDictionary*>* input_events;
 @property(nonatomic, strong) id key_monitor;
@@ -135,7 +189,9 @@ NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
 @property(nonatomic, strong) id drag_monitor;
 @property(nonatomic, strong) id down_monitor;
 @property(nonatomic, strong) id up_monitor;
+@property(nonatomic, strong) id move_monitor;
 - (void)saveAs:(id)sender;
+- (void)selectMenuItem:(id)sender;
 @end
 
 @implementation PlussTilsViewCocoaShellHost
@@ -149,9 +205,53 @@ NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
     }];
   }
 }
+- (void)selectMenuItem:(id)sender {
+  NSMenuItem* item = [sender isKindOfClass:[NSMenuItem class]] ? (NSMenuItem*)sender : nil;
+  NSString* note = [item representedObject];  // "<menu id>:<option id>"
+  if (self.input_events != nil && note != nil) {
+    [self.input_events addObject:@{@"kind" : @"shortcut", @"note" : note}];
+  }
+}
 @end
 
 namespace pluss::view::window {
+
+// Adds `options` to `menu`. Entries with children become cascading items (the system
+// draws the arrow and flies the submenu out to the side on hover).
+static void add_menu_options(NSMenu* menu,
+                             const std::vector<ShellMenuOption>& options,
+                             const std::string& prefix,
+                             PlussTilsViewCocoaShellHost* host) {
+  for (const auto& option : options) {
+    NSString* label = [[NSString alloc] initWithBytes:option.label.data()
+                                               length:option.label.size()
+                                             encoding:NSUTF8StringEncoding];
+    if (label == nil) {
+      continue;
+    }
+    if (!option.children.empty()) {
+      NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label action:nil keyEquivalent:@""];
+      NSMenu* submenu = [[NSMenu alloc] initWithTitle:label];
+      add_menu_options(submenu, option.children, option.id, host);
+      [item setSubmenu:submenu];
+      [menu addItem:item];
+      continue;
+    }
+    const std::string note = prefix + ":" + option.id;
+    NSString* ns_note = [[NSString alloc] initWithBytes:note.data()
+                                                 length:note.size()
+                                               encoding:NSUTF8StringEncoding];
+    if (ns_note == nil) {
+      continue;
+    }
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label
+                                                  action:@selector(selectMenuItem:)
+                                           keyEquivalent:@""];
+    [item setTarget:host];
+    [item setRepresentedObject:ns_note];
+    [menu addItem:item];
+  }
+}
 
 class CocoaWindowShell final : public IWindowShell {
  public:
@@ -171,8 +271,9 @@ class CocoaWindowShell final : public IWindowShell {
 
       const CGFloat width = static_cast<CGFloat>(std::max(640, config.initial_size.width));
       const CGFloat height = static_cast<CGFloat>(std::max(420, config.initial_size.height));
+      const bool show_menus = !config.menus.empty();
       const bool show_save_button = !config.save_formats.empty();
-      const CGFloat toolbar_height = show_save_button ? 46.0 : 0.0;
+      const CGFloat toolbar_height = (show_save_button || show_menus) ? 46.0 : 0.0;
       const NSRect frame = NSMakeRect(0.0, 0.0, width, height + toolbar_height);
       const NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                       NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
@@ -201,7 +302,7 @@ class CocoaWindowShell final : public IWindowShell {
 
       NSView* content = [host_.window contentView];
       const NSRect content_bounds = [content bounds];
-      if (show_save_button) {
+      if (show_save_button || show_menus) {
         host_.toolbar = [[NSView alloc]
             initWithFrame:NSMakeRect(0.0,
                                      content_bounds.size.height - toolbar_height,
@@ -212,6 +313,27 @@ class CocoaWindowShell final : public IWindowShell {
         host_.toolbar.layer.backgroundColor = [[NSColor windowBackgroundColor] CGColor];
         [content addSubview:host_.toolbar];
 
+        host_.menu_buttons = [NSMutableArray array];
+        // Laid out right to left from "Save As": the last menu sits closest to it.
+        CGFloat right_edge = content_bounds.size.width - 104.0 - 8.0;
+        for (std::size_t index = config.menus.size(); index-- > 0;) {
+          const auto& menu = config.menus[index];
+          NSPopUpButton* button = [[NSPopUpButton alloc]
+              initWithFrame:NSMakeRect(std::max<CGFloat>(12.0, right_edge - 92.0), 8.0, 92.0, 30.0)
+                  pullsDown:YES];
+          right_edge -= 92.0 + 8.0;
+          [button setAutoresizingMask:NSViewMinXMargin];
+          [button setBezelStyle:NSBezelStyleRounded];
+          [button setFont:[NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold]];
+          NSString* title = [[NSString alloc] initWithBytes:menu.title.data()
+                                                     length:menu.title.size()
+                                                   encoding:NSUTF8StringEncoding];
+          [button addItemWithTitle:(title != nil ? title : @"Menu")];
+          [host_.toolbar addSubview:button];
+          [host_.menu_buttons addObject:button];
+          add_menu_options([button menu], menu.options, menu.id, host_);
+        }
+        if (show_save_button) {
         host_.save_button = [[NSPopUpButton alloc]
             initWithFrame:NSMakeRect(
                 std::max<CGFloat>(12.0, content_bounds.size.width - 104.0), 8.0, 92.0, 30.0)
@@ -240,12 +362,13 @@ class CocoaWindowShell final : public IWindowShell {
           [item setRepresentedObject:extension];
           [[host_.save_button menu] addItem:item];
         }
+        }
       } else {
         host_.toolbar = nil;
         host_.save_button = nil;
       }
 
-      host_.image_view = [[NSImageView alloc]
+      host_.image_view = [[PlussTilsViewCursorImageView alloc]
           initWithFrame:NSMakeRect(0.0, 0.0, content_bounds.size.width, height)];
       [host_.image_view setImageScaling:NSImageScaleAxesIndependently];
       [host_.image_view setImageAlignment:NSImageAlignCenter];
@@ -412,7 +535,8 @@ class CocoaWindowShell final : public IWindowShell {
                                                                     [strong_host.input_events addObject:@{
                                                                       @"kind" : @"pointer_down",
                                                                       @"x" : @(x),
-                                                                      @"y" : @(y)
+                                                                      @"y" : @(y),
+                                                                      @"clicks" : @([e clickCount])
                                                                     }];
                                                                     return e;
                                                                   }];
@@ -445,6 +569,46 @@ class CocoaWindowShell final : public IWindowShell {
                                                                  return e;
                                                                }];
 
+      // Hover (no button held): lets the viewer show a resize cursor over column borders.
+      [host_.window setAcceptsMouseMovedEvents:YES];
+      host_.move_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMouseMoved
+                                                                  handler:^NSEvent* _Nullable(NSEvent* e) {
+                                                                    PlussTilsViewCocoaShellHost* strong_host = weak_host;
+                                                                    if (strong_host == nil ||
+                                                                        !event_targets_window(e, strong_host.window) ||
+                                                                        strong_host.image_view == nil) {
+                                                                      return e;
+                                                                    }
+                                                                    NSPoint in_window =
+                                                                        event_location_in_window(e, strong_host.window);
+                                                                    NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
+                                                                    const NSRect bounds = [strong_host.image_view bounds];
+                                                                    const double x = std::clamp(static_cast<double>(in_view.x), 0.0, static_cast<double>(bounds.size.width));
+                                                                    const double y = std::clamp(static_cast<double>(bounds.size.height - in_view.y),
+                                                                                                0.0,
+                                                                                                static_cast<double>(bounds.size.height));
+                                                                    [strong_host.input_events addObject:@{
+                                                                      @"kind" : @"pointer_move",
+                                                                      @"x" : @(x),
+                                                                      @"y" : @(y)
+                                                                    }];
+                                                                    return e;
+                                                                  }];
+
+      host_.image_view.on_move = ^(NSEvent* e) {
+        PlussTilsViewCocoaShellHost* strong_host = weak_host;
+        if (strong_host == nil || strong_host.image_view == nil) {
+          return;
+        }
+        NSPoint in_window = event_location_in_window(e, strong_host.window);
+        NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
+        const NSRect bounds = [strong_host.image_view bounds];
+        const double x = std::clamp(static_cast<double>(in_view.x), 0.0, static_cast<double>(bounds.size.width));
+        const double y = std::clamp(static_cast<double>(bounds.size.height - in_view.y), 0.0,
+                                    static_cast<double>(bounds.size.height));
+        [strong_host.input_events addObject:@{@"kind" : @"pointer_move", @"x" : @(x), @"y" : @(y)}];
+      };
+
       [host_.window makeKeyAndOrderFront:nil];
       if (@available(macOS 14.0, *)) {
         [NSApp activate];
@@ -452,7 +616,14 @@ class CocoaWindowShell final : public IWindowShell {
         [NSApp activateIgnoringOtherApps:YES];
       }
       [host_.window makeKeyWindow];
+      force_activation(host_.window);
 
+      if (std::getenv("PLUSSTILS_VIEW_DEBUG") != nullptr) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1500 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+          std::fprintf(stderr, "[cocoa] app active=%d window key=%d\n", [NSApp isActive] ? 1 : 0,
+                       [host_.window isKeyWindow] ? 1 : 0);
+        });
+      }
       open_ = true;
       start_display_link_();
       last_size_ = SizeI{static_cast<int>(width), static_cast<int>(height)};
@@ -540,6 +711,10 @@ class CocoaWindowShell final : public IWindowShell {
           [NSEvent removeMonitor:host_.up_monitor];
           host_.up_monitor = nil;
         }
+        if (host_.move_monitor != nil) {
+          [NSEvent removeMonitor:host_.move_monitor];
+          host_.move_monitor = nil;
+        }
         if (open_) {
           [host_.window close];
         }
@@ -568,6 +743,10 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
   std::vector<ShellEvent> poll_events() override {
+    if (host_ != nil && activation_retries_ > 0) {
+      --activation_retries_;
+      force_activation(host_.window);
+    }
     @autoreleasepool {
       pump_app_events();
 
@@ -632,10 +811,24 @@ class CocoaWindowShell final : public IWindowShell {
           } else if ([kind isEqualToString:@"pointer_down"]) {
             const double x = [packet[@"x"] doubleValue];
             const double y = [packet[@"y"] doubleValue];
-            events_.push_back(ShellEvent{
+            ShellEvent down{
                 ShellEventKind::PointerDown,
                 last_size_,
                 "cocoa_pointer_down",
+                0.0,
+                0.0,
+                x,
+                y,
+            };
+            down.click_count = std::max(1, static_cast<int>([packet[@"clicks"] integerValue]));
+            events_.push_back(down);
+          } else if ([kind isEqualToString:@"pointer_move"]) {
+            const double x = [packet[@"x"] doubleValue];
+            const double y = [packet[@"y"] doubleValue];
+            events_.push_back(ShellEvent{
+                ShellEventKind::PointerMove,
+                last_size_,
+                "cocoa_pointer_move",
                 0.0,
                 0.0,
                 x,
@@ -688,6 +881,8 @@ class CocoaWindowShell final : public IWindowShell {
     };
   }
 
+  bool supports_menus() const noexcept override { return true; }
+
   double backing_scale_factor() const noexcept override {
     @autoreleasepool {
       if (host_ == nil || host_.window == nil) {
@@ -702,6 +897,28 @@ class CocoaWindowShell final : public IWindowShell {
       return true;
     }
     return frame_due_.exchange(false, std::memory_order_acq_rel);
+  }
+
+  void set_cursor(const ShellCursor cursor) override {
+    @autoreleasepool {
+      NSCursor* wanted = [NSCursor arrowCursor];
+      if (cursor == ShellCursor::ResizeColumn) {
+        // The standard divider-drag cursor (a bar with left/right arrows, as in a spreadsheet).
+        if (@available(macOS 15.0, *)) {
+          wanted = [NSCursor columnResizeCursor];
+        } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+          wanted = [NSCursor resizeLeftRightCursor];
+#pragma clang diagnostic pop
+        }
+      }
+      if (host_.image_view != nil && host_.image_view.wanted_cursor != wanted) {
+        host_.image_view.wanted_cursor = wanted;
+        [host_.window invalidateCursorRectsForView:host_.image_view];
+      }
+      [wanted set];
+    }
   }
 
   bool set_clipboard_text(const std::string_view text) override {
@@ -1014,6 +1231,7 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
   bool open_{false};
+  int activation_retries_{240};  // frames (about 4 s) to keep asking for activation
   SizeI last_size_{};
   SizeI bitmap_size_{};
   std::size_t frame_slot_{0};

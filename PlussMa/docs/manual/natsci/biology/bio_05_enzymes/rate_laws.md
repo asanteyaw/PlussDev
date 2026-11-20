@@ -1,0 +1,66 @@
+<!-- generated from rate_laws.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Rate laws
+
+[Back to Biology 5: Enzymes](../bio_05_enzymes.md)
+
+An enzyme's reaction rate depends on how much substrate there is and on whatever else binds to the enzyme. This page evaluates the Michaelis-Menten law and the standard ways a second molecule changes it: competitive, uncompetitive and mixed inhibition, inhibition by the substrate itself, and cooperative activation.
+
+## How it works
+
+Each law is a function of the substrate concentration, returning the rate at every concentration in the array. `michaelis_menten(s, vmax, km)` is `vmax s / (km + s)`: the rate rises with substrate and levels off at `vmax`, and `km` is the concentration at which the rate is half of `vmax`. An inhibitor at concentration `I` changes the apparent constants: a competitive inhibitor (`competitive_inhibition`, constant `Ki`) multiplies `km` by `1 + I/Ki`, so enough substrate still reaches `vmax`; an uncompetitive inhibitor (`uncompetitive_inhibition`, constant `Ki'`) divides both `vmax` and `km`; a mixed inhibitor (`mixed_inhibition`) has both constants. `substrate_inhibition` adds a `s^2/Ksi` term to the denominator, so the rate falls at high substrate, and `hill_activation(l, vmax, k_half, n)` gives the sigmoidal rise of a cooperative enzyme with `n` binding sites. The coefficients may be arrays as well, so a batch of enzymes is one call.
+
+## Six laws at five concentrations
+
+The program evaluates each law with `vmax = 10` and `km = 1` at substrate concentrations from `0.1` to `20`, with an inhibitor at `2` for the three inhibition laws.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace kinetics = biology::systems::kinetics;
+namespace enzymes = biology::systems::enzymes;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto s = vec({0.1, 0.5, 1.0, 5.0, 20.0});
+  const double vmax = 10.0, km = 1.0;
+  out.writeln("substrate                   ", flat(s));
+  out.writeln("Michaelis-Menten            ", flat(kinetics::michaelis_menten(s, vmax, km)));
+  const auto inhibitor = s.mul(0.0).add(2.0);
+  out.writeln("competitive (I = 2, Ki = 1) ", flat(kinetics::competitive_inhibition(s, inhibitor, vmax, km, 1.0)));
+  out.writeln("uncompetitive               ", flat(enzymes::uncompetitive_inhibition(s, inhibitor, vmax, km, 1.0)));
+  out.writeln("mixed (Ki = 1, Ki' = 4)     ", flat(enzymes::mixed_inhibition(s, inhibitor, vmax, km, 1.0, 4.0)));
+  out.writeln("substrate inhibition        ", flat(enzymes::substrate_inhibition(s, vmax, km, 10.0)));
+  out.writeln("Hill activation, n = 3      ", flat(kinetics::hill_activation(s, vmax, 1.0, 3.0)));
+}
+```
+
+Output
+
+```text
+substrate                   [0.1000, 0.5000, 1.0000, 5.0000, 20.0000]
+Michaelis-Menten            [0.9091, 3.3333, 5.0000, 8.3333, 9.5238]
+competitive (I = 2, Ki = 1) [0.3226, 1.4286, 2.5000, 6.2500, 8.6957]
+uncompetitive               [0.7692, 2.0000, 2.5000, 3.1250, 3.2787]
+mixed (Ki = 1, Ki' = 4)     [0.3175, 1.3333, 2.2222, 4.7619, 6.0606]
+substrate inhibition        [0.9083, 3.2787, 4.7619, 5.8824, 3.2787]
+Hill activation, n = 3      [0.0100, 1.1111, 5.0000, 9.9206, 9.9988]
+```
+
+The plain law reaches `9.5238` at the highest concentration, near `vmax`. The competitive inhibitor lowers every rate but the high-substrate end is still approaching `10` (`8.6957`), while the uncompetitive inhibitor caps the rate at `vmax/(1 + I/Ki') = 3.3333`, which the column of `3.2787` at `20` is approaching. Mixed inhibition falls between them. Substrate inhibition is highest at the sampled concentration `5` (`5.8824`) and falls to `3.2787` at `20`, and the Hill law with `n = 3` is almost silent at `0.1` (`0.0100`) and almost saturated at `5` (`9.9206`).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="progress_curves.html">
+    <span class="label">Next</span>
+    <span class="title">Progress curves</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

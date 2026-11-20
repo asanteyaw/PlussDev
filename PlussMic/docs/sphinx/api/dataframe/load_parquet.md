@@ -63,6 +63,13 @@ Example 1. Load a Parquet file with the plain filepath-only overload.
 ```cpp
 using namespace pluss::table;
 
+auto source = DataFrame({
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Shelf(pluss::make_series({2, 5, 1}))},
+    {"price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0}))},
+});
+source.save_parquet("orders.parquet");
+
 auto orders = DataFrame::load_parquet("orders.parquet");
 std::cout << orders;
 ```
@@ -70,13 +77,13 @@ std::cout << orders;
 ### Output
 
 ```text
-==========================
-     | id    city    units
---------------------------
-0    | 101   Accra   2    
-1    | 102   Tema    1    
-2    | 103   Kumasi  4    
---------------------------
+===========================
+     | city    units  price
+---------------------------
+0    | Accra   2      1200 
+1    | Tema    5      45.5 
+2    | Kumasi  1      1150 
+---------------------------
 [3 cs x 3 feat]
 ```
 
@@ -92,13 +99,13 @@ std::cout << narrowed;
 ### Output
 
 ```text
-=================
+====================
      | city    units
------------------
-0    | Accra   2
-1    | Tema    1
-2    | Kumasi  4
------------------
+--------------------
+0    | Accra   2    
+1    | Tema    5    
+2    | Kumasi  1    
+--------------------
 [3 cs x 2 feat]
 ```
 

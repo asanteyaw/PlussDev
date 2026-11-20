@@ -70,8 +70,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.keep("zzz", [](const pluss::scribble::Slot::Value&) { return true; });
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -100,9 +100,9 @@ Registry::keep: unknown key 'zzz'
   kindle model, filtering rows rather than one field's values.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="keep_.html">
     <span class="label">Next</span>

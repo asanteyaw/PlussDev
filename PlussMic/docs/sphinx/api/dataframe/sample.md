@@ -90,8 +90,8 @@ Example 1. Draw a fixed number of rows without a seed (result varies each run).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",    Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",    Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
 });
 
 auto three_rows = orders.sample(3);
@@ -104,9 +104,9 @@ std::cout << three_rows;
 ======================
      | order_id  units
 ----------------------
-1    | 102       5    
+4    | 105       4    
+0    | 101       2    
 3    | 104       3    
-5    | 106       2    
 ----------------------
 [3 cs x 2 feat]
 ```
@@ -132,16 +132,16 @@ std::cout << with_repeats;
 ======================
      | order_id  units
 ----------------------
-3    | 104       3    
-0    | 101       2    
-5    | 106       2    
-5    | 106       2    
 1    | 102       5    
-2    | 103       1    
-0    | 101       2    
+3    | 104       3    
+1    | 102       5    
 4    | 105       4    
-3    | 104       3    
 1    | 102       5    
+1    | 102       5    
+5    | 106       2    
+5    | 106       2    
+2    | 103       1    
+5    | 106       2    
 ----------------------
 [10 cs x 2 feat]
 ```
@@ -158,10 +158,10 @@ Example 3. Draw a proportion of the features instead of the cases.
 
 ```cpp
 auto orders_wide = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, 0.08}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.08}))},
 });
 
 auto half_the_features = orders_wide.sample(0.5, false, Axis::Feature);
@@ -171,13 +171,13 @@ std::cout << half_the_features;
 ### Output (one possible draw)
 
 ```text
-===========================
-     | order_id  unit_price
----------------------------
-0    | 101       1200      
-1    | 102       45.5      
-2    | 103       1150      
----------------------------
+========================
+     | unit_price  units
+------------------------
+0    | 1200        2    
+1    | 45.5        5    
+2    | 1150        1    
+------------------------
 [3 cs x 2 feat]
 ```
 

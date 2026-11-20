@@ -47,9 +47,9 @@ Example 1. Sum `weekend` out of a three-way table to recover the ordinary
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto out = df.contingency({"city", "channel", "weekend"})
@@ -83,12 +83,12 @@ std::cout << out;
 ### Output
 
 ```text
-=====================
-     | city  no  yes
----------------------
-0    | A     2   0
-1    | B     1   2
----------------------
+=======================
+     | city  no    yes 
+-----------------------
+0    | A     2     0   
+1    | B     1     2   
+-----------------------
 [2 cs x 3 feat]
 ```
 
@@ -105,12 +105,12 @@ std::cout << out;
 ### Output
 
 ```text
-=============
+=================
      | city  freq
--------------
-0    | A     2
-1    | B     3
--------------
+-----------------
+0    | A     2   
+1    | B     3   
+-----------------
 [2 cs x 2 feat]
 ```
 

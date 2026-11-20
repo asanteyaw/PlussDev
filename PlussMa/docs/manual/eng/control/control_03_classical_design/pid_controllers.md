@@ -6,7 +6,7 @@
 
 When you can measure only the output, and want a controller you can tune by hand, the proportional-integral-derivative law is the standard choice. `control::pid` builds one as an object that holds its three gains and a derivative filter, and `control::freqresp` evaluates its frequency response, so that you can combine it with a plant and examine the loop. This page covers the continuous and the discrete forms, the three rules for discretising the integral and the derivative, and the checks that refuse an unstable discrete derivative.
 
-## The mental model
+## How it works
 
 The controller acts on the error `e = r - y` between a reference and the measurement. In the **parallel form** used here its transfer function is
 

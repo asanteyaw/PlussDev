@@ -4,7 +4,7 @@
 
 Bend a slender cantilever far enough and the linear answer is wrong: the tip does not go as far down as the linear formula says, because the beam turns toward the load and shortens, and its tip moves inward. `solve` with `NonlinearOptions` finds the equilibrium of a frame whose members rotate by large angles, staying elastic. This page solves a cantilever under loads that bend it through a large angle and checks the result against the exact elastica, shows that a rigid rotation costs no strain energy, and explains the load-step controls and what a failed continuation looks like.
 
-## The mental model
+## How it works
 
 The formulation is **corotational**: each member carries a frame of reference that follows its rigid motion, and strains are measured against it, so a member that turns without deforming carries no force. The member itself stays a linear-elastic beam with axial stiffness `E A / L` and bending stiffness `E I / L`, relative to its current chord. Rotations may be large; strains are assumed small. That is the right model for slender flexible members, and not for yielding, or for strains that are themselves large.
 

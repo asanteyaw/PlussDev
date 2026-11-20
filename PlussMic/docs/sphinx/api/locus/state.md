@@ -83,3 +83,14 @@ that changes.
 
 - [`construction`](construction.md): building the `Locus` these methods describe.
 - [`link`](link.md): declaring the relationships `nrelationships`/`shape` count.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="set_table_meta.html">
+    <span class="label">Previous</span>
+    <span class="title">set_table_meta</span>
+  </a>
+  <a class="next-link" href="store.html">
+    <span class="label">Next</span>
+    <span class="title">store</span>
+  </a>
+</div>

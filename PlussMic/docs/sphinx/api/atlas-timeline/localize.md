@@ -49,10 +49,10 @@ moves.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"ts", Slate(pluss::make_timeline({"2024-01-31T09:15:30Z", "2024-02-29T23:45:00Z"}))},
+    {"ts", Shelf(pluss::make_timeline({"2024-01-31T09:15:30Z", "2024-02-29T23:45:00Z"}))},
 });
 auto q2 = DataFrame({
-    {"ts", Slate(pluss::make_timeline({"2024-07-06T14:00:00Z", "2023-03-01T00:00:00Z"}))},
+    {"ts", Shelf(pluss::make_timeline({"2024-07-06T14:00:00Z", "2023-03-01T00:00:00Z"}))},
 });
 auto atlas = Atlas({q1, q2});
 
@@ -82,7 +82,6 @@ std::cout << "epoch after:\n" << localized.tl().epoch(TimeUnit::Seconds).frame(0
 1    | 2023-03-01 00:00:00
 --------------------------
 [2 cs x 1 feat]
-
 epoch before:
 =================
      | ts        
@@ -90,8 +89,7 @@ epoch before:
 0    | 1706692530
 1    | 1709250300
 -----------------
-[2 cs x 1 feat]
-epoch after:
+[2 cs x 1 feat]epoch after:
 =================
      | ts        
 -----------------

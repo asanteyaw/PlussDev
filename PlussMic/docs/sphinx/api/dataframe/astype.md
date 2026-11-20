@@ -88,13 +88,13 @@ std::cout << passed_bool;
 ### Output (the narrowed, cast-only result)
 
 ```text
-============
+=============
      | passed
-------------
+-------------
 0    | true  
 1    | false 
 2    | true  
-------------
+-------------
 [3 cs x 1 feat]
 ```
 
@@ -113,9 +113,9 @@ std::cout << out;
 =========================
      | student_id  passed
 -------------------------
-0    | 101         true  
-1    | 102         false 
-2    | 103         true  
+0    | 101         1     
+1    | 102         0     
+2    | 103         1     
 -------------------------
 [3 cs x 2 feat]
 ```
@@ -169,8 +169,8 @@ before `astype()` is ever reached.
 ```cpp
 try {
   auto out = raw.features({"not_a_column"}).astype(pluss::ScalarType::Bool);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -205,13 +205,13 @@ a chance to run at all.
   numeric-looking column onto the `Note` text family before string operations), see
   [`cast()`](cast.md) instead — `astype()` changes the scalar dtype within a feature's
   existing payload family, not the family itself. `cast()`'s `CastSpec` overload accepts a
-  `SlateCastTarget` (e.g. `SlateCastTarget::Note`) for exactly that purpose.
+  `ShelfCastTarget` (e.g. `ShelfCastTarget::Note`) for exactly that purpose.
 
 ## See Also
 
 - [`DataFrame::cast`](cast.md): the broader casting route — change a feature's payload
   family (`Series`/`Note`/etc.), not just its scalar dtype within the current family.
-- [`Slate::astype`](../slate/astype.md): cast one slate directly outside a frame.
+- [`Shelf::astype`](../shelf/astype.md): cast one shelf directly outside a frame.
 - [`DataFrame::features`](features.md): narrow the frame to the feature(s) the
   shared-dtype overload should cast.
 - [`DataFrame::update`](update.md): merge a narrowed, cast-only result back into the

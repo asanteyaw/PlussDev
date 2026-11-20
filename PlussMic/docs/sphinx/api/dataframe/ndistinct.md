@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::ndistinct(bool dropnull = true) const
+Shelf DataFrame::ndistinct(bool dropnull = true) const
 ```
 
 ## What It Does
@@ -35,7 +35,7 @@ from the distinct count entirely (`true`, the default).
 
 ## Returns
 
-`Slate`
+`Shelf`
     One `Int64` entry per selected feature, labeled by feature name, named
     `"ndistinct"`.
 
@@ -47,8 +47,8 @@ Example 1. Count distinct values per feature on a small frame.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",   Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"city", Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}))},
+    {"id",   Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}))},
 });
 std::cout << orders;
 ```

@@ -39,7 +39,7 @@ int main() {
 
 Doctrine:
 
-- `Atlas -> DataFrame -> Slate -> (Series/Note/Timeline/TimeIndex)`
+- `Atlas -> DataFrame -> Shelf -> (Series/Note/Timeline/TimeIndex)`
 
 ## DataFrame API Style
 
@@ -72,7 +72,7 @@ for (const auto& name : wb.sheet_names()) {
 
 - `PLUSS_FOUNDATIONS.md`
 - `docs/DATAFRAME_ATLAS_USER_GUIDE.md`
-- `docs/SLATE_API_GUIDE.md`
+- `docs/SHELF_API_GUIDE.md`
 - `PlussMic/examples/table/`
 
 ## Build

@@ -279,7 +279,6 @@ Output
 tank UA 0.0000 W/K: tank temperature after an hour 340.0000 K, exact 340.0000 K
 tank UA 2000.0000 W/K: tank temperature after an hour 339.2576 K, exact 339.2576 K
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="Heat.html">

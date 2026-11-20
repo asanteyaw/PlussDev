@@ -45,8 +45,8 @@ a `Series`-kind feature is used as-is; a `Timeline`- or `TimeIndex`-kind feature
 converted to **epoch nanoseconds** (so a genuine timestamp feature can be used directly as
 an `x`/`y`/`z` axis, plotted on a raw nanosecond scale); a `Note`-kind feature is cast to
 `Series` (a text-to-number parse, which produces `NaN` for text that doesn't parse as a
-number rather than throwing outright). Any other `Slate` kind throws `"DataFrame::plot:
-unsupported Slate kind for numeric plotting"`. A resolved axis whose length doesn't match
+number rather than throwing outright). Any other `Shelf` kind throws `"DataFrame::plot:
+unsupported Shelf kind for numeric plotting"`. A resolved axis whose length doesn't match
 the frame's row count throws `"DataFrame::plot: feature '<name>' length mismatch with
 cases"` — note this shared low-level check's message always says `"DataFrame::plot"`, even
 when it fires from a `plot3d()` call.
@@ -76,7 +76,7 @@ The scene accepts these settings. An unset optional setting leaves the pane defa
 | Setting | Choices or default | Purpose |
 |---|---|---|
 | `preset` | Survey, Presentation, Studio, Topology; unset | Sets a coordinated scene style. |
-| `theme` | Paper, Ocean, Graphite, Mist; unset | Chooses the color theme. |
+| `theme` | Paper, Ocean, Slate, Mist; unset | Chooses the color theme. |
 | `camera_preset` | Spatial, TopDown, Front, Side, Isometric; unset | Chooses a camera angle. |
 | `grid_style` | None, Major, MajorMinor; unset | Controls grid lines. |
 | `camera` | Unset | Supplies explicit camera settings instead of a preset angle. |
@@ -101,7 +101,7 @@ Setting both `camera_preset` and `camera` is legal — `camera` applies last and
 |---|---|---|---|
 | `Survey` | Ocean | Isometric | headlight + left lamp |
 | `Presentation` | Paper | perspective, low/wide angle | headlight + right lamp + sun key |
-| `Studio` | Graphite | Spatial (the library-wide default angle) | headlight + both lamps |
+| `Studio` | Slate | Spatial (the library-wide default angle) | headlight + both lamps |
 | `Topology` | Mist | TopDown | headlight only |
 
 
@@ -140,9 +140,9 @@ Example 1. Default options: a simple 3D path.
 using namespace pluss::table;
 
 auto points = DataFrame({
-    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"y", Slate(pluss::make_series({4.0, 3.0, 5.0, 2.0}))},
-    {"z", Slate(pluss::make_series({2.0, 5.0, 4.0, 6.0}))},
+    {"x", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"y", Shelf(pluss::make_series({4.0, 3.0, 5.0, 2.0}))},
+    {"z", Shelf(pluss::make_series({2.0, 5.0, 4.0, 6.0}))},
 });
 
 auto chart = points.plot3d().line("x", "y", "z");
@@ -222,9 +222,9 @@ nanoseconds, per the note above.
 
 ```cpp
 auto readings = DataFrame({
-    {"measured_at", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"}))},
-    {"depth_m",     Slate(pluss::make_series({10.0, 12.0, 9.0}))},
-    {"temp_c",      Slate(pluss::make_series({18.0, 17.5, 19.0}))},
+    {"measured_at", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"}))},
+    {"depth_m",     Shelf(pluss::make_series({10.0, 12.0, 9.0}))},
+    {"temp_c",      Shelf(pluss::make_series({18.0, 17.5, 19.0}))},
 });
 
 auto chart = readings.plot3d().line("measured_at", "depth_m", "temp_c");

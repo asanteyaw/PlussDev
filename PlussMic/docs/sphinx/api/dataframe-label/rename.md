@@ -43,9 +43,9 @@ untouched.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
@@ -135,12 +135,12 @@ Example 3. Call `rename()` on an unstructured frame, to see it throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"sales", Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 try {
   auto out = orders.labels().rename({{"region", "area"}});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -160,8 +160,8 @@ different throw.
 ```cpp
 try {
   auto out = grouped.labels().rename({{"region", "area"}, {"city", "area"}});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

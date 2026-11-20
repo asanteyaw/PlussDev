@@ -53,7 +53,7 @@ as expected.
 using namespace pluss::table;
 
 auto places = DataFrame({
-    {"name", Slate(pluss::make_note(
+    {"name", Shelf(pluss::make_note(
         {"accra central market", "east legon", "north kaneshie"}))},
 });
 std::cout << places;
@@ -98,7 +98,7 @@ expect.
 
 ```cpp
 auto phrases = DataFrame({
-    {"phrase", Slate(pluss::make_note(
+    {"phrase", Shelf(pluss::make_note(
         {"don't stop", "rock 'n' roll", "co-op bank"}))},
 });
 std::cout << phrases;
@@ -126,7 +126,7 @@ std::cout << out2;
 ====================
      | phrase       
 --------------------
-0    | Don'T Stop   
+0    | Don't Stop   
 1    | Rock 'N' Roll
 2    | Co-Op Bank   
 --------------------

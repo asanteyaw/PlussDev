@@ -71,10 +71,10 @@ Example 1. Pivot per-order sales into a city-by-product grid, where every
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",  Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"sales",    Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 80.0, 60.0}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",  Shelf(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"sales",    Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0, 80.0, 60.0}))},
 });
 
 auto by_city_product = orders.pivot("city", "product", "sales");
@@ -84,14 +84,14 @@ std::cout << by_city_product;
 ### Output
 
 ```text
-==========================================
-     | city    Laptop  Headphones  Monitor
-------------------------------------------
-0    | Accra   100     120         NULL   
-1    | Tema    90      NULL        150    
-2    | Kumasi  NULL    80          60     
-------------------------------------------
-[3 cs x 4 feat]
+====================================
+       | Headphones  Laptop  Monitor
+------------------------------------
+Accra  | 120         100     NULL   
+Kumasi | 80          NULL    60     
+Tema   | NULL        90      150    
+------------------------------------
+[3 cs x 3 feat]
 ```
 
 Every `(city, product)` pair in `orders` occurs exactly once, so `pivot()` can spread
@@ -103,16 +103,16 @@ Example 2. A repeated pair throws, pointing you at `pivot_table()` instead.
 
 ```cpp
 auto orders_with_repeat = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema"}))},
-    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Laptop"}))},
-    {"sales",    Slate(pluss::make_series({100.0, 200.0, 90.0}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Accra", "Tema"}))},
+    {"product",  Shelf(pluss::make_note({"Laptop", "Laptop", "Laptop"}))},
+    {"sales",    Shelf(pluss::make_series({100.0, 200.0, 90.0}))},
 });
 
 try {
   auto out = orders_with_repeat.pivot("city", "product", "sales");
 } catch (const pluss::Error& e) {
-  std::cout << e.what() << "\n";
+  std::cout << e.message() << "\n";
 }
 ```
 

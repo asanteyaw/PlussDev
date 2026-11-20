@@ -19,7 +19,7 @@ Controls the band transformation, frequency interpretation, output precision, an
 | `band` | `Band::Low` | Chooses low-pass, high-pass, band-pass, or band-stop transformation. |
 | `sample_rate` | `2.0` | Present: digital design with cutoff in matching ordinary-frequency units. `std::nullopt`: continuous analog design with angular-frequency cutoffs. |
 | `dtype` | `ScalarType::Float64` | Real precision used to construct poles, zeros, and gain. |
-| `platform` | `Platform::CPU` | Storage and execution platform of the resulting pole-zero payload. |
+| `platform` | `Platform::CPU` | Storage and execution platform of the resulting pole-zero payload. On the MPS the dtype must be `Float32`, because the MPS has no 64-bit floats. |
 
 ## Returns
 
@@ -27,150 +27,161 @@ Pass by const reference to a design factory; the result is an `lti::PoleZero` ca
 
 ## Errors
 
-Rejects nonpositive/nonfinite sample rates, unsupported dtypes/platforms, or a band incompatible with the chosen cutoff overload.
+Rejects nonpositive or nonfinite sample rates, a dtype other than `Float32` or `Float64`, a `Float64` design on the MPS (the MPS has no 64-bit floats; use `Float32`), or a band incompatible with the chosen cutoff overload.
+
+## Interpretation and Use
+
+With a `sample_rate` the cutoffs are in hertz (or any unit consistent with the rate) and the result is discrete with sample time `1 / sample_rate`; with `std::nullopt` the cutoffs are angular frequencies in radians per second and the result is continuous. The default rate of 2 makes a cutoff of 1 the Nyquist frequency, the usual normalised convention. Set `dtype` to `Float32` to build the design in single precision.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+A digital design with a sample rate against an analog one without, and the default rate.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-
-  const sig::IirOptions options{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  const lti::PoleZero butter = sig::butter(4, 100.0, options);
-  const lti::PoleZero cheby1 = sig::cheby1(4, 1.0, 100.0, options);
-  const lti::PoleZero cheby2 = sig::cheby2(4, 40.0, 100.0, options);
-
-  out.writeln("Butterworth poles =", butter.poles().numel());
-  out.writeln("Butterworth stable =", butter.is_stable());
-  out.writeln("Chebyshev I stable =", cheby1.is_stable());
-  out.writeln("Chebyshev II stable =", cheby2.is_stable());
-  out.writeln("SOS shape =", lti::to_sos(butter).sizes());
-}
-```
-
-Output
-
-```text
-Butterworth poles = 4
-Butterworth stable = true
-Chebyshev I stable = true
-Chebyshev II stable = true
-SOS shape = [2, 6]
-```
-### Example 2
-
-Exercise band transformations and analog-versus-digital interpretation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
+#include <algorithm>
 #include <cmath>
-#include <optional>
-
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::PoleZero pass = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Pass, .sample_rate = 1000.0});
-  const lti::PoleZero stop = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Stop, .sample_rate = 1000.0});
-  const lti::PoleZero analog = sig::butter(
-      3, 2.0,
-      {.band = sig::Band::Low, .sample_rate = std::nullopt});
-  const pluss::Series omega =
-      pluss::make_series({0.0, 150.0 * 2.0 * std::acos(-1.0)});
-
-  out.writeln("pass magnitude =", lti::freqresp(pass, omega).abs().items<double>());
-  out.writeln("stop magnitude =", lti::freqresp(stop, omega).abs().items<double>());
-  out.writeln("analog continuous =", analog.is_cont());
-  out.writeln("analog gain =", analog.gain().real().item<double>());
-}
-```
-
-Output
-
-```text
-pass magnitude = [0.0000, 1.0000]
-stop magnitude = [1.0000, 0.0015]
-analog continuous = true
-analog gain = 8.0000
-```
-### Example 3
-
-Observe validation of cutoffs, ripple, and band/cutoff shape.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
 
 int main() {
   OutputEngine out;
-  const sig::IirOptions low{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  try {
-    static_cast<void>(sig::butter(3, 500.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("Nyquist cutoff rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::cheby1(3, 0.0, 100.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero ripple rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::butter(
-        3, 100.0,
-        {.band = sig::Band::Pass, .sample_rate = 1000.0}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("scalar passband rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const lti::PoleZero digital = sig::butter(2, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  const lti::PoleZero analog = sig::butter(2, 100.0, {.band = sig::Band::Low, .sample_rate = std::nullopt});
+  out.writeln("with a sample rate: discrete =", digital.is_disc(), " sample time =", digital.sample_time(), " stable =", digital.is_stable());
+  out.writeln("without one: continuous =", analog.is_cont(), " stable =", analog.is_stable());
+  const sig::IirOptions defaults;
+  out.writeln("the default sample rate is", *defaults.sample_rate, "(a cutoff of 0.5 is then half the Nyquist frequency)");
 }
 ```
 
 Output
 
 ```text
-Nyquist cutoff rejected = eng::signal::butter: a digital cutoff must be below the Nyquist frequency
-zero ripple rejected = eng::signal::cheby1: ripple must be finite and positive
-scalar passband rejected = eng::signal::butter: a scalar cutoff requires Band::Low or Band::High
+with a sample rate: discrete = true  sample time = 0.001  stable = true
+without one: continuous = true  stable = true
+the default sample rate is 2.000 (a cutoff of 0.5 is then half the Nyquist frequency)
+```
+### Example 2
+
+Float32 against Float64 poles: the dtype of the design and the same gain at the cutoff.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const lti::PoleZero wide = sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  const lti::PoleZero narrow = sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0, .dtype = pluss::ScalarType::Float32});
+  out.writeln("poles dtype", wide.poles().scalar_type(), "against", narrow.poles().scalar_type());
+  out.writeln("gain at the cutoff", gain_db(wide, 100.0), "dB against", gain_db(narrow, 100.0), "dB");
+}
+```
+
+Output
+
+```text
+poles dtype complex128 against complex64
+gain at the cutoff -3.010 dB against -3.010 dB
+```
+### Example 3
+
+Every refused option.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  refused(out, "a negative sample rate", [] { sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = -1000.0}); });
+  refused(out, "a zero sample rate", [] { sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = 0.0}); });
+  refused(out, "a non-floating dtype", [] { sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0, .dtype = pluss::ScalarType::Int64}); });
+  refused(out, "a float64 design on the MPS", [] { sig::butter(3, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0, .platform = pluss::Platform::MPS}); });
+}
+```
+
+Output
+
+```text
+a negative sample rate : eng::signal::butter: sample_rate must be finite and positive
+a zero sample rate : eng::signal::butter: sample_rate must be finite and positive
+a non-floating dtype : eng::signal::butter: dtype must be Float32 or Float64
+a float64 design on the MPS : eng::signal::butter: float64 is unsupported on the MPS; set dtype to Float32 to design on it
 ```
 ## See Also
 

@@ -79,7 +79,7 @@ auto ct = pluss::kindle::Catalog({
 try {
   auto out = ct.nt().strip();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -87,7 +87,7 @@ try {
 ### Output
 
 ```text
-Slate::strip is only valid for Note payload
+Shelf::strip is only valid for Note payload
 ```
 
 ## Notes

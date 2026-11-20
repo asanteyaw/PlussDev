@@ -8,7 +8,7 @@
 
 A print option tells the output engine how to render a value: how wide it is, how many decimals it shows, whether it groups thousands, how a list is bracketed, and how a flag reads. You set these options on a call, or once on the engine as defaults. This chapter works through the option groups in the order you are likely to need them, with a complete program for each group.
 
-## The mental model
+## How it works
 
 A `PrintOptions` value is a bundle of settings, and every field has a neutral default, so you set only what you need. A call's options are merged with the engine's defaults, and anything neither sets falls back to the built-in behavior. A trailing `PrintOptions` belongs to the whole call, which means the settings apply to every value that call writes. To format values differently on one line, use the pattern form, where each placeholder carries its own width and alignment.
 

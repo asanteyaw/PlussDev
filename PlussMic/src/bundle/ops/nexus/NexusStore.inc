@@ -513,20 +513,20 @@ pluss::table::DataFrame Nexus::schema() const {
   }
 
   return pluss::table::DataFrame({
-      {"table", pluss::table::Slate(pluss::make_note(names))},
-      {"rows", pluss::table::Slate(pluss::make_series(rows))},
-      {"cols", pluss::table::Slate(pluss::make_series(cols))},
-      {"feats", pluss::table::Slate(pluss::make_note(feats))},
-      {"dtypes", pluss::table::Slate(pluss::make_note(dtypes))},
-      {"grain", pluss::table::Slate(pluss::make_note(grains))},
-      {"pkey", pluss::table::Slate(pluss::make_note(pkeys))},
-      {"ckeys", pluss::table::Slate(pluss::make_note(ckeys))},
-      {"time", pluss::table::Slate(pluss::make_note(times))},
-      {"labels", pluss::table::Slate(pluss::make_note(labels))},
-      {"source", pluss::table::Slate(pluss::make_note(sources))},
-      {"provenance", pluss::table::Slate(pluss::make_note(provenances))},
-      {"note", pluss::table::Slate(pluss::make_note(notes))},
-      {"fingerprint", pluss::table::Slate(pluss::make_note(fingerprints))},
+      {"table", pluss::table::Shelf(pluss::make_note(names))},
+      {"rows", pluss::table::Shelf(pluss::make_series(rows))},
+      {"cols", pluss::table::Shelf(pluss::make_series(cols))},
+      {"feats", pluss::table::Shelf(pluss::make_note(feats))},
+      {"dtypes", pluss::table::Shelf(pluss::make_note(dtypes))},
+      {"grain", pluss::table::Shelf(pluss::make_note(grains))},
+      {"pkey", pluss::table::Shelf(pluss::make_note(pkeys))},
+      {"ckeys", pluss::table::Shelf(pluss::make_note(ckeys))},
+      {"time", pluss::table::Shelf(pluss::make_note(times))},
+      {"labels", pluss::table::Shelf(pluss::make_note(labels))},
+      {"source", pluss::table::Shelf(pluss::make_note(sources))},
+      {"provenance", pluss::table::Shelf(pluss::make_note(provenances))},
+      {"note", pluss::table::Shelf(pluss::make_note(notes))},
+      {"fingerprint", pluss::table::Shelf(pluss::make_note(fingerprints))},
   });
 }
 
@@ -558,14 +558,14 @@ void Nexus::save(std::string_view directory, const StoreOptions& options) const 
   }
 
   pluss::table::DataFrame({
-      {"kind", pluss::table::Slate(pluss::make_note(std::vector<std::string>{kind}))},
-      {"fingerprint", pluss::table::Slate(pluss::make_note(std::vector<std::string>{fingerprint()}))},
-      {"ntables", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{ntables()}))},
-      {"nlinks", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{nrelationships()}))},
-      {"tables", pluss::table::Slate(pluss::make_note(std::vector<std::string>{options.tables}))},
-      {"schema", pluss::table::Slate(pluss::make_note(std::vector<std::string>{options.schema}))},
-      {"graph", pluss::table::Slate(pluss::make_note(std::vector<std::string>{options.graph}))},
-      {"views", pluss::table::Slate(pluss::make_note(std::vector<std::string>{options.views}))},
+      {"kind", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{kind}))},
+      {"fingerprint", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{fingerprint()}))},
+      {"ntables", pluss::table::Shelf(pluss::make_series(std::vector<std::int64_t>{ntables()}))},
+      {"nlinks", pluss::table::Shelf(pluss::make_series(std::vector<std::int64_t>{nrelationships()}))},
+      {"tables", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{options.tables}))},
+      {"schema", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{options.schema}))},
+      {"graph", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{options.graph}))},
+      {"views", pluss::table::Shelf(pluss::make_note(std::vector<std::string>{options.views}))},
   }).save_csv((root / options.manifest).string());
 }
 

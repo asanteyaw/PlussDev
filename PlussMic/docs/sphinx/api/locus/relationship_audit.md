@@ -54,3 +54,14 @@ relationship_audit ncases=1
 - [`grain_audit`](grain_audit.md): the matching table-level report.
 - [`audit_report`](audit_report.md): every relationship's audit, combined
   with every table's, in one workspace-wide report.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="query.html">
+    <span class="label">Previous</span>
+    <span class="title">query</span>
+  </a>
+  <a class="next-link" href="rename.html">
+    <span class="label">Next</span>
+    <span class="title">rename</span>
+  </a>
+</div>

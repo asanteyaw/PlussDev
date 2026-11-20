@@ -6,7 +6,7 @@ You have a quantity to make as small as possible, and some rules the answer must
 
 Every program in this chapter is complete. Copy one into a file, add `#include <pluss/ma.h>` if it is not already there, and it builds as shown. The output under each program is the exact output of that program.
 
-## The mental model
+## How it works
 
 `optima` solves
 

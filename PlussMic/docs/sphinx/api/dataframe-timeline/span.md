@@ -12,8 +12,8 @@ DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, const Timeline
 DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const
 DataFrame DataFrameTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const
 DataFrame DataFrameTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const
-DataFrame DataFrameTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const
-DataFrame DataFrameTimelineAccessor::span(const Slate& other, TimeUnit unit) const
+DataFrame DataFrameTimelineAccessor::span(const Shelf& other, const TimelineSpanOptions& options = {}) const
+DataFrame DataFrameTimelineAccessor::span(const Shelf& other, TimeUnit unit) const
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame DataFrameTimelineAccessor::span(const Slate& other, TimeUnit unit) con
 Replaces every selected `Timeline` feature with the elapsed
 distance between it and `other`, in `options.unit` (or plain `unit`) — same
 feature name, now a numeric `Series`. `other` can be another `DataFrame`
-(paired feature-by-feature, by matching name), a bare `Slate`, or a
+(paired feature-by-feature, by matching name), a bare `Shelf`, or a
 `pluss::Timeline`.
 
 Fixed-duration units (`Nanos`/`Micros`/`Millis`/`Seconds`/`Days`/`Weeks`) are
@@ -32,7 +32,7 @@ completed calendar periods or crossed calendar boundaries, per
 
 ## Parameters
 
-**other** (`const DataFrame&` / `const Slate&` / `const pluss::Timeline&`)
+**other** (`const DataFrame&` / `const Shelf&` / `const pluss::Timeline&`)
 
 The right-hand timestamp(s). For the `DataFrame` overload, every selected
 feature name on `*this` must also exist on `other`; each is paired by name.
@@ -66,13 +66,13 @@ Example 1. Fixed-duration span in whole days.
 using namespace pluss::table;
 
 auto starts = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T00:00:00Z",
           "2024-02-29T00:00:00Z",
           "2024-01-01T00:00:00Z",
       }))}});
 auto ends = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-02-01T00:00:00Z",
           "2025-02-28T00:00:00Z",
           "2024-01-05T00:00:00Z",
@@ -130,8 +130,8 @@ non-leap-affected 365-day span.
 Example 2. Calendar-month span: `Complete` vs `Boundary` mode.
 
 ```cpp
-auto start = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto end   = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
+auto start = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto end   = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
 
 TimelineSpanOptions months;
 months.unit = TimeUnit::Months;
@@ -176,8 +176,8 @@ precedes `*this`.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -239,22 +239,22 @@ std::cout << unsigned_out;
 default signed result is negative, `-31`. With `signed_result = false`, the
 same span comes back as the plain magnitude, `31`.
 
-Example 4. Pass `other` as a bare `Slate` or a raw `pluss::Timeline`, instead
+Example 4. Pass `other` as a bare `Shelf` or a raw `pluss::Timeline`, instead
 of wrapping it in a `DataFrame`.
 
 ```cpp
 using namespace pluss::table;
 
-auto self = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto self = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 
-auto via_slate = self.tl().span(Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"})), TimeUnit::Days);
-std::cout << via_slate;
+auto via_shelf = self.tl().span(Shelf(pluss::make_timeline({"2024-02-01T00:00:00Z"})), TimeUnit::Days);
+std::cout << via_shelf;
 
 auto via_timeline = self.tl().span(pluss::make_timeline({"2024-02-01T00:00:00Z"}), TimeUnit::Days);
 std::cout << via_timeline;
 ```
 
-### Output (Slate overload)
+### Output (Shelf overload)
 
 ```text
 ===========
@@ -286,8 +286,8 @@ without a holiday in the range.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-12T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-12T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -363,8 +363,8 @@ count as a completed month, even though their days-of-month don't match.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -436,14 +436,14 @@ mismatched timezones, to see the call throw.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}})
+auto self  = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Shelf(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}})
                  .tl().tz("America/New_York");
 
 try {
   auto out = self.tl().span(other, TimeUnit::Months);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

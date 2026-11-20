@@ -99,9 +99,9 @@ true
   catalog has a backing handle at all.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dropnull.html">
+  <a class="prev-link" href="dropposinf.html">
     <span class="label">Previous</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropposinf</span>
   </a>
   <a class="next-link" href="end.html">
     <span class="label">Next</span>

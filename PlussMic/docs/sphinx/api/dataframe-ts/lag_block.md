@@ -38,8 +38,8 @@ Example 1. Compute two lags of the same feature at once.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().lag_block({1, 2});
@@ -49,14 +49,14 @@ std::cout << out;
 ### Output
 
 ```text
-=================
-     | lag1  lag2
------------------
-0    | NULL  NULL
-1    | 10    NULL
-2    | 20    10  
-3    | 15    20  
------------------
+===========================
+     | load_lag1  load_lag2
+---------------------------
+0    | NULL       NULL     
+1    | 10         NULL     
+2    | 20         10       
+3    | 15         20       
+---------------------------
 [4 cs x 2 feat]
 ```
 

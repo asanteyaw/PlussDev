@@ -77,3 +77,14 @@ with_ changed in place: true
   once.
 - [`without`](without.md): the removal counterpart, which does drop links
   and metadata that touched the catalog.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="summary.html">
+    <span class="label">Previous</span>
+    <span class="title">summary</span>
+  </a>
+  <a class="next-link" href="without.html">
+    <span class="label">Next</span>
+    <span class="title">without</span>
+  </a>
+</div>

@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -24,9 +24,9 @@ int main() {
   // One frame holds features and label; a DFBatch names them. benchmark has
   // the same (frame, DFBatch) overload learn and infer do.
   const DataFrame frame({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"defaulted", Slate(defaulted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"defaulted", Shelf(defaulted)},
   });
   lymph::options::DFBatch batch{};
   batch.feature_names = {"income", "balance"};

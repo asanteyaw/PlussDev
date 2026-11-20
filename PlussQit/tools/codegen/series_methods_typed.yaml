@@ -2601,6 +2601,11 @@ methods:
     forward: ""
 
 skip_methods:
+  # Internal exact int32/int64 division helpers for MPS (free functions in ops_internal), not Series methods.
+  - mps_exact_int_pair
+  - mps_int_truncating_divide
+  - mps_int_floor_divide
+  - has_zero_integer_divisor
   - _backward
   - _coalesced_
   # Free function (two inputs), not a method — torch exposes this as at::complex.

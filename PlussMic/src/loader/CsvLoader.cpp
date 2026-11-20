@@ -33,7 +33,7 @@
 #include "CodeM/core/ScalarType.h"
 #include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include "table/io/CsvSchemaConvert.h"
 #include "loader/parallel_csv_reader.h"
 #include <pluss/tils/kit/output.h>
@@ -121,17 +121,15 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-bool slate_value_is_missing_for_io(const pluss::table::Slate& t, std::int64_t row) {
+bool shelf_value_is_missing_for_io(const pluss::table::Shelf& t, std::int64_t row) {
   if (pluss::table::detail::has_validity_mask(t)) {
     const auto valid = pluss::table::detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
   }
-  if (t.kind() == pluss::table::SlateKind::Series) {
-    return series_value_is_nan_for_io(t.as_series(), row);
-  }
-  if (t.kind() == pluss::table::SlateKind::Duration) {
+  // A floating NaN is a value, not a missing cell: it is written as the text NaN (see shelf_value_for_*), never as the null marker.
+  if (t.kind() == pluss::table::ShelfKind::Duration) {
     return t.as_duration().host()[static_cast<std::size_t>(row)] ==
            pluss::Duration::kNaT;
   }
@@ -143,24 +141,24 @@ bool series_all_zero_i64_for_io(const pluss::Series& s) {
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 
-pluss::table::Slate temporal_slate_for_io(const pluss::table::Slate& t) {
+pluss::table::Shelf temporal_shelf_for_io(const pluss::table::Shelf& t) {
   const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
                               || !series_all_zero_i64_for_io(timeline.minute())
                               || !series_all_zero_i64_for_io(timeline.hour());
   if (!has_clock_time) {
-    return pluss::table::Slate(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Shelf(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
   }
-  return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
+  return pluss::table::Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
 }
 
-pluss::table::Slate slate_for_csv_io(const pluss::table::Slate& t) {
-  if (t.kind() == pluss::table::SlateKind::Timeline) {
-    return temporal_slate_for_io(t);
+pluss::table::Shelf shelf_for_csv_io(const pluss::table::Shelf& t) {
+  if (t.kind() == pluss::table::ShelfKind::Timeline) {
+    return temporal_shelf_for_io(t);
   }
   return t;
 }
@@ -475,22 +473,25 @@ std::string scalar_for_csv(const pluss::Series& s, std::int64_t row, const Write
   }
 }
 
-std::string slate_value_for_csv(const pluss::table::Slate& t, std::int64_t row, const WriteCsvOptions& options) {
-  if (slate_value_is_missing_for_io(t, row)) {
+std::string shelf_value_for_csv(const pluss::table::Shelf& t, std::int64_t row, const WriteCsvOptions& options) {
+  if (shelf_value_is_missing_for_io(t, row)) {
     return options.null_rep;
   }
 
   switch (t.kind()) {
-    case pluss::table::SlateKind::Series:
+    case pluss::table::ShelfKind::Series:
+      if (series_value_is_nan_for_io(t.as_series(), row)) {
+        return "NaN";
+      }
       return scalar_for_csv(t.as_series(), row, options);
-    case pluss::table::SlateKind::Note:
+    case pluss::table::ShelfKind::Note:
       return std::string(t.as_note().at(row));
-    case pluss::table::SlateKind::Timeline:
+    case pluss::table::ShelfKind::Timeline:
       return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case pluss::table::SlateKind::Duration:
+    case pluss::table::ShelfKind::Duration:
       return pluss::tils::OutputEngine::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
-  PLUSS_FAIL("write_csv: unsupported Slate kind");
+  PLUSS_FAIL("write_csv: unsupported Shelf kind");
 }
 
 std::string escape_csv_cell(std::string_view value, const WriteCsvOptions& options) {
@@ -1254,13 +1255,13 @@ void save_csv(const pluss::table::DataFrame& frame,
 
   const auto sep = options.sep;
   const auto names = frame.features();
-  std::vector<pluss::table::Slate> cols;
+  std::vector<pluss::table::Shelf> cols;
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(slate_for_csv_io(frame.features(name)));
+    cols.push_back(shelf_for_csv_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
-  const auto case_values = include_cases ? slate_for_csv_io(frame.labels().values()) : pluss::table::Slate{};
+  const auto case_values = include_cases ? shelf_for_csv_io(frame.labels().values()) : pluss::table::Shelf{};
 
   if (options.header) {
     bool first = true;
@@ -1281,14 +1282,14 @@ void save_csv(const pluss::table::DataFrame& frame,
   for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     bool first = true;
     if (include_cases) {
-      out << escape_csv_cell(slate_value_for_csv(case_values, r, options), options);
+      out << escape_csv_cell(shelf_value_for_csv(case_values, r, options), options);
       first = false;
     }
     for (const auto& col : cols) {
       if (!first) {
         out << sep;
       }
-      out << escape_csv_cell(slate_value_for_csv(col, r, options), options);
+      out << escape_csv_cell(shelf_value_for_csv(col, r, options), options);
       first = false;
     }
     out << options.line_terminator;
@@ -1303,7 +1304,7 @@ struct CsvCaseReader::Impl {
   std::size_t emitted{0};
   std::vector<std::vector<std::string>> preamble;
   std::vector<std::string> schema_names;
-  std::vector<pluss::table::SlateKind> schema_kinds;
+  std::vector<pluss::table::ShelfKind> schema_kinds;
   std::vector<std::optional<pluss::codem::ScalarType>> schema_series_types;
 
   Impl(
@@ -1395,7 +1396,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       const auto column = output.features(feature);
       impl_->schema_kinds.push_back(column.kind());
       impl_->schema_series_types.push_back(
-          column.kind() == pluss::table::SlateKind::Series
+          column.kind() == pluss::table::ShelfKind::Series
               ? std::optional{column.as_series().scalar_type()}
               : std::nullopt);
     }
@@ -1403,7 +1404,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
     PLUSS_CHECK(
         output.features() == impl_->schema_names,
         "CsvCaseReader::next: feature schema changed between batches");
-    std::vector<pluss::table::Slate> columns;
+    std::vector<pluss::table::Shelf> columns;
     columns.reserve(impl_->schema_names.size());
     for (const auto& name : impl_->schema_names) {
       columns.push_back(output.features(name));
@@ -1413,37 +1414,37 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       const auto& column = columns[i];
       const auto same_kind = column.kind() == impl_->schema_kinds[i];
       const auto same_dtype =
-          column.kind() != pluss::table::SlateKind::Series ||
+          column.kind() != pluss::table::ShelfKind::Series ||
           column.as_series().scalar_type() == *impl_->schema_series_types[i];
       if (same_kind && same_dtype) {
         continue;
       }
 
-      pluss::table::SlateCastTarget target =
-          pluss::table::SlateCastTarget::Series;
+      pluss::table::ShelfCastTarget target =
+          pluss::table::ShelfCastTarget::Series;
       switch (impl_->schema_kinds[i]) {
-        case pluss::table::SlateKind::Series:
-          target = pluss::table::SlateCastTarget::Series;
+        case pluss::table::ShelfKind::Series:
+          target = pluss::table::ShelfCastTarget::Series;
           break;
-        case pluss::table::SlateKind::Note:
-          target = pluss::table::SlateCastTarget::Note;
+        case pluss::table::ShelfKind::Note:
+          target = pluss::table::ShelfCastTarget::Note;
           break;
-        case pluss::table::SlateKind::Timeline:
-          target = pluss::table::SlateCastTarget::Timeline;
+        case pluss::table::ShelfKind::Timeline:
+          target = pluss::table::ShelfCastTarget::Timeline;
           break;
-        case pluss::table::SlateKind::Duration:
-          target = pluss::table::SlateCastTarget::Duration;
+        case pluss::table::ShelfKind::Duration:
+          target = pluss::table::ShelfCastTarget::Duration;
           break;
       }
       const auto converted = [&]() {
         switch (target) {
-          case pluss::table::SlateCastTarget::Series:
+          case pluss::table::ShelfCastTarget::Series:
             return column.cast({.series_dtype = impl_->schema_series_types[i]}).series();
-          case pluss::table::SlateCastTarget::Note:
+          case pluss::table::ShelfCastTarget::Note:
             return column.cast().note();
-          case pluss::table::SlateCastTarget::Timeline:
+          case pluss::table::ShelfCastTarget::Timeline:
             return column.cast().timeline();
-          case pluss::table::SlateCastTarget::Duration:
+          case pluss::table::ShelfCastTarget::Duration:
             return column.cast().duration();
         }
         PLUSS_FAIL("CsvCaseReader::next: unsupported schema kind");
@@ -1451,8 +1452,8 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       auto lost_observation =
           column.notnull().as_series().logical_and(
               converted.notnull().as_series().logical_not());
-      if (column.kind() == pluss::table::SlateKind::Series &&
-          converted.kind() == pluss::table::SlateKind::Series) {
+      if (column.kind() == pluss::table::ShelfKind::Series &&
+          converted.kind() == pluss::table::ShelfKind::Series) {
         const auto round_trip =
             converted.as_series().to(column.as_series().scalar_type());
         lost_observation = lost_observation.logical_or(
@@ -1471,7 +1472,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
     }
     if (converted_any) {
       auto cases = output.labels().values();
-      std::vector<std::pair<std::string, pluss::table::Slate>> typed_columns;
+      std::vector<std::pair<std::string, pluss::table::Shelf>> typed_columns;
       typed_columns.reserve(columns.size());
       for (std::size_t i = 0; i < columns.size(); ++i) {
         typed_columns.emplace_back(impl_->schema_names[i], std::move(columns[i]));

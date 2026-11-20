@@ -528,9 +528,7 @@ Series entropy(const Op &state, double base, double tolerance) {
         "and different from one");
   const auto decomposition = require_density(state, tolerance, operation);
   const Series probabilities = decomposition.values.clamp_min(0.0);
-  const Series terms = probabilities.gt(tolerance).where(
-      probabilities.mul(probabilities.clamp_min(tolerance).log()),
-      probabilities.mul(0.0));
+  const Series terms = pluss::series::where(probabilities.gt(tolerance), probabilities.mul(probabilities.clamp_min(tolerance).log()), probabilities.mul(0.0));
   return terms.sum(-1).neg().div(std::log(base));
 }
 

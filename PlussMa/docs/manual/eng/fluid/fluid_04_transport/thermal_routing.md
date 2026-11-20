@@ -6,7 +6,7 @@
 
 Hot water cools as it travels. A district heating main loses heat to the ground, a hot-water return line loses it to the plant room, and a cold supply warms up in a summer ditch. `fluid::heat` follows the temperature of the water through the network over a run, with the heat each pipe and tank exchanges with its surroundings. It is the transport of the previous page with a different law: the water carries its heat with it exactly as it carried a concentration, and loses it to the ambient temperature at a rate that is set by a conductance. This page explains the model and its limits, cools a stagnant pipe and checks it against the exact decay, sends hot water through a pipe and checks the outlet temperature against the analytic result for each conductance, mixes a hot and a cold stream, and shows the confusion of units that gives a plausible wrong temperature.
 
-## The mental model
+## How it works
 
 `heat` runs on the same machinery as `transport`: the hydraulics come from `run`, each pipe is cut into `cells`, quality moves from one cell to the next with the flow, the water mixes completely at junctions, and the same `RouteOptions` control the step, the Courant limit and the cell count. What is different is the reaction. A pipe of volume `V` and a total conductance `UA` to an ambient temperature `T_a` exchanges heat at the rate
 

@@ -39,11 +39,11 @@ inline Complex cmul(const Complex &a, const Complex &b) { return {a.re.mul(b.re)
 // Smith's algorithm: no overflow/underflow from squaring the denominator
 inline Complex cdiv(const Complex &a, const Complex &b) {
   const Series use_re = b.re.abs().ge(b.im.abs());
-  const Series safe_re = use_re.where(b.re, b.re.mul(0.0).add(1.0)), safe_im = use_re.where(b.im.mul(0.0).add(1.0), b.im);
+  const Series safe_re = pluss::series::where(use_re, b.re, b.re.mul(0.0).add(1.0)), safe_im = pluss::series::where(use_re, b.im.mul(0.0).add(1.0), b.im);
   const Series r1 = b.im.div(safe_re), den1 = b.re.add(b.im.mul(r1));
   const Series r2 = b.re.div(safe_im), den2 = b.re.mul(r2).add(b.im);
-  const Series re = use_re.where(a.re.add(a.im.mul(r1)).div(den1), a.re.mul(r2).add(a.im).div(den2));
-  const Series im = use_re.where(a.im.sub(a.re.mul(r1)).div(den1), a.im.mul(r2).sub(a.re).div(den2));
+  const Series re = pluss::series::where(use_re, a.re.add(a.im.mul(r1)).div(den1), a.re.mul(r2).add(a.im).div(den2));
+  const Series im = pluss::series::where(use_re, a.im.sub(a.re.mul(r1)).div(den1), a.im.mul(r2).sub(a.re).div(den2));
   return {re, im};
 }
 inline Complex csub(const Complex &a, const Complex &b) { return {a.re.sub(b.re), a.im.sub(b.im)}; }
@@ -81,7 +81,7 @@ inline J01 bessel_j01(const Complex &z) {
     cur = prev;
     // rescale all lanes that grew large (keeps the recurrence inside double range)
     const Series big = cur.re.abs().maximum(cur.im.abs()).gt(1e100);
-    const Series s = big.where(cur.re.mul(0.0).add(1e-100), cur.re.mul(0.0).add(1.0));
+    const Series s = pluss::series::where(big, cur.re.mul(0.0).add(1e-100), cur.re.mul(0.0).add(1.0));
     cur = cscale(cur, s);
     next = cscale(next, s);
     sum_even = cscale(sum_even, s);
@@ -94,7 +94,7 @@ inline J01 bessel_j01(const Complex &z) {
   const Series use_cos = z.im.abs().gt(1.0);
   const Complex cosz{z.re.cos().mul(z.im.cosh()), z.re.sin().mul(z.im.sinh()).neg()};
   const Complex scale_one = cdiv(Complex{z.re.mul(0.0).add(1.0), z.re.mul(0.0)}, sum_even), scale_cos = cdiv(cosz, sum_alt);
-  const Complex scale{use_cos.where(scale_cos.re, scale_one.re), use_cos.where(scale_cos.im, scale_one.im)};
+  const Complex scale{pluss::series::where(use_cos, scale_cos.re, scale_one.re), pluss::series::where(use_cos, scale_cos.im, scale_one.im)};
   return {cmul(j0, scale), cmul(j1, scale)};
 }
 

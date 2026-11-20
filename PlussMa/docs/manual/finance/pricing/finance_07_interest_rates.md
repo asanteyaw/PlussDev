@@ -6,7 +6,7 @@ Option pricing in the earlier chapters takes the interest rate as a constant. Th
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A short-rate model is a process for one number**, the instantaneous rate {math}`r_t`. Vasicek and Hull-White have Gaussian rates that can be negative; CIR is positive.
 - **Bond prices follow from the rate.** {math}`P(t,T)=\mathbb{E}[e^{-\int_t^Tr}]`; in all three models it is {math}`A(\tau)e^{-B(\tau)r}`, so one closed form gives prices, yields, duration and convexity.

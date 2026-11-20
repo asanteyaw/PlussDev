@@ -69,12 +69,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+===============================
      | customer_id  total_spend
----------------------------------
-0    | 1            15
-1    | 2            14
-2    | 3            NULL
----------------------------------
+-------------------------------
+0    | 1            15         
+1    | 2            14         
+2    | 3            NULL       
+-------------------------------
 [3 cs x 2 feat]
 ```
 
@@ -87,8 +88,8 @@ Example 2. An empty `source` throws.
 ```cpp
 try {
   auto bad = nx.pull("customers").sum("", "bad");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -104,7 +105,7 @@ Example 3. Omitting `alias` falls back to the default
 
 ```cpp
 auto pulled = nx.pull("customers").take("customer_id").sum("events.spend").collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

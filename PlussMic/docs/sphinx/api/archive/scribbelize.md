@@ -51,8 +51,8 @@ auto c1 = pluss::kindle::Catalog({
 auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
 auto axel = archive.scribbelize();
 std::cout << axel.depth() << "\n";
-std::cout << axel.label().has_value() << "\n";
-std::cout << axel.label()->size() << "\n";
+std::cout << axel.labels().has_value() << "\n";
+std::cout << axel.labels()->size() << "\n";
 ```
 
 ### Output
@@ -77,7 +77,7 @@ auto c1 = pluss::kindle::Catalog({
 });
 auto archive_no_labels = pluss::kindle::Archive({c0, c1});
 auto axel_no_labels = archive_no_labels.scribbelize();
-std::cout << axel_no_labels.label().has_value() << "\n";
+std::cout << axel_no_labels.labels().has_value() << "\n";
 ```
 
 ### Output
@@ -93,7 +93,7 @@ try {
   pluss::kindle::Archive undefined_archive;
   undefined_archive.scribbelize();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -129,12 +129,12 @@ Archive::scribbelize: archive undefined
   labels.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bfill.html">
+  <a class="prev-link" href="rename.html">
     <span class="label">Previous</span>
-    <span class="title">bfill</span>
+    <span class="title">rename</span>
   </a>
-  <a class="next-link" href="cast.html">
+  <a class="next-link" href="shape.html">
     <span class="label">Next</span>
-    <span class="title">cast</span>
+    <span class="title">shape</span>
   </a>
 </div>

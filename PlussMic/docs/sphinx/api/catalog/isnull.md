@@ -65,6 +65,7 @@ source stream's own kind.
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Every resulting stream is `Series[bool]`, regardless of the source stream's own payload
   kind.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
@@ -77,12 +78,12 @@ source stream's own kind.
   cells directly, rather than just reporting where they are.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="keyaxis.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">keyaxis</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

@@ -189,36 +189,235 @@ Slot Slot::invalid() const {
   return Slot(std::move(out));
 }
 
+Slot Slot::isnan() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().isnan().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Nan)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::notnan() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().notnan().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Nan)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::isinf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().isinf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Inf)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::isposinf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().isposinf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::PosInf)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::isneginf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().isneginf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::NegInf)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::notinf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().notinf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    out.push_back(bool_slot_value(!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Inf)));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::dropnan() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().dropnan().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Nan)) out.push_back(value);
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::dropinvalid() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().dropinvalid().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (!slot_value_invalid(value)) out.push_back(value);
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::fillinvalid(double value) const {
+  return fillnull(value).fillnan(value).fillinf(value);
+}
+
+Slot Slot::dropinf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().dropinf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::Inf)) out.push_back(value);
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::dropposinf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().dropposinf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::PosInf)) out.push_back(value);
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::dropneginf() const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().dropneginf().scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& value : values()) {
+    if (!slot_value_has_nonfinite(value, pluss::table::nonfinite::Kind::NegInf)) out.push_back(value);
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::fillnan(double value) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().fillnan(value).scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& cell : values()) {
+    out.push_back(slot_value_fill_nonfinite(cell, pluss::table::nonfinite::Kind::Nan, value));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::fillinf(double value) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().fillinf(value).scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& cell : values()) {
+    out.push_back(slot_value_fill_nonfinite(cell, pluss::table::nonfinite::Kind::Inf, value));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::fillposinf(double value) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().fillposinf(value).scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& cell : values()) {
+    out.push_back(slot_value_fill_nonfinite(cell, pluss::table::nonfinite::Kind::PosInf, value));
+  }
+  return Slot(std::move(out));
+}
+
+Slot Slot::fillneginf(double value) const {
+  PLUSS_CHECK(defined(), "Slot: undefined handle");
+  if (is_stream_compatible()) {
+    return kindelize().fillneginf(value).scribbelize();
+  }
+  std::vector<Value> out;
+  out.reserve(values().size());
+  for (const auto& cell : values()) {
+    out.push_back(slot_value_fill_nonfinite(cell, pluss::table::nonfinite::Kind::NegInf, value));
+  }
+  return Slot(std::move(out));
+}
+
 Slot Slot::fillnull(double value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::SlateCastTarget::Series,
+      pluss::table::ShelfCastTarget::Series,
       "Slot::fillnull(double)",
-      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Series, value, {}, nullptr, nullptr));
+      scalar_fill_value_for_target(pluss::table::ShelfCastTarget::Series, value, {}, nullptr, nullptr));
 }
 
 Slot Slot::fillnull(std::string_view value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::SlateCastTarget::Note,
+      pluss::table::ShelfCastTarget::Note,
       "Slot::fillnull(string)",
-      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Note, 0.0, value, nullptr, nullptr));
+      scalar_fill_value_for_target(pluss::table::ShelfCastTarget::Note, 0.0, value, nullptr, nullptr));
 }
 
 Slot Slot::fillnull(const pluss::Timeline& value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::SlateCastTarget::Timeline,
+      pluss::table::ShelfCastTarget::Timeline,
       "Slot::fillnull(Timeline)",
-      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Timeline, 0.0, {}, &value, nullptr));
+      scalar_fill_value_for_target(pluss::table::ShelfCastTarget::Timeline, 0.0, {}, &value, nullptr));
 }
 
 Slot Slot::fillnull(const pluss::Duration& value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::SlateCastTarget::Duration,
+      pluss::table::ShelfCastTarget::Duration,
       "Slot::fillnull(Duration)",
-      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Duration,
+      scalar_fill_value_for_target(pluss::table::ShelfCastTarget::Duration,
                                    0.0, {}, nullptr, &value));
 }
 
@@ -252,7 +451,7 @@ SlotCastAccessor Slot::cast() const {
   return SlotCastAccessor(*this, {});
 }
 
-SlotCastAccessor Slot::cast(const pluss::table::SlateCastOptions& options) const {
+SlotCastAccessor Slot::cast(const pluss::table::ShelfCastOptions& options) const {
   return SlotCastAccessor(*this, options);
 }
 
@@ -264,13 +463,13 @@ SlotTimelineAccessor Slot::tl() const {
   return SlotTimelineAccessor(*this);
 }
 
-Slot Slot::cast(pluss::table::SlateCastTarget target,
-                const pluss::table::SlateCastOptions& options) const {
+Slot Slot::cast(pluss::table::ShelfCastTarget target,
+                const pluss::table::ShelfCastOptions& options) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
     return kindelize().cast(target, options).scribbelize();
   }
-  if (target == pluss::table::SlateCastTarget::Note) {
+  if (target == pluss::table::ShelfCastTarget::Note) {
     std::vector<Value> out;
     out.reserve(values().size());
     for (const auto& value : values()) out.push_back(slot_value_to_note(value));
@@ -352,27 +551,27 @@ Slot Slot::cast(pluss::table::SlateCastTarget target,
   for (const auto pos : slow_positions) {
     const auto& value = at(pos);
     const auto casted = [&]() {
-      const auto slate = slate_from_slot_value(value);
+      const auto shelf = shelf_from_slot_value(value);
       switch (target) {
-        case pluss::table::SlateCastTarget::Series:
-          return slate.cast(options).series();
-        case pluss::table::SlateCastTarget::Note:
-          return slate.cast(options).note();
-        case pluss::table::SlateCastTarget::Timeline:
-          return slate.cast(options).timeline();
-        case pluss::table::SlateCastTarget::Duration:
-          return slate.cast(options).duration();
+        case pluss::table::ShelfCastTarget::Series:
+          return shelf.cast(options).series();
+        case pluss::table::ShelfCastTarget::Note:
+          return shelf.cast(options).note();
+        case pluss::table::ShelfCastTarget::Timeline:
+          return shelf.cast(options).timeline();
+        case pluss::table::ShelfCastTarget::Duration:
+          return shelf.cast(options).duration();
       }
-      return slate;
+      return shelf;
     }();
-    out[static_cast<std::size_t>(pos)] = slot_value_from_slate_payload(casted);
+    out[static_cast<std::size_t>(pos)] = slot_value_from_shelf_payload(casted);
   }
   return Slot(std::move(out));
 }
 
 Slot Slot::astype(pluss::codem::ScalarType dtype) const {
-  return cast(pluss::table::SlateCastTarget::Series,
-              pluss::table::SlateCastOptions{.series_dtype = dtype});
+  return cast(pluss::table::ShelfCastTarget::Series,
+              pluss::table::ShelfCastOptions{.series_dtype = dtype});
 }
 
 Slot Slot::sum() const {
@@ -415,8 +614,8 @@ pluss::kindle::Stream Slot::kindelize() const {
 
   if (profile.kind == SlotKind::Series) {
     // A single scalar value is stored as a 0D Series (numel() == 1, dim() ==
-    // 0) -- every kindle::Stream payload must be strictly 1D (see Slate's
-    // constructor-time checks in SlateInternals.inc), the same invariant the
+    // 0) -- every kindle::Stream payload must be strictly 1D (see Shelf's
+    // constructor-time checks in ShelfInternals.inc), the same invariant the
     // N>1 path below already produces via make_series(out, {n}). reshape()
     // is a pure metadata change here (numel is already 1), so this is exact:
     // no dtype round-trip, no precision loss, unlike the N>1 non-Bool/Int64
@@ -515,6 +714,6 @@ pluss::kindle::Stream Slot::kindelize() const {
   throw pluss::Error("Slot::kindelize: unsupported slot kind");
 }
 
-pluss::table::Slate Slot::tabelize() const {
+pluss::table::Shelf Slot::tabelize() const {
   return kindelize().tabelize();
 }

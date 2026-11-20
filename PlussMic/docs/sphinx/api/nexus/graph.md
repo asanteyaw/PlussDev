@@ -38,12 +38,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 2.0}))},
 });
 
 auto biz = Nexus({
@@ -91,12 +91,12 @@ std::cout << g.features({"name", "left", "right", "cardinality"});
   perspective.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="get.html">
+  <a class="prev-link" href="grain_audit.html">
     <span class="label">Previous</span>
-    <span class="title">get</span>
-  </a>
-  <a class="next-link" href="grain_audit.html">
-    <span class="label">Next</span>
     <span class="title">grain_audit</span>
+  </a>
+  <a class="next-link" href="has.html">
+    <span class="label">Next</span>
+    <span class="title">has</span>
   </a>
 </div>

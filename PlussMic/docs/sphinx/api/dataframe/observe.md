@@ -65,13 +65,13 @@ Example 1. Read one observation out of a wide frame.
 using namespace pluss::table;
 
 auto homes = DataFrame({
-    {"home_id",   Slate(pluss::make_note({"H-104", "H-887", "H-231"}))},
-    {"built_on",  Slate(pluss::make_timeline({"2021-06-14T00:00:00Z",
+    {"home_id",   Shelf(pluss::make_note({"H-104", "H-887", "H-231"}))},
+    {"built_on",  Shelf(pluss::make_timeline({"2021-06-14T00:00:00Z",
                                                "2019-02-03T00:00:00Z",
                                                "2022-11-30T00:00:00Z"}))},
-    {"price",     Slate(pluss::make_series({412000.0, 268500.0, 559900.0}))},
-    {"bedrooms",  Slate(pluss::make_series(std::vector<std::int64_t>{3, 2, 4}))},
-    {"inspected", Slate(pluss::make_series(std::vector<bool>{true, false, true}))},
+    {"price",     Shelf(pluss::make_series({412000.0, 268500.0, 559900.0}))},
+    {"bedrooms",  Shelf(pluss::make_series(std::vector<std::int64_t>{3, 2, 4}))},
+    {"inspected", Shelf(pluss::make_series(std::vector<bool>{true, false, true}))},
 }).title("homes");
 
 std::cout << homes.observe(1);
@@ -80,15 +80,15 @@ std::cout << homes.observe(1);
 ### Output
 
 ```text
-=========================================================================
-          | dtype                          value
--------------------------------------------------------------------------
-home_id   | Note<utf8>                     H-887
-built_on  | Timeline<datetime64[ns, UTC]>  2019-02-03T00:00:00.000000000Z
-price     | Series<float64>                268500
-bedrooms  | Series<int64>                  2
-inspected | Series<bool>                   false
--------------------------------------------------------------------------
+==========================================================
+          | dtype                   value                 
+----------------------------------------------------------
+home_id   | Note<utf8>              H-887                 
+built_on  | Timeline<datetime64[n~  2019-02-03T00:00:00.0~
+price     | Series<float64>         268500                
+bedrooms  | Series<int64>           2                     
+inspected | Series<bool>            false                 
+----------------------------------------------------------
 [5 cs x 2 feat]
 ```
 
@@ -107,25 +107,24 @@ std::cout << with_gap.observe(1);    // the row whose bedrooms is now null
 ### Output
 
 ```text
-=========================================================================
-          | dtype                          value
--------------------------------------------------------------------------
-home_id   | Note<utf8>                     H-231
-built_on  | Timeline<datetime64[ns, UTC]>  2022-11-30T00:00:00.000000000Z
-price     | Series<float64>                559900
-bedrooms  | Series<int64>                  4
-inspected | Series<bool>                   true
--------------------------------------------------------------------------
-[5 cs x 2 feat]
-=========================================================================
-          | dtype                          value
--------------------------------------------------------------------------
-home_id   | Note<utf8>                     H-887
-built_on  | Timeline<datetime64[ns, UTC]>  2019-02-03T00:00:00.000000000Z
-price     | Series<float64>                268500
-bedrooms  | Series<int64>                  <null>
-inspected | Series<bool>                   false
--------------------------------------------------------------------------
+==========================================================
+          | dtype                   value                 
+----------------------------------------------------------
+home_id   | Note<utf8>              H-231                 
+built_on  | Timeline<datetime64[n~  2022-11-30T00:00:00.0~
+price     | Series<float64>         559900                
+bedrooms  | Series<int64>           4                     
+inspected | Series<bool>            true                  
+----------------------------------------------------------
+[5 cs x 2 feat]==========================================================
+          | dtype                   value                 
+----------------------------------------------------------
+home_id   | Note<utf8>              H-887                 
+built_on  | Timeline<datetime64[n~  2019-02-03T00:00:00.0~
+price     | Series<float64>         268500                
+bedrooms  | Series<int64>           <null>                
+inspected | Series<bool>            false                 
+----------------------------------------------------------
 [5 cs x 2 feat]
 ```
 
@@ -134,7 +133,7 @@ one feature's value as text (handy when a long value is clipped by the display w
 
 ```cpp
 auto card  = DataFrame(homes.observe(0));
-auto value = card.features("value");   // a Note-kind Slate, one entry per feature
+auto value = card.features("value");   // a Note-kind Shelf, one entry per feature
 std::cout << value;
 ```
 
@@ -142,7 +141,7 @@ std::cout << value;
 
 ```text
   home_id  H-104
- built_on  2021-06-14T00:00:00.000000000Z
+ built_on  2021-06-14T00:00:00.0~
     price  412000
  bedrooms  3
 inspected  true
@@ -154,8 +153,8 @@ Example 4. Out-of-range position throws rather than clamping.
 ```cpp
 try {
   auto bad = homes.observe(9);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

@@ -41,7 +41,7 @@ AxelCastAccessor Axel::cast() const {
   return AxelCastAccessor(*this, {}, {});
 }
 
-AxelCastAccessor Axel::cast(const pluss::table::SlateCastOptions& options) const {
+AxelCastAccessor Axel::cast(const pluss::table::ShelfCastOptions& options) const {
   return AxelCastAccessor(*this, {}, options);
 }
 
@@ -152,8 +152,76 @@ Axel Axel::fillnull(const pluss::Timeline& value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
 }
 
+Axel Axel::fillnull(const pluss::Duration& value) const {
+  return map([&](const Registry& reg) { return reg.fillnull(value); });
+}
+
 Axel Axel::dropnull() const {
   return map([](const Registry& reg) { return reg.dropnull(); });
+}
+
+Axel Axel::isnan() const {
+  return map([](const Registry& reg) { return reg.isnan(); });
+}
+
+Axel Axel::notnan() const {
+  return map([](const Registry& reg) { return reg.notnan(); });
+}
+
+Axel Axel::isinf() const {
+  return map([](const Registry& reg) { return reg.isinf(); });
+}
+
+Axel Axel::isposinf() const {
+  return map([](const Registry& reg) { return reg.isposinf(); });
+}
+
+Axel Axel::isneginf() const {
+  return map([](const Registry& reg) { return reg.isneginf(); });
+}
+
+Axel Axel::notinf() const {
+  return map([](const Registry& reg) { return reg.notinf(); });
+}
+
+Axel Axel::dropnan() const {
+  return map([](const Registry& reg) { return reg.dropnan(); });
+}
+
+Axel Axel::dropinvalid() const {
+  return map([](const Registry& reg) { return reg.dropinvalid(); });
+}
+
+Axel Axel::dropinf() const {
+  return map([](const Registry& reg) { return reg.dropinf(); });
+}
+
+Axel Axel::dropposinf() const {
+  return map([](const Registry& reg) { return reg.dropposinf(); });
+}
+
+Axel Axel::dropneginf() const {
+  return map([](const Registry& reg) { return reg.dropneginf(); });
+}
+
+Axel Axel::fillnan(double value) const {
+  return map([&](const Registry& reg) { return reg.fillnan(value); });
+}
+
+Axel Axel::fillinvalid(double value) const {
+  return map([&](const Registry& reg) { return reg.fillinvalid(value); });
+}
+
+Axel Axel::fillinf(double value) const {
+  return map([&](const Registry& reg) { return reg.fillinf(value); });
+}
+
+Axel Axel::fillposinf(double value) const {
+  return map([&](const Registry& reg) { return reg.fillposinf(value); });
+}
+
+Axel Axel::fillneginf(double value) const {
+  return map([&](const Registry& reg) { return reg.fillneginf(value); });
 }
 
 Axel Axel::distinct(pluss::kindle::DistinctOptions options) const {

@@ -77,7 +77,9 @@ namespace detail {
   if (name == "bright") return FlashPalette::Bright;
   if (name == "dark") return FlashPalette::Dark;
   if (name == "colorblind") return FlashPalette::Colorblind;
-  return FlashPalette::Deep;
+  if (name == "deep") return FlashPalette::Deep;
+  PLUSS_FAIL("flash::flash_palette: unknown palette '" + std::string(name) +
+             "'; the palettes are deep, muted, pastel, bright, dark and colorblind (lower case)");
 }
 
 [[nodiscard]] inline std::vector<Rgba> flash_palette_colors(FlashPalette palette) {

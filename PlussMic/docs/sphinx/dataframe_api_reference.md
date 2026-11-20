@@ -62,6 +62,7 @@ api/dataframe/copy
 api/dataframe/corr
 api/dataframe/corr_with
 api/dataframe/count
+api/dataframe/count_kinds
 api/dataframe/covar
 api/dataframe/csmax
 api/dataframe/csmin
@@ -74,7 +75,12 @@ api/dataframe/describe
 api/dataframe/div
 api/dataframe/drop
 api/dataframe/drop_duplicates
+api/dataframe/dropinf
+api/dataframe/dropinvalid
+api/dataframe/dropnan
+api/dataframe/dropneginf
 api/dataframe/dropnull
+api/dataframe/dropposinf
 api/dataframe/dtypes
 api/dataframe/duplicated
 api/dataframe/encode
@@ -86,8 +92,13 @@ api/dataframe/factor
 api/dataframe/feataxis
 api/dataframe/features
 api/dataframe/ffill
+api/dataframe/fillinf
+api/dataframe/fillinvalid
+api/dataframe/fillnan
+api/dataframe/fillneginf
 api/dataframe/fillnull
 api/dataframe/fillnull_
+api/dataframe/fillposinf
 api/dataframe/filter
 api/dataframe/floordiv
 api/dataframe/flow
@@ -105,7 +116,11 @@ api/dataframe/info_string
 api/dataframe/insert
 api/dataframe/interp
 api/dataframe/invalid
+api/dataframe/isinf
+api/dataframe/isnan
+api/dataframe/isneginf
 api/dataframe/isnull
+api/dataframe/isposinf
 api/dataframe/join
 api/dataframe/kindelize
 api/dataframe/kurtosis
@@ -140,6 +155,8 @@ api/dataframe/ncases
 api/dataframe/ndistinct
 api/dataframe/ne
 api/dataframe/nfeatures
+api/dataframe/notinf
+api/dataframe/notnan
 api/dataframe/notnull
 api/dataframe/nt
 api/dataframe/observe

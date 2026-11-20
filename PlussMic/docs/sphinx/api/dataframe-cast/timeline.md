@@ -13,7 +13,7 @@ DataFrame DataFrameCastAccessor::timeline() const
 ## What It Does
 
 Casts every feature currently bound on the accessor to `Timeline`, using the shared
-`format` and `invalid` policy from `SlateCastOptions` if the sources are text.
+`format` and `invalid` policy from `ShelfCastOptions` if the sources are text.
 
 ## Returns
 
@@ -29,4 +29,4 @@ Casts every feature currently bound on the accessor to `Timeline`, using the sha
 ## See Also
 
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
-  `SlateCastOptions`.
+  `ShelfCastOptions`.

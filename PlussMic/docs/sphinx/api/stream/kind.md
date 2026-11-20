@@ -82,7 +82,7 @@ ptype: Note
   `std::cout << stream.kind()` with a wall of overload-resolution errors.
 - Requires a defined stream ([`defined()`](defined.md)); throws `"Stream: undefined
   handle"` otherwise.
-- `StreamKind`'s four enumerators map 1:1 with `Slate`'s own payload kinds — a `Stream`
+- `StreamKind`'s four enumerators map 1:1 with `Shelf`'s own payload kinds — a `Stream`
   always wraps exactly one of `Series`/`Note`/`Timeline`/`TimeIndex`.
 
 ## See Also
@@ -93,9 +93,9 @@ ptype: Note
 - [`Stream::cast`](cast.md) / [`Stream::astype`](astype.md): convert between kinds.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="label.html">
     <span class="label">Next</span>

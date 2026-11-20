@@ -14,7 +14,7 @@ Stream Stream::abs() const
 ## What It Does
 
 Returns a new `Series`-kind stream whose values are the elementwise absolute value of the
-current numeric payload. Delegates to `Slate::abs()` under the hood, so it only accepts a
+current numeric payload. Delegates to `Shelf::abs()` under the hood, so it only accepts a
 `Series`-kind stream — calling it on `Note`/`Timeline`/`TimeIndex` throws.
 
 ## Parameters
@@ -61,21 +61,21 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.abs();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 44);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 44);
 }
 ```
 
 ### Output
 
 ```text
-Slate::abs is only valid for Series payload
+Shelf::abs is only valid for Series payload
 ```
 
 ## Notes
 
 - `Series`-only; throws on `Note`/`Timeline`/`TimeIndex` streams — see Example 2. The
-  thrown message is inherited verbatim from `Slate::abs()`, the delegate this method
+  thrown message is inherited verbatim from `Shelf::abs()`, the delegate this method
   calls internally.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.
@@ -89,8 +89,8 @@ Slate::abs is only valid for Series payload
   transforms, sharing the same `Series`-only restriction.
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="as_note.html">
+  <a class="next-link" href="as_duration.html">
     <span class="label">Next</span>
-    <span class="title">as_note</span>
+    <span class="title">as_duration</span>
   </a>
 </div>

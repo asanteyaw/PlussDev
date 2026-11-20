@@ -283,7 +283,7 @@ double quantile_value_(const Series& values, const Series& weights, double tau, 
 
 double quantile_loss_(const Series& resid, const Series& weights, double tau, Config cfg) {
   const Series r = resid.reshape({resid.numel(), 1}).to(f64_cfg_like_(resid, cfg).platform, ScalarType::Float64);
-  const Series pos = r.ge(0.0).where(r.mul(tau), r.mul(tau - 1.0));
+  const Series pos = pluss::series::where(r.ge(0.0), r.mul(tau), r.mul(tau - 1.0));
   return scalar_(pos.mul(weights.reshape({resid.numel(), 1})).sum());
 }
 
@@ -316,7 +316,7 @@ double density_at_zero_(const Series& resid, const Series& endog, const Series& 
     h = 1e-8;
   }
   const Series u = r.div(h);
-  const Series kernel = u.abs().le(1.0).where(u.mul(u).mul(-1.0).add(1.0).mul(0.75), pluss::series::zeros_like(u));
+  const Series kernel = pluss::series::where(u.abs().le(1.0), u.mul(u).mul(-1.0).add(1.0).mul(0.75), pluss::series::zeros_like(u));
   return std::max(kMinInfo, scalar_(kernel.mul(w).sum()) / (dn * h));
 }
 
@@ -355,9 +355,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   for (std::int64_t it = 0; it < options.max_iter; ++it) {
     iters = it + 1;
     const Series rcol = resid.reshape({n, 1});
-    const Series base = rcol.ge(0.0).where(
-        pluss::series::full({n, 1}, options.tau, out_cfg),
-        pluss::series::full({n, 1}, 1.0 - options.tau, out_cfg));
+    const Series base = pluss::series::where(rcol.ge(0.0), pluss::series::full({n, 1}, options.tau, out_cfg), pluss::series::full({n, 1}, 1.0 - options.tau, out_cfg));
     const Series wcol = base.div(rcol.abs().maximum(options.eps)).mul(pw);
     const Series sw = wcol.sqrt();
     const Series Xw = X.mul(sw);
@@ -397,9 +395,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
     // heteroskedasticity-robust sandwich: (X'X)^-1 X' D X (X'X)^-1 with D_i = (tau / f0)^2 above the line and ((1 - tau) / f0)^2 below
     const double up = options.tau / std::max(1e-6, f0);
     const double down = (1.0 - options.tau) / std::max(1e-6, f0);
-    const Series d = resid.reshape({n, 1}).gt(0.0).where(
-        pluss::series::full({n, 1}, up * up, out_cfg),
-        pluss::series::full({n, 1}, down * down, out_cfg));
+    const Series d = pluss::series::where(resid.reshape({n, 1}).gt(0.0), pluss::series::full({n, 1}, up * up, out_cfg), pluss::series::full({n, 1}, down * down, out_cfg));
     const Series xtdx = X.transpose(0, 1).matmul(X.mul(d.mul(pw)));
     cov = xtx_inv.matmul(xtdx).matmul(xtx_inv);
   }

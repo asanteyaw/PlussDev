@@ -4,7 +4,7 @@
 
 A planner or an operator keeps asking the same question in different forms: if this much more power is injected at that bus, which lines carry more, and by how much? Answering by re-solving the power flow for every question is slow, and the DC power flow is linear, so the answer is a matrix. `power::ptdf` returns that matrix, the power transfer distribution factors. This page explains what a factor means, checks the factors of a ring against hand values, uses them to predict the effect of a change of load without a new solve, handles lines out of service and batches, and shows the mistake of reading a transfer between two ordinary buses from one column.
 
-## The mental model
+## How it works
 
 The DC flow on a line is a linear function of the bus injections, so the change of flow on line `l` caused by injecting one extra per-unit of power at bus `b`, withdrawn at the slack bus, is a fixed number: the **PTDF** of line `l` for bus `b`. `ptdf(grid)` returns the whole matrix:
 

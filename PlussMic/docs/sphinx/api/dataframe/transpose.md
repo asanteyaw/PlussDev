@@ -44,8 +44,8 @@ Example 1. Transpose a small numeric frame.
 using namespace pluss::table;
 
 auto orders_small = DataFrame({
-    {"units",      Slate(pluss::make_series({2, 5, 1}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, std::numeric_limits<double>::quiet_NaN()}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 0.0}), pluss::make_series(std::vector<bool>{true, true, false}))},
 });
 
 auto flipped = orders_small.transpose();

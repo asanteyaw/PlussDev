@@ -1,0 +1,149 @@
+<!-- generated from transistors.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d18d67a73916 -->
+
+# `circuit::Circuit::transistors`
+
+[Back to `circuit::Circuit`](../CircuitModel.md)
+
+The number of bipolar transistors.
+
+## Signature
+
+```cpp
+std::int64_t circuit::Circuit::transistors() const noexcept;
+```
+
+## What It Does
+
+Returns how many bipolar transistors the circuit contains, NPN and PNP together. Any transistor makes the operating point a Newton solve.
+
+## Returns
+
+The number of transistors.
+
+## Practical Examples
+
+### Example 1
+
+A resistor divider: a 10 V source into 1 kΩ and 3 kΩ in series.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000.0, 3000.0})};
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("transistors =", obj.transistors());
+}
+```
+
+Output
+
+```text
+transistors = 0
+```
+
+### Example 2
+
+An NPN common-emitter stage: 10 V supply, 1 kΩ collector resistor, 5 V base drive through 100 kΩ.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({10.0, 5.0})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 100000.0})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("transistors =", obj.transistors());
+}
+```
+
+Output
+
+```text
+transistors = 1
+```
+
+### Example 3
+
+Two transistors, an NPN and a PNP, sharing one supply.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 7;
+  net.voltage_sources = {{1, 3, 5}, {0, 0, 0}, vec({10.0, 5.0, 5.0})};
+  net.resistors = {{1, 3, 1, 5}, {2, 4, 6, 4}, vec({1000.0, 100000.0, 1000.0, 100000.0})};
+  net.transistors.collector = {2, 6};
+  net.transistors.base = {4, 4};
+  net.transistors.emitter = {0, 1};
+  net.transistors.polarity = {1, -1};
+  net.transistors.saturation = vec({1e-14, 1e-14});
+  net.transistors.forward_gain = vec({100.0, 80.0});
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("transistors =", obj.transistors());
+}
+```
+
+Output
+
+```text
+transistors = 2
+```
+
+## See Also
+
+- [`diodes`](diodes.md): the number of diodes
+- [`mosfets`](mosfets.md): the number of MOSFETs
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="platform.html">
+    <span class="label">Previous</span>
+    <span class="title">platform</span>
+  </a>
+  <a class="next-link" href="unknowns.html">
+    <span class="label">Next</span>
+    <span class="title">unknowns</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

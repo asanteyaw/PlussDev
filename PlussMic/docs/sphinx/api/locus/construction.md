@@ -70,7 +70,7 @@ for (const auto& n : from_arch.keys()) std::cout << n << ' ';
 std::cout << '\n';
 
 pluss::bundle::Nexus nexus_ws({
-    {"customers", pluss::table::DataFrame({{"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))}})},
+    {"customers", pluss::table::DataFrame({{"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))}})},
 });
 auto from_nx = Locus::from_nexus(nexus_ws);
 std::cout << "from_nexus ntables: " << from_nx.ntables() << '\n';
@@ -97,3 +97,14 @@ named after the `Nexus`'s own table name.
 - [`state`](state.md): `defined`, `empty`, and the rest of a freshly built `Locus`'s
   readable state.
 - [`catalogs`](catalogs.md): reading the member catalogs back out by name or index.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="catalogs.html">
+    <span class="label">Previous</span>
+    <span class="title">catalogs</span>
+  </a>
+  <a class="next-link" href="deduce.html">
+    <span class="label">Next</span>
+    <span class="title">deduce</span>
+  </a>
+</div>

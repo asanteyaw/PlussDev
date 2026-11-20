@@ -43,9 +43,9 @@ Example 1. Swap a 2-level frame's only two levels.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
@@ -89,10 +89,10 @@ middle level stays exactly where it was.
 
 ```cpp
 auto sales3 = DataFrame(
-    {{"region",  Slate(pluss::make_note({"east", "west"}))},
-     {"city",    Slate(pluss::make_note({"Boston", "LA"}))},
-     {"quarter", Slate(pluss::make_note({"Q1", "Q2"}))},
-     {"sales",   Slate(pluss::make_series({10.0, 20.0}))}});
+    {{"region",  Shelf(pluss::make_note({"east", "west"}))},
+     {"city",    Shelf(pluss::make_note({"Boston", "LA"}))},
+     {"quarter", Shelf(pluss::make_note({"Q1", "Q2"}))},
+     {"sales",   Shelf(pluss::make_series({10.0, 20.0}))}});
 auto grouped3 = sales3.labels().set({"region", "city", "quarter"}, true, "/");
 std::cout << grouped3;
 
@@ -137,15 +137,15 @@ level name, to see each throw.
 ```cpp
 try {
   auto out = grouped.labels().swap("region", "region");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto out = grouped.labels().swap("region", "country");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

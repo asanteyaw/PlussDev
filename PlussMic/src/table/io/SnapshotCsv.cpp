@@ -12,7 +12,7 @@ namespace pluss::table::snapshot {
 
 namespace {
 
-pluss::table::SlateValue::HostAny snapshot_cell_host(const pluss::table::DataFrame& frame,
+pluss::table::ShelfValue::HostAny snapshot_cell_host(const pluss::table::DataFrame& frame,
                                                       std::string_view feature,
                                                       std::int64_t row) {
   PLUSS_CHECK(frame.get(feature).has_value(),
@@ -54,27 +54,27 @@ pluss::loader::ReadCsvOptions snapshot_read_options() {
 }
 pluss::table::DataFrame load_snapshot_csv(std::string_view filepath) {
   const auto raw = pluss::loader::read_csv_raw_batch(filepath, snapshot_read_options());
-  std::vector<std::pair<std::string, pluss::table::Slate>> features;
+  std::vector<std::pair<std::string, pluss::table::Shelf>> features;
   features.reserve(raw.features.size());
   for (const auto& column : raw.features) {
     if (column.note_values.has_value()) {
-      features.emplace_back(column.name, pluss::table::Slate(*column.note_values));
+      features.emplace_back(column.name, pluss::table::Shelf(*column.note_values));
     } else {
-      features.emplace_back(column.name, pluss::table::Slate(pluss::make_note(column.values)));
+      features.emplace_back(column.name, pluss::table::Shelf(pluss::make_note(column.values)));
     }
   }
   return pluss::table::DataFrame(std::move(features));
 }
 std::int64_t int_cell(const pluss::table::DataFrame& frame, std::string_view feature, std::int64_t row) {
   const auto host = snapshot_cell_host(frame, feature, row);
-  if (host.kind() == pluss::table::SlateValue::HostAny::Kind::String) {
+  if (host.kind() == pluss::table::ShelfValue::HostAny::Kind::String) {
     return std::stoll(trim_ascii(host.to_str()));
   }
   return host.to_int();
 }
 double double_cell(const pluss::table::DataFrame& frame, std::string_view feature, std::int64_t row) {
   const auto host = snapshot_cell_host(frame, feature, row);
-  if (host.kind() == pluss::table::SlateValue::HostAny::Kind::String) {
+  if (host.kind() == pluss::table::ShelfValue::HostAny::Kind::String) {
     return std::stod(trim_ascii(host.to_str()));
   }
   return host.to_dbl();
@@ -86,12 +86,12 @@ bool bool_cell(const pluss::table::DataFrame& frame, std::string_view feature, s
   const auto index = row;
   const auto host = column.take(std::span<const std::int64_t>(&index, 1)).value().host();
   switch (host.kind()) {
-    case pluss::table::SlateValue::HostAny::Kind::Bool:
-    case pluss::table::SlateValue::HostAny::Kind::Int:
-    case pluss::table::SlateValue::HostAny::Kind::UInt:
-    case pluss::table::SlateValue::HostAny::Kind::Double:
+    case pluss::table::ShelfValue::HostAny::Kind::Bool:
+    case pluss::table::ShelfValue::HostAny::Kind::Int:
+    case pluss::table::ShelfValue::HostAny::Kind::UInt:
+    case pluss::table::ShelfValue::HostAny::Kind::Double:
       return host.to_int() != 0;
-    case pluss::table::SlateValue::HostAny::Kind::String: {
+    case pluss::table::ShelfValue::HostAny::Kind::String: {
       const auto value = lower_trimmed(host.to_str());
       if (value == "1" || value == "true") {
         return true;
@@ -101,9 +101,9 @@ bool bool_cell(const pluss::table::DataFrame& frame, std::string_view feature, s
       }
       PLUSS_FAIL("Nexus::load: malformed boolean value '" + value + "'");
     }
-    case pluss::table::SlateValue::HostAny::Kind::Time:
+    case pluss::table::ShelfValue::HostAny::Kind::Time:
       PLUSS_FAIL("Nexus::load: time snapshots cannot be decoded as boolean");
-    case pluss::table::SlateValue::HostAny::Kind::Duration:
+    case pluss::table::ShelfValue::HostAny::Kind::Duration:
       PLUSS_FAIL("Nexus::load: duration snapshots cannot be decoded as boolean");
   }
   PLUSS_FAIL("Nexus::load: unsupported boolean snapshot scalar kind");

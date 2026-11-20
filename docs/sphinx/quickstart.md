@@ -149,7 +149,7 @@ enriched.save_csv("outputs/enriched.csv");
 
 The important conventions are:
 
-- `features("name")` returns one column as a `Slate`.
+- `features("name")` returns one column as a `Shelf`.
 - `features({"a", "b"})` returns a smaller `DataFrame`.
 - `query(...)` filters cases with a string expression.
 - `assign(...)` derives new features.
@@ -163,7 +163,7 @@ The important conventions are:
 | `Note` | Text and byte-vector data |
 | `Timeline` | Date/time values |
 | `TimeIndex` | 1D time index operations |
-| `Slate` | A typed table column over `Series`, `Note`, `Timeline`, or `TimeIndex` |
+| `Shelf` | A typed table column over `Series`, `Note`, `Timeline`, or `TimeIndex` |
 | `DataFrame` | 2D table of named features over cases |
 | `Atlas` | Stack of related `DataFrame` objects |
 | `Type` | Runtime union over `Series`, `Note`, `Timeline`, and `TimeIndex` |
@@ -197,5 +197,4 @@ Read next:
 - [User Guide](user_guide.md) for the conceptual map.
 - [Data Workflows](data_workflows.md) for table work.
 - [Numerical Workflows](numerical_workflows.md) for `Series` and math.
-- [Series Guide](series.md) for exhaustive numeric examples.
 - [Loader Guide](loader.md) for I/O options.

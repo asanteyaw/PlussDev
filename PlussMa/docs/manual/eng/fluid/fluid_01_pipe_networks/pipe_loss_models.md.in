@@ -4,7 +4,7 @@
 
 Everything the solver knows about a pipe is its head-loss law: how much head the water gives up to friction at a given flow. Choose the wrong law, or the wrong roughness for it, and every head and flow in the network is wrong while the solver still reports convergence. This page explains the two laws, `DarcyWeisbach` and `HazenWilliams`, shows the friction factor passing through the laminar, transition and turbulent ranges and checks each against its closed form, checks the Hazen-Williams law against its formula, shows what roughness and minor losses add, and shows the two unit mistakes that give plausible wrong answers.
 
-## The mental model
+## How it works
 
 For a pipe of length `L` and diameter `D` carrying a flow `q`, the mean velocity is `v = 4 q / (π D²)`. The two laws are
 

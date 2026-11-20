@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::align(const AlignSpec& spec) const
-DataFrame DataFrame::align(const Slate& new_label) const
+DataFrame DataFrame::align(const Shelf& new_label) const
 ```
 
 ## What It Does
@@ -30,14 +30,14 @@ feature subset — all in the same call.
 
 ## Parameters
 
-**new_label** (`const Slate&`, case-only overload)
+**new_label** (`const Shelf&`, case-only overload)
 
 The target case-label axis, in the exact order you want the output rows in. Equivalent
 to `align(AlignSpec{.label = new_label})`.
 
 **spec** (`const AlignSpec&`)
 
-- **`label`** (`std::optional<Slate>`, default unset): target case-label axis. Leave
+- **`label`** (`std::optional<Shelf>`, default unset): target case-label axis. Leave
   unset to keep the frame's existing case axis unchanged while still reordering
   features via `features`.
 - **`features`** (`std::vector<std::string>`, default empty): target feature order.
@@ -68,11 +68,11 @@ the source.
 using namespace pluss::table;
 
 auto prices = DataFrame({
-    {"price", Slate(pluss::make_series({10.0, 20.0, 30.0}))},
-    {"grade", Slate(pluss::make_note({"A", "B", "C"}))},
-}, Slate(pluss::make_note({"p1", "p2", "p3"})));
+    {"price", Shelf(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"grade", Shelf(pluss::make_note({"A", "B", "C"}))},
+}, Shelf(pluss::make_note({"p1", "p2", "p3"})));
 
-auto target = Slate(pluss::make_note({"p2", "p4", "p1"}));
+auto target = Shelf(pluss::make_note({"p2", "p4", "p1"}));
 auto reindexed = prices.align(target);
 std::cout << reindexed;
 ```
@@ -131,8 +131,8 @@ Example 3. List the same target feature name twice, to see it throw.
 ```cpp
 try {
   auto out = prices.align(DataFrame::AlignSpec{.features = {"price", "price"}});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

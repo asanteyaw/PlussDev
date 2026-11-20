@@ -4,7 +4,7 @@
 
 A slender column loaded in compression carries the load straight down until the load reaches a critical value, and then it bows sideways and cannot carry more. That failure is **buckling**, and it happens at a stress far below the strength of the material, so a column is designed against it separately. `structure::buckling` finds the critical loads of a frame. This page finds the buckling loads of a column with four different end conditions against Euler's formulas, checks the shape of the buckled column, and shows how the result scales with the reference load.
 
-## The mental model
+## How it works
 
 Compression stiffens nothing: it softens the member sideways. The sideways stiffness of a member under an axial compressive force `N` is its ordinary stiffness `K` minus a term proportional to `N`, the **geometric stiffness** `K_g`. The member loses its sideways stiffness when `K - lambda K_g` can be singular, and the load multiplier at which that first happens is the buckling factor `lambda`: the eigenvalue of
 

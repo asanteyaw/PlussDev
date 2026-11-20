@@ -294,7 +294,7 @@ double deviance_value_(GLMFamily family, const Series& y, const Series& mu, cons
     const Series yi = y.maximum(0.0);
     const Series mui = mu.maximum(kMinMu);
     const Series log_ratio = yi.maximum(kMinMu).div(mui).log();
-    const Series core = yi.gt(0.0).where(yi.mul(log_ratio).sub(yi.sub(mui)), mui);
+    const Series core = pluss::series::where(yi.gt(0.0), yi.mul(log_ratio).sub(yi.sub(mui)), mui);
     return 2.0 * scalar_(core.mul(w).sum());
   }
   const Series yi = y.clamp(kMinMu, kMaxMu);

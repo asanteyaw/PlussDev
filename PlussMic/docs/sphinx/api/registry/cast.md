@@ -9,7 +9,7 @@
 
 ```cpp
 RegistryCastAccessor Registry::cast() const
-RegistryCastAccessor Registry::cast(const pluss::table::SlateCastOptions& options) const
+RegistryCastAccessor Registry::cast(const pluss::table::ShelfCastOptions& options) const
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ some fields, call `cast()` on a narrower, projected registry instead:
 
 ## Parameters
 
-**options** (`const pluss::table::SlateCastOptions&`, optional)
+**options** (`const pluss::table::ShelfCastOptions&`, optional)
     Casting behavior options (e.g. how parse failures are handled), shared with
     the table model's cast machinery.
 

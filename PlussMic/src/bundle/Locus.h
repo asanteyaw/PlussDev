@@ -182,6 +182,32 @@ public:
   Locus& apply_(std::string_view name, const CatalogFn& fn);
   Locus apply_all(const CatalogFn& fn) const;
   Locus flow(const std::function<Locus(const Locus&)>& fn) const;
+  // Missing-value family, applied to every catalog (links and metadata are kept); each is the Catalog method of the same name.
+  Locus isnull() const;
+  Locus notnull() const;
+  Locus invalid() const;
+  Locus isnan() const;
+  Locus notnan() const;
+  Locus isinf() const;
+  Locus isposinf() const;
+  Locus isneginf() const;
+  Locus notinf() const;
+  Locus dropnull() const;
+  Locus dropnan() const;
+  Locus dropinvalid() const;
+  Locus dropinf() const;
+  Locus dropposinf() const;
+  Locus dropneginf() const;
+  Locus fillnull(double value) const;
+  Locus fillnull(std::string_view value) const;
+  Locus fillnull(const char* value) const { return fillnull(std::string_view{value != nullptr ? value : ""}); }
+  Locus fillnull(const pluss::Timeline& value) const;
+  Locus fillnull(const pluss::Duration& value) const;
+  Locus fillnan(double value) const;
+  Locus fillinvalid(double value) const;
+  Locus fillinf(double value) const;
+  Locus fillposinf(double value) const;
+  Locus fillneginf(double value) const;
 
   // Table metadata (grain, keys, time field, provenance...), shared with Nexus.
   bool has_table_meta(std::string_view name) const;

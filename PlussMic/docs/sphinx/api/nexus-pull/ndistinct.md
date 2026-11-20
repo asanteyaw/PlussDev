@@ -65,12 +65,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+===================================
      | customer_id  distinct_events
-------------------------------------
-0    | 1            2
-1    | 2            3
-2    | 3            0
-------------------------------------
+-----------------------------------
+0    | 1            2              
+1    | 2            3              
+2    | 3            0              
+-----------------------------------
 [3 cs x 2 feat]
 ```
 
@@ -87,7 +88,7 @@ auto pulled = nx.pull("customers")
     .ndistinct("events.event_id")
     .collect();
 
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

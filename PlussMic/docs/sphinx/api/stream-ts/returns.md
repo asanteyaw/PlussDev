@@ -20,7 +20,7 @@ when `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever
 non-finite.
 
 ```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
-Every method on this accessor routes through `Slate::ts()` for the bound
+Every method on this accessor routes through `Shelf::ts()` for the bound
 stream. If the stream isn't a numeric `Series` (`Note`, `Timeline`,
 `TimeIndex`, or a non-numeric `Series`), the call throws — see
 [`Stream::ts`](../stream/ts.md)'s own important callout for the exact throw
@@ -56,18 +56,18 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
+0            | NULL                                                                                                     
 1            | 1                                                                                                        
 2            | -0.25                                                                                                    
 3            | 1                                                                                                        
 ========================================================================================================================
 ```
 
-Position `0` has no prior position to compare against, so it's `nan`.
+Position `0` has no prior position to compare against, so it's `NULL`.
 Position `1` is `20 / 10 - 1 = 1` (a 100% increase); position `2` is
 `15 / 20 - 1 = -0.25` (a 25% decrease); position `3` is `30 / 15 - 1 = 1`.
 
@@ -77,8 +77,8 @@ Example 2 (edge case). `periods = 0` throws.
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 15.0, 30.0}));
 try {
   auto out = stream.ts().returns(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -111,8 +111,8 @@ subsp::stats::ts::returns: periods cannot be zero
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::returns`](../catalog-ts/returns.md): the
   whole-catalog equivalent.
-- [`TimeSeriesAccessor::returns`](../slate-ts/returns.md): the underlying
-  single-slate engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::returns`](../shelf-ts/returns.md): the underlying
+  single-shelf engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log_returns.html">

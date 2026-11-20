@@ -1,0 +1,40 @@
+summary = """
+Return the elementwise absolute value of a numeric shelf.
+
+`Shelf::abs()` is the sign-stripping numeric helper for one-dimensional data. Use it when magnitude matters more than direction, such as absolute error, distance-from-target, or symmetric-threshold preprocessing.
+"""
+
+returns = """
+`Shelf`
+    A numeric shelf containing the absolute value of each element.
+"""
+
+see_also = [
+  "<a href=\"#clip\"><code>Shelf::clip</code></a>: cap values into a range instead of removing sign.",
+  "<a href=\"#pow\"><code>Shelf::pow</code></a>: apply power transformations after magnitude cleanup when needed."
+]
+
+notes = [
+  """
+This method is for numeric shelves. Text and temporal payloads are not valid inputs.
+""",
+  """
+The result is non-mutating. The current shelf is left unchanged.
+"""
+]
+
+[[examples]]
+title = "Take the absolute value of a numeric shelf."
+code = """
+using namespace pluss::table;
+
+auto scores = Shelf(pluss::make_series({-2.5, 0.0, 3.5}));
+
+auto out = scores.abs();
+"""
+output = """
+0  2.5
+1  0
+2  3.5
+ptype: Series
+"""

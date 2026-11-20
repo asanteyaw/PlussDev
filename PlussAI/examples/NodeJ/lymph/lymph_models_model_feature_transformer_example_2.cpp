@@ -11,15 +11,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income",  Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"region",  Slate(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
+      {"income",  Shelf(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"region",  Shelf(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
   });
 
   lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(

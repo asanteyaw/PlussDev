@@ -50,3 +50,14 @@ deduce ncases=0
 - [`link`](link.md): declaring a relationship `deduce()` only suggests.
 - [`audit_report`](audit_report.md): checking relationships that are
   already declared, rather than finding undeclared ones.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="construction.html">
+    <span class="label">Previous</span>
+    <span class="title">construction</span>
+  </a>
+  <a class="next-link" href="drop.html">
+    <span class="label">Next</span>
+    <span class="title">drop</span>
+  </a>
+</div>

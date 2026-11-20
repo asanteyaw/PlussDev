@@ -40,7 +40,7 @@ inline Series lipm_time_to_position(const Series &x0, const Series &v0, const Se
   const Series root = disc.clamp(0.0, 1e300).sqrt();
   const Series u1 = x1.add(root).div(a.mul(2.0)), u2 = x1.sub(root).div(a.mul(2.0));
   const Series nan = x0.mul(0.0).add(std::numeric_limits<double>::quiet_NaN());
-  const Series u = u1.ge(1.0).logical_and(u2.ge(1.0)).where(u1.minimum(u2), u1.ge(1.0).where(u1, u2.ge(1.0).where(u2, nan)));
+  const Series u = pluss::series::where(u1.ge(1.0).logical_and(u2.ge(1.0)), u1.minimum(u2), pluss::series::where(u1.ge(1.0), u1, pluss::series::where(u2.ge(1.0), u2, nan)));
   return u.log().mul(tc);
 }
 
@@ -110,22 +110,22 @@ inline SlipStep slip_apex_map(const SlipParams &p, const Series &y_apex, const S
     const Series lifted = active.logical_and(len_next.ge(l0)).logical_and(radial_out.gt(0.0)).logical_and(t.gt(0.0));
     if (lifted.any().item<bool>()) {
       // partial step h in (0, dt] landing exactly at L = L0: secant/Newton on L(h) - L0 with RK4 sub-steps from the pre-step state
-      Series h = lifted.where(len_prev.sub(l0).neg().div(len_next.sub(len_prev)), len_prev.mul(0.0)).clamp(0.0, 1.0).mul(dt);
+      Series h = pluss::series::where(lifted, len_prev.sub(l0).neg().div(len_next.sub(len_prev)), len_prev.mul(0.0)).clamp(0.0, 1.0).mul(dt);
       for (int it = 0; it < 5; ++it) {
         const detail::Stance trial = detail::rk4(p, xf, s, h);
         const Series radial = trial.x.sub(xf).mul(trial.vx).add(trial.y.mul(trial.vy)).div(leg_length(trial)); // dL/dt
-        h = lifted.where(h.sub(leg_length(trial).sub(l0).div(radial.clamp(1e-9, 1e300))), h).clamp(0.0, dt);
+        h = pluss::series::where(lifted, h.sub(leg_length(trial).sub(l0).div(radial.clamp(1e-9, 1e300))), h).clamp(0.0, dt);
       }
       const detail::Stance landed = detail::rk4(p, xf, s, h);
-      liftoff_t = lifted.where(t.add(h), liftoff_t);
-      s = {lifted.where(landed.x, s.x), lifted.where(landed.y, s.y), lifted.where(landed.vx, s.vx), lifted.where(landed.vy, s.vy)};
+      liftoff_t = pluss::series::where(lifted, t.add(h), liftoff_t);
+      s = {pluss::series::where(lifted, landed.x, s.x), pluss::series::where(lifted, landed.y, s.y), pluss::series::where(lifted, landed.vx, s.vx), pluss::series::where(lifted, landed.vy, s.vy)};
     }
     const Series running = active.logical_and(lifted.logical_not());
     Series ax, ay, force;
     detail::stance_accel(p, xf, next.x, next.y, ax, ay, force);
-    peak = running.where(peak.maximum(force), peak);
-    s = {running.where(next.x, s.x), running.where(next.y, s.y), running.where(next.vx, s.vx), running.where(next.vy, s.vy)};
-    t = running.where(t.add(dt), t);
+    peak = pluss::series::where(running, peak.maximum(force), peak);
+    s = {pluss::series::where(running, next.x, s.x), pluss::series::where(running, next.y, s.y), pluss::series::where(running, next.vx, s.vx), pluss::series::where(running, next.vy, s.vy)};
+    t = pluss::series::where(running, t.add(dt), t);
     done = done.logical_or(lifted);
   }
   SlipStep out;

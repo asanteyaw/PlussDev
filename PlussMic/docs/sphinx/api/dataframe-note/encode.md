@@ -38,7 +38,7 @@ itself.
 
 **encoding** (`std::string_view`, default `"base64"`)
     Which scheme to apply: `"base64"`, `"hex"`, or `"url"`. Any other value
-    throws `"Slate::encode: encoding must be base64, hex, or url"`.
+    throws `"Shelf::encode: encoding must be base64, hex, or url"`.
 
 ## Returns
 
@@ -55,7 +55,7 @@ punctuation, and a space:
 using namespace pluss::table;
 
 auto payloads = DataFrame({
-    {"text", Slate(pluss::make_note(
+    {"text", Shelf(pluss::make_note(
         {"Hi", "Pluss!", "a b/c", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -160,15 +160,15 @@ Example 4. An unrecognized `encoding` argument throws immediately.
 ```cpp
 try {
   auto bad = payloads.nt().encode("base32");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::encode: encoding must be base64, hex, or url
+Shelf::encode: encoding must be base64, hex, or url
 ```
 
 ## Notes

@@ -1,0 +1,44 @@
+# Colour and style
+
+[Back to PlussPl by example](../guide.md)
+
+Colour carries data and style carries the look of a whole figure. This page uses the palette generators, applies them to a field, restyles the same chart with three themes, and shows how to wrap any table so the `flash` functions can read it by column name.
+
+## How it works
+
+A palette is a `PaletteRamp`: an ordered list of colours that data values map through, sampled with `sample(position)` from 0 to 1. The generators build one: `flash_palette`, `color_palette`, `hls_palette`, `husl_palette`, `cubehelix_palette`, `mpl_palette`, `light_palette`, `dark_palette`, `diverging_palette`, `blend_palette`, `crayon_palette` and `xkcd_palette`. A trace uses a ramp through `.palette(ramp)`. A **theme** restyles a whole figure (`Theme::paper()`, `Theme::ocean()`, `flash::flash_theme()`), a **context** scales fonts for a use (`set_context`), and helpers tidy a pane (`despine`, `tickless`, `horizontal_grid`, `tight_layout`).
+
+## Palettes and themes
+
+The program prints the first and last colour of each generator, draws each as a strip of a field, draws the same chart under three themes, and wraps a small table as a dataset.
+
+@@example palettes_and_themes.cpp@@
+
+![Twelve palette generators applied to the same strip of values](assets/palettes.svg)
+
+![The same two curves in the paper, ocean and flash themes, with the despined pane and horizontal grid](assets/themes.svg)
+
+Each line lists a palette's first and last colour as red, green and blue between 0 and 255: the sequential palettes (light blue, dark red, viridis) run from light to dark or the reverse, the diverging palette runs between two hues, and the categorical ones (husl, hls, crayon, xkcd) are chosen to be distinct rather than ordered. The strips make the same point visually. The theme figure draws the same two curves in three styles, with `despine` removing the top and right axis lines and `horizontal_grid` keeping only horizontal grid lines, and the context set to a talk size. `Dataset::from_table` turns any `DataFrame` into a dataset, here four rows by two columns, so that functions taking a dataset and column names accept your own tables as well as the thirteen bundled ones.
+
+## Decisions
+
+- **Sequential, diverging or categorical:** sequential for ordered values, diverging for values with a meaningful centre such as zero, categorical for groups.
+- **A theme for the whole figure:** set it once, then style panes only where they differ.
+- **Context for the medium:** a talk needs larger text than a paper.
+- **Your own data:** wrap it with `Dataset::from_table` to use the by-name `flash` functions.
+
+## Pitfalls
+
+The program below makes 3 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_colour_and_style.cpp@@
+
+- **A palette of zero colours:** An empty palette has nothing to sample, so the generators insist on at least one colour.
+- **A negative palette size:** The same check covers every generator that takes a size.
+- **A canvas with a negative size:** A figure size must be finite and positive; pick a context with `FlashContext` instead of typing a size when you only want a medium.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`flash::flash_palette`](../api/flash/flash_palette.md), [`flash::color_palette`](../api/flash/color_palette.md), [`flash::hls_palette`](../api/flash/hls_palette.md), [`flash::husl_palette`](../api/flash/husl_palette.md), [`flash::cubehelix_palette`](../api/flash/cubehelix_palette.md), [`flash::mpl_palette`](../api/flash/mpl_palette.md), [`flash::light_palette`](../api/flash/light_palette.md), [`flash::dark_palette`](../api/flash/dark_palette.md), [`flash::diverging_palette`](../api/flash/diverging_palette.md), [`flash::blend_palette`](../api/flash/blend_palette.md), [`flash::crayon_palette`](../api/flash/crayon_palette.md), [`flash::xkcd_palette`](../api/flash/xkcd_palette.md), [`flash::flash_theme`](../api/flash/flash_theme.md), [`flash::set_theme`](../api/flash/set_theme.md), [`flash::set_context`](../api/flash/set_context.md), [`flash::despine`](../api/flash/despine.md), [`flash::tickless`](../api/flash/tickless.md), [`flash::horizontal_grid`](../api/flash/horizontal_grid.md), [`flash::tight_layout`](../api/flash/tight_layout.md), [`flash::Dataset`](../api/flash/Dataset.md), [`flash::get_dataset_names`](../api/flash/get_dataset_names.md), [`PaletteRamp`](../api/types/PaletteRamp.md), [`Theme`](../api/types/Theme.md). Back to [PlussPl by example](../guide.md).

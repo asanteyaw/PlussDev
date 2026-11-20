@@ -83,12 +83,11 @@ Example 1. Default behavior: show rows with any null anywhere on the frame.
 ```cpp
 using namespace pluss::table;
 
-const auto nan = std::numeric_limits<double>::quiet_NaN();
 
 auto readings = DataFrame({
-    {"a", pluss::make_series(std::vector<double>{1.0, nan, 3.0, nan})},
-    {"b", pluss::make_series(std::vector<double>{10.0, 11.0, nan, nan})},
-    {"c", pluss::make_series(std::vector<double>{100.0, 101.0, 102.0, nan})},
+    {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 0.0, 3.0, 0.0}), pluss::make_series(std::vector<bool>{true, false, true, false}))},
+    {"b", Shelf(pluss::make_series(std::vector<double>{10.0, 11.0, 0.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, false, false}))},
+    {"c", Shelf(pluss::make_series(std::vector<double>{100.0, 101.0, 102.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 
 auto out = readings.shownull();
@@ -116,8 +115,8 @@ Example 2. Feature-wise reveal: keep columns with any null, then only the fully-
 ```cpp
 auto features = DataFrame({
     {"clean",     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0})},
-    {"some_null", pluss::make_series(std::vector<double>{5.0, nan, 7.0, 8.0})},
-    {"all_null",  pluss::make_series(std::vector<double>{nan, nan, nan, nan})},
+    {"some_null", Shelf(pluss::make_series(std::vector<double>{5.0, 0.0, 7.0, 8.0}), pluss::make_series(std::vector<bool>{true, false, true, true}))},
+    {"all_null",  Shelf(pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 0.0}), pluss::make_series(std::vector<bool>{false, false, false, false}))},
 });
 
 auto any_null_feature = features.shownull(Axis::Feature);
@@ -127,14 +126,14 @@ std::cout << any_null_feature;
 ### Output
 
 ```text
-=====================
+==========================
      | some_null  all_null
----------------------
-0    | 5          NULL
-1    | NULL       NULL
-2    | 7          NULL
-3    | 8          NULL
----------------------
+--------------------------
+0    | 5          NULL    
+1    | NULL       NULL    
+2    | 7          NULL    
+3    | 8          NULL    
+--------------------------
 [4 cs x 2 feat]
 ```
 
@@ -146,14 +145,14 @@ std::cout << fully_null_feature;
 ### Output
 
 ```text
-==============
+===============
      | all_null
---------------
-0    | NULL
-1    | NULL
-2    | NULL
-3    | NULL
---------------
+---------------
+0    | NULL    
+1    | NULL    
+2    | NULL    
+3    | NULL    
+---------------
 [4 cs x 1 feat]
 ```
 
@@ -185,8 +184,8 @@ Example 4. Use `Axis::Case, true` to isolate fully-empty rows only.
 
 ```cpp
 auto sparse = DataFrame({
-    {"x", pluss::make_series(std::vector<double>{nan, 1.0, nan, nan})},
-    {"y", pluss::make_series(std::vector<double>{nan, 2.0, nan, 5.0})},
+    {"x", Shelf(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 0.0}), pluss::make_series(std::vector<bool>{false, true, false, false}))},
+    {"y", Shelf(pluss::make_series(std::vector<double>{0.0, 2.0, 0.0, 5.0}), pluss::make_series(std::vector<bool>{false, true, false, true}))},
 });
 
 auto fully_null_rows = sparse.shownull(Axis::Case, true);
@@ -196,12 +195,12 @@ std::cout << fully_null_rows;
 ### Output
 
 ```text
-============
-     | x     y
-------------
+=================
+     | x     y   
+-----------------
 0    | NULL  NULL
 2    | NULL  NULL
-------------
+-----------------
 [2 cs x 2 feat]
 ```
 
@@ -213,8 +212,8 @@ Example 5. Feature-wise reveal is useful after wide joins or feature engineering
 ```cpp
 auto wide = DataFrame({
     {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 2, 3})},
-    {"age",         pluss::make_series(std::vector<double>{34.0, nan, 29.0})},
-    {"income",      pluss::make_series(std::vector<double>{nan, nan, nan})},
+    {"age",         Shelf(pluss::make_series(std::vector<double>{34.0, 0.0, 29.0}), pluss::make_series(std::vector<bool>{true, false, true}))},
+    {"income",      Shelf(pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}), pluss::make_series(std::vector<bool>{false, false, false}))},
     {"score",       pluss::make_series(std::vector<double>{710.0, 688.0, 701.0})},
 });
 
@@ -225,13 +224,13 @@ std::cout << null_features;
 ### Output
 
 ```text
-==================
+===================
      | age   income
-------------------
-0    | 34    NULL
-1    | NULL  NULL
-2    | 29    NULL
-------------------
+-------------------
+0    | 34    NULL  
+1    | NULL  NULL  
+2    | 29    NULL  
+-------------------
 [3 cs x 2 feat]
 ```
 
@@ -261,11 +260,11 @@ Here `customer_id` and `score` disappear because they are fully observed. That m
   offending rows or features.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="show.md">
+  <a class="prev-link" href="show.html">
     <span class="label">Previous</span>
     <span class="title">show</span>
   </a>
-  <a class="next-link" href="shuffle.md">
+  <a class="next-link" href="shuffle.html">
     <span class="label">Next</span>
     <span class="title">shuffle</span>
   </a>

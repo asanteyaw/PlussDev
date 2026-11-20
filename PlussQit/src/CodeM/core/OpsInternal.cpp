@@ -86,6 +86,19 @@
 
 namespace pluss::codem::ops_internal {
 
+// An MPS fallback that casts to Float32 and back is only valid for real dtypes: casting a complex value to Float32 drops its
+// imaginary part. A complex input that has no native MPS kernel must fail loudly instead.
+static inline bool mps_float32_fallback_valid_(ScalarType dt) { return !dtype_of(dt).is_complex(); }
+// Integer (non-bool) dtype: rounding ops are the identity and NaN/Inf predicates are false.
+static inline bool mps_exact_int_(const Series& a) {
+  return a.platform() == Platform::MPS && (a.scalar_type() == ScalarType::Int32 || a.scalar_type() == ScalarType::Int64);
+}
+
+static inline bool is_int_value_dtype_(ScalarType dt) {
+  return dtype_of(dt).is_integral() && dt != ScalarType::Bool;
+}
+
+
 namespace {
 
 thread_local std::vector<Platform> g_platform_scope_stack;
@@ -248,8 +261,8 @@ Series stable_erfc_piecewise_(const Series& x) {
   const Series y_small_core = r_small.div(s_small);
   const Series y_small_lo = x.mul(y_small_core).add(x).mul(-1.0).add(1.0);
   const Series y_small_hi = x.mul(y_small_core).add(x.sub(0.5)).mul(-1.0).add(0.5);
-  Series y_small = x.lt(0.25).where(y_small_lo, y_small_hi);
-  y_small = absx.lt(std::ldexp(1.0, -56)).where(x.mul(-1.0).add(1.0), y_small);
+  Series y_small = where(x.lt(0.25), y_small_lo, y_small_hi);
+  y_small = where(absx.lt(std::ldexp(1.0, -56)), x.mul(-1.0).add(1.0), y_small);
 
   const Series s_mid = absx.sub(1.0);
   const Series p_mid =
@@ -259,7 +272,7 @@ Series stable_erfc_piecewise_(const Series& x) {
   const Series mid_ratio = p_mid.div(q_mid);
   const Series y_mid_pos = const_like(1.0 - erx).sub(mid_ratio);
   const Series y_mid_neg = const_like(1.0 + erx).add(mid_ratio);
-  const Series y_mid = neg.where(y_mid_neg, y_mid_pos);
+  const Series y_mid = where(neg, y_mid_neg, y_mid_pos);
 
   const Series inv_z = z.reciprocal();
   const Series r_tail_a = inv_z.mul(ra7).add(ra6).mul(inv_z).add(ra5).mul(inv_z).add(ra4).mul(inv_z).add(ra3).mul(inv_z).add(ra2).mul(inv_z).add(ra1).mul(inv_z).add(ra0);
@@ -267,18 +280,18 @@ Series stable_erfc_piecewise_(const Series& x) {
   const Series r_tail_b = inv_z.mul(rb6).add(rb5).mul(inv_z).add(rb4).mul(inv_z).add(rb3).mul(inv_z).add(rb2).mul(inv_z).add(rb1).mul(inv_z).add(rb0);
   const Series s_tail_b = inv_z.mul(sb7).add(sb6).mul(inv_z).add(sb5).mul(inv_z).add(sb4).mul(inv_z).add(sb3).mul(inv_z).add(sb2).mul(inv_z).add(sb1).mul(inv_z).add(1.0);
   const Series use_a = absx.lt(2.8571414947509766);
-  const Series r_tail = use_a.where(r_tail_a, r_tail_b);
-  const Series s_tail = use_a.where(s_tail_a, s_tail_b);
+  const Series r_tail = where(use_a, r_tail_a, r_tail_b);
+  const Series s_tail = where(use_a, s_tail_a, s_tail_b);
   Series y_tail = absx.square().mul(-1.0).sub(0.5625).add(r_tail.div(s_tail)).exp().div(absx);
-  y_tail = neg.where(y_tail.mul(-1.0).add(2.0), y_tail);
-  y_tail = x.lt(-6.0).where(const_like(2.0 - tiny), y_tail);
-  y_tail = x.ge(28.0).where(const_like(tiny * tiny), y_tail);
+  y_tail = where(neg, y_tail.mul(-1.0).add(2.0), y_tail);
+  y_tail = where(x.lt(-6.0), const_like(2.0 - tiny), y_tail);
+  y_tail = where(x.ge(28.0), const_like(tiny * tiny), y_tail);
 
   const Series small_mask = absx.lt(0.84375);
   const Series mid_mask = absx.ge(0.84375).logical_and(absx.lt(1.25));
-  Series out = small_mask.where(y_small, mid_mask.where(y_mid, y_tail));
-  out = inf_mask.where(neg.where(const_like(2.0), const_like(0.0)), out);
-  out = nan_mask.where(x, out);
+  Series out = where(small_mask, y_small, where(mid_mask, y_mid, y_tail));
+  out = where(inf_mask, where(neg, const_like(2.0), const_like(0.0)), out);
+  out = where(nan_mask, x, out);
   return out;
 }
 
@@ -296,9 +309,9 @@ Series stable_erf_noncpu_(const Series& input) {
   const auto const_like = [&](double c) { return zero.add(c); };
   const Series erfc_abs = stable_erfc_piecewise_(x.abs());
   Series out = const_like(1.0).sub(erfc_abs);
-  out = neg.where(out.neg(), out);
-  out = inf_mask.where(neg.where(const_like(-1.0), const_like(1.0)), out);
-  out = nan_mask.where(x, out);
+  out = where(neg, out.neg(), out);
+  out = where(inf_mask, where(neg, const_like(-1.0), const_like(1.0)), out);
+  out = where(nan_mask, x, out);
   return out.to(input.scalar_type());
 }
 
@@ -817,7 +830,7 @@ static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Ser
       native::mps::binary(op, aa, bb, out);
       return out;
     }
-    const bool supports_f32 = native::mps::supports_binary(op, ScalarType::Float32);
+    const bool supports_f32 = mps_float32_fallback_valid_(dt) && native::mps::supports_binary(op, ScalarType::Float32);
     require_mps_support_or_policy_(supports_f32, "binary op");
     if (supports_f32) {
       const Series aa = a.to(ScalarType::Float32).contiguous();
@@ -873,7 +886,8 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
       native::mps::binary(op, aa, bb, out);
       return out;
     }
-    const bool supports_f32 = native::mps::supports_binary(op, ScalarType::Float32);
+    const bool supports_f32 = mps_float32_fallback_valid_(a.scalar_type()) && mps_float32_fallback_valid_(b.scalar_type()) &&
+                              native::mps::supports_binary(op, ScalarType::Float32);
     require_mps_support_or_policy_(supports_f32, "comparison op");
     if (supports_f32) {
       const Series aa = a.to(ScalarType::Float32).contiguous();
@@ -922,7 +936,7 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
       native::mps::unary(op, aa, out);
       return out;
     }
-    const bool supports_f32 = native::mps::supports_unary(op, ScalarType::Float32);
+    const bool supports_f32 = mps_float32_fallback_valid_(a.scalar_type()) && native::mps::supports_unary(op, ScalarType::Float32);
     require_mps_support_or_policy_(supports_f32, "unary op");
     if (supports_f32) {
       const Series aa = a.to(ScalarType::Float32).contiguous();
@@ -1460,7 +1474,12 @@ Series mul(const Series& a, const Series& b) {
   return out;
 }
 Series div(const Series& a, const Series& b) {
-  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Div, a.scalar_type(), b.scalar_type());
+  auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Div, a.scalar_type(), b.scalar_type());
+  // MPS has no float64: true division of integers lands in float32 there.
+  if (a.platform() == Platform::MPS && out_dt == ScalarType::Float64 && a.scalar_type() != ScalarType::Float64 &&
+      b.scalar_type() != ScalarType::Float64) {
+    out_dt = ScalarType::Float32;
+  }
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Div, aa, bb);
@@ -1477,6 +1496,7 @@ Series div(const Series& a, const Series& b) {
       /*rhs_reads_a=*/true, /*rhs_reads_b=*/true);
   return out;
 }
+static Series scalar_like_(const Series& a, double s);
 Series pow(const Series& a, const Series& b) {
   const bool base_is_int = dtype_of(a.scalar_type()).is_integral();
   const bool exp_is_int = dtype_of(b.scalar_type()).is_integral();
@@ -1492,12 +1512,33 @@ Series pow(const Series& a, const Series& b) {
       exp_is_signed_int &&
       lt(b, Series::full({1}, 0.0, b.scalar_type()).to(b.platform())).any().item<bool>();
 
+  const bool on_mps = a.platform() == Platform::MPS;
   ScalarType out_dt = needs_fractional_promotion
-                          ? ScalarType::Float64
+                          ? (on_mps ? ScalarType::Float32 : ScalarType::Float64)
                           : promoted_binary_dtype_(native::cpu::BinaryOpId::Pow, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
+  Series out = pluss::series::undefined();
+  if (on_mps && is_int_value_dtype_(out_dt)) {
+    // Exact integer power by repeated squaring on exact integer ops: the exponent is halved with the native truncating
+    // divide and its low bit read from e - 2 * (e / 2), so any int32/int64 exponent is exact.
+    const Series base0 = add(aa, mul(bb, scalar_like_(bb, 0.0)));
+    Series e = add(bb, mul(aa, scalar_like_(aa, 0.0)));
+    Series base = base0;
+    Series res = add(mul(base0, scalar_like_(base0, 0.0)), scalar_like_(base0, 1.0));
+    const Series two = scalar_like_(e, 2.0);
+    const Series zero = scalar_like_(e, 0.0);
+    while (gt(e, zero).any().item<bool>()) {
+      const Series next = mps_int_truncating_divide(e, two);
+      const Series bit = gt(sub(e, mul(next, two)), zero);
+      res = where(bit, mul(res, base), res);
+      base = mul(base, base);
+      e = next;
+    }
+    out = res;
+  } else {
+    out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
+  }
   maybe_link_binary_op_(
       out, a, b, "pow",
       [a, b, out](const Series& g) {
@@ -1780,6 +1821,9 @@ Series angle(const Series& a) {
 }
 
 Series abs(const Series& a) {
+  if (mps_exact_int_(a)) {
+    return where(lt(a, scalar_like_(a, 0.0)), neg(a), a);
+  }
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
     if (native::mps::supports_complex_component(a.scalar_type(), ScalarType::Float32)) {
@@ -1829,6 +1873,7 @@ Series& abs_(Series& a) { a = abs(a); return a; }
 Series neg(const Series& a) {
   auto out = (a.platform() == Platform::MPS && complex_scalar_type_(a.scalar_type()))
       ? mul(a, -1.0)
+      : mps_exact_int_(a) ? sub(scalar_like_(a, 0.0), a)
       : unary_op_(native::cpu::UnaryOpId::Neg, a);
   if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
     auto link = std::make_shared<series_tape::SourceLink>();
@@ -1935,6 +1980,7 @@ Series& sqrt_(Series& a) {
 }
 
 Series floor(const Series& a) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) return a.contiguous().clone();
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
@@ -1948,6 +1994,7 @@ Series floor(const Series& a) {
   return unary_cpu_with_platform_dispatch_policy_(a, "floor", native::cpu::floor);
 }
 Series ceil(const Series& a) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) return a.contiguous().clone();
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
@@ -1961,6 +2008,7 @@ Series ceil(const Series& a) {
   return unary_cpu_with_platform_dispatch_policy_(a, "ceil", native::cpu::ceil);
 }
 Series round(const Series& a) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) return a.contiguous().clone();
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
@@ -1974,6 +2022,7 @@ Series round(const Series& a) {
   return unary_cpu_with_platform_dispatch_policy_(a, "round", native::cpu::round);
 }
 Series trunc(const Series& a) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) return a.contiguous().clone();
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
@@ -1988,6 +2037,12 @@ Series trunc(const Series& a) {
 }
 Series isnan(const Series& a) {
   auto cpu_route = [](const Series& in, Series& out) { native::cpu::isnan(in, out); };
+  if (a.platform() == Platform::MPS && (is_int_value_dtype_(a.scalar_type()) || a.scalar_type() == ScalarType::Bool)) {
+    return Series::zeros(a.sizes(), ScalarType::Bool).to(a.platform());
+  }
+  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Complex64) {
+    return logical_or(isnan(a.real().contiguous()), isnan(a.imag().contiguous()));
+  }
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
@@ -2002,6 +2057,12 @@ Series isnan(const Series& a) {
 }
 Series isinf(const Series& a) {
   auto cpu_route = [](const Series& in, Series& out) { native::cpu::isinf(in, out); };
+  if (a.platform() == Platform::MPS && (is_int_value_dtype_(a.scalar_type()) || a.scalar_type() == ScalarType::Bool)) {
+    return Series::zeros(a.sizes(), ScalarType::Bool).to(a.platform());
+  }
+  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Complex64) {
+    return logical_or(isinf(a.real().contiguous()), isinf(a.imag().contiguous()));
+  }
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
@@ -2018,6 +2079,11 @@ Series signbit(const Series& a) {
   const auto& dt = dtype_of(a.scalar_type());
   if (dt.is_floating() && !dt.is_complex()) {
     // True IEEE sign bit: distinguishes -0.0 and -NaN, which `a < 0` misses.
+    if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+      // x < 0, or x == 0 with 1/x = -inf (negative zero); the NaN sign bit is not observable here.
+      const Series zero = scalar_like_(a, 0.0);
+      return logical_or(lt(a, zero), logical_and(eq(a, zero), lt(reciprocal(a), zero)));
+    }
     auto cpu_route = [](const Series& in, Series& out) { native::cpu::signbit(in, out); };
     return unary_cpu_with_platform_dispatch_policy_(a, "signbit", cpu_route, ScalarType::Bool);
   }
@@ -2244,18 +2310,31 @@ Series lgamma(const Series& a) {
   Series out = pluss::series::undefined();
   if (a.platform() == Platform::MPS) {
     const auto x = a.contiguous().to(ScalarType::Float32);
-    const auto one = scalar_like_(x, 1.0);
+    const auto zero = scalar_like_(x, 0.0);
     const auto half = scalar_like_(x, 0.5);
-    const auto c0 = scalar_like_(x, 0.9189385332046727);
-    const auto invx = reciprocal(x);
-    const auto invx2 = mul(invx, invx);
+    const auto pi = scalar_like_(x, 3.141592653589793);
+    // Reflection maps x < 1/2 onto 1 - x >= 1/2.
+    const auto refl = lt(x, half);
+    const auto xs = where(refl, sub(scalar_like_(x, 1.0), x), x);
+    // Shift by 8 so the Stirling series is accurate: lgamma(xs) = stirling(xs+8) - sum log(xs+k).
+    Series shift_log = log(xs);
+    for (int k = 1; k < 8; ++k) shift_log = add(shift_log, log(add(xs, scalar_like_(x, static_cast<double>(k)))));
+    const auto y = add(xs, scalar_like_(x, 8.0));
+    const auto invy = reciprocal(y);
+    const auto invy2 = mul(invy, invy);
     const auto corr = add(
-        mul(invx, scalar_like_(x, 1.0 / 12.0)),
-        add(mul(mul(invx2, invx), scalar_like_(x, -1.0 / 360.0)),
-            mul(mul(mul(invx2, invx2), invx), scalar_like_(x, 1.0 / 1260.0))));
-    auto lg = add(add(sub(mul(sub(x, half), log(x)), x), c0), corr);
-    const auto nan = scalar_like_(x, std::numeric_limits<float>::quiet_NaN());
-    lg = where(le(x, scalar_like_(x, 0.0)), nan, lg);
+        mul(invy, scalar_like_(x, 1.0 / 12.0)),
+        add(mul(mul(invy2, invy), scalar_like_(x, -1.0 / 360.0)),
+            mul(mul(mul(invy2, invy2), invy), scalar_like_(x, 1.0 / 1260.0))));
+    const auto stirling = add(add(sub(mul(sub(y, half), log(y)), y), scalar_like_(x, 0.9189385332046727)), corr);
+    auto lg = sub(stirling, shift_log);
+    // lgamma(x) = log(pi / |sin(pi x)|) - lgamma(1 - x) for x < 1/2.
+    const auto reflected = sub(sub(log(pi), log(abs(sin(mul(pi, x))))), lg);
+    lg = where(refl, reflected, lg);
+    const auto inf = scalar_like_(x, std::numeric_limits<float>::infinity());
+    const auto pole = logical_and(le(x, zero), eq(x, floor(x)));
+    lg = where(pole, inf, lg);
+    lg = where(isnan(x), x, lg);
     out = lg.to(a.scalar_type());
   } else {
     out = unary_op_(native::cpu::UnaryOpId::LGamma, a);
@@ -2277,7 +2356,7 @@ static Series inverse_hyperbolic_input_(const Series& a) {
 Series asinh(const Series& a) {
   const Series aa = inverse_hyperbolic_input_(a);
   if (aa.platform() == Platform::MPS) {
-    const auto x = aa.contiguous().to(ScalarType::Float32);
+    const auto x = aa.contiguous().to(mps_float32_fallback_valid_(aa.scalar_type()) ? ScalarType::Float32 : aa.scalar_type());
     const auto one = scalar_like_(x, 1.0);
     Series out = log(add(x, sqrt(add(mul(x, x), one)))).to(aa.scalar_type());
     maybe_link_unary_rule_(out, a, "asinh", autodiff_unary::Rule::Asinh);
@@ -2290,9 +2369,9 @@ Series asinh(const Series& a) {
 Series acosh(const Series& a) {
   const Series aa = inverse_hyperbolic_input_(a);
   if (aa.platform() == Platform::MPS) {
-    const auto x = aa.contiguous().to(ScalarType::Float32);
+    const auto x = aa.contiguous().to(mps_float32_fallback_valid_(aa.scalar_type()) ? ScalarType::Float32 : aa.scalar_type());
     const auto one = scalar_like_(x, 1.0);
-    Series out = log(add(x, sqrt(mul(sub(x, one), add(x, one))))).to(aa.scalar_type());
+    Series out = log(add(x, mul(sqrt(sub(x, one)), sqrt(add(x, one))))).to(aa.scalar_type());
     maybe_link_unary_rule_(out, a, "acosh", autodiff_unary::Rule::Acosh);
     return out;
   }
@@ -2303,7 +2382,7 @@ Series acosh(const Series& a) {
 Series atanh(const Series& a) {
   const Series aa = inverse_hyperbolic_input_(a);
   if (aa.platform() == Platform::MPS) {
-    const auto x = aa.contiguous().to(ScalarType::Float32);
+    const auto x = aa.contiguous().to(mps_float32_fallback_valid_(aa.scalar_type()) ? ScalarType::Float32 : aa.scalar_type());
     const auto one = scalar_like_(x, 1.0);
     Series out = mul(scalar_like_(x, 0.5), log(div(add(one, x), sub(one, x)))).to(aa.scalar_type());
     maybe_link_unary_rule_(out, a, "atanh", autodiff_unary::Rule::Atanh);
@@ -2338,6 +2417,13 @@ Series& bitwise_xor_(Series& a, const Series& b) { a = a.bitwise_xor(b); return 
 
 Series isfinite(const Series& a) {
   auto cpu_route = [](const Series& in, Series& out) { native::cpu::isfinite(in, out); };
+  // An integer or boolean is always finite: the answer is "yes" for every element, with no error and no conversion.
+  if (is_int_value_dtype_(a.scalar_type()) || a.scalar_type() == ScalarType::Bool) {
+    return Series::ones(a.sizes(), ScalarType::Bool).to(a.platform());
+  }
+  if (a.dtype().is_complex()) {
+    return logical_and(isfinite(a.real().contiguous()), isfinite(a.imag().contiguous()));
+  }
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
@@ -2773,6 +2859,54 @@ static void maybe_link_extrema_all_reduce_(
   series_tape::bind_source_link(out, std::move(link));
 }
 
+// Exact integer paths on MPS. The float32 fallback loses integers above 2^24 (int32 too, not only int64), so these use
+// the native int32/int64 kernels (add, sub, mul, compare, where, truncating divide) and compose the rest from them.
+// Reduce `dim` by halving: combine(x[:h], x[h:2h]) with an odd leftover carried along, log2(n) exact steps.
+template <class Combine>
+static Series mps_int_reduce_dim_(const Series& a, std::int64_t dim, bool keepdim, Combine combine) {
+  Series x = a.contiguous();
+  const auto nd = x.dim();
+  if (dim < 0) dim += nd;
+  if (dim != 0) x = x.transpose(0, dim).contiguous();
+  auto n = x.sizes()[0];
+  while (n > 1) {
+    const auto h = n / 2;
+    Series merged = combine(x.slice(0, 0, h).contiguous(), x.slice(0, h, 2 * h).contiguous());
+    x = (n % 2 == 1) ? merged.unite({x.slice(0, 2 * h, n).contiguous()}, 0) : merged;
+    n = x.sizes()[0];
+  }
+  if (dim != 0) x = x.transpose(0, dim).contiguous();
+  return keepdim ? x : x.squeeze(dim);
+}
+
+bool has_zero_integer_divisor(const Series& a, const Series& b) {
+  if (!is_int_value_dtype_(a.scalar_type()) || !is_int_value_dtype_(b.scalar_type()) || b.numel() == 0) {
+    return false;
+  }
+  return eq(b, scalar_like_(b, 0.0)).any().item<bool>();
+}
+
+Series mps_int_truncating_divide(const Series& a, const Series& b) {
+  const ScalarType dt = promote_types(a.scalar_type(), b.scalar_type());
+  const Series aa = a.to(dt).contiguous();
+  const Series bb = b.to(dt).contiguous();
+  Series out = Series::empty(SeriesIterator::broadcast_shape(aa.sizes(), bb.sizes()), dt, Platform::MPS);
+  native::mps::binary(native::cpu::BinaryOpId::Div, aa, bb, out);
+  return out;
+}
+
+bool mps_exact_int_pair(const Series& a, const Series& b) {
+  return mps_exact_int_(a) && mps_exact_int_(b);
+}
+
+Series mps_int_floor_divide(const Series& a, const Series& b) {
+  const Series q = mps_int_truncating_divide(a, b);
+  const Series r = sub(a.to(q.scalar_type()), mul(q, b.to(q.scalar_type())));
+  const Series zero = scalar_like_(r, 0.0);
+  const Series differs = ne(lt(r, zero), lt(b.to(q.scalar_type()), zero));
+  return where(logical_and(ne(r, zero), differs), sub(q, scalar_like_(q, 1.0)), q);
+}
+
 Series sum(const Series& a) {
   PLUSS_CHECK(a.defined(), "sum: undefined");
   if (a.dim() == 0) {
@@ -2864,6 +2998,9 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
     // Bool sum is a count reduction.
     aa = aa.to(ScalarType::Int64);
   }
+  if (mps_exact_int_(aa) && aa.numel() > 0 && !series_tape::tracks_slope(aa)) {
+    return mps_int_reduce_dim_(aa, dim, keepdim, [](const Series& l, const Series& r) { return add(l, r); });
+  }
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
@@ -2892,7 +3029,7 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
         }
         return reduced;
       }
-      const bool supports_f32 = native::mps::supports_sum_dim(ScalarType::Float32);
+      const bool supports_f32 = mps_float32_fallback_valid_(aa.scalar_type()) && native::mps::supports_sum_dim(ScalarType::Float32);
       require_mps_support_or_policy_(supports_f32, "sum(dim)");
       if (supports_f32) {
         const Series aa_f = aa.to(ScalarType::Float32).contiguous();
@@ -3031,6 +3168,9 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
     return out;
   }
   auto aa = a.contiguous();
+  if (mps_exact_int_(aa) && aa.numel() > 0 && !series_tape::tracks_slope(aa)) {
+    return mps_int_reduce_dim_(aa, dim, keepdim, [](const Series& l, const Series& r) { return mul(l, r); });
+  }
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
@@ -3045,6 +3185,13 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
       if (native::mps::supports_prod_dim(aa.scalar_type())) {
         native::mps::prod_dim(aa, dim, out);
         return link_prod_dim_(maybe_keepdim_(out, aa.sizes(), dim, keepdim));
+      }
+      if (dtype_of(aa.scalar_type()).is_complex()) {
+        // No native complex product reduction: multiply the slices along the axis with the complex multiply the MPS does have.
+        const std::int64_t count = aa.size(dim);
+        Series acc = count == 0 ? Series::ones(out_sizes, aa.scalar_type()).to(aa.platform()) : aa.select(dim, 0).contiguous();
+        for (std::int64_t k = 1; k < count; ++k) acc = acc.mul(aa.select(dim, k).contiguous());
+        return link_prod_dim_(maybe_keepdim_(acc, aa.sizes(), dim, keepdim));
       }
       const bool supports_f32 = native::mps::supports_prod_dim(ScalarType::Float32);
       require_mps_support_or_policy_(supports_f32, "prod(dim)");
@@ -3275,6 +3422,9 @@ Series amax(const Series& a) {
   }
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "amax: complex dtype not supported for ordered reduction");
+  if (mps_exact_int_(a) && a.numel() > 0 && !series_tape::tracks_slope(a)) {
+    return mps_int_reduce_dim_(a.reshape({a.numel()}), 0, false, [](const Series& l, const Series& r) { return maximum(l, r); });
+  }
   const bool track_input = series_tape::recording_enabled() && series_tape::tracks_slope(a);
   Series out = pluss::series::undefined();
   {
@@ -3320,6 +3470,9 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "amax: undefined");
   if (a.dim() == 0) return a.clone();
   auto aa = a.contiguous();
+  if (mps_exact_int_(aa) && aa.numel() > 0 && !series_tape::tracks_slope(aa)) {
+    return mps_int_reduce_dim_(aa, dim, keepdim, [](const Series& l, const Series& r) { return maximum(l, r); });
+  }
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
@@ -3383,6 +3536,9 @@ Series amin(const Series& a) {
   }
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "amin: complex dtype not supported for ordered reduction");
+  if (mps_exact_int_(a) && a.numel() > 0 && !series_tape::tracks_slope(a)) {
+    return mps_int_reduce_dim_(a.reshape({a.numel()}), 0, false, [](const Series& l, const Series& r) { return minimum(l, r); });
+  }
   const bool track_input = series_tape::recording_enabled() && series_tape::tracks_slope(a);
   Series out = pluss::series::undefined();
   {
@@ -3427,6 +3583,9 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "amin: undefined");
   if (a.dim() == 0) return a.clone();
   auto aa = a.contiguous();
+  if (mps_exact_int_(aa) && aa.numel() > 0 && !series_tape::tracks_slope(aa)) {
+    return mps_int_reduce_dim_(aa, dim, keepdim, [](const Series& l, const Series& r) { return minimum(l, r); });
+  }
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
@@ -3786,6 +3945,9 @@ Series relu(const Series& a) {
   PLUSS_CHECK(a.defined(), "relu: undefined");
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "relu: complex dtype not supported");
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) {
+    return maximum(a, scalar_like_(a, 0.0));
+  }
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Relu, a.scalar_type());
@@ -4982,6 +5144,8 @@ Series maximum(const Series& a, const Series& b) {
   auto bb = b.contiguous().to(out.scalar_type());
   if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
     native::mps::maximum(aa, bb, out);
+  } else if (a.platform() == Platform::MPS && is_int_value_dtype_(out.scalar_type())) {
+    out = where(gt(aa, bb), aa, bb);
   } else if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
@@ -5023,6 +5187,8 @@ Series minimum(const Series& a, const Series& b) {
   auto bb = b.contiguous().to(out.scalar_type());
   if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
     native::mps::minimum(aa, bb, out);
+  } else if (a.platform() == Platform::MPS && is_int_value_dtype_(out.scalar_type())) {
+    out = where(lt(aa, bb), aa, bb);
   } else if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
@@ -5205,6 +5371,15 @@ static void link_fmod_remainder_backward_(const Series& out, const Series& a,
 
 Series fmod(const Series& a, const Series& b) {
   require_same_platform(a, b, "fmod");
+  if (has_zero_integer_divisor(a, b)) {
+    // Integers cannot hold the IEEE result of x % 0 (NaN), so such a division is done in floating point.
+    const auto fdt = a.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64;
+    return fmod(a.to(fdt), b.to(fdt));
+  }
+  if (mps_exact_int_pair(a, b)) {
+    const Series q = mps_int_truncating_divide(a, b);
+    return sub(a.to(q.scalar_type()), mul(q, b.to(q.scalar_type())));
+  }
   if (a.platform() == Platform::MPS) {
     auto aa = a.contiguous().to(ScalarType::Float32);
     auto bb = b.contiguous().to(ScalarType::Float32);
@@ -5239,6 +5414,14 @@ Series fmod(const Series& a, const Series& b) {
 
 Series remainder(const Series& a, const Series& b) {
   require_same_platform(a, b, "remainder");
+  if (has_zero_integer_divisor(a, b)) {
+    const auto fdt = a.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64;
+    return remainder(a.to(fdt), b.to(fdt));
+  }
+  if (mps_exact_int_pair(a, b)) {
+    const Series q = mps_int_floor_divide(a, b);
+    return sub(a.to(q.scalar_type()), mul(q, b.to(q.scalar_type())));
+  }
   if (a.platform() == Platform::MPS) {
     auto aa = a.contiguous().to(ScalarType::Float32);
     auto bb = b.contiguous().to(ScalarType::Float32);
@@ -5273,7 +5456,7 @@ Series remainder(const Series& a, const Series& b) {
 
 Series rsqrt(const Series& a) {
   Series out = (a.platform() == Platform::MPS)
-                   ? reciprocal(sqrt(a.contiguous().to(ScalarType::Float32)))
+                   ? reciprocal(sqrt(a.contiguous().to(mps_float32_fallback_valid_(a.scalar_type()) ? ScalarType::Float32 : a.scalar_type())))
                    : Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
   if (a.platform() != Platform::MPS) {
     if (a.platform() == Platform::CUDA) {
@@ -5425,7 +5608,8 @@ Series cbrt(const Series& a) {
 }
 Series square(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+  if (a.platform() == Platform::MPS && (a.scalar_type() == ScalarType::Float32 || a.scalar_type() == ScalarType::Complex64 ||
+                                          is_int_value_dtype_(a.scalar_type()))) {
     auto aa = a.contiguous();
     out = mul(aa, aa);
   } else {
@@ -5536,6 +5720,9 @@ Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
 }
 
 Series clamp_min(const Series& a, double lo) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) {
+    return maximum(a, scalar_like_(a, std::trunc(lo))); // an integer tensor takes its bound truncated toward zero, as on the CPU
+  }
   if (a.platform() == Platform::MPS) {
     if (a.scalar_type() == ScalarType::Float32) {
       return maximum(a, scalar_like_(a, lo));
@@ -5605,6 +5792,9 @@ Series& clamp_min_(Series& a, double lo) {
 }
 
 Series clamp_max(const Series& a, double hi) {
+  if (a.platform() == Platform::MPS && is_int_value_dtype_(a.scalar_type())) {
+    return minimum(a, scalar_like_(a, std::trunc(hi)));
+  }
   if (a.platform() == Platform::MPS) {
     if (a.scalar_type() == ScalarType::Float32) {
       return minimum(a, scalar_like_(a, hi));
@@ -5811,25 +6001,59 @@ Series unique(const Series& a, bool sorted) {
         });
   }
 
-  if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(sorted, "unique: MPS path currently requires sorted=true");
+  // Integer ranges decide the route. Non-negative integers of moderate size use the native counting pass (no cast lane,
+  // strict-native friendly). Otherwise the device sorts: MPS sorts int64 through a 32-bit lane, so int64 values outside
+  // the int32 range go to the host (they would silently come back wrong).
+  std::int64_t int_lo = 0;
+  std::int64_t int_hi = 0;
+  const bool integral_input = a.scalar_type() == ScalarType::Int64 || a.scalar_type() == ScalarType::Int32;
+  if (a.platform() == Platform::MPS && integral_input && a.numel() > 0) {
+    int_lo = a.min().item<std::int64_t>();
+    int_hi = a.max().item<std::int64_t>();
+  }
+  const bool int_counting_route = integral_input && a.numel() > 0 && int_lo >= 0 && int_hi < (std::int64_t{1} << 22);
+  const bool int64_fits_device_sort =
+      a.scalar_type() != ScalarType::Int64 ||
+      (int_lo >= std::numeric_limits<std::int32_t>::min() && int_hi <= std::numeric_limits<std::int32_t>::max());
+  if (a.platform() == Platform::MPS && sorted && int_counting_route) {
     auto x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
-    PLUSS_CHECK(
-        x.scalar_type() == ScalarType::Int64 || x.scalar_type() == ScalarType::Int32,
-        "unique: MPS path currently supports int32/int64 tensors only");
     if (x.scalar_type() == ScalarType::Int32) {
       x = x.to(ScalarType::Int64);
     }
     auto counts = bincount(x, 0);
-    if (counts.numel() == 0) {
-      return Series::empty({0}, ScalarType::Int64, Platform::MPS);
-    }
     auto present = counts.to(ScalarType::Float32).gt(0.0);
     auto nz = nonzero(present);
     if (nz.numel() == 0) {
       return Series::empty({0}, ScalarType::Int64, Platform::MPS);
     }
     return nz.to(Platform::CPU).squeeze(-1).to(ScalarType::Int64).to(Platform::MPS);
+  }
+  if (a.platform() == Platform::MPS && sorted && int64_fits_device_sort) {
+    // Stay on the device: sort, keep the first of every run of equal values (NaNs count as one value), and compact with
+    // a mask. Reading the mask's count back is the one host sync, and an output of data-dependent length needs it anyway.
+    const Series x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
+    const auto n = x.numel();
+    if (n <= 1) {
+      return x.clone();
+    }
+    const Series ordered = x.sort(0);
+    const Series position = pluss::series::arange(0, n, ScalarType::Int64).to(Platform::MPS);
+    const Series before = ordered.index_select(0, clamp_min(sub(position, scalar_like_(position, 1.0)), 0.0));
+    Series starts_run = ne(ordered, before);
+    if (dtype_of(x.scalar_type()).is_floating()) {
+      starts_run = logical_and(starts_run, logical_not(logical_and(isnan(ordered), isnan(before))));
+    }
+    const Series keep = logical_or(starts_run, eq(position, scalar_like_(position, 0.0)));
+    return ordered.masked_select(keep);
+  }
+  if (a.platform() == Platform::MPS) {
+    // Unsorted (first-occurrence) order is inherently sequential: deduplicate on the CPU and return on MPS.
+    Series host = pluss::series::undefined();
+    {
+      PlatformScope host_scope{Platform::CPU};
+      host = unique(a.to(Platform::CPU), sorted);
+    }
+    return host.to(Platform::MPS);
   }
 
   auto x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
@@ -8040,6 +8264,12 @@ Series Series::to(ScalarType dst) const {
           *this,
           std::string("to(") + std::to_string(static_cast<int>(dst)) + ")");
       return out;
+    }
+    // Two-hop through float32 (e.g. integer -> complex64 / float16 / bfloat16).
+    if (src.scalar_type() != ScalarType::Float32 && dst != ScalarType::Float32 &&
+        native::mps::supports_cast(src.scalar_type(), ScalarType::Float32) &&
+        native::mps::supports_cast(ScalarType::Float32, dst)) {
+      return src.to(ScalarType::Float32).to(dst);
     }
     require_mps_support_or_policy_(false, "Series::to(dtype)");
     Series cpu_cast = to(Platform::CPU).to(dst);
@@ -10523,58 +10753,18 @@ Series Series::mean() const {
 
 namespace ops_internal {
 
-// Debug aid for the two call styles of Series::where. With the environment variable PLUSS_WARN_LEGACY_WHERE set, every
-// distinct caller that reaches the legacy path (a.where(cond, b): b where cond is TRUE, the reverse of torch) is reported once
-// on stderr with a short stack, so a torch-style call written by habit can be found by running any test or program. A Bool
-// receiver whose first argument is also Bool is marked AMBIGUOUS: it takes the legacy path although it may be written
-// torch-style. Off by default and free when off (one cached flag check).
-void warn_legacy_where_(bool receiver_is_bool) {
-  static const bool enabled = [] {
-    const char* v = std::getenv("PLUSS_WARN_LEGACY_WHERE");
-    return v != nullptr && v[0] != '\0' && v[0] != '0';
-  }();
-  if (!enabled) {
-    return;
-  }
-#ifndef PLUSS_HAVE_EXECINFO
-  return;
-#else
-  void* frames[8];
-  const int depth = ::backtrace(frames, 8);
-  if (depth < 3) {
-    return;
-  }
-  static std::mutex mutex;
-  static std::set<void*> seen;
-  {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (!seen.insert(frames[2]).second) {
-      return;
-    }
-  }
-  char** names = ::backtrace_symbols(frames, depth);
-  std::fprintf(stderr, "[where-legacy]%s a.where(cond, b) selects b where cond is TRUE; called from:\n",
-               receiver_is_bool ? " AMBIGUOUS (Bool receiver and Bool condition)" : "");
-  for (int i = 2; i < std::min(depth, 5); ++i) {
-    std::fprintf(stderr, "    %s\n", names != nullptr ? names[i] : "?");
-  }
-  std::free(names);
-#endif
-}
-
 } // namespace ops_internal
 
+// ATen semantics: x.where(condition, y) keeps x where the condition is true and takes y elsewhere.
 Series Series::where(const Series& condition, const Series& other) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
-  // Support both styles:
-  // - cond.where(a, b): torch-like (self is condition)
-  // - a.where(cond, b): CodeM legacy (true selects other)
-  if (scalar_type() == ScalarType::Bool && condition.scalar_type() != ScalarType::Bool) {
-    return ops_internal::where(*this, condition, other);
-  }
-  ops_internal::warn_legacy_where_(scalar_type() == ScalarType::Bool);
-  return ops_internal::where(condition, other, *this);
+  // A Bool receiver with a non-Bool first argument is almost always `mask.where(a, b)` written from habit: here the receiver is the data
+  // and the first argument the condition, so the call would silently return the wrong thing.
+  PLUSS_CHECK(!(scalar_type() == ScalarType::Bool && condition.scalar_type() != ScalarType::Bool),
+              "Series::where: the receiver is a Bool Series, which is the data to keep, but the condition is not Bool. `x.where(condition, y)` "
+              "keeps x where the condition is true; to select between two values with a mask write pluss::series::where(mask, a, b).");
+  return ops_internal::where(condition, *this, other);
 }
 
 Series& Series::where_(const Series& condition, const Series& other) {
@@ -10583,6 +10773,27 @@ Series& Series::where_(const Series& condition, const Series& other) {
   Series out = where(condition, other);
   copy_(out);
   return finish_direct_inplace_value_op_(*this);
+}
+
+Series Series::where(const Series& condition, double other) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  // An integer or Bool receiver keeps its dtype for a whole-number replacement and widens to Float64 for a fractional (or
+  // non-finite) one, instead of truncating the replacement.
+  ScalarType dt = scalar_type();
+  if ((dt == ScalarType::Bool || dtype_of(dt).is_integral()) && std::trunc(other) != other) {
+    dt = ScalarType::Float64;
+  }
+  Series b = Series::full({}, other, dt).expand_as(*this);
+  return where(condition, b);
+}
+
+Series& Series::where_(const Series& condition, double other) {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  Series out = where(condition, other);
+  copy_(out);
+  return *this;
 }
 
 Series Series::clamp_min(double min) const {
@@ -10632,6 +10843,17 @@ Series Series::cumsum(std::int64_t dim, bool keepdim) const {
   ops_internal::PlatformScope platform_scope{platform()};
   (void)keepdim; // same shape output; keepdim for API parity
   Series a = is_contiguous() ? *this : contiguous();
+  if (platform() == Platform::MPS && a.scalar_type() == ScalarType::Complex64) {
+    // No native complex scan: the sum is linear, so scan the real and imaginary parts separately and recombine.
+    const Series imag_unit = pluss::series::complex(Series::zeros({}, ScalarType::Float32), Series::ones({}, ScalarType::Float32)).to(platform());
+    const Series re = a.real().contiguous().cumsum(dim);
+    const Series im = a.imag().contiguous().cumsum(dim);
+    Series out = re.to(ScalarType::Complex64).add(im.to(ScalarType::Complex64).mul(imag_unit));
+    maybe_link_unary_op_(out, *this, "cumsum", [dim](const Series& out_sens) {
+      return reverse_dim_(reverse_dim_(out_sens, dim).cumsum(dim), dim);
+    });
+    return out;
+  }
   if (platform() == Platform::MPS && native::mps::supports_cumsum_dim(a.scalar_type())) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
     native::mps::cumsum_dim(a, dim, out);
@@ -10835,6 +11057,17 @@ Series Series::cumprod(std::int64_t dim, bool keepdim) const {
   if (platform() == Platform::MPS && native::mps::supports_cumprod_dim(a.scalar_type())) {
     out = Series::empty(a.sizes(), a.scalar_type(), platform());
     native::mps::cumprod_dim(a, dim, out);
+  } else if (platform() == Platform::MPS && a.scalar_type() == ScalarType::Complex64 && a.sizes()[dim] > 0) {
+    // No complex scan kernel: running product over the slices along `dim`.
+    std::vector<Series> rows;
+    Series acc = a.select(dim, 0).contiguous();
+    rows.push_back(acc.unsqueeze(dim));
+    for (std::int64_t k = 1; k < a.sizes()[dim]; ++k) {
+      acc = acc.mul(a.select(dim, k).contiguous());
+      rows.push_back(acc.unsqueeze(dim));
+    }
+    std::vector<Series> rest(rows.begin() + 1, rows.end());
+    out = rest.empty() ? rows[0] : rows[0].unite(pluss::msharp::RangeView::Of<Series>(rest), dim);
   } else if (platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_scan_enabled();
     const bool native_strict = native::cuda::native_scan_strict();
@@ -10869,32 +11102,15 @@ Series& Series::cumprod_(std::int64_t dim, bool keepdim) {
 }
 
 
-Series Series::where(const Series& condition, double other) const {
-  PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series b = Series::full({}, other, scalar_type()).expand_as(*this);
-  return where(condition, b);
-}
-Series& Series::where_(const Series& condition, double other) {
-  PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = where(condition, other);
-  copy_(out);
-  return *this;
-}
 
 Series Series::clamp_min(const Series& min) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   // broadcast min against self
   Series m = (min.scalar_type()==scalar_type()) ? min : min.to(scalar_type());
-  // Series::where(cond, other) selects `other` where cond is true and keeps
-  // `self` where cond is false (see its own doc comment) -- the opposite of
-  // "self when true" naive intuition. clamp_min must keep self where
-  // self >= min and only fall back to min where self < min, so the branch
-  // handed to where() must be true exactly where self is BELOW the floor.
+  // Take the floor where self is below it, self elsewhere.
   Series cond = this->lt(m);
-  return this->where(cond, m);
+  return ops_internal::where(cond, m, *this);
 }
 Series& Series::clamp_min_(const Series& min) {
   PLUSS_CALL_GUARD();
@@ -10909,12 +11125,9 @@ Series Series::clamp_max(const Series& max) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   Series m = (max.scalar_type()==scalar_type()) ? max : max.to(scalar_type());
-  // Same where(cond, other) "true selects other" convention as clamp_min
-  // above: clamp_max must keep self where self <= max and only fall back to
-  // max where self is ABOVE the ceiling, so cond must be true exactly where
-  // self exceeds max.
+  // Take the ceiling where self is above it, self elsewhere.
   Series cond = this->gt(m);
-  return this->where(cond, m);
+  return ops_internal::where(cond, m, *this);
 }
 Series& Series::clamp_max_(const Series& max) {
   PLUSS_CALL_GUARD();

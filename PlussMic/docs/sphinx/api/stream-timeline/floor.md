@@ -60,8 +60,8 @@ Example 2 (edge case). An unsupported unit throws.
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z"}));
 try {
   auto out = stream.tl().floor("bogus");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

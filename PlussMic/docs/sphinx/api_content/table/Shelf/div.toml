@@ -1,0 +1,70 @@
+summary = """
+Divide a numeric shelf by one scalar or by another numeric shelf.
+
+`div(...)` is the named shelf-level division surface behind `/`-style arithmetic when you want a method in a chain or you want the overload family documented explicitly.
+"""
+
+returns = """
+`Shelf`
+    Numeric result shelf with elementwise division applied.
+"""
+
+see_also = [
+  "<a href=\"#truediv\"><code>Shelf::truediv</code></a>: explicit true-division surface.",
+  "<a href=\"#mul\"><code>Shelf::mul</code></a>: same typed arithmetic model for multiplication.",
+  "<a href=\"#align\"><code>Shelf::align</code></a>: align shelves first when you need label-aware preparation before arithmetic."
+]
+
+notes = [
+  """
+Scalar division broadcasts the divisor across the full shelf length.
+""",
+  """
+Shelf-to-shelf division is positional unless you explicitly align the shelves beforehand.
+""",
+  """
+This method is numeric. Use note, timeline, or timeindex accessors for non-numeric payload work.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand divisor.
+
+- `double`: broadcast one numeric divisor across the whole shelf.
+- `const Shelf&`: divide element by element against another numeric shelf of compatible size.
+"""
+
+[[examples]]
+title = "Broadcast one scalar divisor across a numeric shelf."
+code = """
+using namespace pluss::table;
+
+auto values = Shelf(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = values.div(10.0);
+"""
+output = """
+0  1
+1  2
+2  3
+ptype: Series
+"""
+
+[[examples]]
+title = "Divide one numeric shelf by another shelf element by element."
+code = """
+using namespace pluss::table;
+
+auto left = Shelf(pluss::make_series({10.0, 20.0, 30.0}));
+auto right = Shelf(pluss::make_series({2.0, 4.0, 5.0}));
+
+auto out = left.div(right);
+"""
+output = """
+0  5
+1  5
+2  6
+ptype: Series
+"""

@@ -13,7 +13,7 @@ DataFrame DataFrameFeatureAxisAccessor::series() const
 
 ## What It Does
 
-Selects every feature whose `Slate` kind is `Series` (numeric or boolean) —
+Selects every feature whose `Shelf` kind is `Series` (numeric or boolean) —
 dropping text (`Note`) and temporal (`Timeline`/`TimeIndex`) features. Case
 labels and row order are preserved unchanged.
 
@@ -31,9 +31,9 @@ Example 1. Keep only the numeric features out of a mixed frame.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Shelf(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 std::cout << orders;
 
 auto out = orders.feataxis().series();
@@ -76,8 +76,8 @@ alongside numeric features.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"in_stock",     Slate(pluss::make_series({true, false, true}))}});
+    {{"sales_units", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"in_stock",     Shelf(pluss::make_series({true, false, true}))}});
 
 auto out = orders.feataxis().series();
 std::cout << out;

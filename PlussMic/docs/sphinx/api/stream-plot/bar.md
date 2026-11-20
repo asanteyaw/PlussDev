@@ -19,13 +19,13 @@ pluss::pl::Studio StreamPlotAccessor::bar(const Stream& x, const BarPlotOptions&
 Draws one bar per row for the bound stream's values, against an optional companion `x`
 stream — the same shape and naming rules as [`line()`](line.md), drawn as bars instead of a
 connected line. Every overload forwards to
-[`SlatePlotAccessor::bar`](../slate-plot/bar.md) after `Stream::to_slate()`.
+[`ShelfPlotAccessor::bar`](../shelf-plot/bar.md) after `Stream::to_shelf()`.
 
 ## Parameters
 
 **x** (`const Stream&`, optional)
     Same as [`line()`](line.md)'s `x` — a mismatched size throws
-    `"Slate::plot: slate size mismatch"`.
+    `"Shelf::plot: shelf size mismatch"`.
 
 **options** (`BarPlotOptions`)
     The identical struct documented on
@@ -111,15 +111,15 @@ auto short_city = Stream(pluss::make_note({"Accra", "Tema"}));
 
 try {
   auto bad = amount.plot().bar(short_city);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::plot: slate size mismatch
+Shelf::plot: shelf size mismatch
 ```
 
 ## Notes
@@ -131,7 +131,7 @@ Slate::plot: slate size mismatch
 
 ## See Also
 
-- [`SlatePlotAccessor::bar`](../slate-plot/bar.md): the method this delegates to.
+- [`ShelfPlotAccessor::bar`](../shelf-plot/bar.md): the method this delegates to.
 - [`StreamPlotAccessor::line`](line.md): the canonical explanation of this accessor's
   shared naming/row-label mechanics.
 - [`StreamPlotAccessor::hist`](hist.md): bars over binned value ranges instead of one bar

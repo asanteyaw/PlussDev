@@ -9,7 +9,7 @@
 
 ```cpp
 SlotCastAccessor Slot::cast() const
-SlotCastAccessor Slot::cast(const pluss::table::SlateCastOptions& options) const
+SlotCastAccessor Slot::cast(const pluss::table::ShelfCastOptions& options) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ same regardless of how many values the slot holds, including exactly one
 
 ## Parameters
 
-**options** (`pluss::table::SlateCastOptions`, optional)
+**options** (`pluss::table::ShelfCastOptions`, optional)
     `series_dtype` (default `std::nullopt`, meaning "infer"), `format`
     (a parse pattern for text-to-datetime casts), and `invalid` (how to
     handle unparseable input — `ParseInvalid::Raise` by default).
@@ -54,7 +54,7 @@ Example 2. Pass `options` to force a specific target dtype.
 
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
-pluss::table::SlateCastOptions options;
+pluss::table::ShelfCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Float64;
 auto out = slot.cast(options).series();
 std::cout << std::get<pluss::Series>(out.at(0)).host<double>()[0];

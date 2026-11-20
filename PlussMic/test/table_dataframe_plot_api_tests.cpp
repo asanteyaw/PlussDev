@@ -11,7 +11,7 @@ namespace {
 
 using pluss::pl::TraceKind;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
@@ -38,20 +38,20 @@ void expect_throw(Fn&& fn, std::string_view message) {
 
 DataFrame make_xy_frame() {
   return DataFrame({
-      {"x", Slate(pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}))},
-      {"y", Slate(pluss::make_series(std::vector<double>{1.0, 1.4, 2.2, 3.0}))},
-      {"z", Slate(pluss::make_series(std::vector<double>{0.8, 1.0, 1.6, 2.4}))},
-      {"grp", Slate(pluss::make_note({"alpha", "alpha", "beta", "beta"}))},
+      {"x", Shelf(pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}))},
+      {"y", Shelf(pluss::make_series(std::vector<double>{1.0, 1.4, 2.2, 3.0}))},
+      {"z", Shelf(pluss::make_series(std::vector<double>{0.8, 1.0, 1.6, 2.4}))},
+      {"grp", Shelf(pluss::make_note({"alpha", "alpha", "beta", "beta"}))},
   });
 }
 
 DataFrame make_wide_numeric_frame(std::int64_t nfeatures) {
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(static_cast<std::size_t>(nfeatures));
   for (const auto idx : std::views::iota(std::int64_t{0}, nfeatures)) {
     columns.emplace_back(
         "f" + std::to_string(idx + 1),
-        Slate(pluss::make_series(std::vector<double>{
+        Shelf(pluss::make_series(std::vector<double>{
             static_cast<double>(idx),
             static_cast<double>(idx + 1),
             static_cast<double>(idx + 2),
@@ -61,63 +61,63 @@ DataFrame make_wide_numeric_frame(std::int64_t nfeatures) {
   return DataFrame(std::move(columns));
 }
 
-void test_slate_plot_apis() {
-  const auto x = Slate(pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0})).name("x");
-  const auto y = Slate(pluss::make_series(std::vector<double>{1.0, 1.4, 2.2, 3.0}))
-                     .label().set(Slate(pluss::make_note({"r0", "r1", "r2", "r3"})))
+void test_shelf_plot_apis() {
+  const auto x = Shelf(pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0})).name("x");
+  const auto y = Shelf(pluss::make_series(std::vector<double>{1.0, 1.4, 2.2, 3.0}))
+                     .label().set(Shelf(pluss::make_note({"r0", "r1", "r2", "r3"})))
                      .name("y");
-  const auto grp = Slate(pluss::make_note({"alpha", "alpha", "beta", "beta"})).name("grp");
+  const auto grp = Shelf(pluss::make_note({"alpha", "alpha", "beta", "beta"})).name("grp");
 
   const auto fig_line = y.plot().line(x);
-  expect(fig_line.panes().front().trace_count() == 1, "slate.plot().line(x) should emit one trace");
+  expect(fig_line.panes().front().trace_count() == 1, "shelf.plot().line(x) should emit one trace");
   expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
-         "slate.plot().line(x) should emit trend trace");
+         "shelf.plot().line(x) should emit trend trace");
 
   const auto fig_bar = y.plot().bar();
-  expect(fig_bar.panes().front().trace_count() == 1, "slate.plot().bar should emit one trace");
+  expect(fig_bar.panes().front().trace_count() == 1, "shelf.plot().bar should emit one trace");
   expect(fig_bar.panes().front().traces().front().kind() == TraceKind::Columns,
-         "slate.plot().bar should emit columns trace");
+         "shelf.plot().bar should emit columns trace");
 
   const auto fig_hist = y.plot().hist(7);
-  expect(fig_hist.panes().front().trace_count() == 1, "slate.plot().hist should emit one trace");
+  expect(fig_hist.panes().front().trace_count() == 1, "shelf.plot().hist should emit one trace");
   expect(fig_hist.panes().front().traces().front().kind() == TraceKind::Bucket,
-         "slate.plot().hist should emit bucket trace");
+         "shelf.plot().hist should emit bucket trace");
 
   const auto fig_density = y.plot().density(64);
-  expect(fig_density.panes().front().trace_count() == 1, "slate.plot().density should emit one trace");
+  expect(fig_density.panes().front().trace_count() == 1, "shelf.plot().density should emit one trace");
   expect(fig_density.panes().front().traces().front().kind() == TraceKind::Trend,
-         "slate.plot().density should emit trend trace");
+         "shelf.plot().density should emit trend trace");
 
   const auto fig_pie = y.plot().pie(grp);
-  expect(fig_pie.panes().front().trace_count() == 1, "slate.plot().pie(labels) should emit one trace");
+  expect(fig_pie.panes().front().trace_count() == 1, "shelf.plot().pie(labels) should emit one trace");
   expect(fig_pie.panes().front().traces().front().kind() == TraceKind::Wedge,
-         "slate.plot().pie(labels) should emit wedge trace");
+         "shelf.plot().pie(labels) should emit wedge trace");
 
   const auto fig_scatter = y.plot().scatter(x, grp);
-  expect(fig_scatter.panes().front().trace_count() == 2, "slate.plot().scatter(x, hue) should split by hue");
+  expect(fig_scatter.panes().front().trace_count() == 2, "shelf.plot().scatter(x, hue) should split by hue");
   expect(fig_scatter.panes().front().traces().front().kind() == TraceKind::Cloud,
-         "slate.plot().scatter(x, hue) should emit cloud trace");
+         "shelf.plot().scatter(x, hue) should emit cloud trace");
 
   const auto fig_lag = y.plot().lag();
-  expect(fig_lag.panes().front().trace_count() == 1, "slate.plot().lag should emit one trace");
+  expect(fig_lag.panes().front().trace_count() == 1, "shelf.plot().lag should emit one trace");
   expect(fig_lag.panes().front().traces().front().kind() == TraceKind::Cloud,
-         "slate.plot().lag should emit cloud trace");
+         "shelf.plot().lag should emit cloud trace");
 
   const auto fig_act = y.plot().act();
-  expect(fig_act.panes().front().trace_count() >= 1, "slate.plot().act should emit at least one trace");
+  expect(fig_act.panes().front().trace_count() >= 1, "shelf.plot().act should emit at least one trace");
   expect(fig_act.panes().front().traces().front().kind() == TraceKind::Spike,
-         "slate.plot().act should emit spike trace first");
+         "shelf.plot().act should emit spike trace first");
 
   const auto fig_bootstrap = y.plot().bootstrap();
   expect(fig_bootstrap.panes().front().trace_count() == 1,
-         "slate.plot().bootstrap should emit one trace");
+         "shelf.plot().bootstrap should emit one trace");
   expect(fig_bootstrap.panes().front().traces().front().kind() == TraceKind::Bucket,
-         "slate.plot().bootstrap should emit bucket trace");
+         "shelf.plot().bootstrap should emit bucket trace");
 
   const auto fig_auto = y.plot().auto_plot();
-  expect(fig_auto.panes().front().trace_count() == 1, "slate.plot().auto_plot should emit one trace");
+  expect(fig_auto.panes().front().trace_count() == 1, "shelf.plot().auto_plot should emit one trace");
   expect(fig_auto.panes().front().traces().front().kind() == TraceKind::Columns,
-         "slate.plot().auto_plot should prefer columns for short labeled threads");
+         "shelf.plot().auto_plot should prefer columns for short labeled threads");
 }
 
 void test_object_plot_apis() {
@@ -238,17 +238,17 @@ void test_scatter_heatmap_and_validation() {
         pluss::table::ScatterPlotOptions bad_fit_options;
         bad_fit_options.fit_line = true;
         const auto single_row = DataFrame({
-            {"x", Slate(pluss::make_series(std::vector<double>{0.0}))},
-            {"y", Slate(pluss::make_series(std::vector<double>{1.0}))},
+            {"x", Shelf(pluss::make_series(std::vector<double>{0.0}))},
+            {"y", Shelf(pluss::make_series(std::vector<double>{1.0}))},
         });
         (void)single_row.plot().scatter("x", "y", std::nullopt, bad_fit_options);
       },
       "plot().scatter with fit_line=true and fewer than two points should throw");
 
   const auto surface = DataFrame({
-      {"maturity", Slate(pluss::make_note({"1M", "1M", "3M", "3M"}))},
-      {"delta_bucket", Slate(pluss::make_note({"25P", "ATM", "25P", "ATM"}))},
-      {"implied_vol", Slate(pluss::make_series(std::vector<double>{0.30, 0.25, 0.33, 0.28}))},
+      {"maturity", Shelf(pluss::make_note({"1M", "1M", "3M", "3M"}))},
+      {"delta_bucket", Shelf(pluss::make_note({"25P", "ATM", "25P", "ATM"}))},
+      {"implied_vol", Shelf(pluss::make_series(std::vector<double>{0.30, 0.25, 0.33, 0.28}))},
   });
   const auto fig_heatmap = surface.plot().heatmap("maturity", "delta_bucket", "implied_vol");
   expect(fig_heatmap.panes().front().trace_count() == 1, "plot().heatmap(pivot) should emit one trace");
@@ -415,9 +415,9 @@ void test_corr_methods_and_plot3d() {
          "plot3d().line should emit path3 trace");
 
   const auto grid = DataFrame({
-      {"gx", Slate(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0}))},
-      {"gy", Slate(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}))},
-      {"gz", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+      {"gx", Shelf(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0}))},
+      {"gy", Shelf(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}))},
+      {"gz", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
   });
   const auto fig_surface = grid.plot3d().surface("gx", "gy", "gz");
   expect(fig_surface.panes().front().traces().front().kind() == TraceKind::Sheet,
@@ -431,7 +431,7 @@ void test_corr_methods_and_plot3d() {
 } // namespace
 
 int main() {
-  test_slate_plot_apis();
+  test_shelf_plot_apis();
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();
   test_scatter_matrix_guardrails();

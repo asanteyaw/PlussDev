@@ -25,8 +25,8 @@ for every method's own dedicated page.
 ```{important} Requires the stream itself to be Timeline- or TimeIndex-kind
 Same pattern as [`Catalog::tl()`](../catalog/tl.md) — `tl()` accepts both
 `Timeline`-kind and `TimeIndex`-kind streams uniformly. Calling any method on a
-`Series`/`Note` stream throws `"Slate::tl: expected Timeline or TimeIndex
-payload"`. Cast first with [`Stream::cast(SlateCastTarget::Timeline)`](cast.md)
+`Series`/`Note` stream throws `"Shelf::tl: expected Timeline or TimeIndex
+payload"`. Cast first with [`Stream::cast(ShelfCastTarget::Timeline)`](cast.md)
 if the stream isn't already a timestamp.
 ```
 
@@ -73,7 +73,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1.0}));
 try {
   auto out = stream.tl().year();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -81,7 +81,7 @@ try {
 ### Output
 
 ```text
-Slate::tl: expected Timeline or TimeIndex payload
+Shelf::tl: expected Timeline payload
 ```
 
 ## Notes

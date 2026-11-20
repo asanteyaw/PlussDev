@@ -57,8 +57,8 @@ int main() {
   try {
     (void)shop.link(dup);
     std::cout << "duplicate link: did not throw\n";
-  } catch (const std::exception& e) {
-    std::string msg = e.what();
+  } catch (const pluss::Error& e) {
+    std::string msg = e.message();
     std::cout << "duplicate link threw: " << msg.substr(0, msg.find('\n')) << '\n';
   }
 

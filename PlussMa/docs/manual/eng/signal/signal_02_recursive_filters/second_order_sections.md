@@ -6,7 +6,7 @@
 
 You have designed a filter of high order, a sharp low-pass for example, and you want to run it. This page shows why a single pair of coefficient vectors stops being usable at moderate orders, and how a cascade of second-order sections, run by `sos`, stays accurate at any order. It also shows the section matrix format, so that you can build a cascade yourself.
 
-## The mental model
+## How it works
 
 A filter of order `p` has `p` poles. Written as one `numerator` and one `denominator`, its coefficients are the coefficients of a polynomial whose roots are those poles. The roots of a polynomial of high degree are extremely sensitive to the coefficients: a relative change in the 16th digit of one coefficient can move a root a long way. For a narrow low-pass filter the poles are clustered near `z = 1`, which is the worst case. Rounding the coefficients to double precision is enough to push a pole outside the unit circle.
 

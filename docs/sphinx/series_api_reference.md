@@ -44,11 +44,7 @@ misread.
 
 ## Broader Usage Guides
 
-- [`series.md`](series.md): usage-first tour of common `Series` workflows.
-- [`series_query_user_guide.md`](series_query_user_guide.md): deeper walkthroughs
-  for `traverse`, `stat`, and `linearalg`.
-- [`series_all_methods_usage.md`](series_all_methods_usage.md): the broad legacy
-  cookbook while the handwritten rewrite expands.
+- The PlussQit guide, *Series by example*, shows the methods combined in complete programs.
 
 ```{toctree}
 :maxdepth: 1

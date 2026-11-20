@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameCaseStudyAccessor::where(const Slate& values) const
+DataFrame DataFrameCaseStudyAccessor::where(const Shelf& values) const
 DataFrame DataFrameCaseStudyAccessor::where(const pluss::Series& values) const
 ```
 
@@ -21,9 +21,9 @@ and every feature is retained until an optional chained `features(...)` projecti
 
 The two overloads differ in alignment. A bare `Series` is strictly positional: it must
 be 1D, `Bool`-dtype, and contain exactly one value per source case, or the call
-throws. A `Slate` is a table-aware mask: its case labels are aligned to the frame's
+throws. A `Shelf` is a table-aware mask: its case labels are aligned to the frame's
 case axis before filtering, and invalid mask lanes are treated as `false`. Prefer the
-`Slate` form when the predicate came from a frame feature or another labeled table
+`Shelf` form when the predicate came from a frame feature or another labeled table
 operation; prefer the `Series` form when an exact positional match is the intended
 contract and a length mismatch should be a hard error rather than silently aligned.
 
@@ -33,8 +33,8 @@ the same filtering kernel.
 
 ## Parameters
 
-**values** (`const Slate&` / `const pluss::Series&`)
-    The Boolean mask. The `Slate` overload must be `Series`-kind with `Bool` dtype
+**values** (`const Shelf&` / `const pluss::Series&`)
+    The Boolean mask. The `Shelf` overload must be `Series`-kind with `Bool` dtype
     and is aligned to the frame's case axis before filtering (a lane with no aligned
     source value is treated as `false`). The `Series` overload must be 1D, `Bool`
     dtype, and exactly `ncases()` long, or the call throws.
@@ -48,14 +48,14 @@ the same filtering kernel.
 
 ## Examples
 
-Example 1. A `Slate` mask built from a frame feature's own comparison — the common
+Example 1. A `Shelf` mask built from a frame feature's own comparison — the common
 case, since the mask and the frame already share a case axis.
 
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
-    {"units", Slate(pluss::make_series({10, 7, 12, 5}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
+    {"units", Shelf(pluss::make_series({10, 7, 12, 5}))},
 });
 
 auto busy = frame.case_study().where(frame.features("units") >= 10)
@@ -117,8 +117,8 @@ to audit.
 ```cpp
 try {
   (void)frame.case_study().where(pluss::make_series({1, 0, 1, 0}));
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -129,14 +129,14 @@ DataFrame::filter: mask dtype must be Bool
 ```
 
 Example 5. The `Series` overload's length must match `ncases()` exactly — unlike the
-`Slate` overload's case-label alignment, a shorter or longer mask is a hard error,
+`Shelf` overload's case-label alignment, a shorter or longer mask is a hard error,
 never silently truncated or padded.
 
 ```cpp
 try {
   (void)frame.case_study().where(pluss::make_series({true, false}));
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -150,7 +150,7 @@ DataFrame::filter: mask length mismatch
 
 - The `Series` overload is strictly positional: 1D, `Bool` dtype, exactly `ncases()`
   elements, or it throws. It never aligns by case label and never silently resizes.
-- The `Slate` overload aligns by case label instead of requiring an exact length
+- The `Shelf` overload aligns by case label instead of requiring an exact length
   match; a mask lane with no corresponding source case is simply treated as `false`.
   Prefer it when the mask came from the frame itself (a comparison, another table
   operation) rather than a hand-built buffer.

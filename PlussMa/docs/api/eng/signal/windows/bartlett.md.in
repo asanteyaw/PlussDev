@@ -1,5 +1,7 @@
 # `signal::bartlett`
 
+Creates the triangular window that rises linearly to a single peak and falls linearly back.
+
 ## Signature
 
 ```cpp
@@ -10,15 +12,15 @@ pluss::Series signal::bartlett(
 
 ## What It Does
 
-Creates a triangular Bartlett taper. In symmetric mode, ordinary lengths greater than one reach zero at both endpoints and peak near the center.
+The symmetric Bartlett window is `w[i] = 1 - |2 i / (n - 1) - 1|`: zero at both ends and one at the centre when `n` is odd. For an even `n` the two middle coefficients share the peak and are slightly below one; the periodic form places the peak exactly on a coefficient.
 
 ## Parameters
 
 `size`
-: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+: Number of coefficients. Zero returns an empty rank-one `Series`; one returns the single coefficient `1`.
 
 `options`
-: Endpoint, dtype, and platform policy. Bartlett is a piecewise-linear taper. It suppresses leakage more than `boxcar` while broadening the main spectral lobe.
+: A `WindowOptions`: the endpoint convention (`mode`), the floating dtype and the platform. The default is a symmetric float64 window on the CPU.
 
 ## Returns
 
@@ -26,29 +28,40 @@ A rank-one floating `Series` of length `size`, allocated with the requested dtyp
 
 ## Errors
 
-Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+A negative `size`, a dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype (float64 on the MPS) throw `pluss::Error`.
+
+## Interpretation and Use
+
+The coherent gain tends to one half as `n` grows and the mean square to one third. The fourth example measures a main lobe of 2 bins and a highest sidelobe 26.51 dB below the main lobe: wider than the boxcar window and much better suppressed. Use it when a simple, strictly non-negative taper is wanted.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+Eight coefficients in both modes, and the closed form.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_bartlett_values.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Coherent gain and mean square at three lengths.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_bartlett_gain.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Every refused input and the size-zero and size-one cases.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_bartlett_errors.cpp@@
+
+### Example 4
+
+The spectrum of a 64-point window: main-lobe width and highest sidelobe.
+
+@@example Eng/api/signal_bartlett_spectrum.cpp@@
+
 
 ## See Also
 

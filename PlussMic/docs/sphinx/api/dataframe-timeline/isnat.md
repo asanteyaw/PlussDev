@@ -35,7 +35,7 @@ Example 1. Flag which rows of a `Timeline` feature are `NaT`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-10T08:00:00Z",
           "",
           "2024-03-05T17:30:00Z",
@@ -49,13 +49,13 @@ std::cout << out;
 ### Output (before)
 
 ```text
-==========================
-     | ts                 
---------------------------
-0    | 2024-01-10 08:00:00
-1    | NULL               
-2    | 2024-03-05 17:30:00
---------------------------
+=============================
+     | ts                    
+-----------------------------
+0    | 2024-01-10 08:00:00.0~
+1    | NaT                   
+2    | 2024-03-05 17:30:00.0~
+-----------------------------
 [3 cs x 1 feat]
 ```
 

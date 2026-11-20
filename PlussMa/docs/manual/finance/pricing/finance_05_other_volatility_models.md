@@ -6,7 +6,7 @@ Heston and Bates are one family of stochastic-volatility models. This chapter pr
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **SABR has a closed-form smile.** The `Analytic` engine of a SABR field prices with Black's formula at the SABR volatility, and the field's `implied_vol()` returns that volatility; the `MonteCarlo` engine simulates.
 - **Rough models are simulated.** `RoughHeston` and `RoughBergomi` fields take the same `controls.mc` as the earlier chapters.

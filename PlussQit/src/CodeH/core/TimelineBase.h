@@ -274,8 +274,8 @@ public:
   bool quarter_end_scalar() const;
   bool is_weekend_scalar() const;
 
-  std::string weekday_name(bool abbreviated = false) const;
-  std::string month_name(bool abbreviated = false) const;
+  std::string weekday_name(bool abbreviated) const;
+  std::string month_name(bool abbreviated) const;
 
   // Immutable "setters" for compatibility with the old Timeline API.
   Timeline set_year(int year) const;

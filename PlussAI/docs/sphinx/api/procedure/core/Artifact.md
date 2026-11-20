@@ -2,7 +2,7 @@
 
 A named, type-erased value flowing between [`Step`](Step.md)s -- a closed
 variant over every type a [`Procedure`](Procedure.md) can carry (`Series`,
-`DataFrame`, `Note`, `Slate`, every `lymph`/`ice`/`nlp` payload and report
+`DataFrame`, `Note`, `Shelf`, every `lymph`/`ice`/`nlp` payload and report
 type, plus a handful of scalar primitives). Built with
 [`procedure::input`](../build/input.md) for a run's initial inputs, or
 produced by a step's own [`run`](Step/run.md).

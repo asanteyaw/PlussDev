@@ -50,8 +50,8 @@ Example 1. A plain positional interval.
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
-    {"units", Slate(pluss::make_series({10, 7, 12, 5}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
+    {"units", Shelf(pluss::make_series({10, 7, 12, 5}))},
 });
 
 auto middle = frame.case_study().slice(1, 3);

@@ -30,19 +30,69 @@ from white (`rgb(255,255,255)`) at index `0` to `color` at index `n - 1`.
 
 ## Examples
 
-Example 1. A ramp toward a mid-tone blue.
+The examples share one small helper that prints the number of stops and the first and last colour of a ramp as red, green, blue between 0 and 255.
 
 ```cpp
 using namespace pluss::pl;
 
-auto light = flash::light_palette(Rgba::from_u8(30, 80, 200), 6);
-std::cout << "light_palette stops=" << light.stops().size() << " first(white-ish)=" << (light.stops()[0].red > 0.9) << "\n";
+auto describe = [](const PaletteRamp &ramp) {
+  auto c = [](const Rgba &x) {
+    return "(" + std::to_string(static_cast<int>(x.red * 255 + 0.5)) + ", " + std::to_string(static_cast<int>(x.green * 255 + 0.5)) + ", " +
+           std::to_string(static_cast<int>(x.blue * 255 + 0.5)) + ")";
+  };
+  const auto &s = ramp.stops();
+  std::cout << s.size() << " stops; first " << c(s.front()) << ", last " << c(s.back()) << "\n";
+};
+const auto blue = Rgba::from_u8(30, 80, 200);
+const auto red = Rgba::from_u8(200, 40, 40);
+```
+
+Example 1. The default six stops, from white to the target colour.
+
+```cpp
+describe(flash::light_palette(blue));
 ```
 
 Output:
 
 ```text
-light_palette stops=6 first(white-ish)=1
+6 stops; first (255, 255, 255), last (30, 80, 200)
+```
+
+Example 2. Three stops: the two ends and one midpoint.
+
+```cpp
+describe(flash::light_palette(blue, 3));
+```
+
+Output:
+
+```text
+3 stops; first (255, 255, 255), last (30, 80, 200)
+```
+
+Example 3. A longer ramp toward a different colour.
+
+```cpp
+describe(flash::light_palette(red, 10));
+```
+
+Output:
+
+```text
+10 stops; first (255, 255, 255), last (200, 40, 40)
+```
+
+Example 4. Fewer than two stops is refused.
+
+```cpp
+try { flash::light_palette(blue, 1); } catch (const pluss::Error &e) { std::cout << e.message() << "\n"; }
+```
+
+Output:
+
+```text
+flash::light_palette: n must be at least 2
 ```
 
 ## Notes

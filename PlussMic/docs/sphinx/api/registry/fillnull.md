@@ -88,8 +88,8 @@ auto mixed = pluss::scribble::Registry({
 
 try {
   auto out = mixed.fillnull(99.0);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -128,6 +128,7 @@ std::cout << out.fields("city").to_json();
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - See the important callout above — this is the single most surprising thing
   about `Registry::fillnull()`: it can throw on fields that don't even have
   nulls, because it applies unconditionally to every field.
@@ -147,12 +148,12 @@ std::cout << out.fields("city").to_json();
   kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fields.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">fields</span>
+    <span class="title">fillneginf</span>
   </a>
-  <a class="next-link" href="freq.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">freq</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

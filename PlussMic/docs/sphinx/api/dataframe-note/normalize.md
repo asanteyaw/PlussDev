@@ -73,7 +73,7 @@ of whether this build links the Unicode backend.
 using namespace pluss::table;
 
 auto titles = DataFrame({
-    {"title", Slate(pluss::make_note(
+    {"title", Shelf(pluss::make_note(
         {"Hello World", "ASCII text only", "x"}),
         pluss::make_series(std::vector<bool>{true, true, false}))},
 });
@@ -87,6 +87,13 @@ std::cout << out1;
 
 ```text
 ======================
+     | title          
+----------------------
+0    | Hello World    
+1    | ASCII text only
+2    | NULL           
+----------------------
+[3 cs x 1 feat]======================
      | title          
 ----------------------
 0    | Hello World    
@@ -121,20 +128,20 @@ the important callout above).
 
 ```cpp
 auto accented = DataFrame({
-    {"word", Slate(pluss::make_note({"caf\xC3\xA9"}))},  // "café"
+    {"word", Shelf(pluss::make_note({"caf\xC3\xA9"}))},  // "café"
 });
 
 try {
   auto out3 = accented.nt().normalize();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output (build without the Unicode backend)
 
 ```text
-Note::normalize: non-ASCII text requires a Unicode backend
+
 ```
 
 A build with libunistring linked would instead perform genuine Unicode

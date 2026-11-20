@@ -44,12 +44,12 @@ Example 1. Apply the same per-frame transform (here, `head(1)`) across the whole
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({4.0, 5.0, 6.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Shelf(pluss::make_note({"jan", "feb"})));
 
 auto out = atlas.map_frames([](const pluss::table::DataFrame& df) { return df.head(1); });
 std::cout << "out depth: " << out.depth() << "\n";
@@ -75,10 +75,10 @@ resulting atlas is built — see the important callout above.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({4.0, 5.0, 6.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
@@ -88,8 +88,8 @@ try {
     ++calls;
     return calls == 1 ? df.head(1) : df;
   });
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -108,7 +108,7 @@ Atlas: all frames must have identical row count (strict cube)
 
 ## See Also
 
-- [`Atlas::aggregate_over_frames`](aggregate_over_frames.md): reduce every frame down to a
+- [`Atlas::aggregate_depth`](aggregate_depth.md): reduce every frame down to a
   single `DataFrame`, instead of transforming each one independently.
 - [`Atlas::flow`](flow.md): transform the whole `Atlas` in one call, instead of per-frame.
 - [`Archive::map_catalogs`](../archive/map_catalogs.md): the depth-stacked-catalog analog

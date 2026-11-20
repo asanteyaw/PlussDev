@@ -614,7 +614,7 @@ Nexus build_nexus(const detail::LocusImpl& src, const TabelizePolicy& policy) {
   {
     std::lock_guard<std::mutex> lock(cache.mutex);
     for (std::size_t i = 0; i < src.keys_.size(); ++i) {
-      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
+      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].stamp(), pkey);
       used.insert(key);
       const auto it = cache.entries.find(key);
       if (it != cache.entries.end()) {
@@ -635,7 +635,7 @@ Nexus build_nexus(const detail::LocusImpl& src, const TabelizePolicy& policy) {
   {
     std::lock_guard<std::mutex> lock(cache.mutex);
     for (const auto i : todo) {
-      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
+      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].stamp(), pkey);
       cache.entries.insert_or_assign(key, detail::FrameCache::Entry{src.catalogs_[i], frames[i]});
       ++cache.misses;
     }
@@ -816,6 +816,102 @@ Locus Locus::apply(std::string_view name, const CatalogFn& fn) const {
   auto out = clone_();
   out.apply_(name, fn);
   return out;
+}
+
+Locus Locus::isnull() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.isnull(); });
+}
+
+Locus Locus::notnull() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.notnull(); });
+}
+
+Locus Locus::invalid() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.invalid(); });
+}
+
+Locus Locus::isnan() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.isnan(); });
+}
+
+Locus Locus::notnan() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.notnan(); });
+}
+
+Locus Locus::isinf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.isinf(); });
+}
+
+Locus Locus::isposinf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.isposinf(); });
+}
+
+Locus Locus::isneginf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.isneginf(); });
+}
+
+Locus Locus::notinf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.notinf(); });
+}
+
+Locus Locus::dropnull() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropnull(); });
+}
+
+Locus Locus::dropnan() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropnan(); });
+}
+
+Locus Locus::dropinvalid() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropinvalid(); });
+}
+
+Locus Locus::dropinf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropinf(); });
+}
+
+Locus Locus::dropposinf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropposinf(); });
+}
+
+Locus Locus::dropneginf() const {
+  return apply_all([](const pluss::kindle::Catalog& c) { return c.dropneginf(); });
+}
+
+Locus Locus::fillnull(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillnull(value); });
+}
+
+Locus Locus::fillnull(std::string_view value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillnull(value); });
+}
+
+Locus Locus::fillnull(const pluss::Timeline& value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillnull(value); });
+}
+
+Locus Locus::fillnull(const pluss::Duration& value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillnull(value); });
+}
+
+Locus Locus::fillnan(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillnan(value); });
+}
+
+Locus Locus::fillinvalid(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillinvalid(value); });
+}
+
+Locus Locus::fillinf(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillinf(value); });
+}
+
+Locus Locus::fillposinf(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillposinf(value); });
+}
+
+Locus Locus::fillneginf(double value) const {
+  return apply_all([&value](const pluss::kindle::Catalog& c) { return c.fillneginf(value); });
 }
 
 Locus Locus::apply_all(const CatalogFn& fn) const {
@@ -1043,9 +1139,9 @@ void Locus::save(std::string_view directory, const locus::StoreOptions& options)
     for (const auto& name : stores()) plans.emplace_back(name, src.plans_.at(name));
     bundle::store::views_frame(plans).save_csv((root / options.views).string());
   }
-  auto text = [](const std::string& v) { return pluss::table::Slate(pluss::make_note(std::vector<std::string>{v})); };
+  auto text = [](const std::string& v) { return pluss::table::Shelf(pluss::make_note(std::vector<std::string>{v})); };
   auto count = [](std::int64_t v) {
-    return pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{v}, {1}));
+    return pluss::table::Shelf(pluss::make_series(std::vector<std::int64_t>{v}, {1}));
   };
   pluss::table::DataFrame({
       {"kind", text(kind)},

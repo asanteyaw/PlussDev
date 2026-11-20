@@ -288,6 +288,14 @@ struct StyleOptions {
   // ---- Per-kind marks (pt unless stated; shares are of the quantity named). -----------------------------------------
   // Fieldmap: the value written in a cell, and what is done for a field with no spread.
   double field_label_font_pt{10.0}; // size of the value written in a cell of a labelled heat map
+  double cloud_thin_threshold{20000.0}; // an opaque uniform cloud with more markers than this draws one per cell
+  double cloud_thin_cell_diameters{0.7}; // the width of that cell, in marker diameters
+  double tick_label_spacing_factor{1.15}; // supplied x labels wider than their spacing divided by this are thinned to every k-th
+  double line_decimation_points_per_pt{4.0}; // a line with more vertices than this many per point of plot width is drawn from its envelope
+  double line_decimation_bucket_pt{0.5}; // width of the column the envelope keeps the first, lowest, highest and last vertex of
+  double field_label_min_font_pt{5.0}; // smallest size a cell value is written at; a smaller cell is left unlabelled
+  double field_label_height_share{0.8}; // share of a cell's height a written value may fill
+  double field_label_width_share{0.9}; // share of a cell's width a written value may fill
   double field_label_luma_threshold{0.55}; // a lighter cell gets the dark label, a darker one the light label
   Rgba field_label_on_light = Rgba::from_u8(24, 23, 21); // colour of a cell label on a light cell
   Rgba field_label_on_dark = Rgba::from_u8(248, 247, 244); // colour of a cell label on a dark cell
@@ -657,6 +665,14 @@ struct StyleOptions {
   if (!std::isfinite(o.volume_cue_label_offset_x_em)) return "volume_cue_label_offset_x_em";
   if (!std::isfinite(o.volume_cue_label_offset_y_em)) return "volume_cue_label_offset_y_em";
   if (!std::isfinite(o.field_label_font_pt)) return "field_label_font_pt";
+  if (!std::isfinite(o.field_label_min_font_pt)) return "field_label_min_font_pt";
+  if (!std::isfinite(o.cloud_thin_threshold)) return "cloud_thin_threshold";
+  if (!std::isfinite(o.cloud_thin_cell_diameters)) return "cloud_thin_cell_diameters";
+  if (!std::isfinite(o.tick_label_spacing_factor)) return "tick_label_spacing_factor";
+  if (!std::isfinite(o.line_decimation_points_per_pt)) return "line_decimation_points_per_pt";
+  if (!std::isfinite(o.line_decimation_bucket_pt)) return "line_decimation_bucket_pt";
+  if (!std::isfinite(o.field_label_height_share)) return "field_label_height_share";
+  if (!std::isfinite(o.field_label_width_share)) return "field_label_width_share";
   if (!std::isfinite(o.field_label_luma_threshold)) return "field_label_luma_threshold";
   if (!std::isfinite(o.field_label_on_light.red) || !std::isfinite(o.field_label_on_light.green) || !std::isfinite(o.field_label_on_light.blue) || !std::isfinite(o.field_label_on_light.alpha)) return "field_label_on_light";
   if (!std::isfinite(o.field_label_on_dark.red) || !std::isfinite(o.field_label_on_dark.green) || !std::isfinite(o.field_label_on_dark.blue) || !std::isfinite(o.field_label_on_dark.alpha)) return "field_label_on_dark";

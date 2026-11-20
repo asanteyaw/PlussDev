@@ -18,8 +18,8 @@ pluss::pl::Studio StreamPlotAccessor::scatter(const Stream& x, const Stream& hue
 
 Draws one point per row at `(x, value)`, where `value` is the bound stream, optionally
 split into separate, distinctly colored/labeled point groups by a companion `hue` stream.
-Every overload forwards to [`SlatePlotAccessor::scatter`](../slate-plot/scatter.md) after
-`Stream::to_slate()`.
+Every overload forwards to [`ShelfPlotAccessor::scatter`](../shelf-plot/scatter.md) after
+`Stream::to_shelf()`.
 
 Unlike every other method on this accessor, `scatter()` has **no zero-argument overload** —
 `x` is always required, since a scatter plot needs two independent axes, not one axis plus
@@ -28,7 +28,7 @@ a case index the way [`line()`](line.md)/[`bar()`](bar.md) fall back to.
 See [`line()`](line.md)'s important callouts for the shared naming and row-label
 inheritance rules — here, `x` always wraps to a column named `"x"` and `hue` always wraps
 to a column named `"hue"` (`Stream` has no `name()` to override either, unlike the
-equivalent `Slate`-level method).
+equivalent `Shelf`-level method).
 
 ```{important} hue must be Note-, Timeline-, or TimeIndex-kind, same as the 2D accessor
 Because `scatter()` ultimately delegates to
@@ -43,7 +43,7 @@ since `Stream` never contributes one. See Example 5.
 
 **x** (`const Stream&`, required)
     The companion stream for the horizontal axis. Must match the bound stream's size, or
-    the call throws `"Slate::plot: slate size mismatch"` — see Example 6.
+    the call throws `"Shelf::plot: shelf size mismatch"` — see Example 6.
 
 **hue** (`const Stream&`, optional)
     Optional companion stream splitting points into separate colored/labeled groups. Must
@@ -142,8 +142,8 @@ auto final_score = Stream(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0}));
 
 try {
   auto bad = midterm.plot().scatter(final_score, final_score);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -163,15 +163,15 @@ auto short_final = Stream(pluss::make_series({75.0, 85.0}));
 
 try {
   auto bad = midterm.plot().scatter(short_final);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::plot: slate size mismatch
+Shelf::plot: shelf size mismatch
 ```
 
 ## Notes
@@ -179,7 +179,7 @@ Slate::plot: slate size mismatch
 - `x` is required, non-optional — there is no case-index fallback the way
   `line()`/`bar()`/etc. have.
 - Both `x` and `hue` always wrap to the generic fallback names `"x"`/`"hue"` — `Stream` has
-  no `name()`/`named()` the way `Slate` does, so the throw message in Example 5 always
+  no `name()`/`named()` the way `Shelf` does, so the throw message in Example 5 always
   says `'hue'` literally, never a name derived from the stream you passed.
 - `hue` must be Note-, Timeline-, or TimeIndex-kind, or the call throws — see Example 5.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md)'s important callouts for how to
@@ -187,7 +187,7 @@ Slate::plot: slate size mismatch
 
 ## See Also
 
-- [`SlatePlotAccessor::scatter`](../slate-plot/scatter.md): the method this delegates to.
+- [`ShelfPlotAccessor::scatter`](../shelf-plot/scatter.md): the method this delegates to.
 - [`StreamPlotAccessor::line`](line.md): the canonical explanation of this accessor's
   shared naming/row-label mechanics.
 

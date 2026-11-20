@@ -115,9 +115,9 @@ region                   | Series       | Series[int64]    | 2       | [3, 1]
 - [`Catalog::ndistinct`](ndistinct.md): just the count of distinct values per stream.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="grep.html">
+  <a class="prev-link" href="fingerprint.html">
     <span class="label">Previous</span>
-    <span class="title">grep</span>
+    <span class="title">fingerprint</span>
   </a>
   <a class="next-link" href="from_json.html">
     <span class="label">Next</span>

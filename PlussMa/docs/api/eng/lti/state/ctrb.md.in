@@ -1,5 +1,7 @@
 # `lti::ctrb`
 
+Builds the controllability matrix.
+
 ## Signature
 
 ```cpp
@@ -8,42 +10,46 @@ pluss::Series lti::ctrb(const lti::StateSpace& system);
 
 ## What It Does
 
-Builds `[B, AB, A²B, ...]` through power `states - 1`. Full row rank means every state direction is reachable from an input over a finite horizon.
+Returns `[B, AB, A^2 B, ..., A^{n-1} B]`, an `[n, n m]` matrix. Every state can be steered to any value by some input exactly when this matrix has full row rank `n`.
 
 ## Parameters
 
 `system`
-: Valid state-space system. Continuous and discrete systems use the same algebraic controllability matrix.
+: A `StateSpace`. Continuous and discrete systems use the same matrix.
 
 ## Returns
 
-A `Series` with matrix tail `[states, states * inputs]` and the system batch axes.
+A `Series` with matrix shape `[n, n m]` and the batch axes of the system.
 
 ## Errors
 
-Construction-time validation protects matrix compatibility. Rank or conditioning interpretation remains the caller's numerical decision.
+Construction errors are raised by `state`; `ctrb` itself does not fail for a valid system. Judging the rank is left to the caller.
+
+## Interpretation and Use
+
+For a single input the matrix is square and its determinant decides: the oscillator has determinant -1 and is controllable; the decoupled system, whose second state no input reaches, has determinant 0. For a numerical rank use a singular value decomposition rather than a determinant, which is sensitive to scaling.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+The matrix and determinant of a controllable system and a system with an unreachable state.
 
-@@example Eng/api/lti_state.cpp@@
+@@example Eng/api/lti_ctrb_rank.cpp@@
 
 ### Example 2
 
-Compare energy Gramians across continuous and discrete timebases.
+The shape for one and for several inputs.
 
-@@example Eng/api/lti_gram.cpp@@
+@@example Eng/api/lti_ctrb_shape.cpp@@
 
 ### Example 3
 
-Exercise matrix-shape and sample-time validation.
+The matrix against `[B, AB]` built by hand.
 
-@@example Eng/api/lti_state_errors.cpp@@
+@@example Eng/api/lti_ctrb_power.cpp@@
 
 ## See Also
 

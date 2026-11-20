@@ -53,7 +53,7 @@ namespace detail {
 inline Series jacobian(const ModelFn &model, const Series &beta, const Series &yfit, double step) {
   const std::int64_t l = beta.size(0), p = beta.size(1), m = yfit.size(1);
   const Series norm = beta.square().sum(-1, true).sqrt();                                          // [L, 1]
-  const Series base = beta.abs().gt(0.0).where(beta.mul(step), norm.gt(0.0).where(norm, norm.mul(0.0).add(1.0)).mul(step)); // delta [L, P]
+  const Series base = pluss::series::where(beta.abs().gt(0.0), beta.mul(step), pluss::series::where(norm.gt(0.0), norm, norm.mul(0.0).add(1.0)).mul(step)); // delta [L, P]
   const Config cfg = Config{}.with_dtype(beta.scalar_type()).with_platform(beta.platform());
   const Series eye = pluss::series::eye(p, cfg);                                                    // [P, P]
   const Series perturbed = beta.unsqueeze(1).add(base.unsqueeze(-1).mul(eye.unsqueeze(0))); // [L, P, P]: row i of lane l = beta_l + delta_{l,i} e_i
@@ -106,34 +106,34 @@ inline Fit levenberg_marquardt(const ModelFn &model, const Series &y, const Seri
       const Series finite = ns.sub(ns).eq(0.0); // not NaN / inf
       const Series improved = ns.lt(sse_old).logical_and(finite);
       const Series take = improved.logical_and(done.eq(0.0)).logical_and(pending.gt(0.0));
-      trial_beta = take.unsqueeze(-1).where(nb, trial_beta);
-      trial_sse = take.where(ns, trial_sse);
-      trial_r = take.unsqueeze(-1).where(nr, trial_r);
-      step_final = take.unsqueeze(-1).where(step, step_final);
-      done = take.where(done.mul(0.0).add(1.0), done);
+      trial_beta = pluss::series::where(take.unsqueeze(-1), nb, trial_beta);
+      trial_sse = pluss::series::where(take, ns, trial_sse);
+      trial_r = pluss::series::where(take.unsqueeze(-1), nr, trial_r);
+      step_final = pluss::series::where(take.unsqueeze(-1), step, step_final);
+      done = pluss::series::where(take, done.mul(0.0).add(1.0), done);
       // the first trial of a lane that did not improve: raise lambda (the first inner pass uses the standing lambda)
       const Series fail = improved.logical_not().logical_and(done.eq(0.0)).logical_and(pending.gt(0.0));
-      lam = fail.where(lam.mul(10.0), lam);
+      lam = pluss::series::where(fail, lam.mul(10.0), lam);
       if (done.mul(pending).sum().item<double>() >= pending.sum().item<double>())
         break;
     }
     const Series stalled = pending.gt(0.0).logical_and(done.eq(0.0)); // lambda ran past 1e16 without a decrease
     const Series ok = pending.gt(0.0).logical_and(done.gt(0.0));
-    beta = ok.unsqueeze(-1).where(trial_beta, beta);
-    r = ok.unsqueeze(-1).where(trial_r, r);
-    sse = ok.where(trial_sse, sse);
+    beta = pluss::series::where(ok.unsqueeze(-1), trial_beta, beta);
+    r = pluss::series::where(ok.unsqueeze(-1), trial_r, r);
+    sse = pluss::series::where(ok, trial_sse, sse);
     yfit = data.sub(r);
     // lambda bookkeeping: after a success at the standing lambda it shrinks; after retries it keeps the raised value
     const Series first_try = lam.sub(lambda).abs().lt(1e-300);
-    lambda = ok.where(first_try.where(lambda.mul(0.1).clamp(eps, 1e300), lam), lambda);
+    lambda = pluss::series::where(ok, pluss::series::where(first_try, lambda.mul(0.1).clamp(eps, 1e300), lam), lambda);
     iters = iters.add(active);
     const Series step_norm = step_final.square().sum(-1, false).sqrt();
     const Series beta_norm = beta.square().sum(-1, false).sqrt();
     const Series tolx = step_norm.lt(beta_norm.add(detail::sqrt_eps()).mul(opt.tol_x)).logical_and(ok);
     const Series tolfun = sse.sub(sse_old).abs().le(sse.mul(opt.tol_fun)).logical_and(ok);
     const Series stop = tolx.logical_or(tolfun).logical_or(stalled);
-    converged = tolx.logical_or(tolfun).logical_and(active.gt(0.0)).where(converged.mul(0.0).add(1.0), converged);
-    active = stop.where(active.mul(0.0), active);
+    converged = pluss::series::where(tolx.logical_or(tolfun).logical_and(active.gt(0.0)), converged.mul(0.0).add(1.0), converged);
+    active = pluss::series::where(stop, active.mul(0.0), active);
   }
   Fit out;
   out.beta = beta;

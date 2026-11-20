@@ -73,18 +73,14 @@ struct Picked {
 Picked pick_margin(const Series &candidate, const Series &frequency,
                    const Series &mask, const Series &score,
                    double absent_value) {
-  const Series ranked = mask.where(
-      score,
-      pluss::series::full_like(score, std::numeric_limits<double>::infinity()));
+  const Series ranked = pluss::series::where(mask, score, pluss::series::full_like(score, std::numeric_limits<double>::infinity()));
   const Series index = ranked.argmin(-1, true);
   const Series present = mask.any(-1, false);
   const Series selected = candidate.gather(-1, index).squeeze(-1);
   const Series selected_frequency = frequency.gather(-1, index).squeeze(-1);
   return {
-      present.where(selected, pluss::series::full_like(selected, absent_value)),
-      present.where(
-          selected_frequency,
-          pluss::series::full_like(selected_frequency,
+      pluss::series::where(present, selected, pluss::series::full_like(selected, absent_value)),
+      pluss::series::where(present, selected_frequency, pluss::series::full_like(selected_frequency,
                                    std::numeric_limits<double>::quiet_NaN())),
   };
 }
@@ -93,9 +89,8 @@ Series safe_fraction(const Series &numerator, const Series &denominator,
                      double tolerance) {
   const Series usable = denominator.abs().gt(tolerance);
   const Series safe_denominator =
-      usable.where(denominator, pluss::series::ones_like(denominator));
-  return usable.where(numerator.div(safe_denominator),
-                      pluss::series::zeros_like(numerator));
+      pluss::series::where(usable, denominator, pluss::series::ones_like(denominator));
+  return pluss::series::where(usable, numerator.div(safe_denominator), pluss::series::zeros_like(numerator));
 }
 
 MarginResult margin_impl(const Series &response, const Series &omega) {
@@ -118,8 +113,7 @@ MarginResult margin_impl(const Series &response, const Series &omega) {
   const Series gain_response = left.add(right.sub(left).mul(gain_alpha));
   const Series phase_radians = gain_response.angle();
   const Series phase_degrees = phase_radians.mul(180.0 / kPi);
-  const Series phase_margin = phase_degrees.le(0.0).where(
-      phase_degrees.add(180.0), phase_degrees.sub(180.0));
+  const Series phase_margin = pluss::series::where(phase_degrees.le(0.0), phase_degrees.add(180.0), phase_degrees.sub(180.0));
   const Series phase_frequency = omega_left.add(omega_step.mul(gain_alpha));
   const Picked phase =
       pick_margin(phase_margin, phase_frequency, gain_cross, phase_margin.abs(),

@@ -84,6 +84,24 @@ public:
   Slot isnull() const;
   Slot notnull() const;
   Slot invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h). A Slot cell holding a Series is flagged when the
+  // Series contains at least one NaN / infinity (the rule invalid() uses); a stream-compatible Slot delegates element-wise to Stream.
+  Slot isnan() const;
+  Slot notnan() const;
+  Slot isinf() const;
+  Slot isposinf() const;
+  Slot isneginf() const;
+  Slot notinf() const;
+  Slot dropnan() const;
+  Slot dropinf() const;
+  Slot dropposinf() const;
+  Slot dropneginf() const;
+  Slot dropinvalid() const;
+  Slot fillinvalid(double value) const;
+  Slot fillnan(double value) const;
+  Slot fillinf(double value) const;
+  Slot fillposinf(double value) const;
+  Slot fillneginf(double value) const;
   Slot fillnull(double value) const;
   Slot fillnull(std::string_view value) const;
   Slot fillnull(const char* value) const {
@@ -96,7 +114,7 @@ public:
   Slot freq(pluss::kindle::FreqOptions options = {}) const;
   Slot ndistinct(pluss::kindle::DistinctOptions options = {}) const;
   SlotCastAccessor cast() const;
-  SlotCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  SlotCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
   Slot astype(pluss::codem::ScalarType dtype) const;
   SlotNoteAccessor nt() const;
   SlotTimelineAccessor tl() const;
@@ -108,7 +126,7 @@ public:
   // Conversion for bridge paths (throws when slot is not stream-compatible).
   pluss::kindle::Stream kindelize() const;
   // 1D counterpart to Registry::tabelize()/Axel::tabelize().
-  pluss::table::Slate tabelize() const;
+  pluss::table::Shelf tabelize() const;
 
   std::string to_string() const;
   std::string to_json() const;
@@ -120,8 +138,8 @@ private:
   explicit Slot(pluss::msharp::intrusive_ptr<detail::SlotImpl> impl);
   bool is_stream_compatible() const;
   void ensure_stream_compatible(std::string_view where = "Slot") const;
-  Slot cast(pluss::table::SlateCastTarget target,
-            const pluss::table::SlateCastOptions& options) const;
+  Slot cast(pluss::table::ShelfCastTarget target,
+            const pluss::table::ShelfCastOptions& options) const;
   const detail::SlotImpl& impl_ref_() const;
   detail::SlotImpl& mut_impl_();
 
@@ -130,7 +148,7 @@ private:
 
 class SlotCastAccessor {
 public:
-  explicit SlotCastAccessor(Slot base, pluss::table::SlateCastOptions options = {});
+  explicit SlotCastAccessor(Slot base, pluss::table::ShelfCastOptions options = {});
 
   Slot series() const;
   Slot note() const;
@@ -139,7 +157,7 @@ public:
 
 private:
   Slot base_{};
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class SlotNoteAccessor {

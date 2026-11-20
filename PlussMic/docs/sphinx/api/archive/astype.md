@@ -13,7 +13,7 @@ Archive Archive::astype(pluss::codem::ScalarType dtype) const
 
 ## What It Does
 
-Shorthand for [`cast(SlateCastTarget::Series, {.series_dtype = dtype})`](cast.md) —
+Shorthand for [`cast(ShelfCastTarget::Series, {.series_dtype = dtype})`](cast.md) —
 casts every stream in every catalog to `Series`, at the requested numeric dtype, in one
 call. Delegates to each catalog's own [`Catalog::astype()`](../catalog/astype.md).
 
@@ -68,9 +68,9 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
   applies to every catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="aggregate_over_catalogs.html">
+  <a class="prev-link" href="aggregate_depth.html">
     <span class="label">Previous</span>
-    <span class="title">aggregate_over_catalogs</span>
+    <span class="title">aggregate_depth</span>
   </a>
   <a class="next-link" href="bfill.html">
     <span class="label">Next</span>

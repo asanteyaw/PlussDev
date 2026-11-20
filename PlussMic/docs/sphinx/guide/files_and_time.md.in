@@ -4,7 +4,7 @@
 
 Real data comes from files, has holes, and has dates. This page reads a messy CSV, repairs it, summarises it, writes it back and checks the round trip; and then turns daily prices into a monthly view.
 
-## The mental model
+## How it works
 
 A loaded frame remembers which values are missing. `NULL` is a state of the value, not a number, and the table operations (`aggregate`, `group`, `fillnull`, `dropnull`) respect it. The numbers underneath, which you reach with `as_series()`, are an array with a placeholder where a value is missing; that is the escape hatch to the full `Series` API, and it does not know about missingness. Time works the same way: dates live in a `Timeline` feature, numeric streams are read with `.ts()`, and resampling needs the dates on the case axis.
 
@@ -14,7 +14,7 @@ Six lines of a CSV with a missing station, a missing temperature and a missing h
 
 @@example load_clean_save.cpp@@
 
-The frame arrives with `NULL` where the file was empty. `dropnull({"station"}, true)` removes the one row whose station is missing, so five rows remain. The fills use each feature's mean: `13.85` for temperature, and for humidity a mean of `78.75` that the program rounds to `79` itself, because the humidity feature was read as whole numbers and so cannot hold a fraction. The per-station report then has two rows, and the reloaded file has five rows and the same humidity total as the table that was saved, which is the check that the round trip lost nothing.
+The frame arrives with `NULL` where the file was empty. `dropnull({"station"}, true)` removes the one row whose station is missing, so five rows remain. The fills use each feature's mean: `13.85` for temperature and `78.75` for humidity. The humidity feature was read as whole numbers, and filling a whole-number feature with a fractional value widens it to floating point instead of truncating the fill, so the stored value is exactly `78.75`; a whole-number fill would have kept the feature integer. The per-station report then has two rows, and the reloaded file has five rows and the same humidity total as the table that was saved, which is the check that the round trip lost nothing.
 
 ## Missing is not zero
 
@@ -35,7 +35,7 @@ The first return is `nan` because the first day has no predecessor. Resampling w
 ## Decisions
 
 - **Missing values:** decide the rule once (drop the row, fill with a statistic, keep the null) and apply it with `dropnull` and `fillnull` before summarising.
-- **Fill type:** a whole-number feature takes a whole-number fill; round it yourself so the table shows what is stored.
+- **Fill type:** a fill keeps the feature's type when the value fits it and widens it to floating point when it does not, so the fill is never truncated; check the printed table if the dtype matters downstream.
 - **Round trips:** always read back what you wrote and compare a total.
 - **Time:** parse dates into a `Timeline` early, keep them on the case axis for resampling, and use `.ts()` for returns and rolling work.
 

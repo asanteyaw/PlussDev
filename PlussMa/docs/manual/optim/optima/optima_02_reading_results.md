@@ -6,7 +6,7 @@ A solver run can end in many ways, and only one of them means "here is your answ
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Four independent pieces of information come back from every call. Keep them separate.
 

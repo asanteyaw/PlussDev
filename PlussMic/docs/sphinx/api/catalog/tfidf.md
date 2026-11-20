@@ -85,12 +85,12 @@ similarly high (but not identical, due to differing word counts) norm.
   field, without IDF weighting.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clean.html">
+  <a class="prev-link" href="take.html">
     <span class="label">Previous</span>
-    <span class="title">clean</span>
+    <span class="title">take</span>
   </a>
-  <a class="next-link" href="to_json.html">
+  <a class="next-link" href="tl.html">
     <span class="label">Next</span>
-    <span class="title">to_json</span>
+    <span class="title">tl</span>
   </a>
 </div>

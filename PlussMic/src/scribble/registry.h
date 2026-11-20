@@ -89,7 +89,7 @@ public:
   Registry fields(const NameRange& keys) const;
   RegistryFieldAxisAccessor fieldaxis() const;
   RegistryCastAccessor cast() const;
-  RegistryCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  RegistryCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
   RegistryNoteAccessor nt() const;
   RegistryTimelineAccessor tl() const;
   bool has(std::string_view key) const;
@@ -142,6 +142,24 @@ public:
   Registry isnull() const;
   Registry notnull() const;
   Registry invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h): isnull / dropnull / fillnull never touch them and
+  // these never touch a null.
+  Registry isnan() const;
+  Registry notnan() const;
+  Registry isinf() const;
+  Registry isposinf() const;
+  Registry isneginf() const;
+  Registry notinf() const;
+  Registry dropnan() const;
+  Registry dropinvalid() const;
+  Registry dropinf() const;
+  Registry dropposinf() const;
+  Registry dropneginf() const;
+  Registry fillnan(double value) const;
+  Registry fillinvalid(double value) const;
+  Registry fillinf(double value) const;
+  Registry fillposinf(double value) const;
+  Registry fillneginf(double value) const;
   Registry fillnull(double value) const;
   Registry fillnull(std::string_view value) const;
   Registry fillnull(const char* value) const {
@@ -259,7 +277,7 @@ class RegistryCastAccessor {
 public:
   explicit RegistryCastAccessor(Registry base,
                                 std::vector<std::string> keys,
-                                pluss::table::SlateCastOptions options = {});
+                                pluss::table::ShelfCastOptions options = {});
 
   Registry series() const;
   Registry note() const;
@@ -269,7 +287,7 @@ public:
 private:
   Registry base_{};
   std::vector<std::string> keys_{};
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class RegistryNoteAccessor {

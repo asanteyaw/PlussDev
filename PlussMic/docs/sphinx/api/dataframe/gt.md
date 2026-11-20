@@ -12,9 +12,9 @@ DataFrame DataFrame::gt(double other, bool strict = true) const
 DataFrame DataFrame::gt(std::string_view other, bool strict = true) const
 DataFrame DataFrame::gt(const DataFrame& other, bool strict = true) const
 DataFrame DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) const
-DataFrame DataFrame::gt(const Slate& other, Axis axis = Axis::Feature, bool strict = true) const
-DataFrame DataFrame::gt(const Slate& other, Axis axis, const AlignOptions& options, bool strict = true) const
-DataFrame DataFrame::gt(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const
+DataFrame DataFrame::gt(const Shelf& other, Axis axis = Axis::Feature, bool strict = true) const
+DataFrame DataFrame::gt(const Shelf& other, Axis axis, const AlignOptions& options, bool strict = true) const
+DataFrame DataFrame::gt(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ DataFrame DataFrame::gt(const Slate& other, const AlignOptions& options, Axis ax
 The ordering relation "greater than", returning a boolean-valued frame the same shape
 as the source. `gt()` is the mirror image of [`lt()`](lt.md): same operand shapes, same
 `strict` parameter, same comparison-family alignment rules — see [`eq()`](eq.md)'s
-"What It Does" for the full explanation of the shared scalar/string/`DataFrame`/`Slate`
+"What It Does" for the full explanation of the shared scalar/string/`DataFrame`/`Shelf`
 operand shapes.
 
 ```{important} ge() is implemented in terms of gt()
@@ -36,7 +36,7 @@ independent implementation: `frame.ge(other)` is literally `frame.gt(other, /* s
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Shelf&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
 **strict** (`bool`, default `true`)
@@ -46,7 +46,7 @@ the full breakdown.
 - `false`: "greater than or equal to" (`>=`) — a cell equal to `other` reports `true`.
   This is exactly what calling [`ge()`](ge.md) does internally.
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -104,13 +104,13 @@ std::cout << out_ge_style;
 ### Output
 
 ```text
-===================
-      | quiz  final
--------------------
-s1    | true  true 
-s2    | true  true 
-s3    | true  false
--------------------
+==================
+     | quiz  final
+------------------
+s1   | true  true 
+s2   | true  true 
+s3   | true  false
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -133,13 +133,13 @@ std::cout << out_names;
 ### Output
 
 ```text
-=============
-      | name 
--------------
-s1    | false
-s2    | true 
-s3    | false
--------------
+============
+     | name 
+------------
+s1   | false
+s2   | true 
+s3   | false
+------------
 [3 cs x 1 feat]
 ```
 
@@ -161,13 +161,13 @@ std::cout << out_frames;
 ### Output
 
 ```text
-====================
-      | quiz   final
---------------------
-s1    | false  false
-s2    | false  false
-s3    | true   false
---------------------
+===================
+     | quiz   final
+-------------------
+s1   | false  false
+s2   | false  false
+s3   | true   false
+-------------------
 [3 cs x 2 feat]
 ```
 
@@ -176,25 +176,25 @@ Exactly one `true` cell — `s3`'s `quiz` (`84 > 83`) — since every other cell
 [`scores.ge(changed)`](ge.md) on the identical two frames, where all of those equal
 cells report `true` instead.
 
-Example 5. Compare against a `Slate` with one value per feature — `quiz` checked
+Example 5. Compare against a `Shelf` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
-auto out_slate = scores.gt(thresholds);
-std::cout << out_slate;
+auto thresholds = Shelf(pluss::make_series({84.0, 88.0}));
+auto out_shelf = scores.gt(thresholds);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-====================
-      | quiz   final
---------------------
-s1    | false  false
-s2    | true   false
-s3    | false  false
---------------------
+===================
+     | quiz   final
+-------------------
+s1   | false  false
+s2   | true   false
+s3   | false  false
+-------------------
 [3 cs x 2 feat]
 ```
 

@@ -4,7 +4,7 @@ Integration is the inverse of differentiation, and the same operators acting on 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **Exact where possible, numerical where not, and always labelled.** `provenance()` is `Structural` for an exact result and `Quadrature` for a numerical one.
 - **The integrated variable stays in the variable list.** A definite integral still takes an argument for it, which it ignores; this keeps the calling convention of the original function.

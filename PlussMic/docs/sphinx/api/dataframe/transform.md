@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-// Whole-frame, slate-wise
-DataFrame DataFrame::transform(const std::function<Slate(const Slate&)>& fn) const
-DataFrame DataFrame::transform(const std::function<Slate(const Slate&)>& fn, Axis axis) const  // axis must be Axis::Feature
+// Whole-frame, shelf-wise
+DataFrame DataFrame::transform(const std::function<Shelf(const Shelf&)>& fn) const
+DataFrame DataFrame::transform(const std::function<Shelf(const Shelf&)>& fn, Axis axis) const  // axis must be Axis::Feature
 
 // One or several features via structured specs
 DataFrame DataFrame::transform(pluss::RangeView<TransformSpec> specs) const
 
 // Row-wise (Axis::Case only)
-Slate DataFrame::transform(const std::function<SlateValue(const DataFrame&)>& fn, Axis axis) const
+Shelf DataFrame::transform(const std::function<ShelfValue(const DataFrame&)>& fn, Axis axis) const
 DataFrame DataFrame::transform(const std::function<DataFrame(const DataFrame&)>& fn, Axis axis, ResultShape shape = ResultShape::Infer) const
 ```
 
@@ -25,19 +25,19 @@ DataFrame DataFrame::transform(const std::function<DataFrame(const DataFrame&)>&
 Rewrites feature values by applying a user-supplied function, in several shapes
 depending on which overload you reach for:
 
-- **Whole-frame, slate-wise** (`transform(fn)`): applies `fn` to *every* feature's
-  `Slate` independently, replacing each with `fn`'s result. The `Axis` overload is
+- **Whole-frame, shelf-wise** (`transform(fn)`): applies `fn` to *every* feature's
+  `Shelf` independently, replacing each with `fn`'s result. The `Axis` overload is
   the same thing spelled out explicitly — it requires `Axis::Feature` and throws
   otherwise, pointing you at the row-wise `DataFrame`-callback overload for
   `Axis::Case` instead.
 - **One or several features via `TransformSpec`** (`transform(specs)`): apply a
-  different `Slate`-callback to each of one or several named features in one call —
+  different `Shelf`-callback to each of one or several named features in one call —
   `transform({{"sales", fn}})` targets just `"sales"`; every feature not named in
   `specs` is left untouched.
 - **Row-wise** (`Axis::Case` only): the two least common overloads. The
-  `SlateValue`-callback form calls `fn` once per case (each case observed as a
+  `ShelfValue`-callback form calls `fn` once per case (each case observed as a
   one-row `DataFrame`) and expects a single scalar back, concatenating the results
-  into one `Slate` — every returned value must share the same `SlateKind`. The
+  into one `Shelf` — every returned value must share the same `ShelfKind`. The
   `DataFrame`-callback form is the same per-case iteration but expects a `DataFrame`
   back each time, controlled by `shape`: `ResultShape::Infer` (the default) imposes
   no consistency check at all; `Reduce`/`Preserve` require exactly one output row per
@@ -46,16 +46,16 @@ depending on which overload you reach for:
 
 To *derive a brand-new feature* from the whole frame (rather than rewrite an existing
 one from its own values), reach for [`assign()`](assign.md) instead — `transform()`'s
-`TransformSpec` overload only ever sees one feature's own `Slate` at a time, so it
+`TransformSpec` overload only ever sees one feature's own `Shelf` at a time, so it
 can rewrite an existing feature but never create one that doesn't already exist.
 
 ## Parameters
 
 **fn**
 
-The transform function. Its signature (`Slate(const Slate&)`, `SlateValue(const
+The transform function. Its signature (`Shelf(const Shelf&)`, `ShelfValue(const
 DataFrame&)`, or `DataFrame(const DataFrame&)`) selects which overload is called. A
-returned `Slate` must match the frame's case count.
+returned `Shelf` must match the frame's case count.
 
 **axis** (`Axis`)
 
@@ -67,7 +67,7 @@ site.
 **specs** (`pluss::RangeView<TransformSpec>`)
 
 A list of `{feature, expr}` pairs, each naming one existing feature and the
-`Slate`-callback to apply to it. A single-element list targets just one feature.
+`Shelf`-callback to apply to it. A single-element list targets just one feature.
 
 **shape** (`ResultShape`, default `Infer`, row-wise `DataFrame`-callback overload
 only)
@@ -83,21 +83,21 @@ other).
 `DataFrame`
     (Most overloads) A new frame with the targeted feature(s) rewritten.
 
-`Slate`
-    (Row-wise `SlateValue`-callback overload) One entry per case, concatenated from
+`Shelf`
+    (Row-wise `ShelfValue`-callback overload) One entry per case, concatenated from
     each case's scalar result.
 
 ## Examples
 
-Example 1. Rewrite every feature with the same slate-level function.
+Example 1. Rewrite every feature with the same shelf-level function.
 
 ```cpp
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -116,8 +116,8 @@ std::cout << orders;
 ```
 
 ```cpp
-auto clipped = orders.transform([](const Slate& t) {
-  return t.kind() == SlateKind::Series ? t.clip(0.0, 110.0) : t;
+auto clipped = orders.transform([](const Shelf& t) {
+  return t.kind() == ShelfKind::Series ? t.clip(0.0, 110.0) : t;
 });
 std::cout << clipped;
 ```
@@ -146,7 +146,7 @@ the frame alone by construction rather than by the callback's own logic.
 
 ```cpp
 auto sales_clipped = orders.transform({
-    {"sales", [](const Slate& t) { return t.clip(0.0, 110.0); }},
+    {"sales", [](const Shelf& t) { return t.clip(0.0, 110.0); }},
 });
 std::cout << sales_clipped;
 ```
@@ -168,8 +168,8 @@ Example 3. Rewrite two named features with different callbacks in one call.
 
 ```cpp
 auto both = orders.transform({
-    {"id",    [](const Slate& t) { return t.add(100.0); }},
-    {"sales", [](const Slate& t) { return t.clip(0.0, 110.0); }},
+    {"id",    [](const Shelf& t) { return t.add(100.0); }},
+    {"sales", [](const Shelf& t) { return t.clip(0.0, 110.0); }},
 });
 std::cout << both;
 ```
@@ -196,7 +196,7 @@ std::cout << both;
 - `transform()` can only **rewrite** features that already exist on the frame —
   passing a name not already present throws. To **create** a new feature, use
   [`assign()`](assign.md) instead.
-- Every returned `Slate` (whole-frame and `TransformSpec` overloads) must have the
+- Every returned `Shelf` (whole-frame and `TransformSpec` overloads) must have the
   same length as the frame's case count, or the call throws.
 - For the row-wise `DataFrame`-callback overload, `ResultShape::Infer` (the
   default) performs **no** shape consistency check across cases at all — reach for
@@ -208,8 +208,8 @@ std::cout << both;
   whole-frame expressions, including creating a feature that doesn't already exist —
   the tool to reach for when `transform()`'s existing-feature-only `TransformSpec`
   overload isn't enough.
-- [`DataFrame::map`](map.md): a scalar-per-cell transform (`SlateValue -> SlateValue`,
-  skipping nulls automatically), a narrower tool than this method's `Slate`-wide
+- [`DataFrame::map`](map.md): a scalar-per-cell transform (`ShelfValue -> ShelfValue`,
+  skipping nulls automatically), a narrower tool than this method's `Shelf`-wide
   callbacks.
 - [`DataFrame::fold`](fold.md), [`DataFrame::flow`](flow.md): other whole-frame
   callback-driven reductions and transformations.

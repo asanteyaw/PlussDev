@@ -11,9 +11,9 @@ using pluss::table::Atlas;
 using pluss::table::Axis;
 using pluss::table::DataFrame;
 using pluss::table::ParseInvalid;
-using pluss::table::Slate;
-using pluss::table::SlateCastOptions;
-using pluss::table::SlateCastTarget;
+using pluss::table::Shelf;
+using pluss::table::ShelfCastOptions;
+using pluss::table::ShelfCastTarget;
 using pluss::table::TimeUnit;
 using pluss::table::TimelineLocalizeOptions;
 using pluss::table::WindowOptions;
@@ -32,12 +32,12 @@ int main() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   DataFrame df({
-      {"case_id", Slate(pluss::make_series(std::vector<std::int64_t>{101, 102, 103, 104}))},
-      {"event_time", Slate(event_time)},
-      {"event_date_text", Slate(pluss::make_note({"2026-01-01", "bad-date", "2026-02-03", "2026-03-04"}))},
-      {"revenue", Slate(pluss::make_series(std::vector<double>{10.25, 22.50, 31.75, 45.00}))},
-      {"cost", Slate(pluss::make_series(std::vector<double>{4.00, 9.50, 14.25, 20.00}))},
-      {"region", Slate(pluss::make_note({"north", "south", "north", "west"}))},
+      {"case_id", Shelf(pluss::make_series(std::vector<std::int64_t>{101, 102, 103, 104}))},
+      {"event_time", Shelf(event_time)},
+      {"event_date_text", Shelf(pluss::make_note({"2026-01-01", "bad-date", "2026-02-03", "2026-03-04"}))},
+      {"revenue", Shelf(pluss::make_series(std::vector<double>{10.25, 22.50, 31.75, 45.00}))},
+      {"cost", Shelf(pluss::make_series(std::vector<double>{4.00, 9.50, 14.25, 20.00}))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "west"}))},
   });
 
   std::cout << "Original frame\n" << df.head(4) << "\n";
@@ -49,7 +49,7 @@ int main() {
   });
   auto parsed_dates = renamed_many
                           .features({"event_date_text"})
-                          .cast(SlateCastOptions{.format = "%Y-%m-%d", .invalid = ParseInvalid::Null})
+                          .cast(ShelfCastOptions{.format = "%Y-%m-%d", .invalid = ParseInvalid::Null})
                           .timeline();
   std::cout << "Note surface parsing text dates into Timeline with invalid-as-null\n"
             << parsed_dates.head(4) << "\n";
@@ -59,7 +59,7 @@ int main() {
 
   auto margin = renamed_all.features("sales") - renamed_all.features("expense");
   renamed_all.set("margin") = margin;
-  std::cout << "Slate arithmetic result\n" << renamed_all.features("margin") << "\n";
+  std::cout << "Shelf arithmetic result\n" << renamed_all.features("margin") << "\n";
 
   auto scaled = renamed_all.features({"sales", "expense", "margin"}).mul(2.0);
   auto compared = renamed_all.features({"sales", "expense", "margin"}).gt(20.0);
@@ -71,16 +71,16 @@ int main() {
 
   auto reduced_by_feature = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Case);
   auto reduced_by_case = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Feature);
-  std::cout << "DF reduction to Slate over features\n" << reduced_by_feature << "\n";
-  std::cout << "DF reduction to Slate over cases\n" << reduced_by_case << "\n";
-  std::cout << "Slate reduction to SlateValue\n" << renamed_all.features("sales").sum() << "\n";
+  std::cout << "DF reduction to Shelf over features\n" << reduced_by_feature << "\n";
+  std::cout << "DF reduction to Shelf over cases\n" << reduced_by_case << "\n";
+  std::cout << "Shelf reduction to ShelfValue\n" << renamed_all.features("sales").sum() << "\n";
 
-  auto event_slate = renamed_all.features("event_time");
-  std::cout << "Slate timeline year\n" << event_slate.tl().year() << "\n";
-  std::cout << "Slate timeline ISO text\n" << event_slate.tl().iso() << "\n";
-  std::cout << "Slate timeline epoch seconds\n" << event_slate.tl().epoch(TimeUnit::Seconds) << "\n";
-  std::cout << "Slate timeline min scalar\n" << event_slate.min() << "\n";
-  std::cout << "Slate timeline max scalar\n" << event_slate.max() << "\n";
+  auto event_shelf = renamed_all.features("event_time");
+  std::cout << "Shelf timeline year\n" << event_shelf.tl().year() << "\n";
+  std::cout << "Shelf timeline ISO text\n" << event_shelf.tl().iso() << "\n";
+  std::cout << "Shelf timeline epoch seconds\n" << event_shelf.tl().epoch(TimeUnit::Seconds) << "\n";
+  std::cout << "Shelf timeline min scalar\n" << event_shelf.min() << "\n";
+  std::cout << "Shelf timeline max scalar\n" << event_shelf.max() << "\n";
 
   auto calendar = renamed_all.features({"event_time"}).tl().year()
       .rename({std::pair<std::string_view, std::string_view>{"event_time", "event_year"}});

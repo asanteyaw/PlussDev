@@ -10,7 +10,7 @@ Two small utilities wrap a value so that you can work with it in steps. `flow` w
 
 For named premises and checked derivations about Pluss values, use [`suppose`](../api/core-suppose.md).
 
-## The mental model
+## How it works
 
 Both utilities are boxes. You put a value in, and the box gives it back through `value()`, `get()`, or `unwrap()`. The difference is what the box allows. A `flow` box accepts any type, and every step returns a new box, so the one you started with never changes. A `let` box accepts only the payload types it was built for, and it never accepts a new value: once bound, the name always refers to the same payload.
 

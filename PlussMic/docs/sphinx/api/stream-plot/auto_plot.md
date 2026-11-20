@@ -16,18 +16,18 @@ pluss::pl::Studio StreamPlotAccessor::auto_plot(const AutoPlotOptions& options) 
 
 Picks a chart automatically for the bound stream, with no selection required from the
 caller. Both overloads forward straight to
-[`SlatePlotAccessor::auto_plot`](../slate-plot/auto_plot.md) after `Stream::to_slate()`
+[`ShelfPlotAccessor::auto_plot`](../shelf-plot/auto_plot.md) after `Stream::to_shelf()`
 — the routing decision, and everything else about this method, is entirely
-`SlatePlotAccessor`'s, not reimplemented at the `Stream` layer.
+`ShelfPlotAccessor`'s, not reimplemented at the `Stream` layer.
 
-```{important} The full decision tree — inherited as-is from SlatePlotAccessor
+```{important} The full decision tree — inherited as-is from ShelfPlotAccessor
 1. **The bound stream has its own label (`Stream::with_label()`), and 16 or fewer rows.**
    Routes to [`bar()`](bar.md).
 2. **Everything else** (no label, or more than 16 rows). Routes to [`line()`](line.md).
 
 Both routed-to calls use their own zero-argument overload — no companion `x` stream is
-ever passed through. Since `Stream::to_slate()` copies the stream's own label onto the
-resulting `Slate`'s row labels (see [`line()`](line.md)'s important callout), "has its own
+ever passed through. Since `Stream::to_shelf()` copies the stream's own label onto the
+resulting `Shelf`'s row labels (see [`line()`](line.md)'s important callout), "has its own
 label" here means exactly `Stream::has_label()`.
 ```
 
@@ -54,7 +54,7 @@ Example 1. A labeled stream with few rows: routes to `bar()`.
 using namespace pluss::kindle;
 
 auto revenue = Stream(pluss::make_series({100.0, 120.0, 90.0, 150.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
 
 auto chart = revenue.plot().auto_plot();
 chart.show();
@@ -89,7 +89,7 @@ currently empty.
 using namespace pluss::kindle;
 
 auto revenue = Stream(pluss::make_series({100.0, 120.0, 90.0, 150.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
 
 auto chart = revenue.plot().auto_plot(pluss::table::AutoPlotOptions{});
 chart.show();
@@ -102,14 +102,14 @@ calls `bar()`.
 
 ## Notes
 
-- Only two routing rules, both inherited from `SlatePlotAccessor::auto_plot` unchanged —
+- Only two routing rules, both inherited from `ShelfPlotAccessor::auto_plot` unchanged —
   see the important callout above. There is no `Stream`-specific routing logic.
 - `options` is accepted but has no effect — `AutoPlotOptions` is an empty struct.
 - Both routed-to calls always use their zero-argument form, never passing a companion `x`.
 
 ## See Also
 
-- [`SlatePlotAccessor::auto_plot`](../slate-plot/auto_plot.md): the method this delegates
+- [`ShelfPlotAccessor::auto_plot`](../shelf-plot/auto_plot.md): the method this delegates
   to, and the canonical explanation of the routing rules.
 - [`StreamPlotAccessor::bar`](bar.md) / [`line`](line.md): the two charts this can route to.
 - [`Stream::plot`](../stream/plot.md): how to enter this accessor in the first place.

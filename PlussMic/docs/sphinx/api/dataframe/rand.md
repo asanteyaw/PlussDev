@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::rand(const DataFrame& other) const
-DataFrame DataFrame::rand(const Slate& other) const
+DataFrame DataFrame::rand(const Shelf& other) const
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ An earlier revision of `rand(const DataFrame&)` computed the reflection as
 `other.land(*this)`, which meant the result's case labels and title came from
 `other` instead of from the frame the method was called on — a real, verified quirk
 that was documented here as a caution. That has since been fixed: `rand()` now zips
-`*this` and `other` directly (with `Slate::rand()` handling the per-cell operand
+`*this` and `other` directly (with `Shelf::rand()` handling the per-cell operand
 order internally), so the result's structure always comes from `*this`, matching
 [`land()`](land.md) and every other method in this family. If you're working against
 an older build where this fix isn't present, verify which behavior you're actually
@@ -35,9 +35,9 @@ seeing before relying on either.
 
 **other**
 
-`const DataFrame&` or `const Slate&` — identical shape requirements to
+`const DataFrame&` or `const Shelf&` — identical shape requirements to
 [`land()`](land.md): same feature names in order and same case count for the
-`DataFrame` overload; one boolean slate matching `ncases()` for the `Slate` overload.
+`DataFrame` overload; one boolean shelf matching `ncases()` for the `Shelf` overload.
 
 ## Returns
 
@@ -105,10 +105,10 @@ from `left`, the frame both methods were called on), even though `right` uses a
 completely different set of case labels (`x, y, z`) that never appear in either
 result.
 
-Example 2. The `Slate` overload behaves identically, as it always has.
+Example 2. The `Shelf` overload behaves identically, as it always has.
 
 ```cpp
-auto mask = Slate(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto mask = Shelf(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto out = left.rand(mask);
 std::cout << out;
 ```

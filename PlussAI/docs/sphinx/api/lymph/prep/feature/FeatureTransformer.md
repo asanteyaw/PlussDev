@@ -152,15 +152,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income",  Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"region",  Slate(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
+      {"income",  Shelf(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"region",  Shelf(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
   });
 
   lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
@@ -217,14 +217,14 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"tenure", Slate(pluss::make_series({7., 8., 9., 10.}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"tenure", Shelf(pluss::make_series({7., 8., 9., 10.}, {4}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"income", "tenure"}).feature_batch();
@@ -277,15 +277,15 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame train({
-      {"income",  Slate(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
-      {"region",  Slate(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
-      {"target",  Slate(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
+      {"income",  Shelf(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
+      {"region",  Shelf(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
+      {"target",  Shelf(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -306,10 +306,10 @@ int main() {
 
   std::cout << "trained = " << std::boolalpha << model.trained() << "\n";
   std::cout << DataFrame({
-      {"income",    Slate(train.features("income"))},
-      {"region",    Slate(train.features("region"))},
-      {"actual",    Slate(train.features("target"))},
-      {"predicted", Slate(model.infer(train, data_options))},
+      {"income",    Shelf(train.features("income"))},
+      {"region",    Shelf(train.features("region"))},
+      {"actual",    Shelf(train.features("target"))},
+      {"predicted", Shelf(model.infer(train, data_options))},
   });
 
   return 0;

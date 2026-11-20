@@ -1,5 +1,7 @@
 # `lti::to_sos`
 
+Realises a discrete pole-zero system as second-order sections.
+
 ## Signature
 
 ```cpp
@@ -8,42 +10,52 @@ pluss::Series lti::to_sos(const lti::PoleZero& system);
 
 ## What It Does
 
-Pairs poles and zeros into numerically ordered biquadratic sections. The first section absorbs system gain, producing rows directly consumable by `signal::sos`.
+Pairs the poles and zeros into biquads and returns one row `b0 b1 b2 a0 a1 a2` per section, in the layout `signal::sos` consumes. A system of order `n` gives `ceil(n / 2)` sections, so an odd order uses one more section than half of it.
 
 ## Parameters
 
 `system`
-: Discrete pole-zero system carrying one explicit zero per pole. Conjugate-paired real systems produce real coefficients.
+: A discrete `PoleZero`.
 
 ## Returns
 
-A matrix with shape `[sections, 6]`; each row is `[b0,b1,b2,a0,a1,a2]`.
+A `Series` of shape `[sections, 6]`; `sections` is `ceil(order / 2)`.
 
 ## Errors
 
-Rejects continuous systems, unequal zero/pole counts, or root configurations that cannot be paired into a valid realization.
+A continuous system and an improper system throw `pluss::Error`.
+
+## Interpretation and Use
+
+The cascade of the sections reproduces the response of the pole-zero model to rounding (the second example evaluates both at five frequencies). Pass the rows to `signal::sos` to filter.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect stability, response, and second-order-section realization.
+The number of sections for orders 2 to 5.
 
-@@example Eng/api/lti_pole_zero.cpp@@
+@@example Eng/api/lti_to_sos_shape.cpp@@
 
 ### Example 2
 
-Compare frequency response across equivalent system representations.
+The cascade against the pole-zero response.
 
-@@example Eng/api/lti_response.cpp@@
+@@example Eng/api/lti_to_sos_response.cpp@@
 
 ### Example 3
 
-Exercise frequency-grid and realization validation.
+The layout of one section.
 
-@@example Eng/api/lti_response_errors.cpp@@
+@@example Eng/api/lti_to_sos_layout.cpp@@
+
+### Example 4
+
+Every refused system.
+
+@@example Eng/api/lti_to_sos_errors.cpp@@
 
 ## See Also
 

@@ -40,8 +40,8 @@ Example 1. Compute the one-period return of a numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 std::cout << readings;
 ```
@@ -72,9 +72,9 @@ std::cout << out;
      | load 
 ------------
 0    | NULL 
-1    | 1    
+1    |  1   
 2    | -0.25
-3    | 1    
+3    |  1   
 ------------
 [4 cs x 1 feat]
 ```
@@ -96,14 +96,14 @@ std::cout << out_lead;
 ### Output
 
 ```text
-===================
-     | load        
--------------------
-0    | -0.5        
-1    | 0.3333333333
-2    | -0.5        
-3    | NULL        
--------------------
+====================
+     | load         
+--------------------
+0    | -0.5         
+1    |  0.3333333333
+2    | -0.5         
+3    | NULL         
+--------------------
 [4 cs x 1 feat]
 ```
 
@@ -121,8 +121,8 @@ infinity.
 using namespace pluss::table;
 
 auto zero_base = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3}))},
-    {"delta",     Slate(pluss::make_series({10.0, 0.0, 20.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3}))},
+    {"delta",     Shelf(pluss::make_series({10.0, 0.0, 20.0}))},
 });
 
 auto out2 = zero_base.features({"delta"}).ts().returns(1);
@@ -151,8 +151,8 @@ Example 4. Pass `periods = 0`, to see the call throw.
 ```cpp
 try {
   auto out3 = readings.features({"load"}).ts().returns(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

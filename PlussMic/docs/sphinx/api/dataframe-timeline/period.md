@@ -43,7 +43,7 @@ Example 1. Truncate every row of a `Timeline` feature to its month start.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -91,7 +91,7 @@ Example 2. Truncate the same rows to their year start instead.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -142,7 +142,7 @@ different name.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
+    {{"ts", Shelf(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().period("days");
@@ -182,12 +182,12 @@ Example 4. Pass an unrecognized frequency string to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
+    {{"ts", Shelf(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
 
 try {
   auto out = events.tl().period("week");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -195,7 +195,7 @@ try {
 ### Output
 
 ```text
-Timeline::to_period: unsupported frequency
+Timeline::period_start: unsupported unit; expected year, month, day, hour, minute, or second
 ```
 
 `"week"` isn't one of the accepted year/month/day/hour/minute/second

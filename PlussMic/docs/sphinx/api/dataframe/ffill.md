@@ -16,7 +16,7 @@ DataFrame DataFrame::ffill(const FillOptions& options) const
 ## What It Does
 
 Forward-fills missing values: each null cell is replaced by the last *observed* value
-above it in the same feature, propagating downward. `ffill()` works on every `Slate`
+above it in the same feature, propagating downward. `ffill()` works on every `Shelf`
 kind PlussMic supports — `Series`, `Note`, `Timeline`, and `TimeIndex` — not just
 numeric features.
 
@@ -56,15 +56,14 @@ Example 1. Forward-fill a numeric feature with no run-length limit.
 using namespace pluss::table;
 
 auto sensor = DataFrame({
-    {"sales", pluss::make_series({
-        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN(),
+    {"sales", Shelf(pluss::make_series({
+        0.0,
+        0.0,
         10.0,
-        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN(),
-        20.0,
-    })},
+        0.0,
+        0.0,
+        0.0,
+        20.0}), pluss::make_series(std::vector<bool>{false, false, true, false, false, false, true}))},
 });
 
 std::cout << sensor;
@@ -166,8 +165,8 @@ up its two allowed fills.
     <span class="label">Previous</span>
     <span class="title">features</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

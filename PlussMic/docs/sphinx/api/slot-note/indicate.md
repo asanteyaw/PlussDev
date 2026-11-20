@@ -69,7 +69,7 @@ alphabetical feature order.
 
 - Output features are sorted alphabetically by token text, not
   first-appearance order.
-- An empty `delimiter` throws `"Slate::indicate: delimiter cannot be
+- An empty `delimiter` throws `"Shelf::indicate: delimiter cannot be
   empty"`.
 - Requires the slot to be `Note`-kind — a non-`Note` slot throws.
 

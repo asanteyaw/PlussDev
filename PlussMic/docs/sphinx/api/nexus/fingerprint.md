@@ -46,8 +46,8 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto biz = Nexus({{"customers", customers}});
@@ -56,7 +56,7 @@ auto fp1 = biz.fingerprint();
 auto fp2 = biz.fingerprint();
 std::cout << (fp1 == fp2) << " " << fp1.size() << "\n";
 
-auto changed = biz.inject("extra", DataFrame({{"x", Slate(pluss::make_series({1.0}))}}));
+auto changed = biz.inject("extra", DataFrame({{"x", Shelf(pluss::make_series({1.0}))}}));
 std::cout << (fp1 == changed.fingerprint());
 ```
 
@@ -81,9 +81,9 @@ std::cout << (fp1 == changed.fingerprint());
 - [`Nexus::save`](save.md): persists the workspace whose content this method summarizes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="fillposinf.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">fillposinf</span>
   </a>
   <a class="next-link" href="flow.html">
     <span class="label">Next</span>

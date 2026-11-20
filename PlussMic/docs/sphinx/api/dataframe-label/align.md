@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameLabelAccessor::align(const Slate& new_label) const
-DataFrame DataFrameLabelAccessor::align(const Slate& new_label, std::optional<double> fill) const
+DataFrame DataFrameLabelAccessor::align(const Shelf& new_label) const
+DataFrame DataFrameLabelAccessor::align(const Shelf& new_label, std::optional<double> fill) const
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ fill]})` with every feature selected.
 
 ## Parameters
 
-**new_label** (`const Slate&`)
+**new_label** (`const Shelf&`)
 
 The new case labels to reindex onto. Becomes the result's case labels exactly,
 including any repeats.
@@ -57,12 +57,12 @@ source.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region", false);
 std::cout << labeled;
 
-auto target = Slate(pluss::make_note({"west", "east", "south"}));
+auto target = Shelf(pluss::make_note({"west", "east", "south"}));
 auto out = labeled.labels().align(target);
 std::cout << out;
 ```
@@ -127,7 +127,7 @@ Example 3. A target with more repeats of a label than the source has —
 matched positionally, then exhausted.
 
 ```cpp
-auto target2 = Slate(pluss::make_note({"east", "east", "east"}));
+auto target2 = Shelf(pluss::make_note({"east", "east", "east"}));
 auto out3 = labeled.labels().align(target2);
 std::cout << out3;
 ```

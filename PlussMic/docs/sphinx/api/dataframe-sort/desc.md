@@ -39,8 +39,8 @@ Example 1. Sort by `"sales"` descending.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city",  Slate(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
-    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {"city",  Shelf(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
+    {"sales", Shelf(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 
 auto out = df.sort().by("sales").desc().yield();

@@ -81,8 +81,8 @@ auto ct = pluss::kindle::Catalog({
 
 try {
   ct.save_as("xml", "out.xml");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

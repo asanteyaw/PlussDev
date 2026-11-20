@@ -6,7 +6,7 @@
 
 A signal is a series ordered in time. This page smooths a noisy level and catches faulty readings with a moving statistic, then finds the tones hidden in a recording with the Fourier transform.
 
-## The mental model
+## How it works
 
 Two kinds of tool apply. **Moving statistics** (`stat().movmean`, `movstd`) slide a window along the series and describe the local level and local spread. **Spectral tools** (`rfft`, `irfft`) move between time and frequency: a tone is a spike in the spectrum, and removing the spike removes the tone.
 
@@ -26,7 +26,7 @@ int main() {
   // Sixty readings of a slowly rising level with noise, and two injected faults at positions 25 and 41.
   const std::int64_t n = 60;
   auto t = pluss::series::arange(0, n, ScalarType::Float64);
-  auto level = t.mul(0.05).add(10.0).add(pluss::series::randn({n}, ScalarType::Float64, 21).mul(0.2));
+  auto level = t * 0.05 + 10.0 + pluss::series::randn({n}, ScalarType::Float64, 21) * 0.2;
   auto values = level.clone();
   auto faults = pluss::make_series({25, 41});
   values = values.index_copy(0, faults, pluss::make_series({14.0, 7.0}));
@@ -37,16 +37,16 @@ int main() {
   show("trend, first 8 samples", trend.slice(0, 0, 8));
 
   // 2. A reading is anomalous when it is more than three times the known noise level (0.2, so a floor of 0.4 is generous) from the trend.
-  auto distance = values.sub(trend).abs();
+  auto distance = (values - trend).abs();
   auto anomaly = distance.gt(3.0 * 0.4);
   show("anomalous positions", anomaly.nonzero().squeeze(1));
   show("their values", values.masked_select(anomaly));
   show("spread at those positions", spread.masked_select(anomaly));
 
   // 3. Replace each anomaly by the trend value and smooth again.
-  auto repaired = values.where(anomaly, trend);
+  auto repaired = pluss::series::where(anomaly, trend, values);
   show("repaired values at the faults", repaired.index_select(0, faults));
-  std::cout << "largest remaining deviation from the trend: " << repaired.sub(repaired.stat().movmean(7)).abs().max().item<double>() << "\n";
+  std::cout << "largest remaining deviation from the trend: " << (repaired - repaired.stat().movmean(7)).abs().max().item<double>() << "\n";
 }
 ```
 
@@ -83,14 +83,14 @@ int main() {
   using pluss::ScalarType;
   const double rate = 1000.0;          // samples per second
   const std::int64_t n = 1000;         // one second of signal
-  auto t = pluss::series::arange(0, n, ScalarType::Float64).div(rate);
+  auto t = pluss::series::arange(0, n, ScalarType::Float64) / rate;
   const double two_pi = 6.283185307179586;
   // A 50 Hz tone, a weaker 120 Hz tone, and noise.
-  auto signal = t.mul(two_pi * 50.0).sin().add(t.mul(two_pi * 120.0).sin().mul(0.5)).add(pluss::series::randn({n}, ScalarType::Float64, 8).mul(0.3));
+  auto signal = (t * (two_pi * 50.0)).sin() + (t * (two_pi * 120.0)).sin() * 0.5 + pluss::series::randn({n}, ScalarType::Float64, 8) * 0.3;
 
   // 1. rfft returns the n/2 + 1 frequency bins of a real signal; with one second of data bin k is k Hz.
   auto spectrum = signal.rfft();
-  auto magnitude = spectrum.abs().mul(2.0 / n);
+  auto magnitude = spectrum.abs() * (2.0 / n);
   std::cout << "bins " << magnitude.numel() << "\n";
 
   // 2. The strongest bins are the tones; topk finds them without a manual search.
@@ -103,7 +103,7 @@ int main() {
   auto kill = pluss::make_series({49, 50, 51});
   cleaned_spectrum = cleaned_spectrum.index_fill(0, kill, 0.0);
   auto cleaned = cleaned_spectrum.irfft(n);
-  auto after = cleaned.rfft().abs().mul(2.0 / n);
+  auto after = cleaned.rfft().abs() * (2.0 / n);
   std::cout << "after the filter: 50 Hz magnitude " << after.select(0, 50).item<double>() << ", 120 Hz magnitude " << after.select(0, 120).item<double>() << "\n";
   std::cout << "energy before " << signal.square().mean().item<double>() << ", after " << cleaned.square().mean().item<double>() << "\n";
 }

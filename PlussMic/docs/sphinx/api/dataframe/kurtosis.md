@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const
+Shelf DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const
 ```
 
 ## What It Does
 
 Reduces every numeric feature to its (bias-adjusted) sample **excess** kurtosis — a
 measure of how heavy a distribution's tails are relative to a normal distribution —
-returning one `Slate` whose entries line up with the frame's numeric feature names,
+returning one `Shelf` whose entries line up with the frame's numeric feature names,
 the same shape [`skew()`](skew.md) returns. Because this is *excess* kurtosis (not raw
 kurtosis), a normal distribution scores `0`: a positive value describes heavier tails
 and a sharper peak than normal, a negative value describes lighter tails and a flatter
@@ -43,7 +43,7 @@ always enforces `max(4, min_count)` — but passing a larger value raises the ba
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's sample excess kurtosis.
 
@@ -56,10 +56,10 @@ Example 1. Compute the excess kurtosis of every numeric feature, the default
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto kurt = orders.kurtosis();
@@ -152,8 +152,8 @@ Every feature has at most three observed values in this three-case slice, below 
     <span class="label">Previous</span>
     <span class="title">kindelize</span>
   </a>
-  <a class="next-link" href="label.html">
+  <a class="next-link" href="labels.html">
     <span class="label">Next</span>
-    <span class="title">label</span>
+    <span class="title">labels</span>
   </a>
 </div>

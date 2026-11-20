@@ -39,8 +39,8 @@ Example 1. `dloc()` and `frame()` return the same result for the same index.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Shelf(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.dloc(1);
@@ -49,12 +49,12 @@ std::cout << atlas.dloc(1);
 ### Output
 
 ```text
-==========
+============
      | sales
-----------
-0    | 110
-1    | 90
-----------
+------------
+0    | 110  
+1    | 90   
+------------
 [2 cs x 1 feat]
 ```
 
@@ -76,8 +76,8 @@ std::cout << atlas.dloc(1);
     <span class="label">Previous</span>
     <span class="title">depth</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

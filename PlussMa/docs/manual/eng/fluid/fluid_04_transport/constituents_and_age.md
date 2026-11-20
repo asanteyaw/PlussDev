@@ -6,7 +6,7 @@
 
 Pressure and flow say how much water arrives; they do not say what is in it. A utility needs to know how much chlorine is left at the end of a main, where two sources mix, and how long the water has sat in a pipe, because old water is where a disinfectant is gone and bacteria are not. `fluid::transport` follows one quantity through the network over a run: a **constituent**, such as a concentration of a disinfectant or a tracer, or the **age** of the water. It uses the flows that `fluid::run` finds and does not solve the hydraulics again. This page explains how the quantity moves, follows two sources mixing at a junction and checks the mixture against the flows, adds a decay reaction and checks it against its exact value, shows how the number of cells changes the sharpness of a front, and follows the age of the water along a pipe.
 
-## The mental model
+## How it works
 
 `transport` calls `run` for the hydraulics, and then advances the quality through every hydraulic interval with the flows of that interval held fixed. Inside an interval the quality clock takes steps no longer than `RouteOptions::step`, shortened so that no pipe cell, and no draining tank, passes more than the fraction `courant` of its content in one step.
 

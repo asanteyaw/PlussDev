@@ -67,7 +67,7 @@ inline SsaResult gillespie(const PropensityFn &propensity, const Series &nu,
     const Series r1 = pluss::series::rand({batch}, cfg, base + 2 * event + 1);
     const Series r2 = pluss::series::rand({batch}, cfg, base + 2 * event + 2);
     // r1 in [0,1): use 1 - r1 in (0,1] so ln is finite.
-    const Series safe_a0 = a0.gt(0.0).where(a0, a0.mul(0.0).add(1.0));
+    const Series safe_a0 = pluss::series::where(a0.gt(0.0), a0, a0.mul(0.0).add(1.0));
     const Series tau = r1.neg().add(1.0).log().neg().div(safe_a0);
     const Series t_new = t.add(tau);
     const Series stops = a0.le(0.0).logical_or(t_new.gt(t_end));
@@ -81,7 +81,7 @@ inline SsaResult gillespie(const PropensityFn &propensity, const Series &nu,
     const Series onehot = picked.eq(reaction_index).to(x0.scalar_type());
     const Series fired = fire.to(x0.scalar_type());
     x = x.add(onehot.matmul(nu_t).mul(fired.unsqueeze(-1)));
-    t = fire.where(t_new, t);
+    t = pluss::series::where(fire, t_new, t);
     count = count.add(fired);
     if ((event & 7) == 7 || event + 1 == options.max_events) {
       if (done.all().item<bool>()) {

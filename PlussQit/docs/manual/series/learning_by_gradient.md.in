@@ -4,7 +4,7 @@
 
 Many problems have no closed-form answer but a loss you can differentiate. This page fits a line by gradient descent, letting the library compute the gradient, and checks the result against the exact least-squares solution.
 
-## The mental model
+## How it works
 
 A `Series` can **track slope**: after `tracks_slope_(true)`, every operation built from it is recorded. Calling `reverse()` on the final scalar walks the record backwards and stores, on each tracked series, its **sensitivity**: how much the final value changes per unit change of that series. For a loss and its parameters that sensitivity is the gradient. A training loop is then four lines: track, forward, reverse, step. The updated parameters start a fresh record on the next pass.
 

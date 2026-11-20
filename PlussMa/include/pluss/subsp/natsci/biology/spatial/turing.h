@@ -35,7 +35,7 @@ inline Series growth_rate(const Jacobian2 &j, const Series &da, const Series &db
   const Series root = disc.clamp(0.0, 1e300).sqrt();
   const Series real_case = tr.add(root).mul(0.5);        // disc >= 0: larger real eigenvalue
   const Series complex_case = tr.mul(0.5);               // disc < 0: real part of the complex pair
-  return disc.ge(0.0).where(real_case, complex_case);
+  return pluss::series::where(disc.ge(0.0), real_case, complex_case);
 }
 // dispersion h(k^2) = det(J - k^2 D)
 inline Series determinant_of_perturbation(const Jacobian2 &j, const Series &da, const Series &db, const Series &k2) {
@@ -59,8 +59,8 @@ inline Conditions turing_conditions(const Jacobian2 &j, const Series &da, const 
   const Series root = disc.clamp(0.0, 1e300).sqrt();
   const Series two = da.mul(db).mul(2.0);
   const Series nan = m.mul(0.0).add(std::numeric_limits<double>::quiet_NaN());
-  out.k2_lower = out.turing_unstable.where(m.sub(root).div(two), nan);
-  out.k2_upper = out.turing_unstable.where(m.add(root).div(two), nan);
+  out.k2_lower = pluss::series::where(out.turing_unstable, m.sub(root).div(two), nan);
+  out.k2_upper = pluss::series::where(out.turing_unstable, m.add(root).div(two), nan);
   return out;
 }
 

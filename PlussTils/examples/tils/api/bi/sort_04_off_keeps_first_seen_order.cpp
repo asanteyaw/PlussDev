@@ -18,14 +18,14 @@ namespace fs = std::filesystem;
 // Four months of sales. The region of the third row is missing, so a pivot on region has a missing column.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   // Regions in first-seen order: south, north, missing, east.
   const DataFrame sales({
-      {"month", Slate(pluss::make_note({"jan", "jan", "feb", "feb"}))},
-      {"region", Slate(pluss::make_note(std::vector<std::string>{"south", "north", "NULL", "east"}),
+      {"month", Shelf(pluss::make_note({"jan", "jan", "feb", "feb"}))},
+      {"region", Shelf(pluss::make_note(std::vector<std::string>{"south", "north", "NULL", "east"}),
                         pluss::make_series(std::vector<bool>{true, true, false, true}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40}, {4}, cfg))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40}, {4}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }

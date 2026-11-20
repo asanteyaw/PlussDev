@@ -58,3 +58,14 @@ set_table_meta == meta: true
 - [`meta`](meta.md): the same setter, under its shorter alias, plus the
   getter overload and the in-place `meta_` form.
 - [`has_table_meta`](has_table_meta.md): reading the declared metadata back.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="select.html">
+    <span class="label">Previous</span>
+    <span class="title">select</span>
+  </a>
+  <a class="next-link" href="state.html">
+    <span class="label">Next</span>
+    <span class="title">state</span>
+  </a>
+</div>

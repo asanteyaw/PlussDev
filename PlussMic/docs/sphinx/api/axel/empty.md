@@ -63,9 +63,9 @@ false true
   at all, independent of depth.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dropnull.html">
+  <a class="prev-link" href="dropposinf.html">
     <span class="label">Previous</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropposinf</span>
   </a>
   <a class="next-link" href="fieldaxis.html">
     <span class="label">Next</span>

@@ -13,10 +13,13 @@ Stream Stream::invalid() const
 
 ## What It Does
 
-Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which rows
-are invalid — the same shape and, in every case tested here, the same result as
-[`isnull()`](isnull.md). Delegates to `Slate::invalid()` (a distinct underlying method from
-`Slate::isnull()`), works uniformly across all four payload kinds.
+Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which records
+are not ordinary numbers: `true` for a missing record (`NULL`), a `NaN` or an infinity. It is the
+union of [`isnull()`](isnull.md), [`isnan()`](isnan.md) and [`isinf()`](isinf.md), so it agrees with
+`isnull()` for a missing record and also flags the other two, which `isnull()` does not (a `NaN`
+is a value, not a missing record). Delegates to `Shelf::invalid()`, and works on all four payload
+kinds (text, timestamp and duration streams can only be missing, so there `invalid()` equals
+`isnull()`).
 
 ## Parameters
 
@@ -55,14 +58,14 @@ label        | value
 ========================================================================================================================
 ```
 
-Example 2. Also agrees with `isnull()` for an unmarked `NaN` in a numeric stream built
-with no explicit validity mask.
+Example 2. A `NaN` is invalid but not missing: `invalid()` flags it and `isnull()` does not.
 
 ```cpp
 double nan_value = std::numeric_limits<double>::quiet_NaN();
 auto stream = pluss::kindle::Stream(pluss::make_series({1.0, nan_value, 3.0}));
 
 std::cout << stream.invalid();
+std::cout << stream.isnull();
 ```
 
 ### Output
@@ -78,21 +81,31 @@ label        | value
 1            | true                                                                                                     
 2            | false                                                                                                    
 ========================================================================================================================
+========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[bool]  records=3
+label=no  mask=no  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | false                                                                                                    
+1            | false                                                                                                    
+2            | false                                                                                                    
+========================================================================================================================
 ```
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction.
-- Calls a distinct underlying `Slate::invalid()` method from
-  [`isnull()`](isnull.md)/`Slate::isnull()`, but has produced an identical result in every
-  case checked here, including both mask-based `NULL`s and unmarked numeric `NaN`.
+- `invalid()` and [`isnull()`](isnull.md) agree on missing records and differ on `NaN` and
+  infinities: those are values, so only `invalid()` flags them.
 - The result is always `Series`-kind (`Series[bool]`), regardless of the receiver's own
   kind.
 
 ## See Also
 
-- [`Stream::isnull`](isnull.md) / [`Stream::notnull`](notnull.md): the closely related
-  validity checks this method agrees with in practice.
+- [`Stream::isnull`](isnull.md) / [`Stream::notnull`](notnull.md): the missing-record
+  checks; [`Stream::isnan`](isnan.md) and [`Stream::isinf`](isinf.md) cover the other two kinds.
 - [`Stream::fillnull`](fillnull.md) / [`Stream::dropnull`](dropnull.md): act on the rows
   this method identifies.
 
@@ -101,8 +114,8 @@ label        | value
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

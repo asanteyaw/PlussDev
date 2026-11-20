@@ -67,13 +67,13 @@ std::cout << biz.frame("orders");
 ### Output
 
 ```text
-=====================================
-      | order_id  customer_id  amount
--------------------------------------
-0     | 100       1            50    
-1     | 101       2            75    
-2     | 102       2            20    
--------------------------------------
+====================================
+     | order_id  customer_id  amount
+------------------------------------
+0    | 100       1            50    
+1    | 101       2            75    
+2    | 102       2            20    
+------------------------------------
 [3 cs x 3 feat]
 ```
 
@@ -102,7 +102,7 @@ std::cout << (last_by_index.equals(last_by_negative));
 ### Output
 
 ```text
-true
+1
 ```
 
 Example 4. Both overloads throw on a bad argument.
@@ -110,15 +110,15 @@ Example 4. Both overloads throw on a bad argument.
 ```cpp
 try {
   auto missing = biz.frame("products");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto out_of_range = biz.frame(5);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

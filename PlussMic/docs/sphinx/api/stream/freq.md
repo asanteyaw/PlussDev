@@ -115,12 +115,12 @@ label        | value
   values) back out.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="filter.html">
+  <a class="prev-link" href="fingerprint.html">
     <span class="label">Previous</span>
-    <span class="title">filter</span>
+    <span class="title">fingerprint</span>
   </a>
-  <a class="next-link" href="from_slate.html">
+  <a class="next-link" href="from_shelf.html">
     <span class="label">Next</span>
-    <span class="title">from_slate</span>
+    <span class="title">from_shelf</span>
   </a>
 </div>

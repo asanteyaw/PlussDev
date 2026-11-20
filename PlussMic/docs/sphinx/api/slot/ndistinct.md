@@ -63,8 +63,8 @@ std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
     <span class="label">Previous</span>
     <span class="title">min</span>
   </a>
-  <a class="next-link" href="notnull.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">notnull</span>
+    <span class="title">notinf</span>
   </a>
 </div>

@@ -4,7 +4,7 @@
 
 A portal frame is two columns joined by a beam. A lateral load, from wind or an earthquake, makes it sway, and what resists the sway is the bending of the columns and the beam together. This page solves a portal frame under a lateral load, checks its sway against a closed formula and its reactions against equilibrium, and sweeps the beam's stiffness and the base fixity in one call to show how strongly each controls the sway.
 
-## The mental model
+## How it works
 
 Take columns of height `h` and second moment `I_c`, a beam of span `L` and second moment `I_b`, the same modulus `E` throughout, and a lateral load `H` at the top-left corner. Assume the members are so stiff axially that their lengths do not change. The sway `delta` of the beam is then governed by the **stiffness ratio** of the beam to the columns,
 

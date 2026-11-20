@@ -185,10 +185,16 @@ TEST_CASE("MPS strict gather/scatter rejects unsupported non-exact lane", "[mps]
     REQUIRE(std::string(e.what()).find("no native MPS kernel yet") != std::string::npos);
   }
 
+  // Int64 scatter has a native lane (exact 64-bit set); UInt64 still does not.
   const auto base_i64 = pluss::Series::zeros({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
   const auto src_i64 = pluss::Series::ones({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
+  const auto got_i64 = base_i64.scatter(0, idx, src_i64).to(pluss::pCPU).flatten(0, -1).items<std::int64_t>();
+  REQUIRE(got_i64 == std::vector<std::int64_t>{1, 1, 1, 1});
+
+  const auto base_u64 = pluss::make_series(std::vector<std::uint64_t>{0, 0, 0, 0}, {4}).to(pluss::pMPS);
+  const auto src_u64 = pluss::make_series(std::vector<std::uint64_t>{1, 1, 1, 1}, {4}).to(pluss::pMPS);
   try {
-    (void)base_i64.scatter(0, idx, src_i64);
+    (void)base_u64.scatter(0, idx, src_u64);
     FAIL("strict scatter should fail for unsupported non-exact dtype lane");
   } catch (const std::exception& e) {
     REQUIRE(std::string(e.what()).find("no native MPS kernel yet") != std::string::npos);

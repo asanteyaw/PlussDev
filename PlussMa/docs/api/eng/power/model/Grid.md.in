@@ -14,64 +14,49 @@ const power::Base& power::Grid::base() const noexcept;
 const pluss::Series& power::Grid::ybus() const noexcept;
 ```
 
-## What It Does
-
-A `Grid` is what `power::make` returns: the validated network with its admittance matrices and incidence maps, held immutably so that one grid can be analysed repeatedly. Every analysis takes a `Grid`.
-
-## Methods
-
-`buses(), gens(), lines()`
-: The numbers of buses, generators and lines.
-
-`batch_shape()`
-: The leading scenario axes shared by all values.
-
-`base_power(), base()`
-: The per-unit base.
-
-`dtype(), platform()`
-: The element type and device of the stored data.
-
-`ybus(), yfrom(), yto()`
-: The complex bus admittance matrix, and the admittances from each line's ends to the buses.
-
-## Returns
+## Construction
 
 Accessors return counts, the base and the admittance matrices.
 
-## Errors
+## Methods
 
-Accessors do not fail. Invalid networks are rejected by `make` before a `Grid` exists.
+| Method | What it does |
+|---|---|
+| [`buses`](Grid/buses.md) | The number of buses. |
+| [`gens`](Grid/gens.md) | The number of generators. |
+| [`lines`](Grid/lines.md) | The number of lines. |
+| [`batch_shape`](Grid/batch_shape.md) | The leading scenario axes shared by all values. |
+| [`base_power`](Grid/base_power.md) | The three-phase apparent-power base in volt-amperes. |
+| [`base`](Grid/base.md) | The per-unit base: apparent power and line-to-line voltage. |
+| [`dtype`](Grid/dtype.md) | The floating dtype of the stored values. |
+| [`platform`](Grid/platform.md) | The device the stored values live on. |
+| [`ybus`](Grid/ybus.md) | The complex bus admittance matrix. |
+| [`yfrom`](Grid/yfrom.md) | The complex from-end line admittance matrix. |
+| [`yto`](Grid/yto.md) | The complex to-end line admittance matrix. |
 
 ## Changelog
 
-- **0.1** — Initial public contract.
+- **0.1**: initial documented surface.
 
-## Interpretation and Use
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-A `Grid` cannot be default-constructed. The admittance matrix `Y` relates the complex bus current injections to the voltages, and `V conj(Y V)` is the complex power injected at every bus.
-
-## Practical Examples
-
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
-
-### Example 1
-
-Counts and the admittance matrix of a two-bus grid.
-
-@@example Eng/api/power_build.cpp@@
-
-### Example 2
-
-The admittance matrix used to check an AC solution.
-
-@@example Eng/api/power_ac_solve.cpp@@
-
-### Example 3
-
-The batch shape of a scenario sweep.
-
-@@example Eng/api/power_scenarios.cpp@@
+Grid/Introduction
+Grid/buses
+Grid/gens
+Grid/lines
+Grid/batch_shape
+Grid/base_power
+Grid/base
+Grid/dtype
+Grid/platform
+Grid/ybus
+Grid/yfrom
+Grid/yto
+```
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
@@ -85,7 +70,3 @@ The batch shape of a scenario sweep.
   </a>
 </div>
 <!-- apiref:nav:end -->
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->

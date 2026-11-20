@@ -62,16 +62,16 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 2.0}))},
 });
 auto payments = DataFrame({
-    {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
-    {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
+    {"payment_id", Shelf(pluss::make_series({9001.0, 9002.0}))},
+    {"order_id",   Shelf(pluss::make_series({101.0, 102.0}))},
 });
 
 auto biz = Nexus({
@@ -119,13 +119,13 @@ declared with `customers`/`orders` playing the *right*-hand role
 Example 2. No route at all throws.
 
 ```cpp
-auto standalone = DataFrame({{"note", Slate(pluss::make_note({"unrelated"}))}});
+auto standalone = DataFrame({{"note", Shelf(pluss::make_note({"unrelated"}))}});
 auto with_standalone = linked.inject("standalone", standalone);
 
 try {
   auto bad = with_standalone.path("customers", "standalone");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

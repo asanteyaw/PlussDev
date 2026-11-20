@@ -91,12 +91,12 @@ show length: 767
 - [`Catalog::to_string`](../catalog/to_string.md): the per-catalog equivalent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tail.html">
+  <a class="prev-link" href="tl.html">
     <span class="label">Previous</span>
-    <span class="title">tail</span>
+    <span class="title">tl</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="ts.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">ts</span>
   </a>
 </div>

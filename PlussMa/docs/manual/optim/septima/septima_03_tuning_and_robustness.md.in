@@ -4,7 +4,7 @@ Chapters 1 and 2 used Septima's settings without explaining them. This chapter m
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Septima has two independent groups of settings. The **step** settings, in `options.step`, decide how a point moves: the optimizer and its parameters. The **solve** settings, directly in `SeptimaSolveOptions`, decide when to stop: the budget and the tolerances. Keep them apart in your mind. A run that stops too early is a solve-setting question; a run that moves badly is a step-setting question.
 

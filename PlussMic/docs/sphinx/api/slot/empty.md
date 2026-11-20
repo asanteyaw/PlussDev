@@ -66,12 +66,12 @@ true
 - [`Slot::defined`](defined.md): checks handle validity, not value count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dropnull.html">
+  <a class="prev-link" href="dropposinf.html">
     <span class="label">Previous</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropposinf</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

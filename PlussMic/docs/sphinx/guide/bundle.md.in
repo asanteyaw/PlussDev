@@ -4,7 +4,7 @@
 
 When an analysis spans several related tables, a workspace that remembers how they connect saves repeating the join logic. A `Nexus` coordinates `DataFrame`s and a `Locus` coordinates `Catalog`s. This page assembles a customer table, checks a workspace's health, walks a join path, asks SQL questions across tables, persists a workspace, and does the Locus versions.
 
-## The mental model
+## How it works
 
 A workspace holds named tables, a **declaration of what one row of each table is** (its primary key), and **relationships** between tables with a cardinality. Everything else uses those declarations. `pull(root)` assembles one row per root row with features reduced from related tables (the grain never changes). `from(root).join(...)` walks relationships and expands rows. `query()` runs SQL across the tables by name. `audit()` and its companions check the declarations against the data. The default cardinality of a declared relationship is many-to-one (left rows share a right row), so a one-to-many link must say so.
 

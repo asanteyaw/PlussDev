@@ -47,7 +47,7 @@ was previously missing.
 
 The feature to encode. Must exist on the frame; throws
 `"DataFrame::encode: unknown feature '<name>'"` otherwise. Works on a feature of any
-`Slate` kind (`Series`, `Note`, `Timeline`, `TimeIndex`) — "distinct value" is
+`Shelf` kind (`Series`, `Note`, `Timeline`, `TimeIndex`) — "distinct value" is
 determined the same way [`factor()`](factor.md) determines it, not restricted to text.
 
 **mode** (`EncodeMode`, default `OneHot`)
@@ -90,9 +90,9 @@ using namespace pluss::table;
 auto city_valid = pluss::make_series({true, true, true, true, false}, pluss::ScalarType::Bool);
 
 auto customers = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3, 4, 5}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", ""}), city_valid)},
-    {"score", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3, 4, 5}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", ""}), city_valid)},
+    {"score", Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
 });
 std::cout << customers;
 ```
@@ -120,15 +120,15 @@ std::cout << one_hot;
 ### Output
 
 ```text
-======================================================
-     | id    city_Accra  city_Tema  city_Kumasi  score
-------------------------------------------------------
-0    | 1     true        false      false        10   
-1    | 2     false       true       false        20   
-2    | 3     true        false      false        30   
-3    | 4     false       false      true         40   
-4    | 5     NULL        NULL       NULL         50   
-------------------------------------------------------
+=========================================================
+     | id    city_Accra  city_Tema  city_Kumasi  score
+---------------------------------------------------------
+0    | 1     true         false       false         10   
+1    | 2     false        true        false         20   
+2    | 3     true         false       false         30   
+3    | 4     false        false       true          40   
+4    | 5     NULL         NULL        NULL          50   
+---------------------------------------------------------
 [5 cs x 5 feat]
 ```
 
@@ -152,15 +152,15 @@ std::cout << reduced;
 ### Output
 
 ```text
-==========================================
-     | id    city_Tema  city_Kumasi  score
-------------------------------------------
-0    | 1     false      false        10   
-1    | 2     true       false        20   
-2    | 3     false      false        30   
-3    | 4     false      true         40   
-4    | 5     NULL       NULL         50   
-------------------------------------------
+============================================
+     | id    city_Tema  city_Kumasi  score
+--------------------------------------------
+0    | 1     false       false         10   
+1    | 2     true        false         20   
+2    | 3     false       false         30   
+3    | 4     false       true          40   
+4    | 5     NULL        NULL          50   
+--------------------------------------------
 [5 cs x 4 feat]
 ```
 

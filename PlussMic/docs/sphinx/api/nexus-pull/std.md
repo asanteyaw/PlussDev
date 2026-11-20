@@ -61,7 +61,7 @@ auto pulled = nx.pull("customers")
     .std("events.spend", "std_spend")
     .collect();
 
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -84,7 +84,7 @@ auto pulled = nx.pull("customers")
     .std("events.spend")
     .collect();
 
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

@@ -55,3 +55,14 @@ plan steps=2 root_table=items
 - [`store`](store.md): saving a plan under a name to run again later.
 - [`link`](link.md): `path`, the shortest-path search this builds a plan
   from.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="persistence.html">
+    <span class="label">Previous</span>
+    <span class="title">persistence</span>
+  </a>
+  <a class="next-link" href="policy.html">
+    <span class="label">Next</span>
+    <span class="title">policy</span>
+  </a>
+</div>

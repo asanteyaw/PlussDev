@@ -2,6 +2,8 @@
 
 # `signal::PadMode`
 
+How `zero_phase` extends the signal at its ends.
+
 ## Signature
 
 ```cpp
@@ -13,148 +15,118 @@ signal::PadMode signal::PadMode::None;
 
 ## What It Does
 
-Selects how `zero_phase` extends samples at both boundaries before forward-backward filtering. Boundary policy is central to transient behavior because a non-causal pass sees both ends.
+The forward and backward passes start from rest, which creates a transient at each end. Extending the signal before filtering and cutting the extension afterwards moves the transient out of the kept samples. The pad mode chooses what the extension is.
 
-## Fields
+## Values
 
-| Value | Meaning |
+| Value | Extension |
 |---|---|
-| `Odd` | Reflects with odd symmetry around each endpoint. This is the default and preserves local slope. |
-| `Even` | Reflects with even symmetry around each endpoint. |
-| `Constant` | Repeats the endpoint values. |
-| `None` | Disables extension; use only when edge transients are acceptable. |
+| `Odd` | Point reflection about the end sample: the signal continues its slope. |
+| `Even` | Mirror reflection about the end sample. |
+| `Constant` | The end sample repeated. |
+| `None` | No extension; the transient stays in the output. |
 
 ## Returns
 
-Stored in `PhaseOpts::pad` and consumed by `zero_phase`.
+Field `pad` of `PhaseOpts`.
 
 ## Errors
 
-Requested edge length must remain compatible with the selected axis and input length.
+`None` ignores the edge length; for the other modes an edge as long as the input is refused.
+
+## Interpretation and Use
+
+`Odd` continues a trend through the ends, so a ramp passes through a smoothing filter unchanged (the second example shows an error of zero), while `Even` and `Constant` bend toward the ends. Use `Odd` for data with a trend, `Even` for data that is flat at the ends and `None` only when the ends carry no information.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The first and last two samples of a ramp for each mode.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  for (const auto [label, pad] : {std::pair{"Odd     ", sig::PadMode::Odd}, {"Even    ", sig::PadMode::Even}, {"Constant", sig::PadMode::Constant}, {"None    ", sig::PadMode::None}}) {
+    const auto y = sig::zero_phase(x, b, a, {.dim = 0, .edge = 3, .pad = pad}).items<double>();
+    out.writeln(label, "first two =", y[0], y[1], " last two =", y[y.size() - 2], y.back());
   }
+  out.writeln("a ramp from 4 to 13: Odd reproduces it, the others bend toward the ends");
+}
+```
+
+Output
+
+```text
+Odd      first two = 4.0000 5.0000  last two = 12.0000 13.0000
+Even     first two = 4.7500 5.1250  last two = 11.8750 12.2500
+Constant first two = 4.3750 5.0625  last two = 11.9375 12.6250
+None     first two = 4.3750 5.0625  last two = 11.7500 12.0000
+a ramp from 4 to 13: Odd reproduces it, the others bend toward the ends
+```
+### Example 2
+
+How far each mode moves a ramp from the input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
   try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  for (const auto [label, pad] : {std::pair{"Odd     ", sig::PadMode::Odd}, {"Even    ", sig::PadMode::Even}, {"Constant", sig::PadMode::Constant}, {"None    ", sig::PadMode::None}}) {
+    const auto y = sig::zero_phase(x, b, a, {.dim = 0, .edge = 3, .pad = pad}).items<double>();
+    const auto v = x.items<double>();
+    double worst = 0.0;
+    for (std::size_t i = 0; i < v.size(); ++i) worst = std::max(worst, std::abs(y[i] - v[i]));
+    out.writeln(label, "largest difference from the input ramp =", worst);
   }
 }
 ```
@@ -162,8 +134,51 @@ int main() {
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+Odd      largest difference from the input ramp = 0.0000
+Even     largest difference from the input ramp = 0.7500
+Constant largest difference from the input ramp = 0.3750
+None     largest difference from the input ramp = 1.0000
+```
+### Example 3
+
+The edge-length validation, and `None` ignoring it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  refused(out, "Odd with an edge as long as the input", [&] { sig::zero_phase(pluss::make_series({1.0, 2.0, 3.0, 4.0}), b, a, {.dim = 0, .edge = 4, .pad = sig::PadMode::Odd}); });
+  refused(out, "None ignores the edge length", [&] { sig::zero_phase(pluss::make_series({1.0, 2.0, 3.0, 4.0}), b, a, {.dim = 0, .edge = 100, .pad = sig::PadMode::None}); });
+}
+```
+
+Output
+
+```text
+Odd with an edge as long as the input : eng::signal::zero_phase: sample axis must be longer than the edge extension
+None ignores the edge length : accepted
 ```
 ## See Also
 

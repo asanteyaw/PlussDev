@@ -52,7 +52,7 @@ against.
 ## Input Shapes
 
 Same four shapes as [`learn`](learn.md) minus the `(x, Series y)` /
-`(x, Slate y)` pair (mapping needs no label): `batch` (a pre-assembled
+`(x, Shelf y)` pair (mapping needs no label): `batch` (a pre-assembled
 `FeatureBatch`), `raw_frame` alone or with `data_options` (naming feature
 columns explicitly), and `payload` (a [`Payload`](../Payload.md) — its
 `feature_batch()`/frame is used; a label role on it, if any, is ignored by
@@ -110,15 +110,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
-      {"target", Slate(pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"target", Shelf(pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64))},
   });
 
   workflow::Workflow wf = workflow::make(lymph::models::logistic_regression());
@@ -164,14 +164,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
   });
 
   workflow::Workflow wf = workflow::make(lymph::models::logistic_regression());
@@ -214,14 +214,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
   });
 
   workflow::Workflow wf = workflow::make(lymph::models::logistic_regression());

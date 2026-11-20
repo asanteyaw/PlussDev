@@ -18,7 +18,7 @@ TEST_CASE("where/clamp basics", "[eltwise]") {
   auto a = pluss::make_series(std::vector<float>{-1, 2, -3, 4}, {2,2});
   auto c = pluss::make_series(std::vector<bool>{true,false,true,false}, {2,2});
   auto b = pluss::series::zeros({2,2}, pluss::config({{"dtype","float32"}}));
-  auto w = a.where(c, b);
+  auto w = pluss::series::where(c, b, a);
   REQUIRE(w.numel() == 4);
 
   auto cl = a.clamp(-0.5, 1.5);

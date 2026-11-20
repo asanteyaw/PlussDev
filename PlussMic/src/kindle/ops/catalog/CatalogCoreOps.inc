@@ -92,7 +92,7 @@ Catalog Catalog::query(const QueryFn& fn) const {
   return filter(mask);
 }
 
-Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
+Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
                         pluss::msharp::RangeView::Of<Catalog> choices,
                         const Catalog& default_value) {
   PLUSS_CHECK(!choices.empty(), "Catalog::select: at least one choice is required");
@@ -298,9 +298,9 @@ Catalog Catalog::fillnull(const pluss::Duration& value) const {
 
 Catalog Catalog::dropnull() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  std::optional<pluss::table::Slate> keep;
+  std::optional<pluss::table::Shelf> keep;
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto valid = impl_ref_().streams_[i].notnull().to_slate();
+    const auto valid = impl_ref_().streams_[i].notnull().to_shelf();
     keep = keep.has_value() ? keep->land(valid) : valid;
   }
   if (!keep.has_value()) return *this;
@@ -312,6 +312,217 @@ Catalog Catalog::dropnull() const {
     const auto& key = impl_ref_().keys_[i];
     const auto& stream = impl_ref_().streams_[i];
     out.emplace_back(key, stream.filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::isnan() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].isnan());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::notnan() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].notnan());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::isinf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].isinf());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::isposinf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].isposinf());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::isneginf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].isneginf());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::notinf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].notinf());
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::dropnan() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::optional<pluss::table::Shelf> keep;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto kept = impl_ref_().streams_[i].notnan().to_shelf();
+    keep = keep.has_value() ? keep->land(kept) : kept;
+  }
+  if (!keep.has_value()) return *this;
+  const auto mask = keep->as_series();
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::dropinvalid() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::optional<pluss::table::Shelf> keep;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto kept = pluss::table::Shelf(impl_ref_().streams_[i].invalid().to_shelf().as_series().logical_not());
+    keep = keep.has_value() ? keep->land(kept) : kept;
+  }
+  if (!keep.has_value()) return *this;
+  const auto mask = keep->as_series();
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::dropinf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::optional<pluss::table::Shelf> keep;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto kept = impl_ref_().streams_[i].notinf().to_shelf();
+    keep = keep.has_value() ? keep->land(kept) : kept;
+  }
+  if (!keep.has_value()) return *this;
+  const auto mask = keep->as_series();
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::dropposinf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::optional<pluss::table::Shelf> keep;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto kept = pluss::table::Shelf(impl_ref_().streams_[i].isposinf().to_shelf().as_series().logical_not());
+    keep = keep.has_value() ? keep->land(kept) : kept;
+  }
+  if (!keep.has_value()) return *this;
+  const auto mask = keep->as_series();
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::dropneginf() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::optional<pluss::table::Shelf> keep;
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto kept = pluss::table::Shelf(impl_ref_().streams_[i].isneginf().to_shelf().as_series().logical_not());
+    keep = keep.has_value() ? keep->land(kept) : kept;
+  }
+  if (!keep.has_value()) return *this;
+  const auto mask = keep->as_series();
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].filter(mask));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillnan(double value) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].fillnan(value));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillinvalid(double value) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].fillinvalid(value));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillinf(double value) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].fillinf(value));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillposinf(double value) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].fillposinf(value));
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillneginf(double value) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].fillneginf(value));
   }
   return Catalog(std::move(out));
 }
@@ -336,6 +547,15 @@ Catalog Catalog::bfill() const {
     out.emplace_back(impl_ref_().keys_[i], impl_ref_().streams_[i].bfill());
   }
   return Catalog(std::move(out));
+}
+
+pluss::table::DataFrame Catalog::count_kinds() const {
+  std::vector<pluss::table::Shelf> columns;
+  columns.reserve(keys().size());
+  for (const auto& key : keys()) {
+    columns.push_back(this->keys(key).to_shelf());
+  }
+  return pluss::table::detail::kind_counts_frame(keys(), columns);
 }
 
 Catalog Catalog::isnull() const {
@@ -371,8 +591,8 @@ Catalog Catalog::invalid() const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::cast(pluss::table::SlateCastTarget target,
-                      const pluss::table::SlateCastOptions& options) const {
+Catalog Catalog::cast(pluss::table::ShelfCastTarget target,
+                      const pluss::table::ShelfCastOptions& options) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(nstreams()));
@@ -383,8 +603,8 @@ Catalog Catalog::cast(pluss::table::SlateCastTarget target,
 }
 
 Catalog Catalog::astype(pluss::codem::ScalarType dtype) const {
-  return cast(pluss::table::SlateCastTarget::Series,
-              pluss::table::SlateCastOptions{.series_dtype = dtype});
+  return cast(pluss::table::ShelfCastTarget::Series,
+              pluss::table::ShelfCastOptions{.series_dtype = dtype});
 }
 
 Catalog Catalog::distinct(DistinctOptions options) const {

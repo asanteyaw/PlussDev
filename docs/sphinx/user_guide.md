@@ -11,7 +11,7 @@ one umbrella include and one CMake target.
 | Module | Main purpose | Common objects |
 | --- | --- | --- |
 | PlussQit | Core array, text, time, dispatch, and serialization surface | `Series`, `Note`, `Timeline`, `TimeIndex`, `Type` |
-| PlussMic | Tables, loaders, DataFrame operations, Atlas stacks | `Slate`, `DataFrame`, `Atlas` |
+| PlussMic | Tables, loaders, DataFrame operations, Atlas stacks | `Shelf`, `DataFrame`, `Atlas` |
 | PlussMa | Math, statistics, distributions, finance, optimization | distribution objects, optimizers, time-series helpers |
 | PlussPl | Plotting and export | `pluss::pl::Studio`, panes, traces |
 | PlussAI | Classical ML and neural/AI surfaces | NodeJ, Lymph, model/workflow types |
@@ -32,7 +32,7 @@ the default umbrella.
 Pluss uses a layered model:
 
 ```text
-Atlas -> DataFrame -> Slate -> Series / Note / Timeline / TimeIndex
+Atlas -> DataFrame -> Shelf -> Series / Note / Timeline / TimeIndex
 ```
 
 ### Series
@@ -50,21 +50,21 @@ double total = x.sum().item<double>();
 ### Note
 
 `Note` is the vectorized text type. It is used directly for text arrays and
-indirectly through text `Slate` columns in a `DataFrame`.
+indirectly through text `Shelf` columns in a `DataFrame`.
 
 ### Timeline and TimeIndex
 
 `Timeline` and `TimeIndex` are for date/time data. Use them for time axes,
 calendar extraction, alignment, and time-series workflows.
 
-### Slate
+### Shelf
 
-`Slate` is a 1D table column. A `Slate` wraps exactly one core payload kind:
+`Shelf` is a 1D table column. A `Shelf` wraps exactly one core payload kind:
 numeric `Series`, text `Note`, `Timeline`, or `TimeIndex`. It also carries
 validity/missingness information.
 
 ```cpp
-pluss::table::Slate values(pluss::make_series({10.0, 12.5, 9.0}));
+pluss::table::Shelf values(pluss::make_series({10.0, 12.5, 9.0}));
 auto cleaned = values.fillna(0.0).clip(0.0, 100.0);
 ```
 
@@ -222,10 +222,9 @@ fig.save_svg("trend.svg");
 | Learn by building a first program | [Quickstart](quickstart.md) |
 | Load CSV, Excel, JSON, Parquet | [Loader Guide](loader.md) |
 | Work with tables | [Data Workflows](data_workflows.md) |
-| Work with numeric arrays | [Series Guide](series.md) |
-| Query/filter tables | [Series Query User Guide](series_query_user_guide.md) |
+| Query/filter tables | [Data Workflows](data_workflows.md) |
 | Save/load core objects | [I/O Save/Load Guide](io_save_load_guide.md) |
-| Plot manually | [PlussPl User Guide](plusspl_user_guide.md) |
+| Plot manually | the PlussPl guide *PlussPl by example* |
 | Use distributions | [Distributions User Guide](plussma_distributions_user_guide.md) |
 | Optimize functions | [Optimization User Guide](plussma_optimization_user_guide.md) |
 | Build ML workflows | [Lymph User Guide](lymph_user_guide.md), [NodeJ User Guide](nodej_user_guide.md) |
@@ -236,7 +235,6 @@ The API reference pages are intentionally detailed and method-oriented. Read
 the guides first, then use these pages when you need exact method names:
 
 - [Series API Reference](series_api_reference.md)
-- [Series All Methods Usage](series_all_methods_usage.md)
 - [Note API Reference](note_api_reference.md)
 - [Timeline API Reference](timeline_api_reference.md)
 - [TimeIndex API Reference](timeindex_api_reference.md)

@@ -261,6 +261,192 @@ kernel void binary_cmp_c64(
   out[gid] = v ? uchar(1) : uchar(0);
 }
 
+// exact integer arithmetic / comparison / select (no float32 lane): add, sub, mul and the six comparisons
+kernel void binary_i32(
+    const device int* a [[buffer(0)]],
+    const device int* b [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const int av = a[ao];
+  const int bv = b[bo];
+  int v = 0;
+  switch (meta.op) {
+    case 0: v = av + bv; break;
+    case 1: v = av - bv; break;
+    case 2: v = av * bv; break;
+    case 3: v = bv != 0 ? av / bv : 0; break;
+    default: v = 0; break;
+  }
+  out[gid] = v;
+}
+
+kernel void binary_cmp_i32(
+    const device int* a [[buffer(0)]],
+    const device int* b [[buffer(1)]],
+    device uchar* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const int av = a[ao];
+  const int bv = b[bo];
+  bool v = false;
+  switch (meta.op) {
+    case 0: v = (av == bv); break;
+    case 1: v = (av != bv); break;
+    case 2: v = (av <  bv); break;
+    case 3: v = (av <= bv); break;
+    case 4: v = (av >  bv); break;
+    case 5: v = (av >= bv); break;
+    default: v = false; break;
+  }
+  out[gid] = v ? uchar(1) : uchar(0);
+}
+
+kernel void where_i32(
+    const device uchar* cond [[buffer(0)]],
+    const device int* a [[buffer(1)]],
+    const device int* b [[buffer(2)]],
+    device int* out [[buffer(3)]],
+    constant TernaryMeta& meta [[buffer(4)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong co = 0;
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    co = static_cast<ulong>(gid);
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else {
+    co = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.cond_strides);
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = (cond[co] != 0) ? a[ao] : b[bo];
+}
+
+// exact integer arithmetic / comparison / select (no float32 lane): add, sub, mul and the six comparisons
+kernel void binary_i64(
+    const device long* a [[buffer(0)]],
+    const device long* b [[buffer(1)]],
+    device long* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const long av = a[ao];
+  const long bv = b[bo];
+  long v = 0;
+  switch (meta.op) {
+    case 0: v = av + bv; break;
+    case 1: v = av - bv; break;
+    case 2: v = av * bv; break;
+    case 3: v = bv != 0 ? av / bv : 0; break;
+    default: v = 0; break;
+  }
+  out[gid] = v;
+}
+
+kernel void binary_cmp_i64(
+    const device long* a [[buffer(0)]],
+    const device long* b [[buffer(1)]],
+    device uchar* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const long av = a[ao];
+  const long bv = b[bo];
+  bool v = false;
+  switch (meta.op) {
+    case 0: v = (av == bv); break;
+    case 1: v = (av != bv); break;
+    case 2: v = (av <  bv); break;
+    case 3: v = (av <= bv); break;
+    case 4: v = (av >  bv); break;
+    case 5: v = (av >= bv); break;
+    default: v = false; break;
+  }
+  out[gid] = v ? uchar(1) : uchar(0);
+}
+
+kernel void where_i64(
+    const device uchar* cond [[buffer(0)]],
+    const device long* a [[buffer(1)]],
+    const device long* b [[buffer(2)]],
+    device long* out [[buffer(3)]],
+    constant TernaryMeta& meta [[buffer(4)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong co = 0;
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    co = static_cast<ulong>(gid);
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else {
+    co = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.cond_strides);
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = (cond[co] != 0) ? a[ao] : b[bo];
+}
+
 kernel void maximum_f32(
     const device float* a [[buffer(0)]],
     const device float* b [[buffer(1)]],
@@ -307,6 +493,46 @@ kernel void minimum_f32(
     bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
   }
   out[gid] = fmin(a[ao], b[bo]);
+}
+
+kernel void nextafter_f32(
+    const device float* a [[buffer(0)]],
+    const device float* b [[buffer(1)]],
+    device float* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  // Step one representable float from x toward y, on the IEEE bit pattern (the result may be subnormal).
+  const float x = a[ao];
+  const float y = b[bo];
+  float v;
+  if (isnan(x) || isnan(y)) {
+    v = x + y;
+  } else if (x == y) {
+    v = y;
+  } else if (x == 0.0f) {
+    v = as_type<float>(y > 0.0f ? 0x00000001u : 0x80000001u);
+  } else {
+    uint bits = as_type<uint>(x);
+    const bool away_from_zero = (y > x) == (x > 0.0f);
+    bits = away_from_zero ? bits + 1u : bits - 1u;
+    v = as_type<float>(bits);
+  }
+  out[gid] = v;
 }
 
 kernel void where_f32(
@@ -384,7 +610,7 @@ kernel void unary_f32(
     case 16: v = 1.0f / x; break;
     case 17: v = floor(x); break;
     case 18: v = ceil(x); break;
-    case 19: v = round(x); break;
+    case 19: v = rint(x); break; // round half to even, as on the CPU
     case 23: v = trunc(x); break;
     case 24: v = max(0.0f, x); break;
     case 25: v = 1.0f / (1.0f + exp(-x)); break;
@@ -505,11 +731,18 @@ struct Context {
   id<MTLCommandQueue> queue{nil};
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> binary_f32{nil};
+  id<MTLComputePipelineState> binary_i32{nil};
+  id<MTLComputePipelineState> binary_cmp_i32{nil};
+  id<MTLComputePipelineState> where_i32{nil};
+  id<MTLComputePipelineState> binary_i64{nil};
+  id<MTLComputePipelineState> binary_cmp_i64{nil};
+  id<MTLComputePipelineState> where_i64{nil};
   id<MTLComputePipelineState> binary_cmp_f32{nil};
   id<MTLComputePipelineState> binary_c64{nil};
   id<MTLComputePipelineState> binary_cmp_c64{nil};
   id<MTLComputePipelineState> maximum_f32{nil};
   id<MTLComputePipelineState> minimum_f32{nil};
+  id<MTLComputePipelineState> nextafter_f32{nil};
   id<MTLComputePipelineState> where_f32{nil};
   id<MTLComputePipelineState> where_c64{nil};
   id<MTLComputePipelineState> unary_f32{nil};
@@ -573,11 +806,18 @@ Context& ctx_() {
       };
 
       if (!make_pipeline("binary_f32", &ctx.binary_f32)) return;
+      if (!make_pipeline("binary_i32", &ctx.binary_i32)) return;
+      if (!make_pipeline("binary_cmp_i32", &ctx.binary_cmp_i32)) return;
+      if (!make_pipeline("where_i32", &ctx.where_i32)) return;
+      if (!make_pipeline("binary_i64", &ctx.binary_i64)) return;
+      if (!make_pipeline("binary_cmp_i64", &ctx.binary_cmp_i64)) return;
+      if (!make_pipeline("where_i64", &ctx.where_i64)) return;
       if (!make_pipeline("binary_cmp_f32", &ctx.binary_cmp_f32)) return;
       if (!make_pipeline("binary_c64", &ctx.binary_c64)) return;
       if (!make_pipeline("binary_cmp_c64", &ctx.binary_cmp_c64)) return;
       if (!make_pipeline("maximum_f32", &ctx.maximum_f32)) return;
       if (!make_pipeline("minimum_f32", &ctx.minimum_f32)) return;
+      if (!make_pipeline("nextafter_f32", &ctx.nextafter_f32)) return;
       if (!make_pipeline("where_f32", &ctx.where_f32)) return;
       if (!make_pipeline("where_c64", &ctx.where_c64)) return;
       if (!make_pipeline("unary_f32", &ctx.unary_f32)) return;
@@ -602,15 +842,16 @@ void require_contiguous_(const Series& s, const char* op) {
   }
 }
 
-void validate_mps_tensor_(const Series& s, const char* op) {
+void validate_mps_tensor_(const Series& s, const char* op, bool allow_integer = false) {
   if (!s.defined()) {
     fail_(std::string(op) + ": undefined Series");
   }
   if (s.platform() != Platform::MPS) {
     fail_(std::string(op) + ": expected MPS Series");
   }
+  const bool integer_ok = allow_integer && (s.scalar_type() == ScalarType::Int32 || s.scalar_type() == ScalarType::Int64);
   if (s.scalar_type() != ScalarType::Float32 && s.scalar_type() != ScalarType::Bool &&
-      s.scalar_type() != ScalarType::Complex64) {
+      s.scalar_type() != ScalarType::Complex64 && !integer_ok) {
     fail_(std::string(op) + ": unsupported dtype on current MPS path");
   }
   require_contiguous_(s, op);
@@ -883,6 +1124,23 @@ bool supports_binary(cpu::BinaryOpId op, ScalarType dt) noexcept {
         return false;
     }
   }
+  if (dt == ScalarType::Int32 || dt == ScalarType::Int64) {
+    switch (op) {
+      case B::Add:
+      case B::Sub:
+      case B::Mul:
+      case B::Div: // integer operands: truncating division (callers wanting true division cast to float first)
+      case B::Eq:
+      case B::Ne:
+      case B::Lt:
+      case B::Le:
+      case B::Gt:
+      case B::Ge:
+        return true;
+      default:
+        return false;
+    }
+  }
   if (dt != ScalarType::Float32) {
     return false;
   }
@@ -922,15 +1180,16 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
   if (rhs.platform() != Platform::MPS && rhs.defined() && rhs.numel() == 1) {
     rhs = rhs.to(Platform::MPS, out.scalar_type() == ScalarType::Complex64 ? ScalarType::Complex64 : ScalarType::Float32);
   }
-  validate_mps_tensor_(lhs, "binary");
-  validate_mps_tensor_(rhs, "binary");
-  validate_mps_tensor_(out, "binary");
+  validate_mps_tensor_(lhs, "binary", true);
+  validate_mps_tensor_(rhs, "binary", true);
+  validate_mps_tensor_(out, "binary", true);
   const ScalarType compute_dt = lhs.scalar_type();
   if (compute_dt != rhs.scalar_type()) {
     fail_("binary: dtype mismatch on current MPS path");
   }
-  if (compute_dt != ScalarType::Float32 && compute_dt != ScalarType::Complex64) {
-    fail_("binary: only float32 and complex64 inputs are supported on current MPS path");
+  if (compute_dt != ScalarType::Float32 && compute_dt != ScalarType::Complex64 && compute_dt != ScalarType::Int32 &&
+      compute_dt != ScalarType::Int64) {
+    fail_("binary: only float32, int32, int64 and complex64 inputs are supported on current MPS path");
   }
 
   const bool is_cmp = (op == cpu::BinaryOpId::Eq || op == cpu::BinaryOpId::Ne || op == cpu::BinaryOpId::Lt ||
@@ -951,7 +1210,9 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t elem_bytes = compute_dt == ScalarType::Complex64 ? sizeof(float) * 2 : sizeof(float);
+    const std::size_t elem_bytes = compute_dt == ScalarType::Complex64 ? sizeof(float) * 2
+                                   : compute_dt == ScalarType::Int64   ? sizeof(std::int64_t)
+                                                                      : sizeof(float);
     const std::size_t a_bytes = static_cast<std::size_t>(lhs.numel()) * elem_bytes;
     const std::size_t b_bytes = static_cast<std::size_t>(rhs.numel()) * elem_bytes;
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * (is_cmp ? sizeof(std::uint8_t) : elem_bytes);
@@ -987,8 +1248,14 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     }
 
     id<MTLCommandBuffer> cb = encode_op_(
-        is_cmp ? (compute_dt == ScalarType::Complex64 ? c.binary_cmp_c64 : c.binary_cmp_f32)
-               : (compute_dt == ScalarType::Complex64 ? c.binary_c64 : c.binary_f32),
+        is_cmp ? (compute_dt == ScalarType::Complex64 ? c.binary_cmp_c64
+                  : compute_dt == ScalarType::Int32   ? c.binary_cmp_i32
+                  : compute_dt == ScalarType::Int64   ? c.binary_cmp_i64
+                                                      : c.binary_cmp_f32)
+               : (compute_dt == ScalarType::Complex64 ? c.binary_c64
+                  : compute_dt == ScalarType::Int32   ? c.binary_i32
+                  : compute_dt == ScalarType::Int64   ? c.binary_i64
+                                                      : c.binary_f32),
         a_buf,
         b_buf,
         out_buf,
@@ -1215,18 +1482,24 @@ void minimum(const Series& a, const Series& b, Series& out) {
   maxmin_impl_("minimum", c.minimum_f32, a, b, out);
 }
 
+void nextafter(const Series& a, const Series& b, Series& out) {
+  auto& c = ctx_();
+  maxmin_impl_("nextafter", c.nextafter_f32, a, b, out);
+}
+
 bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept {
-  return cond_dt == ScalarType::Bool && (data_dt == ScalarType::Float32 || data_dt == ScalarType::Complex64);
+  return cond_dt == ScalarType::Bool && (data_dt == ScalarType::Float32 || data_dt == ScalarType::Complex64 ||
+                                         data_dt == ScalarType::Int32 || data_dt == ScalarType::Int64);
 }
 
 void where(const Series& cond, const Series& a, const Series& b, Series& out) {
   if (!is_available()) {
     fail_("where: MPS backend unavailable");
   }
-  validate_mps_tensor_(cond, "where");
-  validate_mps_tensor_(a, "where");
-  validate_mps_tensor_(b, "where");
-  validate_mps_tensor_(out, "where");
+  validate_mps_tensor_(cond, "where", true);
+  validate_mps_tensor_(a, "where", true);
+  validate_mps_tensor_(b, "where", true);
+  validate_mps_tensor_(out, "where", true);
   if (!supports_where(cond.scalar_type(), a.scalar_type()) || a.scalar_type() != b.scalar_type() ||
       out.scalar_type() != a.scalar_type()) {
     fail_("where: unsupported dtype combination on current MPS path");
@@ -1235,7 +1508,9 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
   auto& c = ctx_();
   @autoreleasepool {
     const bool complex_data = a.scalar_type() == ScalarType::Complex64;
-    const std::size_t elem_bytes = complex_data ? sizeof(float) * 2u : sizeof(float);
+    const std::size_t elem_bytes = complex_data                           ? sizeof(float) * 2u
+                                   : a.scalar_type() == ScalarType::Int64 ? sizeof(std::int64_t)
+                                                                          : sizeof(float);
     const std::size_t cond_bytes = static_cast<std::size_t>(cond.numel()) * sizeof(std::uint8_t);
     const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
     const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * elem_bytes;
@@ -1264,7 +1539,10 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
     }
 
     id<MTLCommandBuffer> cb = encode_op_(
-        complex_data ? c.where_c64 : c.where_f32,
+        complex_data                           ? c.where_c64
+        : a.scalar_type() == ScalarType::Int32 ? c.where_i32
+        : a.scalar_type() == ScalarType::Int64 ? c.where_i64
+                                               : c.where_f32,
         cond_buf,
         a_buf,
         b_buf,

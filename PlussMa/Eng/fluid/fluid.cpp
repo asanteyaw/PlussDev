@@ -237,8 +237,7 @@ LossEval darcy_loss(const Series &length, const Series &diameter,
       flow.mul(laminar_resistance.add(minor.mul(abs_flow)));
   const Series laminar_gradient =
       laminar_resistance.add(minor.mul(abs_flow).mul(2.0));
-  const Series laminar_friction = abs_flow.gt(0.0).where(
-      reynolds.reciprocal().mul(64.0), pluss::series::zeros_like(flow));
+  const Series laminar_friction = pluss::series::where(abs_flow.gt(0.0), reynolds.reciprocal().mul(64.0), pluss::series::zeros_like(flow));
 
   const Series relative = roughness.div(diameter.mul(3.7));
   const Series y1 = w.pow(-0.9).mul(a8);
@@ -266,8 +265,8 @@ LossEval darcy_loss(const Series &length, const Series &diameter,
           .div(diameter);
 
   const Series upper = w.ge(a1);
-  const Series friction = upper.where(turbulent_friction, transition_friction);
-  const Series df = upper.where(turbulent_df, transition_df);
+  const Series friction = pluss::series::where(upper, turbulent_friction, transition_friction);
+  const Series df = pluss::series::where(upper, turbulent_df, transition_df);
   const Series coefficient = friction.mul(base).add(minor);
   const Series nonlaminar_loss = flow.mul(abs_flow).mul(coefficient);
   const Series nonlaminar_gradient = coefficient.mul(abs_flow).mul(2.0).add(
@@ -275,11 +274,11 @@ LossEval darcy_loss(const Series &length, const Series &diameter,
 
   const Series laminar = w.le(a2);
   return {
-      laminar.where(laminar_loss, nonlaminar_loss).to(dtype),
-      laminar.where(laminar_gradient, nonlaminar_gradient)
+      pluss::series::where(laminar, laminar_loss, nonlaminar_loss).to(dtype),
+      pluss::series::where(laminar, laminar_gradient, nonlaminar_gradient)
           .clamp_min(min_gradient)
           .to(dtype),
-      laminar.where(laminar_friction, friction).to(dtype),
+      pluss::series::where(laminar, laminar_friction, friction).to(dtype),
   };
 }
 
@@ -337,10 +336,10 @@ DemandEval demand(const Series &base, const Series &coefficient,
         pressure.sub(options.min_pressure).div(span).clamp(1e-30, 1.0);
     const Series partial = base.mul(ratio.pow(options.demand_exponent));
     const Series pressure_demand =
-        pressure.ge(options.full_pressure)
-            .where(base, interior.where(partial, zero));
-    delivered = positive.where(pressure_demand, base);
-    demand_gradient = positive.logical_and(interior).where(
+        pluss::series::where(pressure.ge(options.full_pressure), base, pluss::series::where(interior, partial, zero));
+    delivered = pluss::series::where(positive, pressure_demand, base);
+    demand_gradient = pluss::series::where(
+        positive.logical_and(interior),
         base.mul(options.demand_exponent / span)
             .mul(ratio.pow(options.demand_exponent - 1.0)),
         zero);
@@ -348,12 +347,9 @@ DemandEval demand(const Series &base, const Series &coefficient,
 
   const Series positive_pressure = pressure.gt(0.0);
   const Series safe_pressure = pressure.clamp_min(1e-30);
-  const Series emitter = positive_pressure.where(
-      coefficient.mul(safe_pressure.pow(options.emitter_exponent)), zero);
-  const Series emitter_gradient = positive_pressure.where(
-      coefficient.mul(options.emitter_exponent)
-          .mul(safe_pressure.pow(options.emitter_exponent - 1.0)),
-      zero);
+  const Series emitter = pluss::series::where(positive_pressure, coefficient.mul(safe_pressure.pow(options.emitter_exponent)), zero);
+  const Series emitter_gradient = pluss::series::where(positive_pressure, coefficient.mul(options.emitter_exponent)
+          .mul(safe_pressure.pow(options.emitter_exponent - 1.0)), zero);
   return {delivered.to(base.scalar_type()), emitter.to(base.scalar_type()),
           demand_gradient.add(emitter_gradient).to(base.scalar_type())};
 }
@@ -1102,7 +1098,7 @@ RunResult run(const Network &network, const Schedule &schedule,
                                    .to(ScalarType::Bool)
                                    .to(network.platform());
   Series valve_value =
-      throttle_mask.where(base_valve_minor, base_valve_setting);
+      pluss::series::where(throttle_mask, base_valve_minor, base_valve_setting);
   const Series base_pump = pump_value;
   const Series base_valve = valve_value;
 
@@ -1146,12 +1142,10 @@ RunResult run(const Network &network, const Schedule &schedule,
       control_open = control_open.logical_or(link);
       if (action.device == Device::Pump) {
         pump_latch = pump_latch.logical_or(family);
-        pump_value = family.where(
-            pluss::series::full_like(pump_value, action.value), pump_value);
+        pump_value = pluss::series::where(family, pluss::series::full_like(pump_value, action.value), pump_value);
       } else {
         valve_latch = valve_latch.logical_or(family);
-        valve_value = family.where(
-            pluss::series::full_like(valve_value, action.value), valve_value);
+        valve_value = pluss::series::where(family, pluss::series::full_like(valve_value, action.value), valve_value);
       }
     }
     return !before_open.equal(control_open) ||
@@ -1224,8 +1218,8 @@ RunResult run(const Network &network, const Schedule &schedule,
         pattern(schedule.valve, network.valves_, time, schedule.pattern_step,
                 network.dtype_, network.platform(), base_valve);
     const Series patterned_pump = base_pump.mul(pump_scale);
-    const Series effective_pump = pump_latch.where(pump_value, patterned_pump);
-    const Series effective_valve = valve_latch.where(valve_value, valve_base);
+    const Series effective_pump = pluss::series::where(pump_latch, pump_value, patterned_pump);
+    const Series effective_valve = pluss::series::where(valve_latch, valve_value, valve_base);
 
     Series bound_closed =
         pluss::series::zeros_like(control_open).to(ScalarType::Bool);
@@ -1259,9 +1253,8 @@ RunResult run(const Network &network, const Schedule &schedule,
                     network.pipes_ + network.pumps_);
       if (network.valves_ > 0) {
         const Series active_minor =
-            throttle_mask.where(effective_valve, base_valve_minor);
-        const Series active_setting = throttle_mask.logical_not().where(
-            effective_valve, base_valve_setting);
+            pluss::series::where(throttle_mask, effective_valve, base_valve_minor);
+        const Series active_setting = pluss::series::where(throttle_mask.logical_not(), effective_valve, base_valve_setting);
         snapshot.valve_minor_ =
             replace(network.valve_minor_, active_minor,
                     network.pipes_ + network.pumps_, network.links());
@@ -1319,9 +1312,8 @@ RunResult run(const Network &network, const Schedule &schedule,
     Series tank_flow = matvec(network.tank_pick_, result.balance);
     const Series at_max = tank_level.ge(network.tank_max_.sub(1e-10));
     const Series spill =
-        at_max.logical_and(network.tank_overflow_.gt(0.0))
-            .logical_and(tank_flow.gt(0.0))
-            .where(tank_flow, pluss::series::zeros_like(tank_flow));
+        pluss::series::where(at_max.logical_and(network.tank_overflow_.gt(0.0)).logical_and(tank_flow.gt(0.0)), tank_flow,
+                             pluss::series::zeros_like(tank_flow));
     const Series tank_rate = tank_flow.sub(spill).div(network.tank_area_);
     append(result, tank_level, spill, effective_open);
     if (time >= schedule.duration - time_tol)
@@ -1355,16 +1347,12 @@ RunResult run(const Network &network, const Schedule &schedule,
     if (network.tanks_ > 0) {
       const Series inf = pluss::series::full_like(
           tank_rate, std::numeric_limits<double>::infinity());
-      const Series to_max = tank_rate.gt(0.0).where(
-          network.tank_max_.sub(tank_level).div(tank_rate.clamp_min(1e-30)),
-          inf);
-      const Series to_min = tank_rate.lt(0.0).where(
-          network.tank_min_.sub(tank_level).div(tank_rate.clamp_max(-1e-30)),
-          inf);
+      const Series to_max = pluss::series::where(tank_rate.gt(0.0), network.tank_max_.sub(tank_level).div(tank_rate.clamp_min(1e-30)), inf);
+      const Series to_min = pluss::series::where(tank_rate.lt(0.0), network.tank_min_.sub(tank_level).div(tank_rate.clamp_max(-1e-30)), inf);
       const double tank_event =
-          to_max.gt(time_tol).where(to_max, inf).amin().item<double>();
+          pluss::series::where(to_max.gt(time_tol), to_max, inf).amin().item<double>();
       const double tank_min_event =
-          to_min.gt(time_tol).where(to_min, inf).amin().item<double>();
+          pluss::series::where(to_min.gt(time_tol), to_min, inf).amin().item<double>();
       dt = std::min(dt, std::min(tank_event, tank_min_event));
       for (const auto &control : schedule.state) {
         const auto tank_index =
@@ -1375,27 +1363,22 @@ RunResult run(const Network &network, const Schedule &schedule,
         const Series rate = tank_rate.select(-1, tank_index);
         const Series candidate =
             control.sense == Sense::Above
-                ? rate.gt(0.0)
-                      .logical_and(value.lt(control.threshold))
-                      .where(
-                          pluss::series::full_like(value, control.threshold)
-                              .sub(value)
-                              .div(rate.clamp_min(1e-30)),
-                          pluss::series::full_like(
-                              value, std::numeric_limits<double>::infinity()))
-                : rate.lt(0.0)
-                      .logical_and(value.gt(control.threshold))
-                      .where(
-                          pluss::series::full_like(value, control.threshold)
-                              .sub(value)
-                              .div(rate.clamp_max(-1e-30)),
-                          pluss::series::full_like(
-                              value, std::numeric_limits<double>::infinity()));
+                ? pluss::series::where(rate.gt(0.0).logical_and(value.lt(control.threshold)),
+                                       pluss::series::full_like(value, control.threshold)
+                                           .sub(value)
+                                           .div(rate.clamp_min(1e-30)),
+                                       pluss::series::full_like(
+                                           value, std::numeric_limits<double>::infinity()))
+                : pluss::series::where(rate.lt(0.0).logical_and(value.gt(control.threshold)),
+                                       pluss::series::full_like(value, control.threshold)
+                                           .sub(value)
+                                           .div(rate.clamp_max(-1e-30)),
+                                       pluss::series::full_like(
+                                           value, std::numeric_limits<double>::infinity()));
         const double state_event =
-            candidate.gt(time_tol)
-                .where(candidate,
-                       pluss::series::full_like(
-                           candidate, std::numeric_limits<double>::infinity()))
+            pluss::series::where(candidate.gt(time_tol), candidate,
+                                 pluss::series::full_like(
+                                     candidate, std::numeric_limits<double>::infinity()))
                 .amin()
                 .item<double>();
         dt = std::min(dt, state_event);

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::diff(const Slate& other) const
+Shelf DataFrameLabelAccessor::diff(const Shelf& other) const
 ```
 
 ## What It Does
@@ -21,30 +21,30 @@ library compute; it's a set operation over label *values*.
 
 ## Parameters
 
-**other** (`const Slate&`)
+**other** (`const Shelf&`)
 
-The values to subtract. Can be any `Slate`, not necessarily another frame's
+The values to subtract. Can be any `Shelf`, not necessarily another frame's
 case labels.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The distinct case-label values with no match in `other`, in first-occurrence
     order, `display_name` `"diff"`.
 
 ## Examples
 
-Example 1. Subtract a set of values from a case-label slate with a repeat.
+Example 1. Subtract a set of values from a case-label shelf with a repeat.
 
 ```cpp
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
-auto other = Slate(pluss::make_note({"west", "north"}));
+auto other = Shelf(pluss::make_note({"west", "north"}));
 auto out = labeled.labels().diff(other);
 std::cout << out;
 ```

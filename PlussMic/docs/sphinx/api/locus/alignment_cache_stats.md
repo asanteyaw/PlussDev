@@ -101,3 +101,10 @@ not on which `Locus` or which call produced it.
   and the one a repeated call on the same `Locus` actually hits.
 - [`policy`](policy.md): part of the cache key alongside each catalog's own
   data.
+
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="apply.html">
+    <span class="label">Next</span>
+    <span class="title">apply</span>
+  </a>
+</div>

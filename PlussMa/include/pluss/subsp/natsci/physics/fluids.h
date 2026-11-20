@@ -1468,15 +1468,11 @@ step_limit_for_nu(const IncompressibleState &state, const Grid &grid,
     throw std::invalid_argument(
         "natsci::fluids::step_limit: viscosity maximum must be finite, "
         "non-negative, and match the state batch layout");
-  const Series conv = conv_rate.gt(0.0).where(
-      pluss::codem::make_scalar_like(conv_rate, guard.courant).div(conv_rate),
-      infinite);
+  const Series conv = pluss::series::where(conv_rate.gt(0.0), pluss::codem::make_scalar_like(conv_rate, guard.courant).div(conv_rate), infinite);
   const Series viscous_rate = viscosity_max.mul(inverse_h2);
-  const Series visc = viscous_rate.gt(0.0).where(
-      pluss::codem::make_scalar_like(viscous_rate, guard.diffusion)
+  const Series visc = pluss::series::where(viscous_rate.gt(0.0), pluss::codem::make_scalar_like(viscous_rate, guard.diffusion)
           .div(viscous_rate.add(
-              viscous_rate.eq(0.0).to(viscous_rate.scalar_type()))),
-      infinite);
+              viscous_rate.eq(0.0).to(viscous_rate.scalar_type()))), infinite);
   const Series allowed = conv.minimum(visc);
   return {common::SeriesQuantity<common::Time>::from_si(conv),
           common::SeriesQuantity<common::Time>::from_si(visc),

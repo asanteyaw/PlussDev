@@ -10,7 +10,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -21,7 +21,7 @@ int main() {
   //                        five positives at the top only
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame frame({{"score", Slate(score)}, {"target", Slate(y)}});
+  const DataFrame frame({{"score", Shelf(score)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"score"};

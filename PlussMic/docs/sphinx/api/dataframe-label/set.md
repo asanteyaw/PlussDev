@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameLabelAccessor::set(const Slate& labels) const
+DataFrame DataFrameLabelAccessor::set(const Shelf& labels) const
 DataFrame DataFrameLabelAccessor::set(const pluss::Note& labels) const
 DataFrame DataFrameLabelAccessor::set(
     std::string_view feature_name,
@@ -33,10 +33,10 @@ DataFrame DataFrameLabelAccessor::set(const DataFrame::SetLabelOptions& options)
 
 Two label sources share this name:
 
-- **The direct-label overloads** replace the flat case labels from a `Slate` or `Note`.
-  `Slate` is the general form and can carry any supported label payload; `Note` is the
+- **The direct-label overloads** replace the flat case labels from a `Shelf` or `Note`.
+  `Shelf` is the general form and can carry any supported label payload; `Note` is the
   convenience form for any closed `Note` dtype and is exactly equivalent to first wrapping
-  that `Note` in a `Slate`. Neither form creates named levels, so [`has()`](has.md) is
+  that `Note` in a `Shelf`. Neither form creates named levels, so [`has()`](has.md) is
   `false` afterward.
 - **The feature-name overloads** (single name, multiple names, or the full
   `SetLabelOptions`) promote one or more existing features to **structured**
@@ -61,10 +61,10 @@ not recalculate the ordinary feature values.
 
 ## Parameters
 
-**labels** (`const Slate&` or `const pluss::Note&`)
+**labels** (`const Shelf&` or `const pluss::Note&`)
 
 Replacement flat case labels. Their element count must equal `ncases()`. The `Note`
-overload accepts any `Note` dtype; use the general `Slate` overload for `Series`,
+overload accepts any `Note` dtype; use the general `Shelf` overload for `Series`,
 `Timeline`, `Duration`, or already-threaded nullable labels. Neither overload creates
 structured levels.
 
@@ -108,8 +108,8 @@ removed from the ordinary feature columns.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 auto out = orders.labels().set("region");
 std::cout << out;
@@ -163,9 +163,9 @@ separator, keeping the default drop behavior.
 
 ```cpp
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
@@ -214,12 +214,12 @@ west/SF     | west    SF      40
 [4 cs x 3 feat]
 ```
 
-Example 5. `set(const Slate&)` — a raw axis replacement with no structure at all, and no
+Example 5. `set(const Shelf&)` — a raw axis replacement with no structure at all, and no
 `drop` parameter (there is nothing to drop, since it isn't sourced from an existing
 column).
 
 ```cpp
-auto tagged = orders.labels().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
+auto tagged = orders.labels().set(Shelf(pluss::make_note({"r1", "r2", "r3", "r4"})));
 std::cout << tagged;
 ```
 
@@ -238,12 +238,12 @@ r4   | north   90
 ```
 
 `tagged.labels().has()` is `false` here — this overload never creates a
-`case_axis_`, regardless of the `Slate`'s own kind or origin. Both `region` and `sales`
+`case_axis_`, regardless of the `Shelf`'s own kind or origin. Both `region` and `sales`
 remain as ordinary columns since this overload doesn't source the labels from a column at
 all.
 
 Example 6. Pass an existing `Note` directly; this example uses text labels. The overload is
-equivalent to `set(Slate(labels))` and does not turn the `Note` into a frame feature or a
+equivalent to `set(Shelf(labels))` and does not turn the `Note` into a frame feature or a
 structured level.
 
 ```cpp
@@ -282,8 +282,8 @@ result is returned.
 ```cpp
 try {
   auto invalid = sales.labels().set(pluss::make_note({"row-a", "row-b"}));
-} catch (const std::exception& e) {
-  std::string message(e.what());
+} catch (const pluss::Error& e) {
+  std::string message(e.message());
   std::cout << message.substr(0, message.find('\n'));
 }
 ```
@@ -350,8 +350,8 @@ unique.
 ```cpp
 try {
   auto verified = orders.labels().set(DataFrame::SetLabelOptions{.features = {"region"}, .verify = true});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -371,7 +371,7 @@ instead rejects the duplicate outright — independent of, and unaffected by, `d
 - `drop_feature`/`drop_features`/`SetLabelOptions.drop` all default to `true` — promoting a
   feature to the case-label axis removes it from the ordinary columns unless you pass
   `false` explicitly. See the important callout above.
-- Only the feature-name overloads create a structured `case_axis_`. The `Slate` and `Note`
+- Only the feature-name overloads create a structured `case_axis_`. The `Shelf` and `Note`
   overloads never do and have no `drop` concept because their labels are not sourced from
   an existing feature.
 - `separator` only affects the displayed composite string. It's preserved

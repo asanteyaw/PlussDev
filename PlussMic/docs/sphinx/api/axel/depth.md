@@ -50,8 +50,8 @@ Example 2. An undefined handle throws.
 pluss::scribble::Axel undef;
 try {
   undef.depth();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

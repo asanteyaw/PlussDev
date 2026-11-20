@@ -65,5 +65,9 @@ Workbook load_excel_workbook(
 void save_excel(const pluss::table::DataFrame& frame,
                 std::string_view filepath,
                 const WriteExcelOptions& options = {});
+// Writes every sheet of a workbook, in order, into one .xlsx file (the counterpart of loading a workbook). Sheet names must be unique.
+void save_excel(const Workbook& workbook,
+                std::string_view filepath,
+                const WriteExcelOptions& options = {});
 
 } // namespace pluss::loader

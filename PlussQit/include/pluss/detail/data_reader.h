@@ -147,7 +147,7 @@ struct DataReader final {
 
   // Supports the `{68.0, std::nullopt, 72.0}` null-gap construction pattern for
   // floating-point data. `std::nullopt` maps to NaN, the existing null-sentinel
-  // convention for raw (validity-mask-less) numeric Series/Slate values. Deliberately
+  // convention for raw (validity-mask-less) numeric Series/Shelf values. Deliberately
   // NOT templated on T: template argument deduction for `std::initializer_list<T>`
   // requires every element to independently deduce the *same* T, which a mix of
   // `double` and `std::nullopt_t` elements can never satisfy. Making the element type

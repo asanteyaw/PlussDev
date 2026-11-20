@@ -744,7 +744,7 @@ StatusOr<Series> regression_metrics(const Series& truth, const Series& predictio
   const Series sst = y.sub(y.mean()).square().sum();
   const Series one = pluss::series::ones({1}, f64_on(platform));
   const Series zero = pluss::series::zeros({1}, f64_on(platform));
-  const Series r2 = sst.gt(std::numeric_limits<double>::epsilon()).where(one.sub(sse.div(sst)), zero);
+  const Series r2 = pluss::series::where(sst.gt(std::numeric_limits<double>::epsilon()), one.sub(sse.div(sst)), zero);
 
   std::vector<Series> out{};
   out.reserve(requested.size());

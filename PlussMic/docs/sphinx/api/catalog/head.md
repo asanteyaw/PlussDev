@@ -80,8 +80,8 @@ city                     | Note         | Note             | 2       | [Accra, T
     <span class="label">Previous</span>
     <span class="title">has</span>
   </a>
-  <a class="next-link" href="info.html">
+  <a class="next-link" href="identity.html">
     <span class="label">Next</span>
-    <span class="title">info</span>
+    <span class="title">identity</span>
   </a>
 </div>

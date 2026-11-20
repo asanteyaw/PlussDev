@@ -15,7 +15,7 @@ Stream Stream::clip(double min_value, double max_value) const
 
 Clamps every value in a `Series`-kind stream to `[min_value, max_value]` — values below
 `min_value` become `min_value`, values above `max_value` become `max_value`, and everything
-in between passes through unchanged. Delegates to `Slate::clip()`, so it's `Series`-only,
+in between passes through unchanged. Delegates to `Shelf::clip()`, so it's `Series`-only,
 same as [`abs()`](abs.md)/[`log()`](log.md)/[`exp()`](exp.md).
 
 ## Parameters
@@ -67,22 +67,22 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.clip(0.0, 1.0);
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 45);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 45);
 }
 ```
 
 ### Output
 
 ```text
-Slate::clip is only valid for Series payload
+Shelf::clip is only valid for Series payload
 ```
 
 ## Notes
 
 - `Series`-only; throws on `Note`/`Timeline`/`TimeIndex` streams — see Example 2.
 - `min_value`/`max_value` are not validated against each other; passing `min_value >
-  max_value` is not checked for here and follows whatever `Slate::clip()` does with an
+  max_value` is not checked for here and follows whatever `Shelf::clip()` does with an
   inverted range — keep them in the expected order to avoid surprising results.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.

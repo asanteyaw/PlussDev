@@ -83,12 +83,12 @@ using namespace pluss::table;
 
 auto panel = DataFrame(
     {
-        {"city", Slate(pluss::make_note({"A", "A", "B", "B", "C"}))},
-        {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
-        {"amount", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
-        {"score", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
+        {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "C"}))},
+        {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
+        {"amount", Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+        {"score", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
     },
-    Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+    Shelf(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
 auto [lhs, rhs] = panel.split(0.4);
 std::cout << lhs;
@@ -98,20 +98,19 @@ std::cout << rhs;
 ### Output
 
 ```text
-==================================
+===================================
      | city  channel  amount  score
-----------------------------------
-r0   | A     Cash     10      1
-r1   | A     Card     20      2
-r2   | B     Cash     30      3
-----------------------------------
-[3 cs x 4 feat]
-==================================
+-----------------------------------
+r0   | A     Cash     10      1    
+r1   | A     Card     20      2    
+r2   | B     Cash     30      3    
+-----------------------------------
+[3 cs x 4 feat]===================================
      | city  channel  amount  score
-----------------------------------
-r3   | B     Card     40      4
-r4   | C     Cash     50      5
-----------------------------------
+-----------------------------------
+r3   | B     Card     40      4    
+r4   | C     Cash     50      5    
+-----------------------------------
 [2 cs x 4 feat]
 ```
 
@@ -130,25 +129,24 @@ std::cout << right_features;
 ### Output
 
 ```text
-===================
+====================
      | city  channel
--------------------
-r0   | A     Cash
-r1   | A     Card
-r2   | B     Cash
-r3   | B     Card
-r4   | C     Cash
--------------------
-[5 cs x 2 feat]
-===================
+--------------------
+r0   | A     Cash   
+r1   | A     Card   
+r2   | B     Cash   
+r3   | B     Card   
+r4   | C     Cash   
+--------------------
+[5 cs x 2 feat]====================
      | amount  score
--------------------
-r0   | 10      1
-r1   | 20      2
-r2   | 30      3
-r3   | 40      4
-r4   | 50      5
--------------------
+--------------------
+r0   | 10      1    
+r1   | 20      2    
+r2   | 30      3    
+r3   | 40      4    
+r4   | 50      5    
+--------------------
 [5 cs x 2 feat]
 ```
 
@@ -176,10 +174,10 @@ std::cout << recombined.equals(original_sorted) << "\n";
 ### Output
 
 ```text
-true
-true
+1
+1
 3, 2
-true
+1
 ```
 
 The important portable contract is not the exact shuffled row order. It is that
@@ -195,15 +193,21 @@ options.axis = Axis::Case;
 options.shuffle = false;
 
 auto [headish, tailish] = panel.split(0.3, options);
-std::cout << headish.label().values() << "\n";
-std::cout << tailish.label().values() << "\n";
+std::cout << headish.labels().values() << "\n";
+std::cout << tailish.labels().values() << "\n";
 ```
 
 ### Output
 
 ```text
-[r0, r1, r2]
-[r3, r4]
+0  r0
+1  r1
+2  r2
+ptype: Note
+
+0  r3
+1  r4
+ptype: Note
 ```
 
 This example is intentionally small because it highlights the rounding rule.
@@ -250,12 +254,12 @@ legitimately collapse to either boundary.
 - [`DataFrame::take`](take.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sql.html">
+  <a class="prev-link" href="sort.html">
     <span class="label">Previous</span>
-    <span class="title">sql</span>
+    <span class="title">sort</span>
   </a>
-  <a class="next-link" href="stack.html">
+  <a class="next-link" href="sql.html">
     <span class="label">Next</span>
-    <span class="title">stack</span>
+    <span class="title">sql</span>
   </a>
 </div>

@@ -37,7 +37,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   using lymph::AssessOptions;
   using lymph::LinearFamilyOptions;
   using lymph::MetricKind;
@@ -47,13 +47,13 @@ int main() {
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"observed_at", Slate(pluss::make_timeline({
+      {"customer_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+      {"late", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"region", Shelf(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"observed_at", Shelf(pluss::make_timeline({
           "2026-01-01T00:00:00Z",
           "2026-01-02T00:00:00Z",
           "2026-01-03T00:00:00Z",
@@ -221,12 +221,12 @@ int main() {
 
   lymph::workflow::Workflow workflow = lymph::workflow::make(model, policy);
   const DataFrame incoming({
-      {"customer_id", Slate(pluss::make_series({201, 202, 203}, {3}, f64))},
-      {"income", Slate(pluss::make_series({1.2, 4.4, 1.6}, {3}, f64))},
-      {"balance", Slate(pluss::make_series({0.3, 2.3, 0.5}, {3}, f64))},
-      {"late", Slate(pluss::make_series({0, 1, 0}, {3}, f64))},
-      {"region", Slate(pluss::make_note({"north", "south", "west"}))},
-      {"observed_at", Slate(pluss::make_timeline({
+      {"customer_id", Shelf(pluss::make_series({201, 202, 203}, {3}, f64))},
+      {"income", Shelf(pluss::make_series({1.2, 4.4, 1.6}, {3}, f64))},
+      {"balance", Shelf(pluss::make_series({0.3, 2.3, 0.5}, {3}, f64))},
+      {"late", Shelf(pluss::make_series({0, 1, 0}, {3}, f64))},
+      {"region", Shelf(pluss::make_note({"north", "south", "west"}))},
+      {"observed_at", Shelf(pluss::make_timeline({
           "2026-02-01T00:00:00Z",
           "2026-02-02T00:00:00Z",
           "2026-02-03T00:00:00Z",

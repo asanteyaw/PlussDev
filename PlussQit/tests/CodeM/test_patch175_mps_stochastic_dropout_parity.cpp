@@ -356,7 +356,7 @@ TEST_CASE("MPS indexing and where backward paths stay device-native under strict
   const pluss::Series mask = pluss::make_series(std::vector<bool>{true, false, true, false}, {4}, mask_cfg);
   a.tracks_slope_(true);
   b.tracks_slope_(true);
-  mask.where(a, b).sum().reverse();
+  pluss::series::where(mask, a, b).sum().reverse();
   REQUIRE(a.sensitivity().platform() == pluss::pMPS);
   REQUIRE(b.sensitivity().platform() == pluss::pMPS);
   require_close(vec_f32(a.sensitivity()), {1.0f, 0.0f, 1.0f, 0.0f});

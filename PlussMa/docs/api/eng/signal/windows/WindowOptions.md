@@ -2,144 +2,148 @@
 
 # `signal::WindowOptions`
 
+The endpoint convention, dtype and platform of a window.
+
 ## Signature
 
 ```cpp
-signal::WindowOptions options{};
+struct signal::WindowOptions {
+  signal::WindowMode mode{signal::WindowMode::Symmetric};
+  pluss::ScalarType dtype{pluss::ScalarType::Float64};
+  pluss::Platform platform{pluss::Platform::CPU};
+};
 ```
 
 ## What It Does
 
-Carries the common construction policy for every signal window. Defaults produce a symmetric `Float64` CPU `Series`, making an omitted options object deterministic.
+Passed as the second argument of `boxcar`, `bartlett`, `blackman`, `hamming` and `hann`. It does not change the shape of the window; it chooses which of the equivalent samplings is returned and where and in which precision the coefficients live.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `mode` | `WindowMode::Symmetric` | Selects symmetric finite endpoints or periodic DFT-oriented sampling. |
-| `dtype` | `ScalarType::Float64` | Selects `Float32` or `Float64` coefficients. |
-| `platform` | `Platform::CPU` | Selects the execution and storage platform of the returned `Series`. |
-
-## Returns
-
-Pass the object by const reference to any window factory. The returned `Series` reflects its dtype and platform.
+| Field | Meaning | Default |
+|---|---|---|
+| `mode` | `Symmetric` or `Periodic`; see `WindowMode`. | `Symmetric` |
+| `dtype` | `Float32` or `Float64`. | `Float64` |
+| `platform` | Where the result is allocated. | `CPU` |
 
 ## Errors
 
-Window construction rejects non-floating dtypes and unavailable or unsupported platform configurations.
+A dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype, are rejected by the window function that receives the options.
+
+## Interpretation and Use
+
+Construct options with designated initializers, setting only what differs from the default: `sig::hann(256, {.mode = sig::WindowMode::Periodic})`. Use `Float32` when the window multiplies float32 data so that no promotion to float64 happens, and note that the MPS holds only 32-bit and narrower floats.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+The default options, and what a window made without any is.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+
+#include <cmath>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  out.writeln("boxcar =", sig::boxcar(5).items<double>());
-  out.writeln("bartlett =", sig::bartlett(5).items<double>());
-  out.writeln("blackman =", sig::blackman(5).items<double>());
-  out.writeln("hamming =", sig::hamming(5).items<double>());
-  out.writeln("hann =", sig::hann(5).items<double>());
+  const sig::WindowOptions defaults;
+  out.writeln("default mode is symmetric:", defaults.mode == sig::WindowMode::Symmetric);
+  out.writeln("default dtype =", defaults.dtype);
+  out.writeln("default platform is the CPU:", defaults.platform == pluss::Platform::CPU);
+  const pluss::Series w = sig::blackman(5);
+  out.writeln("a window made with no options has dtype", w.scalar_type(), "and", w.numel(), "coefficients");
 }
 ```
 
 Output
 
 ```text
-boxcar = [1.0000, 1.0000, 1.0000, 1.0000, 1.0000]
-bartlett = [0.0000, 0.5000, 1.0000, 0.5000, 0.0000]
-blackman = [0.0000, 0.3400, 1.0000, 0.3400, 0.0000]
-hamming = [0.0800, 0.5400, 1.0000, 0.5400, 0.0800]
-hann = [0.0000, 0.5000, 1.0000, 0.5000, 0.0000]
+default mode is symmetric: true
+default dtype = float64
+default platform is the CPU: true
+a window made with no options has dtype float64 and 5 coefficients
 ```
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Float32 against Float64: the dtype changes and the values agree to rounding.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+
+#include <cmath>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
+  out.print_defaults(PrintOptions{}.fixed(8));
 
-  const pluss::Series symmetric = sig::hann(6);
-  const pluss::Series periodic = sig::hann(
-      6, {.mode = sig::WindowMode::Periodic,
-          .dtype = pluss::ScalarType::Float32});
-
-  out.writeln("symmetric =", symmetric.items<double>());
-  out.writeln("periodic =", periodic.items<float>());
-  out.writeln("periodic dtype =", periodic.scalar_type());
-  out.writeln("empty size =", sig::hann(0).numel());
-  out.writeln("singleton =", sig::hann(1).items<double>());
+  const pluss::Series wide = sig::hamming(8);
+  const pluss::Series narrow = sig::hamming(8, {.dtype = pluss::ScalarType::Float32});
+  out.writeln("float64 dtype =", wide.scalar_type(), " float32 dtype =", narrow.scalar_type());
+  const auto a = wide.items<double>();
+  const auto b = narrow.items<float>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < a.size(); ++i) worst = std::max(worst, std::abs(a[i] - static_cast<double>(b[i])));
+  out.writeln("largest float32 rounding difference =", worst);
 }
 ```
 
 Output
 
 ```text
-symmetric = [0.0000, 0.3455, 0.9045, 0.9045, 0.3455, 0.0000]
-periodic = [0.0000, 0.2500, 0.7500, 1.0000, 0.7500, 0.2500]
-periodic dtype = float32
-empty size = 0
-singleton = [1.0000]
+float64 dtype = float64  float32 dtype = float32
+largest float32 rounding difference = 0.00000009
 ```
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Which dtype and platform combinations are refused.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
-#include <string>
+#include <cmath>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::hann(-1));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative size rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::hamming(
-        4, {.dtype = pluss::ScalarType::Int64}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer dtype rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  refused(out, "dtype Int64", [] { sig::hann(4, {.dtype = pluss::ScalarType::Int64}); });
+  refused(out, "dtype Bool", [] { sig::hann(4, {.dtype = pluss::ScalarType::Bool}); });
+  refused(out, "dtype Float32", [] { sig::hann(4, {.dtype = pluss::ScalarType::Float32}); });
+  refused(out, "float64 on the MPS", [] { sig::hann(4, {.platform = pluss::Platform::MPS}); });
+  refused(out, "float32 on the MPS", [] { sig::hann(4, {.dtype = pluss::ScalarType::Float32, .platform = pluss::Platform::MPS}); });
 }
 ```
 
 Output
 
 ```text
-negative size rejected = eng::signal::hann: size must be non-negative
-integer dtype rejected = eng::signal::hamming: dtype must be Float32 or Float64
+dtype Int64 : eng::signal::hann: dtype must be Float32 or Float64
+dtype Bool : eng::signal::hann: dtype must be Float32 or Float64
+dtype Float32 : accepted
+float64 on the MPS : Series::to(MPS): float64 is unsupported on MPS; cast to float32/float16/bfloat16 first
+float32 on the MPS : accepted
 ```
 ## See Also
 

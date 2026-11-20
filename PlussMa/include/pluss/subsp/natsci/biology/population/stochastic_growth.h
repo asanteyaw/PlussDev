@@ -72,7 +72,7 @@ struct Paths final {
   const Series a = x.sub(barrier);
   const Series pair = a.slice(0, 0, t - 1, 1).mul(a.slice(0, 1, t, 1)).mul(-2.0 / (s * s * block_time)).exp();     // bridge dip probability
   const Series both = above.slice(0, 0, t - 1, 1).logical_and(above.slice(0, 1, t, 1));
-  const Series stay = both.where(pair.neg().add(1.0), pair.mul(0.0));                                                // lanes already below keep stay = 0 on that interval
+  const Series stay = pluss::series::where(both, pair.neg().add(1.0), pair.mul(0.0));                                                // lanes already below keep stay = 0 on that interval
   const Series start_ok = above.select(0, 0).to(x.scalar_type());
   return stay.cumprod(0, false).select(0, t - 2).mul(start_ok).neg().add(1.0);
 }

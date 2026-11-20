@@ -2,6 +2,8 @@
 
 # `lti::sim`
 
+Simulates a state-space system over a time grid.
+
 ## Signature
 
 ```cpp
@@ -21,151 +23,239 @@ lti::SimRun lti::sim(
 
 ## What It Does
 
-Propagates continuous or discrete state-space dynamics over an explicit time grid. The first overload starts from zero state; the second uses a supplied initial state. Continuous propagation supports zero-order and linear input holds.
+Advances `x` through the supplied time points with the input held between them (the `Hold` of `SimOptions`) using exact discretisation, so there is no integration step error: the only error is how the input behaves between samples. The initial state defaults to zero. The result is a `SimRun` with the outputs and the states at every time point.
 
 ## Parameters
 
 `system`
-: Valid state-space model.
+: A `StateSpace`.
 
 `input`
-: Samples shaped `[..., time, inputs]`.
+: `[time, inputs]`, one row per time point.
 
 `time`
-: Finite, strictly increasing real floating vector. Discrete spacing must match `sample_time`.
+: A strictly increasing rank-one `Series` of time points, s.
 
 `initial`
-: Optional state shaped `[..., states]`; omitted means zero.
+: Optional initial state, shape `[..., states]`; omitted means zero.
 
 `options`
-: Input interpolation policy.
+: A `SimOptions`: the input hold.
 
 ## Returns
 
-`SimRun` with values `[..., time, outputs]` and states `[..., time, states]`, preserving promoted precision and platform.
+A `SimRun`: `values` of shape `[time, outputs]` and `states` of shape `[time, states]`.
 
 ## Errors
 
-Rejects malformed or incompatible shapes, mismatched lengths or platforms, nonfinite/nonincreasing time, wrong discrete spacing, incompatible initial state, and linear hold for discrete dynamics.
+A mismatched input length or width, a time vector that does not increase and an initial state of the wrong size throw `pluss::Error`.
+
+## Interpretation and Use
+
+For `x' = -x + u` and a unit step the response is `1 - exp(-t)`, and the first example reproduces it at eleven samples to rounding. With no input the state decays from the initial value as `x0 exp(-t)` (the second example). Choose the time grid by what you need to observe, not by accuracy: the solution at each grid point is exact for the held input.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+A step response against `1 - exp(-t)`.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.2, 0.7, 1.5});
-  const pluss::Series input = pluss::make_series({1.0, 1.0, 1.0, 1.0}, {4, 1});
-  const lti::SimRun run = lti::sim(
-      system, input, time, {.hold = lti::Hold::Zero});
-
-  out.writeln("values =", run.values.flatten().items<double>());
-  out.writeln("states =", run.states.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-values = [0.0000, 0.1813, 0.5034, 0.7769]
-states = [0.0000, 0.1813, 0.5034, 0.7769]
-```
-### Example 2
-
-Compare hold policies with an explicit initial state.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const pluss::Series time = pluss::make_series({0.0, 0.5, 1.0});
-  const pluss::Series ramp = pluss::make_series({0.0, 0.5, 1.0}, {3, 1});
-  const pluss::Series initial = pluss::make_series({2.0});
-  const lti::SimRun zero = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Zero});
-  const lti::SimRun linear = lti::sim(
-      system, ramp, time, initial, {.hold = lti::Hold::Linear});
-
-  out.writeln("zero hold =", zero.values.flatten().items<double>());
-  out.writeln("linear hold =", linear.values.flatten().items<double>());
-}
-```
-
-Output
-
-```text
-zero hold = [2.0000, 1.2131, 0.9325]
-linear hold = [2.0000, 1.3196, 1.1036]
-```
-### Example 3
-
-Exercise timestamp and input-shape validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}, {3, 1}),
-        pluss::make_series({0.0, 0.5, 0.5})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("repeated time rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::sim(
-        system, pluss::make_series({1.0, 1.0, 1.0}),
-        pluss::make_series({0.0, 0.5, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("rank-one input rejected =", message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // dx/dt = -x + u: the step response is 1 - exp(-t).
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  std::vector<double> t, u;
+  for (int i = 0; i <= 10; ++i) { t.push_back(0.5 * i); u.push_back(1.0); }
+  const lti::SimRun run = lti::sim(s, pluss::make_series(u, {11, 1}), pluss::make_series(t));
+  const auto y = run.values.flatten().items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < y.size(); ++i) worst = std::max(worst, std::abs(y[i] - (1.0 - std::exp(-t[i]))));
+  out.writeln("y(0) =", y.front(), " y(5) =", y.back(), " exact", 1.0 - std::exp(-5.0), " largest difference over all 11 samples =", worst);
 }
 ```
 
 Output
 
 ```text
-repeated time rejected = eng::lti::sim: time values must be strictly increasing
-rank-one input rejected = eng::lti::sim: input must have shape [..., time, inputs]
+y(0) = 0.0000  y(5) = 0.9933  exact 0.9933  largest difference over all 11 samples = 0.0000
+```
+### Example 2
+
+A free response from an initial state.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // With no input the output decays as x0 exp(-t).
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 1.0, 2.0, 3.0});
+  const lti::SimRun run = lti::sim(s, pluss::series::zeros({4, 1}, pluss::ScalarType::Float64), t, pluss::make_series({2.0}));
+  out.writeln("y =", run.values.flatten().items<double>(), " exact 2 exp(-t) =", 2.0, 2.0 * std::exp(-1.0), 2.0 * std::exp(-2.0), 2.0 * std::exp(-3.0));
+}
+```
+
+Output
+
+```text
+y = [2.0000, 0.7358, 0.2707, 0.0996]  exact 2 exp(-t) = 2.0000 0.7358 0.2707 0.0996
+```
+### Example 3
+
+Two inputs and two outputs: the shapes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(pluss::series::eye(3, pluss::ScalarType::Float64).mul(-1.0), pluss::series::ones({3, 2}, pluss::ScalarType::Float64), pluss::series::ones({2, 3}, pluss::ScalarType::Float64), pluss::series::zeros({2, 2}, pluss::ScalarType::Float64));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0, 1.5});
+  const lti::SimRun run = lti::sim(s, pluss::series::ones({4, 2}, pluss::ScalarType::Float64), t);
+  out.writeln("values shape", run.values.size(0), "x", run.values.size(1), " states shape", run.states.size(0), "x", run.states.size(1));
+}
+```
+
+Output
+
+```text
+values shape 4 x 2  states shape 4 x 3
+```
+### Example 4
+
+Every refused argument.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const pluss::Series t = pluss::make_series({0.0, 0.5, 1.0});
+  refused(out, "an input with the wrong number of samples", [&] { lti::sim(s, pluss::series::ones({2, 1}, pluss::ScalarType::Float64), t); });
+  refused(out, "an input with the wrong number of channels", [&] { lti::sim(s, pluss::series::ones({3, 2}, pluss::ScalarType::Float64), t); });
+  refused(out, "a time vector that does not increase", [&] { lti::sim(s, pluss::series::ones({3, 1}, pluss::ScalarType::Float64), pluss::make_series({0.0, 1.0, 0.5})); });
+  refused(out, "an initial state of the wrong size", [&] { lti::sim(s, pluss::series::ones({3, 1}, pluss::ScalarType::Float64), t, pluss::make_series({1.0, 2.0})); });
+}
+```
+
+Output
+
+```text
+an input with the wrong number of samples : eng::lti::sim: input and time lengths must match
+an input with the wrong number of channels : eng::lti::sim: input width must equal the system input count
+a time vector that does not increase : eng::lti::sim: time values must be strictly increasing
+an initial state of the wrong size : eng::lti::sim: initial state must have shape [..., states]
 ```
 ## See Also
 

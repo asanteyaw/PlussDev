@@ -64,3 +64,14 @@ changed data changes fingerprint: true
 - [`alignment_cache_stats`](alignment_cache_stats.md): a different kind of
   fingerprint (per-catalog, for cache keys) used internally for alignment
   reuse.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fillposinf.html">
+    <span class="label">Previous</span>
+    <span class="title">fillposinf</span>
+  </a>
+  <a class="next-link" href="flow.html">
+    <span class="label">Next</span>
+    <span class="title">flow</span>
+  </a>
+</div>

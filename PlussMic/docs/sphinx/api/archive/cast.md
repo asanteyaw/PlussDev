@@ -9,8 +9,8 @@
 
 ```cpp
 ArchiveCastAccessor Archive::cast() const
-ArchiveCastAccessor Archive::cast(const pluss::table::SlateCastOptions& options) const
-Archive Archive::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options = {}) const
+ArchiveCastAccessor Archive::cast(const pluss::table::ShelfCastOptions& options) const
+Archive Archive::cast(pluss::table::ShelfCastTarget target, const pluss::table::ShelfCastOptions& options = {}) const
 ```
 
 ## What It Does
@@ -41,18 +41,18 @@ only want to cast specific streams, use [`Archive::keys(names)`](keys.md) follow
 
 ## Parameters
 
-**options** (`const pluss::table::SlateCastOptions&`, optional)
+**options** (`const pluss::table::ShelfCastOptions&`, optional)
     For the accessor overloads, stores conversion policy on the accessor before you pick
     the terminal target.
 
-**target** (`pluss::table::SlateCastTarget`)
+**target** (`pluss::table::ShelfCastTarget`)
     For the direct root overload, the payload kind to cast every stream to — `Series`,
     `Note`, `Timeline`, or `TimeIndex`.
 
-**options** (`const pluss::table::SlateCastOptions&`, optional)
+**options** (`const pluss::table::ShelfCastOptions&`, optional)
     For the direct root overload, conversion policy — `series_dtype` picks the numeric
     dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
-    [`Slate::cast`](../slate/cast.md) for the full breakdown.
+    [`Shelf::cast`](../shelf/cast.md) for the full breakdown.
 
 ## Returns
 
@@ -100,7 +100,7 @@ score                    | Series       | Series[float64]  | 2       | [1.5, 2.5
   in result; they differ only in surface style.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
 - Follows the same per-target conversion rules as
-  [`Catalog::cast`](../catalog/cast.md)/[`Slate::cast`](../slate/cast.md).
+  [`Catalog::cast`](../catalog/cast.md)/[`Shelf::cast`](../shelf/cast.md).
 
 ## See Also
 

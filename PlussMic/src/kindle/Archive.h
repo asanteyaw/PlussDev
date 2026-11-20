@@ -79,7 +79,7 @@ public:
   Archive tail(std::int64_t n = 5) const;
   Archive slice_depth(std::int64_t start, std::int64_t stop) const;
   Archive map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const;
-  Catalog aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const;
+  Catalog aggregate_depth(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const;
 
   bool has(std::string_view key) const;
   Archive drop(std::span<const std::string_view> keys) const;
@@ -104,10 +104,28 @@ public:
   Archive isnull() const;
   Archive notnull() const;
   Archive invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h): isnull / dropnull / fillnull never touch them and
+  // these never touch a null.
+  Archive isnan() const;
+  Archive notnan() const;
+  Archive isinf() const;
+  Archive isposinf() const;
+  Archive isneginf() const;
+  Archive notinf() const;
+  Archive dropnan() const;
+  Archive dropinvalid() const;
+  Archive dropinf() const;
+  Archive dropposinf() const;
+  Archive dropneginf() const;
+  Archive fillnan(double value) const;
+  Archive fillinvalid(double value) const;
+  Archive fillinf(double value) const;
+  Archive fillposinf(double value) const;
+  Archive fillneginf(double value) const;
   ArchiveCastAccessor cast() const;
-  ArchiveCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
-  Archive cast(pluss::table::SlateCastTarget target,
-               const pluss::table::SlateCastOptions& options = {}) const;
+  ArchiveCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
+  Archive cast(pluss::table::ShelfCastTarget target,
+               const pluss::table::ShelfCastOptions& options = {}) const;
   ArchiveTimelineAccessor tl() const;
   ArchiveTimeSeriesAccessor ts() const;
   Archive astype(pluss::codem::ScalarType dtype) const;
@@ -172,7 +190,7 @@ public:
   ArchiveKeyAccessor(Archive archive, std::vector<std::string> keys);
 
   ArchiveCastAccessor cast() const;
-  ArchiveCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  ArchiveCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
   Archive fillnull(double value) const;
   Archive fillnull(std::string_view value) const;
   Archive fillnull(const char* value) const {
@@ -207,7 +225,7 @@ class ArchiveCastAccessor {
 public:
   ArchiveCastAccessor(Archive archive,
                       std::vector<std::string> keys,
-                      pluss::table::SlateCastOptions options = {});
+                      pluss::table::ShelfCastOptions options = {});
 
   Archive series() const;
   Archive note() const;
@@ -216,7 +234,7 @@ public:
 
 private:
   ArchiveKeyAccessor keysel_;
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class ArchiveTimelineAccessor {

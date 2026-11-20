@@ -50,8 +50,8 @@ inline Series isoelectric_point(const Series &counts, const Series &pka, const S
   for (int i = 0; i < iterations; ++i) {
     const Series mid = a.add(b).mul(0.5);
     const Series positive = charge(counts, pka, sign, mid).gt(0.0);
-    a = positive.where(mid, a);
-    b = positive.where(b, mid);
+    a = pluss::series::where(positive, mid, a);
+    b = pluss::series::where(positive, b, mid);
   }
   return a.add(b).mul(0.5);
 }

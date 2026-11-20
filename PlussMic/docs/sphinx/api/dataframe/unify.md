@@ -89,14 +89,14 @@ only in `orders`, and `2`/`3` exist on both sides:
 using namespace pluss::table;
 
 auto customers = DataFrame({
-    {"id",   Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name", Slate(pluss::make_note({"Ada", "Bola", "Chen"}))},
+    {"id",   Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name", Shelf(pluss::make_note({"Ada", "Bola", "Chen"}))},
 });
 std::cout << customers;
 
 auto orders = DataFrame({
-    {"id",     Slate(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"amount", Slate(pluss::make_series({100.0, 200.0, 300.0}))},
+    {"id",     Shelf(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"amount", Shelf(pluss::make_series({100.0, 200.0, 300.0}))},
 });
 std::cout << orders;
 ```
@@ -104,26 +104,26 @@ std::cout << orders;
 ### Output (customers)
 
 ```text
-================
-      | id  name
-----------------
-0     | 1   Ada 
-1     | 2   Bola
-2     | 3   Chen
-----------------
+=================
+     | id    name
+-----------------
+0    | 1     Ada 
+1    | 2     Bola
+2    | 3     Chen
+-----------------
 [3 cs x 2 feat]
 ```
 
 ### Output (orders)
 
 ```text
-==================
-      | id  amount
-------------------
-0     | 2   100   
-1     | 3   200   
-2     | 4   300   
-------------------
+===================
+     | id    amount
+-------------------
+0    | 2     100   
+1    | 3     200   
+2    | 4     300   
+-------------------
 [3 cs x 2 feat]
 ```
 
@@ -138,12 +138,12 @@ std::cout << common;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 2   Bola  100   
-1     | 3   Chen  200   
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 2     Bola  100   
+1    | 3     Chen  200   
+-------------------------
 [2 cs x 3 feat]
 ```
 
@@ -162,13 +162,13 @@ std::cout << keep_left;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 1   Ada   NULL  
-1     | 2   Bola  100   
-2     | 3   Chen  200   
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 1     Ada   NULL  
+1    | 2     Bola  100   
+2    | 3     Chen  200   
+-------------------------
 [3 cs x 3 feat]
 ```
 
@@ -186,13 +186,13 @@ std::cout << keep_right;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 2   Bola  100   
-1     | 3   Chen  200   
-2     | 4   NULL  300   
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 2     Bola  100   
+1    | 3     Chen  200   
+2    | 4     NULL  300   
+-------------------------
 [3 cs x 3 feat]
 ```
 
@@ -209,14 +209,14 @@ std::cout << united;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 1   Ada   NULL  
-1     | 2   Bola  100   
-2     | 3   Chen  200   
-3     | 4   NULL  300   
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 1     Ada   NULL  
+1    | 2     Bola  100   
+2    | 3     Chen  200   
+3    | 4     NULL  300   
+-------------------------
 [4 cs x 3 feat]
 ```
 
@@ -235,11 +235,11 @@ std::cout << left_only;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 1   Ada   NULL  
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 1     Ada   NULL  
+-------------------------
 [1 cs x 3 feat]
 ```
 
@@ -258,11 +258,11 @@ std::cout << right_only;
 ### Output
 
 ```text
-========================
-      | id  name  amount
-------------------------
-0     | 4   NULL  300   
-------------------------
+=========================
+     | id    name  amount
+-------------------------
+0    | 4     NULL  300   
+-------------------------
 [1 cs x 3 feat]
 ```
 
@@ -272,12 +272,12 @@ every row pairs with every row.
 
 ```cpp
 auto small_customers = DataFrame({
-    {"id",   Slate(pluss::make_series({1.0, 2.0}))},
-    {"name", Slate(pluss::make_note({"Ada", "Bola"}))},
+    {"id",   Shelf(pluss::make_series({1.0, 2.0}))},
+    {"name", Shelf(pluss::make_note({"Ada", "Bola"}))},
 });
 auto small_orders = DataFrame({
-    {"id",     Slate(pluss::make_series({2.0, 3.0}))},
-    {"amount", Slate(pluss::make_series({100.0, 200.0}))},
+    {"id",     Shelf(pluss::make_series({2.0, 3.0}))},
+    {"amount", Shelf(pluss::make_series({100.0, 200.0}))},
 });
 
 auto crossed = small_customers.unify({}, small_orders, {}, "cross");
@@ -287,14 +287,14 @@ std::cout << crossed;
 ### Output
 
 ```text
-==================================
-      | id  name  id_right  amount
-----------------------------------
-0     | 1   Ada   2         100   
-1     | 1   Ada   3         200   
-2     | 2   Bola  2         100   
-3     | 2   Bola  3         200   
-----------------------------------
+===================================
+     | id    name  id_right  amount
+-----------------------------------
+0    | 1     Ada   2         100   
+1    | 1     Ada   3         200   
+2    | 2     Bola  2         100   
+3    | 2     Bola  3         200   
+-----------------------------------
 [4 cs x 4 feat]
 ```
 
@@ -309,9 +309,9 @@ feature.
 
 ```cpp
 auto orders_with_names = DataFrame({
-    {"id",     Slate(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"name",   Slate(pluss::make_note({"Ba", "Ch", "Da"}))},
-    {"amount", Slate(pluss::make_series({100.0, 200.0, 300.0}))},
+    {"id",     Shelf(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"name",   Shelf(pluss::make_note({"Ba", "Ch", "Da"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 200.0, 300.0}))},
 });
 
 auto default_suffix = customers.unify("id", orders_with_names);
@@ -324,24 +324,24 @@ std::cout << custom_suffix;
 ### Output (default `right_suffix = "_right"`)
 
 ```text
-====================================
-      | id  name  amount  name_right
-------------------------------------
-0     | 2   Bola  100     Ba        
-1     | 3   Chen  200     Ch        
-------------------------------------
+=====================================
+     | id    name  name_right  amount
+-------------------------------------
+0    | 2     Bola  Ba          100   
+1    | 3     Chen  Ch          200   
+-------------------------------------
 [2 cs x 4 feat]
 ```
 
 ### Output (`right_suffix = "_o"`)
 
 ```text
-================================
-      | id  name  amount  name_o
---------------------------------
-0     | 2   Bola  100     Ba    
-1     | 3   Chen  200     Ch    
---------------------------------
+=================================
+     | id    name  name_o  amount
+---------------------------------
+0    | 2     Bola  Ba      100   
+1    | 3     Chen  Ch      200   
+---------------------------------
 [2 cs x 4 feat]
 ```
 
@@ -354,14 +354,14 @@ here `customers` has `id = 2` twice.
 
 ```cpp
 auto dup_customers = DataFrame({
-    {"id",   Slate(pluss::make_series({2.0, 2.0, 3.0}))},
-    {"name", Slate(pluss::make_note({"Ada", "Bola", "Chen"}))},
+    {"id",   Shelf(pluss::make_series({2.0, 2.0, 3.0}))},
+    {"name", Shelf(pluss::make_note({"Ada", "Bola", "Chen"}))},
 });
 
 try {
   auto bad = dup_customers.unify("id", orders, "id", "common", "_right", "one_to_one");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

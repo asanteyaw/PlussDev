@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate DataFrameLabelAccessor::part(std::string_view name) const
-Slate DataFrameLabelAccessor::part(std::int64_t position) const
+Shelf DataFrameLabelAccessor::part(std::string_view name) const
+Shelf DataFrameLabelAccessor::part(std::int64_t position) const
 ```
 
 ## What It Does
@@ -30,7 +30,7 @@ The level's position (0-based; negative counts back from the end).
 
 ## Returns
 
-`Slate`
+`Shelf`
     That level's own values — not the composite case label, just this one
     level's contribution to it.
 
@@ -43,9 +43,9 @@ position.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
 auto region_by_name = grouped.labels().part("region");
@@ -62,7 +62,7 @@ std::cout << city_by_position;
 1  east
 2  west
 3  west
-ptype: Note
+Name: region, ptype: Note
 ```
 
 ### Output (part(1), same as part("city"))
@@ -72,7 +72,7 @@ ptype: Note
 1  NYC
 2  LA
 3  SF
-ptype: Note
+Name: city, ptype: Note
 ```
 
 Each call returns just that one level's own values — not the joined
@@ -92,7 +92,7 @@ std::cout << city_by_negative_position;
 1  NYC
 2  LA
 3  SF
-ptype: Note
+Name: city, ptype: Note
 ```
 
 `-1` is the last level regardless of how many levels exist — here that's
@@ -104,13 +104,13 @@ Example 3. Call `part()` on an unstructured frame, to see it throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"sales", Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 std::cout << orders.labels().has();
 
 try {
   auto out = orders.labels().part("region");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -118,8 +118,7 @@ try {
 ### Output
 
 ```text
-false
-DataFrame::caselbl: current DataFrame has no case levels
+0DataFrame::caselbl: current DataFrame has no case levels
 ```
 
 `orders` never had its case labels promoted via `set()`, so `has()` is
@@ -131,8 +130,8 @@ frame.
 ```cpp
 try {
   auto out = grouped.labels().part("country");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -150,8 +149,8 @@ asking for `"country"` throws rather than returning an empty or null result.
 
 - Throws if the frame isn't structured (`has()` is `false`) — there's no level
   to read from a flat or default case axis.
-- The returned `Slate` carries no display labels of its own; it prints with a
-  plain default integer index, same as any other freestanding `Slate`.
+- The returned `Shelf` carries no display labels of its own; it prints with a
+  plain default integer index, same as any other freestanding `Shelf`.
 
 ## See Also
 

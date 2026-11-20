@@ -58,8 +58,8 @@ std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="tail.html">
+  <a class="next-link" href="tabelize.html">
     <span class="label">Next</span>
-    <span class="title">tail</span>
+    <span class="title">tabelize</span>
   </a>
 </div>

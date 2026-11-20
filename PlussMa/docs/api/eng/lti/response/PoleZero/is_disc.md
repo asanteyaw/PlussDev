@@ -1,0 +1,126 @@
+<!-- generated from is_disc.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3daea189d5ef -->
+
+# `lti::PoleZero::is_disc`
+
+[Back to `lti::PoleZero`](../PoleZero.md)
+
+Whether the system is discrete-time (sample time positive).
+
+## Signature
+
+```cpp
+bool lti::PoleZero::is_disc() const noexcept;
+```
+
+## What It Does
+
+True when `sample_time()` is positive, so the poles and zeros live in the `z` plane and a stable system has every pole strictly inside the unit circle. It is the negation of [`is_cont`](is_cont.md).
+
+## Returns
+
+`true` for a discrete-time system, `false` otherwise.
+
+## Practical Examples
+
+### Example 1
+
+A plain `zpk` is not discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("discrete:", plant().is_disc());
+}
+```
+
+Output
+
+```text
+discrete: false
+```
+
+### Example 2
+
+A positive sample time makes it discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("discrete:", plant(0.02).is_disc());
+}
+```
+
+Output
+
+```text
+discrete: true
+```
+
+### Example 3
+
+A digital filter is discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+// G(s) = 5 (s + 1) / ((s + 2)(s + 3))
+static lti::PoleZero plant(double sample_time = 0.0) { return lti::zpk(pluss::make_series({-1.0}), pluss::make_series({-2.0, -3.0}), pluss::make_series(5.0), sample_time); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  namespace sig = pluss::subsp::eng::signal;
+  out.writeln("discrete:", sig::butter(2, 0.3).is_disc());
+}
+```
+
+Output
+
+```text
+discrete: true
+```
+
+## See Also
+
+- [`is_cont`](is_cont.md): its negation
+- [`sample_time`](sample_time.md): the period itself
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="is_cont.html">
+    <span class="label">Previous</span>
+    <span class="title">is_cont</span>
+  </a>
+  <a class="next-link" href="is_stable.html">
+    <span class="label">Next</span>
+    <span class="title">is_stable</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

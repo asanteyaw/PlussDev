@@ -145,17 +145,17 @@ Series confint_from_params_se_2_(const Series& params,
     const Series idx = Series::arange(0, 2, 1, ScalarType::Int64)
                            .to(params64.platform(), ScalarType::Int64);
     const Series second = idx.eq(1);
-    lower = second.where(lower.clamp_min(0.0), lower);
+    lower = pluss::series::where(second, lower.clamp_min(0.0), lower);
   }
   return lower.reshape({2, 1}).unite({upper.reshape({2, 1})}, 1).to(params64.platform(), ScalarType::Float64);
 }
 
 Series stable_log_expm1_over_x(const Series& x) {
   const Series small = x.abs().lt(1e-5);
-  const Series x_safe = small.where(x.mul(0.0).add(1.0), x);
+  const Series x_safe = pluss::series::where(small, x.mul(0.0).add(1.0), x);
   const Series general = x_safe.expm1().div(x_safe).log();
   const Series series = x.mul(0.5).add(x.mul(x).div(24.0));
-  return small.where(series, general);
+  return pluss::series::where(small, series, general);
 }
 
 Series stable_log_x_over_sin_x(const Series& x) {
@@ -163,7 +163,7 @@ Series stable_log_x_over_sin_x(const Series& x) {
   const Series x2 = x.square();
   const Series series = x2.div(6.0).add(x2.square().div(180.0)).add(x2.square().mul(x2).div(2835.0));
   const Series general = x.div(x.sin()).log();
-  return small.logical_not().where(general, series);
+  return pluss::series::where(small.logical_not(), general, series);
 }
 
 double rayleigh_raw_moment(double sigma, std::int64_t order) {

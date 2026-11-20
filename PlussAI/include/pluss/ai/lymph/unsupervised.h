@@ -64,8 +64,8 @@ class Result final {
       counts = counts.defined() ? counts.unite({count}, 0) : count;
     }
     return pluss::table::DataFrame({
-        {"cluster", pluss::table::Slate(detail::result_index_series_(k, flat_labels.platform()))},
-        {"count", pluss::table::Slate(counts.reshape({k}))},
+        {"cluster", pluss::table::Shelf(detail::result_index_series_(k, flat_labels.platform()))},
+        {"count", pluss::table::Shelf(counts.reshape({k}))},
     });
   }
 
@@ -144,9 +144,9 @@ class Result final {
     const Series total = variance.sum().reshape({1}).clamp_min(1e-12);
     const Series ratio = variance.div(total);
     return pluss::table::DataFrame({
-        {"component", pluss::table::Slate(detail::result_index_series_(k, variance.platform()))},
-        {"variance", pluss::table::Slate(variance)},
-        {"variance_ratio", pluss::table::Slate(ratio)},
+        {"component", pluss::table::Shelf(detail::result_index_series_(k, variance.platform()))},
+        {"variance", pluss::table::Shelf(variance)},
+        {"variance_ratio", pluss::table::Shelf(ratio)},
     });
   }
 

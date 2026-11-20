@@ -11,9 +11,9 @@
 DataFrame DataFrame::sub(double other) const
 DataFrame DataFrame::sub(const DataFrame& other) const
 DataFrame DataFrame::sub(const DataFrame& other, const AlignOptions& options) const
-DataFrame DataFrame::sub(const Slate& other, Axis axis = Axis::Feature) const
-DataFrame DataFrame::sub(const Slate& other, Axis axis, const AlignOptions& options) const
-DataFrame DataFrame::sub(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
+DataFrame DataFrame::sub(const Shelf& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::sub(const Shelf& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::sub(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame DataFrame::sub(const Slate& other, const AlignOptions& options, Axis a
 The named-method form of elementwise subtraction. `sub()` shares the exact same
 overload shape and alignment rules as [`add()`](add.md), [`mul()`](mul.md),
 [`div()`](div.md), and the rest of the arithmetic family — see `add()`'s
-"What It Does" for the full explanation of the scalar/frame/Slate operand shapes and
+"What It Does" for the full explanation of the scalar/frame/Shelf operand shapes and
 the `axis`/`options` parameters. Unlike addition, subtraction is not commutative, so
 operand order matters: `a.sub(b)` computes `a - b`, not `b - a`. Use
 [`rsub()`](rsub.md) when you specifically want `other - a` with `a`'s shape driving
@@ -32,10 +32,10 @@ the result.
 **other**
 
 The right-hand operand, subtracted from the current frame: `double` (broadcast
-scalar), `const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Shelf&` (broadcast
 per `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.
@@ -43,7 +43,7 @@ value per feature; `Axis::Case` supplies one value per case.
 **options** (`AlignOptions`, optional)
 
 Same meaning as [`add()`](add.md)'s `options`: controls alignment and missing-value
-handling for the `DataFrame`/`Slate` overloads.
+handling for the `DataFrame`/`Shelf` overloads.
 
 ## Returns
 
@@ -105,11 +105,11 @@ c    | 1      28
 [3 cs x 2 feat]
 ```
 
-Example 3. Subtract a `Slate` with one value per case (`Axis::Case`) — a per-row
+Example 3. Subtract a `Shelf` with one value per case (`Axis::Case`) — a per-row
 adjustment applied across every feature in that row.
 
 ```cpp
-auto per_case_discount = Slate(pluss::make_series({1.0, 2.0, 3.0}));
+auto per_case_discount = Shelf(pluss::make_series({1.0, 2.0, 3.0}));
 auto out = prices.sub(per_case_discount, Axis::Case);
 std::cout << out;
 ```
@@ -120,8 +120,8 @@ std::cout << out;
 ===================
      | units  price
 -------------------
-a    | 1      9    
-b    | 3      18   
+a    |  1     9    
+b    |  3     18   
 c    | -2     27   
 -------------------
 [3 cs x 2 feat]

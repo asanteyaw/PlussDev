@@ -26,7 +26,7 @@ Learn a workflow from a dataframe using named feature and label columns. The pro
 
 namespace lymph = pluss::ai::lymph;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
   const pluss::Series x = pluss::make_series(std::vector<double>{
@@ -41,9 +41,9 @@ lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
 
 int main() {
   DataFrame frame({
-      {"income", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
-      {"balance", Slate(pluss::make_series(std::vector<double>{2.0, 1.0, 4.0, 3.0}, {4}))},
-      {"default", Slate(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {4}))},
+      {"income", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"balance", Shelf(pluss::make_series(std::vector<double>{2.0, 1.0, 4.0, 3.0}, {4}))},
+      {"default", Shelf(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {4}))},
   });
   lymph::DataFrameBatchOptions options{};
   options.feature_names = {"income", "balance"};
@@ -100,7 +100,7 @@ Which shape a `Payload` holds is what `has_frame()` / `has_features()` /
 3. [`time`](time.md) — the time role, from a name, a full
    [`TimeOptions`](../TimeOptions.md), or a `Series`.
 4. [`roles`](roles.md) — `features(...)`, `groups(...)`, and the
-   `note`/`layout`/`slate` data-conversion shortcuts.
+   `note`/`layout`/`shelf` data-conversion shortcuts.
 5. [`batch`](batch.md) — `feature_batch()` / `labeled_batch()` /
    `with_frame()`, the materialization step every verb runs internally.
 

@@ -199,11 +199,11 @@ inline Series dot(const Series &lhs, const Series &rhs) {
 inline Series wrap(const Series &angle) {
   constexpr double tau = 2.0 * std::numbers::pi;
   const Series reduced = angle.remainder(tau);
-  return reduced.lt(0.0).where(reduced.add(tau), reduced);
+  return pluss::series::where(reduced.lt(0.0), reduced.add(tau), reduced);
 }
 
 inline Series safe_den(const Series &value, const Series &valid) {
-  return valid.where(value, pluss::series::ones_like(value));
+  return pluss::series::where(valid, value, pluss::series::ones_like(value));
 }
 
 inline Series cube(const Series &value) { return value.square().mul(value); }
@@ -234,18 +234,18 @@ inline StumpffPair stumpff(const Series &z) {
 
   const Series positive = z.gt(0.1);
   const Series negative = z.lt(-0.1);
-  const Series pos_z = positive.where(z, one);
+  const Series pos_z = pluss::series::where(positive, z, one);
   const Series pos_root = pos_z.sqrt();
   const Series c_pos = pos_root.mul(0.5).sin().square().mul(2.0).div(pos_z);
   const Series s_pos = pos_root.sub(pos_root.sin()).div(cube(pos_root));
 
-  const Series neg_z = negative.where(z.neg(), one);
+  const Series neg_z = pluss::series::where(negative, z.neg(), one);
   const Series neg_root = neg_z.sqrt();
   const Series c_neg = neg_root.mul(0.5).sinh().square().mul(2.0).div(neg_z);
   const Series s_neg = neg_root.sinh().sub(neg_root).div(cube(neg_root));
 
-  return {positive.where(c_pos, negative.where(c_neg, c_series)),
-          positive.where(s_pos, negative.where(s_neg, s_series))};
+  return {pluss::series::where(positive, c_pos, pluss::series::where(negative, c_neg, c_series)),
+          pluss::series::where(positive, s_pos, pluss::series::where(negative, s_neg, s_series))};
 }
 
 inline Series lambert_hypergeom(const Series &argument) {
@@ -271,14 +271,12 @@ inline Series lambert_time(const Series &x, const Series &lambda) {
 
   const Series z = one.add(lambda2.mul(e)).clamp_min(0.0).sqrt();
   const Series eta = z.sub(lambda.mul(x));
-  const Series series_argument = battin.where(
-      one.sub(lambda).sub(x.mul(eta)).mul(0.5),
-      pluss::series::zeros_like(x));
+  const Series series_argument = pluss::series::where(battin, one.sub(lambda).sub(x.mul(eta)).mul(0.5), pluss::series::zeros_like(x));
   const Series q = lambert_hypergeom(series_argument).mul(4.0 / 3.0);
   const Series battin_time =
       detail::cube(eta).mul(q).add(lambda.mul(eta).mul(4.0)).mul(0.5);
 
-  const Series safe_e = lancaster.where(e, one);
+  const Series safe_e = pluss::series::where(lancaster, e, one);
   const Series rho_root = safe_e.abs().sqrt();
   const Series g = x.mul(z).sub(lambda.mul(e));
   const Series ellipse = e.lt(0.0);
@@ -286,22 +284,22 @@ inline Series lambert_time(const Series &x, const Series &lambda) {
   const Series log_argument =
       rho_root.mul(z.sub(lambda.mul(x))).add(g).clamp_min(1e-30);
   const Series hyper_d = log_argument.log();
-  const Series d = ellipse.where(ellipse_d, hyper_d);
+  const Series d = pluss::series::where(ellipse, ellipse_d, hyper_d);
   const Series lancaster_time =
       x.sub(lambda.mul(z)).sub(d.div(rho_root)).div(safe_e);
 
-  const Series safe_a_den = lagrange.where(one.sub(x.square()), one);
+  const Series safe_a_den = pluss::series::where(lagrange, one.sub(x.square()), one);
   const Series a = safe_a_den.reciprocal();
   const Series ellipse_a = a.gt(0.0);
-  const Series ellipse_x = ellipse_a.where(x.clamp(-1.0, 1.0), one);
-  const Series hyper_x = ellipse_a.where(one, x.clamp_min(1.0));
+  const Series ellipse_x = pluss::series::where(ellipse_a, x.clamp(-1.0, 1.0), one);
+  const Series hyper_x = pluss::series::where(ellipse_a, one, x.clamp_min(1.0));
   const Series alpha_ellipse = ellipse_x.acos().mul(2.0);
   const Series alpha_hyper = hyper_x.acosh().mul(2.0);
   const Series ellipse_beta_arg =
-      lambda2.div(ellipse_a.where(a, one)).clamp(0.0, 1.0).sqrt();
+      lambda2.div(pluss::series::where(ellipse_a, a, one)).clamp(0.0, 1.0).sqrt();
   const Series hyper_beta_arg =
-      lambda2.neg().div(ellipse_a.where(one, a)).clamp_min(0.0).sqrt();
-  const Series beta_sign = lambda.ge(0.0).where(one, one.neg());
+      lambda2.neg().div(pluss::series::where(ellipse_a, one, a)).clamp_min(0.0).sqrt();
+  const Series beta_sign = pluss::series::where(lambda.ge(0.0), one, one.neg());
   const Series beta_ellipse =
       ellipse_beta_arg.asin().mul(2.0).mul(beta_sign);
   const Series beta_hyper =
@@ -317,10 +315,9 @@ inline Series lambert_time(const Series &x, const Series &lambda) {
           .mul(beta_hyper.sub(beta_hyper.sinh())
                    .sub(alpha_hyper.sub(alpha_hyper.sinh())))
           .mul(0.5);
-  const Series lagrange_time = ellipse_a.where(ellipse_time, hyper_time);
+  const Series lagrange_time = pluss::series::where(ellipse_a, ellipse_time, hyper_time);
 
-  return battin.where(battin_time,
-                      lagrange.where(lagrange_time, lancaster_time));
+  return pluss::series::where(battin, battin_time, pluss::series::where(lagrange, lagrange_time, lancaster_time));
 }
 
 inline pluss::subsp::math::roots::Derivatives
@@ -330,9 +327,7 @@ lambert_time_derivatives(const Series &x, const Series &lambda) {
   const Series lambda2 = lambda.square();
   const Series lambda3 = lambda2.mul(lambda);
   const Series one_minus_x2 = one.sub(x.square());
-  const Series safe_den = one_minus_x2.abs().lt(1e-12).where(
-      one_minus_x2.ge(0.0).where(one.mul(1e-12), one.mul(-1e-12)),
-      one_minus_x2);
+  const Series safe_den = pluss::series::where(one_minus_x2.abs().lt(1e-12), pluss::series::where(one_minus_x2.ge(0.0), one.mul(1e-12), one.mul(-1e-12)), one_minus_x2);
   const Series y = one.sub(lambda2.mul(one_minus_x2)).clamp_min(0.0).sqrt();
   const Series first = time.mul(x).mul(3.0)
                            .sub(2.0)
@@ -700,18 +695,17 @@ to_elem(const OrbitState &state, const common::Quantity<GravParam, Rep> &mu,
   const Series circle_x = detail::dot(nvec, r).div(safe_n.mul(radius));
   const Series circle_phase = detail::wrap(circle_y.atan2(circle_x));
 
-  const Series orient = hz.ge(0.0).where(pluss::series::ones_like(hz),
-                                         pluss::series::full_like(hz, -1.0));
+  const Series orient = pluss::series::where(hz.ge(0.0), pluss::series::ones_like(hz), pluss::series::full_like(hz, -1.0));
   const Series flat_peri =
       detail::wrap(evec.select(-1, 1).mul(orient).atan2(evec.select(-1, 0)));
   const Series flat_phase =
       detail::wrap(r.select(-1, 1).mul(orient).atan2(r.select(-1, 0)));
 
-  const Series out_node = inclined.where(node, zero);
+  const Series out_node = pluss::series::where(inclined, node, zero);
   const Series out_peri =
-      eccentric.where(inclined.where(general_peri, flat_peri), zero);
+      pluss::series::where(eccentric, pluss::series::where(inclined, general_peri, flat_peri), zero);
   const Series out_phase =
-      eccentric.where(general_phase, inclined.where(circle_phase, flat_phase));
+      pluss::series::where(eccentric, general_phase, pluss::series::where(inclined, circle_phase, flat_phase));
 
   return make_elem(
       common::SeriesQuantity<common::Length>::from_si(axis),
@@ -822,7 +816,7 @@ period(const Elements &elements, const common::Quantity<GravParam, Rep> &mu) {
   const Series e_anomaly = sin_e.atan2(cos_e);
   const Series ellipse_mean = detail::wrap(e_anomaly.sub(ecc.mul(sin_e)));
 
-  const Series safe_hyper_e = elliptic.where(one, ecc);
+  const Series safe_hyper_e = pluss::series::where(elliptic, one, ecc);
   const Series sinh_h = safe_hyper_e.square()
                             .sub(1.0)
                             .clamp_min(0.0)
@@ -831,7 +825,7 @@ period(const Elements &elements, const common::Quantity<GravParam, Rep> &mu) {
                             .div(safe_denom);
   const Series h_anomaly = sinh_h.asinh();
   const Series hyper_mean = ecc.mul(sinh_h).sub(h_anomaly);
-  return elliptic.where(ellipse_mean, hyper_mean);
+  return pluss::series::where(elliptic, ellipse_mean, hyper_mean);
 }
 
 [[nodiscard]] inline Series to_true(const Series &ecc, const Series &anomaly) {
@@ -840,16 +834,16 @@ period(const Elements &elements, const common::Quantity<GravParam, Rep> &mu) {
   const Series elliptic = ecc.lt(1.0);
   const Series one = pluss::series::ones_like(ecc);
   const Series zero = pluss::series::zeros_like(anomaly);
-  const Series ellipse_anomaly = elliptic.where(anomaly, zero);
-  const Series hyper_anomaly = elliptic.where(zero, anomaly);
+  const Series ellipse_anomaly = pluss::series::where(elliptic, anomaly, zero);
+  const Series hyper_anomaly = pluss::series::where(elliptic, zero, anomaly);
   const Series ellipse_y =
       one.sub(ecc.square()).clamp_min(0.0).sqrt().mul(ellipse_anomaly.sin());
   const Series ellipse_x = ellipse_anomaly.cos().sub(ecc);
   const Series hyper_y =
       ecc.square().sub(1.0).clamp_min(0.0).sqrt().mul(hyper_anomaly.sinh());
   const Series hyper_x = ecc.sub(hyper_anomaly.cosh());
-  return detail::wrap(elliptic.where(ellipse_y, hyper_y)
-                          .atan2(elliptic.where(ellipse_x, hyper_x)));
+  return detail::wrap(pluss::series::where(elliptic, ellipse_y, hyper_y)
+                          .atan2(pluss::series::where(elliptic, ellipse_x, hyper_x)));
 }
 
 [[nodiscard]] inline KeplerResult
@@ -862,26 +856,25 @@ solve_mean(const Series &ecc, const Series &mean,
   const Series elliptic = ecc.lt(1.0);
   const Series wrapped = detail::wrap(mean);
   const Series centered =
-      wrapped.gt(std::numbers::pi).where(wrapped.sub(tau), wrapped);
+      pluss::series::where(wrapped.gt(std::numbers::pi), wrapped.sub(tau), wrapped);
   const Series sign =
-      centered.ge(0.0).where(pluss::series::ones_like(centered),
-                             pluss::series::full_like(centered, -1.0));
+      pluss::series::where(centered.ge(0.0), pluss::series::ones_like(centered), pluss::series::full_like(centered, -1.0));
   const Series ellipse_start = centered.add(sign.mul(ecc).mul(0.71));
   const Series safe_hyper_e =
-      elliptic.where(pluss::series::ones_like(ecc), ecc);
+      pluss::series::where(elliptic, pluss::series::ones_like(ecc), ecc);
   const Series hyper_start = mean.div(safe_hyper_e).asinh();
-  const Series start = elliptic.where(ellipse_start, hyper_start);
+  const Series start = pluss::series::where(elliptic, ellipse_start, hyper_start);
 
   const auto function = [ecc, mean, centered, elliptic](const Series &value) {
     const Series ellipse = value.sub(ecc.mul(value.sin())).sub(centered);
     const Series hyper = ecc.mul(value.sinh()).sub(value).sub(mean);
-    return elliptic.where(ellipse, hyper);
+    return pluss::series::where(elliptic, ellipse, hyper);
   };
   const auto derivative = [ecc, elliptic](const Series &value) {
     const Series ellipse =
         pluss::series::ones_like(value).sub(ecc.mul(value.cos()));
     const Series hyper = ecc.mul(value.cosh()).sub(1.0);
-    return elliptic.where(ellipse, hyper);
+    return pluss::series::where(elliptic, ellipse, hyper);
   };
   pluss::subsp::math::roots::Options root_options;
   root_options.max_iterations = options.max_steps;
@@ -890,9 +883,9 @@ solve_mean(const Series &ecc, const Series &mean,
   const auto solved = pluss::subsp::math::roots::newton(
       function, start, derivative, root_options);
   const Series anomaly =
-      elliptic.where(solved.root.add(mean.sub(centered)), solved.root);
+      pluss::series::where(elliptic, solved.root.add(mean.sub(centered)), solved.root);
   const Series residual = function(solved.root);
-  const Series residual_reference = elliptic.where(centered.abs(), mean.abs());
+  const Series residual_reference = pluss::series::where(elliptic, centered.abs(), mean.abs());
   const Series scale = residual_reference.add(1.0).mul(tolerance);
   const Series converged = residual.abs().le(scale);
   if (options.strict && !converged.all().item<bool>())
@@ -980,20 +973,19 @@ advance(const OrbitState &state,
   const Series tau = sqrt_gm.mul(time).div(r0.mul(sqrt_r0));
 
   const Series one = pluss::series::ones_like(tau);
-  const Series direction = tau.ge(0.0).where(one, one.neg());
+  const Series direction = pluss::series::where(tau.ge(0.0), one, one.neg());
   const Series hyper = scaled_alpha.lt(-0.05);
-  const Series safe_neg_alpha = hyper.where(scaled_alpha.neg(), one);
+  const Series safe_neg_alpha = pluss::series::where(hyper, scaled_alpha.neg(), one);
   const Series hyper_den =
       eta.add(direction.mul(one.sub(scaled_alpha)).div(safe_neg_alpha.sqrt()));
   const Series hyper_arg =
-      scaled_alpha.mul(tau).mul(-2.0).div(hyper.where(hyper_den, one));
+      scaled_alpha.mul(tau).mul(-2.0).div(pluss::series::where(hyper, hyper_den, one));
   const Series usable_hyper = hyper.logical_and(hyper_arg.gt(0.0));
-  const Series safe_arg = usable_hyper.where(hyper_arg, one);
+  const Series safe_arg = pluss::series::where(usable_hyper, hyper_arg, one);
   const Series hyper_start =
       direction.mul(safe_arg.log()).div(safe_neg_alpha.sqrt());
   const Series ellipse_start = scaled_alpha.mul(tau);
-  const Series start = usable_hyper.where(
-      hyper_start, scaled_alpha.gt(0.05).where(ellipse_start, tau));
+  const Series start = pluss::series::where(usable_hyper, hyper_start, pluss::series::where(scaled_alpha.gt(0.05), ellipse_start, tau));
 
   const auto function = [scaled_alpha, eta, tau](const Series &u) {
     const Series z = scaled_alpha.mul(u.square());
@@ -1134,11 +1126,9 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   Series start_tangent = ih.cross(ir1, -1);
   Series finish_tangent = ih.cross(ir2, -1);
   const Series aligned = orientation.gt(0.0);
-  lambda = aligned.where(lambda, lambda.neg());
-  start_tangent = aligned.unsqueeze(-1).where(start_tangent,
-                                                start_tangent.neg());
-  finish_tangent = aligned.unsqueeze(-1).where(finish_tangent,
-                                                 finish_tangent.neg());
+  lambda = pluss::series::where(aligned, lambda, lambda.neg());
+  start_tangent = pluss::series::where(aligned.unsqueeze(-1), start_tangent, start_tangent.neg());
+  finish_tangent = pluss::series::where(aligned.unsqueeze(-1), finish_tangent, finish_tangent.neg());
   if (options.sense == OrbitSense::Retrograde) {
     lambda = lambda.neg();
     start_tangent = start_tangent.neg();
@@ -1171,12 +1161,10 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
       t1.div(t00).log().reciprocal().mul(std::numbers::ln2);
   const Series middle_start =
       target.div(t00).log().mul(middle_exponent).exp().sub(1.0);
-  Series root_start = high_time.where(
-      high_start, low_time.where(low_start, middle_start));
+  Series root_start = pluss::series::where(high_time, high_start, pluss::series::where(low_time, low_start, middle_start));
   const double root_nudge =
       r1_vec.scalar_type() == ScalarType::Float64 ? 1e-8 : 1e-4;
-  root_start = root_start.sub(1.0).abs().lt(root_nudge).where(
-      root_start.add(root_nudge), root_start);
+  root_start = pluss::series::where(root_start.sub(1.0).abs().lt(root_nudge), root_start.add(root_nudge), root_start);
 
   const auto evaluate = [lambda, target](const Series &x) {
     auto derivatives = detail::lambert_time_derivatives(x, lambda);

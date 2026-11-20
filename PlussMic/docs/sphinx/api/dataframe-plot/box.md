@@ -76,9 +76,9 @@ Example 1. No explicit features: every numeric feature in the frame is summarize
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"midterm", Slate(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0}))},
-    {"final",   Slate(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0}))},
-    {"cohort",  Slate(pluss::make_note({"Morning", "Evening", "Morning", "Evening", "Morning"}))},
+    {"midterm", Shelf(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0}))},
+    {"final",   Shelf(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0}))},
+    {"cohort",  Shelf(pluss::make_note({"Morning", "Evening", "Morning", "Evening", "Morning"}))},
 });
 
 auto chart = scores.plot().box();
@@ -131,8 +131,8 @@ Example 5. A feature that isn't numeric throws immediately.
 ```cpp
 try {
   auto bad = scores.plot().box({"cohort"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

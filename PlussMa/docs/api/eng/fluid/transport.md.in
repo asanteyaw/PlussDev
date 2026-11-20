@@ -15,13 +15,11 @@ The examples exercise the principal surface of this branch.
 Two sources mixing at a junction.
 
 @@example Eng/api/fluid_transport_mix.cpp@@
-
 ### Example 2
 
 A decay checked against its exact value.
 
 @@example Eng/api/fluid_transport_decay.cpp@@
-
 ### Example 3
 
 A pipe cooling.

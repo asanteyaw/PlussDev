@@ -28,3 +28,13 @@ selected numeric keys row-by-row (`ReduceAxis::Key`).
 - [`Catalog::var`](var.md)
 - [`Catalog::mean`](mean.md)
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stats.html">
+    <span class="label">Previous</span>
+    <span class="title">stats</span>
+  </a>
+  <a class="next-link" href="sum.html">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
+</div>

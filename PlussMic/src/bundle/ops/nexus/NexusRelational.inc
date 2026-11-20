@@ -211,13 +211,13 @@ std::unordered_map<std::string, std::string> simulate_pull_projection_map(
   return out;
 }
 
-std::vector<std::pair<std::string, pluss::table::Slate>> materialize_pull_columns(
+std::vector<std::pair<std::string, pluss::table::Shelf>> materialize_pull_columns(
     const pluss::table::DataFrame& materialized,
     std::string_view root,
     const std::vector<NexusPullField>& fields,
     const std::unordered_map<std::string, std::string>& projected,
     std::string_view where) {
-  std::vector<std::pair<std::string, pluss::table::Slate>> out_cols;
+  std::vector<std::pair<std::string, pluss::table::Shelf>> out_cols;
   out_cols.reserve(fields.size());
   std::unordered_set<std::string> aliases;
   aliases.reserve(fields.size() * 2 + 1);
@@ -271,7 +271,7 @@ std::vector<std::string> pull_root_projection_names(const std::vector<std::strin
   return out;
 }
 
-pluss::table::Slate materialize_grouped_pull(const pluss::table::DataFrame& root_frame,
+pluss::table::Shelf materialize_grouped_pull(const pluss::table::DataFrame& root_frame,
                                 const std::vector<std::string>& root_keys,
                                 const pluss::table::DataFrame& grouped,
                                 std::string_view output_name,
@@ -298,7 +298,7 @@ pluss::table::Slate materialize_grouped_pull(const pluss::table::DataFrame& root
   return joined.features(output_name);
 }
 
-pluss::table::Slate aggregate_pull_field(const pluss::table::DataFrame& root_frame,
+pluss::table::Shelf aggregate_pull_field(const pluss::table::DataFrame& root_frame,
                             const std::vector<std::string>& root_keys,
                             const pluss::table::DataFrame& expanded,
                             std::string_view value_column,
@@ -437,7 +437,7 @@ pluss::table::DataFrame nexus_pull_impl(const detail::NexusImpl& src,
     plain_fields.push_back(field);
   }
 
-  std::unordered_map<std::string, pluss::table::Slate> pulled_columns;
+  std::unordered_map<std::string, pluss::table::Shelf> pulled_columns;
   pulled_columns.reserve(parsed.size() * 2 + 1);
 
   if (!plain_fields.empty()) {
@@ -530,7 +530,7 @@ pluss::table::DataFrame nexus_pull_impl(const detail::NexusImpl& src,
     }
   }
 
-  std::vector<std::pair<std::string, pluss::table::Slate>> out;
+  std::vector<std::pair<std::string, pluss::table::Shelf>> out;
   out.reserve(parsed.size());
   for (const auto& field : parsed) {
     const auto alias = pull_output_alias(root, field);

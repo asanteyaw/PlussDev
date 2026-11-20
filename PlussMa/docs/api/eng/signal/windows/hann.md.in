@@ -1,5 +1,7 @@
 # `signal::hann`
 
+Creates the Hann window, a raised cosine that falls to zero at both ends.
+
 ## Signature
 
 ```cpp
@@ -10,15 +12,15 @@ pluss::Series signal::hann(
 
 ## What It Does
 
-Creates a raised-cosine Hann window. Symmetric Hann reaches zero at both endpoints; periodic Hann tiles cleanly for an equal-length DFT.
+The symmetric Hann window is `w[i] = 0.5 - 0.5 cos(2 pi i / (n - 1))`. It is zero at both ends, so a framed signal has no step at its edges, and it balances main-lobe width against sidelobe decay. The periodic form is `0.5 - 0.5 cos(2 pi i / n)` and tiles: windows shifted by half a length add to exactly one.
 
 ## Parameters
 
 `size`
-: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+: Number of coefficients. Zero returns an empty rank-one `Series`; one returns the single coefficient `1`.
 
 `options`
-: Endpoint, dtype, and platform policy. Hann is a common general-purpose taper because it balances main-lobe width and sidelobe suppression.
+: A `WindowOptions`: the endpoint convention (`mode`), the floating dtype and the platform. The default is a symmetric float64 window on the CPU.
 
 ## Returns
 
@@ -26,29 +28,40 @@ A rank-one floating `Series` of length `size`, allocated with the requested dtyp
 
 ## Errors
 
-Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+A negative `size`, a dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype (float64 on the MPS) throw `pluss::Error`.
+
+## Interpretation and Use
+
+The coherent gain tends to one half and the mean square to three eighths. The fourth example measures a main lobe of 2.03 bins and a highest sidelobe 31.47 dB below it. Use the symmetric form for filter design and display, and the periodic form for spectral analysis with overlapping frames, where its constant overlap-add keeps the reconstructed level flat (see the `WindowMode` page).
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+Eight coefficients in both modes, and the closed form.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_hann_values.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Coherent gain and mean square at three lengths.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_hann_gain.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Every refused input and the size-zero and size-one cases.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_hann_errors.cpp@@
+
+### Example 4
+
+The spectrum of a 64-point window: main-lobe width and highest sidelobe.
+
+@@example Eng/api/signal_hann_spectrum.cpp@@
+
 
 ## See Also
 

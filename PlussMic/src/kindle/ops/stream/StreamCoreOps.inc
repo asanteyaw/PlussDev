@@ -1,8 +1,8 @@
-pluss::table::Slate Stream::to_slate() const {
+pluss::table::Shelf Stream::to_shelf() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = std::visit(
       [&](const auto& payload) {
-        return pluss::table::Slate(payload, impl_ref_().validity_mask_);
+        return pluss::table::Shelf(payload, impl_ref_().validity_mask_);
       },
       impl_ref_().payload_);
   if (has_label()) {
@@ -11,13 +11,13 @@ pluss::table::Slate Stream::to_slate() const {
   return out;
 }
 
-pluss::table::Slate Stream::to_slate(std::int64_t start, std::int64_t stop) const {
-  const auto t = to_slate();
+pluss::table::Shelf Stream::to_shelf(std::int64_t start, std::int64_t stop) const {
+  const auto t = to_shelf();
   return t.slice(start, stop);
 }
 
-pluss::table::Slate Stream::tabelize() const {
-  return to_slate();
+pluss::table::Shelf Stream::tabelize() const {
+  return to_shelf();
 }
 
 pluss::scribble::Slot Stream::scribbelize() const {
@@ -108,70 +108,115 @@ pluss::scribble::Slot Stream::scribbelize() const {
 
 Stream Stream::head(std::int64_t n) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.head(n); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Shelf& t) { return t.head(n); });
 }
 
 Stream Stream::tail(std::int64_t n) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.tail(n); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Shelf& t) { return t.tail(n); });
 }
 
 Stream Stream::slice(std::int64_t start, std::int64_t stop) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.slice(start, stop); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Shelf& t) { return t.slice(start, stop); });
 }
 
 Stream Stream::take(std::span<const std::int64_t> indices) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.take(indices); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Shelf& t) { return t.take(indices); });
 }
 
 Stream Stream::filter(const pluss::Series& bool_mask) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.filter(bool_mask); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Shelf& t) { return t.filter(bool_mask); });
 }
 
 Stream Stream::dropnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto source = to_slate();
+  const auto source = to_shelf();
   const auto out = source.dropnull();
-  if (!has_label()) return Stream::from_slate(out);
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
   const auto label_out = label()->filter(source.notnull().as_series());
-  return Stream::from_slate(out, label_out);
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
+}
+
+Stream Stream::dropnan() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto source = to_shelf();
+  const auto out = source.dropnan();
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
+  const auto label_out = label()->filter(source.notnan().as_series());
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
+}
+
+Stream Stream::dropinf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto source = to_shelf();
+  const auto out = source.dropinf();
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
+  const auto label_out = label()->filter(source.notinf().as_series());
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
+}
+
+Stream Stream::dropposinf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto source = to_shelf();
+  const auto out = source.dropposinf();
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
+  const auto label_out = label()->filter(source.isposinf().as_series().logical_not());
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
+}
+
+Stream Stream::dropneginf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto source = to_shelf();
+  const auto out = source.dropneginf();
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
+  const auto label_out = label()->filter(source.isneginf().as_series().logical_not());
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
+}
+
+Stream Stream::dropinvalid() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto source = to_shelf();
+  const auto out = source.dropinvalid();
+  if (!has_label()) return carry_meta(Stream::from_shelf(out), *this);
+  const auto label_out = label()->filter(source.invalid().as_series().logical_not());
+  return carry_meta(Stream::from_shelf(out, label_out), *this);
 }
 
 Stream Stream::ffill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.ffill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.ffill(); });
 }
 
 Stream Stream::bfill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.bfill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.bfill(); });
 }
 
 Stream Stream::distinct(DistinctOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto out = to_slate().distinct(options.dropnull);
+  const auto out = to_shelf().distinct(options.dropnull);
   if (out.label().has()) {
-    return Stream::from_slate(out, out.label().values());
+    return Stream::from_shelf(out, out.label().values());
   }
-  return Stream::from_slate(out);
+  return Stream::from_shelf(out);
 }
 
 Stream Stream::freq(FreqOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto out = pluss::table::detail::freq_count_slate(
-      to_slate(), options.top, options.dropnull, "freq");
+  const auto out = pluss::table::detail::freq_count_shelf(
+      to_shelf(), options.top, options.dropnull, "freq");
   if (out.label().has()) {
-    return Stream::from_slate(out, out.label().values());
+    return Stream::from_shelf(out, out.label().values());
   }
-  return Stream::from_slate(out);
+  return Stream::from_shelf(out);
 }
 
 Stream Stream::ndistinct(DistinctOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().ndistinct(options.dropnull).slate());
+  return Stream::from_shelf(to_shelf().ndistinct(options.dropnull).shelf());
 }
 
 Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const {
@@ -184,33 +229,33 @@ Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const {
   return out;
 }
 
-Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
+Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
                       pluss::msharp::RangeView::Of<Stream> choices,
                       const Stream& default_value) {
   PLUSS_CHECK(!choices.empty(), "Stream::select: at least one choice is required");
   PLUSS_CHECK(default_value.defined(), "Stream::select: default value is undefined");
 
-  std::vector<pluss::table::Slate> choice_slates;
-  choice_slates.reserve(choices.size());
+  std::vector<pluss::table::Shelf> choice_shelves;
+  choice_shelves.reserve(choices.size());
   bool any_labels = default_value.has_label();
   for (const auto& choice : choices) {
     PLUSS_CHECK(choice.defined(), "Stream::select: choice is undefined");
     any_labels = any_labels || choice.has_label();
-    choice_slates.push_back(choice.to_slate());
+    choice_shelves.push_back(choice.to_shelf());
   }
 
-  const auto out_slate = pluss::table::Slate::select(
+  const auto out_shelf = pluss::table::Shelf::select(
       conditions,
-      pluss::msharp::RangeView::Of<pluss::table::Slate>(choice_slates),
-      default_value.to_slate());
+      pluss::msharp::RangeView::Of<pluss::table::Shelf>(choice_shelves),
+      default_value.to_shelf());
 
   if (!any_labels) {
-    return Stream::from_slate(out_slate);
+    return Stream::from_shelf(out_shelf);
   }
 
   PLUSS_CHECK(default_value.has_label(),
               "Stream::select: label presence must match across choices and default");
-  std::vector<pluss::table::Slate> choice_labels;
+  std::vector<pluss::table::Shelf> choice_labels;
   choice_labels.reserve(choices.size());
   for (const auto& choice : choices) {
     PLUSS_CHECK(choice.has_label(),
@@ -218,46 +263,46 @@ Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditio
     choice_labels.push_back(*choice.label());
   }
 
-  const auto out_label = pluss::table::Slate::select(
+  const auto out_label = pluss::table::Shelf::select(
       conditions,
-      pluss::msharp::RangeView::Of<pluss::table::Slate>(choice_labels),
+      pluss::msharp::RangeView::Of<pluss::table::Shelf>(choice_labels),
       *default_value.label());
-  return Stream::from_slate(out_slate, out_label);
+  return Stream::from_shelf(out_shelf, out_label);
 }
 
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.astype(dtype); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.astype(dtype); });
 }
 
 Stream Stream::sum() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().sum().slate());
+  return Stream::from_shelf(to_shelf().sum().shelf());
 }
 
 Stream Stream::mean() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().mean().slate());
+  return Stream::from_shelf(to_shelf().mean().shelf());
 }
 
 Stream Stream::min() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().min().slate());
+  return Stream::from_shelf(to_shelf().min().shelf());
 }
 
 Stream Stream::max() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().max().slate());
+  return Stream::from_shelf(to_shelf().max().shelf());
 }
 
 Stream Stream::var(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().var(unbiased).slate());
+  return Stream::from_shelf(to_shelf().var(unbiased).shelf());
 }
 
 Stream Stream::std(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().std(unbiased).slate());
+  return Stream::from_shelf(to_shelf().std(unbiased).shelf());
 }
 
 const pluss::Series& Stream::as_series() const {
@@ -426,6 +471,65 @@ std::ostream& operator<<(std::ostream& os, const Stream& stream) {
 }
 
 std::uint64_t Stream::fingerprint() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  std::uint64_t h = 0xcbf29ce484222325ULL;
+  const auto mix = [&](std::uint64_t v) { h = (h ^ v) * 0x100000001b3ULL; h ^= h >> 29; };
+  const auto n = size();
+  mix(static_cast<std::uint64_t>(kind()));
+  mix(static_cast<std::uint64_t>(n));
+  std::vector<bool> present(static_cast<std::size_t>(n), true);
+  if (pluss::kindle::detail::has_validity_mask(*this)) present = pluss::kindle::detail::validity_mask(*this)->host<bool>();
+  for (std::int64_t i = 0; i < n; ++i) mix(present[static_cast<std::size_t>(i)] ? 1u : 0u);
+  const auto mix_double = [&](double v) {
+    if (v == 0.0) v = 0.0;  // fold -0 into +0
+    std::uint64_t bits;
+    std::memcpy(&bits, &v, sizeof bits);
+    mix(bits);
+  };
+  switch (kind()) {
+    case StreamKind::Series: {
+      const auto s = as_series();
+      mix(static_cast<std::uint64_t>(s.scalar_type()));
+      if (s.dtype().is_complex()) {
+        const auto re = s.real().to(pluss::codem::ScalarType::Float64).items<double>();
+        const auto im = s.imag().to(pluss::codem::ScalarType::Float64).items<double>();
+        for (std::int64_t i = 0; i < n; ++i)
+          if (present[static_cast<std::size_t>(i)]) { mix_double(re[static_cast<std::size_t>(i)]); mix_double(im[static_cast<std::size_t>(i)]); }
+      } else if (s.dtype().is_floating()) {
+        const auto v = s.to(pluss::codem::ScalarType::Float64).items<double>();
+        for (std::int64_t i = 0; i < n; ++i)
+          if (present[static_cast<std::size_t>(i)]) mix_double(v[static_cast<std::size_t>(i)]);
+      } else {
+        const auto v = s.to(pluss::codem::ScalarType::Int64).items<std::int64_t>();
+        for (std::int64_t i = 0; i < n; ++i)
+          if (present[static_cast<std::size_t>(i)]) mix(static_cast<std::uint64_t>(v[static_cast<std::size_t>(i)]));
+      }
+      break;
+    }
+    case StreamKind::Note: {
+      const auto note = as_note();
+      for (std::int64_t i = 0; i < n; ++i)
+        if (present[static_cast<std::size_t>(i)]) mix(std::hash<std::string_view>{}(note.at(i)));
+      break;
+    }
+    case StreamKind::Timeline: {
+      const auto ticks = as_timeline().ticks();
+      for (std::int64_t i = 0; i < n; ++i)
+        if (present[static_cast<std::size_t>(i)]) mix(static_cast<std::uint64_t>(ticks[static_cast<std::size_t>(i)]));
+      break;
+    }
+    case StreamKind::Duration: {
+      const auto nanos = as_duration().host();
+      for (std::int64_t i = 0; i < n; ++i)
+        if (present[static_cast<std::size_t>(i)]) mix(static_cast<std::uint64_t>(nanos[static_cast<std::size_t>(i)]));
+      break;
+    }
+  }
+  if (has_label()) mix(Stream::from_shelf(*label()).fingerprint());
+  return h;
+}
+
+std::uint64_t Stream::stamp() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   const auto mix = [](std::uint64_t h, std::uint64_t v) {
     h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);

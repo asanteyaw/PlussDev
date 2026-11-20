@@ -4,7 +4,7 @@
 
 You have a transmission network: buses, the lines and transformers between them, generators and loads, and you want to study it. `power::make` takes a description of the network, a `Net`, checks that it is a network a power flow can solve, and compiles it into a `Grid` that every analysis function takes. This page explains how a network is written down: the per-unit system, the three kinds of bus, how generators and loads enter, the line parameters including transformers and charging, and the sweeps of scenarios that are written as batches.
 
-## The mental model
+## How it works
 
 Power-system quantities are written in **per unit**: each one is divided by a base, so that a 100 MW load on a 100 MVA base is `1.0`, and voltages sit near `1.0`. A `Base` holds two numbers, the three-phase apparent-power base in volt-amperes and the line-to-line voltage base in volts. From them the impedance base `zbase = V^2 / S`, the admittance base `ybase = 1 / zbase` and the current base `ibase = S / (sqrt(3) V)` follow, and `pu` and `si` convert a value to and from per unit.
 

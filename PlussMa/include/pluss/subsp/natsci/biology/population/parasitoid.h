@@ -61,7 +61,7 @@ inline Series spectral_radius(const Series &a) {
   const Series det = a.select(-1, 0).select(-1, 0).mul(a.select(-1, 1).select(-1, 1)).sub(a.select(-1, 0).select(-1, 1).mul(a.select(-1, 1).select(-1, 0)));
   const Series disc = tr.square().sub(det.mul(4.0));
   const Series real_case = tr.abs().add(disc.clamp(0.0, 1e300).sqrt()).mul(0.5); // largest |root| of a real pair
-  return disc.ge(0.0).where(real_case, det.sqrt());                               // complex pair: |lambda|^2 = det
+  return pluss::series::where(disc.ge(0.0), real_case, det.sqrt());                               // complex pair: |lambda|^2 = det
 }
 
 // ---- coupled-map lattice on a ring ---------------------------------------------------------------------------------------------

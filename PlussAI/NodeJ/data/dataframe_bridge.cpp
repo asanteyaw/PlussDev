@@ -14,8 +14,8 @@
 namespace pluss::ai::nodej {
 namespace {
 
-[[nodiscard]] StatusOr<Series> as_numeric_series(const pluss::table::Slate& slate,
-                                                 DataSlatePolicy slate_policy,
+[[nodiscard]] StatusOr<Series> as_numeric_series(const pluss::table::Shelf& shelf,
+                                                 DataShelfPolicy shelf_policy,
                                                  DataNotePolicy note_policy,
                                                  std::uint64_t note_hash_seed,
                                                  UnknownCategoryPolicy factorize_unknown_categorical,
@@ -24,12 +24,12 @@ namespace {
                                                  bool allow_note_drop,
                                                  const std::string& name,
                                                  std::int64_t expected_size) {
-  if (slate.size() != expected_size) {
+  if (shelf.size() != expected_size) {
     return StatusOr<Series>(
         Status::shape_mismatch("DataFrame feature '" + name + "' size does not match DataFrame case count."));
   }
 
-  if (slate.kind() == pluss::table::SlateKind::Note) {
+  if (shelf.kind() == pluss::table::ShelfKind::Note) {
     if (note_policy == DataNotePolicy::Drop && allow_note_drop) {
       return StatusOr<Series>(pluss::series::undefined());
     }
@@ -57,8 +57,8 @@ namespace {
       if (map_to_use == nullptr) {
         std::set<std::string_view> distinct{};
         for (std::int64_t i = 0; i < expected_size; ++i) {
-          if (!pluss::table::detail::valid_at(slate, i)) continue;
-          distinct.emplace(slate.as_note().at(i));
+          if (!pluss::table::detail::valid_at(shelf, i)) continue;
+          distinct.emplace(shelf.as_note().at(i));
         }
         fitted.categories.assign(distinct.begin(), distinct.end());
         map_to_use = &fitted;
@@ -77,11 +77,11 @@ namespace {
       auto out = Series::empty({expected_size}, ScalarType::Float64);
       auto* p = reinterpret_cast<double*>(out.raw_data());
       for (std::int64_t i = 0; i < expected_size; ++i) {
-        if (!pluss::table::detail::valid_at(slate, i)) {
+        if (!pluss::table::detail::valid_at(shelf, i)) {
           p[i] = std::numeric_limits<double>::quiet_NaN();
           continue;
         }
-        const std::string_view token = slate.as_note().at(i);
+        const std::string_view token = shelf.as_note().at(i);
         const auto it = code_of.find(token);
         if (it != code_of.end()) {
           p[i] = static_cast<double>(it->second);
@@ -115,12 +115,12 @@ namespace {
     constexpr std::uint64_t fnv_offset = 1469598103934665603ULL;
     constexpr std::uint64_t fnv_prime = 1099511628211ULL;
     for (std::int64_t i = 0; i < expected_size; ++i) {
-      if (!pluss::table::detail::valid_at(slate, i)) {
+      if (!pluss::table::detail::valid_at(shelf, i)) {
         p[i] = std::numeric_limits<double>::quiet_NaN();
         continue;
       }
       std::uint64_t h = fnv_offset ^ note_hash_seed;
-      const std::string_view token = slate.as_note().at(i);
+      const std::string_view token = shelf.as_note().at(i);
       for (unsigned char ch : token) {
         h ^= static_cast<std::uint64_t>(ch);
         h *= fnv_prime;
@@ -131,11 +131,11 @@ namespace {
     return StatusOr<Series>(std::move(out));
   }
 
-  pluss::table::Slate materialized = slate;
-  if (slate.kind() != pluss::table::SlateKind::Series) {
-    if (slate_policy == DataSlatePolicy::CastTemporalToSeries &&
-        slate.kind() == pluss::table::SlateKind::Timeline) {
-      materialized = slate.cast().series();
+  pluss::table::Shelf materialized = shelf;
+  if (shelf.kind() != pluss::table::ShelfKind::Series) {
+    if (shelf_policy == DataShelfPolicy::CastTemporalToSeries &&
+        shelf.kind() == pluss::table::ShelfKind::Timeline) {
+      materialized = shelf.cast().series();
     } else {
       return StatusOr<Series>(Status::invalid_argument(
           "DataFrame feature '" + name + "' is not a numeric Series column. Cast it before adapter conversion."));
@@ -149,7 +149,7 @@ namespace {
                              .to(out.platform(), ScalarType::Float64)
                              .reshape({expected_size});
     const Series nan_fill = pluss::series::zeros_like(out, ScalarType::Float64).add(std::numeric_limits<double>::quiet_NaN());
-    out = valid.gt(0.5).where(out, nan_fill);
+    out = pluss::series::where(valid.gt(0.5), out, nan_fill);
   }
   return StatusOr<Series>(std::move(out));
 }
@@ -213,7 +213,7 @@ StatusOr<FeatureBatch> feature_batch_from_dataframe(const pluss::table::DataFram
   bool have_platform = false;
   for (const auto& name : feature_names) {
     StatusOr<Series> series_or = as_numeric_series(frame.features(name),
-                                                   options.slate_policy,
+                                                   options.shelf_policy,
                                                    options.note_policy,
                                                    options.note_hash_seed,
                                                    options.factorize_unknown_categorical,
@@ -278,7 +278,7 @@ StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFram
 
   StatusOr<Series> label_or =
       as_numeric_series(frame.features(*options.label_feature),
-                        options.slate_policy,
+                        options.shelf_policy,
                         options.note_policy,
                         options.note_hash_seed,
                         options.factorize_unknown_categorical,
@@ -294,7 +294,7 @@ StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFram
   if (options.sample_weight_feature.has_value()) {
     StatusOr<Series> weight_or = as_numeric_series(
         frame.features(*options.sample_weight_feature),
-        options.slate_policy,
+        options.shelf_policy,
         options.note_policy,
         options.note_hash_seed,
         options.factorize_unknown_categorical,

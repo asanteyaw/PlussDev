@@ -11,7 +11,7 @@ PaletteRamp flash::mpl_palette(std::string_view name = "viridis")
 ```
 
 ```{important} The name selects one of the five built-in ramps
-`mpl_palette(name)` maps the name of a familiar colormap family to the built-in `PaletteRamp` whose progression of hue is closest to it; the table below gives the mapping. A name that is not recognised, and the default `"viridis"`, give the lagoon ramp.
+`mpl_palette(name)` maps the name of a familiar colormap family to the built-in `PaletteRamp` whose progression of hue is closest to it; the table below gives the mapping. The default `"viridis"` gives the lagoon ramp. A name that is not recognised is an error that lists the recognised names, so an unsupported colormap is reported instead of silently drawing a different one.
 ```
 
 ## What It Does
@@ -36,7 +36,7 @@ specific colormap's data).
 | `"blues"`, `"cool"`, `"winter"`, `"ocean"` | `PaletteRamp::ocean()` | a monotone dark-to-light blue ramp |
 | `"greens"`, `"summer"`, `"spring"` | `PaletteRamp::meadow()` | a green-to-warm-tan ramp |
 | `"greys"`, `"gray"`, `"grey"`, `"binary"` | `PaletteRamp::neutral()` | a grayscale ramp |
-| anything else | `PaletteRamp::lagoon()` | the same fallback as `"viridis"` |
+| anything else | `pluss::Error` | lists the recognised names |
 
 ## Returns
 
@@ -103,19 +103,22 @@ mpl_palette("blues") vs mpl_palette("greens") differ: 1
 mpl_palette("greens") vs mpl_palette("greys") differ: 1
 ```
 
-Example 3 (edge case). An unrecognized name falls back to `lagoon`, same as `"viridis"`.
+Example 3 (edge case). An unrecognized name is an error.
 
 ```cpp
 using namespace pluss::pl;
 
-auto unknown = flash::mpl_palette("some-unknown-cmap");
-std::cout << "mpl_palette(unknown) falls back to name=" << unknown.name() << "\n";
+try {
+  flash::mpl_palette("jet");
+} catch (const pluss::Error &e) {
+  std::cout << e.message() << "\n";
+}
 ```
 
 Output:
 
 ```text
-mpl_palette(unknown) falls back to name=lagoon
+flash::mpl_palette: unknown colormap name 'jet'; the names are viridis, cividis, plasma, inferno, magma, hot, afmhot, blues, cool, winter, ocean, greens, summer, spring, greys, gray, grey and binary
 ```
 
 ## Notes

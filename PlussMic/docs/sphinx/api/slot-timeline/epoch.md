@@ -57,8 +57,8 @@ Example 2. A span-only unit throws.
 auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 try {
   auto out = slot.tl().epoch(pluss::table::TimeUnit::Weeks);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -66,7 +66,7 @@ try {
 ### Output
 
 ```text
-Slate::tl().epoch: unit is span-only; use Slate::tl().span
+Shelf::tl().epoch: unit is span-only; use Shelf::tl().span
 ```
 
 ## Notes

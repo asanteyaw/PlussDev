@@ -30,7 +30,7 @@ Build a cross-validation plan and a stratified plan, then read the fold count fr
 
 namespace lymph = pluss::ai::lymph;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
   const pluss::Series x = pluss::make_series(std::vector<double>{

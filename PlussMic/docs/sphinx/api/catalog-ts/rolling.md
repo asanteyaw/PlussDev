@@ -31,7 +31,7 @@ full explanation and how to project down to numeric keys first.
 ```
 
 ```{important} Only the fixed-window overload — no calendar-duration form
-Unlike [`Slate::ts().rolling()`](../slate-ts/rolling.md), which also has a
+Unlike [`Shelf::ts().rolling()`](../shelf-ts/rolling.md), which also has a
 `rolling(axis, duration, ...)` calendar-duration overload,
 `CatalogTimeSeriesAccessor::rolling()` only has this one fixed-row-count
 signature — a multi-key catalog has no single unambiguous time axis to key a
@@ -114,12 +114,12 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [NA, 7.07106781187, 3.53553390593, 10.6066017178]
+metric                   | Series       | Series[float64]  | 4       | [NULL, 7.07106781187, 3.53553390593, 10.60660171~
 ========================================================================================================================
 ```
 
 Position `0`'s window has only 1 observation, and the default `ddof = 1`
-requires more than `1` observation for a defined variance/std, so it's `NA`
+requires more than `1` observation for a defined variance/std, so it's `NULL`
 even though `min_count = 1` alone would have allowed it.
 
 Example 3. `options.centered = true` — the window straddles each position
@@ -163,8 +163,8 @@ auto ct = pluss::kindle::Catalog({
 });
 try {
   auto out = ct.ts().rolling(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -172,11 +172,11 @@ try {
 ### Output
 
 ```text
-Slate::moving: window must be > 0
+Shelf::moving: window must be > 0
 ```
 
 A window of `0` (or negative) has no meaningful trailing span, so it's
-rejected outright. The error is reported under `Slate::moving` — the private
+rejected outright. The error is reported under `Shelf::moving` — the private
 engine this method delegates to internally.
 
 ## Notes
@@ -198,8 +198,8 @@ engine this method delegates to internally.
 - [`Stream::ts`](../stream/ts.md): the single-stream equivalent, which also
   exposes the calendar-duration overload — see the important callout above.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::rolling`](../slate-ts/rolling.md): the underlying
-  single-slate engine this method's fixed-window form delegates to.
+- [`TimeSeriesAccessor::rolling`](../shelf-ts/rolling.md): the underlying
+  single-shelf engine this method's fixed-window form delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

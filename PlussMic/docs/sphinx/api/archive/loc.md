@@ -105,8 +105,8 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 
 try {
   archive.loc(std::int64_t(0));
-} catch (const std::exception& e) {
-  std::cout << "loc(0) threw: " << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << "loc(0) threw: " << e.message();
 }
 ```
 

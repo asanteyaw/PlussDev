@@ -4,7 +4,7 @@
 
 A state-space model describes the inside of a system. For many questions you want to know what it does from the outside: how it treats a sinusoid of each frequency, and whether it is stable. `zpk` describes a single-input, single-output system by its **zeros, poles and gain**; `freqresp` evaluates the frequency response of either description; `PoleZero::is_stable` tests stability; and `to_sos` turns a discrete pole-zero model into the section matrix that [`sos`](../../signal/signal_02_recursive_filters/second_order_sections.md) filters with.
 
-## The mental model
+## How it works
 
 The transfer function of a single-input, single-output system factors into a gain and the roots of two polynomials:
 

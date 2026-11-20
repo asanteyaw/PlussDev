@@ -2,6 +2,8 @@
 
 # `signal::conv`
 
+Convolves a signal with a kernel along one axis.
+
 ## Signature
 
 ```cpp
@@ -14,153 +16,71 @@ pluss::Series signal::conv(
 
 ## What It Does
 
-Computes linear convolution along one axis while treating remaining dimensions as independent batches. Kernel reversal follows the mathematical convolution convention.
+Computes `y[n] = sum_m k[m] x[n - m]` along `dim` for every lane of the other axes. The mode chooses how much of the result is kept: `Full` keeps every overlap, `Same` keeps the part aligned with the input and `Valid` keeps only the positions where the kernel lies entirely inside the signal. Convolution is commutative, so exchanging the input and the kernel gives the same sequence.
 
 ## Parameters
 
 `input`
-: Floating or complex signal samples.
+: A floating or complex `Series`. Integer and Bool inputs are rejected.
 
 `kernel`
-: Rank-one or batch-compatible floating or complex convolution coefficients.
+: A rank-one floating or complex `Series`, the impulse response or weights.
 
 `dim`
-: Sample axis; negative dimensions count from the end.
+: The axis to convolve along. Negative values count from the end; the default `-1` is the last axis.
 
 `mode`
-: Output alignment and length policy.
+: A `ConvMode`: `Full` (default), `Same` or `Valid`.
 
 ## Returns
 
-A promoted floating or complex `Series` with batch dimensions preserved and processed-axis length determined by `mode`.
+A `Series` of the promoted dtype. Along `dim` its length is `N + K - 1` for `Full`, `N` for `Same` and `N - K + 1` for `Valid` (for input length `N` and kernel length `K`); other axes keep their shape.
 
 ## Errors
 
-Rejects integer signals, invalid axes, empty/incompatible kernels, incompatible batch shapes, dtypes, or platforms.
+An integer input, an empty input or kernel, and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+Use `conv` for FIR smoothing and differencing. The first and last `K - 1` samples of a `Full` result are start-up and shut-down transients where the kernel only partly overlaps the signal.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The three modes on a short signal, with the length each one returns.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
+  const pluss::Series k = pluss::make_series({1.0, 0.0, -1.0});
+  for (const auto [label, mode] : {std::pair{"full ", sig::ConvMode::Full}, {"same ", sig::ConvMode::Same}, {"valid", sig::ConvMode::Valid}}) {
+    const pluss::Series y = sig::conv(x, k, -1, mode);
+    out.writeln(label, "length", y.numel(), "values", y.items<double>());
   }
 }
 ```
@@ -168,8 +88,108 @@ int main() {
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+full  length 7 values [1.0000, 2.0000, 2.0000, 2.0000, 2.0000, -4.0000, -5.0000]
+same  length 5 values [2.0000, 2.0000, 2.0000, 2.0000, -4.0000]
+valid length 3 values [2.0000, 2.0000, 2.0000]
+```
+### Example 2
+
+The result against the direct sum, the commutative property, and a batch of rows convolved along an axis.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
+  const pluss::Series k = pluss::make_series({0.5, 1.0, 0.25});
+  const auto y = sig::conv(x, k).items<double>();
+  const auto xs = x.items<double>();
+  const auto ks = k.items<double>();
+  double worst = 0.0;
+  for (std::size_t n = 0; n < y.size(); ++n) {
+    double sum = 0.0;
+    for (std::size_t m = 0; m < ks.size(); ++m)
+      if (n >= m && n - m < xs.size()) sum += ks[m] * xs[n - m];
+    worst = std::max(worst, std::abs(sum - y[n]));
+  }
+  out.writeln("largest difference from the direct sum =", worst);
+  const auto swapped = sig::conv(k, x).items<double>();
+  double commute = 0.0;
+  for (std::size_t n = 0; n < y.size(); ++n) commute = std::max(commute, std::abs(swapped[n] - y[n]));
+  out.writeln("conv(x, k) against conv(k, x), largest difference =", commute);
+  const pluss::Series rows = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({2, 3});
+  const pluss::Series two = sig::conv(rows, pluss::make_series({1.0, 1.0}), 1);
+  out.writeln("two rows convolved along the last axis, shape", two.size(0), "x", two.size(1), "first row", two.select(0, 0).items<double>());
+}
+```
+
+Output
+
+```text
+largest difference from the direct sum = 0.0000
+conv(x, k) against conv(k, x), largest difference = 0.0000
+two rows convolved along the last axis, shape 2 x 4 first row [1.0000, 3.0000, 5.0000, 3.0000]
+```
+### Example 3
+
+Every refused input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "an integer input", [] { sig::conv(pluss::make_series({1, 2, 3}), pluss::make_series({1.0, 1.0})); });
+  refused(out, "an empty kernel", [] { sig::conv(pluss::make_series({1.0, 2.0}), pluss::series::zeros({0}, pluss::ScalarType::Float64)); });
+  refused(out, "an axis out of range", [] { sig::conv(pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}), 3); });
+}
+```
+
+Output
+
+```text
+an integer input : eng::signal::conv: input must have a floating or complex dtype
+an empty kernel : eng::signal::conv: sample axes must be non-empty
+an axis out of range : eng::signal::conv: dim out of range
 ```
 ## See Also
 

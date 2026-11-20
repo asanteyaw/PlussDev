@@ -58,15 +58,15 @@ built without Arrow/Parquet C++.
 ```cpp
 try {
   auto ct = pluss::kindle::Catalog::load_parquet("cities.parquet");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-loader::read_parquet_raw_batch: built without parquet-cpp support (install Arrow + Parquet C++ and reconfigure)
+loader::read_parquet_raw_batch: unable to open file 'cities.parquet'
 ```
 
 ## Notes
@@ -85,12 +85,12 @@ loader::read_parquet_raw_batch: built without parquet-cpp support (install Arrow
   Arrow/Parquet C++ requirement.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_json.html">
+  <a class="prev-link" href="load_labeled.html">
     <span class="label">Previous</span>
-    <span class="title">load_json</span>
+    <span class="title">load_labeled</span>
   </a>
-  <a class="next-link" href="load_txt.html">
+  <a class="next-link" href="load_streams.html">
     <span class="label">Next</span>
-    <span class="title">load_txt</span>
+    <span class="title">load_streams</span>
   </a>
 </div>

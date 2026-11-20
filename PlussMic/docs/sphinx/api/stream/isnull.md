@@ -15,7 +15,7 @@ Stream Stream::isnull() const
 
 Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which
 rows are `NULL` (validity-masked as invalid, or an unmarked `NaN` in a numeric payload).
-Delegates to `Slate::isnull()`; works uniformly across all four payload kinds — unlike the
+Delegates to `Shelf::isnull()`; works uniformly across all four payload kinds — unlike the
 elementwise math family, `isnull()` never throws based on kind.
 
 ## Parameters
@@ -80,12 +80,13 @@ label        | value
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction, unlike
   [`abs()`](abs.md)/[`clip()`](clip.md)/[`log()`](log.md)/[`exp()`](exp.md).
 - The result is always `Series`-kind (`Series[bool]`), regardless of the receiver's own
   kind.
 - In every case tested here, produces the same result as [`invalid()`](invalid.md) — the
-  two call different underlying `Slate` methods but agree in ordinary use.
+  two call different underlying `Shelf` methods but agree in ordinary use.
 
 ## See Also
 
@@ -95,12 +96,12 @@ label        | value
   this method identifies.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="kind.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">kind</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

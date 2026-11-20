@@ -18,8 +18,8 @@
 
 <div class="pluss-card">
 <span class="card-name">PlussMic</span>
-<span class="card-model">DataFrame &middot; Slate &middot; Atlas</span>
-<p class="card-desc">The data-analysis layer: tabular data (<code>DataFrame</code>), typed columns (<code>Slate</code>), stacks of related frames (<code>Atlas</code>), plus streaming, bundling, and plotting.</p>
+<span class="card-model">DataFrame &middot; Shelf &middot; Atlas</span>
+<p class="card-desc">The data-analysis layer: tabular data (<code>DataFrame</code>), typed columns (<code>Shelf</code>), stacks of related frames (<code>Atlas</code>), plus streaming, bundling, and plotting.</p>
 <div class="card-links">
 <a href="_local/PlussMic/api_reference.html">API Reference &rarr;</a>
 </div>
@@ -28,7 +28,7 @@
 <div class="pluss-card">
 <span class="card-name">PlussQit</span>
 <span class="card-model">Series &middot; Note &middot; Timeline &middot; TimeIndex</span>
-<p class="card-desc">The core object layer: the numeric/boolean tensor object (<code>Series</code>), the vectorized text object (<code>Note</code>), and the two time objects that <code>Slate</code> builds on.</p>
+<p class="card-desc">The core object layer: the numeric/boolean tensor object (<code>Series</code>), the vectorized text object (<code>Note</code>), and the two time objects that <code>Shelf</code> builds on.</p>
 <div class="card-links">
 <a href="_local/PlussQit/api_reference.html">API Reference &rarr;</a>
 </div>
@@ -76,13 +76,13 @@
 <div class="pluss-section">
 <h2>Core mental model</h2>
 <p class="section-sub">Pluss is organized around a small set of composable data objects. Every package above ultimately builds on, or feeds, this stack.</p>
-<div class="pluss-model-diagram">Atlas -&gt; DataFrame -&gt; Slate -&gt; Series / Note / Timeline / TimeIndex</div>
+<div class="pluss-model-diagram">Atlas -&gt; DataFrame -&gt; Shelf -&gt; Series / Note / Timeline / TimeIndex</div>
 <ul class="pluss-model-list">
 <li><code>Series</code> is the numeric and boolean tensor-style object.</li>
 <li><code>Note</code> is the vectorized text object.</li>
 <li><code>Timeline</code> and <code>TimeIndex</code> are time objects.</li>
-<li><code>Slate</code> is a typed table column over one of those core objects.</li>
-<li><code>DataFrame</code> is a 2D table of named <code>Slate</code> features over a case axis.</li>
+<li><code>Shelf</code> is a typed table column over one of those core objects.</li>
+<li><code>DataFrame</code> is a 2D table of named <code>Shelf</code> features over a case axis.</li>
 <li><code>Atlas</code> is a stack of related <code>DataFrame</code> objects.</li>
 </ul>
 </div>
@@ -122,9 +122,7 @@ lymph_combination_atlas
 lymph_troubleshooting
 nodej_user_guide
 nodej_cookbook
-plusspl_user_guide
 plusspl_api_reference
-flash_user_guide
 flash_api_reference
 plussma_optimization_user_guide
 plussma_optimization_cookbook
@@ -141,8 +139,6 @@ plussma_hypothesis_user_guide
 demo_catalog
 plussmic_docs_hub
 time_series_accessor_guide
-series
-series_query_user_guide
 kit
 aux_tutorial
 tils_env
@@ -155,16 +151,10 @@ autodiff_architecture
 optimization_diff_contract
 dl_torch_maturity_blueprint
 series_api_reference
-series_all_methods_usage
-note
 content_moment_helpers
 note_api_reference
-note_all_methods_usage
-timeline_timeindex
 timeline_api_reference
 timeindex_api_reference
-timeline_all_methods_usage
-timeindex_all_methods_usage
 api_indexes
 build_outputs
 README

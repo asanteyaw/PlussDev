@@ -1,8 +1,8 @@
 <!-- generated from Result.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# `control::mpc::Result`
+# `control::Result`
 
-The selected action, complete plan, state trajectory, and optimizer diagnostics.
+The optimal plan returned by `solve`.
 
 ## Signature
 
@@ -12,202 +12,198 @@ control::mpc::Result
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Holds the first control to apply, the whole planned control sequence, the predicted states and the solver outcome.
 
 ## Fields
 
-### `control`
-
-The first control action, ready to apply in receding-horizon operation.
-
-### `controls`
-
-The full optimized control sequence over the horizon.
-
-### `states`
-
-The predicted state sequence after applying the optimized controls.
-
-### `optimization`
-
-The underlying `pluss::math::qp::Result`, including convergence and residual diagnostics.
+| Field | Meaning | Shape |
+|---|---|---|
+| `control` | The first planned input: the one to apply now. | `[inputs]` |
+| `controls` | The planned inputs over the horizon. | `[horizon, inputs]` |
+| `states` | The predicted state after each planned input. | `[horizon, states]` |
+| `optimization` | The `qp::Result`: `converged`, `iterations`, residuals and `warm()`. | |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again; check `optimization.converged` before applying the control.
 
 ## Interpretation and Use
 
-Apply only `control`, the first action, in receding-horizon operation. `controls` and `states` are predictions used for inspection and warm-start planning, not commitments. Always check `optimization.converged` and residual diagnostics before applying the action.
+`control` is the first row of `controls` (the first example). The predicted states are the model rolled forward from the initial state under those controls: the second example finds no difference. Pass `optimization.warm()` to the next `solve` to warm-start it.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect the first action, full input plan, states, and convergence.
+The shapes of the fields.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.1}, {1, 1}),
-      pluss::make_series({2.0}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.4}), pluss::make_series({0.4}),
-      pluss::make_series({-2.0}), pluss::make_series({1.05})};
-  control::mpc::Options options;
-  options.horizon = 4;
-  options.qp.abs_tol = 1e-7;
-  options.qp.rel_tol = 1e-7;
-  const control::mpc::Result result = control::mpc::solve(
-      plant, pluss::make_series({0.0}), pluss::make_series({1.0}),
-      weights, bounds, options);
-
-  out.writeln("first control =", result.control.items<double>());
-  out.writeln("controls =", result.controls.flatten().items<double>());
-  out.writeln("states =", result.states.flatten().items<double>());
-  out.writeln("converged =", result.optimization.converged);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mpc::Result res = run();
+  out.writeln("control", res.control.numel(), "value; controls", res.controls.size(0), "x", res.controls.size(1), "; states", res.states.size(0), "x", res.states.size(1));
+  out.writeln("first control is the first row of controls:", std::abs(res.control.items<double>()[0] - res.controls.flatten().items<double>()[0]) < 1e-12);
 }
 ```
 
 Output
 
 ```text
-first control = [0.400000]
-controls = [0.400000, 0.400000, 0.183267, 0.015936]
-states = [0.400000, 0.800000, 0.983267, 0.999203]
-converged = true
+control 1 value; controls 4 x 1 ; states 4 x 1
+first control is the first row of controls: true
 ```
 ### Example 2
 
-Observe saturation and optimizer iterations under tighter bounds.
+The predicted states against the model rolled forward.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}, {1, 1}), 1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({0.5}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.25}), pluss::make_series({0.25})};
-  control::mpc::Options options;
-  options.horizon = 3;
-  options.qp.max_iters = 1000;
-  options.qp.abs_tol = 1e-7;
-  options.qp.rel_tol = 1e-7;
-
-  const control::mpc::Result result = control::mpc::solve(
-      plant, pluss::make_series({0.0}), pluss::make_series({1.0}),
-      weights, bounds, options);
-
-  out.writeln("bounded controls =", result.controls.flatten().items<double>());
-  out.writeln("predicted states =", result.states.flatten().items<double>());
-  out.writeln("iterations =", result.optimization.iterations);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // The predicted states follow the model: x[k+1] = x[k] + u[k] from the initial state 0.
+  const mpc::Result res = run();
+  const auto u = res.controls.flatten().items<double>(), x = res.states.flatten().items<double>();
+  double state = 0.0, worst = 0.0;
+  for (std::size_t k = 0; k < u.size(); ++k) { state += u[k]; worst = std::max(worst, std::abs(state - x[k])); }
+  out.writeln("largest difference between the predicted states and the model rolled forward =", worst);
 }
 ```
 
 Output
 
 ```text
-bounded controls = [0.250000, 0.250000, 0.250000]
-predicted states = [0.250000, 0.500000, 0.750000]
-iterations = 40
+largest difference between the predicted states and the model rolled forward = 0.0000
 ```
 ### Example 3
 
-Compare cold and warm-started result diagnostics.
+The solver outcome.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.1}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.5}), pluss::make_series({0.5})};
-  const control::mpc::Plan plan =
-      control::mpc::build(plant, weights, bounds, {.horizon = 3});
-  const control::mpc::Result first = control::mpc::solve(
-      plan, pluss::make_series({0.0}), pluss::make_series({1.0}));
-  const control::mpc::Result warm = control::mpc::solve(
-      plan, pluss::make_series({0.1}), pluss::make_series({1.0}),
-      first.optimization.warm());
-
-  std::cout << "horizon = " << plan.horizon() << ", states = " << plan.states()
-            << ", inputs = " << plan.inputs() << "\n";
-  out.writeln("cold iterations =", first.optimization.iterations);
-  out.writeln("warm iterations =", warm.optimization.iterations);
-  out.writeln("warm controls =", warm.controls.flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mpc::Result res = run();
+  out.writeln("converged:", res.optimization.converged, " iterations", res.optimization.iterations, " primal residual below 1e-6:", res.optimization.primal_residual < 1e-6, " dual residual below 1e-6:", res.optimization.dual_residual < 1e-6);
 }
 ```
 
 Output
 
 ```text
-horizon = 3, states = 1, inputs = 1
-cold iterations = 20
-warm iterations = 20
-warm controls = [0.500000, 0.366416, 0.030529]
+converged: true  iterations 30  primal residual below 1e-6: true  dual residual below 1e-6: true
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Options.html">
-    <span class="label">Previous</span>
-    <span class="title">Options</span>
-  </a>
-  <a class="next-link" href="Plan.html">
-    <span class="label">Next</span>
-    <span class="title">Plan</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

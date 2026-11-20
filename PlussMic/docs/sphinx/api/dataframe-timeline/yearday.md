@@ -35,7 +35,7 @@ Example 1. Extract the day-of-year from every row of a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -85,7 +85,7 @@ relative to a non-leap year, so early-March dates coincide numerically.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
-- A `NaT` row (or one already null on the underlying `Slate`) displays as
+- A `NaT` row (or one already null on the underlying `Shelf`) displays as
   `"NULL"`.
 
 ## See Also

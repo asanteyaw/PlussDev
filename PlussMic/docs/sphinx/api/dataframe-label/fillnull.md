@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate DataFrameLabelAccessor::fillnull(double value) const
-Slate DataFrameLabelAccessor::fillnull(std::string_view value) const
-Slate DataFrameLabelAccessor::fillnull(const char* value) const
-Slate DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const
+Shelf DataFrameLabelAccessor::fillnull(double value) const
+Shelf DataFrameLabelAccessor::fillnull(std::string_view value) const
+Shelf DataFrameLabelAccessor::fillnull(const char* value) const
+Shelf DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const
 ```
 
 ## What It Does
@@ -34,7 +34,7 @@ own kind.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The case-label values with nulls replaced — not yet applied back to the
     frame.
 
@@ -46,8 +46,8 @@ Example 1. Fill a null in a numeric case-label axis.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
+    {{"value", Shelf(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Shelf(pluss::make_series({10.0, 0.0, 30.0}), pluss::make_series(std::vector<bool>{true, false, true})));
 std::cout << readings;
 
 auto filled = readings.labels().fillnull(0.0);
@@ -76,7 +76,7 @@ NULL | 2
 ptype: Series
 ```
 
-`filled` is a bare `Slate` — the middle case label's `NULL` became `0`, but
+`filled` is a bare `Shelf` — the middle case label's `NULL` became `0`, but
 `readings` itself is unchanged unless you call
 `readings.labels().set(filled)` to apply it.
 
@@ -87,8 +87,8 @@ Example 2. Fill a `NaT` in a `Timeline` case-label axis, using the
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "", "2024-01-03T00:00:00Z"})));
+    {{"value", Shelf(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "", "2024-01-03T00:00:00Z"})));
 std::cout << readings;
 
 auto filled = readings.labels().fillnull(pluss::make_timeline("2024-01-02T00:00:00Z"));
@@ -98,22 +98,22 @@ std::cout << filled;
 ### Output (before)
 
 ```text
-==================
-           | value
-------------------
-2024-01-01 | 1    
-NULL       | 2    
-2024-01-03 | 3    
-------------------
+==============================
+                       | value
+------------------------------
+2024-01-01 00:00:00.0~ | 1    
+NaT                    | 2    
+2024-01-03 00:00:00.0~ | 3    
+------------------------------
 [3 cs x 1 feat]
 ```
 
 ### Output (filled values, not yet applied)
 
 ```text
-0  2024-01-01
-1  2024-01-02
-2  2024-01-03
+0  2024-01-01 00:00:00.0~
+1  NaT
+2  2024-01-03 00:00:00.0~
 ptype: Timeline
 ```
 
@@ -126,7 +126,7 @@ value, `2024-01-02`. As in Example 1, this is still just the filled values —
 
 - Returns values only; chain into [`set()`](set.md) to actually update the
   frame's case labels.
-- Choose the overload matching the case labels' `SlateKind` — passing a
+- Choose the overload matching the case labels' `ShelfKind` — passing a
   `double` to a `Note` axis (or vice versa) doesn't fit any overload and won't
   compile.
 - The `std::string_view`/`const char*` overloads work the same way as

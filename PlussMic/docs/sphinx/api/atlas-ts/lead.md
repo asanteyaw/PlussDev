@@ -39,8 +39,8 @@ Example 1. Lead a numeric feature by one row, stacked across two frames.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
-auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
+auto q1 = DataFrame({{"load", Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
+auto q2 = DataFrame({{"load", Shelf(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
 auto atlas = Atlas({q1, q2});
 
 auto out = atlas.ts().lead();
@@ -56,7 +56,7 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 0    | 20  
 1    | 15  
 2    | 30  
-3    | nan 
+3    | NULL
 -----------
 [4 cs x 1 feat]
 ===========
@@ -65,7 +65,7 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 0    | 18  
 1    | 14  
 2    | 28  
-3    | nan 
+3    | NULL
 -----------
 [4 cs x 1 feat]
 ```

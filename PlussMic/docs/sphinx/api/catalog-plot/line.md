@@ -268,7 +268,7 @@ becomes the x-axis, still titled `"record"` rather than the label's own meaning.
 using namespace pluss::kindle::literals;
 
 auto amount_stream = pluss::kindle::Stream(pluss::make_series({100.0, 120.0, 90.0, 150.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
 auto quarterly = pluss::kindle::Catalog({"amount"_k = amount_stream});
 
 auto chart = quarterly.plot().line("amount");
@@ -399,8 +399,8 @@ auto short_metric = pluss::kindle::Catalog({
 
 try {
   auto bad = short_metric.plot().line("sales", "day");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -422,8 +422,8 @@ auto weather = pluss::kindle::Catalog({
 
 try {
   auto bad = weather.plot().line("nonexistent");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

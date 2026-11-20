@@ -16,13 +16,15 @@ A customer export has a duplicated id, a malformed email, an empty email, a miss
 #include <iostream>
 
 using pluss::table::DataFrame;
+using pluss::table::Shelf;
 
 int main() {
-  const double none = std::numeric_limits<double>::quiet_NaN();
   auto export_table = DataFrame({
       {"id", pluss::make_series({1, 2, 3, 3, 4, 5, 6, 7})},
       {"email", pluss::make_note({"ada@example.com", "grace@navy.mil", "alan@@bad", "alan@example.org", "edsger@dijkstra.nl", "", "barbara@mit.edu", "ken@bell-labs.com"})},
-      {"age", pluss::make_series({36.0, 85.0, none, 41.0, 200.0, 29.0, 34.0, 17.0})},
+      // The third customer's age was never recorded: the validity mask marks it missing (the 0.0 under it is only a placeholder).
+      {"age", Shelf(pluss::make_series({36.0, 85.0, 0.0, 41.0, 200.0, 29.0, 34.0, 17.0}),
+                    pluss::make_series(std::vector<bool>{true, true, false, true, true, true, true, true}))},
       {"country", pluss::make_note({"UK", "US", "UK", "UK", "NL", "US", "US", "US"})},
   });
   std::cout << export_table.to_string() << "\n";

@@ -8,10 +8,10 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-1.0, 1.0, 50, ScalarType::Float64);
-  const DataFrame raw({{"x", Slate(x)}, {"x2", Slate(x.square())}, {"y", Slate(x.gt(0.0).to(ScalarType::Float64))}});
+  const DataFrame raw({{"x", Shelf(x)}, {"x2", Shelf(x.square())}, {"y", Shelf(x.gt(0.0).to(ScalarType::Float64))}});
 
   lymph::WorkflowOptions options{};
   options.workers = 4;

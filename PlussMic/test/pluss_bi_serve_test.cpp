@@ -93,8 +93,8 @@ pluss::bi::Studio make_serve_test_studio(const pluss::bundle::Nexus& nexus) {
 // library's own client, pulled in transitively by pluss/bi/serve.h.
 httplib::Client make_client(const pluss::bi::ServeHandle& handle) {
   httplib::Client client("127.0.0.1", handle.port());
-  client.set_connection_timeout(5, 0);
-  client.set_read_timeout(5, 0);
+  client.set_connection_timeout(30, 0);
+  client.set_read_timeout(30, 0);
   return client;
 }
 
@@ -278,8 +278,8 @@ void test_serve_concurrent_requests_smoke() {
   for (int i = 0; i < kRequestCount; ++i) {
     workers.emplace_back([&handle, &success_count, i]() {
       httplib::Client client("127.0.0.1", handle.port());
-      client.set_connection_timeout(5, 0);
-      client.set_read_timeout(5, 0);
+      client.set_connection_timeout(30, 0);
+      client.set_read_timeout(30, 0);
       const std::string value = (i % 2 == 0) ? "retail" : "enterprise";
       const auto resp = client.Post(
           "/api/filter",

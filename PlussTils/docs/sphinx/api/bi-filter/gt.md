@@ -57,11 +57,11 @@ namespace bi = pluss::bi;
 // Six sales rows: regions north, south, north, east, south, north; amounts 10 to 60.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -120,11 +120,11 @@ namespace bi = pluss::bi;
 // Six sales rows: regions north, south, north, east, south, north; amounts 10 to 60.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -185,11 +185,11 @@ namespace bi = pluss::bi;
 // Six sales rows: regions north, south, north, east, south, north; amounts 10 to 60.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -250,13 +250,13 @@ namespace bi = pluss::bi;
 // Dates: one per month from January to June 2024. Leads: 1 to 6 days.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
-      {"placed", Slate(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
-      {"lead", Slate(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"placed", Shelf(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
+      {"lead", Shelf(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -320,13 +320,13 @@ namespace bi = pluss::bi;
 // Dates: one per month from January to June 2024. Leads: 1 to 6 days.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
-      {"placed", Slate(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
-      {"lead", Slate(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"placed", Shelf(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
+      {"lead", Shelf(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -391,13 +391,13 @@ namespace bi = pluss::bi;
 // Dates: one per month from January to June 2024. Leads: 1 to 6 days.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
-      {"placed", Slate(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
-      {"lead", Slate(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {6}, cfg))},
+      {"placed", Shelf(pluss::make_timeline({"2024-01-05", "2024-02-10", "2024-03-15", "2024-04-20", "2024-05-25", "2024-06-30"}))},
+      {"lead", Shelf(pluss::make_duration(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6}, pluss::duration::Unit::Days))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }

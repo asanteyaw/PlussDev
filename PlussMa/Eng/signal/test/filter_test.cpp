@@ -320,6 +320,17 @@ int main() {
   }
   expect(integral_filter, "integral filtering input was accepted");
 
+  bool short_state = false;
+  try {
+    // A state of length one cannot continue a filter of order two; it must not be repeated into the missing slot.
+    const auto one = eng_signal::filter(pluss::series::make({1.0, 2.0, 3.0}), iir_b, iir_a);
+    (void)eng_signal::filter(pluss::series::make({1.0, 2.0, 3.0}), pluss::series::make({0.5, 0.3, 0.2}),
+                             pluss::series::make({1.0, -0.4, 0.1}), one.state);
+  } catch (const pluss::Error &) {
+    short_state = true;
+  }
+  expect(short_state, "a state shorter than the filter order was accepted");
+
   bool scalar_omega = false;
   try {
     (void)eng_signal::freqz(h, pluss::series::make(0.0));

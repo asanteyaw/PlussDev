@@ -70,15 +70,15 @@ std::cout << "get(\"nope\") has value: " << shop.get("nope").has_value() << '\n'
 try {
   (void)shop.catalog("nope");
   std::cout << "catalog(\"nope\"): did not throw\n";
-} catch (const std::exception& e) {
-  std::string msg = e.what();
+} catch (const pluss::Error& e) {
+  std::string msg = e.message();
   std::cout << "catalog(\"nope\") threw: " << msg.substr(0, msg.find('\n')) << '\n';
 }
 try {
   (void)shop.catalog(99);
   std::cout << "catalog(99): did not throw\n";
-} catch (const std::exception& e) {
-  std::string msg = e.what();
+} catch (const pluss::Error& e) {
+  std::string msg = e.message();
   std::cout << "catalog(99) threw: " << msg.substr(0, msg.find('\n')) << '\n';
 }
 
@@ -109,3 +109,14 @@ counts from the end rather than meaning "invalid."
 - [`state`](state.md): `ntables()`, the count these accessors index into.
 - [`link`](link.md): `neighbors`/`path`, which answer questions about a table by name
   the same way `has`/`catalog` do.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="audit_report.html">
+    <span class="label">Previous</span>
+    <span class="title">audit_report</span>
+  </a>
+  <a class="next-link" href="construction.html">
+    <span class="label">Next</span>
+    <span class="title">construction</span>
+  </a>
+</div>

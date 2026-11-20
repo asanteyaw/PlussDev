@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::land(const DataFrame& other) const
-DataFrame DataFrame::land(const Slate& other) const
+DataFrame DataFrame::land(const Shelf& other) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ on boolean payloads, unlike the arithmetic and comparison families.
 
 ```{important} Both operands must already be Bool Series
 Every logical method requires each participating feature to be a `Series`-kind
-`Slate` with a genuine `Bool` scalar type. A numeric 0/1 column (even `int64` or
+`Shelf` with a genuine `Bool` scalar type. A numeric 0/1 column (even `int64` or
 `float64`) is rejected — cast it first with
 [`astype(..., pluss::ScalarType::Bool)`](astype.md) if it isn't already boolean.
 ```
@@ -30,7 +30,7 @@ Every logical method requires each participating feature to be a `Series`-kind
 ```{important} Much simpler overload shape than add()/eq()
 Unlike the arithmetic family ([`add()`](add.md)) or the comparison family
 ([`eq()`](eq.md)), the logical methods take no `axis` and no `AlignOptions` — there
-are exactly two overloads: another `DataFrame`, or a single `Slate`. See "Parameters"
+are exactly two overloads: another `DataFrame`, or a single `Shelf`. See "Parameters"
 below for what each one requires.
 ```
 
@@ -44,9 +44,9 @@ The right-hand operand, in one of two shapes:
   order**, and the **same number of cases**. Values are combined position-by-position
   — there is no case-label alignment step; only the feature-name list and the case
   *count* are checked, not the case label values themselves.
-- `const Slate&`: a single boolean `Slate` whose length matches `ncases()`. The
-  *same* slate is combined against **every** feature identically, position-by-position
-  — there is no per-feature broadcast the way the `Slate` overloads of [`add()`](add.md)
+- `const Shelf&`: a single boolean `Shelf` whose length matches `ncases()`. The
+  *same* shelf is combined against **every** feature identically, position-by-position
+  — there is no per-feature broadcast the way the `Shelf` overloads of [`add()`](add.md)
   or [`eq()`](eq.md) support via `axis`.
 
 ## Returns
@@ -130,13 +130,13 @@ each have `3` cases and the same two feature names (`a`, `b`) in the same order,
 is all `land(DataFrame)` requires — it never checks whether the case labels
 themselves match.
 
-Example 2. AND a frame against a single shared `Slate`, applied identically to every
+Example 2. AND a frame against a single shared `Shelf`, applied identically to every
 feature.
 
 ```cpp
-auto mask = Slate(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
-auto out_slate = left.land(mask);
-std::cout << out_slate;
+auto mask = Shelf(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto out_shelf = left.land(mask);
+std::cout << out_shelf;
 ```
 
 ### Output
@@ -154,7 +154,7 @@ r    | true   false
 
 The same three-value `mask` is combined against **both** `a` and `b` at matching
 positions — there is no way to supply a different mask per feature in one call, unlike
-[`add()`](add.md)'s `Axis::Feature` `Slate` overload.
+[`add()`](add.md)'s `Axis::Feature` `Shelf` overload.
 
 ## Notes
 
@@ -178,9 +178,9 @@ positions — there is no way to supply a different mask per feature in one call
   with any logical method.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="label.html">
+  <a class="prev-link" href="labels.html">
     <span class="label">Previous</span>
-    <span class="title">label</span>
+    <span class="title">labels</span>
   </a>
   <a class="next-link" href="le.html">
     <span class="label">Next</span>

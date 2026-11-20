@@ -1,5 +1,7 @@
 # `signal::PadMode`
 
+How `zero_phase` extends the signal at its ends.
+
 ## Signature
 
 ```cpp
@@ -11,46 +13,50 @@ signal::PadMode signal::PadMode::None;
 
 ## What It Does
 
-Selects how `zero_phase` extends samples at both boundaries before forward-backward filtering. Boundary policy is central to transient behavior because a non-causal pass sees both ends.
+The forward and backward passes start from rest, which creates a transient at each end. Extending the signal before filtering and cutting the extension afterwards moves the transient out of the kept samples. The pad mode chooses what the extension is.
 
-## Fields
+## Values
 
-| Value | Meaning |
+| Value | Extension |
 |---|---|
-| `Odd` | Reflects with odd symmetry around each endpoint. This is the default and preserves local slope. |
-| `Even` | Reflects with even symmetry around each endpoint. |
-| `Constant` | Repeats the endpoint values. |
-| `None` | Disables extension; use only when edge transients are acceptable. |
+| `Odd` | Point reflection about the end sample: the signal continues its slope. |
+| `Even` | Mirror reflection about the end sample. |
+| `Constant` | The end sample repeated. |
+| `None` | No extension; the transient stays in the output. |
 
 ## Returns
 
-Stored in `PhaseOpts::pad` and consumed by `zero_phase`.
+Field `pad` of `PhaseOpts`.
 
 ## Errors
 
-Requested edge length must remain compatible with the selected axis and input length.
+`None` ignores the edge length; for the other modes an edge as long as the input is refused.
+
+## Interpretation and Use
+
+`Odd` continues a trend through the ends, so a ramp passes through a smoothing filter unchanged (the second example shows an error of zero), while `Even` and `Constant` bend toward the ends. Use `Odd` for data with a trend, `Even` for data that is flat at the ends and `None` only when the ends carry no information.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The first and last two samples of a ramp for each mode.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_padmode_edges.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+How far each mode moves a ramp from the input.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_padmode_ramp_error.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+The edge-length validation, and `None` ignoring it.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_padmode_errors.cpp@@
 
 ## See Also
 

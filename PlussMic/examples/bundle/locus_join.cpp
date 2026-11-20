@@ -51,8 +51,8 @@ int main() {
   try {
     (void)make_shop().join("orders", "customers");
     std::cout << "unlinked join: did not throw\n";
-  } catch (const std::exception& e) {
-    std::string msg = e.what();
+  } catch (const pluss::Error& e) {
+    std::string msg = e.message();
     std::cout << "unlinked join threw: " << msg.substr(0, msg.find('\n')) << '\n';
   }
 

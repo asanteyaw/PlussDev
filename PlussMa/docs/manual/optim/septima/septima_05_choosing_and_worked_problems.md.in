@@ -4,7 +4,7 @@ Four chapters introduced Septima's two optimizers, its constraint handling and t
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 The choice rests on four questions about the problem, in this order.
 

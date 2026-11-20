@@ -52,7 +52,7 @@ off of, which a multi-key catalog doesn't have implicitly. Apply
 ## Examples
 
 Example 1. `ts().lag(1)` shifts every numeric key's values forward by one position,
-introducing a leading `NaN` — see
+introducing a leading `NULL` — see
 [`CatalogTimeSeriesAccessor::lag`](../catalog-ts/lag.md) for this specific method's
 own page.
 
@@ -73,7 +73,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 3       | [nan, 10, 20]                                    
+metric                   | Series       | Series[float64]  | 3       | [NULL, 10, 20]                                   
 ========================================================================================================================
 ```
 

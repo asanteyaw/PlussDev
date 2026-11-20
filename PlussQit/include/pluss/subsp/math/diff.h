@@ -877,7 +877,7 @@ inline DualTrace rrelu(const DualTrace& x, double lower, double upper, bool trai
   // dividing by a substituted 1 at that single point safely yields a slope
   // of 0 -- a defensible value since the true drawn slope isn't recoverable
   // at that measure-zero point either way.
-  const Series safe_x = x.value().where(x.value().eq(0.0), one);
+  const Series safe_x = pluss::series::where(x.value().eq(0.0), one, x.value());
   const Series recovered_slope = primal.div(safe_x);
   const Series slope = pos_mask.add(one.sub(pos_mask).mul(recovered_slope));
   return DualTrace(primal, slope.mul(x.tangent()));
@@ -905,8 +905,8 @@ inline DualTrace dropout(const DualTrace& x, double p, bool train) {
   const Series one = detail::ones_like_(x.value());
   const Series zero = detail::zeros_like_(x.value());
   const Series self_is_zero = x.value().eq(0.0);
-  const Series safe_self = x.value().where(self_is_zero, one);
-  const Series recovered_scale = primal.div(safe_self).where(self_is_zero, zero);
+  const Series safe_self = pluss::series::where(self_is_zero, one, x.value());
+  const Series recovered_scale = pluss::series::where(self_is_zero, zero, primal.div(safe_self));
   return DualTrace(primal, recovered_scale.mul(x.tangent()));
 }
 
@@ -926,8 +926,8 @@ inline DualTrace feature_dropout(const DualTrace& x, double p, bool train) {
   const Series one = detail::ones_like_(x.value());
   const Series zero = detail::zeros_like_(x.value());
   const Series self_is_zero = x.value().eq(0.0);
-  const Series safe_self = x.value().where(self_is_zero, one);
-  const Series recovered_scale = primal.div(safe_self).where(self_is_zero, zero);
+  const Series safe_self = pluss::series::where(self_is_zero, one, x.value());
+  const Series recovered_scale = pluss::series::where(self_is_zero, zero, primal.div(safe_self));
   return DualTrace(primal, recovered_scale.mul(x.tangent()));
 }
 
@@ -1173,10 +1173,10 @@ inline DualTrace cumprod(const DualTrace& x, std::int64_t dim) {
   const Series mask_first_zero = mask_zeros.logical_and(mask_zeros_f.cumsum(dim).eq(1.0));
   // Series::where(cond, other) selects `other` where cond is true and self
   // (the receiver) where false -- the opposite of torch's Tensor::where --
-  // so "mask_first_zero ? tangent : value" is value.where(mask, tangent).
-  const Series new_grad = x.value().where(mask_first_zero, x.tangent()).cumprod(dim);
+  // so "mask_first_zero ? tangent : value" is pluss::series::where(mask, tangent, value).
+  const Series new_grad = pluss::series::where(mask_first_zero, x.tangent(), x.value()).cumprod(dim);
   const Series mask_after_first_zero = mask_first_zero.to(x.value().scalar_type()).cumsum(dim).gt(0.0);
-  const Series grad = generic_grad.where(mask_after_first_zero, new_grad);
+  const Series grad = pluss::series::where(mask_after_first_zero, new_grad, generic_grad);
   return DualTrace(result, grad);
 }
 

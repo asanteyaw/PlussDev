@@ -52,8 +52,8 @@ current row, excluding the row itself.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto exclude_current = [](std::int64_t size, const WindowOptions&) {
@@ -127,8 +127,8 @@ WindowBoundsFn empty_fn;
 
 try {
   auto out = readings.features({"load"}).ts().bounded(empty_fn);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

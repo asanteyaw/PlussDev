@@ -196,7 +196,7 @@ private:
   [[nodiscard]] Series select(const Series &temperature) const {
     // Cantera's NasaPoly2 uses the low interval at exactly the midpoint.
     const Series low = temperature.unsqueeze(-1).le(mids_).unsqueeze(-1);
-    return low.where(low_, high_);
+    return pluss::series::where(low, low_, high_);
   }
 
   Series low_ = pluss::series::undefined();

@@ -9,19 +9,19 @@
 
 ```cpp
 static Catalog Catalog::select(
-    pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
+    pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
     pluss::msharp::RangeView::Of<Catalog> choices,
     const Catalog& default_value)
 
 static Catalog Catalog::select(
-    std::initializer_list<pluss::table::Slate> conditions,
+    std::initializer_list<pluss::table::Shelf> conditions,
     std::initializer_list<Catalog> choices,
     const Catalog& default_value)
 ```
 
 ## What It Does
 
-Chooses row-wise between whole catalogs, using boolean `Slate` masks as the conditions.
+Chooses row-wise between whole catalogs, using boolean `Shelf` masks as the conditions.
 
 Every choice catalog and the default catalog must have the same keys in the same order.
 For each key, `Catalog::select(...)` delegates to [`Stream::select`](../stream/select.md).
@@ -43,9 +43,9 @@ To keep only named keys, do **not** use this method anymore. Project them with
 - [`Catalog::drop`](drop.md): remove named streams from one catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="save_txt.html">
+  <a class="prev-link" href="scribbelize.html">
     <span class="label">Previous</span>
-    <span class="title">save_txt</span>
+    <span class="title">scribbelize</span>
   </a>
   <a class="next-link" href="set.html">
     <span class="label">Next</span>

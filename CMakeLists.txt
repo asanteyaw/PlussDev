@@ -84,7 +84,7 @@ if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
     unset(_pluss_probe)
 endif()
 
-project(plussma VERSION 0.0.4 LANGUAGES CXX)
+project(plussma VERSION 0.0.5 LANGUAGES CXX)
 
 if(MSVC)
     add_compile_options(/utf-8)
@@ -617,6 +617,12 @@ add_custom_target(pluss_sdk_consumer_smoke
         -DArrow_DIR=${Arrow_DIR}
         -DParquet_DIR=${Parquet_DIR}
         -DTorch_DIR=${Torch_DIR}
+        -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCURL_LIBRARY=${CURL_LIBRARY}
+        -DCURL_INCLUDE_DIR=${CURL_INCLUDE_DIR}
+        "-DPARENT_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
         -P ${CMAKE_SOURCE_DIR}/cmake/RunSdkConsumerSmoke.cmake
     DEPENDS pluss
     USES_TERMINAL
@@ -647,6 +653,12 @@ if(BUILD_TESTING)
             -DArrow_DIR=${Arrow_DIR}
             -DParquet_DIR=${Parquet_DIR}
             -DTorch_DIR=${Torch_DIR}
+            -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCURL_LIBRARY=${CURL_LIBRARY}
+            -DCURL_INCLUDE_DIR=${CURL_INCLUDE_DIR}
+            "-DPARENT_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
             -P ${CMAKE_SOURCE_DIR}/cmake/RunSdkConsumerSmoke.cmake
     )
 endif()

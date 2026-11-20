@@ -73,13 +73,13 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
-    {"amount",      Slate(pluss::make_series({50.0, 75.0, 20.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"amount",      Shelf(pluss::make_series({50.0, 75.0, 20.0}))},
 });
 
 auto biz = Nexus({
@@ -137,8 +137,8 @@ unambiguous.
 try {
   JoinSpec empty;
   auto bad = linked.join("orders", "customers", empty);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -170,9 +170,9 @@ Nexus::join: join keys cannot be empty
 - [`DataFrame::unify`](../dataframe/unify.md): the underlying join primitive.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="inject.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">inject</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="keys.html">
     <span class="label">Next</span>

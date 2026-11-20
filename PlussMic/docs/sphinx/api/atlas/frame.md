@@ -38,8 +38,8 @@ Example 1. Retrieve a frame by its forward position.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Shelf(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.frame(0);
@@ -48,12 +48,12 @@ std::cout << atlas.frame(0);
 ### Output
 
 ```text
-==========
+============
      | sales
-----------
-0    | 100
-1    | 120
-----------
+------------
+0    | 100  
+1    | 120  
+------------
 [2 cs x 1 feat]
 ```
 
@@ -66,12 +66,12 @@ std::cout << atlas.frame(-1);
 ### Output
 
 ```text
-==========
+============
      | sales
-----------
-0    | 110
-1    | 90
-----------
+------------
+0    | 110  
+1    | 90   
+------------
 [2 cs x 1 feat]
 ```
 
@@ -84,8 +84,8 @@ frame.
 ```cpp
 try {
   auto out = atlas.frame(5);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

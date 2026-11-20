@@ -66,9 +66,9 @@ frame survives untouched.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
-    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Shelf(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
 auto unique_combos = orders.drop_duplicates({"city", "product"});
@@ -155,8 +155,8 @@ not grouped by combination.
     <span class="label">Previous</span>
     <span class="title">drop</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

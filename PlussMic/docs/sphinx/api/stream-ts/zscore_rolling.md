@@ -73,20 +73,20 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=5
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
-1            | 1                                                                                                        
-2            | 1.22474487139                                                                                            
-3            | 1.22474487139                                                                                            
-4            | 1.22474487139                                                                                            
+0            | NULL                                                                                                     
+1            | 0.707106781187                                                                                           
+2            | 1                                                                                                        
+3            | 1                                                                                                        
+4            | 1                                                                                                        
 ========================================================================================================================
 ```
 
 Position `0`'s window is just itself — a single-value window always has a
-standard deviation of exactly `0`, which is below `epsilon`, so it's `nan`.
+standard deviation of exactly `0`, which is below `epsilon`, so it's `NULL`.
 Position `1`'s window is `(10, 20)`: mean `15`, population std `5`, so
 `(20 - 15) / 5 = 1`.
 
@@ -107,8 +107,8 @@ Position `1`'s window is `(10, 20)`: mean `15`, population std `5`, so
 - [`StreamTimeSeriesAccessor::rolling_block`](rolling_block.md): shares this
   method's underlying rolling-mean/rolling-std engine.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::zscore_rolling`](../slate-ts/zscore_rolling.md): the
-  underlying single-slate engine, with the fully worked
+- [`TimeSeriesAccessor::zscore_rolling`](../shelf-ts/zscore_rolling.md): the
+  underlying single-shelf engine, with the fully worked
   missing-value-poisons-the-window example.
 
 <div class="pluss-inline-prev-next">

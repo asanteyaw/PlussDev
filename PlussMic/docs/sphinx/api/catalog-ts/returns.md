@@ -61,7 +61,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 1, -0.25, 1]                               
+metric                   | Series       | Series[float64]  | 4       | [NULL, 1, -0.25, 1]                              
 ========================================================================================================================
 ```
 
@@ -90,12 +90,12 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [-0.5, 0.333333333333, -0.5, nan]                
+metric                   | Series       | Series[float64]  | 4       | [-0.5, 0.333333333333, -0.5, NULL]               
 ========================================================================================================================
 ```
 
 With `periods = -1`, each position's `base` is the *next* position instead of
-the previous one — the `nan` now lands at the opposite end (position `3`
+the previous one — the `NULL` now lands at the opposite end (position `3`
 instead of position `0`).
 
 Example 3 (edge case). A `base` of exactly `0` comes back `NULL` rather than
@@ -120,7 +120,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 3       | [nan, -1, nan]                                   
+metric                   | Series       | Series[float64]  | 3       | [NULL, -1, NULL]                                 
 ========================================================================================================================
 ```
 
@@ -138,8 +138,8 @@ auto ct = pluss::kindle::Catalog({
 });
 try {
   auto out = ct.ts().returns(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -174,8 +174,8 @@ output.
 - [`CatalogTimeSeriesAccessor::lag`](lag.md), [`lead()`](lead.md): the
   underlying shift this method's comparison base is built from.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::returns`](../slate-ts/returns.md): the underlying
-  single-slate engine this method delegates to.
+- [`TimeSeriesAccessor::returns`](../shelf-ts/returns.md): the underlying
+  single-shelf engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log_returns.html">

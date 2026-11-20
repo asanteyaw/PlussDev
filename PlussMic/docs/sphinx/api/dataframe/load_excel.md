@@ -96,6 +96,18 @@ Example 1. Load the default (first) sheet as a plain frame.
 ```cpp
 using namespace pluss::table;
 
+// A two-sheet workbook to read back: "Sheet1" (orders) and "Regions".
+auto first_sheet = DataFrame({
+    {"id",    Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Shelf(pluss::make_series({2, 1, 4}))},
+});
+auto second_sheet = DataFrame({
+    {"id",     Shelf(pluss::make_series({201, 202}))},
+    {"region", Shelf(pluss::make_note({"North", "South"}))},
+});
+pluss::loader::save_excel(pluss::loader::Workbook{{"Sheet1", first_sheet}, {"Regions", second_sheet}}, "workbook.xlsx");
+
 auto orders = DataFrame::load_excel("workbook.xlsx");
 std::cout << orders;
 ```

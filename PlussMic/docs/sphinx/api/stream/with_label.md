@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream Stream::with_label(const pluss::table::Slate& label) const
+Stream Stream::with_label(const pluss::table::Shelf& label) const
 ```
 
 ## What It Does
@@ -26,9 +26,9 @@ different source than the stream's own row count.
 
 ## Parameters
 
-**label** (`const pluss::table::Slate&`)
-    The row-label axis to attach. Commonly a `Note`-kind slate of string labels, but any
-    `Slate` payload kind is accepted. Must match the stream's own length.
+**label** (`const pluss::table::Shelf&`)
+    The row-label axis to attach. Commonly a `Note`-kind shelf of string labels, but any
+    `Shelf` payload kind is accepted. Must match the stream's own length.
 
 ## Returns
 
@@ -41,10 +41,10 @@ different source than the stream's own row count.
 Example 1. Attach a `Note`-kind label to a numeric stream.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-auto labels = Slate(pluss::make_note({"a", "b", "c"}));
+auto labels = Shelf(pluss::make_note({"a", "b", "c"}));
 
 auto out = stream.with_label(labels);
 std::cout << "original has_label: " << stream.has_label() << "\n";
@@ -66,16 +66,16 @@ ptype: Note
 Example 2. A length mismatch throws immediately, before the receiver is touched.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-auto too_short = Slate(pluss::make_note({"a", "b"}));
+auto too_short = Shelf(pluss::make_note({"a", "b"}));
 
 try {
   auto out = stream.with_label(too_short);
-} catch (const std::exception& e) {
+} catch (const pluss::Error& e) {
   std::cout << "threw (message starts): "
-            << std::string_view(e.what()).substr(0, 51);
+            << std::string_view(e.message()).substr(0, 51);
 }
 ```
 
@@ -101,7 +101,7 @@ threw (message starts): Stream: label axis length must match payload length
 - [`Stream::with_label_`](with_label_.md): the mutating in-place version of this method.
 - [`Stream::clear_label`](clear_label.md): remove a label axis instead of attaching one.
 - [`Stream::lbl`](lbl.md)`.set()`: the accessor-surface equivalent, accepting either a
-  `Stream` or a `Slate`.
+  `Stream` or a `Shelf`.
 - [`Stream::lbl`](lbl.md)`.align()`: reconciles length/order mismatches instead of
   rejecting them outright.
 

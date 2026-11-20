@@ -1,5 +1,6 @@
 #include "pluss/pl/plusspl.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace pluss::pl {
@@ -942,12 +943,26 @@ Pane& Pane::clear_z_ticks() noexcept {
 
 Pane& Pane::x_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {
   require_category_spec(labels, first, step, "x_categories");
-  return x_ticks(category_positions(first, step, labels.size()), labels);
+  x_ticks(category_positions(first, step, labels.size()), labels);
+  // A categorical axis spans its groups with half a slot of room at each end, not a rounded "nice" range that leaves a
+  // gap. Limits the caller already fixed are kept.
+  if (!x_axis_.limits.has_value() && labels.size() > 0) {
+    const double half = 0.5 * std::abs(step);
+    const double last = first + static_cast<double>(labels.size() - 1) * step;
+    x_limits(Range1d{std::min(first, last) - half, std::max(first, last) + half});
+  }
+  return *this;
 }
 
 Pane& Pane::y_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {
   require_category_spec(labels, first, step, "y_categories");
-  return y_ticks(category_positions(first, step, labels.size()), labels);
+  y_ticks(category_positions(first, step, labels.size()), labels);
+  if (!y_axis_.limits.has_value() && labels.size() > 0) {
+    const double half = 0.5 * std::abs(step);
+    const double last = first + static_cast<double>(labels.size() - 1) * step;
+    y_limits(Range1d{std::min(first, last) - half, std::max(first, last) + half});
+  }
+  return *this;
 }
 
 Pane& Pane::z_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {

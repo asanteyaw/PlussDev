@@ -1,5 +1,7 @@
 # `lti::sim`
 
+Simulates a state-space system over a time grid.
+
 ## Signature
 
 ```cpp
@@ -19,52 +21,62 @@ lti::SimRun lti::sim(
 
 ## What It Does
 
-Propagates continuous or discrete state-space dynamics over an explicit time grid. The first overload starts from zero state; the second uses a supplied initial state. Continuous propagation supports zero-order and linear input holds.
+Advances `x` through the supplied time points with the input held between them (the `Hold` of `SimOptions`) using exact discretisation, so there is no integration step error: the only error is how the input behaves between samples. The initial state defaults to zero. The result is a `SimRun` with the outputs and the states at every time point.
 
 ## Parameters
 
 `system`
-: Valid state-space model.
+: A `StateSpace`.
 
 `input`
-: Samples shaped `[..., time, inputs]`.
+: `[time, inputs]`, one row per time point.
 
 `time`
-: Finite, strictly increasing real floating vector. Discrete spacing must match `sample_time`.
+: A strictly increasing rank-one `Series` of time points, s.
 
 `initial`
-: Optional state shaped `[..., states]`; omitted means zero.
+: Optional initial state, shape `[..., states]`; omitted means zero.
 
 `options`
-: Input interpolation policy.
+: A `SimOptions`: the input hold.
 
 ## Returns
 
-`SimRun` with values `[..., time, outputs]` and states `[..., time, states]`, preserving promoted precision and platform.
+A `SimRun`: `values` of shape `[time, outputs]` and `states` of shape `[time, states]`.
 
 ## Errors
 
-Rejects malformed or incompatible shapes, mismatched lengths or platforms, nonfinite/nonincreasing time, wrong discrete spacing, incompatible initial state, and linear hold for discrete dynamics.
+A mismatched input length or width, a time vector that does not increase and an initial state of the wrong size throw `pluss::Error`.
+
+## Interpretation and Use
+
+For `x' = -x + u` and a unit step the response is `1 - exp(-t)`, and the first example reproduces it at eleven samples to rounding. With no input the state decays from the initial value as `x0 exp(-t)` (the second example). Choose the time grid by what you need to observe, not by accuracy: the solution at each grid point is exact for the held input.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+A step response against `1 - exp(-t)`.
 
-@@example Eng/api/lti_sim.cpp@@
+@@example Eng/api/lti_sim_step.cpp@@
 
 ### Example 2
 
-Compare hold policies with an explicit initial state.
+A free response from an initial state.
 
-@@example Eng/api/lti_sim_modes.cpp@@
+@@example Eng/api/lti_sim_initial.cpp@@
 
 ### Example 3
 
-Exercise timestamp and input-shape validation.
+Two inputs and two outputs: the shapes.
+
+@@example Eng/api/lti_sim_mimo.cpp@@
+
+### Example 4
+
+Every refused argument.
 
 @@example Eng/api/lti_sim_errors.cpp@@
 

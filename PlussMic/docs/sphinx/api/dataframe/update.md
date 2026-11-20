@@ -50,15 +50,15 @@ features not shared by both are left as this frame's own.
 using namespace pluss::table;
 
 auto left = DataFrame({
-    {"name", Slate(pluss::make_note({"Ama", "Kofi", "Efua"}))},
-    {"age",  Slate(pluss::make_series({30.0, std::nullopt, 28.0}))},
-}, Slate(pluss::make_note({"c1", "c2", "c3"})));
+    {"name", Shelf(pluss::make_note({"Ama", "Kofi", "Efua"}))},
+    {"age",  Shelf(pluss::make_series({30.0, std::nullopt, 28.0}))},
+}, Shelf(pluss::make_note({"c1", "c2", "c3"})));
 std::cout << left;
 
 auto right = DataFrame({
-    {"age",   Slate(pluss::make_series({26.0, 40.0, 22.0}))},
-    {"score", Slate(pluss::make_series({88.0, 91.0, 75.0}))},
-}, Slate(pluss::make_note({"c2", "c3", "c4"})));
+    {"age",   Shelf(pluss::make_series({26.0, 40.0, 22.0}))},
+    {"score", Shelf(pluss::make_series({88.0, 91.0, 75.0}))},
+}, Shelf(pluss::make_note({"c2", "c3", "c4"})));
 std::cout << right;
 ```
 
@@ -69,17 +69,16 @@ std::cout << right;
      | name  age 
 -----------------
 c1   | Ama   30  
-c2   | Kofi  NULL
+c2   | Kofi  NaN 
 c3   | Efua  28  
 -----------------
-[3 cs x 2 feat]
-=========================
-     | age  score
--------------------------
-c2   | 26   88   
-c3   | 40   91   
-c4   | 22   75   
--------------------------
+[3 cs x 2 feat]==================
+     | age   score
+------------------
+c2   | 26    88   
+c3   | 40    91   
+c4   | 22    75   
+------------------
 [3 cs x 2 feat]
 ```
 

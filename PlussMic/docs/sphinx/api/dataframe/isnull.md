@@ -50,12 +50,12 @@ Example 1. Check every feature on a frame with two independently missing cells.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Shelf(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto mask = orders.isnull();
@@ -97,6 +97,7 @@ calculation) and do not want to accidentally react to nulls elsewhere on the fra
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - `isnull()` never mutates the frame or changes which cells are null; it is a pure
   read-only inspection.
 - Combine the result with [`any(Axis::Case)`](any.md) to collapse the per-cell mask down
@@ -116,12 +117,12 @@ calculation) and do not want to accidentally react to nulls elsewhere on the fra
   filter rows with.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="join.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">join</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

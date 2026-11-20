@@ -6,7 +6,7 @@ Sometimes the function you want to minimise has no usable gradient: it comes fro
 
 Every program is complete and its output is the output of that program. Evaluation and iteration counts are shown because they are the same on every machine; no running times are claimed.
 
-## The mental model
+## How it works
 
 A derivative-free method only ever asks "what is f at this point?". From the answers it builds a picture of where lower values lie, and moves there. That makes it:
 

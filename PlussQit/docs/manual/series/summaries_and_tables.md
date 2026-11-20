@@ -6,7 +6,7 @@
 
 Most analysis is a summary: who is best, how much per group, how does this year compare with that one. This page works three such questions end to end: ranking candidates, totalling sales by region and reading a year-by-month table.
 
-## The mental model
+## How it works
 
 Three families of operations do nearly all the work.
 
@@ -48,7 +48,7 @@ int main() {
   const double mean = score.mean().item<double>();
   auto above = score.gt(mean);
   std::cout << "mean score " << mean << "; above average: " << above.sum().item<double>() << " of " << score.numel() << "\n";
-  show("distance from the mean", score.sub(mean));
+  show("distance from the mean", score - mean);
 
   // 5. A histogram of the scores in four equal bins between the lowest and highest score.
   show("histogram", score.histc(4));
@@ -104,11 +104,11 @@ int main() {
   show("largest per region", largest);
 
   // 2. Each region's share of the whole.
-  show("share of total", total.div(total.sum()));
+  show("share of total", total / total.sum());
 
   // 3. Each sale as a fraction of its own region's total: gather the region total back onto every sale.
   auto own_total = total.index_select(0, region);
-  show("sale / its region total", amount.div(own_total));
+  show("sale / its region total", amount / own_total);
 
   // 4. scatter_add builds the same totals from first principles: add each amount into the slot named by its region.
   auto manual = pluss::series::zeros({regions}, pluss::ScalarType::Float64).scatter_add(0, region, amount);
@@ -168,7 +168,7 @@ int main() {
   show("month-on-month change, year 1", table.diff(1, 1).select(0, 0));
 
   // 4. Compare each year with the average year: positive means wetter than usual.
-  show("departure from the average year", table.sub(table.mean(0)).sum(1));
+  show("departure from the average year", (table - table.mean(0)).sum(1));
 
   // 5. permute swaps the axes, so each row is now a calendar month and each column a year.
   show("March across the years", table.permute({1, 0}).select(0, 2));
@@ -217,10 +217,10 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 int main() {
   auto column = pluss::make_series({1.0, 2.0, 3.0}).unsqueeze(1);   // shape [3, 1]
   auto row = pluss::make_series({10.0, 20.0, 30.0, 40.0});          // shape [4]
-  show("column + row gives a 3 x 4 table", column.add(row));
+  show("column + row gives a 3 x 4 table", column + row);
   auto wrong = pluss::make_series({1.0, 2.0, 3.0});                 // shape [3]
   try {
-    show("row + wrong", row.add(wrong));
+    show("row + wrong", row + wrong);
   } catch (const pluss::Error &e) {
     std::cout << "error: " << e.message() << "\n";
   }

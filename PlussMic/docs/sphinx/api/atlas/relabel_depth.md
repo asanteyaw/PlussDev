@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas Atlas::relabel_depth(const Slate& labels) const
+Atlas Atlas::relabel_depth(const Shelf& labels) const
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ label values attached to each existing depth position.
 
 ## Parameters
 
-**labels** (`const Slate&`)
+**labels** (`const Shelf&`)
     The new depth-label axis. Must have the same length as the atlas's
     [`depth()`](depth.md).
 
@@ -35,14 +35,14 @@ Example 1. Attach fresh depth labels to a previously unlabeled atlas.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.relabel_depth(pluss::table::Slate(pluss::make_note({"jan", "feb"})));
+auto out = atlas.relabel_depth(pluss::table::Shelf(pluss::make_note({"jan", "feb"})));
 std::cout << "has label: " << out.label().has() << "\n";
 std::cout << out.label().values();
 ```
@@ -60,17 +60,17 @@ Example 2. A length mismatch throws immediately, before the receiver is touched.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
 try {
-  atlas.relabel_depth(pluss::table::Slate(pluss::make_note({"only_one"})));
-} catch (const std::exception& e) {
-  std::cout << e.what();
+  atlas.relabel_depth(pluss::table::Shelf(pluss::make_note({"only_one"})));
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -100,8 +100,8 @@ Atlas: axis0 labels length must equal depth
     <span class="label">Previous</span>
     <span class="title">plot</span>
   </a>
-  <a class="next-link" href="show.html">
+  <a class="next-link" href="scribbelize.html">
     <span class="label">Next</span>
-    <span class="title">show</span>
+    <span class="title">scribbelize</span>
   </a>
 </div>

@@ -106,12 +106,12 @@ city                     | Note         | Note             | 2       | [Tema, Ku
   either end.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cast.html">
+  <a class="prev-link" href="clear_cache.html">
     <span class="label">Previous</span>
-    <span class="title">cast</span>
+    <span class="title">clear_cache</span>
   </a>
-  <a class="next-link" href="similarity.html">
+  <a class="next-link" href="combine.html">
     <span class="label">Next</span>
-    <span class="title">similarity</span>
+    <span class="title">combine</span>
   </a>
 </div>

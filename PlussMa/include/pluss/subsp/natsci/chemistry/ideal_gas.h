@@ -180,16 +180,16 @@ public:
           state.internal_energy.sub(specific_internal_energy);
       const Series done = residual.abs().le(energy_tolerance);
       const Series below = residual.lt(0.0);
-      lower = done.where(current, below.where(current, lower));
-      upper = done.where(current, below.where(upper, current));
+      lower = pluss::series::where(done, current, pluss::series::where(below, current, lower));
+      upper = pluss::series::where(done, current, pluss::series::where(below, upper, current));
 
       const Series midpoint = lower.add(upper).mul(0.5);
       const Series newton = current.sub(residual.div(state.cv));
       const Series valid = newton.isfinite()
                                .logical_and(newton.ge(lower))
                                .logical_and(newton.le(upper));
-      const Series candidate = valid.where(newton, midpoint);
-      current = done.where(current, candidate);
+      const Series candidate = pluss::series::where(valid, newton, midpoint);
+      current = pluss::series::where(done, current, candidate);
     }
 
     const Series residual = properties_unchecked(current, mass_fractions)

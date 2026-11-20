@@ -56,6 +56,10 @@ the `FillSpec` overload instead of chaining several single-value calls.
 For an in-place variant, see [`fillnull_()`](fillnull_.md) (note the trailing
 underscore, the project-wide convention for mutating siblings of a non-mutating method).
 
+## Whole-number features and fractional fills
+
+Filling a whole-number (integer) feature with a fractional value widens the feature to floating point, so the stored fill is exact: filling an integer feature with `78.75` stores `78.75`, never `78`. A fill that is itself a whole number keeps the feature's integer type.
+
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
@@ -98,12 +102,12 @@ Example 1. Fill every missing numeric value on the frame with `0.0`.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Shelf(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto filled = orders.fillnull(0.0);
@@ -161,7 +165,7 @@ Example 3. Fill a `Note` column's missing entries with a placeholder string.
 ```cpp
 auto validity = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto cities = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "", "Kumasi"}), validity)},
+    {"city", Shelf(pluss::make_note({"Accra", "", "Kumasi"}), validity)},
 });
 
 auto filled = cities.fillnull("Unknown");
@@ -173,6 +177,7 @@ because their dtype does not match the fill value's type.
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Scalar-typed overloads (`double`, string, `Timeline`, `Duration`) only ever fill
   columns whose dtype matches the scalar's type. This is the most common source of
   "why didn't my fill do anything?" confusion — check that the column you expected to
@@ -195,9 +200,9 @@ because their dtype does not match the fill value's type.
   filling them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ffill.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">ffill</span>
+    <span class="title">fillneginf</span>
   </a>
   <a class="next-link" href="fillnull_.html">
     <span class="label">Next</span>

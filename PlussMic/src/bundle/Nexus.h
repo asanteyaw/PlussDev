@@ -136,6 +136,33 @@ public:
   Nexus apply_all(const std::function<pluss::table::DataFrame(const pluss::table::DataFrame&)>& fn) const;
   Nexus map_frames(const std::function<pluss::table::DataFrame(const pluss::table::DataFrame&)>& fn) const;
   Nexus flow(const std::function<Nexus(const Nexus&)>& fn) const;
+  // Missing-value family, applied to every table (relationships and metadata are kept). NULL is a missing cell; NaN and
+  // infinity are values, handled by the nan / inf members. Each is the DataFrame method of the same name.
+  Nexus isnull() const;
+  Nexus notnull() const;
+  Nexus invalid() const;
+  Nexus isnan() const;
+  Nexus notnan() const;
+  Nexus isinf() const;
+  Nexus isposinf() const;
+  Nexus isneginf() const;
+  Nexus notinf() const;
+  Nexus dropnull() const;
+  Nexus dropnan() const;
+  Nexus dropinvalid() const;
+  Nexus dropinf() const;
+  Nexus dropposinf() const;
+  Nexus dropneginf() const;
+  Nexus fillnull(double value) const;
+  Nexus fillnull(std::string_view value) const;
+  Nexus fillnull(const char* value) const { return fillnull(std::string_view{value != nullptr ? value : ""}); }
+  Nexus fillnull(const pluss::Timeline& value) const;
+  Nexus fillnull(const pluss::Duration& value) const;
+  Nexus fillnan(double value) const;
+  Nexus fillinvalid(double value) const;
+  Nexus fillinf(double value) const;
+  Nexus fillposinf(double value) const;
+  Nexus fillneginf(double value) const;
 
   pluss::table::DataFrame summary() const;
   pluss::table::DataFrame profile() const;
@@ -273,13 +300,13 @@ public:
   static Nexus read(std::string_view directory, const nexus::StoreOptions& options = {});
 
   static Nexus from_atlas(const pluss::table::Atlas& atlas);
-  static Nexus from_atlas(const pluss::table::Atlas& atlas, const pluss::table::Slate& labels);
+  static Nexus from_atlas(const pluss::table::Atlas& atlas, const pluss::table::Shelf& labels);
   pluss::table::Atlas to_atlas(std::initializer_list<std::string_view> keys,
-                 std::optional<pluss::table::Slate> labels = std::nullopt) const;
+                 std::optional<pluss::table::Shelf> labels = std::nullopt) const;
   pluss::table::Atlas to_atlas(pluss::msharp::RangeView::Of<std::string_view> keys,
-                 std::optional<pluss::table::Slate> labels = std::nullopt) const;
+                 std::optional<pluss::table::Shelf> labels = std::nullopt) const;
   template <detail::StringViewNameRange NameRange>
-  pluss::table::Atlas to_atlas(const NameRange& keys, std::optional<pluss::table::Slate> labels = std::nullopt) const {
+  pluss::table::Atlas to_atlas(const NameRange& keys, std::optional<pluss::table::Shelf> labels = std::nullopt) const {
     return detail::with_stack_name_view(keys, [&](auto names) { return to_atlas(names, std::move(labels)); });
   }
 

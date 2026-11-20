@@ -6,9 +6,9 @@
 
 An `Atlas` holds several `DataFrame`s of identical shape as one object: folds of a cross-validation, months of an export, scenarios of a model. This page uses it for all three. It is the least-used table type, and the programs show why: it is exactly right when the frames really are the same shape, and it refuses everything else.
 
-## The mental model
+## How it works
 
-An Atlas is a *strict cube*: every frame has the same number of rows and the same feature names in the same order, and the frames are addressed by a depth label (`loc("fold2")`) or a position. `map_frames` applies a table transformation to every frame and `aggregate_over_frames` sees all frames at once to produce one row per frame. If your pieces differ in size (train, validation and test splits, products that come and go), use an `Archive`, the Kindle model's version, on the [Kindle page](kindle_streams_archives.md).
+An Atlas is a *strict cube*: every frame has the same number of rows and the same feature names in the same order, and the frames are addressed by a depth label (`loc("fold2")`) or a position. `map_frames` applies a table transformation to every frame and `aggregate_depth` sees all frames at once to produce one row per frame. If your pieces differ in size (train, validation and test splits, products that come and go), use an `Archive`, the Kindle model's version, on the [Kindle page](kindle_streams_archives.md).
 
 ## Cross-validation
 
@@ -22,7 +22,7 @@ Twelve noisy observations of a line, shuffled with a fixed seed and cut into fou
 using pluss::ScalarType;
 using pluss::table::Atlas;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 int main() {
   // Twelve observations y = 2 + 0.5 x with noise; shuffled by a fixed seed so folds mix early and late x values.
@@ -35,7 +35,7 @@ int main() {
   // 1. An Atlas needs frames of identical shape: four folds of three rows each.
   std::vector<DataFrame> parts;
   for (std::int64_t k = 0; k < folds; ++k) parts.push_back(data.slice(k * per_fold, (k + 1) * per_fold));
-  Atlas atlas(parts, Slate(pluss::make_note({"fold0", "fold1", "fold2", "fold3"})));
+  Atlas atlas(parts, Shelf(pluss::make_note({"fold0", "fold1", "fold2", "fold3"})));
   std::cout << "folds " << atlas.depth() << " of " << atlas.ncases() << " rows each\n";
 
   // 2. For each fold: fit y = a + b x on the other folds, predict the held-out fold, record the mean absolute error.
@@ -88,7 +88,7 @@ Three months of a product table with the same schema. The program totals each mo
 
 using pluss::table::Atlas;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 static DataFrame month(std::vector<std::string> products, std::vector<double> units, std::vector<double> revenue) {
   return DataFrame({{"product", pluss::make_note(products)}, {"units", pluss::make_series(units)}, {"revenue", pluss::make_series(revenue)}});
@@ -98,13 +98,13 @@ int main() {
   Atlas year({month({"widget", "gadget", "gizmo"}, {120, 80, 40}, {1200, 1600, 800}),
               month({"widget", "gadget", "gizmo"}, {150, 70, 55}, {1500, 1400, 1100}),
               month({"widget", "gadget", "gizmo"}, {90, 95, 60}, {900, 1900, 1200})},
-             Slate(pluss::make_note({"2026-09", "2026-10", "2026-11"})));
+             Shelf(pluss::make_note({"2026-09", "2026-10", "2026-11"})));
   std::cout << "months " << year.depth() << ", cases per month " << year.ncases() << ", features";
   for (const auto &name : year.column_names()) std::cout << " " << name;
   std::cout << "\n";
 
-  // 1. One summary row per month: total units and revenue. aggregate_over_frames sees every month at once.
-  auto totals = year.aggregate_over_frames([](const std::vector<DataFrame> &frames) {
+  // 1. One summary row per month: total units and revenue. aggregate_depth sees every month at once.
+  auto totals = year.aggregate_depth([](const std::vector<DataFrame> &frames) {
     std::vector<double> units, revenue;
     for (const auto &f : frames) {
       units.push_back(f.features("units").as_series().sum().item<double>());
@@ -165,7 +165,7 @@ October:
 latest month only: depth 1
 rejected: Atlas: all frames must have identical column names/order
 ```
-`aggregate_over_frames` is given all the months and returns one table with one row per month: units `240`, `275` and `245`, and revenue per unit of `15`, `14.5` and `16.3`. `loc("2026-10")` reads a month by its label and `tail(1)` keeps the last one. When the same month arrives with `units` renamed to `units_sold`, the Atlas is refused (`all frames must have identical column names/order`) rather than silently misaligning the columns.
+`aggregate_depth` is given all the months and returns one table with one row per month: units `240`, `275` and `245`, and revenue per unit of `15`, `14.5` and `16.3`. `loc("2026-10")` reads a month by its label and `tail(1)` keeps the last one. When the same month arrives with `units` renamed to `units_sold`, the Atlas is refused (`all frames must have identical column names/order`) rather than silently misaligning the columns.
 
 ## What-if scenarios
 
@@ -178,7 +178,7 @@ One product table under four assumptions: the baseline, prices up 10 %, costs up
 
 using pluss::table::Atlas;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 static DataFrame scenario(double price_factor, double cost_factor) {
   const std::vector<double> price{20.0, 35.0, 50.0, 12.0}, cost{12.0, 25.0, 38.0, 9.0}, volume{500.0, 300.0, 120.0, 900.0};
@@ -192,7 +192,7 @@ static DataFrame scenario(double price_factor, double cost_factor) {
 
 int main() {
   Atlas scenarios({scenario(1.0, 1.0), scenario(1.10, 1.0), scenario(1.0, 1.15), scenario(1.10, 1.15)},
-                  Slate(pluss::make_note({"baseline", "price +10%", "cost +15%", "both"})));
+                  Shelf(pluss::make_note({"baseline", "price +10%", "cost +15%", "both"})));
   std::cout << "scenarios " << scenarios.depth() << ", products " << scenarios.ncases() << "\n";
 
   // 1. The same formula in every scenario: map_frames applies a DataFrame transform to each frame.
@@ -201,8 +201,8 @@ int main() {
   });
   std::cout << "profit by product in the baseline:\n" << with_profit.loc("baseline").features({"product", "profit"}).to_string() << "\n";
 
-  // 2. One row per scenario: total profit. aggregate_over_frames sees all scenarios at once.
-  auto totals = with_profit.aggregate_over_frames([](const std::vector<DataFrame> &frames) {
+  // 2. One row per scenario: total profit. aggregate_depth sees all scenarios at once.
+  auto totals = with_profit.aggregate_depth([](const std::vector<DataFrame> &frames) {
     std::vector<double> total;
     for (const auto &f : frames) total.push_back(f.features("profit").as_series().sum().item<double>());
     return DataFrame({{"total_profit", pluss::make_series(total)}});
@@ -258,9 +258,9 @@ The totals are `11140`, `14870`, `7216` and `10946`: against the baseline, a pri
 
 - **Equal shapes:** use an Atlas when frames share rows and features; use an Archive when they do not.
 - **One formula, many frames:** `map_frames` rather than a loop, so every scenario is computed the same way.
-- **Across frames:** `aggregate_over_frames` for anything that needs all frames at once.
+- **Across frames:** `aggregate_depth` for anything that needs all frames at once.
 - **Labels:** give the depth axis meaningful labels, such as the fold, the month or the scenario, and read frames by label.
 
 ## Where next
 
-Reference pages: [`map_frames`](../api/atlas/map_frames.md), [`aggregate_over_frames`](../api/atlas/aggregate_over_frames.md), [`loc`](../api/atlas/loc.md), [`frame`](../api/atlas/frame.md), [`tail`](../api/atlas/tail.md), [`depth`](../api/atlas/depth.md), [`column_names`](../api/atlas/column_names.md). Next: [Catalogs](kindle_catalogs.md).
+Reference pages: [`map_frames`](../api/atlas/map_frames.md), [`aggregate_depth`](../api/atlas/aggregate_depth.md), [`loc`](../api/atlas/loc.md), [`frame`](../api/atlas/frame.md), [`tail`](../api/atlas/tail.md), [`depth`](../api/atlas/depth.md), [`column_names`](../api/atlas/column_names.md). Next: [Catalogs](kindle_catalogs.md).

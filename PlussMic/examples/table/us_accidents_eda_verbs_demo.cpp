@@ -21,12 +21,12 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Slate;
-using pluss::table::SlateBinaryCompareOp;
-using pluss::table::SlateCastOptions;
-using pluss::table::SlateCastTarget;
-using pluss::table::SlateKind;
-using pluss::table::SlateWindowOp;
+using pluss::table::Shelf;
+using pluss::table::ShelfBinaryCompareOp;
+using pluss::table::ShelfCastOptions;
+using pluss::table::ShelfCastTarget;
+using pluss::table::ShelfKind;
+using pluss::table::ShelfWindowOp;
 
 struct MeanAccum {
   double sum{0.0};
@@ -310,8 +310,8 @@ bool extract_numeric_value(const pluss::Series& s, std::int64_t idx, double& out
   }
 }
 
-std::optional<double> numeric_at(const Slate& t, std::int64_t row) {
-  if (!pluss::table::detail::valid_at(t, row) || t.kind() != SlateKind::Series) {
+std::optional<double> numeric_at(const Shelf& t, std::int64_t row) {
+  if (!pluss::table::detail::valid_at(t, row) || t.kind() != ShelfKind::Series) {
     return std::nullopt;
   }
   double out = 0.0;
@@ -321,8 +321,8 @@ std::optional<double> numeric_at(const Slate& t, std::int64_t row) {
   return out;
 }
 
-bool bool_at(const Slate& t, std::int64_t row, bool default_value = false) {
-  if (!pluss::table::detail::valid_at(t, row) || t.kind() != SlateKind::Series) {
+bool bool_at(const Shelf& t, std::int64_t row, bool default_value = false) {
+  if (!pluss::table::detail::valid_at(t, row) || t.kind() != ShelfKind::Series) {
     return default_value;
   }
   double x = 0.0;
@@ -332,30 +332,30 @@ bool bool_at(const Slate& t, std::int64_t row, bool default_value = false) {
   return x != 0.0;
 }
 
-std::optional<std::string> note_at(const Slate& t, std::int64_t row) {
-  if (!pluss::table::detail::valid_at(t, row) || t.kind() != SlateKind::Note) {
+std::optional<std::string> note_at(const Shelf& t, std::int64_t row) {
+  if (!pluss::table::detail::valid_at(t, row) || t.kind() != ShelfKind::Note) {
     return std::nullopt;
   }
   return std::string(t.as_note().at(row));
 }
 
-Slate make_i64_slate(const std::vector<std::int64_t>& values) {
+Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
   auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
-  return Slate(out);
+  return Shelf(out);
 }
 
-Slate make_f64_slate(const std::vector<double>& values) {
+Shelf make_f64_shelf(const std::vector<double>& values) {
   auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(double));
   }
-  return Slate(out);
+  return Shelf(out);
 }
 
-Slate make_note_slate(const std::vector<std::string>& values) {
+Shelf make_note_shelf(const std::vector<std::string>& values) {
   std::vector<std::string_view> views;
   views.reserve(values.size());
   for (const auto& v : values) {
@@ -365,7 +365,7 @@ Slate make_note_slate(const std::vector<std::string>& values) {
   auto note = pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size()));
-  return Slate(note);
+  return Shelf(note);
 }
 
 std::vector<std::pair<std::string, std::int64_t>> sorted_counts(
@@ -418,7 +418,7 @@ DataFrame count_table(std::string key_name,
     keys.push_back(k);
     vals.push_back(v);
   }
-  return DataFrame({{std::move(key_name), make_note_slate(keys)}, {std::move(value_name), make_i64_slate(vals)}});
+  return DataFrame({{std::move(key_name), make_note_shelf(keys)}, {std::move(value_name), make_i64_shelf(vals)}});
 }
 
 DataFrame metric_table(std::string key_name,
@@ -432,7 +432,7 @@ DataFrame metric_table(std::string key_name,
     keys.push_back(k);
     vals.push_back(v);
   }
-  return DataFrame({{std::move(key_name), make_note_slate(keys)}, {std::move(value_name), make_f64_slate(vals)}});
+  return DataFrame({{std::move(key_name), make_note_shelf(keys)}, {std::move(value_name), make_f64_shelf(vals)}});
 }
 
 void show_q_table(int q, std::string_view title, const DataFrame& frame, std::int64_t n = 10) {
@@ -450,9 +450,9 @@ void run_verb_walkthrough(const DataFrame& df) {
   auto sel = df.features({"State", "City", "Severity", "Distance(mi)", "Start_Time", "Weather_Condition"});
   (void)sel.drop({"City"}).reorder({"State", "Severity", "Distance(mi)", "Start_Time", "Weather_Condition"});
 
-  auto severe_mask = df.features("Severity").compare(3.0, SlateBinaryCompareOp::Ge).as_series();
+  auto severe_mask = df.features("Severity").compare(3.0, ShelfBinaryCompareOp::Ge).as_series();
   auto q_mask = df.filter(severe_mask);
-  auto q_pred = df.filter(df.features("Distance(mi)").compare(1.0, SlateBinaryCompareOp::Gt).as_series());
+  auto q_pred = df.filter(df.features("Distance(mi)").compare(1.0, ShelfBinaryCompareOp::Gt).as_series());
   auto q_expr = df.query(R"(Severity >= 3 and `Visibility(mi)` < 5)");
   (void)q_pred;
   (void)q_expr;
@@ -461,7 +461,7 @@ void run_verb_walkthrough(const DataFrame& df) {
   auto d_spec = d_assign.assign({{
       "Is_Severe",
       [](const DataFrame& frame) {
-        return frame.features("Severity").compare(3.0, SlateBinaryCompareOp::Ge);
+        return frame.features("Severity").compare(3.0, ShelfBinaryCompareOp::Ge);
       },
   }});
   (void)d_spec.assign({{"Severity_Alias", d_spec.features("Severity")}});
@@ -498,7 +498,7 @@ void run_verb_walkthrough(const DataFrame& df) {
 
   auto cast_note = df.features({"Start_Time"}).cast().note();
   auto cast_series = cast_note.cast(
-      SlateCastOptions{
+      ShelfCastOptions{
           .series_dtype = pluss::codem::ScalarType::Int64,
       }).series();
   auto typed = cast_series.astype({{"Start_Time", pluss::codem::ScalarType::Float64}});
@@ -535,9 +535,9 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)cmp;
 
   auto win = numeric.ts().rolling({
-      DataFrame::WindowSpec{"severity_rollmean_12", "Severity", SlateWindowOp::RollingMean, 12, 3},
-      DataFrame::WindowSpec{"distance_rollmax_24", "Distance(mi)", SlateWindowOp::RollingMax, 24, 1},
-      DataFrame::WindowSpec{"visibility_rollmin_6", "Visibility(mi)", SlateWindowOp::RollingMin, 6, 1},
+      DataFrame::WindowSpec{"severity_rollmean_12", "Severity", ShelfWindowOp::RollingMean, 12, 3},
+      DataFrame::WindowSpec{"distance_rollmax_24", "Distance(mi)", ShelfWindowOp::RollingMax, 24, 1},
+      DataFrame::WindowSpec{"visibility_rollmin_6", "Visibility(mi)", ShelfWindowOp::RollingMin, 6, 1},
   });
   (void)win;
 
@@ -604,7 +604,7 @@ int main(int argc, char** argv) {
 
   auto start_as_note = df.features({"Start_Time"}).cast().note();
   auto times_ns = df.features({"Start_Time", "End_Time"})
-                      .cast(SlateCastOptions{.series_dtype = pluss::codem::ScalarType::Int64})
+                      .cast(ShelfCastOptions{.series_dtype = pluss::codem::ScalarType::Int64})
                       .series();
 
   const auto& severity_t = df.features("Severity");
@@ -934,9 +934,9 @@ int main(int argc, char** argv) {
       years.push_back(pluss::tils::OutputEngine::format("{}", year));
       counts.push_back(c);
     }
-    auto ydf = DataFrame({{"year", make_note_slate(years)}, {"accidents", make_i64_slate(counts)}});
+    auto ydf = DataFrame({{"year", make_note_shelf(years)}, {"accidents", make_i64_shelf(counts)}});
     auto trend = ydf.ts().rolling(
-        {DataFrame::WindowSpec{"accidents_rollmean_3", "accidents", SlateWindowOp::RollingMean, 3, 1}}, true);
+        {DataFrame::WindowSpec{"accidents_rollmean_3", "accidents", ShelfWindowOp::RollingMean, 3, 1}}, true);
     show_q_table(17, "Accident frequency trend over time", trend, trend.ncases());
   }
 

@@ -14,7 +14,7 @@ LocusPull& LocusPull::var(std::string_view source, std::string_view alias = {})
 
 The sample variance of the usable (non-null) related values of `source` for
 each root record -- [`std`](std.md) squared. Requires a numeric stream; see
-[`sum`](sum.md) for the shared `NaN`-exclusion rule. Like `std`, `var` is
+[`sum`](sum.md) for the shared missing-value rule. Like `std`, `var` is
 null for a root record with zero *or exactly one* related value, since
 sample variance needs at least two observations. Omitting `alias` derives
 one from the source: `"events.spend"` becomes `"events_spend_var"`.
@@ -75,5 +75,5 @@ text var: Stream::reduce_groups: this reduction needs a numeric Series stream
 ## See Also
 
 - [`std`](std.md): the matching sample standard deviation.
-- [`sum`](sum.md): the `NaN`-exclusion rule, and the reducers that only null
+- [`sum`](sum.md): the missing-value rule, and the reducers that only null
   out at zero related values.

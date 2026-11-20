@@ -51,8 +51,8 @@ size.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().rolling_block({2});
@@ -62,14 +62,14 @@ std::cout << out;
 ### Output
 
 ```text
-================================
-     | roll_mean_w2  roll_std_w2
---------------------------------
-0    | 10            NULL       
-1    | 15            7.071067812
-2    | 17.5          3.535533906
-3    | 22.5          10.60660172
---------------------------------
+==========================================
+     | load_roll_mean_w2  load_roll_std_w2
+------------------------------------------
+0    | 10                 NULL            
+1    | 15                 7.071067812     
+2    | 17.5               3.535533906     
+3    | 22.5               10.60660172     
+------------------------------------------
 [4 cs x 2 feat]
 ```
 

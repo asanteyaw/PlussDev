@@ -36,6 +36,15 @@ per column, with per-column dtype inference.
 
 Example 1. Load a tab-separated text file.
 
+Given `cities.txt`:
+
+```text
+city	population
+Accra	2500000
+Tema	161000
+Kumasi	3000000
+```
+
 ```cpp
 auto ct = pluss::kindle::Catalog::load_txt("cities.txt");
 std::cout << ct;
@@ -45,14 +54,13 @@ std::cout << ct;
 
 ```text
 ========================================================================================================================
-kindle::Catalog  keys=3
-keys: [id, city, population]
+kindle::Catalog  keys=2
+keys: [city, population]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[int64]    | 3       | [1, 2, 3]                                        
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-population               | Series       | Series[int64]    | 3       | [2388000, 300000, 3348000]                       
+population               | Series       | Series[int64]    | 3       | [2500000, 161000, 3000000]                       
 ========================================================================================================================
 ```
 
@@ -71,12 +79,12 @@ population               | Series       | Series[int64]    | 3       | [2388000,
 - [`Catalog::save_txt`](save_txt.md): the write-side counterpart.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_parquet.html">
+  <a class="prev-link" href="load_streams.html">
     <span class="label">Previous</span>
-    <span class="title">load_parquet</span>
+    <span class="title">load_streams</span>
   </a>
-  <a class="next-link" href="where.html">
+  <a class="next-link" href="map.html">
     <span class="label">Next</span>
-    <span class="title">where</span>
+    <span class="title">map</span>
   </a>
 </div>

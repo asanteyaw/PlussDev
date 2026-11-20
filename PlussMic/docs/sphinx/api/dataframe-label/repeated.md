@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Slate DataFrameLabelAccessor::repeated() const
-Slate DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const
-Slate DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const
+Shelf DataFrameLabelAccessor::repeated() const
+Shelf DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const
+Shelf DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const
 ```
 
 ## What It Does
@@ -32,8 +32,8 @@ Requires a structured frame.
 
 ## Returns
 
-`Slate`
-    A boolean slate, one entry per row, `display_name` `"repeated"`,
+`Shelf`
+    A boolean shelf, one entry per row, `display_name` `"repeated"`,
     displayed against the case label(s) it was computed from.
 
 ## Examples
@@ -45,8 +45,8 @@ the extras.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().repeated();
@@ -71,9 +71,9 @@ frame, versus the full composite key.
 
 ```cpp
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
 auto by_region = grouped.labels().repeated({"region"});

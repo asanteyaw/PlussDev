@@ -41,15 +41,15 @@ int main() {
   try {
     (void)shop.catalog("nope");
     std::cout << "catalog(\"nope\"): did not throw\n";
-  } catch (const std::exception& e) {
-    std::string msg = e.what();
+  } catch (const pluss::Error& e) {
+    std::string msg = e.message();
     std::cout << "catalog(\"nope\") threw: " << msg.substr(0, msg.find('\n')) << '\n';
   }
   try {
     (void)shop.catalog(99);
     std::cout << "catalog(99): did not throw\n";
-  } catch (const std::exception& e) {
-    std::string msg = e.what();
+  } catch (const pluss::Error& e) {
+    std::string msg = e.message();
     std::cout << "catalog(99) threw: " << msg.substr(0, msg.find('\n')) << '\n';
   }
 

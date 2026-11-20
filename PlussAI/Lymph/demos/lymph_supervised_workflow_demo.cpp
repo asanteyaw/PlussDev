@@ -11,17 +11,17 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"loan_id", Slate(pluss::make_series(std::vector<double>{101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
-      {"income", Slate(pluss::make_series(std::vector<double>{44, 52, 31, 80, 38, 92, 67, 73}, {8}, f64))},
-      {"debt", Slate(pluss::make_series(std::vector<double>{18, 11, 26, 9, 29, 7, 13, 10}, {8}, f64))},
-      {"age", Slate(pluss::make_series(std::vector<double>{25, 33, 42, 51, 29, 55, 46, 39}, {8}, f64))},
-      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"bad", Slate(pluss::make_series(std::vector<double>{0, 0, 1, 0, 1, 0, 0, 0}, {8}, f64))},
+      {"loan_id", Shelf(pluss::make_series(std::vector<double>{101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
+      {"income", Shelf(pluss::make_series(std::vector<double>{44, 52, 31, 80, 38, 92, 67, 73}, {8}, f64))},
+      {"debt", Shelf(pluss::make_series(std::vector<double>{18, 11, 26, 9, 29, 7, 13, 10}, {8}, f64))},
+      {"age", Shelf(pluss::make_series(std::vector<double>{25, 33, 42, 51, 29, 55, 46, 39}, {8}, f64))},
+      {"region", Shelf(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"bad", Shelf(pluss::make_series(std::vector<double>{0, 0, 1, 0, 1, 0, 0, 0}, {8}, f64))},
   });
 
   const lymph::workflow::Policy cleanup{.drop_columns = {"loan_id"}};
@@ -45,11 +45,11 @@ int main() {
   deployed.learn_(raw, data, train);
 
   const DataFrame incoming({
-      {"loan_id", Slate(pluss::make_series(std::vector<double>{201, 202, 203}, {3}, f64))},
-      {"income", Slate(pluss::make_series(std::vector<double>{49, 88, 35}, {3}, f64))},
-      {"debt", Slate(pluss::make_series(std::vector<double>{14, 8, 31}, {3}, f64))},
-      {"age", Slate(pluss::make_series(std::vector<double>{36, 58, 27}, {3}, f64))},
-      {"region", Slate(pluss::make_note({"west", "south", "north"}))},
+      {"loan_id", Shelf(pluss::make_series(std::vector<double>{201, 202, 203}, {3}, f64))},
+      {"income", Shelf(pluss::make_series(std::vector<double>{49, 88, 35}, {3}, f64))},
+      {"debt", Shelf(pluss::make_series(std::vector<double>{14, 8, 31}, {3}, f64))},
+      {"age", Shelf(pluss::make_series(std::vector<double>{36, 58, 27}, {3}, f64))},
+      {"region", Shelf(pluss::make_note({"west", "south", "north"}))},
   });
 
   const Series labels = deployed.infer(incoming, data);

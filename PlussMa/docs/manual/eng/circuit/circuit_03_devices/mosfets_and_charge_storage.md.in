@@ -4,7 +4,7 @@
 
 A MOSFET is controlled by a voltage, not a current: the gate voltage sets the channel and the drain current follows. This page finds the bias point of a common-source stage in each of the three regions, sweeps the gate voltage, mirrors the stage with a PMOS, computes the small-signal gain, and then charges the gate through a resistor: devices store charge, and the stored charge is what makes them slow.
 
-## The mental model
+## How it works
 
 `circuit::Mosfets` describes enhancement MOSFETs by `drain`, `gate` and `source` (the body is tied to the source), `polarity` (`1` NMOS, `-1` PMOS), the transconductance `kp = mu Cox W / L` in A/V^2, the threshold voltage magnitude and an optional channel-length modulation `lambda`. The model is the level-1 square law. With the overdrive `vov = vgs - Vth`:
 

@@ -268,11 +268,9 @@ void test_bounded_weno_reconstruction_and_flow() {
       pluss::series::arange(0, shock_cells, 1, ScalarType::Float64);
   const Series left = coordinate.lt(shock_cells / 2);
   const Series shock_rho =
-      left.where(pluss::series::full_like(coordinate, 1.0),
-                 pluss::series::full_like(coordinate, 0.125));
+      pluss::series::where(left, pluss::series::full_like(coordinate, 1.0), pluss::series::full_like(coordinate, 0.125));
   const Series shock_pressure =
-      left.where(pluss::series::full_like(coordinate, 1.0),
-                 pluss::series::full_like(coordinate, 0.1));
+      pluss::series::where(left, pluss::series::full_like(coordinate, 1.0), pluss::series::full_like(coordinate, 0.1));
   const auto shock = make_state(
       shock_rho, pluss::series::zeros({1, shock_cells}, ScalarType::Float64),
       shock_pressure, shock_grid);

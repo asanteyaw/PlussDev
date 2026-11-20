@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
+  const DataFrame x({{"income", Shelf(income)}, {"balance", Shelf(balance)}});
 
   // A logistic-regression template: an algorithm choice, nothing learned yet.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -29,10 +29,10 @@ int main() {
   // Inference reuses the same feature contract training saw.
   const pluss::Series predicted = model.infer(x);
   const DataFrame review({
-      {"income", Slate(income)},
-      {"balance", Slate(balance)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(predicted)},
+      {"income", Shelf(income)},
+      {"balance", Shelf(balance)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(predicted)},
   });
   std::cout << review;
 

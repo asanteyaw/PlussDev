@@ -6,7 +6,7 @@
 
 You have a few bodies that exchange heat with each other and with their surroundings, and you want to know where each settles, how much heat flows through each connection, and how much the surroundings supply. This page builds such a network, solves its steady state, and reads the answers.
 
-## The mental model
+## How it works
 
 A thermal network is an electrical network with different names. A node has a temperature (the voltage), a connection between two nodes has a conductance in watts per kelvin (the reciprocal of a resistance), and the heat that flows is the current. Heat flows from the warmer node to the cooler one at `G` times the temperature difference. At every node that is not held, the heat that arrives equals the heat that leaves, plus whatever a heater injects: that is the whole of steady state. Because the equations are the circuit equations, the solve is done by the circuit engine, and everything it knows (batches, differentiation, dtype) comes with it.
 

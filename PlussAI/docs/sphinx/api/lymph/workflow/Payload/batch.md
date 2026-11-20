@@ -71,15 +71,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6}, {5}, f64))},
-      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9}, {5}, f64))},
-      {"note_col", Slate(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0}, {5}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6}, {5}, f64))},
+      {"balance", Shelf(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9}, {5}, f64))},
+      {"note_col", Shelf(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0}, {5}, f64))},
   });
 
   const workflow::Payload payload =
@@ -114,16 +114,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
-      {"w", Slate(pluss::make_series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}, {6}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Shelf(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"w", Shelf(pluss::make_series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}, {6}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
 
   const workflow::Payload payload = workflow::payload::make(raw)
@@ -162,20 +162,20 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame six({
-      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
-      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Shelf(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"default", Shelf(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
   const DataFrame three({
-      {"income", Slate(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64))},
-      {"balance", Slate(pluss::make_series({0.6, 1.5, 2.2}, {3}, f64))},
-      {"default", Slate(pluss::make_series({0, 1, 1}, {3}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64))},
+      {"balance", Shelf(pluss::make_series({0.6, 1.5, 2.2}, {3}, f64))},
+      {"default", Shelf(pluss::make_series({0, 1, 1}, {3}, f64))},
   });
 
   const workflow::Payload original =

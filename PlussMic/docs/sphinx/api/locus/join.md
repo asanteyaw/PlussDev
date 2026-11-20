@@ -99,8 +99,8 @@ std::cout << "explicit-key join rows: " << manual.get("amount")->size() << '\n';
 try {
   (void)make_shop().join("orders", "customers");
   std::cout << "unlinked join: did not throw\n";
-} catch (const std::exception& e) {
-  std::string msg = e.what();
+} catch (const pluss::Error& e) {
+  std::string msg = e.message();
   std::cout << "unlinked join threw: " << msg.substr(0, msg.find('\n')) << '\n';
 }
 ```
@@ -143,3 +143,14 @@ semantics), not silently dropped without a count.
 - [`link`](link.md): declaring the relationship a keyless `join()` call resolves.
 - [`audit`](audit.md): checking cardinality and orphans ahead of a join, without
   joining anything.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="isposinf.html">
+    <span class="label">Previous</span>
+    <span class="title">isposinf</span>
+  </a>
+  <a class="next-link" href="link.html">
+    <span class="label">Next</span>
+    <span class="title">link</span>
+  </a>
+</div>

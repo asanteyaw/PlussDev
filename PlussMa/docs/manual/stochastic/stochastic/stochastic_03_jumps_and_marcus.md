@@ -4,7 +4,7 @@
 
 Prices gap, defaults arrive, claims come in lumps. A process that jumps needs two things the continuous theory does not have: a rule for what a jump does to `g(X)`, and a decision about how a jump should be integrated against. This chapter covers both. After it you can describe the jump part of a process to the library, tell the raw form from the compensated one, simulate a path with jumps, and use the Marcus (canonical) integral when you need the ordinary chain rule to survive a jump.
 
-## The mental model
+## How it works
 
 A jump of size `z` does not need a derivative. It moves the state from `x` to `x + z`, and `g(X)` moves by the plain difference `g(x + z) − g(x)`, however rough `g` is. The jump part of the process is therefore described by its **atoms**: atom `k` jumps by `sizes[k]` and arrives at rate `intensity[k]` per unit time. A compound Poisson process is a handful of atoms; a Levy measure with a density is its quadrature, with the atom rate equal to the density times the width of the cell.
 

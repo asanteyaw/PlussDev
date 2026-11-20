@@ -16,10 +16,10 @@ namespace {
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
-using pluss::table::SlateCastOptions;
-using pluss::table::SlateCastTarget;
-using pluss::table::SlateKind;
+using pluss::table::Shelf;
+using pluss::table::ShelfCastOptions;
+using pluss::table::ShelfCastTarget;
+using pluss::table::ShelfKind;
 using pluss::table::TsAlignMode;
 using pluss::table::TsOptions;
 using pluss::table::TsReindexFill;
@@ -42,13 +42,13 @@ void expect_throw(Fn&& fn, const std::string& message) {
   expect(threw, message);
 }
 
-std::vector<double> to_f64(const Slate& t) {
+std::vector<double> to_f64(const Shelf& t) {
   return t.as_series().to(pluss::pCPU, ScalarType::Float64).reshape({t.as_series().numel()}).host<double>();
 }
 
 void test_dataframe_ts_one_feature_and_set() {
   DataFrame df({
-      {"Adj Close", Slate(pluss::make_series(std::vector<double>{100.0, 110.0, 121.0, 133.1}))},
+      {"Adj Close", Shelf(pluss::make_series(std::vector<double>{100.0, 110.0, 121.0, 133.1}))},
   });
 
   auto lr = df.features({"Adj Close"}).ts().log_returns();
@@ -75,9 +75,9 @@ void test_dataframe_ts_resample_reindex_blocks() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   DataFrame df({
-      {"Adj Close", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0}))},
-      {"Volume", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-      {"date", Slate(timeline)},
+      {"Adj Close", Shelf(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0}))},
+      {"Volume", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"date", Shelf(timeline)},
   });
 
   const auto ts_opts = TsOptions{.axis = df.features("date")};
@@ -97,13 +97,10 @@ void test_dataframe_ts_resample_reindex_blocks() {
          "chained resample(...).mean() should match explicit ResampleOp::Mean");
 
   DataFrame counted({
-      {"Adj Close", Slate(pluss::make_series(std::vector<double>{
-                        1.0,
-                        std::numeric_limits<double>::quiet_NaN(),
-                        2.0,
-                        4.0,
-                    }))},
-      {"date", Slate(timeline)},
+      // The second observation is a missing cell (a NaN would be a value and would be counted).
+      {"Adj Close", Shelf(pluss::make_series(std::vector<double>{1.0, 0.0, 2.0, 4.0}),
+                          pluss::make_series(std::vector<bool>{true, false, true, true}).to(ScalarType::Bool))},
+      {"date", Shelf(timeline)},
   });
   auto daily_count = counted.features({"Adj Close"})
                          .ts({.axis = counted.features("date")})
@@ -187,7 +184,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
 
   auto reindexed = df.features({"Adj Close"})
                        .ts(ts_opts)
-                       .align_to(Slate(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
+                       .align_to(Shelf(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
   expect(reindexed.ncases() == static_cast<std::int64_t>(target_iso.size()), "reindexed row count mismatch");
 
   auto timed_daily = df.features({"Adj Close"}).ts(ts_opts).timed(
@@ -200,8 +197,8 @@ void test_dataframe_ts_resample_reindex_blocks() {
          "features(...).ts({.axis}).timed(duration_nanos, ...) should delegate timed windows over the bound temporal axis");
 
   DataFrame timed_numeric({
-      {"time_nanos", Slate(pluss::make_series(std::vector<std::int64_t>{0, 1, 3, 4}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+      {"time_nanos", Shelf(pluss::make_series(std::vector<std::int64_t>{0, 1, 3, 4}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
   });
   auto timed_numeric_df = timed_numeric.features({"value"}).ts().timed(
       timed_numeric.features("time_nanos"),
@@ -232,10 +229,10 @@ void test_dataframe_ts_resample_reindex_blocks() {
       std::span<const std::string_view>(grouped_iso.data(), grouped_iso.size()),
       std::span<const std::int64_t>(grouped_shape.data(), grouped_shape.size()));
   DataFrame grouped_roll({
-      {"date", Slate(grouped_timeline)},
-      {"group", Slate(pluss::make_note({"a", "a", "b", "a"}))},
-      {"cohort", Slate(pluss::make_note({"x", "x", "x", "y"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 10.0, 5.0}))},
+      {"date", Shelf(grouped_timeline)},
+      {"group", Shelf(pluss::make_note({"a", "a", "b", "a"}))},
+      {"cohort", Shelf(pluss::make_note({"x", "x", "x", "y"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 3.0, 10.0, 5.0}))},
   });
   auto grouped_timed = grouped_roll.features({"value"})
                            .ts({.axis = grouped_roll.features("date"),
@@ -280,8 +277,8 @@ void test_dataframe_ts_resample_reindex_blocks() {
       std::span<const std::string_view>(unsorted_iso.data(), unsorted_iso.size()),
       std::span<const std::int64_t>(unsorted_shape.data(), unsorted_shape.size()));
   DataFrame unsorted({
-      {"date", Slate(unsorted_timeline)},
-      {"value", Slate(pluss::make_series(std::vector<double>{30.0, 10.0, 20.0}))},
+      {"date", Shelf(unsorted_timeline)},
+      {"value", Shelf(pluss::make_series(std::vector<double>{30.0, 10.0, 20.0}))},
   });
   const auto sorted_df = unsorted.features({"value"})
                              .ts({.axis = unsorted.features("date")})
@@ -297,24 +294,24 @@ void test_dataframe_ts_resample_reindex_blocks() {
              }),
          "features(...).ts({.axis}).sort() should carry the sorted time axis as case labels");
 
-  const auto sorted_slate = unsorted.features("value").ts().sort(unsorted.features("date"));
-  expect(to_f64(sorted_slate) == std::vector<double>({10.0, 20.0, 30.0}),
-         "Slate::ts().sort(axis) should sort values by the supplied time axis");
-  const auto sorted_slate_iso = sorted_slate.label().values().tl().iso();
-  expect(sorted_slate_iso.as_note().vector() ==
+  const auto sorted_shelf = unsorted.features("value").ts().sort(unsorted.features("date"));
+  expect(to_f64(sorted_shelf) == std::vector<double>({10.0, 20.0, 30.0}),
+         "Shelf::ts().sort(axis) should sort values by the supplied time axis");
+  const auto sorted_shelf_iso = sorted_shelf.label().values().tl().iso();
+  expect(sorted_shelf_iso.as_note().vector() ==
              std::vector<std::string_view>({
                  "2024-01-01T00:00:00.000000000+00:00",
                  "2024-01-02T00:00:00.000000000+00:00",
                  "2024-01-03T00:00:00.000000000+00:00",
              }),
-         "Slate::ts().sort(axis) should preserve the sorted time axis as labels");
+         "Shelf::ts().sort(axis) should preserve the sorted time axis as labels");
 
   DataFrame lhs_frame({
-      {"x", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
-  }, Slate(unsorted_timeline));
+      {"x", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
+  }, Shelf(unsorted_timeline));
   DataFrame rhs_frame({
-      {"x", Slate(pluss::make_series(std::vector<double>{15.0, 20.0, 25.0}))},
-  }, Slate(pluss::codeh::ops_internal::timeline_from_utf8(
+      {"x", Shelf(pluss::make_series(std::vector<double>{15.0, 20.0, 25.0}))},
+  }, Shelf(pluss::codeh::ops_internal::timeline_from_utf8(
          std::span<const std::string_view>(
              std::array<std::string_view, 3>{
                  "2024-01-01T00:00:00Z",
@@ -334,17 +331,17 @@ void test_dataframe_ts_resample_reindex_blocks() {
 
 void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
   DataFrame df({
-      {"Date", Slate(pluss::make_series(std::vector<std::int64_t>{19900102, 19900103, 20000229}))},
+      {"Date", Shelf(pluss::make_series(std::vector<std::int64_t>{19900102, 19900103, 20000229}))},
   });
 
   const auto out = df.features({"Date"}).cast().timeline();
-  const auto date_slate = out.features("Date");
-  expect(date_slate.kind() == SlateKind::Timeline, "cast(Timeline) should materialize Timeline for YYYYMMDD integers");
+  const auto date_shelf = out.features("Date");
+  expect(date_shelf.kind() == ShelfKind::Timeline, "cast(Timeline) should materialize Timeline for YYYYMMDD integers");
 
-  const auto tl = date_slate.as_timeline();
-  const auto years = Slate(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
-  const auto months = Slate(tl.month()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
-  const auto days = Slate(tl.day()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto tl = date_shelf.as_timeline();
+  const auto years = Shelf(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto months = Shelf(tl.month()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto days = Shelf(tl.day()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
 
   expect(years.size() == 3, "timeline year vector size mismatch");
   expect(years[0] == 1990 && months[0] == 1 && days[0] == 2, "first YYYYMMDD conversion mismatch");
@@ -354,9 +351,9 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
 
 void test_dataframe_cast_pair_payload_targets() {
   DataFrame raw({
-      {"id", Slate(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
-      {"amount_text", Slate(pluss::make_note({"10.5", "Alice", "30"}))},
-      {"event_text", Slate(pluss::make_note({
+      {"id", Shelf(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
+      {"amount_text", Shelf(pluss::make_note({"10.5", "Alice", "30"}))},
+      {"event_text", Shelf(pluss::make_note({
           "2024-01-01T00:00:00Z",
           "2024-01-02T00:00:00Z",
           "2024-01-03T00:00:00Z",
@@ -368,11 +365,11 @@ void test_dataframe_cast_pair_payload_targets() {
   casted.set("amount_text") = raw.features("amount_text").cast().series();
   casted.set("event_text") = raw.features("event_text").cast().timeline();
 
-  expect(casted.features("id").kind() == SlateKind::Note,
+  expect(casted.features("id").kind() == ShelfKind::Note,
          "cast(pair target): Series -> Note should change payload kind");
-  expect(casted.features("amount_text").kind() == SlateKind::Series,
+  expect(casted.features("amount_text").kind() == ShelfKind::Series,
          "cast(pair target): Note -> Series should change payload kind");
-  expect(casted.features("event_text").kind() == SlateKind::Timeline,
+  expect(casted.features("event_text").kind() == ShelfKind::Timeline,
          "cast(pair target): Note -> Timeline should change payload kind");
   expect(pluss::table::detail::has_validity_mask(casted.features("amount_text")),
          "cast(pair target): unparsable Note numeric value should set a validity mask");
@@ -384,21 +381,21 @@ void test_dataframe_cast_pair_payload_targets() {
 
   auto back_to_note = casted;
   back_to_note.set("event_text") = casted.features("event_text").cast().note();
-  expect(back_to_note.features("event_text").kind() == SlateKind::Note,
+  expect(back_to_note.features("event_text").kind() == ShelfKind::Note,
          "cast(pair target): Timeline -> Note should change payload kind");
 }
 
 void test_selection_first_note_tl_and_ts_time_rolling() {
   DataFrame raw({
-      {"date_text", Slate(pluss::make_note({"2024-01-01", "bad", "2024-01-05"}))},
-      {"price", Slate(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
-      {"volume", Slate(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
+      {"date_text", Shelf(pluss::make_note({"2024-01-01", "bad", "2024-01-05"}))},
+      {"price", Shelf(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
+      {"volume", Shelf(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
   });
 
   auto parsed = raw.features({"date_text"})
-                    .cast(SlateCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null})
+                    .cast(ShelfCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null})
                     .timeline();
-  expect(parsed.features("date_text").kind() == SlateKind::Timeline,
+  expect(parsed.features("date_text").kind() == ShelfKind::Timeline,
          "cast(Timeline) should parse selected text feature into Timeline");
   expect(pluss::table::detail::valid_at(parsed.features("date_text"), 0), "valid parsed date should stay valid");
   expect(!pluss::table::detail::valid_at(parsed.features("date_text"), 1), "invalid parsed date should become null when requested");
@@ -414,9 +411,9 @@ void test_selection_first_note_tl_and_ts_time_rolling() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   DataFrame df({
-      {"date", Slate(timeline)},
-      {"price", Slate(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
-      {"volume", Slate(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
+      {"date", Shelf(timeline)},
+      {"price", Shelf(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
+      {"volume", Shelf(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
   });
   auto values = df.labels().set("date", false).features({"price", "volume"});
 
@@ -450,15 +447,15 @@ void test_payload_surfaces_reject_wrong_payloads() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   DataFrame df({
-      {"date", Slate(timeline)},
-      {"name", Slate(pluss::make_note({"Ada", "Grace"}))},
-      {"price", Slate(pluss::make_series(std::vector<double>{10.0, 12.0}))},
+      {"date", Shelf(timeline)},
+      {"name", Shelf(pluss::make_note({"Ada", "Grace"}))},
+      {"price", Shelf(pluss::make_series(std::vector<double>{10.0, 12.0}))},
   });
 
   expect_throw([&] { (void)df.features("price").nt().upper(); },
-               "Slate.nt() should reject Series payloads");
+               "Shelf.nt() should reject Series payloads");
   expect_throw([&] { (void)df.features("name").tl().year(); },
-               "Slate.tl() should reject Note payloads");
+               "Shelf.tl() should reject Note payloads");
   expect_throw([&] { (void)df.features({"price"}).nt().upper(); },
                "DataFrame.features(...).nt() should reject non-Note features");
   expect_throw([&] { (void)df.features({"name"}).tl().year(); },
@@ -468,14 +465,14 @@ void test_payload_surfaces_reject_wrong_payloads() {
   expect_throw([&] { (void)df.tl().year(); },
                "DataFrame.tl() should require an intentional all-Timeline selection");
 
-  expect(df.features("name").nt().upper().kind() == SlateKind::Note,
-         "Slate.nt() should still work for Note payloads");
-  expect(df.features("date").tl().year().kind() == SlateKind::Series,
-         "Slate.tl() should still work for Timeline payloads");
+  expect(df.features("name").nt().upper().kind() == ShelfKind::Note,
+         "Shelf.nt() should still work for Note payloads");
+  expect(df.features("date").tl().year().kind() == ShelfKind::Series,
+         "Shelf.tl() should still work for Timeline payloads");
   expect(df.features("date").tl().period("month").tl().day().as_series().host<std::int32_t>()
              == std::vector<std::int32_t>({1, 1}),
-         "Slate.tl().period(month) should bucket timestamps to the first day of the month");
-  expect(df.features({"date"}).tl().period("D").features("date").kind() == SlateKind::Timeline,
+         "Shelf.tl().period(month) should bucket timestamps to the first day of the month");
+  expect(df.features({"date"}).tl().period("D").features("date").kind() == ShelfKind::Timeline,
          "DataFrame.tl().period(D) should delegate period bucketing to selected Timeline features");
 }
 

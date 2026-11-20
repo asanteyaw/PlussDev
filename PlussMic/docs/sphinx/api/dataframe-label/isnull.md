@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::isnull() const
+Shelf DataFrameLabelAccessor::isnull() const
 ```
 
 ## What It Does
@@ -18,8 +18,8 @@ genuine value.
 
 ## Returns
 
-`Slate`
-    A boolean slate, one entry per row, `display_name` `"isnull"`, displayed
+`Shelf`
+    A boolean shelf, one entry per row, `display_name` `"isnull"`, displayed
     against the case labels themselves.
 
 ## Examples
@@ -30,8 +30,8 @@ Example 1. A numeric case-label axis with one null.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
+    {{"value", Shelf(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Shelf(pluss::make_series({10.0, 0.0, 30.0}), pluss::make_series(std::vector<bool>{true, false, true})));
 
 auto out = readings.labels().isnull();
 std::cout << out;
@@ -49,7 +49,7 @@ Name: isnull, ptype: Series
 ## Notes
 
 - Works regardless of whether the case labels are structured or a flat/default
-  axis — it always inspects the flat displayed case-label slate.
+  axis — it always inspects the flat displayed case-label shelf.
 
 ## See Also
 

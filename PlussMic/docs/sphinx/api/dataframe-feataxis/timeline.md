@@ -13,7 +13,7 @@ DataFrame DataFrameFeatureAxisAccessor::timeline() const
 
 ## What It Does
 
-Selects every feature whose `Slate` kind is `Timeline` **or** `TimeIndex` —
+Selects every feature whose `Shelf` kind is `Timeline` **or** `TimeIndex` —
 dropping numeric (`Series`) and text (`Note`) features. Case labels and row
 order are preserved unchanged.
 
@@ -31,9 +31,9 @@ Example 1. Keep only the temporal feature out of a mixed frame.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-     {"visit_date",  Slate(pluss::make_timeline({
+    {{"sales_units", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"city",        Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+     {"visit_date",  Shelf(pluss::make_timeline({
           "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"}))}});
 std::cout << orders;
 

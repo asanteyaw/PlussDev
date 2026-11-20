@@ -6,7 +6,7 @@
 
 A **constellation** is the set of complex numbers a transmitter may send, one per pattern of bits. This page builds phase-shift-keying (PSK) and square quadrature-amplitude (QAM) constellations, shows why the labelling of the points matters, and maps bits to symbols and back.
 
-## The mental model
+## How it works
 
 `comms::psk(order)` places `order` points on the unit circle; `comms::qam(order)` places `order` points on a square grid, `order` a power of four. Both return a `Constellation`: `points[label]` is the complex symbol sent for the integer `label`, the label's binary digits (most significant first) are the `bits` bits that symbol carries, and the average energy `E|s|^2` is **one**. That normalisation fixes the scale of everything that follows: a noise variance `N0` per symbol is then a symbol signal-to-noise ratio of `1 / N0`.
 

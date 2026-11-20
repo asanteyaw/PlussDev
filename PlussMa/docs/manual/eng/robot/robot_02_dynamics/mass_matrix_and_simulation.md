@@ -6,7 +6,7 @@
 
 The equations of motion split into an inertial part and a bias: `M(q) qdd + b(q, qd) = tau`. Knowing both lets you find the accelerations under given torques, simulate the robot by integrating them, and check the simulation against the energies. This page computes the mass matrix against its closed form, shows the bias, runs forward dynamics, simulates a swinging arm for a second with energy conserved, and relates the energies to the matrix.
 
-## The mental model
+## How it works
 
 `inertia(robot, q)` is the symmetric positive-definite matrix `M(q)` of shape `[..., links, links]`; the kinetic energy is `0.5 qd^T M qd`. `bias(robot, q, qd)` is `b`: the torques that hold the motion with zero acceleration, which are the Coriolis and centrifugal forces plus gravity. `accel(robot, q, qd, tau)` solves `M qdd = tau - b`. In a serial chain the inertia seen at a joint depends on the joints farther out: for the planar arm `M` depends on the elbow angle and not on the shoulder angle.
 

@@ -4,7 +4,7 @@ An option seller owes a random payoff and removes most of the randomness by hold
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A delta hedge is a self-financing portfolio.** Shares worth {math}`\Delta_tS_t` and a cash account that pays for every change of the position; the hedge error is the portfolio minus the option.
 - **The error is the gamma of the option.** Each rebalance leaves a profit of {math}`\tfrac12\Gamma S^2(\sigma^2\Delta t-(\Delta S/S)^2)`, mean zero at the true volatility, and the standard deviation of the total falls like {math}`1/\sqrt n`.

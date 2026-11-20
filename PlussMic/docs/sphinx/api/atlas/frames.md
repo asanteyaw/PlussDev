@@ -36,8 +36,8 @@ Example 1. Iterate the stack directly as a `std::vector<DataFrame>`.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Shelf(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 for (const auto& frame : atlas.frames()) {
@@ -59,8 +59,8 @@ for an `Atlas`-specific reduction method.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Shelf(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 double total = 0.0;
@@ -95,7 +95,7 @@ works here without an `Atlas`-specific equivalent needing to exist.
 - [`Atlas::frame`](frame.md) / [`Atlas::dloc`](dloc.md): retrieve one frame by position
   instead of the whole vector.
 - [`Atlas::depth`](depth.md): the length of this vector.
-- [`Atlas::aggregate_over_frames`](aggregate_over_frames.md): reduce this same vector to
+- [`Atlas::aggregate_depth`](aggregate_depth.md): reduce this same vector to
   one `DataFrame` via a supplied function, without leaving the `Atlas` API.
 
 <div class="pluss-inline-prev-next">

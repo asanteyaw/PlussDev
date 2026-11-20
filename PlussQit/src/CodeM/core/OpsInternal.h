@@ -141,6 +141,12 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   // Logical (bool out)
   Series logical_not(const Series& a);
   Series logical_and(const Series& a, const Series& b);
+  // Exact int32/int64 division on MPS (no float32 lane).
+  bool mps_exact_int_pair(const Series& a, const Series& b);
+  Series mps_int_truncating_divide(const Series& a, const Series& b);
+  Series mps_int_floor_divide(const Series& a, const Series& b);
+  // True when both operands are integers and some divisor is zero (the result then needs floating point: +-inf / NaN).
+  bool has_zero_integer_divisor(const Series& a, const Series& b);
   Series logical_or(const Series& a, const Series& b);
   Series logical_xor(const Series& a, const Series& b);
 
@@ -335,7 +341,7 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series& masked_scatter_(Series& a, const Series& mask, const Series& src);
 
 
-  // Where variants (method-form: condition.where(x,y))
+  // Where variants (method-form: condition.where_legacy(x,y))
   Series where(const Series& condition, const Series& x, const Series& y);
 
   // Nonzero (returns indices, int64)

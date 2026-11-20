@@ -107,8 +107,8 @@ template <class Fn>
 void print_error(std::string_view label, Fn&& fn) {
   try {
     fn();
-  } catch (const std::exception& error) {
-    std::string message(error.what());
+  } catch (const pluss::Error& error) {
+    std::string message(error.message());
     const auto newline = message.find('\n');
     if (newline != std::string::npos) message.resize(newline);
     std::cout << label << ": " << message << "\n";

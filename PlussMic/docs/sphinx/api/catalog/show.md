@@ -20,8 +20,8 @@ is no no-argument overload, so there's no risk of it silently opening a GUI view
 the way some other `show()`-named methods in this codebase can.
 
 ```{important} display(), info(), and show() all render identically — there is no separate metadata summary
-Unlike Slate::info(), which prints a name/kind/dtype/null-count summary distinct from
-Slate::to_string()'s row rendering, Catalog::info() and Catalog::display() both call the exact
+Unlike Shelf::info(), which prints a name/kind/dtype/null-count summary distinct from
+Shelf::to_string()'s row rendering, Catalog::info() and Catalog::display() both call the exact
 same underlying render as show() and operator<<. All four produce byte-identical output;
 there is currently no metadata-only summary view for Catalog.
 ```
@@ -100,8 +100,8 @@ captured 761 characters
     <span class="label">Previous</span>
     <span class="title">shape</span>
   </a>
-  <a class="next-link" href="size.html">
+  <a class="next-link" href="similarity.html">
     <span class="label">Next</span>
-    <span class="title">size</span>
+    <span class="title">similarity</span>
   </a>
 </div>

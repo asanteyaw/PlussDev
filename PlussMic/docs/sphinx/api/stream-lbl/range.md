@@ -75,10 +75,10 @@ Example 2. `range()` overwrites an *existing custom* label, not just an
 absent one.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .lbl().set(Slate(pluss::make_note({"x", "y", "z"})));
+                   .lbl().set(Shelf(pluss::make_note({"x", "y", "z"})));
 auto out = labeled.lbl().range();
 std::cout << out;
 ```

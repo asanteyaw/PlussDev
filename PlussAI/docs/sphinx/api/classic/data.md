@@ -33,13 +33,13 @@ Turn two feature columns and one label column of a dataframe into a labeled batc
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame frame({
-      {"income", Slate(pluss::make_series(std::vector<double>{30.0, 42.0, 55.0, 61.0, 88.0, 92.0}, {6}, cfg))},
-      {"balance", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 1.5, 3.0, 5.0, 4.5}, {6}, cfg))},
-      {"default", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
+      {"income", Shelf(pluss::make_series(std::vector<double>{30.0, 42.0, 55.0, 61.0, 88.0, 92.0}, {6}, cfg))},
+      {"balance", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 1.5, 3.0, 5.0, 4.5}, {6}, cfg))},
+      {"default", Shelf(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
   });
 
   cls::DataFrameBatchOptions options{};

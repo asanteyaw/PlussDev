@@ -1,0 +1,130 @@
+<!-- generated from nodes.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d6064954c8e9 -->
+
+# `structure::Frame::nodes`
+
+[Back to `structure::Frame`](../FrameModel.md)
+
+The number of nodes.
+
+## Signature
+
+```cpp
+std::int64_t structure::Frame::nodes() const noexcept;
+```
+
+## What It Does
+
+Returns the node count. Each node carries three degrees of freedom, so the displacement vector has `3 * nodes()` entries.
+
+## Returns
+
+The number of nodes.
+
+## Practical Examples
+
+### Example 1
+
+A portal frame: two columns and a beam on four nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace structure = pluss::subsp::eng::structure;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const structure::Mesh mesh{grid({0, 0, 0, 3, 4, 3, 4, 0}, 2), {0, 1, 3}, {1, 2, 2}};
+  const structure::Sections sections{vec({2e-2, 2e-2, 2e-2}), vec({6.667e-5, 6.667e-5, 6.667e-5}), vec({200e9, 200e9, 200e9})};
+  const auto obj = structure::frame(mesh, sections);
+  out.writeln("nodes =", obj.nodes(), " members", obj.members());
+}
+```
+
+Output
+
+```text
+nodes = 4  members 3
+```
+
+### Example 2
+
+A 2 m cantilever beam divided into four members.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace structure = pluss::subsp::eng::structure;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const structure::Mesh mesh{grid({0, 0, 0.5, 0, 1, 0, 1.5, 0, 2, 0}, 2), {0, 1, 2, 3}, {1, 2, 3, 4}};
+  const structure::Sections sections{vec({1e-3, 1e-3, 1e-3, 1e-3}), vec({8.333e-8, 8.333e-8, 8.333e-8, 8.333e-8}), vec({200e9, 200e9, 200e9, 200e9})};
+  const auto obj = structure::frame(mesh, sections);
+  out.writeln("nodes =", obj.nodes(), " members", obj.members());
+}
+```
+
+Output
+
+```text
+nodes = 5  members 4
+```
+
+### Example 3
+
+A single member between two nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace structure = pluss::subsp::eng::structure;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const structure::Mesh mesh{grid({0, 0, 2, 0}, 2), {0}, {1}};
+  const structure::Sections sections{vec({1e-3}), vec({8.333e-8}), vec({200e9})};
+  const auto obj = structure::frame(mesh, sections);
+  out.writeln("nodes =", obj.nodes(), " members", obj.members());
+}
+```
+
+Output
+
+```text
+nodes = 2  members 1
+```
+
+## See Also
+
+- [`members`](members.md): the member count
+- [`dofs`](dofs.md): degrees of freedom per node
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="members.html">
+    <span class="label">Previous</span>
+    <span class="title">members</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -137,8 +137,8 @@ auto weather = pluss::kindle::Catalog({
 
 try {
   auto bad = weather.plot().step("nonexistent");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

@@ -63,8 +63,8 @@ above.
 auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   auto out = slot.tl().isnat();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

@@ -14,7 +14,7 @@ pluss::table::Atlas atlas({frame0, frame1});
 With depth labels:
 
 ```cpp
-pluss::table::Slate labels = pluss::make_note({"train", "valid"});
+pluss::table::Shelf labels = pluss::make_note({"train", "valid"});
 pluss::table::Atlas atlas({train, valid}, labels);
 ```
 
@@ -24,7 +24,7 @@ pluss::table::Atlas atlas({train, valid}, labels);
 auto sales = sales_frame();
 auto south = sales.query("region == 'south'");
 auto other = sales.query("region != 'south'");
-Slate labels = pluss::make_note({"south", "other"});
+Shelf labels = pluss::make_note({"south", "other"});
 
 pluss::table::Atlas atlas({south, other}, labels);
 std::cout << "depth=" << atlas.depth()
@@ -119,13 +119,13 @@ auto cleaned = atlas.map_frames([](const pluss::table::DataFrame& frame) {
 Aggregate across frames:
 
 ```cpp
-auto summary = atlas.aggregate_over_frames(
+auto summary = atlas.aggregate_depth(
     [](const std::vector<pluss::table::DataFrame>& frames) {
       return frames.front().copy();
     });
 ```
 
-Use `aggregate_over_frames` when the aggregation requires seeing all frames at
+Use `aggregate_depth` when the aggregation requires seeing all frames at
 once.
 
 ## Squeeze and unsqueeze

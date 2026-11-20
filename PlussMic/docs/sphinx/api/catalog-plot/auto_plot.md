@@ -91,8 +91,8 @@ Example 3. An undefined (default-constructed) catalog throws.
 pluss::kindle::Catalog empty;
 try {
   auto bad = empty.plot().auto_plot();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

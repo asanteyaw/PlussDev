@@ -1,6 +1,6 @@
-# `control::mpc::Result`
+# `control::Result`
 
-The selected action, complete plan, state trajectory, and optimizer diagnostics.
+The optimal plan returned by `solve`.
 
 ## Signature
 
@@ -10,71 +10,48 @@ control::mpc::Result
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Holds the first control to apply, the whole planned control sequence, the predicted states and the solver outcome.
 
 ## Fields
 
-### `control`
-
-The first control action, ready to apply in receding-horizon operation.
-
-### `controls`
-
-The full optimized control sequence over the horizon.
-
-### `states`
-
-The predicted state sequence after applying the optimized controls.
-
-### `optimization`
-
-The underlying `pluss::math::qp::Result`, including convergence and residual diagnostics.
+| Field | Meaning | Shape |
+|---|---|---|
+| `control` | The first planned input: the one to apply now. | `[inputs]` |
+| `controls` | The planned inputs over the horizon. | `[horizon, inputs]` |
+| `states` | The predicted state after each planned input. | `[horizon, states]` |
+| `optimization` | The `qp::Result`: `converged`, `iterations`, residuals and `warm()`. | |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again; check `optimization.converged` before applying the control.
 
 ## Interpretation and Use
 
-Apply only `control`, the first action, in receding-horizon operation. `controls` and `states` are predictions used for inspection and warm-start planning, not commitments. Always check `optimization.converged` and residual diagnostics before applying the action.
+`control` is the first row of `controls` (the first example). The predicted states are the model rolled forward from the initial state under those controls: the second example finds no difference. Pass `optimization.warm()` to the next `solve` to warm-start it.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect the first action, full input plan, states, and convergence.
+The shapes of the fields.
 
-@@example Eng/api/control_mpc.cpp@@
+@@example Eng/api/control_mpcresult_fields.cpp@@
 
 ### Example 2
 
-Observe saturation and optimizer iterations under tighter bounds.
+The predicted states against the model rolled forward.
 
-@@example Eng/api/control_mpc_options.cpp@@
+@@example Eng/api/control_mpcresult_dynamics.cpp@@
 
 ### Example 3
 
-Compare cold and warm-started result diagnostics.
+The solver outcome.
 
-@@example Eng/api/control_mpc_plan.cpp@@
+@@example Eng/api/control_mpcresult_solver.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Options.html">
-    <span class="label">Previous</span>
-    <span class="title">Options</span>
-  </a>
-  <a class="next-link" href="Plan.html">
-    <span class="label">Next</span>
-    <span class="title">Plan</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

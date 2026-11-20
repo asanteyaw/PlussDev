@@ -25,7 +25,7 @@ as plain columns and lets you choose a `value_features` subset instead of always
 stacking everything).
 
 Because every feature's values get concatenated together into one `value_name`
-column, every feature on the frame must share the same `Slate` kind (and, for
+column, every feature on the frame must share the same `Shelf` kind (and, for
 numeric features, the same concrete dtype) — the same constraint
 [`lengthen()`](lengthen.md) places on its `value_features`.
 
@@ -57,8 +57,8 @@ result.
 using namespace pluss::table;
 
 auto monthly = DataFrame({
-    {"jan_sales", Slate(pluss::make_series({100.0, 200.0}))},
-    {"feb_sales", Slate(pluss::make_series({150.0, 250.0}))},
+    {"jan_sales", Shelf(pluss::make_series({100.0, 200.0}))},
+    {"feb_sales", Shelf(pluss::make_series({150.0, 250.0}))},
 });
 std::cout << monthly;
 ```
@@ -77,7 +77,7 @@ std::cout << monthly;
 
 ```cpp
 auto stacked = monthly.stack();
-std::cout << stacked.label().names().size() << "\n";  // case-label levels: "case", "feature"
+std::cout << stacked.labels().names().size() << "\n";  // case-label levels: "case", "feature"
 std::cout << stacked.features().size() << "\n";        // remaining ordinary feature: "value"
 ```
 
@@ -99,7 +99,7 @@ result plainly.
 ```cpp
 DataFrame::ResetLabelOptions options;
 options.names = {"case", "feature"};
-auto plain = stacked.label().reset(options);
+auto plain = stacked.labels().reset(options);
 std::cout << plain;
 ```
 
@@ -124,7 +124,7 @@ Four output rows — `2` original cases times `2` original features. Row `0` is
 
 ## Notes
 
-- Every feature on the source frame must share the same `Slate` kind (and, for
+- Every feature on the source frame must share the same `Shelf` kind (and, for
   numeric features, the same concrete scalar dtype and platform), since their values
   are concatenated into one `value_name` column.
 - If the source frame already has named case labels, every one of those levels is

@@ -6,7 +6,7 @@
 
 The power flow turns known injections into voltages. A control room has the opposite problem: a set of noisy measurements, some of them redundant, some possibly wrong, and it needs the best estimate of the voltages on every bus. **Weighted least-squares state estimation** finds the voltages that fit all the measurements best, weighting each by its accuracy. `power::estimate` does it for the AC network. This page explains the problem, estimates the state of a network from ten measurements of every family, checks it against an independent least-squares solver, reads the residuals and the covariance, finds a gross error by its normalised residual, and shows the mistakes the estimator is built to reject.
 
-## The mental model
+## How it works
 
 The **state** is the voltage magnitude at every bus and the angle at every bus except the reference, `2 n - 1` unknowns for a network of `n` buses. A **measurement** is a number with a known accuracy `sigma`: a voltage magnitude or angle, an active or reactive power injected at a bus, or the active or reactive power entering a line at either end. Each measurement is a known function `h(x)` of the state through the network equations. The estimate minimises the weighted sum of squares
 

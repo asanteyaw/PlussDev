@@ -12,15 +12,15 @@ DataFrame DataFrame::ge(double other) const
 DataFrame DataFrame::ge(std::string_view other) const
 DataFrame DataFrame::ge(const DataFrame& other) const
 DataFrame DataFrame::ge(const DataFrame& other, const AlignOptions& options) const
-DataFrame DataFrame::ge(const Slate& other, Axis axis = Axis::Feature) const
-DataFrame DataFrame::ge(const Slate& other, Axis axis, const AlignOptions& options) const
-DataFrame DataFrame::ge(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
+DataFrame DataFrame::ge(const Shelf& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::ge(const Shelf& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::ge(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does
 
 The ordering relation "greater than or equal to", returning a boolean-valued frame the
-same shape as the source. `ge()` shares the same scalar/string/`DataFrame`/`Slate`
+same shape as the source. `ge()` shares the same scalar/string/`DataFrame`/`Shelf`
 operand shapes as [`eq()`](eq.md) — see `eq()`'s "What It Does" for the full
 explanation.
 
@@ -36,10 +36,10 @@ same call site, use [`gt()`](gt.md) directly instead.
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Shelf&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -103,13 +103,13 @@ std::cout << out_names;
 ### Output
 
 ```text
-=============
-      | name 
--------------
-s1    | false
-s2    | true 
-s3    | false
--------------
+============
+     | name 
+------------
+s1   | false
+s2   | true 
+s3   | false
+------------
 [3 cs x 1 feat]
 ```
 
@@ -131,13 +131,13 @@ std::cout << out_frames;
 ### Output
 
 ```text
-===================
-      | quiz  final
--------------------
-s1    | true  true 
-s2    | true  true 
-s3    | true  true 
--------------------
+==================
+     | quiz  final
+------------------
+s1   | true  true 
+s2   | true  true 
+s3   | true  true 
+------------------
 [3 cs x 2 feat]
 ```
 
@@ -147,25 +147,25 @@ this with [`scores.gt(changed)`](gt.md) on the identical two frames: strict `>` 
 every one of these equal cells to `false`, leaving only that one genuinely-larger cell
 `true`.
 
-Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
+Example 4. Compare against a `Shelf` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
-auto out_slate = scores.ge(thresholds);
-std::cout << out_slate;
+auto thresholds = Shelf(pluss::make_series({84.0, 88.0}));
+auto out_shelf = scores.ge(thresholds);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-===================
-      | quiz  final
--------------------
-s1    | true  false
-s2    | true  true 
-s3    | true  false
--------------------
+==================
+     | quiz  final
+------------------
+s1   | true  false
+s2   | true  true 
+s3   | true  false
+------------------
 [3 cs x 2 feat]
 ```
 

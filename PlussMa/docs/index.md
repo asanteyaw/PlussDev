@@ -93,6 +93,13 @@
 <a href="manual/eng.html">User Guide</a> &middot; <a href="api/plussma_eng.html">API Reference</a>
 </div>
 
+<div class="pluss-card">
+<span class="card-name">Natural sciences</span>
+<span class="card-model">natsci</span>
+<p class="card-desc">Biology, chemistry and physics models: populations, kinetics, flows and fields.</p>
+<a href="manual/natsci.html">User Guide</a> &middot; <span class="pluss-soon">API Reference (coming)</span>
+</div>
+
 <!-- topics:end -->
 </div>
 </div>

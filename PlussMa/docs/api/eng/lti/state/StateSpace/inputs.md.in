@@ -1,0 +1,120 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 70c30b8fe6e0 -->
+
+# `lti::StateSpace::inputs`
+
+[Back to `lti::StateSpace`](../StateSpace.md)
+
+The number of inputs, `m`.
+
+## Signature
+
+```cpp
+std::int64_t lti::StateSpace::inputs() const;
+```
+
+## What It Does
+
+Returns `m`, the number of inputs, read from the last dimension of `B`. It is the quickest way to size a vector or loop that accompanies the system without taking a matrix apart. The value is an integer count and does not depend on any batch axes.
+
+## Returns
+
+`m` as a non-negative integer.
+
+## Practical Examples
+
+### Example 1
+
+The oscillator has a single force input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("inputs =", oscillator().inputs());
+}
+```
+
+### Example 2
+
+Two input columns in `B` give two inputs.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 0.0, 1.0, 1.0}, 2, 2), mat({1.0, 0.0}, 1, 2), mat({0.0, 0.0}, 1, 2));
+  out.writeln("inputs =", s.inputs());
+}
+```
+
+### Example 3
+
+The input count is independent of the number of states.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  out.writeln("states =", s.states(), ", inputs =", s.inputs());
+}
+```
+
+## See Also
+
+- [`states`](states.md): the number of states
+- [`outputs`](outputs.md): the number of outputs
+- [`b`](b.md): the matrix whose size it reads
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="d.html">
+    <span class="label">Previous</span>
+    <span class="title">d</span>
+  </a>
+  <a class="next-link" href="is_cont.html">
+    <span class="label">Next</span>
+    <span class="title">is_cont</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

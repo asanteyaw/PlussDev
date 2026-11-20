@@ -33,7 +33,7 @@ Train a logistic model, predict on its features, and summarize the predictions a
 
 namespace lymph = pluss::ai::lymph;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
   const pluss::Series x = pluss::make_series(std::vector<double>{

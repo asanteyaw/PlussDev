@@ -19,7 +19,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using namespace pluss::ai::nodej;
 
 Config f64() {
@@ -44,15 +44,15 @@ DataFrame make_mixed_flow_frame() {
           1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
       {6},
       Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  const Slate ts = Slate(epoch_nanos).cast().timeline();
+  const Shelf ts = Shelf(epoch_nanos).cast().timeline();
   const Series y = x0.mul(2.0).sub(x1.mul(0.5)).add(1.0);
 
   return DataFrame({
-      {"x0", Slate(x0)},
-      {"x1", Slate(x1)},
-      {"category", Slate(note)},
+      {"x0", Shelf(x0)},
+      {"x1", Shelf(x1)},
+      {"category", Shelf(note)},
       {"ts", ts},
-      {"target", Slate(y)},
+      {"target", Shelf(y)},
   });
 }
 
@@ -623,7 +623,7 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
     data_options.feature_names = {"x0", "x1", "category", "ts", "target"};
     data_options.label_feature = "target";
     data_options.note_policy = DataNotePolicy::Hash;
-    data_options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
+    data_options.shelf_policy = DataShelfPolicy::CastTemporalToSeries;
 
     ModelSpec spec{
         .task = TaskKind::Regression,

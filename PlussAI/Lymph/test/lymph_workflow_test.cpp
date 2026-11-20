@@ -19,7 +19,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -63,9 +63,9 @@ DataFrame make_raw_frame(int n) {
   const Series x_series = pluss::make_series(x_values, {static_cast<std::int64_t>(n)}, f64());
   const Series y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(n)}, f64());
   return DataFrame({
-      {"id", Slate(id_series)},
-      {"x", Slate(x_series)},
-      {"y", Slate(y_series)},
+      {"id", Shelf(id_series)},
+      {"x", Shelf(x_series)},
+      {"y", Shelf(y_series)},
   });
 }
 

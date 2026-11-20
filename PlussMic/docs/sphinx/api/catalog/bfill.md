@@ -55,7 +55,7 @@ keys: [id, city]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 id                       | Series       | Series[float64]  | 3       | [1, 3, 3]                                        
-city                     | Note         | Note             | 3       | [Accra, Tema, NA]                                
+city                     | Note         | Note             | 3       | [Accra, Tema, NULL]                              
 ========================================================================================================================
 ```
 
@@ -81,8 +81,8 @@ Row `1`'s `NULL` in `id` becomes `3` (pulled backward from row `2`). Row `2`'s `
     <span class="label">Previous</span>
     <span class="title">begin</span>
   </a>
-  <a class="next-link" href="cast.html">
+  <a class="next-link" href="cache_stats.html">
     <span class="label">Next</span>
-    <span class="title">cast</span>
+    <span class="title">cache_stats</span>
   </a>
 </div>

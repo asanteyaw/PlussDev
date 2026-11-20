@@ -13,7 +13,7 @@ TEST_CASE("where + clamp + cum", "[where][clamp][cum]") {
   m = m.index_put({pluss::series::full({1}, 0, ScalarType::Int64), pluss::series::full({1}, 1, ScalarType::Int64)},
                   pluss::series::full({1}, 1, ScalarType::Bool), false);
 
-  auto wv = a.where(m, b);
+  auto wv = pluss::series::where(m, b, a);
   auto* wp = reinterpret_cast<const std::int64_t*>(wv.raw_data());
   REQUIRE(wp[1] == 100);
 

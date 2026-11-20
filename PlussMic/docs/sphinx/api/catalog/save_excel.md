@@ -64,15 +64,15 @@ auto ct = pluss::kindle::Catalog({
 
 try {
   ct.save_excel("cities.xlsx");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-save_excel: Excel support not built (libzip not available)
+
 ```
 
 ## Notes

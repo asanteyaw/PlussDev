@@ -1,6 +1,6 @@
 # `control::loop`
 
-Evaluates open- and closed-loop SISO frequency responses.
+Computes the loop response, sensitivity and complementary sensitivity.
 
 ## Signature
 
@@ -16,59 +16,59 @@ control::LoopResult control::loop(
 
 ## What It Does
 
-The model-specific overload delegates frequency evaluation to the LTI layer, then computes sensitivity functions with vectorized complex `Series` arithmetic.
+For an open-loop system `L` it returns `L(jw)`, the sensitivity `S = (I + L)^{-1}` and the complementary sensitivity `T = L (I + L)^{-1}` on a grid of angular frequencies. `S` is the transfer from disturbances at the plant output to the output; `T` is the transfer from the reference, and from sensor noise to the output. The two always sum to the identity. The loop response must be square (as many outputs as inputs).
 
 ## Parameters
 
 `system`
-: A SISO state-space or pole-zero model.
+: A `StateSpace` or a `PoleZero` open loop.
 
 `omega`
-: Real angular frequencies in radians per unit time.
+: A non-empty rank-one real floating `Series` of angular frequencies, rad/s.
 
 ## Returns
 
-A `LoopResult` with `L`, `S`, and `T` over the requested grid.
+A `LoopResult` with `response`, `sens` and `comp`.
 
 ## Errors
 
-Throws when the model is not SISO or the frequency grid is invalid.
+A system that is not square (a different number of inputs and outputs) and a scalar, empty or integer `omega` throw `pluss::Error`.
 
 ## Interpretation and Use
 
-`loop` is the response coordinator; it delegates plant evaluation to LTI and then computes `S` and `T` vectorially. Choose the overload matching the model already in hand. Both require a SISO loop because scalar unity-feedback formulas are used.
+For `L = 1 / (s (s + 1) (s + 2))` the first example shows the familiar pattern: at low frequency `|L|` is large, so `|S|` is small and `|T|` is near 1; at 10 rad/s `|L|` is 0.001 and the roles reverse. The second example checks `S = 1/(1 + L)`, `T = L/(1 + L)` and `S + T = 1` at 200 frequencies, and the fourth checks `S + T = I` as matrices for a 2 by 2 loop.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Evaluate a state-space loop.
+The loop response and both sensitivities at three frequencies.
 
-@@example Eng/api/control_loop.cpp@@
+@@example Eng/api/control_loop_values.cpp@@
 
 ### Example 2
 
-Evaluate the same feedback quantities from poles, zeros, and gain.
+The defining identities over a frequency grid.
 
-@@example Eng/api/control_loop_polezero.cpp@@
+@@example Eng/api/control_loop_identity.cpp@@
 
 ### Example 3
 
-Observe the SISO contract at failure boundaries.
+A pole-zero loop against the same loop as a state-space model.
+
+@@example Eng/api/control_loop_representations.cpp@@
+
+### Example 4
+
+A square two-input, two-output loop.
+
+@@example Eng/api/control_loop_mimo.cpp@@
+
+### Example 5
+
+Every refused input.
 
 @@example Eng/api/control_loop_errors.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="MarginResult.html">
-    <span class="label">Previous</span>
-    <span class="title">MarginResult</span>
-  </a>
-  <a class="next-link" href="margin.html">
-    <span class="label">Next</span>
-    <span class="title">margin</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

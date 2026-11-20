@@ -65,11 +65,12 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
-     | customer_id  avg_spend
+===============================
+     | customer_id  avg_spend  
 -------------------------------
-0    | 1            7.5
+0    | 1            7.5        
 1    | 2            4.666666667
-2    | 3            NULL
+2    | 3            NULL       
 -------------------------------
 [3 cs x 2 feat]
 ```
@@ -86,7 +87,7 @@ auto pulled = nx.pull("customers")
     .mean("events.spend")
     .collect();
 
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

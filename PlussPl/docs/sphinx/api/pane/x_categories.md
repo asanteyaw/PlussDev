@@ -13,7 +13,7 @@ Pane& Pane::x_categories(std::initializer_list<std::string_view> labels, double 
 
 ## What It Does
 
-Labels the x axis with names instead of numbers: the first label goes at position `first`, the next at `first + step`, and so on. It is the form of [`x_ticks`](x_ticks.md) for categorical data (bars of a bar chart, groups of a box plot) where the positions are evenly spaced, and it produces exactly the ticks that `x_ticks` would with those positions, replacing the automatic ones; [`clear_x_ticks`](x_ticks.md) removes them.
+Labels the x axis with names instead of numbers: the first label goes at position `first`, the next at `first + step`, and so on. It is the form of [`x_ticks`](x_ticks.md) for categorical data (bars of a bar chart, groups of a box plot) where the positions are evenly spaced, and it produces exactly the ticks that `x_ticks` would with those positions, replacing the automatic ones, and unless you have already set the x limits it fixes them half a step beyond the first and last label (`x_limits({first - step / 2, last + step / 2})`) so the axis shows the categories and no empty margin; [`clear_x_ticks`](x_ticks.md) removes them.
 
 The defaults put the labels at 1, 2, 3, ..., which is where the bar and box traces draw their categories. A negative `step` runs the labels downwards. Labels cannot be empty, and `first` and `step` must be finite with a non-zero `step`; otherwise the call throws `pluss::Error` and the previous ticks are kept. Ticks that fall outside the displayed range are not drawn.
 
@@ -122,18 +122,23 @@ p a b c
 
 ![Output of Example 3](img/x_categories-3-descending.svg)
 
-Example 4. The same as `x_ticks`. `x_categories` computes the positions and calls `x_ticks`, so the two give the same figure.
+Example 4. The same as `x_ticks` plus limits. `x_categories` places the labels with `x_ticks` and also fixes the x limits half a step beyond the first and last label, so the axis spans exactly the categories. With `x_ticks` alone the axis range is chosen automatically and differs; adding the limits by hand gives the same figure.
 
 ```cpp
-auto build = [&](bool through_ticks) {
+auto build = [&](bool through_ticks, bool with_limits) {
   auto fig = studio("x_categories_same");
   auto& pane = fig.pane2("p");
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 5, 4});
-  if (through_ticks) pane.x_ticks(std::vector<double>{1.0, 2.0, 3.0}, {"a", "b", "c"});
-  else pane.x_categories({"a", "b", "c"});
+  if (through_ticks) {
+    pane.x_ticks(std::vector<double>{1.0, 2.0, 3.0}, {"a", "b", "c"});
+    if (with_limits) pane.x_limits({0.5, 3.5});
+  } else {
+    pane.x_categories({"a", "b", "c"});
+  }
   return fig.to_svg();
 };
-std::cout << "equal: " << (build(true) == build(false)) << "\n";
+std::cout << "ticks alone: " << (build(true, false) == build(false, false)) << "\n";
+std::cout << "ticks and limits: " << (build(true, true) == build(false, false)) << "\n";
 auto fig = studio("x_categories_same_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 5, 4});
@@ -144,7 +149,8 @@ fig.save_svg("figure.svg");
 ### Output
 
 ```text
-equal: 1
+ticks alone: 0
+ticks and limits: 1
 ```
 
 ![Output of Example 4](img/x_categories-4-same_as_ticks.svg)

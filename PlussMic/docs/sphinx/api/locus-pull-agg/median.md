@@ -17,7 +17,7 @@ LocusPullAgg& LocusPullAgg::median(std::initializer_list<std::pair<std::string_v
 The scoped spelling of [`LocusPull::median`](../locus-pull/median.md):
 `scope.median("spend", "middle")` inside an `agg("events")` scope is exactly
 `pull.median("events.spend", "middle")`. Requires a numeric feature; see
-[`sum`](sum.md) for the shared null-for-empty and `NaN`-exclusion rules.
+[`sum`](sum.md) for the shared null-for-empty and missing-value rules.
 
 ## Parameters
 

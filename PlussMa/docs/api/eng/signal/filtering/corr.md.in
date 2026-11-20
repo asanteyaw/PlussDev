@@ -1,5 +1,7 @@
 # `signal::corr`
 
+Correlates a signal with a template along one axis.
+
 ## Signature
 
 ```cpp
@@ -12,51 +14,55 @@ pluss::Series signal::corr(
 
 ## What It Does
 
-Computes linear cross-correlation along one axis. For complex data the kernel is conjugated, so peaks retain their standard signal-processing interpretation.
+Slides the kernel along the input without reversing it, so `corr(x, k)` equals `conv(x, flip(k))`. Where convolution measures how a system blends the past, correlation measures how closely a template matches the signal at each offset.
 
 ## Parameters
 
 `input`
-: Floating or complex observations.
+: A floating or complex `Series`.
 
 `kernel`
-: Floating or complex reference pattern.
+: A rank-one floating or complex `Series`, the template.
 
 `dim`
-: Axis along which lag is evaluated.
+: The axis to correlate along; default `-1`.
 
 `mode`
-: Selects full, centered input-sized, or complete-overlap output.
+: A `ConvMode`: `Full` (default), `Same` or `Valid`.
 
 ## Returns
 
-A floating or complex correlation `Series` whose lag-axis length follows `mode`.
+A `Series` with the lengths of `conv` for the same mode.
 
 ## Errors
 
-Rejects integer inputs, invalid axes, incompatible shapes, dtypes, or platforms.
+An integer input, an empty input or kernel, and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+To locate a known pattern, correlate in `Valid` mode and take the position of the maximum: in `Valid` mode element `j` compares the template with the window starting at sample `j`, so the index of the peak is the start of the match. The peak value is the template energy when the match is exact.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+Correlation against convolution with the flipped kernel.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_corr_vs_conv.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+Finding a pattern inside a longer signal from the peak of the correlation.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_corr_lag.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_corr_errors.cpp@@
 
 ## See Also
 

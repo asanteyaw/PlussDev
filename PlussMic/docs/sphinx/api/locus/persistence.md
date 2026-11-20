@@ -83,3 +83,14 @@ survived the round trip, not just the raw catalog data.
 - [`join`](join.md): the join a restored `Locus` can run immediately, with no
   relationships to redeclare.
 - [`link`](link.md): what gets written and restored alongside the catalog data.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="notnull.html">
+    <span class="label">Previous</span>
+    <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="plan.html">
+    <span class="label">Next</span>
+    <span class="title">plan</span>
+  </a>
+</div>

@@ -58,12 +58,12 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 10, 20, 15]                                
+metric                   | Series       | Series[float64]  | 4       | [NULL, 10, 20, 15]                               
 ========================================================================================================================
 ```
 
 Each position now shows the previous position's value; position `0` has no
-predecessor, so it's `nan`.
+predecessor, so it's `NULL`.
 
 Example 2. A negative `periods` behaves like `lead()` with the sign flipped.
 
@@ -89,7 +89,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, nan]                                
+metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, NULL]                               
 ========================================================================================================================
 lead(1):
 ========================================================================================================================
@@ -98,7 +98,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, nan]                                
+metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, NULL]                               
 ========================================================================================================================
 ```
 
@@ -127,8 +127,8 @@ keys: [a, b]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-a                        | Series       | Series[float64]  | 3       | [nan, 10, 20]                                    
-b                        | Series       | Series[float64]  | 3       | [nan, 1, 2]                                      
+a                        | Series       | Series[float64]  | 3       | [NULL, 10, 20]                                   
+b                        | Series       | Series[float64]  | 3       | [NULL, 1, 2]                                     
 ========================================================================================================================
 ```
 
@@ -144,8 +144,8 @@ b                        | Series       | Series[float64]  | 3       | [nan, 1, 
 
 - [`CatalogTimeSeriesAccessor::lead`](lead.md): the mirror-image shift.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lag`](../slate-ts/lag.md): the underlying
-  single-slate engine this method delegates to.
+- [`TimeSeriesAccessor::lag`](../shelf-ts/lag.md): the underlying
+  single-shelf engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="diff.html">

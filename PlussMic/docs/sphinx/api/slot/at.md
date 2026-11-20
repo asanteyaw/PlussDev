@@ -46,8 +46,8 @@ Example 2. An out-of-bounds index throws.
 auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   auto v = slot.at(5);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

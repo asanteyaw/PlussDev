@@ -4,7 +4,7 @@
 
 An integral `∫ f dW` against a Wiener path cannot be defined as the limit of ordinary Riemann sums, because the path wiggles too much: its squared increments add up to the elapsed time rather than to zero. Where in each step the integrand is read changes the answer, and that is the whole subject of this chapter. After it you can simulate Wiener paths, compute Ito, Stratonovich and in-between integrals along them, know which sample of the path each one reads, and have the library refuse an integrand that peeks into the future.
 
-## The mental model
+## How it works
 
 Split the interval into steps. Over a step the path moves by `ΔW`. The integral adds up `f · ΔW` over the steps, and the only choice is where in the step `f` is evaluated.
 

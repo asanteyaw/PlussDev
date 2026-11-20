@@ -101,8 +101,8 @@ auto ragged = pluss::kindle::Catalog({
 
 try {
   auto out = ragged.sample(1);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

@@ -4,7 +4,7 @@
 
 Before you can build a network you need its conductances, and before you trust a one-body model you need to know when it is allowed. This page gives the resistance of the standard shapes, the Biot number that says whether a body can be lumped, fins that extend a surface, and a layered wall that turns into a network of many nodes.
 
-## The mental model
+## How it works
 
 Conduction through a layer is a resistance, `R = L / (k A)` for a plane wall, and resistances in series add. Convection at a surface is another resistance, `1 / (h A)`. A body is **lumped** (one temperature) when its internal resistance is small against its surface resistance: the Biot number `h L / k` compares them. When it is not small the temperature varies inside the body, and the body has to be divided into cells. A fin is the opposite design question: how much heat does a protrusion lose, given that its own conduction limits how much of it is useful.
 

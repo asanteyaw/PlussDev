@@ -6,13 +6,88 @@
 
 Data arrives with holes, spikes and columns on wildly different scales. This page takes two raw inputs, a sensor log and a feature table, and turns them into something you can trust: unusable values found and replaced, columns put on a common scale, outliers flagged. The programs are complete; every output below was printed by the program above it.
 
-## The mental model
+## How it works
 
 A `Series` is a rectangular block of numbers or booleans with a **shape** and a **dtype**. Every operation works on the whole block at once, so you describe *what* you want for all elements and never write the loop. The idioms of data cleaning are three:
 
 - a **comparison** such as `lt`, `gt` or `isnan` produces a Boolean `Series` of the same shape, the **mask**;
 - masks combine with `logical_or`, `logical_and` and `logical_not`;
 - a mask then **selects** (`masked_select`, which returns only the chosen values), **replaces** (`where`, `masked_fill`) or **counts** (`sum`, because `true` counts as one).
+
+## Operators and methods
+
+Arithmetic and comparison can be written with operators or with methods, and the two are the same operations: `x + y` is `x.add(y)`, `-x` is `x.neg()`, `x > 2` is `x.gt(2)`, and `+=` is `add_`. The guide uses both on purpose: operators for expressions that read like the formula on paper, methods where a call has more to say than an operator can (a power, a clamp, a reduction along an axis) or where it chains naturally with other methods. Mix them freely.
+
+```cpp
+#include <pluss/pluss.h>
+
+#include <iostream>
+
+int main() {
+  auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  auto y = pluss::make_series({10.0, 20.0, 30.0, 40.0});
+
+  // 1. Each operator has a method with the same result. allclose says the two Series agree.
+  std::cout << "x + y   == x.add(y):   " << (x + y).allclose(x.add(y)) << "\n";
+  std::cout << "x - y   == x.sub(y):   " << (x - y).allclose(x.sub(y)) << "\n";
+  std::cout << "x * y   == x.mul(y):   " << (x * y).allclose(x.mul(y)) << "\n";
+  std::cout << "y / x   == y.div(x):   " << (y / x).allclose(y.div(x)) << "\n";
+  std::cout << "-x      == x.neg():    " << (-x).allclose(x.neg()) << "\n";
+
+  // 2. A number may be on either side, and an expression reads the way it is written on paper.
+  std::cout << "2 * x + 1   : " << pluss::series::print(2.0 * x + 1.0) << "\n";
+  std::cout << "1 / x       : " << pluss::series::print(1.0 / x) << "\n";
+  std::cout << "(y - x) / x : " << pluss::series::print((y - x) / x) << "\n";
+
+  // 3. Comparisons give Boolean Series, with operators or methods.
+  std::cout << "x > 2       : " << pluss::series::print(x > 2.0) << "\n";
+  std::cout << "x.gt(2)     : " << pluss::series::print(x.gt(2.0)) << "\n";
+
+  // 4. In place: += changes the Series it is applied to. The method with a trailing underscore does the same.
+  auto a = x.clone();
+  a += y;
+  auto b = x.clone();
+  b.add_(y);
+  std::cout << "a += y      : " << pluss::series::print(a) << "\n";
+  std::cout << "b.add_(y)   : " << pluss::series::print(b) << "\n";
+
+  // 5. Methods take what operators cannot say: a power, a clamp, a fused multiply-add.
+  std::cout << "x.pow(2)           : " << pluss::series::print(x.pow(2.0)) << "\n";
+  std::cout << "y.clamp_max(25)    : " << pluss::series::print(y.clamp_max(25.0)) << "\n";
+  std::cout << "x.addcmul(x, y, 0.1): " << pluss::series::print(x.addcmul(x, y, 0.1)) << "\n";
+}
+```
+
+Output
+
+```text
+x + y   == x.add(y):   1
+x - y   == x.sub(y):   1
+x * y   == x.mul(y):   1
+y / x   == y.div(x):   1
+-x      == x.neg():    1
+2 * x + 1   : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[3.0000, 5.0000, 7.0000, 9.0000]
+1 / x       : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.0000, 0.5000, 0.3333, 0.2500]
+(y - x) / x : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[9.0000, 9.0000, 9.0000, 9.0000]
+x > 2       : Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, false, true, true]
+x.gt(2)     : Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[false, false, true, true]
+a += y      : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[11.0000, 22.0000, 33.0000, 44.0000]
+b.add_(y)   : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[11.0000, 22.0000, 33.0000, 44.0000]
+x.pow(2)           : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.0000, 4.0000, 9.0000, 16.0000]
+y.clamp_max(25)    : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[10.0000, 20.0000, 25.0000, 25.0000]
+x.addcmul(x, y, 0.1): Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[2.0000, 6.0000, 12.0000, 20.0000]
+```
+The first five lines show that each operator and its method agree. A number may be on either side (`2 * x + 1`, `1 / x`), and an expression such as `(y - x) / x` needs no intermediate names. A comparison gives a Boolean `Series` whichever way you write it. The in-place forms change the `Series` they are applied to: `a += y` and `b.add_(y)` both leave `[11, 22, 33, 44]`. The last block is what only the methods can do: `pow`, `clamp_max`, and `addcmul`, which computes `x + 0.1 * x * y` in one call. From here on the programs use whichever form reads best.
 
 ## A sensor log, start to finish
 
@@ -44,8 +119,8 @@ int main() {
   auto usable = log.masked_select(unusable.logical_not());
   show("usable", usable);
   const double centre = usable.median().item<double>();
-  // x.where(condition, other) keeps x where the condition is false and takes `other` where it is true.
-  auto repaired = log.where(unusable, centre);
+  // pluss::series::where(condition, a, b) takes `a` where the condition is true and `b` elsewhere.
+  auto repaired = pluss::series::where(unusable, centre, log);
   show("repaired", repaired);
 
   // 3. Report.
@@ -75,7 +150,7 @@ quartiles 21.975 22 22.125
 ```
 Four of twelve readings are unusable: the two NaNs, the spike and the fault. The median of the eight usable readings is 22.0 and, unlike the mean, it would not have moved had the spike been 850. Replacing with it gives a mean of 21.99 and a standard deviation of 0.27, which describes the room; the raw log's mean would have been NaN, and with the NaNs removed it would still have been dragged to 22.09 by the spike and fault. The quartiles on the last line are the numbers you would put on a chart.
 
-Two details of the program matter in practice. `where` keeps the receiver where the condition is **false** and takes the replacement where it is true, so `log.where(unusable, centre)` reads "in `log`, put `centre` where it is unusable". And the comparison `log.gt(50.0)` on a NaN is false, which is why the missing values needed their own `isnan` test.
+Two details of the program matter in practice. `pluss::series::where(unusable, centre, log)` reads "where it is unusable, take `centre`, otherwise keep `log`"; the method form keeps the receiver where the condition is true, so the same repair is `log.where(unusable.logical_not(), centre)`. And the comparison `log.gt(50.0)` on a NaN is false, which is why the missing values needed their own `isnan` test.
 
 ## Putting columns on one scale
 
@@ -112,7 +187,7 @@ int main() {
   // 3. Min-max scale to [0, 1], the other common choice when you must keep a bounded range.
   auto lo = features.amin(0, true);
   auto hi = features.amax(0, true);
-  auto scaled = features.sub(lo).div(hi.sub(lo));
+  auto scaled = (features - lo) / (hi - lo);
   show("min-max scaled", scaled);
 
   // 4. Correlation between the columns (variables are rows of the transposed matrix).
@@ -166,7 +241,7 @@ Dimension 0 runs down the rows, so `standardize(0)` and `amin(0, true)` work col
 
 ## Pitfalls
 
-`where` is the one that catches people. The program below asks four ways for "x where it is big, otherwise 0":
+`where` has one mistake that actually happens: a condition that does not line up with the data. The program below shows the two equivalent spellings of "`x` where it is big, otherwise 0" and then a condition with the wrong length:
 
 ```cpp
 #include <pluss/pluss.h>
@@ -178,34 +253,31 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 int main() {
   auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
   auto big = x.gt(2.5);
-  show("condition (x > 2.5)", big);
-  // A common mistake: expecting "x where big, otherwise 0".
-  show("x.where(big, 0)      ", x.where(big, 0.0));
-  // What was meant: replace the values that are NOT big, i.e. take 0 where the condition is false.
-  show("x.where(!big, 0)     ", x.where(big.logical_not(), 0.0));
-  // masked_fill states the intent directly: fill with 0 where the mask is true.
-  show("x.masked_fill(!big, 0)", x.masked_fill(big.logical_not(), 0.0));
-  // With a Boolean receiver the order reads naturally: condition.where(a, b) picks a where it is true.
-  show("big.where(x, 0)      ", big.where(x, pluss::make_series(0.0)));
+  // x.where(big, 0) keeps x where `big` is true and takes 0 elsewhere; the free form writes the condition first.
+  show("x.where(big, 0)              ", x.where(big, 0.0));
+  show("pluss::series::where(big, x, 0)", pluss::series::where(big, x, 0.0));
+
+  // A condition with five flags for four values cannot line up with the data.
+  try {
+    auto flags = pluss::make_series({true, false, true, false, true});
+    show("never printed", x.where(flags, 0.0));
+  } catch (const pluss::Error &e) {
+    std::cout << "wrong length: " << e.message() << "\n";
+  }
 }
 ```
 
 Output
 
 ```text
-condition (x > 2.5): Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[false, false, true, true]
-x.where(big, 0)      : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[1.0000, 2.0000, 0.0000, 0.0000]
-x.where(!big, 0)     : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+x.where(big, 0)              : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[0.0000, 0.0000, 3.0000, 4.0000]
-x.masked_fill(!big, 0): Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+pluss::series::where(big, x, 0): Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[0.0000, 0.0000, 3.0000, 4.0000]
-big.where(x, 0)      : Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[0.0000, 0.0000, 3.0000, 4.0000]
+wrong length: broadcast: incompatible shapes
 ```
-`x.where(big, 0)` returned `[1, 2, 0, 0]`: it zeroed the values that were big, the opposite of the intention. Negate the condition (`x.where(big.logical_not(), 0)`), use `masked_fill`, which says what it does, or put the Boolean first, where `big.where(x, 0)` reads naturally.
+Both spellings return `[0, 0, 3, 4]`. The five flags against four values cannot broadcast, so the call fails with a broadcast error instead of guessing: build the condition from the data it is meant for (`x.gt(2.5)`) rather than typing it separately.
 
 ## Where next
 
-Reference pages: [`isnan`](../../sphinx/api/series/isnan.md), [`masked_select`](../../sphinx/api/series/masked_select.md), [`masked_fill`](../../sphinx/api/series/masked_fill.md), [`where`](../../sphinx/api/series/where.md), [`median`](../../sphinx/api/series/median.md), [`quantile`](../../sphinx/api/series/quantile.md), [`standardize`](../../sphinx/api/series/standardize.md), [`amin`](../../sphinx/api/series/amin.md), [`amax`](../../sphinx/api/series/amax.md), [`corrcoef`](../../sphinx/api/series/corrcoef.md). Next: [Summaries, rankings and tables](summaries_and_tables.md).
+Reference pages: [`add`](../../sphinx/api/series/add.md), [`sub`](../../sphinx/api/series/sub.md), [`mul`](../../sphinx/api/series/mul.md), [`div`](../../sphinx/api/series/div.md), [`neg`](../../sphinx/api/series/neg.md), [`gt`](../../sphinx/api/series/gt.md), [`pow`](../../sphinx/api/series/pow.md), [`clamp_max`](../../sphinx/api/series/clamp_max.md), [`addcmul`](../../sphinx/api/series/addcmul.md), [`operators`](../../sphinx/api/series/operators.md), [`isnan`](../../sphinx/api/series/isnan.md), [`masked_select`](../../sphinx/api/series/masked_select.md), [`masked_fill`](../../sphinx/api/series/masked_fill.md), [`where`](../../sphinx/api/series/where.md), [`median`](../../sphinx/api/series/median.md), [`quantile`](../../sphinx/api/series/quantile.md), [`standardize`](../../sphinx/api/series/standardize.md), [`amin`](../../sphinx/api/series/amin.md), [`amax`](../../sphinx/api/series/amax.md), [`corrcoef`](../../sphinx/api/series/corrcoef.md). Next: [Summaries, rankings and tables](summaries_and_tables.md).

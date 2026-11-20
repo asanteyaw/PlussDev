@@ -295,6 +295,14 @@ enum class Engine : std::uint8_t { Auto = 0, Structural = 1, Jet = 2 };
 [[nodiscard]] Operator taylor(pluss::StackArray<std::string_view> variables,
                               pluss::RangeView<double> center,
                               std::int64_t order, DiffOptions options = {});
+// Braced lists of names and centres. Without this overload a call such as taylor({"x", "y"}, {0.0}, 2) binds the first list to a single
+// std::string_view (its iterator-pair constructor) and the second to one centre, so the mismatch between two variables and one centre
+// would go unnoticed; here it reaches the length check of the multi-variable form and is reported.
+[[nodiscard]] inline Operator taylor(std::initializer_list<const char *> variables,
+                                     std::initializer_list<double> center, std::int64_t order,
+                                     DiffOptions options = {}) {
+  return taylor(pluss::StackArray<std::string_view>(variables), pluss::RangeView<double>(center), order, options);
+}
 // Companion operators of the Taylor expansion, reached as taylor().name(...).
 struct Taylor {
   // The coefficients f^(k)(a) / k!, k = 0..order, as a vector-valued Function

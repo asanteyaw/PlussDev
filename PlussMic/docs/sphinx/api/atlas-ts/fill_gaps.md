@@ -44,9 +44,8 @@ Example 1. Forward-fill a gapped feature stacked across two frames.
 ```cpp
 using namespace pluss::table;
 
-auto nan = std::numeric_limits<double>::quiet_NaN();
-auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, nan, nan, 30.0}))}});
-auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, nan, 14.0, nan}))}});
+auto q1 = DataFrame({{"load", Shelf(pluss::make_series({10.0, 0.0, 0.0, 30.0}), pluss::make_series(std::vector<bool>{true, false, false, true}))}});
+auto q2 = DataFrame({{"load", Shelf(pluss::make_series({12.0, 0.0, 14.0, 0.0}), pluss::make_series(std::vector<bool>{true, false, true, false}))}});
 auto atlas = Atlas({q1, q2});
 
 auto out = atlas.ts().fill_gaps();
@@ -80,13 +79,12 @@ Each frame's gaps are carried forward using only that frame's own values —
 `frame(1)`'s row `3` carries forward `14` from `frame(1)`'s own row `2`, never a
 value from `frame(0)`.
 
-```{important} A NaN literal is used here, not std::nullopt, to build the gapped Series
-`pluss::make_series({10.0, std::nullopt, ...})` — the pattern shown in several other
-already-published pages — currently fails to compile in this build (a confirmed
-library issue: `DataReader` has no `std::optional<double>` element-type support).
-The example above works around it by using
-`std::numeric_limits<double>::quiet_NaN()` directly, which the display layer already
-renders identically to a genuine null cell.
+```{note} How the gapped columns are built
+`pluss::make_series({10.0, std::nullopt, ...})` does not compile in this build (`DataReader`
+has no `std::optional<double>` element-type support), so the example builds each column from
+its values plus a validity mask: the `0.0` under a missing cell is only a placeholder. A
+`NaN` would not do here, because a `NaN` is a value and not a gap (see
+[Missing, NaN and infinity](../../guide/missing_nan_and_inf.md)).
 ```
 
 ## Notes

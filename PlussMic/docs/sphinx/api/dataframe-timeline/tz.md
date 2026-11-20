@@ -41,7 +41,7 @@ Example 1. Relabel a UTC `Timeline` feature to `"America/New_York"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-07-15T09:15:30Z",
       }))}});
@@ -87,7 +87,7 @@ other three supported names.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-07-15T09:15:30Z",
       }))}});
@@ -132,7 +132,7 @@ exactly.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-07-15T09:15:30Z",
       }))}});
@@ -178,7 +178,7 @@ the original instants come back exactly.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-07-15T09:15:30Z",
       }))}});
@@ -224,12 +224,12 @@ Example 5. Pass an unrecognized timezone name to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({"2024-01-31T09:15:30Z"}))}});
+    {{"ts", Shelf(pluss::make_timeline({"2024-01-31T09:15:30Z"}))}});
 
 try {
   auto out = events.tl().tz("Asia/Tokyo");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

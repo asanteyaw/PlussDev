@@ -1,5 +1,7 @@
 # `lti::freqresp`
 
+Evaluates a system's frequency response on a grid.
+
 ## Signature
 
 ```cpp
@@ -14,45 +16,55 @@ pluss::Series lti::freqresp(
 
 ## What It Does
 
-Evaluates complex frequency response without forcing representation conversion. State-space evaluation solves the resolvent; pole-zero evaluation forms root products. Both follow the same angular-frequency and timebase convention.
+Returns `G(j w)` for a continuous system or `G(e^{j w T})` for a discrete one with sample time `T`, for each angular frequency `w` in rad/s. There is an overload for a `StateSpace` (`C (j w I - A)^{-1} B + D`) and one for a `PoleZero`.
 
 ## Parameters
 
 `system`
-: State-space or pole-zero model. Continuous systems evaluate at `jω`; discrete systems evaluate at `exp(jωT)`.
+: A `StateSpace` or `PoleZero`.
 
 `omega`
-: Nonempty rank-one real floating angular-frequency grid on the same platform as the system.
+: A non-empty rank-one floating `Series` of angular frequencies, rad/s.
 
 ## Returns
 
-For pole-zero input, a complex vector over frequency. For state-space input, complex output/input response matrices with frequency on the final axis and batch axes preserved.
+For a `StateSpace`, a complex `Series` of shape `[outputs, inputs, omega]` (with batch axes); for a `PoleZero`, a complex `Series` with the shape of `omega`.
 
 ## Errors
 
-Rejects undefined, empty, scalar, integer, complex, or cross-platform frequency grids. Singular state-space resolvents may fail at poles.
+A scalar, empty or integer `omega` throws `pluss::Error`.
+
+## Interpretation and Use
+
+The first example compares `1 / (s + 1)` with `1 / (1 + j w)` at three frequencies. The third shows that the state-space and pole-zero forms of the same system agree to rounding. Take `abs()` for the gain and `arg()` for the phase; the gain in decibels is `20 log10 |G|`.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect stability, response, and second-order-section realization.
+A first-order system against its closed form.
 
-@@example Eng/api/lti_pole_zero.cpp@@
+@@example Eng/api/lti_freqresp_first_order.cpp@@
 
 ### Example 2
 
-Compare frequency response across equivalent system representations.
+The shape for one and for several inputs and outputs.
 
-@@example Eng/api/lti_response.cpp@@
+@@example Eng/api/lti_freqresp_shape.cpp@@
 
 ### Example 3
 
-Exercise frequency-grid and realization validation.
+One system in both representations.
 
-@@example Eng/api/lti_response_errors.cpp@@
+@@example Eng/api/lti_freqresp_same_system.cpp@@
+
+### Example 4
+
+Every refused grid.
+
+@@example Eng/api/lti_freqresp_errors.cpp@@
 
 ## See Also
 

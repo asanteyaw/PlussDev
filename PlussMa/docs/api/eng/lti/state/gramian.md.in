@@ -1,4 +1,6 @@
-# `lti::gram`
+# `lti::gramian`
+
+Solves the Lyapunov equation of a stable system for its Gramian.
 
 ## Signature
 
@@ -11,48 +13,52 @@ pluss::Series lti::gram(
 
 ## What It Does
 
-Computes a reachability or observability Gramian by delegating to the shared continuous or discrete Lyapunov solver selected from the system timebase.
+Returns the reachability Gramian `W` with `A W + W A' + B B' = 0` or the observability Gramian with `A' W + W A + C' C = 0` for a continuous system, and the discrete equations `W = A W A' + B B'` and `W = A' W A + C' C` for a discrete one. The Gramian measures how much energy an input needs to reach each state direction, or how much output energy a state produces.
 
 ## Parameters
 
 `system`
-: State-space dynamics and input/output matrices.
+: A `StateSpace`. It must be stable.
 
 `side`
-: `Gram::Reach` uses `B Bᴴ`; `Gram::Observe` uses `Cᴴ C` and conjugate-transposed dynamics.
+: `Gram::Reach` or `Gram::Observe`.
 
 `options`
-: Public matrix-equation solver controls for tolerances and numerical policy.
+: Solver settings of the Lyapunov solver.
 
 ## Returns
 
-A square `Series` with tail `[states, states]` and broadcast system batch axes.
+A `Series` of shape `[n, n]` (with batch axes): symmetric and positive semidefinite.
 
 ## Errors
 
-May reject or fail to converge for invalid solver options, unstable or singular Lyapunov structure, or numerically ill-conditioned dynamics.
+An unstable or marginal system throws `pluss::Error`: the message names the stability condition that failed and appends the solver's own message.
+
+## Interpretation and Use
+
+For a scalar system `x' = a x + b u` the reachability Gramian is `b^2 / (2 |a|)` and the observability Gramian `c^2 / (2 |a|)`, which the first example checks. The second shows the residual of the Lyapunov equation at rounding level for the oscillator. Use the Gramians for balanced truncation, for the energy needed to reach a state and for the H2 norm.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+A scalar system against the closed form.
 
-@@example Eng/api/lti_state.cpp@@
+@@example Eng/api/lti_gram_scalar.cpp@@
 
 ### Example 2
 
-Compare energy Gramians across continuous and discrete timebases.
+The residual of both Lyapunov equations for the oscillator.
 
-@@example Eng/api/lti_gram.cpp@@
+@@example Eng/api/lti_gram_residual.cpp@@
 
 ### Example 3
 
-Exercise matrix-shape and sample-time validation.
+Systems for which no Gramian exists.
 
-@@example Eng/api/lti_state_errors.cpp@@
+@@example Eng/api/lti_gram_errors.cpp@@
 
 ## See Also
 

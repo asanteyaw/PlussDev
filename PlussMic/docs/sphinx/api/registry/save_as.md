@@ -86,8 +86,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   rg.save_as("xml", "cities.xml");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

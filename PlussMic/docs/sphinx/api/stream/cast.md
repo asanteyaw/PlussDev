@@ -8,18 +8,18 @@
 ## Signatures
 
 ```cpp
-Stream Stream::cast(pluss::table::SlateCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const
-Stream Stream::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options) const
+Stream Stream::cast(pluss::table::ShelfCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const
+Stream Stream::cast(pluss::table::ShelfCastTarget target, const pluss::table::ShelfCastOptions& options) const
 ```
 
 ## What It Does
 
 Converts the stream to a different payload kind (`Series`, `Note`, `Timeline`,
-`TimeIndex`), delegating to `Slate::cast()`; see [`Slate::cast`](../slate/cast.md) for
-the full breakdown of what each `SlateCastTarget` means and how `SlateCastOptions`
+`TimeIndex`), delegating to `Shelf::cast()`; see [`Shelf::cast`](../shelf/cast.md) for
+the full breakdown of what each `ShelfCastTarget` means and how `ShelfCastOptions`
 (dtype selection, parse-failure handling) affects the conversion. The first overload is a
 convenience shorthand accepting just a `series_dtype` directly instead of a full
-`SlateCastOptions`; the second accepts the full options struct.
+`ShelfCastOptions`; the second accepts the full options struct.
 
 ```{note} cast() also has a no-argument accessor-returning overload
 `Stream::cast()` (no arguments) and `Stream::cast(options)` (options only, no target)
@@ -31,17 +31,17 @@ the primary, most commonly used path.
 
 ## Parameters
 
-**target** (`pluss::table::SlateCastTarget`)
+**target** (`pluss::table::ShelfCastTarget`)
     The payload kind to cast to — `Series`, `Note`, `Timeline`, or `TimeIndex`.
 
 **series_dtype** (`std::optional<pluss::codem::ScalarType>`, first overload, defaults to
 `std::nullopt`)
     The numeric dtype to use when `target` is `Series`. Shorthand for setting just this one
-    field of `SlateCastOptions`.
+    field of `ShelfCastOptions`.
 
-**options** (`const pluss::table::SlateCastOptions&`, second overload)
+**options** (`const pluss::table::ShelfCastOptions&`, second overload)
     The full conversion policy — `series_dtype` and `invalid` (parse-failure handling). See
-    [`Slate::cast`](../slate/cast.md) for the complete breakdown.
+    [`Shelf::cast`](../shelf/cast.md) for the complete breakdown.
 
 ## Returns
 
@@ -55,7 +55,7 @@ Example 1. Cast numeric-looking text to `Series`, letting the dtype be inferred.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"1", "2", "3"}));
 
-std::cout << stream.cast(pluss::table::SlateCastTarget::Series);
+std::cout << stream.cast(pluss::table::ShelfCastTarget::Series);
 ```
 
 ### Output
@@ -78,7 +78,7 @@ Example 2. Request a specific numeric dtype via the shorthand `series_dtype` arg
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"1", "2", "3"}));
 
-auto out = stream.cast(pluss::table::SlateCastTarget::Series, pluss::codem::ScalarType::Int64);
+auto out = stream.cast(pluss::table::ShelfCastTarget::Series, pluss::codem::ScalarType::Int64);
 std::cout << out;
 ```
 
@@ -97,14 +97,14 @@ label        | value
 ========================================================================================================================
 ```
 
-Example 3. The full `SlateCastOptions` overload does the same thing, spelled out.
+Example 3. The full `ShelfCastOptions` overload does the same thing, spelled out.
 
 ```cpp
-pluss::table::SlateCastOptions options;
+pluss::table::ShelfCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Int64;
 
 auto stream = pluss::kindle::Stream(pluss::make_note({"1", "2", "3"}));
-std::cout << stream.cast(pluss::table::SlateCastTarget::Series, options);
+std::cout << stream.cast(pluss::table::ShelfCastTarget::Series, options);
 ```
 
 ### Output
@@ -124,8 +124,8 @@ label        | value
 
 ## Notes
 
-- Follows the same per-target conversion rules as [`Slate::cast`](../slate/cast.md),
-  including its documented quirk that `SlateCastOptions::invalid` only actually takes
+- Follows the same per-target conversion rules as [`Shelf::cast`](../shelf/cast.md),
+  including its documented quirk that `ShelfCastOptions::invalid` only actually takes
   effect for the `Timeline` target.
 - The no-argument `cast()`/`cast(options)` accessor overloads (returning
   `StreamCastAccessor`) are out of scope for this page — see the note above.
@@ -135,7 +135,7 @@ label        | value
 ## See Also
 
 - [`Stream::astype`](astype.md): the shorthand for `cast(Series, {.series_dtype = dtype})`.
-- [`Slate::cast`](../slate/cast.md): the underlying single-stream conversion this method
+- [`Shelf::cast`](../shelf/cast.md): the underlying single-stream conversion this method
   delegates to.
 
 <div class="pluss-inline-prev-next">

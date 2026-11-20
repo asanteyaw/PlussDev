@@ -290,6 +290,7 @@ kind = "class"
 family = "eng/lti/state"
 page = "api/eng/lti/state/StateSpace.md"
 summary = "An immutable continuous- or discrete-time state-space system with broadcast batch axes."
+methods = ["a", "b", "c", "d", "inputs", "is_cont", "is_disc", "outputs", "sample_time", "states"]
 
 [[symbol]]
 qualname = "lti::Gram"
@@ -333,6 +334,7 @@ kind = "class"
 family = "eng/lti/response"
 page = "api/eng/lti/response/PoleZero.md"
 summary = "An immutable zero-pole-gain system with explicit timebase and stability inspection."
+methods = ["gain", "is_cont", "is_disc", "is_stable", "poles", "sample_time", "zeros"]
 
 [[symbol]]
 qualname = "lti::zpk"
@@ -538,6 +540,7 @@ kind = "class"
 family = "eng/control/controllers"
 page = "api/eng/control/controllers/PidController.md"
 summary = "An immutable continuous or discrete parallel-form PID controller."
+methods = ["diff_rule", "filter", "int_rule", "is_cont", "is_disc", "kd", "ki", "kp", "sample_time"]
 
 [[symbol]]
 qualname = "control::place"
@@ -599,6 +602,7 @@ kind = "class"
 family = "eng/control/mpc"
 page = "api/eng/control/mpc/Plan.md"
 summary = "A compiled finite-horizon MPC problem with reusable factorization."
+methods = ["dtype", "horizon", "inputs", "platform", "states"]
 
 [[symbol]]
 qualname = "control::mpc::build"
@@ -689,6 +693,7 @@ kind = "class"
 family = "eng/structure/model"
 page = "api/eng/structure/model/TrussModel.md"
 summary = "An immutable compiled truss of pin-jointed bars."
+methods = ["bars", "dim", "nodes"]
 
 [[symbol]]
 qualname = "structure::Frame"
@@ -696,6 +701,7 @@ kind = "class"
 family = "eng/structure/model"
 page = "api/eng/structure/model/FrameModel.md"
 summary = "An immutable compiled frame of rigidly jointed members."
+methods = ["dofs", "members", "nodes"]
 
 [[symbol]]
 qualname = "structure::truss"
@@ -999,6 +1005,7 @@ kind = "class"
 family = "eng/power/model"
 page = "api/eng/power/model/Grid.md"
 summary = "An immutable compiled network."
+methods = ["base", "base_power", "batch_shape", "buses", "dtype", "gens", "lines", "platform", "ybus", "yfrom", "yto"]
 
 [[symbol]]
 qualname = "power::make"
@@ -1346,6 +1353,7 @@ kind = "class"
 family = "eng/circuit/model"
 page = "api/eng/circuit/model/CircuitModel.md"
 summary = "An immutable compiled circuit."
+methods = ["batch_shape", "diodes", "dtype", "mosfets", "nodes", "platform", "transistors", "unknowns"]
 
 [[symbol]]
 qualname = "circuit::make"
@@ -1485,6 +1493,7 @@ kind = "class"
 family = "eng/robot/model"
 page = "api/eng/robot/model/RobotModel.md"
 summary = "An immutable compiled robot."
+methods = ["dtype", "has_mass", "links", "parent", "platform"]
 
 [[symbol]]
 qualname = "robot::make"
@@ -2159,6 +2168,7 @@ kind = "class"
 family = "eng/fluid/model"
 page = "api/eng/fluid/model/Network.md"
 summary = "The compiled, immutable pipe network."
+methods = ["batch_shape", "dtype", "junctions", "links", "liquid", "nodes", "pipes", "platform", "pumps", "reservoirs", "tanks", "valves"]
 
 [[symbol]]
 qualname = "fluid::network"

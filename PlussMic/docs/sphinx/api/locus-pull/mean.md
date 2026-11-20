@@ -14,7 +14,7 @@ LocusPull& LocusPull::mean(std::string_view source, std::string_view alias = {})
 
 The arithmetic mean of the usable (non-null) related values of `source` for
 each root record. Requires a numeric stream, the same as [`sum`](sum.md) --
-see that page for the shared null-for-empty and `NaN`-exclusion rules every
+see that page for the shared null-for-empty and missing-value rules every
 numeric reducer follows. Omitting `alias` derives one from the source:
 `"events.spend"` becomes `"events_spend_mean"`.
 
@@ -75,7 +75,7 @@ text mean: Stream::reduce_groups: this reduction needs a numeric Series stream
 
 ## See Also
 
-- [`sum`](sum.md): the null-for-empty and `NaN`-exclusion rules this page
+- [`sum`](sum.md): the null-for-empty and missing-value rules this page
   shares.
 - [`median`](median.md): the order-statistic center, instead of the
   arithmetic one.

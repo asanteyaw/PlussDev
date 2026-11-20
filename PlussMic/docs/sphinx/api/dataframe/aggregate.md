@@ -70,8 +70,8 @@ Example 1. Build a compact summary row from three different reductions.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"region", Slate(pluss::make_note({"East", "West", "East", "West", "East"}))},
-    {"amount", Slate(pluss::make_series({120.0, 85.0, 200.0, 60.0, 95.0}))},
+    {"region", Shelf(pluss::make_note({"East", "West", "East", "West", "East"}))},
+    {"amount", Shelf(pluss::make_series({120.0, 85.0, 200.0, 60.0, 95.0}))},
 });
 
 auto summary = orders.aggregate({
@@ -156,8 +156,8 @@ try {
   auto bad = orders.aggregate({
       {"bad", "region", DataFrame::SummaryOp::Sum},
   });
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
@@ -166,8 +166,8 @@ try {
       {"x", "amount", DataFrame::SummaryOp::Sum},
       {"x", "amount", DataFrame::SummaryOp::Mean},
   });
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -175,7 +175,7 @@ try {
 ### Output
 
 ```text
-DataFrame::summarize: numeric reductions require numeric Series feature
+DataFrame::summarize: numeric reductions require Series feature
 DataFrame::summarize: duplicate output name 'x'
 ```
 

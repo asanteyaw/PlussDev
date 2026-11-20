@@ -6,9 +6,9 @@
 
 Most table work ends in a report: totals by group, the best few rows, customers matched to their orders. This page builds two such reports end to end, one from a single table and one from two tables that must be joined, with complete programs and the output they print.
 
-## The mental model
+## How it works
 
-A `DataFrame` is a set of named features (columns), each a typed `Slate`, with one row per case. Work on it is a pipeline of calls that each return a new frame, so a report is a chain: derive a feature with `assign`, filter with `query`, order with `arrange`, summarise with `group(...).by(...).agg(...)` or `aggregate`. Relational questions that involve several tables (a join, a left join to find what is missing) are easier in SQL: `frame.sql(options).execute(...)` runs a `SELECT` over the frame, which is named `df`, and over other frames you bind by name.
+A `DataFrame` is a set of named features (columns), each a typed `Shelf`, with one row per case. Work on it is a pipeline of calls that each return a new frame, so a report is a chain: derive a feature with `assign`, filter with `query`, order with `arrange`, summarise with `group(...).by(...).agg(...)` or `aggregate`. Relational questions that involve several tables (a join, a left join to find what is missing) are easier in SQL: `frame.sql(options).execute(...)` runs a `SELECT` over the frame, which is named `df`, and over other frames you bind by name.
 
 ## A sales report
 

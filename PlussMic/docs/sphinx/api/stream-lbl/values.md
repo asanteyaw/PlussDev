@@ -81,10 +81,10 @@ label's own content and kind — not a synthesized range, and not the bound
 stream's numeric values.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .lbl().set(Slate(pluss::make_note({"x", "y", "z"})));
+                   .lbl().set(Shelf(pluss::make_note({"x", "y", "z"})));
 
 std::cout << "result has(): " << std::boolalpha << labeled.lbl().values().lbl().has() << "\n";
 std::cout << labeled.lbl().values();

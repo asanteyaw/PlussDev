@@ -4,7 +4,7 @@
 
 You know where the hand should be and you want the joint values that put it there. `robot::ik` finds them by **damped least squares**: it measures how far the link is from the target, builds the Jacobian, and moves the joints by a damped pseudo-inverse step, repeating until the error is below a tolerance. This page solves position and pose targets on a six-joint arm, solves a batch of targets in one call, shows what an unreachable target looks like, and shows the controls of the iteration.
 
-## The mental model
+## How it works
 
 Each iteration computes the task error `e` (the position error, with a weighted orientation error appended when a target rotation is given), takes the Jacobian `J` of the link, and moves the joints by `J^T (J J^T + lambda^2 I)^-1 e`. The damping `lambda` keeps the step finite near singular configurations, where a plain pseudo-inverse would demand enormous joint motions. The orientation error is `0.5 (R_target R^T - R R_target^T)` read as a vector: the sine of the turning angle along the turning axis.
 

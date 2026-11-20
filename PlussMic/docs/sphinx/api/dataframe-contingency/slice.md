@@ -59,9 +59,9 @@ Example 1. Fix one dimension and then render the remaining two-way table.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto out = df.contingency({"city", "channel", "weekend"})
@@ -95,12 +95,12 @@ std::cout << out;
 ### Output
 
 ```text
-=================
+====================
      | channel  freq
------------------
-0    | Card     1
-1    | Cash     1
------------------
+--------------------
+0    | Card     1   
+1    | Cash     1   
+--------------------
 [2 cs x 2 feat]
 ```
 
@@ -113,9 +113,9 @@ Example 3. Use the typed boolean overload instead of stringifying a logical leve
 
 ```cpp
 auto flags = DataFrame({
-    {"segment", Slate(pluss::make_note({"A", "A", "B", "B"}))},
-    {"active",  Slate(pluss::make_series({true, false, true, false}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Cash", "Card", "Cash"}))},
+    {"segment", Shelf(pluss::make_note({"A", "A", "B", "B"}))},
+    {"active",  Shelf(pluss::make_series({true, false, true, false}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Cash", "Card", "Cash"}))},
 });
 
 auto out = flags.contingency({"segment", "active", "channel"})
@@ -127,12 +127,12 @@ std::cout << out;
 ### Output
 
 ```text
-=======================
+==========================
      | segment  Card  Cash
------------------------
-0    | A        0     1
-1    | B        1     0
------------------------
+--------------------------
+0    | A        0     1   
+1    | B        1     0   
+--------------------------
 [2 cs x 3 feat]
 ```
 

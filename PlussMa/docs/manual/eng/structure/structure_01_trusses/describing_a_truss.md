@@ -6,7 +6,7 @@
 
 You have a framework of straight bars pinned together and you want to know how it behaves under load. `structure::truss` takes the geometry and the bar properties, checks that they describe a real structure, and compiles them into a `Truss` that the solvers analyse. This page explains how a truss is written down: the nodes and the bars between them, the cross-section and material of each bar, what the compiled `Truss` reports, and the checks that reject a description that cannot be a structure.
 
-## The mental model
+## How it works
 
 A truss has **nodes** (the pins) and **bars** (the straight members between two nodes). It is described by two small structures:
 

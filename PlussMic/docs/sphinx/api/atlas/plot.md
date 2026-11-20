@@ -42,7 +42,7 @@ own `DataFramePlotAccessor` for the familiar 2D chart methods.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 
@@ -67,9 +67,9 @@ auto frame_plot = atlas.plot().frames(0);
   method doesn't take a feature selector of its own.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nfeatures.html">
+  <a class="prev-link" href="notnull.html">
     <span class="label">Previous</span>
-    <span class="title">nfeatures</span>
+    <span class="title">notnull</span>
   </a>
   <a class="next-link" href="relabel_depth.html">
     <span class="label">Next</span>

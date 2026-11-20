@@ -1,8 +1,8 @@
 <!-- generated from Weights.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# `control::mpc::Weights`
+# `control::Weights`
 
-Quadratic state, input, and terminal penalties for finite-horizon MPC.
+The cost weights of the predictive-control problem.
 
 ## Signature
 
@@ -12,183 +12,199 @@ control::mpc::Weights
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+The cost over the horizon is the sum of `(x - r)' Q (x - r) + u' R u` over the steps plus a terminal term `(x_N - r)' P (x_N - r)`. `Weights` holds `Q`, `R` and `P`.
 
 ## Fields
 
-### `state`
-
-Stage state-error weight `Q`, scalar/diagonal/full matrix or compatible batch.
-
-### `input`
-
-Stage input weight `R`, required to define the control penalty.
-
-### `terminal`
-
-Optional terminal state weight. An undefined value reuses the stage state weight.
+| Field | Meaning |
+|---|---|
+| `state` | `Q`, `[..., n, n]`, symmetric positive semidefinite: the cost of tracking error. |
+| `input` | `R`, `[..., m, m]`, symmetric positive definite: the cost of control effort. |
+| `terminal` | `P`, `[..., n, n]`, optional: the cost of the final tracking error; when omitted the state weight `Q` is used. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Member of the argument list of `build` and `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A state weight that is not positive semidefinite, an input weight that is not positive definite and weights of the wrong size throw `pluss::Error` when the plan is built.
 
 ## Interpretation and Use
 
-Larger state weights prioritize tracking; larger input weights reduce control effort. The terminal weight shapes the horizon boundary and should represent value beyond the final optimized step. Undefined terminal weight deliberately reuses the stage state weight.
+A heavier `R` makes effort costly: with `R = 10` the first move is 0.25 and the state reaches only 0.62 by the end of the horizon, against 0.99 and 1.00 for `R = 0.01` (the first example). A heavier `Q` tracks harder (the third example): the first move rises from 0.62 to 0.92 to 0.99 as `Q` goes from 0.1 to 1 to 10. The terminal weight pulls the end of the horizon onto the reference (the second example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Solve with explicit state/input weights and the default terminal fallback.
+The effect of the input weight.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}, {1, 1}), 1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({0.5}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.25}), pluss::make_series({0.25})};
-  control::mpc::Options options;
-  options.horizon = 3;
-  options.qp.max_iters = 1000;
-  options.qp.abs_tol = 1e-7;
-  options.qp.rel_tol = 1e-7;
-
-  const control::mpc::Result result = control::mpc::solve(
-      plant, pluss::make_series({0.0}), pluss::make_series({1.0}),
-      weights, bounds, options);
-
-  out.writeln("bounded controls =", result.controls.flatten().items<double>());
-  out.writeln("predicted states =", result.states.flatten().items<double>());
-  out.writeln("iterations =", result.optimization.iterations);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A heavier input weight makes effort costly: a gentler first move.
+  for (const double r : {0.01, 0.1, 10.0}) {
+    const mpc::Result res = run(r);
+    out.writeln("input weight", r, ": first control", res.control.items<double>()[0], " final predicted state", res.states.flatten().items<double>().back());
+  }
 }
 ```
 
 Output
 
 ```text
-bounded controls = [0.250000, 0.250000, 0.250000]
-predicted states = [0.250000, 0.500000, 0.750000]
-iterations = 40
+input weight 0.0100 : first control 0.9902  final predicted state 1.0000
+input weight 0.1000 : first control 0.9161  final predicted state 1.0000
+input weight 10.0000 : first control 0.2520  final predicted state 0.6245
 ```
 ### Example 2
 
-Add a stronger terminal weight and inspect the resulting trajectory.
+The effect of the terminal weight.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.1}, {1, 1}),
-      pluss::make_series({2.0}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.4}), pluss::make_series({0.4}),
-      pluss::make_series({-2.0}), pluss::make_series({1.05})};
-  control::mpc::Options options;
-  options.horizon = 4;
-  options.qp.abs_tol = 1e-7;
-  options.qp.rel_tol = 1e-7;
-  const control::mpc::Result result = control::mpc::solve(
-      plant, pluss::make_series({0.0}), pluss::make_series({1.0}),
-      weights, bounds, options);
-
-  out.writeln("first control =", result.control.items<double>());
-  out.writeln("controls =", result.controls.flatten().items<double>());
-  out.writeln("states =", result.states.flatten().items<double>());
-  out.writeln("converged =", result.optimization.converged);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // The terminal weight pulls the end of the horizon toward the reference.
+  for (const double t : {0.0, 2.0, 50.0}) {
+    const mpc::Result res = run(0.1, generous(), 4, t);
+    out.writeln("terminal weight", t, ": state at the end of the horizon", res.states.flatten().items<double>().back(), "(reference 1)");
+  }
 }
 ```
 
 Output
 
 ```text
-first control = [0.400000]
-controls = [0.400000, 0.400000, 0.183267, 0.015936]
-states = [0.400000, 0.800000, 0.983267, 0.999203]
-converged = true
+terminal weight 0.0000 : state at the end of the horizon 0.9994 (reference 1)
+terminal weight 2.0000 : state at the end of the horizon 1.0000 (reference 1)
+terminal weight 50.0000 : state at the end of the horizon 1.0000 (reference 1)
 ```
 ### Example 3
 
-See invalid planning contexts rejected before weights are used.
+The effect of the state weight.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.1}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.5}), pluss::make_series({0.5})};
-  try {
-    const lti::StateSpace continuous = lti::state(
-        pluss::make_series({-1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1}));
-    static_cast<void>(control::mpc::build(continuous, weights, bounds));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    const lti::StateSpace discrete = lti::state(
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1}), 1.0);
-    static_cast<void>(control::mpc::build(
-        discrete, weights, bounds, {.horizon = 0}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero horizon rejected =", message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A heavier state weight tracks the reference harder.
+  for (const double q : {0.1, 1.0, 10.0}) {
+    const mpc::Weights wts{mat({q}, 1, 1), mat({0.1}, 1, 1), mat({0.0}, 1, 1)};
+    const mpc::Result res = mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), wts, generous(), with_horizon(4));
+    out.writeln("state weight", q, ": first control", res.control.items<double>()[0], " states", res.states.flatten().items<double>());
   }
 }
 ```
@@ -196,14 +212,64 @@ int main() {
 Output
 
 ```text
-continuous plant rejected = eng::control::mpc::solve: system must be discrete
-zero horizon rejected = eng::control::mpc::solve: horizon must be positive
+state weight 0.1000 : first control 0.6154  states [0.6154, 0.8462, 0.9231, 0.9231]
+state weight 1.0000 : first control 0.9161  states [0.9161, 0.9930, 0.9994, 0.9994]
+state weight 10.0000 : first control 0.9902  states [0.9902, 0.9999, 1.0000, 1.0000]
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="Bounds.html">
-    <span class="label">Next</span>
-    <span class="title">Bounds</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused weight.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "a negative state weight", [] { mpc::build(plant(), {mat({-1.0}, 1, 1), mat({0.1}, 1, 1), mat({0.0}, 1, 1)}, generous(), with_horizon(4)); });
+  refused(out, "an input weight that is not positive definite", [] { mpc::build(plant(), {mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({0.0}, 1, 1)}, generous(), with_horizon(4)); });
+  refused(out, "a state weight of the wrong size", [] { mpc::build(plant(), {pluss::series::eye(2, pluss::ScalarType::Float64), mat({0.1}, 1, 1), mat({0.0}, 1, 1)}, generous(), with_horizon(4)); });
+}
+```
+
+Output
+
+```text
+a negative state weight : eng::control::mpc::solve: weights.state must be positive semidefinite
+an input weight that is not positive definite : eng::control::mpc::solve: weights.input must be positive definite
+a state weight of the wrong size : eng::control::mpc::solve: weights.state must end in a square 1 by 1 matrix
+```

@@ -109,8 +109,8 @@ auto measurements = pluss::kindle::Catalog({
 
 try {
   auto bad = measurements.plot3d().line("nope", "humidity", "pressure");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

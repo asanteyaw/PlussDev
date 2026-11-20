@@ -522,9 +522,9 @@ Series heston_variance_step_(const Series& vt,
   const Series beta = p_zero.mul(-1.0).add(1.0).div(m.clamp_min(kEps));
   const Series u = u_qe.clamp_min(kEps).clamp_max(1.0 - kEps);
   const Series v2_nonzero = u.sub(1.0).div(p_zero.sub(1.0).clamp_max(-kEps)).log().mul(-1.0).div(beta.clamp_min(kEps));
-  const Series v2 = u.le(p_zero).where(pluss::series::zeros(vt.sizes(), vt_cfg), v2_nonzero);
+  const Series v2 = pluss::series::where(u.le(p_zero), pluss::series::zeros(vt.sizes(), vt_cfg), v2_nonzero);
 
-  return use_q1.where(v1, v2).clamp_min(p.variance_floor);
+  return pluss::series::where(use_q1, v1, v2).clamp_min(p.variance_floor);
 }
 
 Series heston_transition_step_(const Series& vt,
@@ -777,7 +777,7 @@ StochVolPaths detail::bates_paths(std::int64_t steps,
 
     const Series jump_mask = uj.le(p_jump);
     const Series jump_log = zj.mul(params.jump_vol).add(params.jump_mean);
-    const Series jump_term = jump_mask.where(jump_log, pluss::series::zeros({1, paths}, out_cfg));
+    const Series jump_term = pluss::series::where(jump_mask, jump_log, pluss::series::zeros({1, paths}, out_cfg));
     const Series log_inc = v_start.mul(-0.5 * dt)
                                .add(params.mu * dt - jump_compensator)
                                .add(v_start.mul(dt).sqrt().mul(eps_s))
@@ -887,8 +887,8 @@ Series multi_variance_step_(const Series& vt, const Series& z_var, const Series&
   const Series beta = p_zero.mul(-1.0).add(1.0).div(m.clamp_min(kEps));
   const Series u = u_qe.clamp_min(kEps).clamp_max(1.0 - kEps);
   const Series v2_nonzero = u.sub(1.0).div(p_zero.sub(1.0).clamp_max(-kEps)).log().mul(-1.0).div(beta.clamp_min(kEps));
-  const Series v2 = u.le(p_zero).where(v1.mul(0.0), v2_nonzero);
-  return use_q1.where(v1, v2).clamp_min(p.floor);
+  const Series v2 = pluss::series::where(u.le(p_zero), v1.mul(0.0), v2_nonzero);
+  return pluss::series::where(use_q1, v1, v2).clamp_min(p.floor);
 }
 
 }  // namespace
@@ -1070,7 +1070,7 @@ MultiSvPaths detail::multi_sv_paths(std::int64_t steps, std::int64_t paths, doub
       Series log_inc = v_start.mul(-0.5 * dt).add(growth_g.mul(dt)).add(v_start.mul(dt).sqrt().mul(eps_s));
       if (jumps) {
         const Series jump_log = zj_g.select(0, t).mul(jvol_g).add(jmean_g);
-        log_inc = log_inc.sub(compensator_g).add(uj_g.select(0, t).le(p_jump_g).where(jump_log, jump_log.mul(0.0)));
+        log_inc = log_inc.sub(compensator_g).add(pluss::series::where(uj_g.select(0, t).le(p_jump_g), jump_log, jump_log.mul(0.0)));
       }
       st = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
       vt = v_next;
@@ -1128,7 +1128,7 @@ MultiSvPaths detail::multi_sv_paths(std::int64_t steps, std::int64_t paths, doub
       if (milstein) {
         f_next = f_next.add(a_c.square().mul(beta.mul(0.5 * dt)).mul(log_f.mul(beta.mul(2.0).sub(1.0)).exp()).mul(eps_f.square().sub(1.0)));
       }
-      const Series f_safe = f_next.isfinite().where(f_next, f0.add(zeros_gp));
+      const Series f_safe = pluss::series::where(f_next.isfinite(), f_next, f0.add(zeros_gp));
       const Series f_bounded = f_safe.clamp_min(floor).clamp_max(1.0e12).mul(positive).add(f_safe.clamp_min(-1.0e12).clamp_max(1.0e12).mul(positive.neg().add(1.0)));
       at = a_next;
       ft = f_bounded;
@@ -1344,8 +1344,7 @@ StochVolPaths detail::heston_nandi_paths(std::int64_t steps,
   const double h0 = heston_nandi_initial_variance_(params, "heston_nandi_paths");
 
   const Series z_raw = draw_normals_(steps, paths, options, out_cfg, seed, 0xF311ULL, DrawBlock{0, 1}, true);
-  const Series z_spot = z_raw.isfinite()
-                            .where(z_raw, pluss::series::zeros({steps, paths}, out_cfg))
+  const Series z_spot = pluss::series::where(z_raw.isfinite(), z_raw, pluss::series::zeros({steps, paths}, out_cfg))
                             .clamp_min(-10.0)
                             .clamp_max(10.0);
 
@@ -1365,14 +1364,12 @@ StochVolPaths detail::heston_nandi_paths(std::int64_t steps,
     const Series sig_t = ht.sqrt();
     const Series log_inc = ht.mul(params.lambda).add(params.r * dt).add(sig_t.mul(zt)).clamp_min(-30.0).clamp_max(30.0);
     const Series s_raw = st.mul(log_inc.exp());
-    const Series s_next = s_raw.isfinite()
-                              .where(s_raw, pluss::series::full({1, paths}, spot0, out_cfg))
+    const Series s_next = pluss::series::where(s_raw.isfinite(), s_raw, pluss::series::full({1, paths}, spot0, out_cfg))
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e12);
 
     const Series h_next = ht.mul(params.beta).add(params.omega).add(zt.sub(sig_t.mul(params.gamma)).square().mul(params.alpha));
-    const Series h_safe = h_next.isfinite()
-                              .where(h_next, pluss::series::full({1, paths}, params.variance_floor, out_cfg))
+    const Series h_safe = pluss::series::where(h_next.isfinite(), h_next, pluss::series::full({1, paths}, params.variance_floor, out_cfg))
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e6);
 
@@ -1461,7 +1458,7 @@ StochVolPaths detail::sabr_paths(std::int64_t steps,
       }
     }
 
-    const Series f_safe = f_next.isfinite().where(f_next, pluss::series::full({1, paths}, forward0, out_cfg));
+    const Series f_safe = pluss::series::where(f_next.isfinite(), f_next, pluss::series::full({1, paths}, forward0, out_cfg));
     const Series f_bounded = positive_forward
                                  ? f_safe.clamp_min(params.alpha_floor).clamp_max(1.0e12)
                                  : f_safe.clamp_min(-1.0e12).clamp_max(1.0e12);

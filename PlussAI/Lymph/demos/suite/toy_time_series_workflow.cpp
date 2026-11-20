@@ -8,12 +8,12 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series time = pluss::series::linspace(0.0, 119.0, 120, ScalarType::Float64);
   const Series temp = time.mul(0.05).sin().mul(12.0).add(22.0);
   const Series load = temp.mul(2.0).add(time.mul(0.03)).add(time.mul(0.17).cos());
-  const DataFrame raw({{"day", Slate(time)}, {"temp", Slate(temp)}, {"load", Slate(load)}});
+  const DataFrame raw({{"day", Shelf(time)}, {"temp", Shelf(temp)}, {"load", Shelf(load)}});
 
   lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"temp"})

@@ -188,7 +188,7 @@ void test_factories() {
   expect_throws(
       [&] {
         auto cond = s1_mps.gt(0.0);
-        (void)s1_mps.where(cond.to(pluss::Platform::CPU), s1_mps);
+        (void)pluss::series::where(cond.to(pluss::Platform::CPU), s1_mps, s1_mps);
       },
       "mixed-platform where throws");
 

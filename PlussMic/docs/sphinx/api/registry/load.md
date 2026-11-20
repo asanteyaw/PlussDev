@@ -44,6 +44,15 @@ otherwise.
 
 Example 1. Load a CSV file by naming the format explicitly.
 
+Given `cities.csv`:
+
+```text
+city,population
+Accra,2500000
+Tema,161000
+Kumasi,3000000
+```
+
 ```cpp
 auto rg = pluss::scribble::Registry::load("csv", "cities.csv");
 std::cout << rg;
@@ -55,14 +64,8 @@ std::cout << rg;
 {
   "_type": "Registry",
   "defined": true,
-  "nfields": 3,
+  "nfields": 2,
   "fields": {
-    "id": {
-      "size": 3,
-      "types": {
-        "Series": 3
-      }
-    },
     "city": {
       "size": 3,
       "types": {
@@ -81,11 +84,20 @@ std::cout << rg;
 
 Example 2. An unrecognized format name throws.
 
+Given `cities.csv`:
+
+```text
+city,population
+Accra,2500000
+Tema,161000
+Kumasi,3000000
+```
+
 ```cpp
 try {
   auto rg = pluss::scribble::Registry::load("xml", "cities.csv");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

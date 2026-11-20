@@ -1,52 +1,58 @@
 # `signal::WindowOptions`
 
+The endpoint convention, dtype and platform of a window.
+
 ## Signature
 
 ```cpp
-signal::WindowOptions options{};
+struct signal::WindowOptions {
+  signal::WindowMode mode{signal::WindowMode::Symmetric};
+  pluss::ScalarType dtype{pluss::ScalarType::Float64};
+  pluss::Platform platform{pluss::Platform::CPU};
+};
 ```
 
 ## What It Does
 
-Carries the common construction policy for every signal window. Defaults produce a symmetric `Float64` CPU `Series`, making an omitted options object deterministic.
+Passed as the second argument of `boxcar`, `bartlett`, `blackman`, `hamming` and `hann`. It does not change the shape of the window; it chooses which of the equivalent samplings is returned and where and in which precision the coefficients live.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `mode` | `WindowMode::Symmetric` | Selects symmetric finite endpoints or periodic DFT-oriented sampling. |
-| `dtype` | `ScalarType::Float64` | Selects `Float32` or `Float64` coefficients. |
-| `platform` | `Platform::CPU` | Selects the execution and storage platform of the returned `Series`. |
-
-## Returns
-
-Pass the object by const reference to any window factory. The returned `Series` reflects its dtype and platform.
+| Field | Meaning | Default |
+|---|---|---|
+| `mode` | `Symmetric` or `Periodic`; see `WindowMode`. | `Symmetric` |
+| `dtype` | `Float32` or `Float64`. | `Float64` |
+| `platform` | Where the result is allocated. | `CPU` |
 
 ## Errors
 
-Window construction rejects non-floating dtypes and unavailable or unsupported platform configurations.
+A dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype, are rejected by the window function that receives the options.
+
+## Interpretation and Use
+
+Construct options with designated initializers, setting only what differs from the default: `sig::hann(256, {.mode = sig::WindowMode::Periodic})`. Use `Float32` when the window multiplies float32 data so that no promotion to float64 happens, and note that the MPS holds only 32-bit and narrower floats.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+The default options, and what a window made without any is.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_window_options_defaults.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Float32 against Float64: the dtype changes and the values agree to rounding.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_window_options_dtype.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Which dtype and platform combinations are refused.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_window_options_errors.cpp@@
 
 ## See Also
 

@@ -13,7 +13,7 @@ bool DataFrameLabelAccessor::monotonic(bool ascending = true, bool strict = fals
 
 ## What It Does
 
-Checks whether the flat case-label slate is sorted, according to `ascending`
+Checks whether the flat case-label shelf is sorted, according to `ascending`
 and `strict`. This always compares the full case label as one sequence — for
 a structured (multi-level) frame it does **not** check per-level sortedness;
 use [`depth()`](depth.md) for that.
@@ -47,8 +47,8 @@ values.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 std::cout << labeled.labels().monotonic();
@@ -60,8 +60,7 @@ std::cout << sorted.labels().monotonic();
 ### Output
 
 ```text
-false
-true
+01
 ```
 
 `labeled`'s case labels (`"east"`, `"west"`, `"east"`, `"north"`) decrease from
@@ -75,8 +74,8 @@ Example 2. Use `strict = true` to reject equal adjacent case labels.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "north", "west"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "north", "west"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 std::cout << labeled.labels().monotonic();
@@ -86,8 +85,7 @@ std::cout << labeled.labels().monotonic(true, true);
 ### Output
 
 ```text
-true
-false
+10
 ```
 
 `labeled`'s case labels are already sorted ascending, with one repeated
@@ -101,8 +99,8 @@ Example 3. Pass `ascending = false` to check for descending order instead.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"west", "north", "east"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0}))}});
+    {{"region", Shelf(pluss::make_note({"west", "north", "east"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0}))}});
 auto labeled = orders.labels().set("region");
 
 std::cout << labeled.labels().monotonic();
@@ -112,8 +110,7 @@ std::cout << labeled.labels().monotonic(false);
 ### Output
 
 ```text
-false
-true
+01
 ```
 
 `"west"`, `"north"`, `"east"` decreases at every step, so the default
@@ -127,8 +124,8 @@ expected to sort.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Slate(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN()})));
+    {{"value", Shelf(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Shelf(pluss::make_series({10.0, 20.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, false})));
 std::cout << readings;
 
 std::cout << readings.labels().monotonic();

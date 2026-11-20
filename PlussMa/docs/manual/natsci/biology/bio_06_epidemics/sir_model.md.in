@@ -1,0 +1,62 @@
+# The SIR model
+
+[Back to Biology 6: Epidemics](../bio_06_epidemics.md)
+
+An infection moves through a population as people pass from susceptible to infective to recovered. The SIR model follows the three fractions in time. This page reads the outcome of an epidemic straight from its two parameters, confirms it by integrating the model, and runs three contact rates in a single batch.
+
+## How it works
+
+`sir_rate(x, beta, gamma)` returns the rates of the state `(S, I, R)`: susceptibles are infected at `beta S I / N` and infectives recover at `gamma I`. The ratio `sigma = beta / gamma` is the contact number, the infections one case causes while infective, and an epidemic takes off only if `sigma S0 > 1`. Two outcomes have closed forms. `final_susceptible(sigma, s0, i0)` solves for the susceptible fraction that remains when the epidemic has run out, and `peak_infective(sigma, s0, i0)` is the highest infective fraction reached. The rate function takes arrays for `beta` and `gamma` as well as for the state, so a batch of epidemics is one call to `dynamics::simulate`.
+
+## Outcome from the parameters
+
+The population starts with `99%` susceptible and `1%` infective, with `beta = 0.5` and `gamma = 0.2` per day. The program prints the closed-form final size and peak, integrates the model to four days, and then runs `beta = 0.3`, `0.5` and `0.8` as one batch.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace epi = biology::epidemiology;
+namespace dynamics = biology::dynamics;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // a population of fractions: 99% susceptible, 1% infective. Contacts spread infection at 0.5 per day,
+  // and an infective recovers at 0.2 per day.
+  const double beta = 0.5, gamma = 0.2;
+  const double contact_number = beta / gamma;
+  out.writeln("contact number sigma = beta / gamma = ", contact_number);
+
+  // closed-form final size and peak
+  const auto sigma = vec({contact_number}), s0 = vec({0.99}), i0 = vec({0.01});
+  out.writeln("susceptible left at the end  = ", flat(epi::final_susceptible(sigma, s0, i0)));
+  out.writeln("peak infective fraction      = ", flat(epi::peak_infective(sigma, s0, i0)));
+
+  // integrate the model and compare
+  const auto rate = [&](const pluss::Series &x) { return epi::sir_rate(x, beta, gamma); };
+  const auto start = vec({0.99, 0.01, 0.0});
+  for (double t : {10.0, 20.0, 40.0, 200.0})
+    out.writeln("day ", t, ": (S, I, R) = ", flat(dynamics::simulate(rate, start, 0.0, t, 4000)));
+
+  // the same epidemic under three contact rates in one batch
+  const auto batch = vec({0.99, 0.01, 0.0, 0.99, 0.01, 0.0, 0.99, 0.01, 0.0}).reshape({3, 3});
+  const auto betas = vec({0.3, 0.5, 0.8});
+  const auto batch_rate = [&](const pluss::Series &x) { return epi::sir_rate(x, betas, gamma); };
+  const auto end = dynamics::simulate(batch_rate, batch, 0.0, 300.0, 6000);
+  out.writeln("recovered fraction at day 300 for beta = 0.3, 0.5, 0.8: ", flat(end.select(-1, 2)));
+}
+```
+
+The contact number is `2.5`, so the epidemic takes off; the closed forms say the infective fraction peaks at `0.2375` and that `0.1059` of the population is never infected. The integration agrees: at day `20` the infective fraction is `0.2097` and falling after its peak, and by day `200` the susceptible fraction has settled at `0.1059`. The last line shows that the contact rate matters sharply: at `beta = 0.3` (`sigma = 1.5`) `59%` of the population is eventually infected, at `0.5` `89%`, and at `0.8` `98%`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

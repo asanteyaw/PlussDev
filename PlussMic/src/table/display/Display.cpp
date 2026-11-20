@@ -3,12 +3,15 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -32,7 +35,7 @@
 #include "pluss/tils/view/window/text_layout.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include <pluss/tils/kit/output.h>
 
 namespace pluss::table::display {
@@ -85,6 +88,7 @@ struct EffectiveDisplayOptions {
 };
 
 std::atomic<DisplayBackend> g_default_backend{DisplayBackend::Auto};
+std::atomic<DisplayTheme> g_default_theme{DisplayTheme::Default};
 
 std::string clip_cell(std::string s, std::int64_t maxw) {
   if (maxw <= 0) {
@@ -144,7 +148,9 @@ std::vector<std::string> split_display_token_(std::string_view text,
 
 std::string scalar_at(const pluss::Series& s, std::int64_t row) {
   const auto format_float = [](double value, std::string_view spec) {
-    return std::isnan(value) ? std::string("NULL")
+    // NULL is a missing cell (see shelf_value_at). A floating NaN is a value, "not a number" (an integer remainder by zero, 0/0),
+    // and prints as NaN; it must not look like missing data.
+    return std::isnan(value) ? std::string("NaN")
                              : pluss::tils::OutputEngine::format(pluss::tils::runtime_format(spec), value);
   };
   const auto st = s.scalar_type();
@@ -193,8 +199,8 @@ std::string scalar_at(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-bool is_numeric_slate(const Slate& t) {
-  if (t.kind() != SlateKind::Series) {
+bool is_numeric_shelf(const Shelf& t) {
+  if (t.kind() != ShelfKind::Series) {
     return false;
   }
   const auto dt = t.as_series().dtype();
@@ -206,51 +212,51 @@ bool series_all_zero_i64(const pluss::Series& s) {
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 
-Slate temporal_slate_to_display_note(const Slate& t) {
+Shelf temporal_shelf_to_display_note(const Shelf& t) {
   const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64(timeline.second())
                               || !series_all_zero_i64(timeline.minute())
                               || !series_all_zero_i64(timeline.hour());
   if (!has_clock_time) {
-    return Slate(timeline.strftime("%Y-%m-%d"), detail::validity_mask(t));
+    return Shelf(timeline.strftime("%Y-%m-%d"), detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return Slate(timeline.strftime("%Y-%m-%d %H:%M:%S"), detail::validity_mask(t));
+    return Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S"), detail::validity_mask(t));
   }
-  return Slate(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), detail::validity_mask(t));
+  return Shelf(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), detail::validity_mask(t));
 }
 
-Slate display_slate(const Slate& t) {
-  if (t.kind() == SlateKind::Timeline) {
-    return temporal_slate_to_display_note(t);
+Shelf display_shelf(const Shelf& t) {
+  if (t.kind() == ShelfKind::Timeline) {
+    return temporal_shelf_to_display_note(t);
   }
-  if (t.kind() == SlateKind::Duration) {
+  if (t.kind() == ShelfKind::Duration) {
     return t.cast().note();
   }
   return t;
 }
 
-std::string slate_value_at(const Slate& t, std::int64_t row) {
+std::string shelf_value_at(const Shelf& t, std::int64_t row) {
   if (!detail::valid_at(t, row)) {
     return "NULL";
   }
 
   switch (t.kind()) {
-    case SlateKind::Series:
+    case ShelfKind::Series:
       return scalar_at(t.as_series(), row);
-    case SlateKind::Note:
+    case ShelfKind::Note:
       return std::string(t.as_note().at(row));
-    case SlateKind::Timeline:
+    case ShelfKind::Timeline:
       return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case SlateKind::Duration:
+    case ShelfKind::Duration:
       return std::string(t.as_duration().to_note_iso().at(row));
   }
   return "<?>";
 }
 
-std::int64_t non_null_count(const Slate& t) {
-  if (t.kind() == SlateKind::Duration) {
+std::int64_t non_null_count(const Shelf& t) {
+  if (t.kind() == ShelfKind::Duration) {
     const auto values = t.as_duration().host();
     const auto valid = detail::has_validity_mask(t)
                            ? detail::validity_mask(t)->host<bool>()
@@ -268,14 +274,14 @@ std::int64_t non_null_count(const Slate& t) {
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
-std::uint64_t estimate_bytes(const Slate& t) {
+std::uint64_t estimate_bytes(const Shelf& t) {
   std::uint64_t bytes = 0;
-  if (t.kind() == SlateKind::Series) {
+  if (t.kind() == ShelfKind::Series) {
     const auto item = t.as_series().dtype().itemsize;
     bytes += static_cast<std::uint64_t>(item) * static_cast<std::uint64_t>(t.size());
-  } else if (t.kind() == SlateKind::Timeline || t.kind() == SlateKind::Duration) {
+  } else if (t.kind() == ShelfKind::Timeline || t.kind() == ShelfKind::Duration) {
     bytes += static_cast<std::uint64_t>(8) * static_cast<std::uint64_t>(t.size());
-  } else if (t.kind() == SlateKind::Note) {
+  } else if (t.kind() == ShelfKind::Note) {
     const auto& n = t.as_note();
     for (std::int64_t i = 0; i < t.size(); ++i) {
       bytes += static_cast<std::uint64_t>(n.at(i).size());
@@ -585,8 +591,8 @@ std::string render_ascii_table(
   return out;
 }
 
-std::vector<Slate> dataframe_columns_(const DataFrame& frame) {
-  std::vector<Slate> columns;
+std::vector<Shelf> dataframe_columns_(const DataFrame& frame) {
+  std::vector<Shelf> columns;
   const auto& names = frame.features();
   columns.reserve(names.size());
   for (const auto& name : names) {
@@ -604,21 +610,21 @@ TableMatrix build_dataframe_matrix(
 
   const auto names = frame.features();
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.labels().values());
-  std::vector<Slate> display_cols;
+  const auto display_cases = display_shelf(frame.labels().values());
+  std::vector<Shelf> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
-    display_cols.push_back(display_slate(col));
+    display_cols.push_back(display_shelf(col));
   }
 
   auto has_negative_visible_value = [&](std::int64_t cidx) {
     const auto& col = cols[static_cast<std::size_t>(cidx)];
-    if (!is_numeric_slate(col)) {
+    if (!is_numeric_shelf(col)) {
       return false;
     }
 
     auto row_is_negative = [&](std::int64_t ridx) {
-      const auto v = slate_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
+      const auto v = shelf_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
       return !v.empty() && v.front() == '-';
     };
 
@@ -675,11 +681,11 @@ TableMatrix build_dataframe_matrix(
     row.reserve(m.headers.size());
 
     if (options.show_case_index) {
-      row.push_back(clip_cell(slate_value_at(display_cases, ridx), options.max_cell_width));
+      row.push_back(clip_cell(shelf_value_at(display_cases, ridx), options.max_cell_width));
     }
 
     auto render_data_cell = [&](std::int64_t cidx) {
-      std::string value = slate_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
+      std::string value = shelf_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
       if (sign_pad_by_column.contains(cidx) && sign_pad_by_column.at(cidx)) {
         if (!value.empty() && value != "NULL" && value.front() != '-') {
           value.insert(value.begin(), ' ');
@@ -737,29 +743,29 @@ std::string dtype_summary_line(const std::unordered_map<std::string, std::int64_
   return line;
 }
 
-std::string logical_dtype(const Slate& t) {
+std::string logical_dtype(const Shelf& t) {
   switch (t.kind()) {
-    case SlateKind::Series:
+    case ShelfKind::Series:
       return "Series";
-    case SlateKind::Note:
+    case ShelfKind::Note:
       return "Note";
-    case SlateKind::Timeline:
+    case ShelfKind::Timeline:
       return "Timeline";
-    case SlateKind::Duration:
+    case ShelfKind::Duration:
       return "Duration";
   }
   return "Unknown";
 }
 
-std::string render_slate_series_like_(const Slate& slate,
+std::string render_shelf_series_like_(const Shelf& shelf,
                                        const EffectiveDisplayOptions& options,
                                        std::int64_t terminal_width) {
-  const auto dtype_footer = logical_dtype(slate);
+  const auto dtype_footer = logical_dtype(shelf);
 
-  const auto values = display_slate(slate);
-  std::optional<Slate> labels = std::nullopt;
-  if (detail::has_display_labels(slate)) {
-    labels = display_slate(detail::display_labels(slate));
+  const auto values = display_shelf(shelf);
+  std::optional<Shelf> labels = std::nullopt;
+  if (detail::has_display_labels(shelf)) {
+    labels = display_shelf(detail::display_labels(shelf));
   }
 
   std::vector<std::string> structured_headers;
@@ -776,9 +782,9 @@ std::string render_slate_series_like_(const Slate& slate,
     rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
 
     auto push_row = [&](std::int64_t ridx) {
-      auto parts = split_display_token_(slate_value_at(*labels, ridx));
+      auto parts = split_display_token_(shelf_value_at(*labels, ridx));
       parts.resize(structured_headers.size());
-      parts.push_back(slate_value_at(values, ridx));
+      parts.push_back(shelf_value_at(values, ridx));
       rows.push_back(std::move(parts));
     };
 
@@ -838,8 +844,8 @@ std::string render_slate_series_like_(const Slate& slate,
     if (!out.empty()) {
       out.push_back('\n');
     }
-    if (slate.named()) {
-      out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
+    if (shelf.named()) {
+      out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", shelf.name(), dtype_footer);
     } else {
       out += pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
     }
@@ -850,8 +856,8 @@ std::string render_slate_series_like_(const Slate& slate,
   rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
 
   auto push_row = [&](std::int64_t ridx) {
-    const auto idx = labels.has_value() ? slate_value_at(*labels, ridx) : pluss::tils::OutputEngine::format("{}", ridx);
-    const auto val = slate_value_at(values, ridx);
+    const auto idx = labels.has_value() ? shelf_value_at(*labels, ridx) : pluss::tils::OutputEngine::format("{}", ridx);
+    const auto val = shelf_value_at(values, ridx);
     rows.emplace_back(clip_cell(idx, options.max_cell_width), clip_cell(val, options.max_cell_width));
   };
 
@@ -883,8 +889,8 @@ std::string render_slate_series_like_(const Slate& slate,
   if (!out.empty()) {
     out.push_back('\n');
   }
-  if (slate.named()) {
-    out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
+  if (shelf.named()) {
+    out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", shelf.name(), dtype_footer);
   } else {
     out += pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
   }
@@ -967,6 +973,100 @@ std::string native_window_title_(std::string_view fallback) {
   return std::string(fallback);
 }
 
+struct ThemePalette {
+  DisplayTheme theme;
+  const char* name;   // id, lower case (used by parse_theme / the demo)
+  const char* label;  // shown in the Theme menu
+  // order matches kThemeTokens
+  std::array<const char*, 29> v;
+  const char* heat_pos;  // "r,g,b" for positive correlations
+  const char* heat_neg;  // "r,g,b" for negative correlations
+};
+
+constexpr std::array<const char*, 29> kThemeTokens{
+    "paper", "panel", "ink", "title", "muted", "line", "border", "row-line", "accent", "accent-2",
+    "accent-3", "accent-3-border", "on-accent", "btn", "btn-border", "hero-a", "hero-b", "hero-c",
+    "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border", "miss-ink",
+    "miss-bg", "pill-bg", "grid"};
+
+const std::array<ThemePalette, 8> kThemes{{
+    {DisplayTheme::Default, "default", "Default",
+     {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#dce4ef", "#cfdae9", "#e7edf5", "#c84d58",
+      "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#ffffff", "#f8d9d9",
+      "#dae3ee", "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#a4433b", "#ffe3db",
+      "#e5ebf4", "#dce4ed"},
+     "41,93,138", "200,77,88"},
+    {DisplayTheme::Ember, "ember", "Ember",
+     {"#f1e3da", "#fbf6f2", "#3a241e", "#2a1917", "#8d5646", "#e3cabd", "#e3cdc1", "#f0e0d6", "#b5412a",
+      "#e8742a", "#77493b", "#4a2a22", "#fbe4d9", "#6b3a2e", "#46261e", "#eab09a", "#fbf6f2", "#f6c9a8",
+      "#f0d3c4", "#f6e4d9", "#e6b9a2", "#fbf1ea", "#f6dccd", "#77493b", "#d9b9a8", "#ffffff", "#d7261e",
+      "#f0d3c4", "#f0e0d6"},
+     "232,116,42", "90,61,56"},
+    {DisplayTheme::Nardo, "nardo", "Nardo",
+     {"#dcdfe2", "#f4f5f6", "#1c1f23", "#111316", "#6a7078", "#c3c7cc", "#c3c7cc", "#dfe2e5", "#d1122b",
+      "#ff5a36", "#d1122b", "#9d0c20", "#ffffff", "#d1122b", "#9d0c20", "#cfd3d8", "#f4f5f6", "#eceef0",
+      "#d3d7db", "#e6e8eb", "#c4c9ce", "#eef0f2", "#e3e6e9", "#d1122b", "#b5bac0", "#a8001a", "#ffc2c9",
+      "#d3d7db", "#dfe2e5"},
+     "209,18,43", "58,64,72"},
+    {DisplayTheme::Brooklands, "brooklands", "Brooklands",
+     {"#ece6d2", "#fbf8ed", "#14261b", "#0b3b25", "#6b7a62", "#cfc7a8", "#cfc7a8", "#e6dfc4", "#0b5d3b",
+      "#c9a227", "#0b5d3b", "#06402a", "#f0d77a", "#0b5d3b", "#c9a227", "#bfd8c4", "#fbf8ed", "#f2e6b6",
+      "#d7e6d4", "#e8f0e4", "#b9d3be", "#f5f2e2", "#e7eed9", "#c9a227", "#b8b08c", "#a30f00", "#ffc2b8",
+      "#d7e6d4", "#e6dfc4"},
+     "11,93,59", "192,128,16"},
+    {DisplayTheme::Gulf, "gulf", "Gulf",
+     {"#cfe7f3", "#f7fcff", "#0e2a3a", "#0a2433", "#547489", "#a9d0e4", "#a9d0e4", "#d2e8f3", "#ff6a13",
+      "#ff6a13", "#ff6a13", "#d9500a", "#ffffff", "#ff6a13", "#d9500a", "#8ccbea", "#f7fcff", "#ffe3cf",
+      "#bfe0f0", "#dcedf7", "#a7d3ea", "#eef7fc", "#d6ecf8", "#ff6a13", "#8fc2dc", "#a8140a", "#ffc2b8",
+      "#bfe0f0", "#d2e8f3"},
+     "255,106,19", "40,130,180"},
+    {DisplayTheme::Obsidian, "obsidian", "Obsidian",
+     {"#f8f4ec", "#fffdf9", "#282d32", "#181b22", "#756e68", "#e3d9cb", "#d9cfc2", "#eee7dc", "#a8532d",
+      "#eeb171", "#604938", "#493629", "#ffffff", "#604938", "#493629", "#e8d5bd", "#fffdf9", "#f0dfc5",
+      "#e8d8c4", "#f3e8d9", "#e2c7a9", "#fbf7f0", "#f3e4d1", "#9d5f35", "#c9bbaa", "#9b382d", "#ffe0d7",
+      "#f2e4d2", "#e6dacb"},
+     "180,111,60", "80,65,60"},
+    {DisplayTheme::Indigo, "indigo", "Indigo",
+     {"#f6f3ff", "#fdfcff", "#2b2149", "#19152f", "#756988", "#ded6f1", "#d4c9eb", "#ebe5f8", "#7052b4",
+      "#cab4ff", "#4b347f", "#392664", "#ffffff", "#4b347f", "#392664", "#d7c8f6", "#fdfcff", "#e8dcff",
+      "#e5dcf8", "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#9a3260", "#ffe1ec",
+      "#e8defa", "#e5dcf7"},
+     "112,82,180", "147,88,130"},
+    {DisplayTheme::Native, "native", "Native",
+     {"#e1e9f8", "#fafcff", "#14213d", "#0f1b4d", "#5a6b8f", "#c5d3ea", "#c5d3ea", "#dbe5f4", "#0fa3a3",
+      "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#aee9e3", "#e9f6fb",
+      "#cfdcf8", "#eef3fc", "#bfeee9", "#f3f7fd", "#dce9fb", "#0fa3a3", "#a9bbdc", "#ffffff", "#d6336c",
+      "#cfdcf8", "#dbe5f4"},
+     "15,163,163", "106,92,255"},
+}};
+
+DisplayTheme resolve_theme_(const DisplayOptions& options) {
+  if (options.theme != DisplayTheme::Auto) {
+    return options.theme;
+  }
+  return g_default_theme.load(std::memory_order_relaxed);
+}
+
+const ThemePalette& palette_for_(const DisplayTheme theme) {
+  for (const auto& palette : kThemes) {
+    if (palette.theme == theme) {
+      return palette;
+    }
+  }
+  return kThemes.front();
+}
+
+// The `:root { --token: value; ... }` block every other rule reads through var().
+std::string theme_root_css_(const DisplayOptions& options) {
+  const auto& palette = palette_for_(resolve_theme_(options));
+  std::string css = ":root {";
+  for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
+    css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
+  }
+  css += " --shadow: none; }";
+  return css;
+}
+
 std::string html_shell_(std::string_view title,
                         std::string_view subtitle,
                         std::string_view body,
@@ -1005,44 +1105,33 @@ std::string html_shell_(std::string_view title,
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{0}</title>
   <style>
-    :root {{
-      --paper: #f4f7fb;
-      --ink: #102033;
-      --muted: #607086;
-      --grid: #dbe3ec;
-      --line: #c8d3df;
-      --accent: #007f86;
-      --accent-2: #ef5b3f;
-      --accent-3: #6757d9;
-      --success: #4f8994;
-      --panel: #ffffff;
-      --shadow: none;
-    }}
+    {6}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       color: var(--ink);
       font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
-      background: #edf4f7;
+      background: var(--paper);
     }}
     .shell {{
       min-height: 100vh;
       padding: 14px;
+      background: var(--paper);
     }}
     .frame {{
       max-width: 1560px;
       margin: 0 auto;
       background: var(--panel);
-      border: 1px solid #cbd7e3;
+      border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
       box-shadow: none;
     }}
     .hero {{
       padding: 14px 16px;
-      border-bottom: 1px solid #cbd7e3;
+      border-bottom: 1px solid var(--border);
       border-top: 5px solid var(--accent);
-      background: linear-gradient(90deg, #dff5f4 0%, #ffffff 68%, #f5f9fa 100%);
+      background: linear-gradient(90deg, var(--hero-a) 0%, var(--hero-b) 68%, var(--hero-c) 100%);
       display: flex;
       gap: 14px;
       align-items: center;
@@ -1054,7 +1143,7 @@ std::string html_shell_(std::string_view title,
       font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
       font-size: 1.35rem;
       font-weight: 700;
-      color: #102f3b;
+      color: var(--title);
     }}
     .hero p {{
       margin: 3px 0 0;
@@ -1076,8 +1165,8 @@ std::string html_shell_(std::string_view title,
       min-height: 40px;
       padding: 0 12px;
       border-radius: 7px;
-      border: 1px solid #b9c7d5;
-      background: #ffffff;
+      border: 1px solid var(--control-border);
+      background: var(--panel);
       color: var(--ink);
       font: inherit;
       line-height: 38px;
@@ -1091,9 +1180,9 @@ std::string html_shell_(std::string_view title,
       min-width: 88px;
       padding: 0 12px;
       border-radius: 7px;
-      border: 1px solid #075d68;
-      background: #0b7285;
-      color: white;
+      border: 1px solid var(--btn-border);
+      background: var(--btn);
+      color: var(--on-accent);
       font: 600 0.82rem/1 "Avenir Next", "Inter", "Segoe UI", sans-serif;
       line-height: 38px;
       appearance: none;
@@ -1101,9 +1190,9 @@ std::string html_shell_(std::string_view title,
       cursor: pointer;
     }}
     .tools button.reset {{
-      background: #0b7285;
-      border-color: #075d68;
-      color: #ffffff;
+      background: var(--btn);
+      border-color: var(--btn-border);
+      color: var(--on-accent);
     }}
     .tools button {{
       text-align: center;
@@ -1113,7 +1202,7 @@ std::string html_shell_(std::string_view title,
     }}
     .content {{
       padding: 0 12px 12px;
-      background: #ffffff;
+      background: var(--panel);
     }}
     .summary-grid {{
       display: grid;
@@ -1124,9 +1213,9 @@ std::string html_shell_(std::string_view title,
     .summary-card {{
       padding: 9px 11px;
       border-radius: 7px;
-      border: 1px solid #cfdae5;
+      border: 1px solid var(--border);
       border-left: 4px solid var(--accent-3);
-      background: #ffffff;
+      background: var(--panel);
     }}
     .summary-card .label {{
       color: var(--muted);
@@ -1140,9 +1229,9 @@ std::string html_shell_(std::string_view title,
     }}
     .table-wrap {{
       margin-top: 4px;
-      border: 1px solid #c8d4df;
+      border: 1px solid var(--border);
       border-radius: 7px;
-      background: #ffffff;
+      background: var(--panel);
       overflow: hidden;
     }}
     .table-scroll {{
@@ -1163,21 +1252,21 @@ std::string html_shell_(std::string_view title,
       position: sticky;
       top: 0;
       z-index: 2;
-      background: #dcefee;
+      background: var(--head-bg);
       border-bottom: 1px solid var(--line);
       text-align: center;
       white-space: nowrap;
     }}
     th, td {{
       padding: 8px 10px;
-      border-bottom: 1px solid #dde5ed;
+      border-bottom: 1px solid var(--row-line);
       vertical-align: top;
     }}
-    tbody tr:nth-child(even) {{
-      background: #f7f9fc;
+    td {{
+      background: var(--panel);
     }}
-    tbody tr:hover {{
-      background: #e8f7f5;
+    tr.even td {{
+      background: var(--zebra);
     }}
     th.sortable {{
       cursor: pointer;
@@ -1185,19 +1274,20 @@ std::string html_shell_(std::string_view title,
     }}
     th.sortable::after {{
       content: "  ↕";
-      color: #65758a;
+      color: var(--muted);
       font-size: 0.85em;
     }}
     .sticky-left {{
       position: sticky;
       left: 0;
       z-index: 1;
-      background: #edf6f7;
+      background: var(--case-bg);
+      border-color: var(--success);
       border-right: 2px solid var(--success);
     }}
     thead .sticky-left {{
       z-index: 3;
-      background: #cce8e6;
+      background: var(--case-head-bg);
     }}
     .num {{
       text-align: left;
@@ -1210,18 +1300,74 @@ std::string html_shell_(std::string_view title,
       color: var(--muted);
     }}
     .missing {{
-      color: #c9362b;
-      background: #fff0ee;
+      color: var(--miss-ink);
+      background: var(--miss-bg);
       font-weight: 700;
+    }}
+    .nonfinite {{
+      /* NaN / inf / -inf are values, not missing data: a neutral tint made from the theme's own ink, never the NULL red. */
+      color: var(--title);
+      background: color-mix(in srgb, var(--ink) 11%, transparent);
+      font-style: italic;
+      font-weight: 600;
     }}
     .hidden {{
       display: none;
+    }}
+    table.fixed {{
+      table-layout: fixed;
+    }}
+    table.fixed th, table.fixed td {{
+      overflow-wrap: anywhere;
+      border-right: 1px solid var(--line);  /* column dividers in a browser view */
+    }}
+    table.fixed .sticky-left {{
+      border-right: 2px solid var(--success);  /* the heavier divider after the label column */
+    }}
+    table.fixed thead th {{
+      white-space: normal;
+    }}
+    .table-wrap.vwrap {{
+      position: relative;
+    }}
+    .vbadge {{
+      position: absolute;
+      right: 18px;
+      bottom: 12px;
+      padding: 3px 11px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--panel);
+      font-size: 0.74rem;
+      font-weight: 600;
+      opacity: 0.88;
+      pointer-events: none;
+      z-index: 5;
+    }}
+    table[data-virtual] {{
+      height: auto;
+      overflow: visible;  /* the scroll area, not the table, scrolls: keeps the header sticky */
+    }}
+    table[data-virtual] tbody td {{
+      height: 38px;
+      padding-top: 0;
+      padding-bottom: 0;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }}
+    table[data-virtual] tbody tr.vspace td {{
+      height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
     }}
     .pill {{
       display: inline-block;
       padding: 4px 7px;
       border-radius: 6px;
-      background: #dff3f1;
+      background: var(--pill-bg);
       color: var(--accent);
       font-size: 0.76rem;
       font-weight: 600;
@@ -1242,25 +1388,25 @@ std::string html_shell_(std::string_view title,
       margin-bottom: 8px;
     }}
     .atlas-frame-tabs {{
-      border-bottom: 1px solid #d8e1e8;
+      border-bottom: 1px solid var(--row-line);
       padding-bottom: 12px;
     }}
     .atlas-current-frame {{
       min-width: 150px;
       padding: 8px 12px;
-      border: 1px solid #9eb2c3;
+      border: 1px solid var(--control-border);
       border-radius: 7px;
-      background: #edf6f7;
-      color: #163b47;
+      background: var(--case-bg);
+      color: var(--title);
       text-align: center;
       font-weight: 700;
       white-space: nowrap;
     }}
     .atlas-tab {{
       padding: 7px 10px;
-      border: 1px solid #bac8d6;
+      border: 1px solid var(--control-border);
       border-radius: 7px;
-      background: #ffffff;
+      background: var(--panel);
       color: var(--ink);
       cursor: pointer;
       white-space: nowrap;
@@ -1268,9 +1414,60 @@ std::string html_shell_(std::string_view title,
     }}
     .atlas-tab.active {{
       background: var(--accent-3);
-      border-color: #5141bd;
-      color: #ffffff;
+      border-color: var(--accent-3-border);
+      color: var(--on-accent);
       font-weight: 600;
+    }}
+    .view-picker {{
+      padding: 10px 2px 8px;
+    }}
+    .view-toggle {{
+      display: inline-block;
+      width: 220px;
+      margin: 0;
+      padding: 8px 14px;
+      border: 1px solid var(--control-border);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+    }}
+    .view-menu {{
+      display: none;
+      width: 220px;
+      margin: 4px 0 0 6px;
+      padding: 4px;
+      border: 1px solid var(--control-border);
+      border-radius: 7px;
+      background: var(--panel);
+    }}
+    .view-menu.open {{
+      display: block;
+    }}
+    .tab {{
+      display: block;
+      width: 100%;
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 5px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+    }}
+    .tab.active {{
+      background: var(--accent-3);
+      color: var(--on-accent);
+      font-weight: 600;
+    }}
+    .tab-panel {{
+      display: none;
+    }}
+    .tab-panel.active {{
+      display: block;
     }}
     .atlas-panel {{
       display: none;
@@ -1328,42 +1525,197 @@ std::string html_shell_(std::string_view title,
       searchInput.classList.add('hidden');
     }}
 
+    // Row text and sort keys are read from the DOM once and cached; filtering and sorting then
+    // work on those arrays, so neither forces a layout per row (innerText did) and a reorder is
+    // a single batch.
+    const collator = new Intl.Collator(undefined, {{ numeric: true, sensitivity: 'base' }});
+    const tableState = new WeakMap();
+    function stateOf(tbl) {{
+      let st = tableState.get(tbl);
+      if (!st) {{
+        const tbody = tbl.tBodies[0];
+        const rows = tbody ? Array.from(tbody.rows) : [];
+        st = {{ tbody, rows, original: rows.slice(), texts: null, hidden: new Uint8Array(rows.length), keys: new Map() }};
+        tableState.set(tbl, st);
+      }}
+      return st;
+    }}
+
     function filterTables(query) {{
       const needle = query.trim().toLowerCase();
       detailTables.forEach((tbl) => {{
+        if (tbl._vt) {{
+          virtualFilter(tbl._vt, needle);
+          return;
+        }}
         if (tbl.offsetParent === null) return;
-        Array.from(tbl.tBodies).forEach((tbody) => {{
-          Array.from(tbody.rows).forEach((row) => {{
-            const haystack = row.innerText.toLowerCase();
-            row.classList.toggle('hidden', needle.length > 0 && !haystack.includes(needle));
-          }});
-        }});
+        const st = stateOf(tbl);
+        if (!st.tbody) return;
+        if (needle.length > 0 && !st.texts) st.texts = st.rows.map((r) => r.textContent.toLowerCase());
+        for (let i = 0; i < st.rows.length; i++) {{
+          const hide = needle.length > 0 && st.texts[i].indexOf(needle) === -1 ? 1 : 0;
+          if (st.hidden[i] !== hide) {{
+            st.hidden[i] = hide;
+            st.rows[i].classList.toggle('hidden', hide === 1);
+          }}
+        }}
       }});
     }}
 
-    function sortTable(tbl, columnIndex, numeric) {{
-      const tbody = tbl.tBodies[0];
-      if (!tbody) return;
-      const rows = Array.from(tbody.rows);
-      const current = tbl.dataset.sortDir === 'asc' ? 'asc' : 'desc';
-      const next = current === 'asc' ? 'desc' : 'asc';
-      rows.sort((a, b) => {{
-        const av = a.cells[columnIndex]?.dataset.sortValue ?? a.cells[columnIndex]?.innerText ?? '';
-        const bv = b.cells[columnIndex]?.dataset.sortValue ?? b.cells[columnIndex]?.innerText ?? '';
-        if (numeric) {{
-          const an = Number(av);
-          const bn = Number(bv);
-          if (Number.isFinite(an) && Number.isFinite(bn)) {{
-            return next === 'asc' ? an - bn : bn - an;
+    // Per column: category (0 number incl. +-inf, 1 text, 2 missing NULL, 3 NaN), numeric value and text, per row.
+    function buildKeys(n, rawAt, numeric) {{
+      const cat = new Uint8Array(n);
+      const num = new Float64Array(n);
+      const txt = new Array(n);
+      for (let i = 0; i < n; i++) {{
+        const trimmed = rawAt(i).trim();
+        txt[i] = trimmed;
+        if (trimmed === '' || trimmed === 'NULL') {{
+          cat[i] = 2;
+        }} else if (numeric && trimmed.toLowerCase() === 'nan') {{
+          cat[i] = 3;  // NaN: not a number, after every number and just before NULL
+        }} else if (numeric && (trimmed.toLowerCase() === 'inf' || trimmed.toLowerCase() === '-inf')) {{
+          cat[i] = 0;
+          num[i] = trimmed.toLowerCase() === 'inf' ? Infinity : -Infinity;
+        }} else {{
+          const v = numeric ? Number(trimmed) : NaN;
+          if (numeric && Number.isFinite(v)) {{
+            cat[i] = 0;
+            num[i] = v;
+          }} else {{
+            cat[i] = 1;
           }}
         }}
-        return next === 'asc'
-          ? av.localeCompare(bv, undefined, {{ numeric: true, sensitivity: 'base' }})
-          : bv.localeCompare(av, undefined, {{ numeric: true, sensitivity: 'base' }});
-      }});
-      rows.forEach((row) => tbody.appendChild(row));
-      tbl.dataset.sortDir = next;
+      }}
+      return {{ cat, num, txt }};
     }}
+
+    // Row indices in sorted order: numbers (-inf first, +inf last), then text, then NaN, then NULL (always last).
+    function sortedOrder(k, asc) {{
+      const order = Array.from({{ length: k.cat.length }}, (_, i) => i);
+      order.sort((a, b) => {{
+        const ca = k.cat[a];
+        const cb = k.cat[b];
+        if (ca >= 2 || cb >= 2) return ca !== cb ? ca - cb : a - b;
+        if (ca !== cb) return asc ? ca - cb : cb - ca;
+        const d = ca === 0 ? (k.num[a] < k.num[b] ? -1 : (k.num[a] > k.num[b] ? 1 : 0)) : collator.compare(k.txt[a], k.txt[b]);
+        if (d === 0) return a - b;
+        return asc ? d : -d;
+      }});
+      return order;
+    }}
+
+    function sortTable(tbl, columnIndex, numeric) {{
+      const current = tbl.dataset.sortDir === 'asc' ? 'asc' : 'desc';
+      const next = current === 'asc' ? 'desc' : 'asc';
+      tbl.dataset.sortDir = next;
+      if (tbl._vt) {{
+        virtualSort(tbl._vt, columnIndex, numeric, next === 'asc');
+        return;
+      }}
+      const st = stateOf(tbl);
+      if (!st.tbody) return;
+      let k = st.keys.get(columnIndex);
+      if (!k) {{
+        k = buildKeys(st.rows.length, (i) => {{
+          const cell = st.rows[i].cells[columnIndex];
+          return cell ? (cell.dataset.sortValue !== undefined ? cell.dataset.sortValue : cell.textContent) : '';
+        }}, numeric);
+        st.keys.set(columnIndex, k);
+      }}
+      const order = sortedOrder(k, next === 'asc');
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < order.length; i++) frag.appendChild(st.rows[order[i]]);
+      st.tbody.appendChild(frag);
+    }}
+
+    // ---- long tables: only the visible window of rows exists in the page ----
+    const VROW_H = 38;
+    const VBUFFER = 8;
+    function escapeHtml(s) {{
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }}
+    function setupVirtual(tbl) {{
+      const dataEl = document.getElementById(tbl.id + '-data');
+      if (!dataEl) return;
+      const data = JSON.parse(dataEl.textContent);
+      const n = data.rows.length;
+      const order = new Uint32Array(n);
+      for (let i = 0; i < n; i++) order[i] = i;
+      const vt = {{ tbl, data, n, cols: data.num.length, tbody: tbl.tBodies[0], scroller: tbl.closest('.table-scroll'),
+                  order, view: order, texts: null, keys: new Map(), needle: '', raf: 0 }};
+      vt.badge = document.getElementById(tbl.id + '-badge');
+      tbl._vt = vt;
+      vt.scroller.addEventListener('scroll', () => {{
+        if (!vt.raf) vt.raf = requestAnimationFrame(() => {{ vt.raf = 0; renderVirtual(vt); }});
+      }});
+      window.addEventListener('resize', () => renderVirtual(vt));
+      renderVirtual(vt);
+      requestAnimationFrame(() => renderVirtual(vt));  // once the scroll area has its real height
+    }}
+    function renderVirtual(vt) {{
+      const total = vt.view.length;
+      const top = vt.scroller.scrollTop;
+      // Before layout settles the scroll area can still be tiny, so draw enough rows to fill the
+      // window; the readout uses the real height once there is one.
+      const clientH = vt.scroller.clientHeight;
+      const height = Math.max(clientH, window.innerHeight);
+      const first = Math.max(0, Math.floor(top / VROW_H) - VBUFFER);
+      const last = Math.min(total, Math.ceil((top + height) / VROW_H) + VBUFFER);
+      const spacer = (rows) => '<tr class="vspace"><td colspan="' + vt.cols + '" style="height:' + (rows * VROW_H) + 'px"></td></tr>';
+      const parts = [spacer(first)];
+      for (let k = first; k < last; k++) {{
+        const r = vt.data.rows[vt.view[k]];
+        let h = k % 2 === 1 ? '<tr class="even">' : '<tr>';
+        for (let c = 0; c < vt.cols; c++) {{
+          const text = r[c];
+          let cls = vt.data.sticky && c === 0 ? 'sticky-left' : '';
+          if (vt.data.num[c]) cls += (cls ? ' ' : '') + 'num';
+          if (text === 'NULL') cls += (cls ? ' ' : '') + 'missing';
+          else if (text === 'NAN' || text === 'INF' || text === '-INF') cls += (cls ? ' ' : '') + 'nonfinite';
+          h += '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + escapeHtml(text) + '</td>';
+        }}
+        parts.push(h + '</tr>');
+      }}
+      parts.push(spacer(total - last));
+      vt.tbody.innerHTML = parts.join('');
+      if (vt.badge) {{
+        const topRow = Math.min(total, Math.floor(top / VROW_H) + 1);
+        const bottomRow = Math.min(total, topRow + Math.max(1, Math.floor((clientH || height) / VROW_H)) - 1);
+        vt.badge.textContent = total === 0 ? 'No matching rows'
+          : 'Rows ' + topRow.toLocaleString() + '\u2013' + bottomRow.toLocaleString() + ' of ' + total.toLocaleString()
+            + (total !== vt.n ? ' (filtered from ' + vt.n.toLocaleString() + ')' : '');
+      }}
+    }}
+    function applyVirtualView(vt) {{
+      if (vt.needle.length > 0) {{
+        if (!vt.texts) vt.texts = vt.data.rows.map((r) => r.join(' ').toLowerCase());
+        vt.view = vt.order.filter((i) => vt.texts[i].indexOf(vt.needle) !== -1);
+      }} else {{
+        vt.view = vt.order;
+      }}
+      vt.scroller.scrollTop = 0;
+      renderVirtual(vt);
+    }}
+    function virtualSort(vt, columnIndex, numeric, asc) {{
+      let k = vt.keys.get(columnIndex);
+      if (!k) {{
+        k = buildKeys(vt.n, (i) => vt.data.rows[i][columnIndex], numeric);
+        vt.keys.set(columnIndex, k);
+      }}
+      vt.order = Uint32Array.from(sortedOrder(k, asc));
+      applyVirtualView(vt);
+    }}
+    function virtualFilter(vt, needle) {{
+      vt.needle = needle;
+      applyVirtualView(vt);
+    }}
+    function virtualReset(vt) {{
+      for (let i = 0; i < vt.n; i++) vt.order[i] = i;
+      vt.needle = '';
+      applyVirtualView(vt);
+    }}
+    document.querySelectorAll('table[data-virtual="true"]').forEach(setupVirtual);
 
     if (enableSort) {{
       document.querySelectorAll('th.sortable').forEach((th) => {{
@@ -1384,12 +1736,45 @@ std::string html_shell_(std::string_view title,
       searchInput.value = '';
       filterTables('');
       detailTables.forEach((tbl) => {{
-        const tbody = tbl.tBodies[0];
-        if (!tbody) return;
-        const rows = Array.from(tbody.rows);
-        rows.sort((a, b) => Number(a.dataset.rowIndex || '0') - Number(b.dataset.rowIndex || '0'));
-        rows.forEach((row) => tbody.appendChild(row));
+        if (tbl._vt) {{
+          virtualReset(tbl._vt);
+          delete tbl.dataset.sortDir;
+          return;
+        }}
+        const st = stateOf(tbl);
+        if (!st.tbody) return;
+        const frag = document.createDocumentFragment();
+        st.original.forEach((row) => frag.appendChild(row));
+        st.tbody.appendChild(frag);
         delete tbl.dataset.sortDir;
+      }});
+    }});
+    document.querySelectorAll('button.view-toggle').forEach((toggle) => {{
+      toggle.addEventListener('click', () => {{
+        document.getElementById(toggle.dataset.dropdown).classList.toggle('open');
+      }});
+    }});
+    // The page's views, and the function that switches between them. A host that offers its own
+    // View control (Apple's window has one in its toolbar) reads plussViews, removes the in-page
+    // picker, and calls plussSelectView.
+    const plussViews = Array.from(document.querySelectorAll('button.tab')).map((b) => ({{
+      id: b.id, label: b.textContent.trim(), group: b.dataset.tabGroup, target: b.dataset.tabTarget }}));
+    function plussSelectView(tabId) {{
+      const view = plussViews.find((v) => v.id === tabId);
+      if (!view) return;
+      document.querySelectorAll('button.tab[data-tab-group="' + view.group + '"]').forEach((b) => b.classList.toggle('active', b.id === tabId));
+      document.querySelectorAll('.tab-panel[data-tab-group="' + view.group + '"]').forEach((p) => p.classList.toggle('active', p.id === view.target));
+      document.querySelectorAll('table[data-virtual="true"]').forEach((t) => t._vt && renderVirtual(t._vt));
+      const label = document.getElementById('view-current');
+      if (label) label.textContent = view.label;
+    }}
+    window.plussViews = plussViews;
+    window.plussSelectView = plussSelectView;
+    document.querySelectorAll('button.tab').forEach((btn) => {{
+      btn.addEventListener('click', () => {{
+        plussSelectView(btn.id);
+        const menu = btn.closest('.view-menu');
+        if (menu) menu.classList.remove('open');
       }});
     }});
     const atlasPanels = Array.from(document.querySelectorAll('.atlas-panel'));
@@ -1445,7 +1830,8 @@ std::string html_shell_(std::string_view title,
                      body,
                      sortable,
                      search,
-                     responsive_css);
+                     responsive_css,
+                     theme_root_css_(options));
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -1458,44 +1844,215 @@ std::string render_html_pre_(std::string_view title,
   return html_shell_(title, subtitle, body, options);
 }
 
+struct HtmlBodyStyle {
+  std::string_view corner_label{"case"};  // header text of the case/row-label column
+  bool show_cards{true};                  // Cases / Features / Case Axis cards above the table
+  bool blank_nulls{false};                // render null cells empty instead of "NULL"
+  bool heatmap{false};                    // tint numeric cells by value in [-1, 1] (correlations)
+  bool format_numbers{false};             // apply DisplayOptions::number_format to numeric cells
+  bool virtual_rows{false};               // long frame in a browser view: rows are drawn by script, a window at a time
+  // Columns that hold counts (shown as whole numbers): decimals and scientific notation
+  // leave them alone, thousands separators still apply.
+  std::vector<std::string> count_columns{};
+};
+
+// Background tint for a value in [-1, 1]: teal for positive, red for negative.
+std::string heat_style_(const double v, const ThemePalette& palette) {
+  if (!std::isfinite(v)) {
+    return {};
+  }
+  const double a = std::min(1.0, std::abs(v));
+  const int alpha = static_cast<int>(std::lround(a * 150.0));
+  return pluss::tils::OutputEngine::format(" style=\"background-color: rgba({}, {});\"",
+                                           v >= 0.0 ? palette.heat_pos : palette.heat_neg, alpha / 255.0);
+}
+
+// Rewrites one numeric cell for `format`. Applies to every numeric column (integers too);
+// `count_like` cells stay whole numbers. Text that is not a plain number is left alone.
+std::string format_number_cell_(const std::string& text, const bool count_like, const NumberFormat format) {
+  if (format == NumberFormat::Default || text.empty() || text == "NULL") {
+    return text;
+  }
+  char* end = nullptr;
+  const double v = std::strtod(text.c_str(), &end);
+  if (end == text.c_str() || *end != '\0' || !std::isfinite(v)) {
+    return text;
+  }
+  char buf[64];
+  const auto group = [](std::string digits) {
+    const bool negative = !digits.empty() && digits[0] == '-';
+    if (negative) {
+      digits.erase(0, 1);
+    }
+    const auto dot = digits.find('.');
+    std::string integer = digits.substr(0, dot);
+    const std::string fraction = dot == std::string::npos ? std::string{} : digits.substr(dot);
+    for (int i = static_cast<int>(integer.size()) - 3; i > 0; i -= 3) {
+      integer.insert(static_cast<std::size_t>(i), ",");
+    }
+    return (negative ? "-" : "") + integer + fraction;
+  };
+  switch (format) {
+    case NumberFormat::Decimals0:
+    case NumberFormat::Decimals1:
+    case NumberFormat::Decimals2:
+    case NumberFormat::Decimals3:
+    case NumberFormat::Decimals4: {
+      if (count_like) {
+        return text;
+      }
+      const int decimals = static_cast<int>(format) - static_cast<int>(NumberFormat::Decimals0);
+      std::snprintf(buf, sizeof(buf), "%.*f", decimals, v);
+      return buf;
+    }
+    case NumberFormat::Thousands:
+      std::snprintf(buf, sizeof(buf), count_like ? "%.0f" : "%.2f", v);
+      return group(buf);
+    case NumberFormat::Scientific:
+      if (count_like) {
+        return text;
+      }
+      std::snprintf(buf, sizeof(buf), "%.3e", v);
+      return buf;
+    case NumberFormat::Default:
+      break;
+  }
+  return text;
+}
+
+// Escapes `text` for HTML and, for a browser view, adds a soft break (<wbr>) after _ - . / so a
+// long snake_case name can wrap at its separators instead of overflowing.
+std::string escape_html_breakable_(const std::string_view text) {
+  std::string out;
+  out.reserve(text.size() + 16);
+  for (std::size_t i = 0; i < text.size(); ++i) {
+    out += escape_html_(text.substr(i, 1));
+    const char ch = text[i];
+    if ((ch == '_' || ch == '-' || ch == '.' || ch == '/') && i + 1 < text.size()) {
+      out += "<wbr>";
+    }
+  }
+  return out;
+}
+
+// Appends `text` as a JSON string. '<' is escaped so the payload can sit in a <script> element.
+void append_json_string_(std::string& out, const std::string_view text) {
+  out.push_back('"');
+  for (const char ch : text) {
+    switch (ch) {
+      case '"':
+        out += "\\\"";
+        break;
+      case '\\':
+        out += "\\\\";
+        break;
+      case '<':
+        out += "\\u003c";
+        break;
+      case '\n':
+        out += "\\n";
+        break;
+      case '\r':
+        out += "\\r";
+        break;
+      case '\t':
+        out += "\\t";
+        break;
+      default:
+        if (static_cast<unsigned char>(ch) < 0x20) {
+          char buf[8];
+          std::snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned>(static_cast<unsigned char>(ch)));
+          out += buf;
+        } else {
+          out.push_back(ch);
+        }
+    }
+  }
+  out.push_back('"');
+}
+
 std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
-                                    std::string_view table_id) {
+                                    std::string_view table_id,
+                                    const HtmlBodyStyle& style = {}) {
+  const auto corner_label = style.corner_label;
+  const auto show_cards = style.show_cards;
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.labels().values());
-  std::vector<Slate> display_cols;
+  const auto display_cases = display_shelf(frame.labels().values());
+  std::vector<Shelf> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
-    display_cols.push_back(display_slate(col));
+    display_cols.push_back(display_shelf(col));
   }
   const auto names = frame.features();
 
-  std::string body;
-  body += "<div class=\"summary-grid\">";
-  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
-                      frame.ncases());
-  body +=
-      pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                  frame.nfeatures());
-  body += pluss::tils::OutputEngine::format(
-      "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.labels().values())));
-  body += "</div>";
-
-  body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
-  int case_width_px = 0;
-  if (options.show_case_index) {
-    case_width_px = pluss::view::window::layout_math_text("case", 14).width;
-    for (std::int64_t row = 0; row < frame.ncases(); ++row) {
-      case_width_px = std::max(
-          case_width_px,
-          pluss::view::window::layout_math_text(slate_value_at(display_cases, row), 14).width);
+  // Per column: 1 = measurement (any numeric type), 2 = count column; bool and text are
+  // never reformatted.
+  std::vector<std::uint8_t> number_kind(cols.size(), 0);
+  if (style.format_numbers && options.number_format != NumberFormat::Default) {
+    for (std::size_t c = 0; c < cols.size(); ++c) {
+      if (!is_numeric_shelf(cols[c])) {
+        continue;
+      }
+      const auto dt = cols[c].as_series().dtype();
+      if (!dt.is_floating() && !dt.is_integral()) {
+        continue;  // bool
+      }
+      const bool is_count = std::find(style.count_columns.begin(), style.count_columns.end(), names[c]) !=
+                            style.count_columns.end();
+      number_kind[c] = is_count ? 2 : 1;
     }
-    case_width_px += 5;
   }
 
-  body += pluss::tils::OutputEngine::format("<table id=\"{}\" data-filterable=\"true\">", escape_html_(table_id));
-  if (options.show_case_index) {
+  std::string body;
+  if (show_cards) {
+    body += "<div class=\"summary-grid\">";
+    body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+                        frame.ncases());
+    body +=
+        pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+                    frame.nfeatures());
+    body += pluss::tils::OutputEngine::format(
+        "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
+        escape_html_(logical_dtype(frame.labels().values())));
+    body += "</div>";
+  }
+
+  body += style.virtual_rows ? "<div class=\"table-wrap vwrap\"><div class=\"table-scroll\">"
+                              : "<div class=\"table-wrap\"><div class=\"table-scroll\">";
+  // The label column starts at a fixed default width like every other column (nothing is sized
+  // from the labels, so long feature names never blow it out); the user drags it to taste.
+  constexpr int kLabelColumnPx = 140;
+  const int case_width_px = options.show_case_index ? kLabelColumnPx : 0;
+
+  // In a browser view every column, the label column included, has the same fixed width (like a
+  // spreadsheet; the page scrolls sideways) and text wraps inside it. The in-house view sizes its
+  // columns itself.
+  const bool browser_view = options.backend == DisplayBackend::NativeWebView;
+  constexpr int kBrowserColumnPx = 150;
+  const std::size_t total_columns = cols.size() + (options.show_case_index ? 1 : 0);
+  // A long table also uses the cheaper fixed layout: the browser then lays out from the first row
+  // instead of measuring every cell of the whole table.
+  std::string table_attributes;
+  if (browser_view || frame.ncases() > 5000 || style.virtual_rows) {
+    table_attributes += " class=\"fixed\"";
+  }
+  if (browser_view) {
+    table_attributes += pluss::tils::OutputEngine::format(
+        " style=\"width:{}px\"", static_cast<std::int64_t>(total_columns) * kBrowserColumnPx);
+  }
+  if (style.virtual_rows) {
+    table_attributes += " data-virtual=\"true\"";
+  }
+  body += pluss::tils::OutputEngine::format("<table id=\"{}\" data-filterable=\"true\"{}>",
+                                            escape_html_(table_id), table_attributes);
+  if (browser_view) {
+    body += "<colgroup>";
+    for (std::size_t i = 0; i < total_columns; ++i) {
+      body += pluss::tils::OutputEngine::format("<col style=\"width:{}px\">", kBrowserColumnPx);
+    }
+    body += "</colgroup>";
+  } else if (options.show_case_index) {
     body += "<colgroup>";
     body += pluss::tils::OutputEngine::format(
         "<col class=\"case-col\" style=\"width:{}px; min-width:{}px; max-width:{}px;\">",
@@ -1512,43 +2069,129 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   std::size_t column_index = 0;
   if (options.show_case_index) {
-    const auto case_numeric = is_numeric_slate(frame.labels().values());
+    const auto case_numeric = is_numeric_shelf(frame.labels().values());
     body += pluss::tils::OutputEngine::format(
-        "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
+        "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">{}</th>",
         case_numeric ? " num" : "",
         column_index++,
-        case_numeric ? "numeric" : "text");
+        case_numeric ? "numeric" : "text",
+        browser_view ? escape_html_breakable_(corner_label) : escape_html_(corner_label));
   }
 
   for (std::size_t i = 0; i < names.size(); ++i) {
-    const auto numeric = is_numeric_slate(cols[i]);
+    const auto numeric = is_numeric_shelf(cols[i]);
     body += pluss::tils::OutputEngine::format("<th class=\"sortable{}\" data-column-index=\"{}\" data-kind=\"{}\">{}</th>",
                         numeric ? " num" : "",
                         column_index++,
                         numeric ? "numeric" : "text",
-                        escape_html_(names[i]));
+                        browser_view ? escape_html_breakable_(names[i]) : escape_html_(names[i]));
   }
   body += "</tr></thead><tbody>";
 
-  for (std::int64_t row = 0; row < frame.ncases(); ++row) {
-    body += pluss::tils::OutputEngine::format("<tr data-row-index=\"{}\">", row);
+  if (style.virtual_rows) {
+    // The rows travel as data and a short script draws the visible window; see the page script.
+    body += "</tbody></table>";
+    std::string data = "{\"num\":[";
+    bool first_flag = true;
+    const auto flag = [&](const bool on) {
+      if (!first_flag) {
+        data.push_back(',');
+      }
+      first_flag = false;
+      data.push_back(on ? '1' : '0');
+    };
     if (options.show_case_index) {
-      const auto case_value = slate_value_at(display_cases, row);
-      const auto case_numeric = is_numeric_slate(frame.labels().values());
-      body += pluss::tils::OutputEngine::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
-                          case_numeric ? " num" : "",
-                          case_value == "NULL" ? " missing" : "",
-                          escape_html_(case_value),
-                          escape_html_(case_value));
+      flag(is_numeric_shelf(frame.labels().values()));
+    }
+    for (const auto& col : cols) {
+      flag(is_numeric_shelf(col));
+    }
+    data += options.show_case_index ? "],\"sticky\":1,\"rows\":[" : "],\"sticky\":0,\"rows\":[";
+    data.reserve(data.size() + static_cast<std::size_t>(frame.ncases()) * (cols.size() * 14 + 12));
+    for (std::int64_t row = 0; row < frame.ncases(); ++row) {
+      data += row == 0 ? "[" : ",[";
+      bool first_cell = true;
+      if (options.show_case_index) {
+        append_json_string_(data, shelf_value_at(display_cases, row));
+        first_cell = false;
+      }
+      for (std::size_t col = 0; col < cols.size(); ++col) {
+        if (!first_cell) {
+          data.push_back(',');
+        }
+        first_cell = false;
+        append_json_string_(data, shelf_value_at(display_cols[col], row));
+      }
+      data.push_back(']');
+    }
+    data += "]}";
+    body += pluss::tils::OutputEngine::format("<script type=\"application/json\" id=\"{}-data\">", escape_html_(table_id));
+    body += data;
+    body += "</script></div>";
+    // Position readout: the scrollbar thumb of a very long table moves by fractions of a pixel,
+    // so the script also says which rows are on screen.
+    body += pluss::tils::OutputEngine::format("<div class=\"vbadge\" id=\"{}-badge\"></div>", escape_html_(table_id));
+    body += "</div>";
+    return body;
+  }
+
+  // Compact markup: the page for a long frame is dominated by cell tags, so attributes that
+  // add nothing are left out (an empty class, a sort value equal to the text, a row index, the
+  // class of odd rows).
+  const bool case_numeric = options.show_case_index && is_numeric_shelf(frame.labels().values());
+  std::vector<std::uint8_t> col_numeric(cols.size(), 0);
+  for (std::size_t c = 0; c < cols.size(); ++c) {
+    col_numeric[c] = is_numeric_shelf(cols[c]) ? 1 : 0;
+  }
+  const auto& heat_palette = palette_for_(resolve_theme_(options));
+  body.reserve(body.size() + static_cast<std::size_t>(frame.ncases()) * (cols.size() * 34 + 48));
+
+  for (std::int64_t row = 0; row < frame.ncases(); ++row) {
+    body += (row % 2 == 1) ? "<tr class=\"even\">" : "<tr>";
+    if (options.show_case_index) {
+      const auto case_value = shelf_value_at(display_cases, row);
+      body += "<td class=\"sticky-left";
+      if (case_numeric) {
+        body += " num";
+      }
+      if (case_value == "NULL") {
+        body += " missing";
+      }
+      body += "\">";
+      body += browser_view ? escape_html_breakable_(case_value) : escape_html_(case_value);
+      body += "</td>";
     }
     for (std::size_t col = 0; col < cols.size(); ++col) {
-      const auto value = slate_value_at(display_cols[col], row);
-      const auto numeric = is_numeric_slate(cols[col]);
-      body += pluss::tils::OutputEngine::format("<td class=\"{}{}\" data-sort-value=\"{}\">{}</td>",
-                          numeric ? "num" : "",
-                          value == "NULL" ? " missing" : "",
-                          escape_html_(value),
-                          escape_html_(value));
+      const auto value = shelf_value_at(display_cols[col], row);
+      const bool numeric = col_numeric[col] != 0;
+      const bool is_null = value == "NULL";
+      const bool is_nonfinite = numeric && (value == "NaN" || value == "inf" || value == "-inf");
+      auto shown = (style.blank_nulls && is_null) ? std::string{} : value;
+      if (number_kind[col] != 0) {
+        shown = format_number_cell_(value, number_kind[col] == 2, options.number_format);
+      }
+      if (is_nonfinite) {
+        shown = (value == "NaN") ? "NAN" : (value == "inf" ? "INF" : "-INF");  // PlussView shows the loud forms; head()/tail() keep NaN/inf
+      }
+      const auto& sort_value = (style.blank_nulls && is_null) ? std::string{} : value;
+      body += "<td";
+      const bool missing_cell = is_null && !style.blank_nulls;
+      if (numeric || missing_cell) {
+        body += " class=\"";
+        body += numeric ? (missing_cell ? "num missing" : (is_nonfinite ? "num nonfinite" : "num")) : "missing";
+        body += "\"";
+      }
+      if (sort_value != shown) {
+        body += " data-sort-value=\"";
+        body += escape_html_(sort_value);
+        body += "\"";
+      }
+      if (style.heatmap && numeric && !is_null && !is_nonfinite) {
+        body += heat_style_(std::strtod(value.c_str(), nullptr), heat_palette);
+      }
+      body += ">";
+      body += escape_html_(shown);
+      body += "</td>";
     }
     body += "</tr>";
   }
@@ -1561,7 +2204,7 @@ class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
-      : cases_(display_slate(frame.labels().values())),
+      : cases_(display_shelf(frame.labels().values())),
         columns_(dataframe_columns_(frame)),
         names_(frame.features()),
         rows_(frame.ncases()) {
@@ -1570,10 +2213,10 @@ class DataFrameVirtualTableModel final
     std::unordered_set<const void*> shared_numeric_payloads;
     for (std::size_t index = 0; index < columns_.size(); ++index) {
       auto& column = columns_[index];
-      column = display_slate(column);
-      numeric_.push_back(is_numeric_slate(column));
+      column = display_shelf(column);
+      numeric_.push_back(is_numeric_shelf(column));
       bool searchable = true;
-      if (column.kind() == SlateKind::Series &&
+      if (column.kind() == ShelfKind::Series &&
           !detail::has_validity_mask(column)) {
         const void* payload = column.as_series().raw_data();
         searchable = shared_numeric_payloads.insert(payload).second;
@@ -1597,7 +2240,7 @@ class DataFrameVirtualTableModel final
   }
 
   std::string row_label(const std::int64_t row) const override {
-    return slate_value_at(cases_, row);
+    return shelf_value_at(cases_, row);
   }
 
   std::string column_name(const std::int64_t column) const override {
@@ -1623,11 +2266,16 @@ class DataFrameVirtualTableModel final
     }
     const auto& source = columns_[static_cast<std::size_t>(column)];
     const bool missing = !detail::valid_at(source, row);
+    std::string text = missing ? std::string("NULL") : shelf_value_at(source, row);
+    const bool nonfinite = !missing && (text == "NaN" || text == "inf" || text == "-inf") && is_numeric_shelf(source);
+    if (nonfinite) {
+      text = (text == "NaN") ? "NAN" : (text == "inf" ? "INF" : "-INF");  // PlussView shows the loud forms
+    }
     return pluss::view::VirtualTableCell{
-        .text = missing ? std::string("NULL") : slate_value_at(source, row),
+        .text = std::move(text),
         .missing = missing,
-    };
-  }
+        .nonfinite = nonfinite,
+    };  }
 
   bool row_matches(const std::int64_t row,
                    const std::string_view folded_query) const override {
@@ -1643,11 +2291,11 @@ class DataFrameVirtualTableModel final
       }
       return folded.find(folded_query) != std::string::npos;
     };
-    if (contains_query(slate_value_at(cases_, row))) {
+    if (contains_query(shelf_value_at(cases_, row))) {
       return true;
     }
     for (const std::size_t index : search_columns_) {
-      if (contains_query(slate_value_at(columns_[index], row))) {
+      if (contains_query(shelf_value_at(columns_[index], row))) {
         return true;
       }
     }
@@ -1655,18 +2303,17 @@ class DataFrameVirtualTableModel final
   }
 
  private:
-  Slate cases_{};
-  std::vector<Slate> columns_{};
+  Shelf cases_{};
+  std::vector<Shelf> columns_{};
   std::vector<std::string> names_{};
   std::vector<bool> numeric_{};
   std::vector<std::size_t> search_columns_{};
   std::int64_t rows_{0};
 };
 
-std::string render_virtual_html_table_(const DataFrame& frame,
-                                       std::string_view title,
-                                       std::string_view subtitle,
-                                       const DisplayOptions& options) {
+// Body of the data-table panel when the in-house viewer paints the rows from a model: the
+// summary cards and an empty table marked as virtual.
+std::string virtual_table_body_(const DataFrame& frame) {
   std::string body;
   body += "<div class=\"summary-grid\">";
   body += pluss::tils::OutputEngine::format(
@@ -1685,21 +2332,494 @@ std::string render_virtual_html_table_(const DataFrame& frame,
   body +=
       "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
       "id=\"plussmic-table\" data-virtual-table=\"true\"></table></div></div>";
-  return html_shell_(title, subtitle, body, options);
+  return body;
 }
 
+// ---------------------------------------------------------------------------
+// Shared helpers for the profiling views (Missing / Outliers). Every view renders as a table so the viewer's table scrolling works.
+// ---------------------------------------------------------------------------
+
+// Series of doubles with some entries unavailable (shown blank in the table).
+Shelf masked_f64_(const std::vector<double>& values, const std::vector<std::uint8_t>& ok) {
+  const auto mask = pluss::make_series(ok).to(pluss::codem::ScalarType::Bool);
+  return Shelf(pluss::make_series(values), mask);
+}
+
+// Per-case "is missing" flags for one column.
+std::vector<bool> missing_flags_(const Shelf& col, const std::int64_t n) {
+  std::vector<bool> out(static_cast<std::size_t>(n), false);
+  try {
+    const auto flags = col.isnull().as_series().to(pluss::codem::ScalarType::Bool).host<bool>();
+    for (std::size_t i = 0; i < flags.size() && i < out.size(); ++i) {
+      out[i] = flags[i];
+    }
+  } catch (const std::exception&) {
+  }
+  return out;
+}
+
+HtmlBodyStyle profile_style_(std::string_view corner, std::vector<std::string> count_columns = {}) {
+  HtmlBodyStyle style;
+  style.corner_label = corner;
+  style.show_cards = true;  // each view shows the Cases / Features / Case Axis of its own table
+  style.blank_nulls = true;
+  style.format_numbers = true;
+  style.count_columns = std::move(count_columns);
+  return style;
+}
+
+// "Default" shows the tidy default rounding; any explicit number format starts from the
+// full-precision values instead.
+DataFrame auto_round_(const DataFrame& table, const std::int64_t decimals, const DisplayOptions& options) {
+  return options.number_format == NumberFormat::Default ? DataFrame(table.round(decimals)) : table;
+}
+
+bool is_stat_numeric_(const Shelf& col) {
+  return is_numeric_shelf(col) && col.as_series().dtype().scalar != pluss::codem::ScalarType::Bool;
+}
+
+// ---------------------------------------------------------------------------
+// The profiling views of a frame (Summary, Correlation, Missing, Outliers). Computing one
+// (percentiles, correlations, ...) is the expensive part and turning the result into HTML is
+// cheap, so StatsViews computes a view only when it is first asked for and keeps the result: a
+// theme or number-format change then only re-renders, and a view nobody opens is never computed.
+// ---------------------------------------------------------------------------
+struct ViewResult {
+  DataFrame table;         // unrounded
+  std::size_t numeric{0};  // correlation: how many numeric columns the frame has
+  bool pairs{false};       // correlation: the strongest pairs instead of the full matrix
+};
+
+// One row per numeric column: count / missing / unique, mean, std and the five-number
+// summary. Non-numeric columns are not summarised.
+std::optional<ViewResult> compute_summary_(const DataFrame& frame) {
+  const auto cols = dataframe_columns_(frame);
+  const auto all_names = frame.features();
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  std::vector<std::string> names;
+  std::vector<std::int64_t> count, missing, nan_count, inf_count, unique;
+  std::array<std::vector<double>, 7> stat;  // mean std min 25% 50% 75% max
+  std::vector<std::uint8_t> has_stat;
+  const auto n = frame.ncases();
+  for (std::size_t c = 0; c < cols.size(); ++c) {
+    const auto& col = cols[c];
+    if (!is_stat_numeric_(col)) {
+      continue;
+    }
+    names.push_back(all_names[c]);
+    const auto valid = col.count().to_int();
+    count.push_back(valid);
+    missing.push_back(n - valid);
+    const auto count_true = [](const Shelf& flags) {
+      std::int64_t total = 0;
+      try {
+        for (const bool f : flags.as_series().to(pluss::codem::ScalarType::Bool).host<bool>()) total += f ? 1 : 0;
+      } catch (const std::exception&) {
+      }
+      return total;
+    };
+    nan_count.push_back(count_true(col.isnan()));
+    inf_count.push_back(count_true(col.isinf()));
+    unique.push_back(col.ndistinct().to_int());
+
+    std::array<double, 7> v{nan, nan, nan, nan, nan, nan, nan};
+    bool ok = false;
+    if (valid > 0) {
+      try {
+        const auto q = col.percentiles({0.25, 0.5, 0.75}).as_series().to(pluss::codem::ScalarType::Float64).host<double>();
+        v[0] = col.mean().to_dbl();
+        v[1] = valid > 1 ? col.std().to_dbl() : nan;
+        v[2] = col.min().to_dbl();
+        v[3] = q.size() > 0 ? q[0] : nan;
+        v[4] = q.size() > 1 ? q[1] : nan;
+        v[5] = q.size() > 2 ? q[2] : nan;
+        v[6] = col.max().to_dbl();
+        ok = true;
+      } catch (const std::exception&) {
+      }
+    }
+    for (std::size_t k = 0; k < 7; ++k) {
+      stat[k].push_back(v[k]);
+    }
+    has_stat.push_back(ok ? 1 : 0);
+  }
+  if (names.empty()) {
+    return std::nullopt;
+  }
+
+  std::vector<std::pair<std::string, Shelf>> out;
+  out.emplace_back("count", Shelf(pluss::make_series(count)));
+  out.emplace_back("missing", Shelf(pluss::make_series(missing)));
+  out.emplace_back("nan", Shelf(pluss::make_series(nan_count)));
+  out.emplace_back("inf", Shelf(pluss::make_series(inf_count)));
+  out.emplace_back("unique", Shelf(pluss::make_series(unique)));
+  const char* stat_names[] = {"mean", "std", "min", "25%", "50%", "75%", "max"};
+  for (std::size_t k = 0; k < 7; ++k) {
+    out.emplace_back(stat_names[k], masked_f64_(stat[k], has_stat));
+  }
+  const DataFrame summary(std::move(out), Shelf(pluss::make_note(names)));
+  return ViewResult{summary, 0, false};
+}
+
+// Pearson correlation between numeric columns. Up to kMatrixColumns numeric columns it is the
+// full matrix; beyond that an N x N matrix is unreadable (and grows quadratically), so it lists
+// only the strongest pairs instead. Empty when there are fewer than two numeric columns or
+// correlation is undefined for the frame.
+std::optional<ViewResult> compute_correlation_(const DataFrame& frame) {
+  constexpr std::size_t kMatrixColumns = 25;
+  constexpr std::size_t kMaxPairs = 50;
+  std::size_t numeric = 0;
+  for (const auto& col : dataframe_columns_(frame)) {
+    numeric += is_stat_numeric_(col) ? 1 : 0;
+  }
+  if (numeric < 2) {
+    return std::nullopt;
+  }
+  try {
+    const DataFrame corr_full = frame.corr();
+    if (numeric <= kMatrixColumns) {
+      return ViewResult{corr_full, numeric, false};
+    }
+
+    // Strongest pairs by |r|, upper triangle only.
+    const auto matrix_cols = dataframe_columns_(corr_full);
+    const auto matrix_names = corr_full.features();
+    struct Pair {
+      std::size_t a, b;
+      double r;
+    };
+    std::vector<Pair> pairs;
+    std::vector<std::vector<double>> values;
+    values.reserve(matrix_cols.size());
+    for (const auto& col : matrix_cols) {
+      values.push_back(col.as_series().to(pluss::codem::ScalarType::Float64).host<double>());
+    }
+    for (std::size_t a = 0; a < values.size(); ++a) {
+      for (std::size_t b = a + 1; b < values.size() && b < values[a].size() + a + 1; ++b) {
+        // Row b of column a is the correlation of features b and a.
+        if (b >= values[a].size()) {
+          continue;
+        }
+        const double r = values[a][b];
+        if (std::isfinite(r)) {
+          pairs.push_back({a, b, r});
+        }
+      }
+    }
+    const std::size_t keep = std::min(kMaxPairs, pairs.size());
+    std::partial_sort(pairs.begin(), pairs.begin() + static_cast<std::ptrdiff_t>(keep), pairs.end(),
+                      [](const Pair& x, const Pair& y) { return std::abs(x.r) > std::abs(y.r); });
+    pairs.resize(keep);
+    if (pairs.empty()) {
+      return std::nullopt;
+    }
+    std::vector<std::string> first, second;
+    std::vector<double> r;
+    for (const auto& p : pairs) {
+      first.push_back(matrix_names[p.a]);
+      second.push_back(matrix_names[p.b]);
+      r.push_back(p.r);
+    }
+    std::vector<std::pair<std::string, Shelf>> out;
+    out.emplace_back("feature", Shelf(pluss::make_note(first)));
+    out.emplace_back("with", Shelf(pluss::make_note(second)));
+    out.emplace_back("r", Shelf(pluss::make_series(r)));
+    return ViewResult{DataFrame(std::move(out)), numeric, true};
+  } catch (const std::exception&) {
+    return std::nullopt;
+  }
+}
+
+// How incomplete each column is: how many values are missing and what share of the column
+// that is (to judge whether it is worth keeping). The last row counts cases with a gap in
+// any column.
+std::optional<ViewResult> compute_missing_(const DataFrame& frame) {
+  const auto cols = dataframe_columns_(frame);
+  const auto names = frame.features();
+  const auto n = frame.ncases();
+  if (cols.empty() || n == 0) {
+    return std::nullopt;
+  }
+  std::vector<std::string> row_names;
+  std::vector<std::int64_t> missing_count;
+  std::vector<double> percent;
+  std::vector<bool> any_missing(static_cast<std::size_t>(n), false);
+
+  const auto add_row = [&](const std::string& name, const std::int64_t gaps) {
+    row_names.push_back(name);
+    missing_count.push_back(gaps);
+    percent.push_back(100.0 * static_cast<double>(gaps) / static_cast<double>(n));
+  };
+  for (std::size_t c = 0; c < cols.size(); ++c) {
+    const auto flags = missing_flags_(cols[c], n);
+    std::int64_t gaps = 0;
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (flags[static_cast<std::size_t>(i)]) {
+        ++gaps;
+        any_missing[static_cast<std::size_t>(i)] = true;
+      }
+    }
+    add_row(names[c], gaps);
+  }
+  add_row("(any column)", std::count(any_missing.begin(), any_missing.end(), true));
+
+  std::vector<std::pair<std::string, Shelf>> out;
+  out.emplace_back("missing", Shelf(pluss::make_series(missing_count)));
+  out.emplace_back("missing %", Shelf(pluss::make_series(percent)));
+  const DataFrame table(std::move(out), Shelf(pluss::make_note(row_names)));
+  return ViewResult{table, 0, false};
+}
+
+// Per numeric column, by the 1.5 x IQR rule: the floor and ceiling (the lower and upper
+// fences), how many values fall below / above them, the percent of the column that is outlying,
+// and the single most extreme value. (To find where the outliers are, sort the Table view by
+// that column: the extremes come first.)
+std::optional<ViewResult> compute_outliers_(const DataFrame& frame) {
+  const auto cols = dataframe_columns_(frame);
+  const auto names = frame.features();
+  const auto n = frame.ncases();
+
+  std::vector<std::string> row_names;
+  std::vector<double> lower, upper, below, above, share, extreme;
+  std::vector<std::uint8_t> has_fence, has_extreme;
+  for (std::size_t c = 0; c < cols.size(); ++c) {
+    if (!is_stat_numeric_(cols[c])) {
+      continue;
+    }
+    row_names.push_back(names[c]);
+    double lo = 0.0, hi = 0.0, nb = 0.0, na = 0.0, pct = 0.0, ext = 0.0;
+    bool fenced = false, has_ext = false;
+    try {
+      const auto q = cols[c].percentiles({0.25, 0.75}).as_series().to(pluss::codem::ScalarType::Float64).host<double>();
+      const auto values = cols[c].as_series().to(pluss::codem::ScalarType::Float64).host<double>();
+      const auto missing = missing_flags_(cols[c], n);
+      if (q.size() >= 2 && q[1] - q[0] > 0.0) {
+        const double iqr = q[1] - q[0];
+        lo = q[0] - 1.5 * iqr;
+        hi = q[1] + 1.5 * iqr;
+        fenced = true;
+        double valid = 0.0, best = -1.0;
+        for (std::int64_t i = 0; i < n && i < static_cast<std::int64_t>(values.size()); ++i) {
+          const double v = values[static_cast<std::size_t>(i)];
+          if (missing[static_cast<std::size_t>(i)] || !std::isfinite(v)) {
+            continue;
+          }
+          valid += 1.0;
+          double beyond = 0.0;
+          if (v < lo) {
+            nb += 1.0;
+            beyond = (lo - v) / iqr;
+          } else if (v > hi) {
+            na += 1.0;
+            beyond = (v - hi) / iqr;
+          } else {
+            continue;
+          }
+          if (beyond > best) {
+            best = beyond;
+            ext = v;
+            has_ext = true;
+          }
+        }
+        pct = valid > 0.0 ? 100.0 * (nb + na) / valid : 0.0;
+      }
+    } catch (const std::exception&) {
+      fenced = false;
+      has_ext = false;
+    }
+    lower.push_back(lo);
+    upper.push_back(hi);
+    below.push_back(nb);
+    above.push_back(na);
+    share.push_back(pct);
+    extreme.push_back(ext);
+    has_fence.push_back(fenced ? 1 : 0);
+    has_extreme.push_back(has_ext ? 1 : 0);
+  }
+  if (row_names.empty()) {
+    return std::nullopt;
+  }
+  std::vector<std::pair<std::string, Shelf>> out;
+  out.emplace_back("floor", masked_f64_(lower, has_fence));
+  out.emplace_back("ceiling", masked_f64_(upper, has_fence));
+  out.emplace_back("below", masked_f64_(below, has_fence));
+  out.emplace_back("above", masked_f64_(above, has_fence));
+  out.emplace_back("percent", masked_f64_(share, has_fence));
+  out.emplace_back("extreme", masked_f64_(extreme, has_extreme));
+  const DataFrame table(std::move(out), Shelf(pluss::make_note(row_names)));
+  return ViewResult{table, 0, false};
+}
+
+std::string render_summary_(const ViewResult& result, const DisplayOptions& options) {
+  return render_html_table_body_(auto_round_(result.table, 4, options), options, "plussmic-summary",
+                                 profile_style_("feature", {"count", "missing", "nan", "inf", "unique"}));
+}
+
+std::string render_correlation_(const ViewResult& result, const DisplayOptions& options) {
+  HtmlBodyStyle style = profile_style_(result.pairs ? "rank" : "feature");
+  style.heatmap = true;
+  std::string html =
+      render_html_table_body_(auto_round_(result.table, 3, options), options, "plussmic-corr", style);
+  if (result.pairs) {
+    html += pluss::tils::OutputEngine::format(
+        "<div class=\"muted\" style=\"padding:8px 2px;\">{} numeric columns: showing the {} strongest pairs instead of the full matrix.</div>",
+        result.numeric, result.table.ncases());
+  }
+  return html;
+}
+
+std::string render_missing_(const ViewResult& result, const DisplayOptions& options) {
+  return render_html_table_body_(auto_round_(result.table, 1, options), options, "plussmic-missing",
+                                 profile_style_("feature", {"missing"}));
+}
+
+std::string render_outliers_(const ViewResult& result, const DisplayOptions& options) {
+  return render_html_table_body_(auto_round_(result.table, 4, options), options, "plussmic-outliers",
+                                 profile_style_("feature", {"below", "above"}));
+}
+
+// The views of one frame, by id, in menu order. available() is cheap (column types only);
+// render() computes on first use and then reuses the result.
+class StatsViews {
+ public:
+  explicit StatsViews(DataFrame frame) : frame_(std::move(frame)) {}
+
+  struct Info {
+    std::string id;
+    std::string label;
+  };
+
+  // Views that can apply to this frame. A view listed here may still turn out to be undefined
+  // (render() then returns an empty string).
+  std::vector<Info> available() const {
+    std::size_t numeric = 0;
+    for (const auto& col : dataframe_columns_(frame_)) {
+      numeric += is_stat_numeric_(col) ? 1 : 0;
+    }
+    std::vector<Info> out;
+    if (numeric >= 1) {
+      out.push_back({"summary", "Summary"});
+    }
+    if (numeric >= 2) {
+      out.push_back({"correlation", "Correlation"});
+    }
+    if (frame_.ncases() > 0 && frame_.nfeatures() > 0) {
+      out.push_back({"missing", "Missing"});
+    }
+    if (numeric >= 1) {
+      out.push_back({"outliers", "Outliers"});
+    }
+    return out;
+  }
+
+  std::string render(const std::string& id, const DisplayOptions& options) {
+    const auto& result = result_for_(id);
+    if (!result.has_value()) {
+      return {};
+    }
+    if (id == "summary") {
+      return render_summary_(*result, options);
+    }
+    if (id == "correlation") {
+      return render_correlation_(*result, options);
+    }
+    if (id == "missing") {
+      return render_missing_(*result, options);
+    }
+    return render_outliers_(*result, options);
+  }
+
+ private:
+  const std::optional<ViewResult>& result_for_(const std::string& id) {
+    const auto found = cache_.find(id);
+    if (found != cache_.end()) {
+      return found->second;
+    }
+    std::optional<ViewResult> computed;
+    if (id == "summary") {
+      computed = compute_summary_(frame_);
+    } else if (id == "correlation") {
+      computed = compute_correlation_(frame_);
+    } else if (id == "missing") {
+      computed = compute_missing_(frame_);
+    } else if (id == "outliers") {
+      computed = compute_outliers_(frame_);
+    }
+    return cache_.emplace(id, std::move(computed)).first->second;
+  }
+
+  DataFrame frame_;
+  std::map<std::string, std::optional<ViewResult>> cache_;
+};
+
+// The page for a frame: the data table plus, as views of the View menu, the profiling views.
+// `views` supplies (and caches) those views. With `lazy` their panels are left empty for the
+// window to fill the first time each is opened; `virtual_model` means the in-house viewer paints
+// the data table's rows from a model.
 std::string render_html_table_(const DataFrame& frame,
                                std::string_view title,
                                std::string_view subtitle,
-                               const DisplayOptions& options) {
-  const auto body = render_html_table_body_(frame, options, "plussmic-table");
+                               const DisplayOptions& options,
+                               StatsViews& views,
+                               const bool lazy = false,
+                               const bool virtual_model = false) {
+  HtmlBodyStyle table_style;
+  table_style.format_numbers = true;
+  // A browser view lays out every row of a long table, which is slow to open, sort and search;
+  // past this many rows the rows are drawn by script, a window at a time.
+  constexpr std::int64_t kBrowserVirtualRows = 2000;
+  table_style.virtual_rows =
+      options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
+  auto body = virtual_model ? virtual_table_body_(frame)
+                            : render_html_table_body_(frame, options, "plussmic-table", table_style);
+  if (options.html_summary) {
+    struct Panel {
+      std::string id;
+      std::string label;
+      std::string html;
+      bool lazy{false};
+    };
+    std::vector<Panel> panels;
+    panels.push_back({"table", "Table", std::move(body), false});
+    for (const auto& info : views.available()) {
+      Panel panel{info.id, info.label, {}, lazy};
+      if (!lazy) {
+        panel.html = views.render(info.id, options);
+        if (panel.html.empty()) {
+          continue;  // undefined for this frame: no tab
+        }
+      }
+      panels.push_back(std::move(panel));
+    }
+    if (panels.size() > 1) {
+      std::string items;
+      std::string sections;
+      for (std::size_t i = 0; i < panels.size(); ++i) {
+        const auto& panel = panels[i];
+        items += pluss::tils::OutputEngine::format(
+            "<button id=\"tab-{0}\" type=\"button\" class=\"tab{2}\" data-tab-group=\"main\" data-tab-target=\"panel-{0}\" data-dropdown-menu=\"view-menu\" data-dropdown-label=\"view-current\">{1}</button>",
+            panel.id, panel.label, i == 0 ? " active" : "");
+        sections += pluss::tils::OutputEngine::format(
+            "<section id=\"panel-{0}\" class=\"tab-panel{1}\" data-tab-group=\"main\"{3}>{2}</section>",
+            panel.id, i == 0 ? " active" : "", panel.html,
+            panel.lazy ? pluss::tils::OutputEngine::format(" data-lazy=\"{}\"", panel.id) : std::string{});
+      }
+      std::string tabs = pluss::tils::OutputEngine::format(
+          "<div class=\"view-picker\"><button id=\"view-toggle\" type=\"button\" class=\"view-toggle\" data-dropdown=\"view-menu\">View: <span id=\"view-current\">{}</span> \u25BE</button>"
+          "<div id=\"view-menu\" class=\"view-menu\">{}</div></div>",
+          panels.front().label, items);
+      body = tabs + sections;
+    } else {
+      body = std::move(panels.front().html);
+    }
+  }
   return html_shell_(title, subtitle, body, options);
 }
 
 std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options) {
-  std::optional<Slate> display_axis0;
+  std::optional<Shelf> display_axis0;
   if (atlas.axis0_labels().has_value()) {
-    display_axis0 = display_slate(*atlas.axis0_labels());
+    display_axis0 = display_shelf(*atlas.axis0_labels());
   }
 
   std::string body;
@@ -1729,7 +2849,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "<button id=\"atlas-previous\" type=\"button\" class=\"atlas-tab\">Previous</button>";
   std::string first_label = "Frame 0";
   if (display_axis0.has_value()) {
-    first_label = slate_value_at(*display_axis0, 0);
+    first_label = shelf_value_at(*display_axis0, 0);
   }
   body += pluss::tils::OutputEngine::format(
       "<span id=\"atlas-current-frame\" class=\"atlas-current-frame\" role=\"status\">{} (1 of {})</span>",
@@ -1743,7 +2863,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
     std::string label = pluss::tils::OutputEngine::format("Frame {}", i);
     if (display_axis0.has_value()) {
-      label = slate_value_at(*display_axis0, i);
+      label = shelf_value_at(*display_axis0, i);
     }
     body += pluss::tils::OutputEngine::format(
         "<button id=\"atlas-tab-{}\" type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\" aria-pressed=\"{}\">{}</button>",
@@ -1754,7 +2874,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
     std::string label = pluss::tils::OutputEngine::format("Frame {}", i);
     if (display_axis0.has_value()) {
-      label = slate_value_at(*display_axis0, i);
+      label = shelf_value_at(*display_axis0, i);
     }
     const auto frame = atlas.frame(i);
     body += pluss::tils::OutputEngine::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
@@ -1776,7 +2896,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.labels().values());
+  const auto display_cases = display_shelf(frame.labels().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
@@ -1787,8 +2907,8 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? slate_value_at(display_cases, 0) : std::string("NULL");
-  const auto last_case = frame.ncases() > 0 ? slate_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
+  const auto first_case = frame.ncases() > 0 ? shelf_value_at(display_cases, 0) : std::string("NULL");
+  const auto last_case = frame.ncases() > 0 ? shelf_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
 
   std::string body;
   body += "<div class=\"summary-grid\">";
@@ -1844,13 +2964,33 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
                      options);
 }
 
+struct NumberFormatEntry {
+  NumberFormat format;
+  const char* id;
+  const char* label;
+};
+
+constexpr std::array<NumberFormatEntry, 8> kNumberFormats{{
+    {NumberFormat::Default, "default", "Default"},
+    {NumberFormat::Decimals0, "0", "0 dp"},
+    {NumberFormat::Decimals1, "1", "1 dp"},
+    {NumberFormat::Decimals2, "2", "2 dp"},
+    {NumberFormat::Decimals3, "3", "3 dp"},
+    {NumberFormat::Decimals4, "4", "4 dp"},
+    {NumberFormat::Thousands, "thousands", "Thousands"},
+    {NumberFormat::Scientific, "scientific", "Scientific"},
+}};
+
 bool show_html_window_(const std::string& html,
                        const DisplayOptions& options,
                        std::string_view title,
                        const DisplayBackend backend,
                        std::shared_ptr<const pluss::view::VirtualTableModel>
                            virtual_table_model = {},
-                       const bool table_viewport_scroll_only = false) {
+                       const bool table_viewport_scroll_only = false,
+                       std::function<std::string(const DisplayOptions&)> render_with = {},
+                       const bool offer_number_format = false,
+                       std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {}) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -1862,6 +3002,54 @@ bool show_html_window_(const std::string& html,
   window_opts.height = std::max<std::int64_t>(420, options.viewer_height);
   window_opts.virtual_table_model = std::move(virtual_table_model);
   window_opts.table_viewport_scroll_only = table_viewport_scroll_only;
+  if (render_with) {
+    // Window menus re-render the page. Both menus edit one shared options state, so a
+    // theme change keeps the chosen number format and the other way round.
+    const auto state = std::make_shared<DisplayOptions>(options);
+    if (render_panel_with) {
+      // Fills a view the first time it is opened, with whatever theme and number format are current.
+      window_opts.render_panel = [state, render_panel_with = std::move(render_panel_with)](std::string_view id) {
+        return render_panel_with(*state, id);
+      };
+    }
+    if (offer_number_format) {
+      pluss::view::HtmlMenu menu;
+      menu.id = "format";
+      menu.title = "Format";
+      menu.in_view_menu = true;  // a cascading entry inside the View menu
+      for (const auto& entry : kNumberFormats) {
+        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
+      }
+      menu.render = [state, render_with](std::string_view id) {
+        for (const auto& entry : kNumberFormats) {
+          if (id == entry.id) {
+            state->number_format = entry.format;
+            return render_with(*state);
+          }
+        }
+        return std::string{};
+      };
+      window_opts.menus.push_back(std::move(menu));
+    }
+    {
+      pluss::view::HtmlMenu menu;
+      menu.id = "theme";
+      menu.title = "Theme";
+      for (const auto& palette : kThemes) {
+        if (palette.theme == DisplayTheme::Native) {
+          continue;  // only used for Apple's native web view
+        }
+        menu.options.push_back(pluss::view::HtmlMenuOption{palette.name, palette.label});
+      }
+      menu.render = [state, render_with](std::string_view id) {
+        if (!parse_theme(std::string(id), state->theme)) {
+          return std::string{};
+        }
+        return render_with(*state);
+      };
+      window_opts.menus.push_back(std::move(menu));
+    }
+  }
   switch (backend) {
     case DisplayBackend::PlussWebView:
       window_opts.backend_preference = pluss::view::BackendPreference::PlussWebViewOnly;
@@ -1905,6 +3093,32 @@ TerminalInfo detect_terminal() {
 
 DisplayBackend default_backend() {
   return g_default_backend.load(std::memory_order_relaxed);
+}
+
+DisplayTheme default_theme() {
+  return g_default_theme.load(std::memory_order_relaxed);
+}
+
+void set_default_theme(DisplayTheme theme) {
+  g_default_theme.store(theme == DisplayTheme::Auto ? DisplayTheme::Default : theme, std::memory_order_relaxed);
+}
+
+const char* theme_name(DisplayTheme theme) {
+  return palette_for_(theme == DisplayTheme::Auto ? default_theme() : theme).name;
+}
+
+bool parse_theme(const std::string& name, DisplayTheme& out) {
+  std::string lower = name;
+  for (auto& ch : lower) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  for (const auto& palette : kThemes) {
+    if (lower == palette.name) {
+      out = palette.theme;
+      return true;
+    }
+  }
+  return false;
 }
 
 void set_default_backend(DisplayBackend backend) {
@@ -1962,25 +3176,26 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
   return out;
 }
 
-std::string render(const Slate& slate, const DisplayOptions& options) {
+std::string render(const Shelf& shelf, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, false);
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
-  return render_slate_series_like_(slate, effective, terminal_width);
+  return render_shelf_series_like_(shelf, effective, terminal_width);
 }
 
 std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
+  StatsViews views(frame);
   return render_html_table_(
       frame,
       document_title_("DataFrame", options),
       pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
-      options);
+      options, views);
 }
 
-std::string render_html(const Slate& slate, const DisplayOptions& options) {
-  const auto title = document_title_(slate.named() ? slate.name() : "Slate", options);
-  const auto subtitle = pluss::tils::OutputEngine::format("{} cases, dtype {}", slate.size(), slate.dtype());
-  return render_html_pre_(title, subtitle, render(slate, options), options);
+std::string render_html(const Shelf& shelf, const DisplayOptions& options) {
+  const auto title = document_title_(shelf.named() ? shelf.name() : "Shelf", options);
+  const auto subtitle = pluss::tils::OutputEngine::format("{} cases, dtype {}", shelf.size(), shelf.dtype());
+  return render_html_pre_(title, subtitle, render(shelf, options), options);
 }
 
 std::string render_html(const Atlas& atlas, const DisplayOptions& options) {
@@ -1993,7 +3208,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.labels().values());
+  const auto display_cases = display_shelf(frame.labels().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
@@ -2005,8 +3220,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? slate_value_at(display_cases, 0) : std::string("NULL");
-  const auto last_case = frame.ncases() > 0 ? slate_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
+  const auto first_case = frame.ncases() > 0 ? shelf_value_at(display_cases, 0) : std::string("NULL");
+  const auto last_case = frame.ncases() > 0 ? shelf_value_at(display_cases, frame.ncases() - 1) : std::string("NULL");
 
   TableMatrix summary;
   summary.headers = {"Field", "Value"};
@@ -2094,9 +3309,9 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   if (frame_opts.mode == DisplayMode::Wide) {
     frame_opts.mode = DisplayMode::Auto;
   }
-  std::optional<Slate> display_axis0;
+  std::optional<Shelf> display_axis0;
   if (atlas.axis0_labels().has_value()) {
-    display_axis0 = display_slate(*atlas.axis0_labels());
+    display_axis0 = display_shelf(*atlas.axis0_labels());
   }
 
   for (std::size_t i = 0; i < visible.size(); ++i) {
@@ -2107,7 +3322,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
     const auto idx = visible[i];
     std::string label = pluss::tils::OutputEngine::format("frame[{}]", idx);
     if (display_axis0.has_value()) {
-      label += pluss::tils::OutputEngine::format(" case={}", slate_value_at(*display_axis0, idx));
+      label += pluss::tils::OutputEngine::format(" case={}", shelf_value_at(*display_axis0, idx));
     }
     lines.push_back(label);
     lines.push_back(render(atlas.frame(idx), frame_opts));
@@ -2139,42 +3354,60 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                       std::max<std::int64_t>(1, columns) &&
           rows * columns > 250000));
     std::shared_ptr<const pluss::view::VirtualTableModel> virtual_model;
-    const auto html =
-        use_virtual_table
-            ? render_virtual_html_table_(
-                  frame,
-                  document_title_("DataFrame", render_opts),
-                  pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(),
-                              frame.nfeatures()),
-                  render_opts)
-            : render_html(frame, render_opts);
+    const DataFrame frame_copy = frame;
+    // PlussView computes each profiling view when it is first opened and keeps the result, so
+    // opening the window is not delayed by views nobody uses and a theme or number-format change
+    // only re-renders. (A browser view builds every view up front.)
+    const bool in_house = backend == DisplayBackend::PlussWebView;
+    const auto views = std::make_shared<StatsViews>(frame_copy);
+    const auto render_with = [frame_copy, views, use_virtual_table, in_house](const DisplayOptions& themed) {
+      return render_html_table_(
+          frame_copy,
+          document_title_("DataFrame", themed),
+          pluss::tils::OutputEngine::format("{} cases, {} features", frame_copy.ncases(), frame_copy.nfeatures()),
+          themed, *views, /*lazy=*/in_house, /*virtual_model=*/use_virtual_table);
+    };
+    const auto html = render_with(render_opts);
     if (use_virtual_table) {
       virtual_model =
           std::make_shared<DataFrameVirtualTableModel>(frame);
+    }
+    std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with;
+    if (in_house) {
+      render_panel_with = [views](const DisplayOptions& current, const std::string_view id) {
+        auto panel = views->render(std::string(id), current);
+        return panel.empty()
+                   ? std::string("<div class=\"muted\" style=\"padding:18px;\">This view is not available for this frame.</div>")
+                   : panel;
+      };
     }
     if (show_html_window_(html,
                           render_opts,
                           "Pluss DataFrame",
                           backend,
                           std::move(virtual_model),
-                          backend == DisplayBackend::PlussWebView)) {
+                          backend == DisplayBackend::PlussWebView,
+                          in_house ? std::function<std::string(const DisplayOptions&)>(render_with)
+                                   : std::function<std::string(const DisplayOptions&)>{},
+                          !use_virtual_table,
+                          std::move(render_panel_with))) {
       return;
     }
   }
   print(std::cout, frame, options);
 }
 
-void show(const Slate& slate, const DisplayOptions& options) {
+void show(const Shelf& shelf, const DisplayOptions& options) {
   const auto backend = resolve_backend_(options);
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    const auto html = render_html(slate, render_opts);
-    if (show_html_window_(html, render_opts, "PlussMic Slate", backend)) {
+    const auto html = render_html(shelf, render_opts);
+    if (show_html_window_(html, render_opts, "PlussMic Shelf", backend)) {
       return;
     }
   }
-  print(std::cout, slate, options);
+  print(std::cout, shelf, options);
 }
 
 void show(const Atlas& atlas, const DisplayOptions& options) {
@@ -2203,8 +3436,8 @@ void show_info(const DataFrame& frame, const DisplayOptions& options) {
   print_info(std::cout, frame, options);
 }
 
-void print(std::ostream& os, const Slate& slate, const DisplayOptions& options) {
-  os << render(slate, options) << '\n';
+void print(std::ostream& os, const Shelf& shelf, const DisplayOptions& options) {
+  os << render(shelf, options) << '\n';
 }
 
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options) {

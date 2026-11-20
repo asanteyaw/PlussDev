@@ -49,6 +49,7 @@ false true true
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Broader than [`isnull()`](isnull.md): also flags `Inf`/`-Inf`, not just
   `NaN` and `std::monostate`.
 - Requires the slot to be defined — an undefined `Slot` throws
@@ -65,8 +66,8 @@ false true true
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

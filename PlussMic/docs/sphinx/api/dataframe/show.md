@@ -55,9 +55,9 @@ Example 1. Print a frame's rendered text to an explicit stream.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 std::ostringstream captured;
@@ -113,8 +113,8 @@ orders.show();  // same rendered text as std::cout << orders, in a terminal cont
     <span class="label">Previous</span>
     <span class="title">shift</span>
   </a>
-  <a class="next-link" href="shuffle.html">
+  <a class="next-link" href="shownull.html">
     <span class="label">Next</span>
-    <span class="title">shuffle</span>
+    <span class="title">shownull</span>
   </a>
 </div>

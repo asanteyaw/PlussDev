@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -19,9 +19,9 @@ int main() {
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
   const DataFrame x({
-      {"amount", Slate(amount)},
-      {"ratio", Slate(ratio)},
-      {"region", Slate(region)},
+      {"amount", Shelf(amount)},
+      {"ratio", Shelf(ratio)},
+      {"region", Shelf(region)},
   });
 
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -47,11 +47,11 @@ int main() {
   const lymph::MetricReport report = model.assess(x, y, options);
 
   const DataFrame review({
-      {"amount", Slate(amount)},
-      {"ratio", Slate(ratio)},
-      {"region", Slate(region)},
-      {"actual", Slate(y)},
-      {"predicted", Slate(model.infer(x))},
+      {"amount", Shelf(amount)},
+      {"ratio", Shelf(ratio)},
+      {"region", Shelf(region)},
+      {"actual", Shelf(y)},
+      {"predicted", Shelf(model.infer(x))},
   });
   std::cout << review << "\n";
   std::cout << "accuracy = " << report.accuracy.item<double>() << "\n";

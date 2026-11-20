@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-Slate DataFrame::corr_with(const DataFrame& other, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
+Shelf DataFrame::corr_with(const DataFrame& other, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
 DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
 ```
 
@@ -24,7 +24,7 @@ present on both sides) as one paired observation. The result is a compact, one-v
 per-shared-feature summary — not a full N×N matrix, since there's exactly one
 sensible comparison per shared name.
 
-The single-frame overload returns a `Slate` whose case labels *are* the shared
+The single-frame overload returns a `Shelf` whose case labels *are* the shared
 feature names; the multi-frame overload runs the same computation once per peer frame
 and lays the results side by side as columns named `frame_0`, `frame_1`, ... in the
 order `others` was given.
@@ -54,7 +54,7 @@ to be computed at all; must be `>= 1`.
 
 ## Returns
 
-`Slate`
+`Shelf`
     (single-peer overload) One value per feature name shared by both frames, case-
     labeled by feature name. Throws `"DataFrame::corr_with: no common numeric
     features"` if this frame and `other` share no numeric feature name at all.
@@ -73,13 +73,13 @@ Example 1. Correlate against one peer frame, feature-by-feature.
 using namespace pluss::table;
 
 auto this_run = DataFrame({
-    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"y", Slate(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
+    {"x", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"y", Shelf(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
 });
 
 auto other_run = DataFrame({
-    {"x", Slate(pluss::make_series({2.0, 4.0, 5.0, 8.0}))},
-    {"y", Slate(pluss::make_series({1.0, 3.0, 2.0, 4.0}))},
+    {"x", Shelf(pluss::make_series({2.0, 4.0, 5.0, 8.0}))},
+    {"y", Shelf(pluss::make_series({1.0, 3.0, 2.0, 4.0}))},
 });
 
 auto out = this_run.corr_with(other_run);
@@ -104,8 +104,8 @@ mirror-image (and therefore perfectly *anti*-correlated).
 
 ```cpp
 auto mirrored_run = DataFrame({
-    {"x", Slate(pluss::make_series({4.0, 3.0, 2.0, 1.0}))},
-    {"y", Slate(pluss::make_series({8.0, 6.0, 4.0, 2.0}))},
+    {"x", Shelf(pluss::make_series({4.0, 3.0, 2.0, 1.0}))},
+    {"y", Shelf(pluss::make_series({8.0, 6.0, 4.0, 2.0}))},
 });
 
 std::array<DataFrame, 2> peers{other_run, mirrored_run};
@@ -119,8 +119,8 @@ std::cout << out;
 ===========================
      | frame_0      frame_1
 ---------------------------
-x    | 0.981155781  -1     
-y    | 0.8          -1     
+0    | 0.981155781  -1     
+1    | 0.8          -1     
 ---------------------------
 [2 cs x 2 feat]
 ```
@@ -134,10 +134,10 @@ on a relationship that is monotonic but not linear.
 
 ```cpp
 auto this_mono = DataFrame({
-    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"x", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
 });
 auto other_mono = DataFrame({
-    {"x", Slate(pluss::make_series({1.0, 4.0, 9.0, 16.0}))},
+    {"x", Shelf(pluss::make_series({1.0, 4.0, 9.0, 16.0}))},
 });
 
 auto pearson_out = this_mono.corr_with(other_mono, DataFrame::CorrMethod::Pearson);
@@ -173,21 +173,21 @@ Example 4. Two throws: no shared numeric feature name between the frames
 
 ```cpp
 auto disjoint = DataFrame({
-    {"z", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"z", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
 });
 
 try {
   auto out = this_run.corr_with(disjoint);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   std::array<DataFrame, 0> empty_peers{};
   auto out = this_run.corr_with(pluss::msharp::RangeView::Of<DataFrame>(empty_peers));
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -201,7 +201,7 @@ DataFrame::corr_with: expected at least one comparison frame
 
 `this_run` only has `x` and `y`; `disjoint` only has `z` — with no shared
 feature name at all, there is nothing to correlate, so the single-peer overload
-rejects the call outright rather than returning an empty `Slate`. The
+rejects the call outright rather than returning an empty `Shelf`. The
 multi-peer overload separately rejects an empty `others` list before looking at
 feature names at all.
 

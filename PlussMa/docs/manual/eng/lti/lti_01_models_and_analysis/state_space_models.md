@@ -6,7 +6,7 @@
 
 You have a dynamic system, a mass on a spring, a circuit, a plant to be controlled, and you want to describe it in a form that every other tool in this library accepts. `lti::state` builds a **state-space model** from four matrices. This page explains what the matrices mean, how continuous and discrete models differ, how models of the same size are batched, and what is checked when you build one.
 
-## The mental model
+## How it works
 
 A linear time-invariant system keeps a vector of **states** `x` that summarises everything the past has done to it. An **input** vector `u` acts on the states, and an **output** vector `y` is read from them. In continuous time
 

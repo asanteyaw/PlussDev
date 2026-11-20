@@ -105,7 +105,7 @@ Duration
 
 Removing TimeIndex therefore creates the runtime-type position needed by
 Duration without increasing the number of payload alternatives. Index status
-belongs to DataFrame/Slate axis metadata and operation contracts, not to a
+belongs to DataFrame/Shelf axis metadata and operation contracts, not to a
 column's value dtype.
 
 Duration integration must define behavior throughout PlussMic rather than
@@ -154,7 +154,7 @@ the old landing page now exists only to explain the transition.
 Duration is now a first-class payload through the initial PlussMic structural
 boundary:
 
-- `Slate`, `Stream`, `Slot`, `Registry`, and `Catalog` preserve Duration kind,
+- `Shelf`, `Stream`, `Slot`, `Registry`, and `Catalog` preserve Duration kind,
   signed nanoseconds, lane order, and validity;
 - explicit casts support Duration to Int64 nanoseconds or Note text and Int64
   or exact decimal-nanosecond Note values back to Duration, while
@@ -181,7 +181,7 @@ transitional TimeIndex names from exported variants and enums, read legacy
 TimeIndex serialization as Timeline, and only then remove the compatibility
 type, factories, and old landing page.
 
-The value-kind collapse has begun at the PlussMic storage boundary. `Slate`
+The value-kind collapse has begun at the PlussMic storage boundary. `Shelf`
 and `Stream` now store temporal payloads only as `Timeline`; their temporary
 TimeIndex constructors normalize immediately, and compatibility extraction
 projects through `Timeline::index(false)`. `Slot` applies the same
@@ -190,17 +190,17 @@ cannot reintroduce TimeIndex storage. `StreamKind::TimeIndex` and
 `SlotKind::TimeIndex` have been removed, and new Stream, Slot, and Catalog JSON
 emits only the Timeline representation. Their transitional TimeIndex overloads
 remain temporarily as input adapters and produce Timeline-backed values.
-`SlateKind::TimeIndex` and its downstream switch branches remain for the next
-compiler-guided cleanup phase, although the current Slate constructors can no
+`ShelfKind::TimeIndex` and its downstream switch branches remain for the next
+compiler-guided cleanup phase, although the current Shelf constructors can no
 longer produce that runtime kind.
 
 The PlussMic accessor cutover is also complete. Public `.timeindex()` cast and
-axis-selection methods have been removed from Slate, DataFrame, Stream,
+axis-selection methods have been removed from Shelf, DataFrame, Stream,
 Catalog, Archive, Slot, Registry, and Axel. Their Duration replacements are
 available consistently: container cast accessors expose `.duration()`, and
 DataFrame feature-axis, Catalog/Archive key-axis, and Registry/Axel field-axis
 accessors select Duration values directly. Duration-aware fill operations now
-span Stream, Catalog, Archive, Slot, Registry, DataFrame, and Slate. Remaining
+span Stream, Catalog, Archive, Slot, Registry, DataFrame, and Shelf. Remaining
 TimeIndex references are compatibility constructors and scalar overloads,
-`SlateKind`/`SlateCastTarget` branches, legacy matrix payload alternatives,
+`ShelfKind`/`ShelfCastTarget` branches, legacy matrix payload alternatives,
 and CodeH index-engine option types; none is a `.timeindex()` user call form.

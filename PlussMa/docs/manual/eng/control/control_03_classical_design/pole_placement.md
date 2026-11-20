@@ -6,7 +6,7 @@
 
 Sometimes you know how you want the closed loop to behave: a response that settles in a given time, with a given damping. That specification is a set of **poles**. `control::place` finds the state-feedback gain `K` that puts the eigenvalues of `A - B K` exactly where you ask. It is the direct counterpart of the optimal design on the previous pages: LQR chooses the poles by minimising a cost, `place` takes them from you.
 
-## The mental model
+## How it works
 
 With the law `u = -K x` the closed loop is `x' = (A - B K) x`, and its poles are the eigenvalues of `A - B K`. A plant that is **controllable** (see [controllability](../../lti/lti_01_models_and_analysis/controllability_and_gramians.md)) can have all of them moved to any positions, with the condition that complex poles of a real plant come in conjugate pairs. The poles you give are the closed-loop poles, one per state.
 

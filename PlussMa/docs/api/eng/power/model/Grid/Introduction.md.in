@@ -1,0 +1,39 @@
+# `power::Grid` Introduction
+
+A `Grid` is what `power::make` returns: the validated network with its admittance matrices and incidence maps, held immutably so that one grid can be analysed repeatedly. Every analysis takes a `Grid`.
+
+A `Grid` cannot be default-constructed. The admittance matrix `Y` relates the complex bus current injections to the voltages, and `V conj(Y V)` is the complex power injected at every bus.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counts and the admittance matrix of a two-bus grid.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 2
+
+The admittance matrix used to check an AC solution.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 3
+
+The batch shape of a scenario sweep.
+
+@@example Eng/api/power_scenarios.cpp@@
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="base.html">
+    <span class="label">Next</span>
+    <span class="title">base</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

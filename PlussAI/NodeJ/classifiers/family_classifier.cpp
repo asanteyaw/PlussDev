@@ -475,7 +475,7 @@ struct DenseFeatureMatrix {
   if (!distance_weighted) {
     const Series wsum = weight_knn.sum(1, false);
     const Series ysum = y_knn.mul(weight_knn).sum(1, false);
-    return wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+    return pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
   }
 
   constexpr double eps = 1e-12;
@@ -486,7 +486,7 @@ struct DenseFeatureMatrix {
   const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist)).mul(weight_knn);
   const Series wsum = weights.sum(1, false);
   const Series ysum = weights.mul(y_knn).sum(1, false);
-  return wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+  return pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
 }
 
 [[nodiscard]] Series radius_probability_series(const Series& query_rows,
@@ -516,15 +516,15 @@ struct DenseFeatureMatrix {
     const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask)).mul(weight_train_2d);
     const Series wsum = weights.sum(1, false);
     const Series ysum = weights.mul(y_train_2d).sum(1, false);
-    radius_prob = wsum.gt(0.0).where(ysum.div(wsum), fallback);
+    radius_prob = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), fallback);
   } else {
     const Series weights = weight_train_2d.mul(mask);
     const Series wsum = weights.sum(1, false);
     const Series ysum = y_train_2d.mul(weights).sum(1, false);
-    radius_prob = wsum.gt(0.0).where(ysum.div(wsum), fallback);
+    radius_prob = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), fallback);
   }
 
-  return in_count.gt(0.0).where(radius_prob, fallback).clamp(0.0, 1.0);
+  return pluss::series::where(in_count.gt(0.0), radius_prob, fallback).clamp(0.0, 1.0);
 }
 
 struct BinaryLabelEncoding {
@@ -1066,11 +1066,11 @@ public:
           const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist)).mul(w_knn);
           const Series wsum = weights.sum(1, false);
           const Series ysum = weights.mul(y_knn).sum(1, false);
-          probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+          probs = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
         } else {
           const Series wsum = w_knn.sum(1, false);
           const Series ysum = y_knn.mul(w_knn).sum(1, false);
-          probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+          probs = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
         }
       }
     }

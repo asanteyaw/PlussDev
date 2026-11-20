@@ -9,11 +9,11 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(0.1, 5.0, 60, ScalarType::Float64);
   const Series y = x.log().mul(3.0).add(x.sqrt());
-  const DataFrame raw({{"x", Slate(x)}, {"y", Slate(y)}});
+  const DataFrame raw({{"x", Shelf(x)}, {"y", Shelf(y)}});
 
   lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x"}).label("y");
   lymph::Workflow wf = lymph::workflow::make(lymph::models::linear_regression());

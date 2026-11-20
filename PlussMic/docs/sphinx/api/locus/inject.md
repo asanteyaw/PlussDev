@@ -79,3 +79,14 @@ the existing three catalogs.
   other name.
 - [`construction`](construction.md): `from_archive`, the same slice-to-catalog
   rule applied when *building* a `Locus` instead of adding to one.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="head.html">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="invalid.html">
+    <span class="label">Next</span>
+    <span class="title">invalid</span>
+  </a>
+</div>

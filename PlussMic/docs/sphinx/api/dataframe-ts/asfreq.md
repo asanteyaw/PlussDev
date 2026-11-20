@@ -68,8 +68,8 @@ Example 1. Resample to a daily grid with `Last`, forward-filling the empty day.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T08:00:00Z", "2024-01-01T20:00:00Z",
         "2024-01-03T10:00:00Z", "2024-01-03T15:00:00Z"})));
 std::cout << readings;
@@ -130,7 +130,7 @@ std::cout << out2;
            | value
 ------------------
 2024-01-01 | 30   
-2024-01-02 | 30   
+2024-01-02 | 0    
 2024-01-03 | 35   
 ------------------
 [3 cs x 1 feat]

@@ -64,9 +64,9 @@ Example 1. Group by one ordinary feature.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Slate(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
-    {"units", Slate(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
+    {"units", Shelf(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
 });
 
 auto grouped = sales.group({.dropnull = true}).by({"city"});
@@ -93,9 +93,9 @@ Example 2. Group by several ordinary features at once.
 
 ```cpp
 auto orders = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema"}))},
-    {"product", Slate(pluss::make_note({"Tea", "Tea", "Coffee", "Tea"}))},
-    {"amount", Slate(pluss::make_series({100.0, 80.0, 30.0, 50.0}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Accra", "Accra", "Tema"}))},
+    {"product", Shelf(pluss::make_note({"Tea", "Tea", "Coffee", "Tea"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 80.0, 30.0, 50.0}))},
 });
 
 auto out = orders.group({.sort = true})
@@ -130,10 +130,10 @@ Example 3. Group by case-label levels instead of ordinary columns.
 
 ```cpp
 auto indexed = DataFrame({
-    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
-    {"year", Slate(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
-    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-}).label().set({"region", "year"});
+    {"region", Shelf(pluss::make_note({"North", "North", "South", "South"}))},
+    {"year", Shelf(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
+    {"amount", Shelf(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+}).labels().set({"region", "year"});
 
 auto out = indexed.group()
                   .by(DataFrame::LabelGroup{.label = "region"})

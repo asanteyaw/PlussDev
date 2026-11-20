@@ -42,7 +42,7 @@ int main() {
         const Series exact = ip::gaussian_density(m.nodes, m.nodes.mul(0.0).add(mw), m.nodes.mul(0.0).add(sw));
         expect(an.w.sub(exact).abs().max().item<double>() < 1e-6, "stable density is the stationary AR(1) normal law");
         const Series core = exact.gt(1e-3);  // away from the truncated tails, where the kernel loses mass through the domain edge
-        expect(core.where(an.v.sub(1.0).abs(), an.v.mul(0.0)).max().item<double>() < 1e-6, "reproductive value is constant 1 where the population lives: " + std::to_string(core.where(an.v.sub(1.0).abs(), an.v.mul(0.0)).max().item<double>()));
+        expect(pluss::series::where(core, an.v.sub(1.0).abs(), an.v.mul(0.0)).max().item<double>() < 1e-6, "reproductive value is constant 1 where the population lives: " + std::to_string(pluss::series::where(core, an.v.sub(1.0).abs(), an.v.mul(0.0)).max().item<double>()));
         expect(std::abs(ip::mean_size(an.w, m).item<double>() - mw) < 1e-6 && std::abs(ip::variance_size(an.w, m).item<double>() - sw * sw) < 1e-6, "mean and variance of the stable size distribution");
       }
     }

@@ -5,7 +5,7 @@ Count non-missing values along the requested axis.
 """
 
 returns = """
-`Slate`
+`Shelf`
     Count result whose labels follow the retained axis.
 """
 

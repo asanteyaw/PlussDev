@@ -30,7 +30,7 @@ int main() {
   namespace ai = pluss::ai;
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   auto vec = [&](std::vector<double> values) {
@@ -38,9 +38,9 @@ int main() {
     return pluss::make_series(std::move(values), {n}, cfg);
   };
   const DataFrame raw({
-      {"id", Slate(vec({100.0, 101.0, 102.0}))},
-      {"x", Slate(vec({1.0, 2.0, 3.0}))},
-      {"y", Slate(vec({4.0, 5.0, 6.0}))},
+      {"id", Shelf(vec({100.0, 101.0, 102.0}))},
+      {"x", Shelf(vec({1.0, 2.0, 3.0}))},
+      {"y", Shelf(vec({4.0, 5.0, 6.0}))},
   });
 
   const ai::Procedure proc = ai::procedure::make({

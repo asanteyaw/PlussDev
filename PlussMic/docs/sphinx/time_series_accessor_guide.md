@@ -1,13 +1,13 @@
 # Time-Series Accessor Guide
 
-This page documents the `.ts()` surface for `DataFrame`, `Slate`, and `Atlas`.
+This page documents the `.ts()` surface for `DataFrame`, `Shelf`, and `Atlas`.
 Use `.ts()` for numeric time-series values. Use `.tl()` for datetime/timeline
 values.
 
 ## API Signature
 
 - `DataFrameTsAccessor DataFrame::ts()`
-- `TimeSeriesAccessor Slate::ts()`
+- `TimeSeriesAccessor Shelf::ts()`
 - `AtlasTsAccessor Atlas::ts()`
 
 Compatibility overloads still accept feature names, but preferred public code is
@@ -17,7 +17,7 @@ names.
 ## Notes
 
 Use `DataFrame::ts()` after selecting numeric value features when you want transforms returned as a `DataFrame`.  
-Use `Slate::ts()` when you want transforms returned as a `Slate` for one column.
+Use `Shelf::ts()` when you want transforms returned as a `Shelf` for one column.
 Use `Atlas::ts()` when you want the same transform delegated to every frame in an `Atlas`.
 
 Preferred selection-first style:
@@ -36,8 +36,8 @@ belong on the `Timeline` surface:
 auto dates = df.cast({
     pluss::table::DataFrame::CastSpec{
         "date_text",
-        pluss::table::SlateCastTarget::Timeline,
-        pluss::table::SlateCastOptions{
+        pluss::table::ShelfCastTarget::Timeline,
+        pluss::table::ShelfCastOptions{
             .format = "%Y-%m-%d",
             .invalid = pluss::table::ParseInvalid::Null}},
 }).features({"date_text"});
@@ -62,7 +62,7 @@ Inputs:
 
 Output:
 - `DataFrameTsAccessor` methods return `DataFrame`.
-- `TimeSeriesAccessor` methods return `Slate` (or `{labels, values}` for `resample`).
+- `TimeSeriesAccessor` methods return `Shelf` (or `{labels, values}` for `resample`).
 
 ## DataFrame Surface
 
@@ -88,10 +88,10 @@ Output:
 - `DataFrame asfreq(time_feature: string_view, freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last)`
 - `DataFrame insert_gaps(freq: string_view, step: int64 = 1)`
 - `DataFrame insert_gaps(time_feature: string_view, freq: string_view, step: int64 = 1)`
-- `DataFrame align_to(target_axis: Slate, mode: TsAlignMode = Exact)`
-- `DataFrame align_to(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact)`
-- `DataFrame reindex_time(target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
-- `DataFrame reindex_time(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
+- `DataFrame align_to(target_axis: Shelf, mode: TsAlignMode = Exact)`
+- `DataFrame align_to(time_feature: string_view, target_axis: Shelf, mode: TsAlignMode = Exact)`
+- `DataFrame reindex_time(target_axis: Shelf, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
+- `DataFrame reindex_time(time_feature: string_view, target_axis: Shelf, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
 - `DataFrame calendar(time_feature: string_view)`
 - `DataFrame lag_block(lags: {int64...})`
 - `DataFrame rolling_block(windows: {int64...}, options: TsRollingBlockOptions = {})`
@@ -106,7 +106,7 @@ using pluss::table::DataFrame;
 DataFrame df = DataFrame::load_csv("prices.csv")
                  .cast({
                      pluss::table::DataFrame::CastSpec{
-                         "date", pluss::table::SlateCastTarget::Timeline, {}},
+                         "date", pluss::table::ShelfCastTarget::Timeline, {}},
                  });
 
 auto values = df.labels().set("date", false).features({"Adj Close", "Volume"});
@@ -131,22 +131,22 @@ auto six_hour_ffill = values.ts().resample("6H").ffill();
   similar methods materialize the final `DataFrame`.
 - Selected features are transformed and returned with aligned cases/time axis.
 
-## Slate Surface
+## Shelf Surface
 
 ### API Signature
 
-- `Slate returns(periods: int64 = 1)`
-- `Slate log_returns(periods: int64 = 1)`
-- `Slate diff(periods: int64 = 1)`
-- `Slate lag(periods: int64 = 1)`
-- `Slate lead(periods: int64 = 1)`
-- `Slate rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {})`
-- `Slate rolling(axis: Slate, duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right)`
-- `Slate expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {})`
-- `Slate ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false)`
-- `Slate zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12)`
-- `Slate fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt)`
-- `TimeSeriesResample resample(axis: Slate, freq: string_view, op: ResampleOp = Mean, step: int64 = 1)`
+- `Shelf returns(periods: int64 = 1)`
+- `Shelf log_returns(periods: int64 = 1)`
+- `Shelf diff(periods: int64 = 1)`
+- `Shelf lag(periods: int64 = 1)`
+- `Shelf lead(periods: int64 = 1)`
+- `Shelf rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {})`
+- `Shelf rolling(axis: Shelf, duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right)`
+- `Shelf expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {})`
+- `Shelf ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false)`
+- `Shelf zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12)`
+- `Shelf fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt)`
+- `TimeSeriesResample resample(axis: Shelf, freq: string_view, op: ResampleOp = Mean, step: int64 = 1)`
 
 ### Example
 
@@ -157,7 +157,7 @@ using pluss::table::DataFrame;
 
 DataFrame df = DataFrame::load_csv("prices.csv").cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::SlateCastTarget::Timeline, {}},
+        "date", pluss::table::ShelfCastTarget::Timeline, {}},
 });
 
 auto s = df.features("Adj Close");
@@ -169,10 +169,10 @@ auto rs = s.ts().resample(df.features("date"), "W", pluss::subsp::stats::ts::Res
 
 ### Expected output
 
-- `lr` and `z` are `Slate`.
+- `lr` and `z` are `Shelf`.
 - `rs.labels` is timeline/timeindex-like labels and `rs.values` is resampled values.
 
 ## Common Pitfall
 
 If you want a transformed **DataFrame**, use `df.ts(...)...`.  
-If you call `df.features(\"col\").ts()...`, you are on the **Slate** surface and the return type is `Slate`.
+If you call `df.features(\"col\").ts()...`, you are on the **Shelf** surface and the return type is `Shelf`.

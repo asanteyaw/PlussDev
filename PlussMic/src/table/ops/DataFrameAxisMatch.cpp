@@ -25,7 +25,7 @@ using RowMap = std::vector<std::int64_t>;
 struct CasePlan {
   RowMap left{};
   RowMap right{};
-  Slate output_cases;
+  Shelf output_cases;
 };
 
 struct FeaturePlan {
@@ -34,8 +34,8 @@ struct FeaturePlan {
   std::vector<std::int64_t> right{};
 };
 
-std::vector<Slate> dataframe_columns(const DataFrame& frame) {
-  std::vector<Slate> columns;
+std::vector<Shelf> dataframe_columns(const DataFrame& frame) {
+  std::vector<Shelf> columns;
   const auto& names = frame.features();
   columns.reserve(names.size());
   for (const auto& name : names) {
@@ -44,17 +44,17 @@ std::vector<Slate> dataframe_columns(const DataFrame& frame) {
   return columns;
 }
 
-pluss::codem::Platform slate_platform(const Slate& slate) {
-  switch (slate.kind()) {
-    case SlateKind::Series:
-      return slate.as_series().platform();
-    case SlateKind::Timeline:
-      return slate.as_timeline().epoch_nanos().platform();
-    case SlateKind::Duration:
-    case SlateKind::Note:
+pluss::codem::Platform shelf_platform(const Shelf& shelf) {
+  switch (shelf.kind()) {
+    case ShelfKind::Series:
+      return shelf.as_series().platform();
+    case ShelfKind::Timeline:
+      return shelf.as_timeline().epoch_nanos().platform();
+    case ShelfKind::Duration:
+    case ShelfKind::Note:
       return pluss::codem::Platform::CPU;
   }
-  PLUSS_FAIL("DataFrame::match: unsupported Slate kind");
+  PLUSS_FAIL("DataFrame::match: unsupported Shelf kind");
 }
 
 pluss::Series bool_series_on(const std::vector<bool>& values,
@@ -68,11 +68,11 @@ pluss::Series bool_series_on(const std::vector<bool>& values,
   return platform == pluss::codem::Platform::CPU ? cpu : cpu.to(platform);
 }
 
-std::vector<bool> slate_validity(const Slate& slate) {
-  if (detail::has_validity_mask(slate)) {
-    return detail::validity_mask(slate)->host<bool>();
+std::vector<bool> shelf_validity(const Shelf& shelf) {
+  if (detail::has_validity_mask(shelf)) {
+    return detail::validity_mask(shelf)->host<bool>();
   }
-  return std::vector<bool>(static_cast<std::size_t>(slate.size()), true);
+  return std::vector<bool>(static_cast<std::size_t>(shelf.size()), true);
 }
 
 template <class T>
@@ -87,7 +87,7 @@ void append_scalar_keys(const pluss::Series& series,
     }
     if constexpr (std::is_floating_point_v<T>) {
       if (std::isnan(values[i])) {
-        keys[i] = std::string(1, '\0');
+        keys[i] = std::string("\x02nan"); // NaN is a value: all NaNs match each other and never the null key
         continue;
       }
       const T normalized = values[i] == static_cast<T>(0) ? static_cast<T>(0) : values[i];
@@ -105,12 +105,12 @@ void append_scalar_keys(const pluss::Series& series,
   }
 }
 
-std::vector<std::string> case_keys(const Slate& cases) {
-  const auto valid = slate_validity(cases);
+std::vector<std::string> case_keys(const Shelf& cases) {
+  const auto valid = shelf_validity(cases);
   std::vector<std::string> keys(static_cast<std::size_t>(cases.size()));
 
   switch (cases.kind()) {
-    case SlateKind::Series: {
+    case ShelfKind::Series: {
       const auto& series = cases.as_series();
       switch (series.scalar_type()) {
         case pluss::codem::ScalarType::Bool:
@@ -167,7 +167,7 @@ std::vector<std::string> case_keys(const Slate& cases) {
       }
       break;
     }
-    case SlateKind::Note: {
+    case ShelfKind::Note: {
       const auto values = cases.as_note().vector();
       for (std::size_t i = 0; i < values.size(); ++i) {
         keys[i] = !valid[i] ? std::string(1, '\0')
@@ -175,7 +175,7 @@ std::vector<std::string> case_keys(const Slate& cases) {
       }
       break;
     }
-    case SlateKind::Timeline: {
+    case ShelfKind::Timeline: {
       const auto ticks = cases.as_timeline().epoch_nanos().host<std::int64_t>();
       for (std::size_t i = 0; i < ticks.size(); ++i) {
         if (!valid[i] || ticks[i] == pluss::Timeline::kNaT) {
@@ -189,7 +189,7 @@ std::vector<std::string> case_keys(const Slate& cases) {
       }
       break;
     }
-    case SlateKind::Duration: {
+    case ShelfKind::Duration: {
       const auto nanos = cases.as_duration().host();
       for (std::size_t i = 0; i < nanos.size(); ++i) {
         if (!valid[i] || nanos[i] == pluss::Duration::kNaT) {
@@ -205,7 +205,7 @@ std::vector<std::string> case_keys(const Slate& cases) {
   return keys;
 }
 
-void ensure_case_types_match(const Slate& left, const Slate& right);
+void ensure_case_types_match(const Shelf& left, const Shelf& right);
 
 void append_key_part_(std::string& out, const std::string& part) {
   const auto n = static_cast<std::uint64_t>(part.size());
@@ -251,12 +251,12 @@ std::vector<std::string> frame_case_keys(const DataFrame& frame) {
                              : case_keys(frame.labels().values());
 }
 
-void ensure_case_types_match(const Slate& left, const Slate& right) {
+void ensure_case_types_match(const Shelf& left, const Shelf& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
       "DataFrame::match: case payload kinds differ; cast the case axes "
       "to a common kind first");
-  if (left.kind() == SlateKind::Series) {
+  if (left.kind() == ShelfKind::Series) {
     PLUSS_CHECK(
         left.as_series().scalar_type() == right.as_series().scalar_type(),
         "DataFrame::match: numeric case dtypes differ; cast the case "
@@ -287,13 +287,13 @@ void reject_repeated_caselbl(
           " frame require RepeatedCaseRule::PairInOrder");
 }
 
-Slate take_cases(const Slate& cases, const RowMap& rows) {
+Shelf take_cases(const Shelf& cases, const RowMap& rows) {
   return cases.take(std::span<const std::int64_t>(rows.data(), rows.size()));
 }
 
 std::optional<pluss::Series> joined_validity(
-    const Slate& left,
-  const Slate& right,
+    const Shelf& left,
+  const Shelf& right,
   const pluss::codem::Platform platform) {
   if (!detail::has_validity_mask(left) && !detail::has_validity_mask(right)) {
     return std::nullopt;
@@ -314,7 +314,7 @@ std::optional<pluss::Series> joined_validity(
   return left_mask.unite(tail, 0);
 }
 
-Slate append_cases(const Slate& left, const Slate& right) {
+Shelf append_cases(const Shelf& left, const Shelf& right) {
   if (left.size() == 0) {
     return right;
   }
@@ -324,17 +324,17 @@ Slate append_cases(const Slate& left, const Slate& right) {
   ensure_case_types_match(left, right);
 
   switch (left.kind()) {
-    case SlateKind::Series: {
+    case ShelfKind::Series: {
       PLUSS_CHECK(
           left.as_series().platform() == right.as_series().platform(),
           "DataFrame::match: numeric case axes must use the same platform");
       std::vector<pluss::Series> tail{right.as_series()};
       auto values = left.as_series().unite(tail, 0);
-      return Slate(
+      return Shelf(
           values,
           joined_validity(left, right, values.platform()));
     }
-    case SlateKind::Note: {
+    case ShelfKind::Note: {
       std::vector<std::string> values;
       values.reserve(static_cast<std::size_t>(left.size() + right.size()));
       for (const auto value : left.as_note().vector()) {
@@ -343,21 +343,21 @@ Slate append_cases(const Slate& left, const Slate& right) {
       for (const auto value : right.as_note().vector()) {
         values.emplace_back(value);
       }
-      return Slate(
+      return Shelf(
           pluss::make_note(values),
           joined_validity(left, right, pluss::codem::Platform::CPU));
     }
-    case SlateKind::Timeline: {
+    case ShelfKind::Timeline: {
       auto values = left.as_timeline().concat(right.as_timeline());
-      return Slate(
+      return Shelf(
           values,
           joined_validity(left, right, values.epoch_nanos().platform()));
     }
-    case SlateKind::Duration: {
+    case ShelfKind::Duration: {
       auto values = left.as_duration().host();
       const auto right_values = right.as_duration().host();
       values.insert(values.end(), right_values.begin(), right_values.end());
-      return Slate(
+      return Shelf(
           pluss::duration::nanos(values),
           joined_validity(left, right, pluss::codem::Platform::CPU));
     }
@@ -365,10 +365,10 @@ Slate append_cases(const Slate& left, const Slate& right) {
   PLUSS_FAIL("DataFrame::match: unsupported case payload kind");
 }
 
-Slate append_feature_values(const Slate& left, const Slate& right) {
+Shelf append_feature_values(const Shelf& left, const Shelf& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
-      "DataFrame::extend: matching features must use the same Slate kind");
+      "DataFrame::extend: matching features must use the same Shelf kind");
   return left.append(right);
 }
 
@@ -525,50 +525,50 @@ FeaturePlan plan_features(
   return plan;
 }
 
-Slate null_slate_like(const Slate& reference, const std::int64_t size) {
+Shelf null_shelf_like(const Shelf& reference, const std::int64_t size) {
   PLUSS_CHECK(size >= 0, "DataFrame::match: invalid null feature size");
-  Slate values;
+  Shelf values;
   if (reference.size() > 0) {
     RowMap zeros(static_cast<std::size_t>(size), 0);
     values = reference.take(
         std::span<const std::int64_t>(zeros.data(), zeros.size()));
   } else {
     switch (reference.kind()) {
-      case SlateKind::Series:
-        values = Slate(pluss::Series::zeros(
+      case ShelfKind::Series:
+        values = Shelf(pluss::Series::zeros(
             {size},
             reference.as_series().scalar_type(),
             reference.as_series().platform()));
         break;
-      case SlateKind::Note:
-        values = Slate(pluss::make_note(
+      case ShelfKind::Note:
+        values = Shelf(pluss::make_note(
             std::vector<std::string>(static_cast<std::size_t>(size))));
         break;
-      case SlateKind::Timeline: {
+      case ShelfKind::Timeline: {
         auto ticks = pluss::Series::zeros(
             {size},
             pluss::codem::ScalarType::Int64,
             reference.as_timeline().epoch_nanos().platform());
-        values = Slate(pluss::timeline::from_epoch(ticks));
+        values = Shelf(pluss::timeline::from_epoch(ticks));
         break;
       }
-      case SlateKind::Duration:
-        values = Slate(pluss::duration::nanos(
+      case ShelfKind::Duration:
+        values = Shelf(pluss::duration::nanos(
             std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
         break;
     }
   }
   return detail::with_validity_mask(values, bool_series_on(
       std::vector<bool>(static_cast<std::size_t>(size), false),
-      slate_platform(values)));
+      shelf_platform(values)));
 }
 
-Slate remap_slate(const Slate& source, const RowMap& rows) {
+Shelf remap_shelf(const Shelf& source, const RowMap& rows) {
   if (rows.empty()) {
     return source.take(std::span<const std::int64_t>{});
   }
   if (source.size() == 0) {
-    return null_slate_like(source, static_cast<std::int64_t>(rows.size()));
+    return null_shelf_like(source, static_cast<std::int64_t>(rows.size()));
   }
 
   RowMap safe(rows.size());
@@ -592,7 +592,7 @@ Slate remap_slate(const Slate& source, const RowMap& rows) {
     return out;
   }
 
-  const auto platform = slate_platform(out);
+  const auto platform = shelf_platform(out);
   auto mask = bool_series_on(present, platform);
   if (detail::has_validity_mask(out)) {
     auto prior = *detail::validity_mask(out);
@@ -610,20 +610,20 @@ DataFrame remap_frame(
     const RowMap& rows,
     const FeaturePlan& features,
     const bool left_side,
-    const Slate& output_cases) {
+    const Shelf& output_cases) {
   const auto source_columns = dataframe_columns(source);
   const auto peer_columns = dataframe_columns(peer);
   const auto& source_positions = left_side ? features.left : features.right;
   const auto& peer_positions = left_side ? features.right : features.left;
 
-  std::vector<std::pair<std::string, Slate>> output;
+  std::vector<std::pair<std::string, Shelf>> output;
   output.reserve(features.names.size());
   for (std::size_t i = 0; i < features.names.size(); ++i) {
     const auto source_position = source_positions[i];
     if (source_position >= 0) {
       output.emplace_back(
           features.names[i],
-          remap_slate(
+          remap_shelf(
               source_columns[static_cast<std::size_t>(source_position)],
               rows));
       continue;
@@ -634,7 +634,7 @@ DataFrame remap_frame(
         "DataFrame::match: internal feature mapping failure");
     output.emplace_back(
         features.names[i],
-        null_slate_like(
+        null_shelf_like(
             peer_columns[static_cast<std::size_t>(peer_position)],
             static_cast<std::int64_t>(rows.size())));
   }
@@ -688,33 +688,33 @@ DataFrame DataFrame::extend(
   const auto feature_plan = plan_features(*this, other, feature_rule);
   const auto left_columns = dataframe_columns(*this);
   const auto right_columns = dataframe_columns(other);
-  std::vector<std::pair<std::string, Slate>> output;
+  std::vector<std::pair<std::string, Shelf>> output;
   output.reserve(feature_plan.names.size());
 
   for (std::size_t i = 0; i < feature_plan.names.size(); ++i) {
     const auto left_position = feature_plan.left[i];
     const auto right_position = feature_plan.right[i];
-    Slate left_values;
-    Slate right_values;
+    Shelf left_values;
+    Shelf right_values;
     if (left_position >= 0) {
       left_values = left_columns[static_cast<std::size_t>(left_position)];
     } else {
       right_values = right_columns[static_cast<std::size_t>(right_position)];
-      left_values = null_slate_like(right_values, ncases());
+      left_values = null_shelf_like(right_values, ncases());
     }
     if (right_position >= 0) {
       right_values = right_columns[static_cast<std::size_t>(right_position)];
     } else {
-      right_values = null_slate_like(left_values, other.ncases());
+      right_values = null_shelf_like(left_values, other.ncases());
     }
     output.emplace_back(
         feature_plan.names[i],
         append_feature_values(left_values, right_values));
   }
 
-  Slate output_cases;
+  Shelf output_cases;
   if (fresh_cases) {
-    output_cases = Slate(pluss::Series::arange(
+    output_cases = Shelf(pluss::Series::arange(
         0.0,
         static_cast<double>(ncases() + other.ncases()),
         1.0,

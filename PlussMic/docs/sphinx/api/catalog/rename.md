@@ -114,8 +114,8 @@ auto ct = pluss::kindle::Catalog({
 
 try {
   auto out = ct.rename({{"id", "metric"}});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -140,9 +140,9 @@ Catalog::rename: duplicate target key 'metric'
   them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="query.html">
+  <a class="prev-link" href="reduce.html">
     <span class="label">Previous</span>
-    <span class="title">query</span>
+    <span class="title">reduce</span>
   </a>
   <a class="next-link" href="rename_.html">
     <span class="label">Next</span>

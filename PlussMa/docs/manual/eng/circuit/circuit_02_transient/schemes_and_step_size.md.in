@@ -4,7 +4,7 @@
 
 A transient run is a series of straight steps along a curve, so its accuracy depends on how long the steps are and on the rule used to take them. `tran` offers two rules, selected by `TranOptions::scheme`, and this page shows what each one does to accuracy, to an oscillation that should not lose energy, and to a circuit whose step is long compared with its fastest time constant. It ends with a rule of thumb for choosing the step and the scheme.
 
-## The mental model
+## How it works
 
 Both schemes are **second order**: halving the step divides the error of a smooth response by about four. They differ in how they treat the part of the response that changes faster than the step can follow.
 

@@ -78,9 +78,9 @@ using dynamics::Coeff;
   const Series a = x1.clamp_min(0.0).sqrt().mul(2.0).div(denom), b = x2.clamp_min(0.0).sqrt().mul(2.0).div(denom);
   const Series g = a1.mul(a2).sub(pi * pi / 4.0);
   const Series root = g.abs().sqrt().mul(2.0);
-  const Series cd = g.gt(0.0).where(root.clamp_max(700.0).cosh(), root.cos());
+  const Series cd = pluss::series::where(g.gt(0.0), root.clamp_max(700.0).cosh(), root.cos());
   const Series cp = a.add(b).clamp_max(700.0).cosh(), cm = a.sub(b).clamp_max(700.0).cosh();
-  return open.where(cp.sub(cm).div(cp.add(cd)), cp.mul(0.0));
+  return pluss::series::where(open, cp.sub(cm).div(cp.add(cd)), cp.mul(0.0));
 }
 // Thermal tunnelling correction kappa(T) = exp(v1/RT) int T(E) exp(-E/RT) dE / RT. T(E) opens like sqrt(E - threshold), so the integral is taken in
 // s = sqrt((E - E0)/RT) (E0 = max(0, v1 - v2)), where the integrand is analytic, with composite Simpson on s in [0, sqrt(u_max)].
@@ -155,7 +155,7 @@ struct Rrkm final {
   const Config zc = Config{}.with_dtype(rho_reactant.scalar_type()).with_platform(rho_reactant.platform());
   const Series cumulative = rho_transition.cumsum(-1, false);                                              // N^‡(eps), eps = i bins above the TS zero
   const Series count = threshold_cm == 0 ? cumulative : pluss::series::zeros({threshold_cm}, zc).unite(std::vector<Series>{cumulative.slice(-1, 0, bins - threshold_cm, 1)}, 0); // N^‡(E - E0), 0 below E0
-  const Series safe_rho = rho_reactant.gt(0.0).where(rho_reactant, rho_reactant.mul(0.0).add(1.0));
+  const Series safe_rho = pluss::series::where(rho_reactant.gt(0.0), rho_reactant, rho_reactant.mul(0.0).add(1.0));
   const double bin_joule = wavenumber_to_joule();
   const Series rate = count.div(safe_rho).mul(bin_joule / planck()).mul(rho_reactant.gt(0.0).to(rho_reactant.scalar_type()));  // N^‡ / (h rho/dE)
   const Series boltz = energy.unsqueeze(0).mul(-bin_joule / boltzmann()).div(temperature.unsqueeze(-1)).exp();               // [..., B]

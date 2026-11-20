@@ -29,7 +29,7 @@ This guide follows the pipeline in the order you will use it. You build a
 that stage's public types. Every program is complete, and it runs without a
 window. Every printed line is copied from the program's real output.
 
-## The mental model
+## How it works
 
 A scene is an ordered list of commands. A command is one drawing operation, such
 as clearing the frame, filling a rectangle, or setting a clip region. The scene

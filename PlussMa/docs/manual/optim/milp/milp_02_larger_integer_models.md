@@ -6,7 +6,7 @@ The first chapter solved small integer programs with the dense branch-and-bound.
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 The sparse solver, `lp::solve_mip(model, options)`, is a **branch-and-cut** method. It is branch and bound with three additions that make the search much shorter.
 

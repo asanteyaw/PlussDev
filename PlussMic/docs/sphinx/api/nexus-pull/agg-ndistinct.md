@@ -55,12 +55,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+=====================================
      | customer_id  distinct_event_id
---------------------------------------
-0    | 1            2
-1    | 2            3
-2    | 3            0
---------------------------------------
+-------------------------------------
+0    | 1            2                
+1    | 2            3                
+2    | 3            0                
+-------------------------------------
 [3 cs x 2 feat]
 ```
 
@@ -82,7 +83,7 @@ auto pulled = nx.pull("customers")
                     {"customer_id", "distinct_customer_id"}})
     .end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -101,7 +102,7 @@ auto pulled = nx.pull("customers")
     .take("customer_id")
     .agg("events").ndistinct(fields).end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

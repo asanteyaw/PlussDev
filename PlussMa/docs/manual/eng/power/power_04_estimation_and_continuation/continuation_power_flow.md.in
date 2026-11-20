@@ -4,7 +4,7 @@
 
 A network loaded more and more heavily has a voltage that falls, and at some load it has none: beyond it, no operating point exists and the voltage collapses. The ordinary power flow cannot tell you where that is, since Newton's method fails beyond the limit and also struggles close to it. The **continuation power flow** follows the solution along the load, with the load as a variable, and passes through the limit, the **nose** of the voltage curve. `power::trace` does it. This page explains the method, traces the curve of a two-bus network and finds the nose against its closed form, follows it to a target load and checks the points against the ordinary power flow, finds the nose of a network with a generator against a bisection on the power flow, and controls the stepping.
 
-## The mental model
+## How it works
 
 A `LoadPath` names a target: the net active and reactive injection at every bus at **loading factor `1`**. The grid's own injections are loading factor `0`, and the load at factor `lambda` is the linear interpolation `(1 - lambda) base + lambda target`. The continuation solves the power-flow equations together with that factor as an extra unknown, by a **predictor-corrector** step: a tangent step along the solution curve (the predictor) followed by Newton iterations at a fixed factor (the corrector), with a step size that adapts to how well the predictor does. Through the nose the Jacobian of the ordinary power flow is singular, but the extended system, with the factor as a variable, is not, and the curve is followed round the nose and onto the lower branch.
 

@@ -22,6 +22,7 @@ enum class ShellEventKind : std::uint8_t {
   TextInput = 8,
   Error = 9,
   PointerUp = 10,
+  PointerMove = 11,  // hover: the pointer moved with no button held
 };
 
 enum class ShellBackend : std::uint8_t {
@@ -59,6 +60,13 @@ struct ShellEvent {
   double y{0.0};
   bool precise_delta{false};
   bool shift_modifier{false};
+  int click_count{1};  // 2 = double-click (PointerDown)
+};
+
+// The pointer shape a window can ask for (e.g. over a draggable column border).
+enum class ShellCursor : std::uint8_t {
+  Arrow = 0,
+  ResizeColumn = 1,  // horizontal resize arrows
 };
 
 struct ShellSaveFormat {
@@ -66,10 +74,29 @@ struct ShellSaveFormat {
   std::string extension{};
 };
 
+// One entry in a toolbar menu. An entry with `children` is a cascading item: it shows an
+// arrow and its children fly out to the side. A child's event note is
+// "<this entry's id>:<child id>"; a plain entry's note is "<menu id>:<id>".
+struct ShellMenuOption {
+  std::string label{};
+  std::string id{};
+  std::vector<ShellMenuOption> children{};
+};
+
+// A pull-down in the toolbar (e.g. "View", "Theme", "Format"). Choosing an option sends
+// a ShortcutCommand event whose note is "<menu id>:<option id>". Menus are laid out
+// left to right in order, ending just before "Save As".
+struct ShellMenu {
+  std::string id{};
+  std::string title{};
+  std::vector<ShellMenuOption> options{};
+};
+
 struct ShellConfig {
   std::string title{"PlussTilsView"};
   SizeI initial_size{1280, 760};
   std::vector<ShellSaveFormat> save_formats{};
+  std::vector<ShellMenu> menus{};
 };
 
 class IWindowShell {
@@ -84,6 +111,14 @@ class IWindowShell {
   [[nodiscard]] virtual ShellCapabilities capabilities() const noexcept = 0;
   [[nodiscard]] virtual double backing_scale_factor() const noexcept {
     return 1.0;
+  }
+  // Asks the window to show `cursor` while the pointer is over it. Default: no-op.
+  virtual void set_cursor(ShellCursor cursor) {
+    (void)cursor;
+  }
+  // True when open() honours ShellConfig::menus with native controls.
+  [[nodiscard]] virtual bool supports_menus() const noexcept {
+    return false;
   }
   [[nodiscard]] virtual bool presentation_frame_due() noexcept {
     return true;

@@ -2,7 +2,7 @@
 
 Ordinary calculus differentiates with respect to a number. Malliavin calculus differentiates with respect to the noise itself: how much does a random quantity `F` change if the Brownian increment in one step is nudged? The answer is a number per increment, and it unlocks things the pathwise derivative cannot do. After this chapter you can compute the discrete Malliavin derivative of any functional of a path, integrate an anticipating process with the Skorokhod integral, and price a sensitivity of a payoff that has a jump in it.
 
-## The mental model
+## How it works
 
 Discretize a Wiener path into increments `ΔW_1, …, ΔW_n`. A functional `F` of the path is a function of those increments, and the **Malliavin derivative** is its gradient with respect to them: `D_i F = ∂F / ∂(ΔW_i)`. The library computes it by autodiff in one reverse pass, whatever `n` is. For `F = W_T²` it is `2 W_T` on every increment; for `F = max(W)` it is 1 on the increments up to the position of the maximum and 0 after it.
 

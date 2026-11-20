@@ -45,19 +45,51 @@ transformation or validation of its own.
 
 ## Examples
 
-See [`Studio::show`](../studio/show.md) for fully worked, independently-verified
-examples of every argument — this wrapper adds nothing beyond forwarding, so
-reproducing them here would only duplicate that page. The one behavior specific to this
-file, `flash::show`'s call signature itself, is:
+Example 1. With `launch` false the figure is prepared but no window opens, and the call reports success.
 
 ```cpp
 using namespace pluss::pl;
 
-auto fig = studio("flash_show_demo");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 4, 9});
-// flash::show(fig, "My Figure", 1000, 700, /*launch=*/false) generates the same HTML
-// Studio::show(...) would, without opening a window when launch is false.
+auto fig = studio("flash_show_nolaunch");
+fig.pane2("curve").trend(x, y);
+std::cout << "show(..., launch=false) returned: " << flash::show(fig, "My Figure", 1000, 700, false) << "\n";
+```
+
+Output:
+
+```text
+show(..., launch=false) returned: 1
+```
+
+Example 2. With the environment variable `PLUSSPL_CAPTURE_DIR` naming a directory, `show` records the figure there as `<figure name>.svg` instead of opening a window. This is how a program that calls `show` runs without a display.
+
+```cpp
+setenv("PLUSSPL_CAPTURE_DIR", dir.c_str(), 1);
+auto fig = studio("flash_show_captured");
+fig.pane2("curve").trend(x, y);
+const bool shown = flash::show(fig);
+unsetenv("PLUSSPL_CAPTURE_DIR");
+std::cout << "show returned " << shown << "; captured file exists: " << fs::exists(dir / "flash_show_captured.svg") << "\n";
+```
+
+Output:
+
+```text
+show returned 1; captured file exists: 1
+```
+
+Example 3. The free function and `Studio::show` are the same operation.
+
+```cpp
+auto fig = studio("flash_show_equivalence");
+fig.pane2("curve").trend(x, y);
+std::cout << "flash::show and Studio::show agree when not launching: " << (flash::show(fig, {}, 1280, 820, false) == fig.show({}, 1280, 820, false)) << "\n";
+```
+
+Output:
+
+```text
+flash::show and Studio::show agree when not launching: 1
 ```
 
 ## Notes

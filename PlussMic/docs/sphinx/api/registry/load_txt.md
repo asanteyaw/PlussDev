@@ -38,6 +38,15 @@ inference.
 
 Example 1. Load a tab-separated text file.
 
+Given `cities.txt`:
+
+```text
+city	population
+Accra	2500000
+Tema	161000
+Kumasi	3000000
+```
+
 ```cpp
 auto rg = pluss::scribble::Registry::load_txt("cities.txt");
 std::cout << rg;
@@ -49,14 +58,8 @@ std::cout << rg;
 {
   "_type": "Registry",
   "defined": true,
-  "nfields": 3,
+  "nfields": 2,
   "fields": {
-    "id": {
-      "size": 3,
-      "types": {
-        "Series": 3
-      }
-    },
     "city": {
       "size": 3,
       "types": {

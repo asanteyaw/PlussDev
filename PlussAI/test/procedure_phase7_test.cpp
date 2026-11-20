@@ -22,7 +22,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -34,9 +34,9 @@ Series vec(std::vector<double> values) {
 
 DataFrame frame() {
   return DataFrame({
-      {"timestamp", Slate(vec({1.0, 2.0, 3.0}))},
-      {"x", Slate(vec({10.0, 20.0, 30.0}))},
-      {"y", Slate(vec({0.0, 1.0, 0.0}))},
+      {"timestamp", Shelf(vec({1.0, 2.0, 3.0}))},
+      {"x", Shelf(vec({10.0, 20.0, 30.0}))},
+      {"y", Shelf(vec({0.0, 1.0, 0.0}))},
   });
 }
 
@@ -126,8 +126,8 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
     options.fail_fast = false;
     const ai::Procedure proc = ai::procedure::make({frame_gate()}, {}, options);
     const DataFrame missing_time({
-        {"x", Slate(vec({10.0, 20.0, 30.0}))},
-        {"y", Slate(vec({0.0, 1.0, 0.0}))},
+        {"x", Shelf(vec({10.0, 20.0, 30.0}))},
+        {"y", Shelf(vec({0.0, 1.0, 0.0}))},
     });
     const ai::ProcedureResult out = proc.run({ai::procedure::input("raw", missing_time)});
     if (out.ok() || out.failed_step() != "gate" || !contains_text(out.warnings(), "timestamp")) {
@@ -206,7 +206,7 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
                                    std::vector<ai::Link>(restored.links().begin(), restored.links().end()),
                                    options);
     const DataFrame missing({
-        {"x", Slate(vec({10.0, 20.0, 30.0}))},
+        {"x", Shelf(vec({10.0, 20.0, 30.0}))},
     });
     const ai::ProcedureResult out = restored.run({ai::procedure::input("raw", missing)});
     std::filesystem::remove_all(bundle);

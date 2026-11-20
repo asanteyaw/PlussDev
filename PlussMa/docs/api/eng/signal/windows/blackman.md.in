@@ -1,5 +1,7 @@
 # `signal::blackman`
 
+Creates the three-term cosine Blackman window.
+
 ## Signature
 
 ```cpp
@@ -10,15 +12,15 @@ pluss::Series signal::blackman(
 
 ## What It Does
 
-Creates the standard three-term Blackman taper. Its stronger endpoint suppression lowers sidelobes relative to Hann or Hamming while widening the main lobe.
+The symmetric Blackman window is `w[i] = 0.42 - 0.5 cos(2 pi i / (n - 1)) + 0.08 cos(4 pi i / (n - 1))`. It is zero at both ends and its second cosine term flattens the tails further than Hann, so it suppresses leakage far from a tone at the price of a wider main lobe.
 
 ## Parameters
 
 `size`
-: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+: Number of coefficients. Zero returns an empty rank-one `Series`; one returns the single coefficient `1`.
 
 `options`
-: Endpoint, dtype, and platform policy. Small floating roundoff at theoretical zero endpoints is normalized by the implementation's coefficient formula and printed as zero at ordinary precision.
+: A `WindowOptions`: the endpoint convention (`mode`), the floating dtype and the platform. The default is a symmetric float64 window on the CPU.
 
 ## Returns
 
@@ -26,29 +28,40 @@ A rank-one floating `Series` of length `size`, allocated with the requested dtyp
 
 ## Errors
 
-Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+A negative `size`, a dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype (float64 on the MPS) throw `pluss::Error`.
+
+## Interpretation and Use
+
+The coherent gain tends to 0.42 and the mean square to about 0.30 as the length grows, so a Blackman-windowed tone reads about 0.42 of its amplitude: divide by the coherent gain to read amplitude. The fourth example measures the widest main lobe of the five windows (3.05 bins) and the lowest highest sidelobe (58.11 dB below the main lobe). Choose Blackman when a weak component sits far from a strong one; choose Hann or Hamming when frequency resolution matters more.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+Eight coefficients in both modes, and the closed form.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_blackman_values.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Coherent gain and mean square at three lengths.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_blackman_gain.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Every refused input and the size-zero and size-one cases.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_blackman_errors.cpp@@
+
+### Example 4
+
+The spectrum of a 64-point window: main-lobe width and highest sidelobe.
+
+@@example Eng/api/signal_blackman_spectrum.cpp@@
+
 
 ## See Also
 

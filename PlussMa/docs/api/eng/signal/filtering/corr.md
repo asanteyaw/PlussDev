@@ -2,6 +2,8 @@
 
 # `signal::corr`
 
+Correlates a signal with a template along one axis.
+
 ## Signature
 
 ```cpp
@@ -14,162 +16,165 @@ pluss::Series signal::corr(
 
 ## What It Does
 
-Computes linear cross-correlation along one axis. For complex data the kernel is conjugated, so peaks retain their standard signal-processing interpretation.
+Slides the kernel along the input without reversing it, so `corr(x, k)` equals `conv(x, flip(k))`. Where convolution measures how a system blends the past, correlation measures how closely a template matches the signal at each offset.
 
 ## Parameters
 
 `input`
-: Floating or complex observations.
+: A floating or complex `Series`.
 
 `kernel`
-: Floating or complex reference pattern.
+: A rank-one floating or complex `Series`, the template.
 
 `dim`
-: Axis along which lag is evaluated.
+: The axis to correlate along; default `-1`.
 
 `mode`
-: Selects full, centered input-sized, or complete-overlap output.
+: A `ConvMode`: `Full` (default), `Same` or `Valid`.
 
 ## Returns
 
-A floating or complex correlation `Series` whose lag-axis length follows `mode`.
+A `Series` with the lengths of `conv` for the same mode.
 
 ## Errors
 
-Rejects integer inputs, invalid axes, incompatible shapes, dtypes, or platforms.
+An integer input, an empty input or kernel, and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+To locate a known pattern, correlate in `Valid` mode and take the position of the maximum: in `Valid` mode element `j` compares the template with the window starting at sample `j`, so the index of the peak is the start of the match. The peak value is the template energy when the match is exact.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+Correlation against convolution with the flipped kernel.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  const pluss::Series k = pluss::make_series({1.0, 2.0, 4.0});
+  out.writeln("corr(x, k)         =", sig::corr(x, k).items<double>());
+  out.writeln("conv(x, flip(k))   =", sig::conv(x, k.flip(0)).items<double>());
+  out.writeln("conv(x, k)         =", sig::conv(x, k).items<double>());
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+corr(x, k)         = [4.0000, 10.0000, 17.0000, 24.0000, 11.0000, 4.0000]
+conv(x, flip(k))   = [4.0000, 10.0000, 17.0000, 24.0000, 11.0000, 4.0000]
+conv(x, k)         = [1.0000, 4.0000, 11.0000, 18.0000, 20.0000, 16.0000]
+```
+### Example 2
+
+Finding a pattern inside a longer signal from the peak of the correlation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series pattern = pluss::make_series({0.0, 1.0, 3.0, 1.0, 0.0});
+  const pluss::Series signal = pluss::make_series({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 3.0, 1.0, 0.0, 0.0, 0.0});
+  const pluss::Series c = sig::corr(signal, pattern, -1, sig::ConvMode::Valid);
+  const auto values = c.items<double>();
+  const auto peak = std::max_element(values.begin(), values.end()) - values.begin();
+  out.writeln("correlation values =", values);
+  out.writeln("the pattern starts at sample", peak, "of the signal, where the correlation peaks at", values[peak]);
+}
+```
+
+Output
+
+```text
+correlation values = [0.0000, 0.0000, 0.0000, 1.0000, 6.0000, 11.0000, 6.0000, 1.0000]
+the pattern starts at sample 5 of the signal, where the correlation peaks at 11.0000
+```
+### Example 3
+
+Every refused input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "an integer input", [] { sig::corr(pluss::make_series({1, 2, 3}), pluss::make_series({1.0, 1.0})); });
+  refused(out, "an empty kernel", [] { sig::corr(pluss::make_series({1.0, 2.0}), pluss::series::zeros({0}, pluss::ScalarType::Float64)); });
+  refused(out, "an axis out of range", [] { sig::corr(pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}), 3); });
+}
+```
+
+Output
+
+```text
+an integer input : eng::signal::corr: input must have a floating or complex dtype
+an empty kernel : eng::signal::conv: sample axes must be non-empty
+an axis out of range : eng::signal::corr: dim out of range
 ```
 ## See Also
 

@@ -80,8 +80,8 @@ auto archive = pluss::kindle::Archive({c0, c1, c2});
 
 try {
   auto labeled = archive.label().set(pluss::kindle::Stream(pluss::make_note({"q1", "q2"})));
-} catch (const std::exception& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 

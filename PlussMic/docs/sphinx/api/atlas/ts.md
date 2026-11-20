@@ -47,7 +47,7 @@ Example 1. Compute period-over-period returns across every frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 
@@ -61,16 +61,16 @@ std::cout << out.dloc(0);
 ============
      | sales
 ------------
-0    | nan  
+0    | NULL 
 1    | 1    
 2    | 0.5  
 ------------
 [3 cs x 1 feat]
 ```
 
-The first row shows `nan` — there's no prior period to compute a return against. The cell
+The first row shows `NULL` — there's no prior period to compute a return against. The cell
 is genuinely `NULL` (confirmed via `dloc(0).isnull()`, which reports `true` for that row);
-it just renders here as `nan` rather than the `NULL` text
+it just renders here as `NULL` rather than the `NULL` text
 [`DataFrame::ts()`](../dataframe/ts.md)`.returns()`'s own docs show for the identical
 case — a display-only difference between the two paths, not a difference in validity.
 

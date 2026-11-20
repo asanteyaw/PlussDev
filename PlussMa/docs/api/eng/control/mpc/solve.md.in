@@ -1,6 +1,6 @@
-# `control::mpc::solve`
+# `control::solve`
 
-Solves a compiled or one-shot finite-horizon regulation problem.
+Solves the model-predictive control problem from the current state.
 
 ## Signature
 
@@ -23,73 +23,59 @@ control::mpc::Result control::mpc::solve(
 
 ## What It Does
 
-The plan overload reuses compiled matrices and factorization. The one-shot overload coordinates `build` followed by the same solve kernel, making it convenient for isolated calculations but less efficient for repeated control updates.
+Finds the sequence of inputs over the horizon that minimises the weighted tracking error and effort while respecting the bounds, and returns the whole plan. Only the first input is applied; the problem is solved again at the next sample from the new state (receding horizon). There is an overload on a built `Plan` and a one-shot overload that builds and solves.
 
 ## Parameters
 
 `plan`
-: A compiled problem from `control::mpc::build`.
-
-`system`
-: Discrete model used by the one-shot overload.
+: A `Plan` from `build`; or, for the one-shot overload, `system`, `weights`, `bounds` and `options`.
 
 `initial_state`
-: Current state vector.
+: The current state, `[states]`.
 
 `reference`
-: A constant state target or a horizon-by-state reference trajectory.
-
-`weights`
-: Quadratic penalties for the one-shot overload.
-
-`bounds`
-: Input and optional state bounds for the one-shot overload.
-
-`options`
-: Horizon and QP settings for the one-shot overload.
+: A target state `[states]` held over the horizon, or a trajectory `[horizon, states]`.
 
 `warm`
-: Optional previous primal/dual QP state for faster repeated solves.
+: Optional previous primal and dual solution from `Result::optimization.warm()`.
 
 ## Returns
 
-An `mpc::Result`; `control` is the receding-horizon action while `controls` and `states` expose the full plan.
+A `Result`.
 
 ## Errors
 
-Throws for shape or platform mismatches, invalid references, failed constraints, or QP non-convergence. The one-shot overload also performs all `build` validation.
+An initial state or reference of the wrong size, a non-finite initial state and the errors of `build` (for the one-shot overload) throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Use the plan overload for repeated control updates; it avoids rebuilding invariant matrices. Use the one-shot overload for isolated analyses or prototyping. A warm start should come from a compatible previous QP result and improves speed without changing the mathematical problem.
+With a constant reference of 1 from the state 0 the plan moves 0.916 on the first step and then converges; a reference trajectory of 0.25, 0.5, 0.75 and 1 gives a gentler first move of 0.25 (the first example). Warm-starting from a previous solution of the same problem needs 10 iterations instead of 40, and 30 for a nearby problem (the second example). The third closes the loop: the state is rate-limited by the input bound and then settles on the reference.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Run the complete one-shot solve.
+A constant reference against a reference trajectory.
 
-@@example Eng/api/control_mpc.cpp@@
+@@example Eng/api/control_mpcsolve_reference.cpp@@
 
 ### Example 2
 
-Reuse a plan and feed the previous optimizer state back as a warm start.
+Cold and warm starts.
 
-@@example Eng/api/control_mpc_plan.cpp@@
+@@example Eng/api/control_mpcsolve_warm.cpp@@
 
 ### Example 3
 
-Solve with non-default bounds, horizon, and tolerances.
+A receding-horizon loop.
 
-@@example Eng/api/control_mpc_options.cpp@@
+@@example Eng/api/control_mpcsolve_closed_loop.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="build.html">
-    <span class="label">Previous</span>
-    <span class="title">build</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused argument.
+
+@@example Eng/api/control_mpcsolve_errors.cpp@@
+

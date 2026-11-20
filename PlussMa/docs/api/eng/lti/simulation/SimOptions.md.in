@@ -1,5 +1,7 @@
 # `lti::SimOptions`
 
+The options of `sim`.
+
 ## Signature
 
 ```cpp
@@ -8,43 +10,47 @@ lti::SimOptions options{};
 
 ## What It Does
 
-Carries simulation interpolation policy without changing the state-space model itself.
+Currently one field: the hold used for the input between samples.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `hold` | `Hold::Auto` | Chooses automatic, zero-order, or linear input interpolation between continuous-time samples. |
+| Field | Meaning | Default |
+|---|---|---|
+| `hold` | A `Hold`. | `Auto` |
 
 ## Returns
 
-Pass by const reference to either `sim` overload.
+Argument of `sim`.
 
 ## Errors
 
-A hold policy incompatible with a discrete system is rejected when simulation begins.
+Invalid inputs are reported by `sim`.
+
+## Interpretation and Use
+
+Construct it with a designated initializer: `{.hold = lti::Hold::Zero}`. The default `Auto` matched `Linear` exactly in the first example and differed from `Zero` by 0.2341 on the ramp.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+The default and what it equals on a ramp.
 
-@@example Eng/api/lti_sim.cpp@@
+@@example Eng/api/lti_simoptions_defaults.cpp@@
 
 ### Example 2
 
-Compare hold policies with an explicit initial state.
+`Zero` and `Linear` on the same ramp.
 
-@@example Eng/api/lti_sim_modes.cpp@@
+@@example Eng/api/lti_simoptions_hold.cpp@@
 
 ### Example 3
 
-Exercise timestamp and input-shape validation.
+Arguments `sim` refuses under these options.
 
-@@example Eng/api/lti_sim_errors.cpp@@
+@@example Eng/api/lti_simoptions_errors.cpp@@
 
 ## See Also
 

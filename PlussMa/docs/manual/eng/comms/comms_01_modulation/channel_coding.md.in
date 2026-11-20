@@ -4,7 +4,7 @@
 
 Noise flips bits. A **channel code** adds redundancy before transmission so that the receiver can find and correct the flips. This page encodes with a convolutional code, decodes with the Viterbi algorithm, shows what it corrects, and measures the coding gain against uncoded BPSK.
 
-## The mental model
+## How it works
 
 A **convolutional code** of rate `1 / n` turns every information bit into `n` coded bits, each the parity of the current bit and the previous `constraint_length - 1` bits selected by a generator. `ConvolutionalCode` holds the constraint length `K` and the generators (integers written in octal); the default is the standard rate-1/2, `K = 7` code with generators `0171` and `0133`. `encode` appends `K - 1` zero bits so that the encoder ends in the zero state, which the decoder uses.
 

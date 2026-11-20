@@ -38,7 +38,7 @@ vectorized `Series` arithmetic and never consult `unknown_categorical` at
 all; see each page's own `## Errors` section for exactly what an unseen
 value produces there instead.
 
-Every encoder also accepts a single `pluss::table::Slate` directly,
+Every encoder also accepts a single `pluss::table::Shelf` directly,
 alongside the usual [`FeatureBatch`](../data/FeatureBatch.md) overload — a
 convenience for the common case of encoding one raw table column without
 building a batch around it by hand.

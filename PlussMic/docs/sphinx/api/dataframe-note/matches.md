@@ -63,7 +63,7 @@ is required to match (`full = true`).
 using namespace pluss::table;
 
 auto codes = DataFrame({
-    {"code", Slate(pluss::make_note(
+    {"code", Shelf(pluss::make_note(
         {"A123", "A123XYZ", "123A", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -155,19 +155,19 @@ evaluated.
 ```cpp
 try {
   auto bad = codes.nt().matches("[unclosed");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::matches: invalid regular expression: <implementation-defined regex error text>
+Shelf::matches: invalid regular expression: The expression contained mismatched [ and ].
 ```
 
 The exact wording after the colon comes from the underlying `std::regex`
-implementation and varies by standard library, but the `"Slate::matches:
+implementation and varies by standard library, but the `"Shelf::matches:
 invalid regular expression: "` prefix is always present.
 
 ## Notes

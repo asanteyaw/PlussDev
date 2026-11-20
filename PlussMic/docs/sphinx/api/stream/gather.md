@@ -46,9 +46,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_slate.html">
+  <a class="prev-link" href="from_shelf.html">
     <span class="label">Previous</span>
-    <span class="title">from_slate</span>
+    <span class="title">from_shelf</span>
   </a>
   <a class="next-link" href="has_label.html">
     <span class="label">Next</span>

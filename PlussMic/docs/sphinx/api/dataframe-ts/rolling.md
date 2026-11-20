@@ -91,8 +91,8 @@ Example 1. A fixed-size trailing rolling mean, including its partial windows.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().rolling(2);
@@ -182,8 +182,8 @@ Example 4. Pass a non-positive `window`, to see it throw.
 ```cpp
 try {
   auto out = readings.features({"load"}).ts().rolling(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -191,7 +191,7 @@ try {
 ### Output
 
 ```text
-Slate::moving: window must be > 0
+Shelf::moving: window must be > 0
 ```
 
 A window of `0` (or negative) has no meaningful trailing span, so it's
@@ -210,7 +210,7 @@ rejected outright.
   one — and is not covered by a worked example here since it depends on frequency
   and calendar conventions outside this reference's current verified scope.
 - The structured `specs` overload only supports `Sum`/`Mean`/`Min`/`Max` (via
-  `SlateWindowOp`), not the full `WindowStatistic` set the other two overloads
+  `ShelfWindowOp`), not the full `WindowStatistic` set the other two overloads
   support.
 
 ## See Also

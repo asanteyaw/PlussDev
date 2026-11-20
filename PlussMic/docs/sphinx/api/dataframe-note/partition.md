@@ -45,7 +45,7 @@ already invalid on input produces `NULL` in all three. See Example 1.
 
 **separator** (`std::string_view`)
     The literal text to split on. Must not be empty — `partition("")`
-    throws `"Slate::partition: separator cannot be empty"`.
+    throws `"Shelf::partition: separator cannot be empty"`.
 
 **prefix** (`std::string`, default `"part"`)
     Base name for the three output columns: `<prefix>_0` (before),
@@ -67,7 +67,7 @@ and the genuinely-invalid row's `NULL`s, side by side.
 using namespace pluss::table;
 
 auto entries = DataFrame({
-    {"entry", Slate(pluss::make_note(
+    {"entry", Shelf(pluss::make_note(
         {"key=value", "no-equals", "a=b=c", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -142,15 +142,15 @@ Example 3. An empty separator throws immediately.
 ```cpp
 try {
   auto bad = entries.features({"entry"}).nt().partition("");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::partition: separator cannot be empty
+Shelf::partition: separator cannot be empty
 ```
 
 ## Notes
@@ -164,7 +164,7 @@ Slate::partition: separator cannot be empty
   columns, not `NULL` — see the important callout above. Only a row that
   was already invalid on input produces `NULL` in any of the three
   columns.
-- An empty `separator` throws `"Slate::partition: separator cannot be
+- An empty `separator` throws `"Shelf::partition: separator cannot be
   empty"`.
 
 ## See Also

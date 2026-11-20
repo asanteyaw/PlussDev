@@ -27,15 +27,15 @@ namespace {
 }
 
 [[nodiscard]] std::vector<std::string> raw_keys_(const pluss::table::DataFrame& df, const std::string& name) {
-  const auto slate = df.features(name);
-  const auto n = slate.size();
+  const auto shelf = df.features(name);
+  const auto n = shelf.size();
   std::vector<std::string> out{};
   out.reserve(static_cast<std::size_t>(n));
-  if (slate.kind() == pluss::table::SlateKind::Note) {
-    const pluss::Note& note = slate.as_note();
+  if (shelf.kind() == pluss::table::ShelfKind::Note) {
+    const pluss::Note& note = shelf.as_note();
     for (std::int64_t i = 0; i < n; ++i) out.emplace_back(note.at(i));
   } else {
-    const auto values = slate.as_series()
+    const auto values = shelf.as_series()
                             .to(pluss::pCPU, ScalarType::Float64)
                             .reshape({n})
                             .host<double>();

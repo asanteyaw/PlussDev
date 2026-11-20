@@ -40,8 +40,8 @@ Example 1. Compute the one-period difference of a numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().diff(1);
@@ -55,9 +55,9 @@ std::cout << out;
      | load
 -----------
 0    | NULL
-1    | 10  
+1    |  10 
 2    | -5  
-3    | 15  
+3    |  15 
 -----------
 [4 cs x 1 feat]
 ```

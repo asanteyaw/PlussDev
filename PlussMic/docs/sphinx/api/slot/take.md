@@ -56,8 +56,8 @@ auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   std::vector<std::int64_t> bad{10};
   auto out = slot.take(bad);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

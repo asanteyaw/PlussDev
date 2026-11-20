@@ -253,14 +253,11 @@ void test_lax_riemann_problem() {
                        .add(0.5)
                        .div(static_cast<double>(cells));
   const Series mask = x.lt(0.5);
-  const Series rho = mask.where(pluss::series::full_like(x, left.rho),
-                                pluss::series::full_like(x, right.rho));
+  const Series rho = pluss::series::where(mask, pluss::series::full_like(x, left.rho), pluss::series::full_like(x, right.rho));
   const Series velocity =
-      mask.where(pluss::series::full_like(x, left.velocity),
-                 pluss::series::full_like(x, right.velocity));
+      pluss::series::where(mask, pluss::series::full_like(x, left.velocity), pluss::series::full_like(x, right.velocity));
   const Series pressure =
-      mask.where(pluss::series::full_like(x, left.pressure),
-                 pluss::series::full_like(x, right.pressure));
+      pluss::series::where(mask, pluss::series::full_like(x, left.pressure), pluss::series::full_like(x, right.pressure));
   const auto initial = primitive(rho, velocity.unsqueeze(0), pressure, grid);
   const auto rules = gas::bounds(
       grid,
@@ -315,13 +312,9 @@ void test_shu_osher_wave_retention() {
                        .mul(width)
                        .add(low);
   const Series mask = x.lt(-4.0);
-  const Series rho = mask.where(
-      pluss::series::full_like(x, 3.857143),
-      x.mul(5.0).sin().mul(0.2).add(1.0));
-  const Series velocity = mask.where(pluss::series::full_like(x, 2.629369),
-                                     pluss::series::zeros_like(x));
-  const Series pressure = mask.where(pluss::series::full_like(x, 10.33333),
-                                     pluss::series::ones_like(x));
+  const Series rho = pluss::series::where(mask, pluss::series::full_like(x, 3.857143), x.mul(5.0).sin().mul(0.2).add(1.0));
+  const Series velocity = pluss::series::where(mask, pluss::series::full_like(x, 2.629369), pluss::series::zeros_like(x));
+  const Series pressure = pluss::series::where(mask, pluss::series::full_like(x, 10.33333), pluss::series::ones_like(x));
   const auto initial = primitive(rho, velocity.unsqueeze(0), pressure, grid);
   const auto rules = gas::bounds(
       grid,
@@ -462,19 +455,13 @@ void test_quirk_cartesian_carbuncle() {
   const Series iy =
       pluss::series::arange(0, ny, 1, ScalarType::Float64).reshape({1, ny});
   const Series post = ix.lt(5.0);
-  const Series sign = ix.add(iy).fmod(2.0).eq(0.0).where(
-      pluss::series::ones({nx, ny}, ScalarType::Float64),
-      pluss::series::full({nx, ny}, -1.0, ScalarType::Float64));
-  const Series noise = post.logical_not().where(sign.mul(1e-3),
-                                                 pluss::series::zeros_like(sign));
-  const Series rho = post.where(pluss::series::full_like(sign, 5.2682926829),
-                                noise.add(1.0));
-  const Series u = post.where(pluss::series::full_like(sign, 5.751744607),
-                              noise.mul(0.1));
+  const Series sign = pluss::series::where(ix.add(iy).fmod(2.0).eq(0.0), pluss::series::ones({nx, ny}, ScalarType::Float64), pluss::series::full({nx, ny}, -1.0, ScalarType::Float64));
+  const Series noise = pluss::series::where(post.logical_not(), sign.mul(1e-3), pluss::series::zeros_like(sign));
+  const Series rho = pluss::series::where(post, pluss::series::full_like(sign, 5.2682926829), noise.add(1.0));
+  const Series u = pluss::series::where(post, pluss::series::full_like(sign, 5.751744607), noise.mul(0.1));
   const Series v = noise.mul(0.1);
   const Series pressure =
-      post.where(pluss::series::full_like(sign, 41.8333333333),
-                 noise.mul(0.1).add(1.0));
+      pluss::series::where(post, pluss::series::full_like(sign, 41.8333333333), noise.mul(0.1).add(1.0));
   const auto initial = primitive(
       rho, u.unsqueeze(0).unite({v.unsqueeze(0)}, 0), pressure, grid);
   const auto rules = gas::bounds(
@@ -543,15 +530,11 @@ void test_double_mach_reflection() {
   const Series y = y_lane.reshape({1, ny});
   const Series post = x.lt(y.div(root3).add(shock_foot));
   const Series field = x.add(y);
-  const Series rho = post.where(pluss::series::full_like(field, post_rho),
-                                pluss::series::full_like(field, pre_rho));
-  const Series u = post.where(pluss::series::full_like(rho, post_u),
-                              pluss::series::zeros_like(rho));
-  const Series v = post.where(pluss::series::full_like(rho, post_v),
-                              pluss::series::zeros_like(rho));
+  const Series rho = pluss::series::where(post, pluss::series::full_like(field, post_rho), pluss::series::full_like(field, pre_rho));
+  const Series u = pluss::series::where(post, pluss::series::full_like(rho, post_u), pluss::series::zeros_like(rho));
+  const Series v = pluss::series::where(post, pluss::series::full_like(rho, post_v), pluss::series::zeros_like(rho));
   const Series pressure =
-      post.where(pluss::series::full_like(rho, post_pressure),
-                 pluss::series::full_like(rho, pre_pressure));
+      pluss::series::where(post, pluss::series::full_like(rho, post_pressure), pluss::series::full_like(rho, pre_pressure));
   const auto initial = primitive(
       rho, u.unsqueeze(0).unite({v.unsqueeze(0)}, 0), pressure, grid);
   const auto post_state =
@@ -564,18 +547,10 @@ void test_double_mach_reflection() {
     const double top_crossing =
         shock_foot + 1.0 / root3 + 10.0 * time.si_value() / sin60;
     const Series top_post = x_lane.lt(top_crossing);
-    const Series top_rho = top_post.where(
-        pluss::series::full_like(x_lane, post_rho),
-        pluss::series::full_like(x_lane, pre_rho));
-    const Series top_u = top_post.where(
-        pluss::series::full_like(x_lane, post_u),
-        pluss::series::zeros_like(x_lane));
-    const Series top_v = top_post.where(
-        pluss::series::full_like(x_lane, post_v),
-        pluss::series::zeros_like(x_lane));
-    const Series top_pressure = top_post.where(
-        pluss::series::full_like(x_lane, post_pressure),
-        pluss::series::full_like(x_lane, pre_pressure));
+    const Series top_rho = pluss::series::where(top_post, pluss::series::full_like(x_lane, post_rho), pluss::series::full_like(x_lane, pre_rho));
+    const Series top_u = pluss::series::where(top_post, pluss::series::full_like(x_lane, post_u), pluss::series::zeros_like(x_lane));
+    const Series top_v = pluss::series::where(top_post, pluss::series::full_like(x_lane, post_v), pluss::series::zeros_like(x_lane));
+    const Series top_pressure = pluss::series::where(top_post, pluss::series::full_like(x_lane, post_pressure), pluss::series::full_like(x_lane, pre_pressure));
     const auto top_state = gas::primitive(
         common::SeriesQuantity<gas::Density>::from_si(top_rho),
         common::SeriesQuantity<common::Speed>::from_si(

@@ -36,7 +36,7 @@ Example 1. Take the first frame of a multi-frame atlas.
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 7; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Shelf(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);
@@ -65,7 +65,7 @@ than throw.
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 7; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Shelf(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);
@@ -101,8 +101,8 @@ head(0) depth: 0
     <span class="label">Previous</span>
     <span class="title">frames</span>
   </a>
-  <a class="next-link" href="kindelize.html">
+  <a class="next-link" href="invalid.html">
     <span class="label">Next</span>
-    <span class="title">kindelize</span>
+    <span class="title">invalid</span>
   </a>
 </div>

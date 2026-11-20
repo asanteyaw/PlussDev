@@ -2117,7 +2117,7 @@ inline Series pinverse_mps_native_(const Series& a, double rcond) {
   const Series keep = decomposition.s.gt(rcond * largest);
   const Series zeros = Series::zeros(decomposition.s.sizes(), decomposition.s.scalar_type())
                            .to(Platform::MPS);
-  const Series reciprocal = keep.where(decomposition.s.reciprocal(), zeros);
+  const Series reciprocal = pluss::series::where(keep, decomposition.s.reciprocal(), zeros);
   return matrix_adjoint_(decomposition.vh)
       .mul(reciprocal.unsqueeze(0))
       .matmul(matrix_adjoint_(decomposition.u))

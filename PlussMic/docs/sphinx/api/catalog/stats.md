@@ -57,9 +57,9 @@ text_mean_char_len -> Series([20.0])
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort.html">
+  <a class="prev-link" href="stamp.html">
     <span class="label">Previous</span>
-    <span class="title">sort</span>
+    <span class="title">stamp</span>
   </a>
   <a class="next-link" href="std.html">
     <span class="label">Next</span>

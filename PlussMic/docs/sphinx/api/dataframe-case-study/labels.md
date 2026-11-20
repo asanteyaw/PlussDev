@@ -16,13 +16,13 @@ DataFrame DataFrameCaseStudyAccessor::labels(std::initializer_list<std::string_v
 DataFrame DataFrameCaseStudyAccessor::labels(pluss::RangeView<std::string_view> values) const
 DataFrame DataFrameCaseStudyAccessor::labels(std::initializer_list<std::int64_t> values) const
 DataFrame DataFrameCaseStudyAccessor::labels(pluss::RangeView<std::int64_t> values) const
-DataFrame DataFrameCaseStudyAccessor::labels(const Slate& values) const
+DataFrame DataFrameCaseStudyAccessor::labels(const Shelf& values) const
 ```
 
 ## What It Does
 
 Selects cases by case-axis label. A single scalar (`value`) selects every case whose
-current case-axis label equals it, in source order. A list, range, or `Slate`
+current case-axis label equals it, in source order. A list, range, or `Shelf`
 (`values`) performs several label lookups in one ordered selection, where the output
 follows the requested order, not source order. Labels are lookup keys, not uniqueness
 declarations: duplicate labels, or a label requested more than once, always expand to
@@ -36,7 +36,7 @@ representation. It is not a substring search, numeric tolerance comparison, or
 hierarchical level match. Use `pick()` when one named level of a structured case axis
 is the intended key.
 
-The range overloads avoid an intermediate owning vector, while the `Slate` overload
+The range overloads avoid an intermediate owning vector, while the `Shelf` overload
 is useful when the requested keys are already a PlussMic value. An empty multi-key
 request is valid and returns a zero-case frame with the original feature schema.
 
@@ -49,7 +49,7 @@ request is valid and returns a zero-case frame with the original feature schema.
     example), since comparison happens against the axis's rendered label text.
 
 **values** (`std::initializer_list<std::string_view>` / `pluss::RangeView<std::string_view>`
-/ `std::initializer_list<std::int64_t>` / `pluss::RangeView<std::int64_t>` / `const Slate&`)
+/ `std::initializer_list<std::int64_t>` / `pluss::RangeView<std::int64_t>` / `const Shelf&`)
     The ordered sequence of case-label keys to select. Order is significant: the
     result follows `values`' order, not the source frame's. The `RangeView` overloads
     borrow their argument — it must remain alive for the duration of the call.
@@ -70,8 +70,8 @@ duplicate labels in the source frame return every match.
 
 ```cpp
 using namespace pluss::table;
-auto frame = DataFrame({{"v", Slate(pluss::make_series({3, 5, 8, 13}))}})
-    .label().set(Slate(pluss::make_note({"A", "B", "B", "D"})));
+auto frame = DataFrame({{"v", Shelf(pluss::make_series({3, 5, 8, 13}))}})
+    .labels().set(Shelf(pluss::make_note({"A", "B", "B", "D"})));
 
 auto duplicates = frame.case_study().labels("B");
 std::cout << duplicates;
@@ -93,8 +93,8 @@ Example 2. A numeric case axis accepts a single `std::int64_t` key directly, wit
 first converting it to a string.
 
 ```cpp
-auto numbered = DataFrame({{"v", Slate(pluss::make_series({4, 9, 16}))}})
-    .label().set(Slate(pluss::make_series({10, 20, 30})));
+auto numbered = DataFrame({{"v", Shelf(pluss::make_series({4, 9, 16}))}})
+    .labels().set(Shelf(pluss::make_series({10, 20, 30})));
 auto by_int = numbered.case_study().labels(20);
 std::cout << by_int;
 ```
@@ -134,8 +134,8 @@ Example 4. Floating-point labels use the same concise, twelve-significant-digit
 rendering as the case axis itself.
 
 ```cpp
-auto decimal = DataFrame({{"v", Slate(pluss::make_series({2, 4, 8}))}})
-    .label().set(Slate(pluss::make_series({0.5, 1.25, 2.5})));
+auto decimal = DataFrame({{"v", Shelf(pluss::make_series({2, 4, 8}))}})
+    .labels().set(Shelf(pluss::make_series({0.5, 1.25, 2.5})));
 auto by_double = decimal.case_study().labels(1.25);
 std::cout << by_double;
 ```
@@ -157,8 +157,8 @@ overloads just as it is for the multi-key form shown later.
 ```cpp
 try {
   (void)frame.case_study().labels("missing");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -210,13 +210,13 @@ B    | 8
 [5 cs x 1 feat]
 ```
 
-Example 8. The `Slate` overload is useful when the requested keys are already a
+Example 8. The `Shelf` overload is useful when the requested keys are already a
 PlussMic value, such as the output of another table operation.
 
 ```cpp
-Slate keys(pluss::make_note({"A", "D"}));
-auto from_slate = frame.case_study().labels(keys).features({"v"});
-std::cout << from_slate;
+Shelf keys(pluss::make_note({"A", "D"}));
+auto from_shelf = frame.case_study().labels(keys).features({"v"});
+std::cout << from_shelf;
 ```
 
 ### Output
@@ -258,8 +258,8 @@ B    | 8
 Example 10. Integer label requests use the matching initializer-list overload.
 
 ```cpp
-auto scaled = DataFrame({{"v", Slate(pluss::make_series({10, 20, 30}))}})
-    .label().set(Slate(pluss::make_series({100, 200, 300})));
+auto scaled = DataFrame({{"v", Shelf(pluss::make_series({10, 20, 30}))}})
+    .labels().set(Shelf(pluss::make_series({100, 200, 300})));
 auto numeric = scaled.case_study().labels({300, 100});
 std::cout << numeric;
 ```
@@ -317,8 +317,8 @@ fails the whole request rather than silently dropping it.
 ```cpp
 try {
   (void)frame.case_study().labels({"A", "missing"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

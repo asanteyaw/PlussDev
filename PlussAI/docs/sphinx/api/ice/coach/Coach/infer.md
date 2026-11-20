@@ -187,7 +187,7 @@ int main() {
   namespace nn = pluss::nn;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f32 = pluss::Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   const pluss::Series x0 = pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}, f32);
@@ -195,9 +195,9 @@ int main() {
   const pluss::Series label = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}, f32);
 
   const DataFrame df({
-      {"x0", Slate(x0)},
-      {"x1", Slate(x1)},
-      {"label", Slate(label)},
+      {"x0", Shelf(x0)},
+      {"x1", Shelf(x1)},
+      {"label", Shelf(label)},
   });
 
   ice::Outline model(nn::Fusion(2, 1));

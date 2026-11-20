@@ -6,7 +6,7 @@ Every algorithm in this guide follows gradients. The objective's gradient says w
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 You write the function; the library supplies the derivative, or you supply it yourself. There are three ways to hand over an objective, and the constraints have the same choices.
 

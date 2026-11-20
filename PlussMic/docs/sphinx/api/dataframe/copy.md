@@ -107,9 +107,9 @@ copy-on-write clone the moment it detects the underlying storage is still shared
 - [`DataFrame::defined`](defined.md): confirm a handle is usable at all.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="conform.html">
+  <a class="prev-link" href="contingency.html">
     <span class="label">Previous</span>
-    <span class="title">conform</span>
+    <span class="title">contingency</span>
   </a>
   <a class="next-link" href="corr.html">
     <span class="label">Next</span>

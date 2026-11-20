@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -17,7 +17,7 @@ int main() {
   // point. It is stateless -- the threshold is a fixed option, not learned.
   const pluss::Series balance = pluss::make_series({-50., -5., 0., 10., 40., 120.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"balance", Slate(balance)}});
+  const DataFrame x({{"balance", Shelf(balance)}});
 
   lymph::options::ThresholdBinarizer o{};
   o.threshold = 5.0;
@@ -26,8 +26,8 @@ int main() {
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"balance", Slate(balance)}, {"actual", Slate(y)},
-                          {"predicted", Slate(model.infer(x))}});
+  std::cout << DataFrame({{"balance", Shelf(balance)}, {"actual", Shelf(y)},
+                          {"predicted", Shelf(model.infer(x))}});
 
   return 0;
 }

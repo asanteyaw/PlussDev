@@ -70,9 +70,9 @@ different parameter bindings.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto stmt = orders.prep_sql("SELECT id, sales FROM df WHERE sales > {min_sales}");
@@ -104,7 +104,7 @@ std::cout << high_bar;
 ==================
      | id    sales
 ------------------
-1    | 2     120  
+0    | 2     120  
 ------------------
 [1 cs x 2 feat]
 ```

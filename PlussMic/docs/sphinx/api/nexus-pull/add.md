@@ -58,7 +58,7 @@ using namespace pluss::bundle::nexus;
 auto pulled = nx.pull("customers")
     .add(take("customer_id"))
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -82,11 +82,12 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+==========================================
      | customer_id  region_id  total_spend
 ------------------------------------------
-0    | 1            10         15
-1    | 2            20         14
-2    | 3            10         NULL
+0    | 1            10         15         
+1    | 2            20         14         
+2    | 3            10         NULL       
 ------------------------------------------
 [3 cs x 3 feat]
 ```
@@ -105,7 +106,7 @@ auto pulled = nx.pull("customers")
     .take("customer_id")
     .add({sum("events.spend", "recent_spend").windowed(30, "d")})
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

@@ -18,9 +18,8 @@ generation, the `colors` vector becomes the ramp's `stops()` verbatim (in order)
 ## Parameters
 
 **colors** (`std::vector<Rgba>`)
-    The ramp's stops, used as-is. If empty, falls back to a fixed two-color default
-    (`rgb(42,95,153)` → `rgb(229,107,111)`, a blue-to-coral gradient) rather than
-    producing an empty ramp — see the edge case below.
+    The ramp's stops, used as-is. At least one colour is required: an empty list is an
+    error (see the edge case below). A single colour gives a constant ramp.
 
 **name** (`std::string`, default `"blend"`)
     The returned ramp's `name()`.
@@ -28,7 +27,7 @@ generation, the `colors` vector becomes the ramp's `stops()` verbatim (in order)
 ## Returns
 
 `PaletteRamp`
-    A ramp whose `stops()` is exactly `colors` (or the two-color fallback).
+    A ramp whose `stops()` is exactly `colors`.
 
 ## Examples
 
@@ -48,20 +47,26 @@ Output:
 blend_palette(3 colors) stops=3 name=rgb
 ```
 
-Example 2 (edge case). An empty `colors` vector does not produce an empty ramp — it
-falls back to a fixed two-color default.
+Example 2 (edge case). An empty list is an error, and a single colour is a valid constant ramp.
 
 ```cpp
 using namespace pluss::pl;
 
-auto blend_default = flash::blend_palette({});
-std::cout << "blend_palette(empty) stops=" << blend_default.stops().size() << " name=" << blend_default.name() << "\n";
+try {
+  flash::blend_palette({});
+} catch (const pluss::Error &e) {
+  std::cout << e.message() << "\n";
+}
+auto one = flash::blend_palette({Rgba::from_u8(1, 2, 3)});
+const auto mid = one.sample(0.5);
+std::cout << "one colour, sampled at 0.5: " << static_cast<int>(mid.red * 255 + 0.5) << "," << static_cast<int>(mid.green * 255 + 0.5) << "," << static_cast<int>(mid.blue * 255 + 0.5) << "\n";
 ```
 
 Output:
 
 ```text
-blend_palette(empty) stops=2 name=blend
+flash::blend_palette: at least one colour is required
+one colour, sampled at 0.5: 1,2,3
 ```
 
 ## Notes

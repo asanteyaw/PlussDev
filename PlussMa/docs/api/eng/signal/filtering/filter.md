@@ -2,6 +2,8 @@
 
 # `signal::filter`
 
+Applies a rational filter by recursion and returns the state for continuation.
+
 ## Signature
 
 ```cpp
@@ -21,165 +23,175 @@ signal::FilterRun signal::filter(
 
 ## What It Does
 
-Applies a direct-form causal recurrence. The first overload starts from zero state; the second resumes from a previous `FilterRun::state`, enabling exact streaming across arbitrary block boundaries.
+Runs the difference equation `a[0] y[n] = sum b[k] x[n-k] - sum_{k>=1} a[k] y[n-k]` in transposed direct form II. The result is a `FilterRun`: the output and the final delay-line state, which the stateful overload accepts to continue the same filter on the next block of samples with no seam.
 
 ## Parameters
 
 `input`
-: Samples to process.
+: A floating or complex `Series`.
 
-`numerator`
-: Feed-forward coefficients.
-
-`denominator`
-: Feedback coefficients; the leading coefficient normalizes the recurrence and must be nonzero.
+`numerator`, `denominator`
+: Rank-one coefficient `Series` `b` and `a`. `a[0]` must be nonzero. The filter order is `max(len(b), len(a)) - 1`.
 
 `state`
-: Optional continuation state produced by a compatible prior run.
+: Optional initial state of shape `[lanes..., order]`; omitted means rest. Lane axes may broadcast; the state axis must equal the order.
 
 `dim`
-: Ordered sample axis.
+: The axis to filter along; default `-1`.
 
 ## Returns
 
-`FilterRun` containing same-length values and terminal continuation state.
+A `FilterRun` with `values` (the input shape) and `state` (`[lanes..., order]`).
 
 ## Errors
 
-Rejects invalid axes, coefficient or signal dtype/platform incompatibility, zero leading denominator, empty coefficients, and incompatible supplied state.
+An integer input, a zero `denominator[0]`, a state whose length is not the filter order, a state that does not broadcast to the lanes and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+The impulse response of `y[n] = x[n] + 0.5 y[n-1]` is `0.5^n`, which the first example checks. Processing a long recording in blocks with the carried state gives the same samples as one pass, to rounding.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The impulse response of a one-pole filter against its closed form.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  const pluss::Series b = pluss::make_series({1.0});
+  const pluss::Series a = pluss::make_series({1.0, -0.5});
+  const auto y = sig::filter(x, b, a).values.items<double>();
+  out.writeln("impulse response of y[n] = x[n] + 0.5 y[n-1] =", y);
+  double worst = 0.0, expected = 1.0;
+  for (std::size_t n = 0; n < y.size(); ++n, expected *= 0.5) worst = std::max(worst, std::abs(y[n] - expected));
+  out.writeln("largest difference from 0.5^n =", worst);
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+impulse response of y[n] = x[n] + 0.5 y[n-1] = [1.0000, 0.5000, 0.2500, 0.1250, 0.0625, 0.0312]
+largest difference from 0.5^n = 0.0000
+```
+### Example 2
+
+Two blocks with a carried state against one pass.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
+  const pluss::Series b = pluss::make_series({0.5, 0.5});
+  const pluss::Series a = pluss::make_series({1.0, -0.3});
+  const auto once = sig::filter(x, b, a).values.items<double>();
+  const sig::FilterRun first = sig::filter(x.slice(0, 0, 3), b, a);
+  const sig::FilterRun second = sig::filter(x.slice(0, 3, 8), b, a, first.state);
+  const auto joined = first.values.unite({second.values}, 0).items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < once.size(); ++i) worst = std::max(worst, std::abs(once[i] - joined[i]));
+  out.writeln("one pass       =", once);
+  out.writeln("two blocks     =", joined);
+  out.writeln("largest difference between the two =", worst);
+}
+```
+
+Output
+
+```text
+one pass       = [0.5000, 1.6500, 2.9950, 4.3985, 5.8195, 7.2459, 8.6738, 10.1021]
+two blocks     = [0.5000, 1.6500, 2.9950, 4.3985, 5.8195, 7.2459, 8.6738, 10.1021]
+largest difference between the two = 0.0000
+```
+### Example 3
+
+A batch of rows filtered along an axis, with the per-row state.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series rows = pluss::make_series({1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0}).reshape({2, 4});
+  const sig::FilterRun run = sig::filter(rows, pluss::make_series({1.0}), pluss::make_series({1.0, -0.5}), 1);
+  out.writeln("values shape", run.values.size(0), "x", run.values.size(1), " state shape", run.state.size(0), "x", run.state.size(1));
+  out.writeln("row 0 =", run.values.select(0, 0).items<double>());
+  out.writeln("row 1 =", run.values.select(0, 1).items<double>(), " (ten times row 0)");
+}
+```
+
+Output
+
+```text
+values shape 2 x 4  state shape 2 x 1
+row 0 = [1.0000, 2.5000, 4.2500, 6.1250]
+row 1 = [10.0000, 25.0000, 42.5000, 61.2500]  (ten times row 0)
 ```
 ## See Also
 

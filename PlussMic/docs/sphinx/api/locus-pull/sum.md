@@ -65,7 +65,7 @@ The customer with zero events sums to `null`, not `0` -- a count of `0`
 related records and a sum of `null` both say "nothing to total," in the
 vocabulary each reducer uses.
 
-Example 2. Missing (`NaN`) values among otherwise-valid numeric readings are
+Example 2. Missing values (`NULL`) among otherwise-valid numeric readings are
 excluded, the same as a missing related record would be.
 
 ```cpp
@@ -84,9 +84,11 @@ usable=[3, 2, 0, 0]
 total=[4, 10, null, null]
 ```
 
-`events.reading` has two `NaN` entries among its eight values; `usable`
-(from `count`) already excludes them, and `sum` excludes them too rather
-than propagating `NaN` through the total.
+`events.reading` has two missing entries among its values; `usable`
+(from `count`) already excludes them, and `sum` excludes them too. A missing
+cell holds no value, so it is skipped. A `NaN` is different: it is a value, so it
+is counted and makes the total `NaN` (remove it first with `dropnan`, see
+[Missing, NaN and infinity](../../guide/missing_nan_and_inf.md)).
 
 Example 3. A text or `Timeline` source is refused -- `sum` needs a numeric
 stream.

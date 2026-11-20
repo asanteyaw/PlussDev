@@ -4,7 +4,7 @@
 
 An economic dispatch that keeps every line within its rating at the planned operating point can still leave the system one fault from an overload: when a line trips, its flow moves onto the others. **Preventive security-constrained dispatch** chooses the generation so that, with that same generation, no line is overloaded after the loss of any single line either. `DispatchOptions::secure` adds those constraints to `power::dispatch`. This page explains the formulation, shows a network where the secure answer differs from the plain one and checks it by hand, reads the post-outage flows, handles the lines whose loss splits the network, and shows the cases the security constraints cannot satisfy.
 
-## The mental model
+## How it works
 
 For every valid single-line outage `k` and every monitored line `m`, the flow after the outage is `F_m + LODF[m, k] F_k`, as in the [line outages](../power_02_sensitivities_and_contingencies/line_outages.md) page, and both are linear functions of the generation. The secure dispatch requires that flow, in both directions, to stay within the rating of line `m`, for all valid `(k, m)`, in addition to the base-case constraints. The generation is the same before and after the outage: it is **preventive** security, with no corrective redispatch after the fault.
 

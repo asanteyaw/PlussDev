@@ -25,18 +25,18 @@ int main() {
   try {
     using pluss::table::Atlas;
     using pluss::table::DataFrame;
-    using pluss::table::Slate;
+    using pluss::table::Shelf;
 
     const Atlas atlas(
         {
-            DataFrame({{"city", Slate(pluss::make_note({"Edmonton"}))},
-                       {"count", Slate(pluss::make_series(std::vector<std::int64_t>{12}))}}),
-            DataFrame({{"city", Slate(pluss::make_note({"Banff"}))},
-                       {"count", Slate(pluss::make_series(std::vector<std::int64_t>{3}))}}),
-            DataFrame({{"city", Slate(pluss::make_note({"Jasper"}))},
-                       {"count", Slate(pluss::make_series(std::vector<std::int64_t>{5}))}}),
+            DataFrame({{"city", Shelf(pluss::make_note({"Edmonton"}))},
+                       {"count", Shelf(pluss::make_series(std::vector<std::int64_t>{12}))}}),
+            DataFrame({{"city", Shelf(pluss::make_note({"Banff"}))},
+                       {"count", Shelf(pluss::make_series(std::vector<std::int64_t>{3}))}}),
+            DataFrame({{"city", Shelf(pluss::make_note({"Jasper"}))},
+                       {"count", Shelf(pluss::make_series(std::vector<std::int64_t>{5}))}}),
         },
-        Slate(pluss::make_note({"Baseline", "Current & plan", "Forecast"})));
+        Shelf(pluss::make_note({"Baseline", "Current & plan", "Forecast"})));
 
     const std::string html = pluss::table::display::render_html(atlas);
     for (const auto control : {"atlas-first", "atlas-previous", "atlas-next", "atlas-last",

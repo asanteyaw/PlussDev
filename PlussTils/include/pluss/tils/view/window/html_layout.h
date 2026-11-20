@@ -20,6 +20,7 @@ struct HtmlHitRegion {
   std::string action{};
   std::string target{};
   int value{0};
+  int aux{0};  // action-specific extra (the current column width for resize handles)
 };
 
 struct HtmlScrollRegion {
@@ -58,6 +59,7 @@ struct HtmlTableGeometryCacheEntry {
   std::vector<std::size_t> source_indices{};
   std::vector<int> column_widths{};
   std::vector<int> row_heights{};
+  std::uint64_t column_override_signature{0};  // user-set widths this entry was laid out with
 };
 
 struct HtmlLayoutCache {
@@ -85,6 +87,12 @@ struct HtmlRenderConfig {
   int table_sort_column{-1};
   bool table_sort_ascending{true};
   std::string table_sort_target{};
+  // User-set column widths (px) per table target, by column index; the viewer fills it as
+  // the user drags column borders. Columns without an entry use the default width.
+  const std::unordered_map<std::string, std::unordered_map<int, int>>* table_column_widths{nullptr};
+  // The column border under the pointer (its header border is drawn highlighted).
+  std::string hover_resize_target{};
+  int hover_resize_column{-1};
   std::string table_filter_query{};
   std::string table_filter_target{};
   std::string active_input_target{};

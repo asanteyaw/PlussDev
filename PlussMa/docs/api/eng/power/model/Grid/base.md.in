@@ -1,0 +1,144 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: eb3515e0dbe3 -->
+
+# `power::Grid::base`
+
+[Back to `power::Grid`](../Grid.md)
+
+The per-unit base: apparent power and line-to-line voltage.
+
+## Signature
+
+```cpp
+const power::Base& power::Grid::base() const noexcept;
+```
+
+## What It Does
+
+Returns the `Base` the grid was made with: the three-phase apparent power `power` in VA and the line-to-line voltage `voltage` in V. Together they define the base impedance and current used to scale the network.
+
+## Returns
+
+A reference to the stored `Base`.
+
+## Practical Examples
+
+### Example 1
+
+Two buses joined by one line: a slack bus feeding a load bus.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace power = pluss::subsp::eng::power;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.5});
+  net.buses.q = vec({0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  const power::Grid obj = power::make(net);
+  out.writeln("power", obj.base().power / 1e6, " MVA, voltage", obj.base().voltage / 1e3, " kV");
+}
+```
+
+### Example 2
+
+The same two buses on a 50 MVA, 115 kV base.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace power = pluss::subsp::eng::power;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  power::Net net;
+  net.base = {50e6, 115e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.5});
+  net.buses.q = vec({0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  const power::Grid obj = power::make(net);
+  out.writeln("power", obj.base().power / 1e6, " MVA, voltage", obj.base().voltage / 1e3, " kV");
+}
+```
+
+### Example 3
+
+Three buses, one generator at bus 1 and three lines with line charging, on a 100 MVA, 230 kV base.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace power = pluss::subsp::eng::power;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.2, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.2});
+  net.buses.vm = vec({1.04, 1.02, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.gens.bus = {1};
+  net.gens.p = vec({0.6});
+  net.gens.q = vec({0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.015});
+  net.lines.x = vec({0.1, 0.2, 0.25});
+  net.lines.charge = vec({0.02, 0.05, 0.04});
+  const power::Grid obj = power::make(net);
+  out.writeln("power", obj.base().power / 1e6, " MVA, voltage", obj.base().voltage / 1e3, " kV");
+}
+```
+
+## See Also
+
+- [`base_power`](base_power.md): only the power base
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="base_power.html">
+    <span class="label">Next</span>
+    <span class="title">base_power</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

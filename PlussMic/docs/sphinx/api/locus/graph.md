@@ -45,3 +45,14 @@ graph ncases=2
 
 - [`schema`](schema.md): the table-level counterpart.
 - [`link`](link.md): declaring the relationships this report renders.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="grain_audit.html">
+    <span class="label">Previous</span>
+    <span class="title">grain_audit</span>
+  </a>
+  <a class="next-link" href="has_store.html">
+    <span class="label">Next</span>
+    <span class="title">has_store</span>
+  </a>
+</div>

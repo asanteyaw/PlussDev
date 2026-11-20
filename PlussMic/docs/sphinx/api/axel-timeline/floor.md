@@ -63,8 +63,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"ts"}).tl().floor("bogus");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

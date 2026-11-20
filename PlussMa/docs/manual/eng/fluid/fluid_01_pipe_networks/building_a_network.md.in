@@ -4,7 +4,7 @@
 
 A water system is a set of pipes joining reservoirs, tanks and the junctions where people draw water. You describe it once, as arrays of elevations, demands and pipe dimensions, and ask what heads and flows it settles into. `fluid::network` checks the description and compiles it, and `fluid::steady` solves it. This page explains the description, solves the smallest network there is and checks it against the textbook formula, shows how flow direction and the sign of a demand are read, shows what the fluid itself changes, and lists the descriptions the compiler refuses.
 
-## The mental model
+## How it works
 
 A network is **nodes** joined by **links**. A node is a `Junction` (its head is unknown and a demand leaves there), a `Reservoir` (its head is fixed, and it supplies or absorbs whatever flow is needed) or a `Tank` (a fixed-grade node whose level changes in time, covered in [Fluid 3](../fluid_03_storage_and_operation.md)). A link is a pipe, a pump or a valve; a pipe has a `from` node and a `to` node.
 

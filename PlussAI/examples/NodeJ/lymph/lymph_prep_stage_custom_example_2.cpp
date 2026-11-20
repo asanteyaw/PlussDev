@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -17,7 +17,7 @@ int main() {
   // factory call produces a fully configured stage.
   const pluss::Series v = pluss::make_series({-100., -3., 0., 4., 50., 900.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"v", Slate(v)}});
+  const DataFrame x({{"v", Shelf(v)}});
 
   const double lo = -5.0, hi = 10.0;
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -26,8 +26,8 @@ int main() {
   }));
   model.learn_(x, y);
   std::cout << "trained = " << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"v", Slate(v)}, {"actual", Slate(y)},
-                          {"predicted", Slate(model.infer(x))}});
+  std::cout << DataFrame({{"v", Shelf(v)}, {"actual", Shelf(y)},
+                          {"predicted", Shelf(model.infer(x))}});
 
   return 0;
 }

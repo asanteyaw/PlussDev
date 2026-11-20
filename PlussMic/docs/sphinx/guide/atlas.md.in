@@ -4,9 +4,9 @@
 
 An `Atlas` holds several `DataFrame`s of identical shape as one object: folds of a cross-validation, months of an export, scenarios of a model. This page uses it for all three. It is the least-used table type, and the programs show why: it is exactly right when the frames really are the same shape, and it refuses everything else.
 
-## The mental model
+## How it works
 
-An Atlas is a *strict cube*: every frame has the same number of rows and the same feature names in the same order, and the frames are addressed by a depth label (`loc("fold2")`) or a position. `map_frames` applies a table transformation to every frame and `aggregate_over_frames` sees all frames at once to produce one row per frame. If your pieces differ in size (train, validation and test splits, products that come and go), use an `Archive`, the Kindle model's version, on the [Kindle page](kindle_streams_archives.md).
+An Atlas is a *strict cube*: every frame has the same number of rows and the same feature names in the same order, and the frames are addressed by a depth label (`loc("fold2")`) or a position. `map_frames` applies a table transformation to every frame and `aggregate_depth` sees all frames at once to produce one row per frame. If your pieces differ in size (train, validation and test splits, products that come and go), use an `Archive`, the Kindle model's version, on the [Kindle page](kindle_streams_archives.md).
 
 ## Cross-validation
 
@@ -22,7 +22,7 @@ Three months of a product table with the same schema. The program totals each mo
 
 @@example atlas_monthly_exports.cpp@@
 
-`aggregate_over_frames` is given all the months and returns one table with one row per month: units `240`, `275` and `245`, and revenue per unit of `15`, `14.5` and `16.3`. `loc("2026-10")` reads a month by its label and `tail(1)` keeps the last one. When the same month arrives with `units` renamed to `units_sold`, the Atlas is refused (`all frames must have identical column names/order`) rather than silently misaligning the columns.
+`aggregate_depth` is given all the months and returns one table with one row per month: units `240`, `275` and `245`, and revenue per unit of `15`, `14.5` and `16.3`. `loc("2026-10")` reads a month by its label and `tail(1)` keeps the last one. When the same month arrives with `units` renamed to `units_sold`, the Atlas is refused (`all frames must have identical column names/order`) rather than silently misaligning the columns.
 
 ## What-if scenarios
 
@@ -36,9 +36,9 @@ The totals are `11140`, `14870`, `7216` and `10946`: against the baseline, a pri
 
 - **Equal shapes:** use an Atlas when frames share rows and features; use an Archive when they do not.
 - **One formula, many frames:** `map_frames` rather than a loop, so every scenario is computed the same way.
-- **Across frames:** `aggregate_over_frames` for anything that needs all frames at once.
+- **Across frames:** `aggregate_depth` for anything that needs all frames at once.
 - **Labels:** give the depth axis meaningful labels, such as the fold, the month or the scenario, and read frames by label.
 
 ## Where next
 
-Reference pages: [`map_frames`](../api/atlas/map_frames.md), [`aggregate_over_frames`](../api/atlas/aggregate_over_frames.md), [`loc`](../api/atlas/loc.md), [`frame`](../api/atlas/frame.md), [`tail`](../api/atlas/tail.md), [`depth`](../api/atlas/depth.md), [`column_names`](../api/atlas/column_names.md). Next: [Catalogs](kindle_catalogs.md).
+Reference pages: [`map_frames`](../api/atlas/map_frames.md), [`aggregate_depth`](../api/atlas/aggregate_depth.md), [`loc`](../api/atlas/loc.md), [`frame`](../api/atlas/frame.md), [`tail`](../api/atlas/tail.md), [`depth`](../api/atlas/depth.md), [`column_names`](../api/atlas/column_names.md). Next: [Catalogs](kindle_catalogs.md).

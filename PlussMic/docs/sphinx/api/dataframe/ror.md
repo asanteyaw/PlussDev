@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::ror(const DataFrame& other) const
-DataFrame DataFrame::ror(const Slate& other) const
+DataFrame DataFrame::ror(const Shelf& other) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ since been fixed, and `ror()` shares the fix.
 
 **other**
 
-`const DataFrame&` or `const Slate&` — identical shape requirements to
+`const DataFrame&` or `const Shelf&` — identical shape requirements to
 [`land()`](land.md).
 
 ## Returns
@@ -61,38 +61,38 @@ std::cout << out;
 ### Output
 
 ```text
-===================
-     | a      b    
--------------------
-p    | true   true 
-q    | false  true 
-r    | true   true 
--------------------
+==================
+     | a      b   
+------------------
+p    | true   true
+q    | false  true
+r    | true   true
+------------------
 [3 cs x 2 feat]
 ```
 
 The values match [`left.lor(right)`](lor.md) exactly, and the case labels are `left`'s
 own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
 
-Example 2. OR against a single shared `Slate`, applied identically to every feature —
+Example 2. OR against a single shared `Shelf`, applied identically to every feature —
 same result as [`left.lor(mask)`](lor.md).
 
 ```cpp
-auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_slate = left.ror(mask);
-std::cout << out_slate;
+auto mask = Shelf(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_shelf = left.ror(mask);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-===================
+==================
      | a     b    
--------------------
+------------------
 p    | true  true 
 q    | true  true 
 r    | true  false
--------------------
+------------------
 [3 cs x 2 feat]
 ```
 

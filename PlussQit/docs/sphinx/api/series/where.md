@@ -7,279 +7,201 @@
 ## Signature
 
 ```cpp
-Series Series::where(const Series& condition,
-                     const Series& other) const
+Series Series::where(const Series& condition, const Series& other) const
+Series Series::where(const Series& condition, double other) const
+Series& Series::where_(const Series& condition, const Series& other)
+Series& Series::where_(const Series& condition, double other)
 
-Series Series::where(const Series& condition,
-                     double other) const
+Series pluss::series::where(const Series& condition, const Series& a, const Series& b)
+Series pluss::series::where(const Series& condition, const Series& a, double b)
+Series pluss::series::where(const Series& condition, double a, const Series& b)
+Series pluss::series::where(const Series& condition, double a, double b)
 ```
 
 ## What It Does
 
-`where()` builds a new `Series` by choosing between two branches position by
-position.
+`where` chooses between two values position by position. `x.where(condition, other)` keeps `x` where the condition is true and takes `other` where it is false. The free function writes the same operation with the condition first: `pluss::series::where(condition, a, b)` takes `a` where the condition is true and `b` elsewhere, and is identical to `a.where(condition, b)`.
 
-Most of the time, the public reading is:
-
-`self.where(condition, other)` means:
-
-- keep `self` where `condition` is false
-- take `other` where `condition` is true
-
-That is the ordinary numeric-self calling convention.
-
-There is one important second calling style:
-
-- if `self` is boolean and `condition` is not boolean, `self` itself becomes
-  the mask
-- in that form, `self.where(a, b)` means "pick `a` where `self` is true,
-  otherwise pick `b`"
-
-That dual behavior is real and worth learning early because it changes how a
-boolean `Series` call site should be read.
+The condition can be any dtype: a non-zero value is true. The condition, the kept values and the replacement broadcast against each other, and the result dtype follows the usual promotion of the two value operands. The in-place form `where_` overwrites the receiver with the result.
 
 ## Overload Map
 
-**`where(condition, other_series)`**
+**`x.where(condition, other_series)`** keeps `x` where the condition is true and takes the matching element of `other_series` elsewhere.
 
-The general branch-selection form.
+**`x.where(condition, scalar)`** takes the same scalar everywhere the condition is false. An integer or Bool receiver keeps its dtype for a whole-number scalar and widens to `float64` for a fractional or non-finite one, so a replacement is never truncated.
 
-**`where(condition, scalar_other)`**
+**`pluss::series::where(condition, a, b)`** is the condition-first spelling; `a` and `b` may each be a `Series` or a scalar.
 
-Convenience overload for scalar fallback or replacement values.
-
-The same broadcast and promotion rules still apply.
+**`x.where_(condition, other)`** is the in-place form.
 
 ## Parameters
 
 **condition** (`const Series&`)
 
-The branch mask for the common numeric-self calling convention.
+The selector. True keeps the first value (the receiver, or `a` in the free form) and false takes the second. Any dtype is accepted; a non-zero value counts as true.
 
-In that form:
+**other** / **b** (`const Series&` or `double`)
 
-- true means "take `other`"
-- false means "keep `self`"
+The value taken where the condition is false. A scalar is broadcast to the shape of the other operand.
 
-If the condition is numeric, it is converted to boolean truthiness first.
+**a** (`const Series&` or `double`, free function only)
 
-In the boolean-self calling style, this parameter is not the mask. It is the
-"true branch" payload instead.
-
-**other** (`const Series&` or `double`)
-
-The alternate branch payload.
-
-In numeric-self calls, this is the replacement branch chosen where
-`condition` is true.
-
-In boolean-self calls, this is the "false branch" payload.
-
-Scalar `other` values are turned into scalar-like `Series` values and then
-broadcast as needed.
+The value taken where the condition is true.
 
 ## Returns
 
 `Series`
-    A newly assembled `Series`.
-
-The output dtype follows branch promotion rules, so mixed branch dtypes can
-promote to a wider result.
+    A new series with the broadcast shape of the three operands. `where_` returns the receiver.
 
 ## Gradient
 
-`where()` is differentiable only through the branch values that actually win.
-
-At each position:
-
-- selected `self` positions feed gradient into `self`
-- selected `other` positions feed gradient into `other`
-- the mask is control data, not a differentiable numeric branch
+`where` is differentiable through the values that win. At each position the gradient flows into whichever operand was selected; the condition is control data and receives none.
 
 ## Examples
 
-Example 1. In the common numeric-self form, true selects `other` and false
-keeps `self`.
+Example 1. Keep `x` where the condition is true; take a series elsewhere.
 
 ```cpp
-auto self = pluss::make_series({10.0, 20.0, 30.0, 40.0});
-auto cond = pluss::make_series({false, true, false, true});
-
-std::cout << self.where(cond, -1.0);
+auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+auto big = x.gt(2.5);
+std::cout << x.where(big, pluss::make_series({10.0, 20.0, 30.0, 40.0})) << "\n";
 ```
 
 ### Output
 
 ```text
 pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[10, -1, 30, -1]
+data=[10, 20, 3, 4]
 ```
 
-Example 2. The alternate branch can be another full `Series`.
+Example 2. A scalar replacement.
 
 ```cpp
-auto other = pluss::make_series({100.0, 200.0, 300.0, 400.0});
-
-std::cout << self.where(cond, other);
+std::cout << x.where(big, 0.0) << "\n";
 ```
 
 ### Output
 
 ```text
 pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[10, 200, 30, 400]
+data=[0, 0, 3, 4]
 ```
 
-Example 3. The condition itself can broadcast.
+Example 3. The free function with the condition first, and with two scalars.
 
 ```cpp
-auto matrix = pluss::make_series({
-    {1.0, 2.0, 3.0},
-    {4.0, 5.0, 6.0},
-});
-auto col_mask = pluss::make_series({true, false, true});
-
-std::cout << matrix.where(col_mask, -1.0);
-```
-
-### Output
-
-```text
-pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[[-1, 2, -1],
-  [-1, 5, -1]]
-```
-
-Example 4. When `self` is boolean, the call can be read as
-"mask picks between two payloads."
-
-```cpp
-auto mask = pluss::make_series({true, false, true, false});
-auto a = pluss::make_series({1.0, 2.0, 3.0, 4.0});
-auto b = pluss::make_series({10.0, 20.0, 30.0, 40.0});
-
-std::cout << mask.where(a, b);
+std::cout << pluss::series::where(big, x, 0.0) << "\n";
+std::cout << pluss::series::where(big, 1.0, 0.0) << "\n";
 ```
 
 ### Output
 
 ```text
 pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[1, 20, 3, 40]
+data=[0, 0, 3, 4]
+pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 1, 1]
 ```
 
-Example 5. Numeric conditions are converted to boolean truthiness.
+Example 4. A condition of any dtype: non-zero is true.
 
 ```cpp
-auto numeric_cond = pluss::make_series({0.0, 2.0, 0.0, -5.0});
-
-std::cout << self.where(numeric_cond, other);
+std::cout << x.where(pluss::make_series({1.0, 0.0, 1.0, 0.0}), -1.0) << "\n";
 ```
 
 ### Output
 
 ```text
 pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[10, 200, 30, 400]
+data=[1, -1, 3, -1]
 ```
 
-Example 6. Mixed branch dtypes can promote the result.
+Example 5. Broadcasting: a column condition selects whole rows of a matrix.
 
 ```cpp
-auto ints = pluss::make_series({1, 2, 3}, pluss::ScalarType::Int32);
-auto halfs = pluss::make_series({0.5, 0.5, 0.5}).to(pluss::ScalarType::Float32);
-auto pick = pluss::make_series({true, false, true});
-
-std::cout << ints.where(pick, halfs);
+auto m = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({3, 2});
+auto rows = pluss::make_series({true, false, true}).reshape({3, 1});
+std::cout << m.where(rows, 0.0) << "\n";
 ```
 
 ### Output
 
 ```text
-pluss::Series(shape=[3], strides=[1], dtype=float32, platform=cpu, numel=3, contiguous=true)
-data=[0.5, 2, 0.5]
+pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2],
+  [0, 0],
+  [5, 6]]
 ```
 
-Example 7. Gradient flows only through the branch that actually wins at each
-position.
+Example 6. An integer series keeps its dtype for a whole-number replacement and widens for a fractional one.
 
 ```cpp
-auto x = pluss::make_series({1.0, 2.0, 3.0});
-auto y = pluss::make_series({10.0, 20.0, 30.0});
-auto grad_mask = pluss::make_series({true, false, true});
-
-x.tracks_slope_(true);
-y.tracks_slope_(true);
-
-auto out = x.where(grad_mask, y);
-out.sum().reverse();
-
-std::cout << "out=" << out << "\n";
-std::cout << "dx=" << x.sensitivity() << "\n";
-std::cout << "dy=" << y.sensitivity() << "\n";
+auto counts = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4});
+std::cout << counts.where(counts.gt(2), 0.0) << "\n";
+std::cout << counts.where(counts.gt(2), 0.5) << "\n";
 ```
 
 ### Output
 
 ```text
-out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[10, 2, 30]
-dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[0, 1, 0]
-dy=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 0, 1]
+pluss::Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 3, 4]
+pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.5, 0.5, 3, 4]
 ```
 
-Example 8. Broadcast-incompatible shapes fail.
+Example 7. In place.
+
+```cpp
+auto y = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+y.where_(y.gt(2.5), 0.0);
+std::cout << y << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 3, 4]
+```
+
+Example 8. A NaN compares false, so a threshold condition does not keep it; test for it explicitly when that matters.
+
+```cpp
+auto with_nan = pluss::make_series({1.0, std::nan(""), 3.0});
+std::cout << with_nan.where(with_nan.gt(0.0), -1.0) << "\n";
+std::cout << with_nan.where(with_nan.isnan().logical_not(), -1.0) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, -1, 3]
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, -1, 3]
+```
+
+## Errors
+
+Operands whose shapes cannot broadcast fail with a `pluss::Error`.
+
+Example 9. Five flags for four values.
 
 ```cpp
 try {
-  std::cout << matrix.where(pluss::make_series({true, false}), -1.0) << "\n";
-} catch (const std::exception& e) {
-  std::string msg = e.what();
-  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+  x.where(pluss::make_series({true, false, true, false, true}), 0.0);
+} catch (const pluss::Error &e) {
+  std::cout << "five flags for four values: " << e.message() << "\n";
 }
 ```
 
 ### Output
 
 ```text
-broadcast: incompatible shapes
+five flags for four values: broadcast: incompatible shapes
 ```
 
-## Gotchas And Failure Modes
+## Related
 
-- On numeric `self`, the common reading is "true selects `other`."
-- On boolean `self`, `self` itself becomes the mask.
-- Numeric conditions are cast to boolean truthiness.
-- Broadcasting rules still apply to the mask and both branches.
-- Dtype promotion can widen the output when branch dtypes disagree.
-
-## Summary
-
-Use `where()` for binary branch selection on an existing `Series`.
-
-- on numeric `self`, read it as "replace self where condition is true"
-- on boolean `self`, read it as "mask picks between the next two payloads"
-- remember that only the chosen branch receives gradient at each position
-
-## See Also
-
-- [`pluss::series::select`](../series_factory/select.md): multi-branch free
-  function for ordered conditional construction.
-- [`Series::where_`](where_.md): in-place sibling when the selected writes
-  should land back into the current `Series`.
-- [`Series::all`](all.md): reduce a mask to one global or axis-wise boolean
-  answer.
-- [`Series::any`](any.md): test whether at least one value in a lane is truthy.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="vsplit.html">
-    <span class="label">Previous</span>
-    <span class="title">vsplit</span>
-  </a>
-  <a class="next-link" href="where_.html">
-    <span class="label">Next</span>
-    <span class="title">where_</span>
-  </a>
-</div>
+[`masked_fill`](masked_fill.md), [`masked_select`](masked_select.md), [`gt`](gt.md), [`isnan`](isnan.md).

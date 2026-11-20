@@ -2,7 +2,7 @@
 
 # `control::freqresp`
 
-Evaluates a PID frequency response.
+Evaluates the frequency response of a PID controller.
 
 ## Signature
 
@@ -14,159 +14,189 @@ pluss::Series control::freqresp(
 
 ## What It Does
 
-Continuous controllers are evaluated on `s = j omega`; discrete controllers use their stored sampling interval and discretization rules. Computation remains vectorized over frequency and controller batches.
+Returns `C(j w)` for a continuous controller, or `C(e^{j w T})` with the chosen rules for a discrete one, for each angular frequency `w` in rad/s. A batch of controllers gives one row per controller.
 
 ## Parameters
 
 `controller`
-: A validated controller created by `control::pid`.
+: A `Pid`.
 
 `omega`
-: Real angular frequencies in radians per unit time.
+: A finite floating rank-one `Series` of angular frequencies, rad/s.
 
 ## Returns
 
-A complex `Series` whose trailing axis follows the frequency grid and whose leading axes follow broadcast controller batches.
+A complex `Series` with the controller batch axes followed by the frequency axis.
 
 ## Errors
 
-Throws for invalid frequency data or singular evaluations such as an active integral term at zero frequency.
+A scalar, non-vector, integer or non-finite `omega`, and a controller and grid on different platforms, throw `pluss::Error`.
 
 ## Interpretation and Use
 
-`freqresp` returns complex response values without changing the controller. Avoid zero frequency when integral gain is active because the ideal integral contribution is singular. For discrete controllers, keep the requested band below the Nyquist frequency for interpretable results.
+Each term is separable: with only `Kp` the response is the constant gain, with only `Ki` it is `-j Ki / w`, with only `Kd` it is `j Kd w` for an unfiltered derivative (the first example). The second example compares the discrete integrator under each rule with the ideal at `omega = 10`.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Evaluate a continuous controller at two frequencies.
+Each term of the controller on its own.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(2.0), pluss::make_series(3.0),
-      pluss::make_series(4.0), pluss::make_series(0.5));
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 1.0}));
-
-  std::cout << std::boolalpha << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  out.writeln("response =", response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  const pluss::Series omega = pluss::make_series({0.5, 2.0});
+  const auto only_p = ctl::freqresp(ctl::pid(s(3.0), s(0.0), s(0.0), s(0.0)), omega).items<std::complex<double>>();
+  const auto only_i = ctl::freqresp(ctl::pid(s(0.0), s(3.0), s(0.0), s(0.0)), omega).items<std::complex<double>>();
+  const auto only_d = ctl::freqresp(ctl::pid(s(0.0), s(0.0), s(3.0), s(0.0)), omega).items<std::complex<double>>();
+  for (std::size_t i = 0; i < 2; ++i) {
+    const double w = omega.items<double>()[i];
+    out.writeln("omega", w, ": P =", only_p[i], " I =", only_i[i], " (3 / j omega =", std::complex<double>(0.0, -3.0 / w), ") D =", only_d[i]);
+  }
 }
 ```
 
 Output
 
 ```text
-continuous = true, discrete = false
-response = [(2.47059,-4.11765), (3.6,0.2)]
+omega 0.5000 : P = (3,0)  I = (0,-6)  (3 / j omega = (0,-6) ) D = (0,1.5)
+omega 2.0000 : P = (3,0)  I = (0,-1.5)  (3 / j omega = (0,-1.5) ) D = (0,6)
 ```
 ### Example 2
 
-Evaluate a sampled controller using its stored substitutions.
+A discrete integrator under each rule against the ideal.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(1.5), pluss::make_series(0.4),
-      pluss::make_series(0.2), pluss::make_series(0.05), 0.1,
-      control::PidRule::Trapezoid, control::PidRule::Backward);
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 2.0}));
-
-  std::cout << std::boolalpha
-            << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  std::cout << "sample time = " << controller.sample_time()
-            << ", integral rule = " << static_cast<int>(controller.int_rule())
-            << ", derivative rule = " << static_cast<int>(controller.diff_rule())
-            << "\n";
-  out.writeln("discrete response =",
-              response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  const pluss::Series omega = pluss::make_series({10.0});
+  const std::complex<double> ideal = ctl::freqresp(ctl::pid(s(0.0), s(1.0), s(0.0), s(0.0)), omega).items<std::complex<double>>()[0];
+  out.writeln("ideal integrator 1 / (j omega) at omega = 10: magnitude", std::abs(ideal), " phase", std::arg(ideal));
+  for (const auto [label, rule] : {std::pair{"Forward  ", ctl::PidRule::Forward}, {"Backward ", ctl::PidRule::Backward}, {"Trapezoid", ctl::PidRule::Trapezoid}}) {
+    const std::complex<double> g = ctl::freqresp(ctl::pid(s(0.0), s(1.0), s(0.0), s(0.0), 0.05, rule, ctl::PidRule::Backward), omega).items<std::complex<double>>()[0];
+    out.writeln(label, "sample time 0.05: magnitude", std::abs(g), " phase", std::arg(g));
+  }
 }
 ```
 
 Output
 
 ```text
-continuous = false, discrete = true
-sample time = 0.1, integral rule = 2, derivative rule = 1
-discrete response = [(1.50499,-0.700062), (1.57742,0.18647)]
+ideal integrator 1 / (j omega) at omega = 10: magnitude 0.1000  phase -1.5708
+Forward   sample time 0.05: magnitude 0.1010  phase -1.8208
+Backward  sample time 0.05: magnitude 0.1010  phase -1.3208
+Trapezoid sample time 0.05: magnitude 0.0979  phase -1.5708
 ```
 ### Example 3
 
-Review controller validation that precedes response evaluation.
+Every refused grid.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <exception>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(control::place(
-        pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-        pluss::series::zeros({2, 1}, pluss::ScalarType::Float64),
-        pluss::make_series({std::complex<double>{-4.0, 0.0},
-                            std::complex<double>{-5.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("uncontrollable plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::pid(
-        pluss::make_series(1.0), pluss::make_series(0.0),
-        pluss::make_series(0.0), pluss::make_series(-0.1)));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative filter rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  const ctl::Pid c = ctl::pid(s(1.0), s(1.0), s(0.0), s(0.0));
+  refused(out, "a scalar frequency", [&] { ctl::freqresp(c, pluss::make_series(1.0)); });
+  refused(out, "an integer frequency grid", [&] { ctl::freqresp(c, pluss::make_series({1, 2})); });
+  refused(out, "a non-finite frequency", [&] { ctl::freqresp(c, pluss::make_series({1.0, std::nan("")})); });
 }
 ```
 
 Output
 
 ```text
-uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
-negative filter rejected = eng::control::pid: filter must be non-negative
+a scalar frequency : eng::control::freqresp(Pid): omega must be a defined vector
+an integer frequency grid : eng::control::freqresp(Pid): omega must be finite and floating
+a non-finite frequency : eng::control::freqresp(Pid): omega must be finite and floating
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pid.html">
-    <span class="label">Previous</span>
-    <span class="title">pid</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

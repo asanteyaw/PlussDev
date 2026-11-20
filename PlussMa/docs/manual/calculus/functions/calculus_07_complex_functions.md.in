@@ -4,7 +4,7 @@ A `Function` can take and return complex numbers, and the calculus operators fol
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **One graph, real or complex.** The same traced body evaluates at real and complex points; a complex scalar is passed directly.
 - **Two derivatives.** `wirtinger` is ∂/∂z and `conjugate_wirtinger` is ∂/∂z̄; the function is holomorphic where the second is zero.

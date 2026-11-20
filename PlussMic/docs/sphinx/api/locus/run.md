@@ -84,3 +84,14 @@ renamed plan still runs rows=3
 
 - [`store`](store.md): saving the plan `run` looks up by name.
 - [`materialize`](materialize.md): the lower-level method `run` calls.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rename.html">
+    <span class="label">Previous</span>
+    <span class="title">rename</span>
+  </a>
+  <a class="next-link" href="scan.html">
+    <span class="label">Next</span>
+    <span class="title">scan</span>
+  </a>
+</div>

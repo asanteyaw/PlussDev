@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::intersect(const Slate& other) const
+Shelf DataFrameLabelAccessor::intersect(const Shelf& other) const
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ first-occurrence order.
 
 ## Parameters
 
-**other** (`const Slate&`)
+**other** (`const Shelf&`)
 
 The values to intersect with.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The distinct case-label values also found in `other`, in first-occurrence
     order, `display_name` `"intersect"`.
 
@@ -37,11 +37,11 @@ Example 1. Intersect case labels with a repeat against a target set.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
-auto other = Slate(pluss::make_note({"west", "south", "north"}));
+auto other = Shelf(pluss::make_note({"west", "south", "north"}));
 auto out = labeled.labels().intersect(other);
 std::cout << out;
 ```

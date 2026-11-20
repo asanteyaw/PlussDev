@@ -58,8 +58,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.fieldaxis().match("(unterminated");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

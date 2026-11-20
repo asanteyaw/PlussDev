@@ -21,11 +21,11 @@ trims any of the given characters, in any order, from either end.
 
 ```{important} StreamNoteAccessor requires the bound stream to be Note-kind
 Every method on this accessor — not just strip() — routes through
-`Slate::strip()` (or the equivalent) for the bound stream. If the stream isn't
+`Shelf::strip()` (or the equivalent) for the bound stream. If the stream isn't
 Note-kind (`Series`, `Timeline`, `TimeIndex`), the call throws
-`"Slate::strip is only valid for Note payload"` (the exact message names
+`"Shelf::strip is only valid for Note payload"` (the exact message names
 whichever method actually ran). Cast first with
-[`Stream::cast(SlateCastTarget::Note)`](../stream/cast.md) if the stream isn't
+[`Stream::cast(ShelfCastTarget::Note)`](../stream/cast.md) if the stream isn't
 already text.
 ```
 
@@ -94,7 +94,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1, 2, 3}));
 try {
   auto out = stream.nt().strip();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -102,7 +102,7 @@ try {
 ### Output
 
 ```text
-Slate::strip is only valid for Note payload
+Shelf::strip is only valid for Note payload
 ```
 
 ## Notes

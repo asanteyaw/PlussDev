@@ -74,7 +74,7 @@ label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | NA                                                                                                       
+0            | NULL                                                                                                     
 1            | 2                                                                                                        
 2            | 2                                                                                                        
 ========================================================================================================================
@@ -104,8 +104,8 @@ label        | value
     <span class="label">Previous</span>
     <span class="title">exp</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

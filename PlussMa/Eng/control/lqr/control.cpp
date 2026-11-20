@@ -142,10 +142,7 @@ RiccatiResult solve_problem(const Series &a, const Series &b, const Series &q,
   try {
     value = discrete ? a_bar.linearalg.dare(g, q_bar, options) : a_bar.linearalg.care(g, q_bar, options);
   } catch (const pluss::Error &error) {
-    std::string cause(error.what());
-    cause = cause.substr(0, cause.find("Triggered"));
-    while (!cause.empty() && (cause.back() == '\n' || cause.back() == ' '))
-      cause.pop_back();
+    const std::string cause = error.message();
     const std::string condition =
         operation == "lqe" ? "(A, C) must be detectable (every unstable mode must be visible in the outputs)"
                            : "(A, B) must be stabilisable (every unstable mode reachable from the input) and the states weighted by Q must be detectable";

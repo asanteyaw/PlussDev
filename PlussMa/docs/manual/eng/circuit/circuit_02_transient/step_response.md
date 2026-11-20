@@ -6,7 +6,7 @@
 
 You close a switch, or a source changes, and you want to know what the capacitor voltages and inductor currents do next: how fast a node charges, how long a current takes to build, how much a charged capacitor still holds after a while. `circuit::tran` computes the **response in time**: every node voltage and branch current at a list of equally spaced instants, starting from a state you choose. This page works through an RC and an RL circuit against their closed forms, starts a circuit from a charged capacitor and from the DC operating point, and sweeps a component.
 
-## The mental model
+## How it works
 
 A circuit with capacitors and inductors obeys one linear equation, `E x' + F x = u`, where `x` collects the node voltages and the branch currents, `F` is the same matrix that `op` solves, `E` holds the capacitances and inductances, and `u` holds the sources. `tran` marches that equation forward by a fixed step `h`, the spacing of the `time` vector you give it. Between two samples every voltage and current is assumed to move smoothly; across the whole run the error shrinks with the square of `h` (see [Schemes and step size](schemes_and_step_size.md)).
 

@@ -4,7 +4,7 @@ When the matrix is large, sparse or structured, forming and factorising it is wa
 
 Every program is complete and its output is the output of that program. Iteration counts are shown because they are the same on every machine; no running times are claimed.
 
-## The mental model
+## How it works
 
 An *operator* is any callable `apply(Series x) -> Series` that returns `A x` for a vector `x` (or a batch of vectors, with the unknowns on the trailing axes). `solve_dims` lists the axes that hold the unknowns (usually `{-1}`); axes in front of them are independent lanes solved together.
 

@@ -60,8 +60,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">cloc</span>
   </a>
-  <a class="next-link" href="defined.html">
+  <a class="next-link" href="count_kinds.html">
     <span class="label">Next</span>
-    <span class="title">defined</span>
+    <span class="title">count_kinds</span>
   </a>
 </div>

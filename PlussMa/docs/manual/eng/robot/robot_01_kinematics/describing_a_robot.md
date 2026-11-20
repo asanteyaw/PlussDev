@@ -6,7 +6,7 @@
 
 Before a robot can be asked anything it has to be described: how many links it has, how they are connected, which way each joint moves, and (for dynamics) what each link weighs. `robot::Links` holds that description with one row per link, and `robot::make` validates it and compiles an immutable `Robot`. This page builds a planar two-link arm, a branching tree with a sliding joint, and a kinematic-only model, and shows the rotation helpers used to describe frames.
 
-## The mental model
+## How it works
 
 A robot is a **tree of links**, one joint per link. Link `i` hangs from link `parent[i]` (`-1` for the base, which is the world frame), and parents always come before their children. Each row of `Links` says three things about its link.
 

@@ -5,14 +5,14 @@
 
 int main() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   auto sales = DataFrame({
-      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
-      {"quarter", Slate(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
-      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-      {"cost", Slate(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
+      {"region", Shelf(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Shelf(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Shelf(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"cost", Shelf(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
   });
 
   auto indexed = sales.labels().set(DataFrame::SetLabelOptions{
@@ -83,7 +83,7 @@ int main() {
   std::cout << long_again << "\n";
 
   auto featurewise = indexed.features({"sales", "cost"}).transform(
-      [](const Slate& values) {
+      [](const Shelf& values) {
         return values + 1.0;
       },
       pluss::table::Axis::Feature);
@@ -94,18 +94,18 @@ int main() {
       [](const DataFrame& row) {
         auto sales_value = row.features("sales").as_series();
         auto cost_value = row.features("cost").as_series();
-        return pluss::table::SlateValue(Slate(sales_value - cost_value));
+        return pluss::table::ShelfValue(Shelf(sales_value - cost_value));
       },
       pluss::table::Axis::Case);
   std::cout << "Row-wise transform with Axis::Case\n";
   std::cout << row_score << "\n";
 
-  auto slatewise = indexed.features("sales").transform(
-      [](const pluss::table::SlateValue& value) {
-        return pluss::table::SlateValue(value.slate() * 2.0);
+  auto shelfwise = indexed.features("sales").transform(
+      [](const pluss::table::ShelfValue& value) {
+        return pluss::table::ShelfValue(value.shelf() * 2.0);
       });
-  std::cout << "Slate element-wise transform\n";
-  std::cout << slatewise << "\n";
+  std::cout << "Shelf element-wise transform\n";
+  std::cout << shelfwise << "\n";
 
   return 0;
 }

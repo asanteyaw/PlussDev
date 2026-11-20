@@ -6,7 +6,7 @@ A linear program asks for the cheapest (or most profitable) way to meet a set of
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 A linear program in this library has the form
 

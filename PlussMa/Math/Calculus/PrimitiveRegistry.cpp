@@ -80,7 +80,7 @@ pluss::Series safe_div_strict(pluss::RangeView<pluss::Series> x) {
 }
 pluss::Series safe_div_zero(pluss::RangeView<pluss::Series> x) {
   const pluss::Series zero = pluss::series::zeros_like(x[0].add(x[1]));
-  return x[1].eq(0.0).where(zero, x[0].div(x[1]));
+  return pluss::series::where(x[1].eq(0.0), zero, x[0].div(x[1]));
 }
 pluss::Series safe_div_piecewise(pluss::RangeView<pluss::Series> x) {
   return x[0].div(x[1]);
@@ -130,7 +130,7 @@ pluss::Series abs_slope_strict(pluss::RangeView<pluss::Series> x) {
 }
 pluss::Series abs_slope_zero(pluss::RangeView<pluss::Series> x) {
   const pluss::Series zero = pluss::series::zeros_like(x[0]);
-  return x[0].eq(0.0).where(zero, x[0].div(x[0].abs()));
+  return pluss::series::where(x[0].eq(0.0), zero, x[0].div(x[0].abs()));
 }
 pluss::Series abs_slope_piecewise(pluss::RangeView<pluss::Series> x) {
   return x[0].div(x[0].abs());

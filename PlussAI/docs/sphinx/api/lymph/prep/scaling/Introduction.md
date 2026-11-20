@@ -42,18 +42,18 @@ Fit a standard scaler on the training frame, then map a later frame with the sam
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame train({
-      {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}, {4}, cfg))},
-      {"ratio", Slate(pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4}, {4}, cfg))},
-      {"region", Slate(pluss::make_note({"north", "south", "north", "east"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}, {4}, cfg))},
+      {"ratio", Shelf(pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4}, {4}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north", "east"}))},
   });
   const DataFrame later({
-      {"amount", Slate(pluss::make_series(std::vector<double>{25.0}, {1}, cfg))},
-      {"ratio", Slate(pluss::make_series(std::vector<double>{0.25}, {1}, cfg))},
-      {"region", Slate(pluss::make_note({"south"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{25.0}, {1}, cfg))},
+      {"ratio", Shelf(pluss::make_series(std::vector<double>{0.25}, {1}, cfg))},
+      {"region", Shelf(pluss::make_note({"south"}))},
   });
 
   lymph::prep::StandardScaler scaler;

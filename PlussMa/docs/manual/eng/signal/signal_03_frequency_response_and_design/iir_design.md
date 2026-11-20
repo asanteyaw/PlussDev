@@ -6,7 +6,7 @@
 
 You need a low-pass, high-pass, band-pass or band-stop filter with a given cutoff, and you do not want to derive coefficients by hand. `butter`, `cheby1` and `cheby2` design infinite-impulse-response filters of a chosen order and return them as poles, zeros and a gain, which `lti::to_sos` turns into the section matrix that [`sos`](../signal_02_recursive_filters/second_order_sections.md) runs. This page shows what each family guarantees, how to choose the band and the units of the cutoff, and how to read the result.
 
-## The mental model
+## How it works
 
 All three families start from a low-pass **analogue prototype** with its cutoff at 1 rad/s, move its cutoff to where you asked, transform it to the band you asked for, and (for a digital filter) map it to the sampled domain with the bilinear transform. What differs is the shape of the prototype, and so the trade you make:
 

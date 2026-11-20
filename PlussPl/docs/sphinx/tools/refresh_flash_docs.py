@@ -74,7 +74,7 @@ def compile_and_run(page, number, code, show_targets):
         return f'{m.group(1)}.save_svg("{target}");' if target else ""
     body = SHOW.sub(replace, code)
     text = HARNESS % body
-    if re.search(r"pluss::table|DataFrame|Slate|\.frame\(|Dataset", code):
+    if re.search(r"pluss::table|DataFrame|Shelf|\.frame\(|Dataset", code):
         text = "#include <pluss/table/table.h>\n" + text
     salt = "".join(hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in os.environ.get("PLUSSDEV_EXTRA_SRCS", "").split() if pathlib.Path(p).exists())
     key = hashlib.sha256((text.replace(str(pathlib.Path(show_targets[0]).parent) if show_targets else "", "<out>") + salt).encode()).hexdigest()[:20]

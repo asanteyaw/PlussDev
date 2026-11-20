@@ -710,7 +710,7 @@ LodfResult lodf(const Grid &grid, double tolerance) {
   const Series valid =
       denominator.abs().gt(tolerance).logical_and(grid.line_active_.gt(0.0));
   const Series safe_denominator =
-      valid.where(denominator, pluss::series::ones_like(denominator));
+      pluss::series::where(valid, denominator, pluss::series::ones_like(denominator));
   const Series raw = response.div(safe_denominator.unsqueeze(-2));
   const Series raw_diagonal = batch_diagonal(raw);
   const Series factor =
@@ -718,7 +718,7 @@ LodfResult lodf(const Grid &grid, double tolerance) {
           .sub(batch_diag(pluss::series::ones_like(raw_diagonal)));
   const Series absent = pluss::series::full_like(
       factor, std::numeric_limits<double>::quiet_NaN());
-  return {valid.unsqueeze(-2).where(factor, absent), valid};
+  return {pluss::series::where(valid.unsqueeze(-2), factor, absent), valid};
 }
 
 OutageResult outages(const Grid &grid, double tolerance) {
@@ -728,7 +728,7 @@ OutageResult outages(const Grid &grid, double tolerance) {
       factors.factor.mT().mul(base.from_power.unsqueeze(-1)));
   const Series absent =
       pluss::series::full_like(flow, std::numeric_limits<double>::quiet_NaN());
-  return {base.from_power, factors.valid.unsqueeze(-1).where(flow, absent),
+  return {base.from_power, pluss::series::where(factors.valid.unsqueeze(-1), flow, absent),
           factors.valid};
 }
 
@@ -777,8 +777,8 @@ DispatchResult dispatch(const Grid &grid, const GenCost &cost,
 
   const Series zero = pluss::series::zeros_like(lower);
   const Series active = grid.gen_active_.gt(0.0);
-  const Series bounded_lower = active.where(lower, zero);
-  const Series bounded_upper = active.where(upper, zero);
+  const Series bounded_lower = pluss::series::where(active, lower, zero);
+  const Series bounded_upper = pluss::series::where(active, upper, zero);
   const Series identity = batch_matrix(
       pluss::series::eye(grid.gens_, config(grid.dtype_, grid.platform())),
       grid.batch_shape_);
@@ -806,16 +806,15 @@ DispatchResult dispatch(const Grid &grid, const GenCost &cost,
     Series post_fixed =
         fixed_flow.unsqueeze(-2).add(transposed.mul(fixed_flow.unsqueeze(-1)));
     const Series valid = factors.valid.unsqueeze(-1);
-    post_matrix = valid.unsqueeze(-1).where(
-        post_matrix, pluss::series::zeros_like(post_matrix));
+    post_matrix = pluss::series::where(valid.unsqueeze(-1), post_matrix, pluss::series::zeros_like(post_matrix));
     const Series neg_inf = pluss::series::full_like(
         post_fixed, -std::numeric_limits<double>::infinity());
     const Series pos_inf = pluss::series::full_like(
         post_fixed, std::numeric_limits<double>::infinity());
     Series post_lower =
-        valid.where(limit.neg().unsqueeze(-2).sub(post_fixed), neg_inf);
+        pluss::series::where(valid, limit.neg().unsqueeze(-2).sub(post_fixed), neg_inf);
     Series post_upper =
-        valid.where(limit.unsqueeze(-2).sub(post_fixed), pos_inf);
+        pluss::series::where(valid, limit.unsqueeze(-2).sub(post_fixed), pos_inf);
     Shape matrix_shape = grid.batch_shape_;
     matrix_shape.push_back(grid.lines_ * grid.lines_);
     matrix_shape.push_back(grid.gens_);
@@ -844,8 +843,7 @@ DispatchResult dispatch(const Grid &grid, const GenCost &cost,
   if (options.secure) {
     const Series candidate = state.from_power.unsqueeze(-2).add(
         factors.factor.mT().mul(state.from_power.unsqueeze(-1)));
-    post_flow = factors.valid.unsqueeze(-1).where(
-        candidate, pluss::series::full_like(
+    post_flow = pluss::series::where(factors.valid.unsqueeze(-1), candidate, pluss::series::full_like(
                        candidate, std::numeric_limits<double>::quiet_NaN()));
   }
   return {generation,          state.angle,
@@ -939,10 +937,10 @@ OpfResult opf(const Grid &grid, const GenCost &cost, const Limits &limits,
   const std::int64_t inequality_rows = constrain_flow ? 2 * grid.lines_ : 0;
   const Series active_gen = grid.gen_active_.gt(0.0);
   const Series zero_gen = pluss::series::zeros_like(grid.gen_active_);
-  const Series bounded_p_lower = active_gen.where(p_lower, zero_gen);
-  const Series bounded_p_upper = active_gen.where(p_upper, zero_gen);
-  const Series bounded_q_lower = active_gen.where(q_lower, zero_gen);
-  const Series bounded_q_upper = active_gen.where(q_upper, zero_gen);
+  const Series bounded_p_lower = pluss::series::where(active_gen, p_lower, zero_gen);
+  const Series bounded_p_upper = pluss::series::where(active_gen, p_upper, zero_gen);
+  const Series bounded_q_lower = pluss::series::where(active_gen, q_lower, zero_gen);
+  const Series bounded_q_upper = pluss::series::where(active_gen, q_upper, zero_gen);
   const Series angle_vars = matvec(grid.angle_map_.mT(), grid.va_);
   const Series angle_lower = pluss::series::full_like(
       angle_vars, -std::numeric_limits<double>::infinity());
@@ -1080,11 +1078,9 @@ OpfResult opf(const Grid &grid, const GenCost &cost, const Limits &limits,
     };
     if (inequality_rows > 0) {
       const Series from_residual =
-          rated.where(from_power.abs().square().sub(flat_limit.square()),
-                      pluss::series::full_like(flat_limit, -1.0));
+          pluss::series::where(rated, from_power.abs().square().sub(flat_limit.square()), pluss::series::full_like(flat_limit, -1.0));
       const Series to_residual =
-          rated.where(to_power.abs().square().sub(flat_limit.square()),
-                      pluss::series::full_like(flat_limit, -1.0));
+          pluss::series::where(rated, to_power.abs().square().sub(flat_limit.square()), pluss::series::full_like(flat_limit, -1.0));
       inequality = from_residual.unite({to_residual}, -1);
       const Series from_jac = flow_jacobian(
           from_power,
@@ -1319,7 +1315,7 @@ EstimateResult estimate(const Grid &grid, const Measurements &measurements,
     const Evaluation current = evaluate(magnitude, angle);
     Series residual = observed.sub(current.predicted);
     const Series wrapped = residual.sin().atan2(residual.cos());
-    residual = angle_mask.where(wrapped, residual);
+    residual = pluss::series::where(angle_mask, wrapped, residual);
     const Series scaled_jacobian = current.jacobian.div(stddev.unsqueeze(-1));
     const Series scaled_residual = residual.div(stddev);
     const Series gain = scaled_jacobian.mT().matmul(scaled_jacobian);
@@ -1337,14 +1333,11 @@ EstimateResult estimate(const Grid &grid, const Measurements &measurements,
                                 .squeeze(-1);
     const Series magnitude_step =
         raw_step.slice(-1, angle_count, angle_count + grid.buses_);
-    const Series step_limit = magnitude_step.lt(0.0).where(
-        magnitude.div(magnitude_step.neg()).mul(0.95),
-        pluss::series::full_like(magnitude_step,
+    const Series step_limit = pluss::series::where(magnitude_step.lt(0.0), magnitude.div(magnitude_step.neg()).mul(0.95), pluss::series::full_like(magnitude_step,
                                  std::numeric_limits<double>::infinity()));
     const Series safe_step =
         raw_step.mul(step_limit.amin(-1, false).clamp_max(1.0).unsqueeze(-1));
-    const Series step = converged.unsqueeze(-1).where(
-        pluss::series::zeros_like(safe_step), safe_step);
+    const Series step = pluss::series::where(converged.unsqueeze(-1), pluss::series::zeros_like(safe_step), safe_step);
     angle_vars = angle_vars.add(step.slice(-1, 0, angle_count));
     magnitude =
         magnitude.add(step.slice(-1, angle_count, angle_count + grid.buses_));
@@ -1356,7 +1349,7 @@ EstimateResult estimate(const Grid &grid, const Measurements &measurements,
 
   const Evaluation final = evaluate(magnitude, angle);
   Series residual = observed.sub(final.predicted);
-  residual = angle_mask.where(residual.sin().atan2(residual.cos()), residual);
+  residual = pluss::series::where(angle_mask, residual.sin().atan2(residual.cos()), residual);
   const Series scaled_jacobian = final.jacobian.div(stddev.unsqueeze(-1));
   const Series gain = scaled_jacobian.mT().matmul(scaled_jacobian);
   const Series state_identity = batch_matrix(
@@ -1371,8 +1364,7 @@ EstimateResult estimate(const Grid &grid, const Measurements &measurements,
   const Series reliable = residual_variance.gt(
       stddev.square().mul(options.observability_tolerance));
   const Series normalized =
-      reliable.where(residual.div(residual_variance.clamp_min(0.0).sqrt()),
-                     pluss::series::zeros_like(residual));
+      pluss::series::where(reliable, residual.div(residual_variance.clamp_min(0.0).sqrt()), pluss::series::zeros_like(residual));
   const Series objective = residual.div(stddev).square().sum(-1, false);
   return {final.voltage,    magnitude,      angle,           final.injection,
           final.from_power, final.to_power, final.predicted, residual,
@@ -1454,9 +1446,9 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
     const Series &identity =
         matrix.size(-1) == bordered_count ? bordered_identity : state_identity;
     const Series safe_matrix =
-        work.unsqueeze(-1).unsqueeze(-1).where(matrix, identity);
+        pluss::series::where(work.unsqueeze(-1).unsqueeze(-1), matrix, identity);
     const Series safe_rhs =
-        work.unsqueeze(-1).where(rhs, pluss::series::zeros_like(rhs));
+        pluss::series::where(work.unsqueeze(-1), rhs, pluss::series::zeros_like(rhs));
     return safe_matrix.linearalg.lu_solve(safe_rhs.unsqueeze(-1))
         .squeeze(-1)
         .to(grid.dtype_);
@@ -1468,9 +1460,7 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
         z.slice(-1, kernel.angle_count, kernel.angle_count + kernel.pq_count);
     const Series magnitude_step = raw_step.slice(
         -1, kernel.angle_count, kernel.angle_count + kernel.pq_count);
-    const Series bound = magnitude_step.lt(0.0).where(
-        magnitude.div(magnitude_step.neg()).mul(0.95),
-        pluss::series::full_like(magnitude_step,
+    const Series bound = pluss::series::where(magnitude_step.lt(0.0), magnitude.div(magnitude_step.neg()).mul(0.95), pluss::series::full_like(magnitude_step,
                                  std::numeric_limits<double>::infinity()));
     return raw_step.mul(bound.amin(-1, false).clamp_max(1.0).unsqueeze(-1));
   };
@@ -1485,8 +1475,8 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
     Series next = safe_solve(bordered(values.jacobian, reference), rhs, work);
     next = next.div(next.square().sum(-1, false).sqrt().unsqueeze(-1));
     const Series reverse = next.mul(reference).sum(-1, false).lt(0.0);
-    next = reverse.unsqueeze(-1).where(next.neg(), next);
-    return work.unsqueeze(-1).where(next, reference);
+    next = pluss::series::where(reverse.unsqueeze(-1), next.neg(), next);
+    return pluss::series::where(work.unsqueeze(-1), next, reference);
   };
 
   struct Corrected {
@@ -1519,7 +1509,7 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
           safe_solve(bordered(values.jacobian, border), rhs, active);
       const Series step = limit_step(result.z, raw);
       result.z = result.z.add(
-          active.unsqueeze(-1).where(step, pluss::series::zeros_like(step)));
+          pluss::series::where(active.unsqueeze(-1), step, pluss::series::zeros_like(step)));
     }
     const auto [state, factor] = split(result.z);
     const auto [p, q] = schedule(factor);
@@ -1553,7 +1543,7 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
           raw.unite({pluss::series::zeros_like(factor).unsqueeze(-1)}, -1);
       const Series step = limit_step(state_z, padded).slice(-1, 0, state_count);
       state = state.add(
-          active.unsqueeze(-1).where(step, pluss::series::zeros_like(step)));
+          pluss::series::where(active.unsqueeze(-1), step, pluss::series::zeros_like(step)));
     }
     const auto [p, q] = schedule(factor);
     const auto final = kernel.evaluate(state, p, q);
@@ -1655,10 +1645,10 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
             "eng::power::trace: target correction did not converge");
       const Series target_z =
           fixed.first.unite({target_factor.unsqueeze(-1)}, -1);
-      final_z = target_hit.unsqueeze(-1).where(target_z, final_z);
+      final_z = pluss::series::where(target_hit.unsqueeze(-1), target_z, final_z);
       const Series target_tangent = tangent(target_z, next.tangent, target_hit);
       final_tangent =
-          target_hit.unsqueeze(-1).where(target_tangent, final_tangent);
+          pluss::series::where(target_hit.unsqueeze(-1), target_tangent, final_tangent);
     }
 
     if (nose_hit.any().item<bool>()) {
@@ -1675,14 +1665,14 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
             nose_hit.logical_and(trial.converged.logical_not().logical_or(
                 trial.tangent.select(-1, state_count).mul(direction).le(0.0)));
         const Series usable_right = right.logical_and(trial.converged);
-        fold_z = usable_right.unsqueeze(-1).where(trial.z, fold_z);
+        fold_z = pluss::series::where(usable_right.unsqueeze(-1), trial.z, fold_z);
         fold_tangent =
-            usable_right.unsqueeze(-1).where(trial.tangent, fold_tangent);
-        upper = right.where(middle, upper);
-        lower = nose_hit.logical_and(right.logical_not()).where(middle, lower);
+            pluss::series::where(usable_right.unsqueeze(-1), trial.tangent, fold_tangent);
+        upper = pluss::series::where(right, middle, upper);
+        lower = pluss::series::where(nose_hit.logical_and(right.logical_not()), middle, lower);
       }
-      final_z = nose_hit.unsqueeze(-1).where(fold_z, final_z);
-      final_tangent = nose_hit.unsqueeze(-1).where(fold_tangent, final_tangent);
+      final_z = pluss::series::where(nose_hit.unsqueeze(-1), fold_z, final_z);
+      final_tangent = pluss::series::where(nose_hit.unsqueeze(-1), fold_tangent, final_tangent);
     }
 
     const Series stopped = target_hit.logical_or(nose_hit);
@@ -1691,8 +1681,8 @@ TraceResult trace(const Grid &grid, const LoadPath &path,
       reached = reached.logical_or(target_hit);
     else
       reached = reached.logical_or(nose_hit);
-    z = stopped.unsqueeze(-1).where(final_z, next.z);
-    branch_tangent = stopped.unsqueeze(-1).where(final_tangent, next.tangent);
+    z = pluss::series::where(stopped.unsqueeze(-1), final_z, next.z);
+    branch_tangent = pluss::series::where(stopped.unsqueeze(-1), final_tangent, next.tangent);
     active = active.logical_and(stopped.logical_not());
     if (options.adaptive) {
       const double error =

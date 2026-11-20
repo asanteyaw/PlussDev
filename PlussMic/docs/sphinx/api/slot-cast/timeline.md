@@ -80,8 +80,8 @@ intended, documented error.
 auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
 try {
   auto out = slot.cast().timeline();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -99,8 +99,8 @@ intended error, not an internal crash.
 auto single_bad = pluss::scribble::Slot({pluss::make_note("Accra")});
 try {
   auto out = single_bad.cast().timeline();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

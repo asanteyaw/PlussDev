@@ -4,7 +4,7 @@ Adam and L-BFGS, the two optimizers of `septima`, both take a step and then see 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Near a point, a smooth function looks like a quadratic: its value, its gradient, and a matrix of curvature. L-BFGS builds the curvature matrix from recent steps in a way that keeps it **positive-definite**, so its model is always a bowl that curves up in every direction. That is right near a minimum, and wrong near a saddle, where the function curves down in some direction. An SR1 model drops the restriction. It can represent a matrix with negative curvature, so its model knows that there is a direction in which the function falls, and a trust-region step can follow it.
 

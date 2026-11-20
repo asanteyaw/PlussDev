@@ -1,5 +1,7 @@
 # `signal::freqz`
 
+Evaluates a filter's frequency response on a grid of angular frequencies.
+
 ## Signature
 
 ```cpp
@@ -17,51 +19,55 @@ pluss::Series signal::freqz(
 
 ## What It Does
 
-Evaluates the complex delay-polynomial response at angular frequencies `omega`. The numerator-only overload is FIR; the second evaluates a rational IIR response.
+Returns `H(e^{j w})` for each `w` in `omega`: the numerator polynomial in `e^{-j w}` divided by the denominator polynomial when one is given. The result is complex with the grid's shape. `omega` is in radians per sample from 0 to `pi`.
 
 ## Parameters
 
 `numerator`
-: Feed-forward coefficients.
+: Rank-one coefficients `b` (floating or complex).
 
 `denominator`
-: Optional feedback coefficients with nonzero leading value.
+: Optional rank-one coefficients `a`; omitted means 1.
 
 `omega`
-: Angular frequencies in radians per sample.
+: A `Series` with at least one dimension of angular frequencies, rad/sample.
 
 `dim`
-: Coefficient axis when coefficients are batched.
+: The coefficient axis; default `-1`.
 
 ## Returns
 
-A complex `Series` whose frequency dimension follows `omega` and whose leading dimensions follow compatible coefficient batches.
+A complex `Series` of the shape of `omega`.
 
 ## Errors
 
-Rejects invalid coefficient axes, non-floating/non-complex inputs, zero leading denominator, and incompatible dtype, platform, or batch shape.
+An integer coefficient array, an empty numerator and a scalar frequency grid throw `pluss::Error`.
+
+## Interpretation and Use
+
+The magnitude at `w = 0` is the DC gain and at `w = pi` the gain at the Nyquist rate. The first example checks the two-tap average against `|cos(w / 2)|` and the second a one-pole filter against its closed form `1 / (1 - 0.5 e^{-j w})`.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A two-tap average against `|cos(w / 2)|`.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_freqz_fir.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+A one-pole filter against its closed form.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_freqz_iir.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_freqz_errors.cpp@@
 
 ## See Also
 

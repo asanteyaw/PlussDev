@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace pluss::view {
 
@@ -16,7 +18,8 @@ enum class BackendPreference : std::uint8_t {
 
 struct VirtualTableCell {
   std::string text{};
-  bool missing{false};
+  bool missing{false};    // a NULL cell (no value): drawn in red
+  bool nonfinite{false};  // NaN / inf / -inf: a value, drawn in a neutral tint, never as missing
 };
 
 class VirtualTableModel {
@@ -36,6 +39,23 @@ class VirtualTableModel {
       std::string_view folded_query) const = 0;
 };
 
+// A window-level menu (e.g. colour theme, number format). Choosing an option calls
+// `render(option id)`, which returns the full page re-rendered for that choice.
+struct HtmlMenuOption {
+  std::string id{};
+  std::string label{};
+};
+
+struct HtmlMenu {
+  std::string id{};
+  std::string title{};
+  std::vector<HtmlMenuOption> options{};
+  std::function<std::string(std::string_view option_id)> render{};
+  // When true the menu is not a toolbar pull-down of its own: it appears as a cascading
+  // entry (with an arrow) inside the "View" menu.
+  bool in_view_menu{false};
+};
+
 struct HtmlWindowOptions {
   std::string title{"PlussTilsView"};
   std::string snapshot_name{"view.png"};
@@ -46,6 +66,10 @@ struct HtmlWindowOptions {
   BackendPreference backend_preference{BackendPreference::Auto};
   std::shared_ptr<const VirtualTableModel> virtual_table_model{};
   bool table_viewport_scroll_only{false};
+  std::vector<HtmlMenu> menus{};
+  // Fills an empty view panel (an element with data-lazy="<id>") the first time it is shown:
+  // returns the panel's inner HTML for that id. Lets expensive views be computed on demand.
+  std::function<std::string(std::string_view id)> render_panel{};
 };
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;

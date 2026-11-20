@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::rxor(const DataFrame& other) const
-DataFrame DataFrame::rxor(const Slate& other) const
+DataFrame DataFrame::rxor(const Shelf& other) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ that has since been fixed, and `rxor()` shares the fix.
 
 **other**
 
-`const DataFrame&` or `const Slate&` — identical shape requirements to
+`const DataFrame&` or `const Shelf&` — identical shape requirements to
 [`land()`](land.md).
 
 ## Returns
@@ -75,25 +75,25 @@ r    | true   true
 The values match [`left.lxor(right)`](lxor.md) exactly, and the case labels are
 `left`'s own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
 
-Example 2. XOR against a single shared `Slate`, applied identically to every
+Example 2. XOR against a single shared `Shelf`, applied identically to every
 feature — same result as [`left.lxor(mask)`](lxor.md).
 
 ```cpp
-auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_slate = left.rxor(mask);
-std::cout << out_slate;
+auto mask = Shelf(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_shelf = left.rxor(mask);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-===================
+==================
      | a     b    
--------------------
+------------------
 p    | true  true 
 q    | true  false
 r    | true  false
--------------------
+------------------
 [3 cs x 2 feat]
 ```
 

@@ -6,7 +6,7 @@ Septima minimizes a function by following its gradient. You write the function o
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 An iteration does four things. It evaluates the objective and its gradient (by reverse-mode automatic differentiation, so you never write the gradient), takes a step with the chosen optimizer, updates the multipliers of any constraints (chapter 2), and then asks whether to stop. The pieces you handle are few:
 

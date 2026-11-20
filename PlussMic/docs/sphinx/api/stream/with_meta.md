@@ -19,6 +19,10 @@ counterpart to [`with_meta_()`](with_meta_.md). Both overloads **merge** into th
 metadata map rather than replacing it: pre-existing keys not mentioned in this call are
 kept untouched, and a key that already exists is overwritten with the new value.
 
+## Which operations keep the metadata
+
+A new stream derived from this one keeps its metadata when the operation keeps the meaning of the values: `clip`, `abs`, `log`, `exp`, `fillnull`, `ffill`, `bfill`, `dropnull`, `astype`, `cast`, `head`, `tail`, `slice`, `take`, `filter` and arithmetic with a number or another stream (the metadata of the left operand, or of the stream operand when the other is a number). A flag derived from the stream (`isnull`, `notnull`, `invalid`, a comparison), a reduction (`sum`, `mean`, ...) and the `ts()`, `tl()` and `nt()` feature accessors describe a different quantity and start with empty metadata.
+
 ## Parameters
 
 **key** (`std::string`, single-pair overload)

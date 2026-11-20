@@ -185,7 +185,7 @@ class search::Search final {
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
-                                 const pluss::table::Slate& y,
+                                 const pluss::table::Shelf& y,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
                                  Scorer objective = MetricKind::Accuracy,
@@ -197,7 +197,7 @@ class search::Search final {
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
-                                 const pluss::table::Slate& y,
+                                 const pluss::table::Shelf& y,
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},

@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ed6eb4cbb6ba -->
+
+# `robot::Robot::links`
+
+[Back to `robot::Robot`](../RobotModel.md)
+
+The number of links, which is also the number of joints.
+
+## Signature
+
+```cpp
+std::int64_t robot::Robot::links() const noexcept;
+```
+
+## What It Does
+
+Returns the number of links. Each link carries one joint, so a configuration has this many joint values (angles for revolute joints, lengths for prismatic ones), and every kinematic or dynamic result has a link axis of this length.
+
+## Returns
+
+The number of links.
+
+## Practical Examples
+
+### Example 1
+
+A planar two-link arm with masses 1 kg and 2 kg.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, 0, 0, 1}, {2, 3});
+  links.translation = mat({0, 0, 0, 0.5, 0, 0}, {2, 3});
+  links.mass = vec({1.0, 2.0});
+  links.center = mat({0.25, 0, 0, 0.2, 0, 0}, {2, 3});
+  links.inertia = mat({0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("links =", obj.links(), " has mass", obj.has_mass());
+}
+```
+
+### Example 2
+
+A four-link branching tree with one prismatic joint and no mass properties.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 0, 2};
+  links.prismatic = {0, 0, 1, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0}, {4, 3});
+  links.translation = mat({0, 0, 0.3, 0.2, 0, 0.1, -0.2, 0, 0.1, 0, 0, 0.3}, {4, 3});
+  links.rpy = mat({0, 0, 0, 0.2, 0, 0.1, 0, -0.1, 0, 0.3, 0.2, 0}, {4, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("links =", obj.links(), " has mass", obj.has_mass());
+}
+```
+
+### Example 3
+
+A serial chain of three revolute joints, with no mass properties.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 1};
+  links.prismatic = {0, 0, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0}, {3, 3});
+  links.translation = mat({0, 0, 0.3, 0.3, 0, 0, 0.3, 0, 0}, {3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("links =", obj.links(), " has mass", obj.has_mass());
+}
+```
+
+## See Also
+
+- [`parent`](parent.md): how the links are connected
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="has_mass.html">
+    <span class="label">Previous</span>
+    <span class="title">has_mass</span>
+  </a>
+  <a class="next-link" href="parent.html">
+    <span class="label">Next</span>
+    <span class="title">parent</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

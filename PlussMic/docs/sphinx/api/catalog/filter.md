@@ -65,7 +65,7 @@ city                     | Note         | Note             | 3       | [Accra, K
 ```
 
 Example 2. Build the mask from one of the catalog's own streams, via
-[`keys("id")`](keys.md).`as_series()` and a `Slate`-level comparison.
+[`keys("id")`](keys.md).`as_series()` and a `Shelf`-level comparison.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({
@@ -101,8 +101,8 @@ auto ct = pluss::kindle::Catalog({
 auto bad_mask = pluss::make_series({true, false}, pluss::codem::ScalarType::Bool);
 try {
   auto out = ct.filter(bad_mask);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -127,12 +127,12 @@ Catalog::filter: mask length must match stream length for key 'id'
   catalog itself, instead of constructing it beforehand.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fillnull.html">
+  <a class="prev-link" href="fillposinf.html">
     <span class="label">Previous</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillposinf</span>
   </a>
-  <a class="next-link" href="grep.html">
+  <a class="next-link" href="fingerprint.html">
     <span class="label">Next</span>
-    <span class="title">grep</span>
+    <span class="title">fingerprint</span>
   </a>
 </div>

@@ -237,8 +237,8 @@ void test_anomaly_solver() {
   const pluss::Series recovered = astro::to_mean(ecc, phase);
   const pluss::Series wrapped = mean.remainder(2.0 * std::numbers::pi);
   const pluss::Series ellipse_mean =
-      wrapped.lt(0.0).where(wrapped.add(2.0 * std::numbers::pi), wrapped);
-  const pluss::Series expected = ecc.lt(1.0).where(ellipse_mean, mean);
+      pluss::series::where(wrapped.lt(0.0), wrapped.add(2.0 * std::numbers::pi), wrapped);
+  const pluss::Series expected = pluss::series::where(ecc.lt(1.0), ellipse_mean, mean);
   expect(recovered.allclose(expected, 2e-11, 2e-11),
          "true/mean anomaly conversion did not round trip");
 

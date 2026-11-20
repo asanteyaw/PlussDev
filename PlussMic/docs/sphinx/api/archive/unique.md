@@ -92,8 +92,8 @@ arc2: 0
   handle has a payload at all, regardless of sharing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_string.html">
+  <a class="prev-link" href="ts.html">
     <span class="label">Previous</span>
-    <span class="title">to_string</span>
+    <span class="title">ts</span>
   </a>
 </div>

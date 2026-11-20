@@ -94,10 +94,10 @@ Example 2. Missing values are skipped per feature, not per row.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto summary = orders.describe(false);
@@ -181,7 +181,7 @@ unassigned call would produce no output.
   instead of the full table.
 - [`DataFrame::corr`](corr.md): pairwise correlation between numeric features, a
   natural next step after `describe()`.
-- [`Slate::describe`](../slate/describe.md): the same summary for one already-extracted
+- [`Shelf::describe`](../shelf/describe.md): the same summary for one already-extracted
   feature.
 
 <div class="pluss-inline-prev-next">

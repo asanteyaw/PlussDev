@@ -1,0 +1,39 @@
+# `fluid::Network` Introduction
+
+The result of `network`: a validated, immutable network whose topology maps and physical arrays are ready for `steady`, `run`, `transport` and `heat`. It cannot be built directly, and it preserves the precision and platform of its source arrays.
+
+Link results are ordered pipes first, then pumps, then valves. A `Network` is a value that can be solved many times: `steady` once, `run` over a schedule, and `transport` or `heat` on top of a run.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The counts and liquid of a compiled network.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+The batch shape of a scenario network.
+
+@@example Eng/api/fluid_net_batch.cpp@@
+
+### Example 3
+
+Counts by node kind.
+
+@@example Eng/api/fluid_nodekind.cpp@@
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="batch_shape.html">
+    <span class="label">Next</span>
+    <span class="title">batch_shape</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

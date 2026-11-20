@@ -8,20 +8,20 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::values() const
+Shelf DataFrameLabelAccessor::values() const
 ```
 
 ## What It Does
 
-Returns the frame's flat case labels as a `Slate` — the same composite,
+Returns the frame's flat case labels as a `Shelf` — the same composite,
 displayed value shown in the leftmost column of the frame's own printed
 table, whether the frame is structured (multi-level), a plain custom axis, or
 just the default integer index.
 
 ## Returns
 
-`Slate`
-    The case labels, as a bare `Slate`.
+`Shelf`
+    The case labels, as a bare `Shelf`.
 
 ## Examples
 
@@ -31,8 +31,8 @@ Example 1. Read the case labels back out after promoting a feature to them.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().values();
@@ -51,7 +51,7 @@ ptype: Note
 
 This is exactly the same sequence shown as `labeled`'s own case-label column
 when printing `labeled` directly — `values()` just gives it to you as a
-standalone `Slate`.
+standalone `Shelf`.
 
 ## Notes
 

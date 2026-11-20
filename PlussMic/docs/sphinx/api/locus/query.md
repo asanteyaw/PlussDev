@@ -119,6 +119,12 @@ statements share the same options; use a prepared query when the statement text
 itself also repeats.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pull.html"><span class="label">Previous</span><span class="title">pull</span></a>
-  <a class="next-link" href="../../locus_api_reference.html"><span class="label">Next</span><span class="title">Locus API Reference</span></a>
+  <a class="prev-link" href="pull.html">
+    <span class="label">Previous</span>
+    <span class="title">pull</span>
+  </a>
+  <a class="next-link" href="relationship_audit.html">
+    <span class="label">Next</span>
+    <span class="title">relationship_audit</span>
+  </a>
 </div>

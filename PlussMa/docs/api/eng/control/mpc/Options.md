@@ -1,8 +1,8 @@
 <!-- generated from Options.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# `control::mpc::Options`
+# `control::Options`
 
-Prediction-horizon and condensed-QP controls.
+The horizon and solver settings of the predictive-control problem.
 
 ## Signature
 
@@ -12,198 +12,257 @@ control::mpc::Options
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Holds the prediction horizon and the settings of the quadratic-programming solver (`qp`: tolerances and iteration limits).
 
 ## Fields
 
-### `horizon`
-
-Positive number of future control intervals. The default is `10`.
-
-### `qp`
-
-`pluss::math::qp::Options` controlling iterations, tolerances, ADMM penalties, checks, and adaptive penalty updates.
+| Field | Meaning | Default |
+|---|---|---|
+| `horizon` | Number of steps predicted, positive. | `10` |
+| `qp` | `math::qp::Options` of the solver (absolute and relative tolerance and so on). | solver defaults |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Member of the argument list of `build` and `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A horizon that is not positive throws `pluss::Error`.
 
 ## Interpretation and Use
 
-`horizon` trades foresight for QP size. QP tolerances control solution accuracy, while `max_iters` caps work; adaptive rho is usually preferable for differently scaled constraints. Configure these once in `build` when repeatedly solving the same problem.
+A longer horizon plans further ahead but costs more: here the first move settles at 0.9161 from horizon 4 on, while horizon 2 gives 0.9091 (the second example). Looser solver tolerances cut the iterations from 30 to 10 for an answer that agrees to four places (the third).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Set horizon, iteration cap, and residual tolerances.
+The default horizon.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}, {1, 1}), 1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({0.5}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.25}), pluss::make_series({0.25})};
-  control::mpc::Options options;
-  options.horizon = 3;
-  options.qp.max_iters = 1000;
-  options.qp.abs_tol = 1e-7;
-  options.qp.rel_tol = 1e-7;
-
-  const control::mpc::Result result = control::mpc::solve(
-      plant, pluss::make_series({0.0}), pluss::make_series({1.0}),
-      weights, bounds, options);
-
-  out.writeln("bounded controls =", result.controls.flatten().items<double>());
-  out.writeln("predicted states =", result.states.flatten().items<double>());
-  out.writeln("iterations =", result.optimization.iterations);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mpc::Options defaults;
+  out.writeln("default horizon", defaults.horizon);
 }
 ```
 
 Output
 
 ```text
-bounded controls = [0.250000, 0.250000, 0.250000]
-predicted states = [0.250000, 0.500000, 0.750000]
-iterations = 40
+default horizon 10
 ```
 ### Example 2
 
-Compile options into a reusable plan.
+The first move for four horizons.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.1}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.5}), pluss::make_series({0.5})};
-  const control::mpc::Plan plan =
-      control::mpc::build(plant, weights, bounds, {.horizon = 3});
-  const control::mpc::Result first = control::mpc::solve(
-      plan, pluss::make_series({0.0}), pluss::make_series({1.0}));
-  const control::mpc::Result warm = control::mpc::solve(
-      plan, pluss::make_series({0.1}), pluss::make_series({1.0}),
-      first.optimization.warm());
-
-  std::cout << "horizon = " << plan.horizon() << ", states = " << plan.states()
-            << ", inputs = " << plan.inputs() << "\n";
-  out.writeln("cold iterations =", first.optimization.iterations);
-  out.writeln("warm iterations =", warm.optimization.iterations);
-  out.writeln("warm controls =", warm.controls.flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A longer horizon plans further ahead: a gentler first move toward the same reference.
+  for (const std::int64_t n : {2, 4, 8, 16}) {
+    const mpc::Result res = run(0.1, generous(), n, 0.0);
+    out.writeln("horizon", n, ": first control", res.control.items<double>()[0], " controls planned", res.controls.size(0));
+  }
 }
 ```
 
 Output
 
 ```text
-horizon = 3, states = 1, inputs = 1
-cold iterations = 20
-warm iterations = 20
-warm controls = [0.500000, 0.366416, 0.030529]
+horizon 2 : first control 0.9091  controls planned 2
+horizon 4 : first control 0.9161  controls planned 4
+horizon 8 : first control 0.9161  controls planned 8
+horizon 16 : first control 0.9161  controls planned 16
 ```
 ### Example 3
 
-Reject the invalid zero-horizon setting.
+Loose against tight solver tolerances.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
 
 int main() {
   OutputEngine out;
-  const control::mpc::Weights weights{
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.1}, {1, 1})};
-  const control::mpc::Bounds bounds{
-      pluss::make_series({-0.5}), pluss::make_series({0.5})};
-  try {
-    const lti::StateSpace continuous = lti::state(
-        pluss::make_series({-1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1}));
-    static_cast<void>(control::mpc::build(continuous, weights, bounds));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    const lti::StateSpace discrete = lti::state(
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1}), 1.0);
-    static_cast<void>(control::mpc::build(
-        discrete, weights, bounds, {.horizon = 0}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero horizon rejected =", message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mpc::Options loose = with_horizon(4);
+  loose.qp.abs_tol = 1e-2; loose.qp.rel_tol = 1e-2;
+  const mpc::Options tight = with_horizon(4);
+  const mpc::Result a = mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(), generous(), loose);
+  const mpc::Result b = mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(), generous(), tight);
+  out.writeln("loose tolerance: iterations", a.optimization.iterations, " converged", a.optimization.converged, " first control", a.control.items<double>()[0]);
+  out.writeln("tight tolerance: iterations", b.optimization.iterations, " converged", b.optimization.converged, " first control", b.control.items<double>()[0]);
 }
 ```
 
 Output
 
 ```text
-continuous plant rejected = eng::control::mpc::solve: system must be discrete
-zero horizon rejected = eng::control::mpc::solve: horizon must be positive
+loose tolerance: iterations 10  converged true  first control 0.9161
+tight tolerance: iterations 30  converged true  first control 0.9161
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Bounds.html">
-    <span class="label">Previous</span>
-    <span class="title">Bounds</span>
-  </a>
-  <a class="next-link" href="Result.html">
-    <span class="label">Next</span>
-    <span class="title">Result</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused horizon.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A discrete integrator x[k+1] = x[k] + u[k] to be driven from 0 to the reference 1.
+static lti::StateSpace plant() { return lti::state(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+static mpc::Weights weights(double r = 0.1, double terminal = 2.0) { return {mat({1.0}, 1, 1), mat({r}, 1, 1), mat({terminal}, 1, 1)}; }
+static mpc::Bounds generous() { return {pluss::make_series({-10.0}), pluss::make_series({10.0})}; }
+static mpc::Options with_horizon(std::int64_t n) { mpc::Options o; o.horizon = n; o.qp.abs_tol = 1e-8; o.qp.rel_tol = 1e-8; return o; }
+static mpc::Result run(double r = 0.1, const mpc::Bounds &b = generous(), std::int64_t n = 4, double terminal = 2.0) { return mpc::solve(plant(), pluss::make_series({0.0}), pluss::make_series({1.0}), weights(r, terminal), b, with_horizon(n)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "a horizon of zero", [] { mpc::Options o; o.horizon = 0; mpc::build(plant(), weights(), generous(), o); });
+  refused(out, "a negative horizon", [] { mpc::Options o; o.horizon = -3; mpc::build(plant(), weights(), generous(), o); });
+}
+```
+
+Output
+
+```text
+a horizon of zero : eng::control::mpc::solve: horizon must be positive
+a negative horizon : eng::control::mpc::solve: horizon must be positive
+```

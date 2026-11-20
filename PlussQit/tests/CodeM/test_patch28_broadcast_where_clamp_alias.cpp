@@ -15,7 +15,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
   m = m.index_put({pluss::series::full({1}, 1, ScalarType::Int64), pluss::series::full({1}, 0, ScalarType::Int64)},
                   pluss::series::full({1}, 1, ScalarType::Bool), false);
 
-  auto wv = a.where(m, b);
+  auto wv = pluss::series::where(m, b, a);
   REQUIRE(wv.sizes()[0] == 2);
   REQUIRE(wv.sizes()[1] == 3);
   auto* wp = reinterpret_cast<const std::int64_t*>(wv.raw_data());
@@ -26,7 +26,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
   auto* cp = reinterpret_cast<const float*>(c.raw_data());
   REQUIRE(cp[0] == 3.0f);
 
-  auto ws = a.where(m, 7.0);
+  auto ws = pluss::series::where(m, 7.0, a);
   auto* wsp = reinterpret_cast<const std::int64_t*>(ws.raw_data());
   REQUIRE(wsp[3] == 7);
 
@@ -36,7 +36,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
       std::numeric_limits<double>::quiet_NaN(),
       ScalarType::Float64);
   auto choose_nan = pluss::make_series({false, true});
-  auto selected = finite.where(choose_nan, nan_values).host<double>();
+  auto selected = pluss::series::where(choose_nan, nan_values, finite).host<double>();
   REQUIRE(selected[0] == 1.0);
   REQUIRE(std::isnan(selected[1]));
 }

@@ -57,6 +57,7 @@ std::cout << out.registry(0).fields("id").size();
 
 ## Notes
 
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - See the important callout above — a previously-aligned axel can
   become ragged after this call.
 - Never throws on a mismatched field kind — unlike
@@ -71,12 +72,12 @@ std::cout << out.registry(0).fields("id").size();
   dropping them, keeping every field's length intact.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">drop</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

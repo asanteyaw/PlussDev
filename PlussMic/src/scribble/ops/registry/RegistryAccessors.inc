@@ -86,7 +86,7 @@ Registry RegistryFieldAxisAccessor::empty() const { return kind(SlotKind::Empty)
 
 RegistryCastAccessor::RegistryCastAccessor(Registry base,
                                            std::vector<std::string> keys,
-                                           pluss::table::SlateCastOptions options)
+                                           pluss::table::ShelfCastOptions options)
     : base_(std::move(base)), keys_(std::move(keys)), options_(std::move(options)) {}
 
 Registry RegistryCastAccessor::series() const {

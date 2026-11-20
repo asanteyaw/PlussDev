@@ -1,0 +1,135 @@
+<!-- generated from kd.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 83bc9c87bacd -->
+
+# `control::Pid::kd`
+
+[Back to `control::Pid`](../PidController.md)
+
+The derivative gain `Kd`.
+
+## Signature
+
+```cpp
+const pluss::Series& control::Pid::kd() const noexcept;
+```
+
+## What It Does
+
+Returns the derivative gain `Kd` as a `Series`, stored as given to `pid` (promoted to the common floating dtype of the four gains). A single controller holds one element; a batch of controllers holds one element per controller on the leading axes. Read it to check what was configured or to rebuild the controller with one value changed.
+
+## Returns
+
+A reference to the stored derivative gain `Kd`.
+
+## Practical Examples
+
+### Example 1
+
+A controller with `Kp = 2`, `Ki = 1`, `Kd = 0.5`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = controller();
+  out.writeln("kd =", c.kd().item<double>());
+}
+```
+
+Output
+
+```text
+kd = 0.5000
+```
+
+### Example 2
+
+`Kd = 0` removes the derivative action, leaving a PI controller.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = ctl::pid(s(2.0), s(1.0), s(0.0), s(0.1));
+  out.writeln("kd =", c.kd().item<double>());
+}
+```
+
+Output
+
+```text
+kd = 0.0000
+```
+
+### Example 3
+
+The derivative gain with the filter time constant that tames it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = controller();
+  out.writeln("kd", c.kd().item<double>(), " filter", c.filter().item<double>());
+}
+```
+
+Output
+
+```text
+kd 0.5000  filter 0.1000
+```
+
+## See Also
+
+- [`kp`](kp.md): the proportional gain
+- [`ki`](ki.md): the integral gain
+- [`kd`](kd.md): the derivative gain
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="is_disc.html">
+    <span class="label">Previous</span>
+    <span class="title">is_disc</span>
+  </a>
+  <a class="next-link" href="ki.html">
+    <span class="label">Next</span>
+    <span class="title">ki</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

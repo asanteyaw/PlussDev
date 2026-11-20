@@ -52,7 +52,7 @@ or persist the result, call one of `Studio`'s own methods afterward:
   embedding elsewhere instead of writing a file.
 
 Every example on this page ends with one of these calls to make that visible; none of them
-show a rendered "Output" block the way `DataFrame`/`Slate` method pages do, because there
+show a rendered "Output" block the way `DataFrame`/`Shelf` method pages do, because there
 is no text form of a chart to display.
 ```
 
@@ -129,9 +129,9 @@ Example 1. Explicit x-feature: the most common and clearest form.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"month",  Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
-    {"amount", Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
-    {"cost",   Slate(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
+    {"month",  Shelf(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {"cost",   Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
 auto chart = sales.plot().line("amount", "month");
@@ -179,8 +179,8 @@ Example 3. No x-feature at all — falls back to the frame's own row labels.
 
 ```cpp
 auto untitled = DataFrame({
-    {"amount", Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
-}, Slate(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
+    {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+}, Shelf(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
 
 auto chart = untitled.plot().line("amount");
 chart.show();

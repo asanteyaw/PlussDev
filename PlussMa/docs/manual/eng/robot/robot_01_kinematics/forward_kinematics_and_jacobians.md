@@ -6,7 +6,7 @@
 
 Given the joint values, **forward kinematics** finds where every link is. Given also the joint rates, the **Jacobian** finds how fast a point on a link moves. This page places the links of the planar arm against closed forms, evaluates a batch of configurations in one call, follows a branching tree with a sliding joint, and builds Jacobians.
 
-## The mental model
+## How it works
 
 `frames(robot, q)` composes the transforms down the tree. For link `i` with parent `p`, the world rotation is `R_i = R_p R_off Rot(axis, q_i)` and the world position of its frame origin is `x_i = x_p + R_p d_i`, where `d_i` is the link's offset in its parent frame (for a prismatic joint, the offset includes the sliding `axis q_i`). The result is a `Pose`: `rotation` `[..., links, 3, 3]` and `position` `[..., links, 3]`.
 

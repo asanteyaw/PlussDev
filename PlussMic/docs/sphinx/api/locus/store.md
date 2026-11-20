@@ -86,3 +86,14 @@ store unknown catalog: Locus::store: plan names a catalog this Locus does not ha
 - [`has_store`](has_store.md), [`stores`](has_store.md): checking what's
   saved, without reading a plan back.
 - [`run`](run.md): executing a saved plan.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="state.html">
+    <span class="label">Previous</span>
+    <span class="title">state</span>
+  </a>
+  <a class="next-link" href="stream.html">
+    <span class="label">Next</span>
+    <span class="title">stream</span>
+  </a>
+</div>

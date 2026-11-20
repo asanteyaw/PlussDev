@@ -201,9 +201,9 @@ Series Series::calc_antidiff_(
           pluss::series::full({nodes}, 2.0, values.scalar_type()).to(platform);
       const Series four =
           pluss::series::full({nodes}, 4.0, values.scalar_type()).to(platform);
-      Series weights = indices.remainder(2.0).eq(0.0).where(two, four);
+      Series weights = pluss::series::where(indices.remainder(2.0).eq(0.0), two, four);
       const Series endpoint = indices.eq(0.0).logical_or(indices.eq(nodes - 1));
-      weights = endpoint.where(one, weights);
+      weights = pluss::series::where(endpoint, one, weights);
       unit_integral = values.mul(weights).sum(-1).mul(
           1.0 / (3.0 * static_cast<double>(intervals)));
     }
@@ -996,7 +996,7 @@ Series Series::calc_marcus_integral_(
     Series acc = zero_like_left();
     for (int q = 0; q < 8; ++q)
       acc = acc.add(broadcast_to_left(f(t_left, left.add(dw.mul(kGlNodes[q])))).mul(kGlWeights[q]));
-    term = mask.where(acc.mul(dw), term);
+    term = pluss::series::where(mask, acc.mul(dw), term);
   }
   PLUSS_CHECK(term.isfinite().all().to(pluss::pCPU, ScalarType::Bool).item<bool>(),
               std::string(op) + ": the integrand returned a non-finite value");

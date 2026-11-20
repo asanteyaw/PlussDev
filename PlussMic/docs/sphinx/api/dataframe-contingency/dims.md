@@ -40,9 +40,9 @@ Example 1. The one-list constructor preserves the supplied dimension order.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 const auto dims = df.contingency({"city", "channel", "weekend"}).dims();

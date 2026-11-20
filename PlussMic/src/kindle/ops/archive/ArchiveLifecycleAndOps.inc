@@ -21,7 +21,7 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
 }
 
 std::int64_t find_note_label(const Stream& labels, std::string_view key) {
-  const auto note = labels.to_slate().cast().note().as_note();
+  const auto note = labels.to_shelf().cast().note().as_note();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (note.at(i) == key) {
       return i;
@@ -31,10 +31,10 @@ std::int64_t find_note_label(const Stream& labels, std::string_view key) {
 }
 
 std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
-  const auto slate = labels.to_slate();
-  PLUSS_CHECK(slate.kind() == pluss::table::SlateKind::Series,
+  const auto shelf = labels.to_shelf();
+  PLUSS_CHECK(shelf.kind() == pluss::table::ShelfKind::Series,
               "Archive::loc(int64): depth labels must be numeric Series");
-  const auto values = slate.as_series().host<std::int64_t>();
+  const auto values = shelf.as_series().host<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (values[static_cast<std::size_t>(i)] == key) {
       return i;
@@ -46,7 +46,7 @@ std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
 std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Archive::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Archive::loc(Timeline): key must be scalar Timeline");
-  const auto keys = labels.to_slate().cast().timeline().as_timeline().ticks();
+  const auto keys = labels.to_shelf().cast().timeline().as_timeline().ticks();
   const auto want = key.ticks();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (keys[static_cast<std::size_t>(i)] == want[0]) {
@@ -57,7 +57,7 @@ std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& ke
 }
 
 std::string label_string_at(const Stream& labels, std::int64_t i) {
-  const auto note = labels.to_slate().cast().note().as_note();
+  const auto note = labels.to_shelf().cast().note().as_note();
   return std::string(note.at(i));
 }
 
@@ -228,9 +228,9 @@ Archive Archive::map_catalogs(const std::function<Catalog(const Catalog&)>& fn) 
   return Archive(std::move(out), impl_ref_().depth_labels_);
 }
 
-Catalog Archive::aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const {
+Catalog Archive::aggregate_depth(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
-  PLUSS_CHECK(static_cast<bool>(fn), "Archive::aggregate_over_catalogs: reducer function is empty");
+  PLUSS_CHECK(static_cast<bool>(fn), "Archive::aggregate_depth: reducer function is empty");
   return fn(impl_ref_().catalogs_);
 }
 
@@ -302,18 +302,82 @@ Archive Archive::invalid() const {
   return map_catalogs([](const Catalog& catalog) { return catalog.invalid(); });
 }
 
+Archive Archive::isnan() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.isnan(); });
+}
+
+Archive Archive::notnan() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.notnan(); });
+}
+
+Archive Archive::isinf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.isinf(); });
+}
+
+Archive Archive::isposinf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.isposinf(); });
+}
+
+Archive Archive::isneginf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.isneginf(); });
+}
+
+Archive Archive::notinf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.notinf(); });
+}
+
+Archive Archive::dropnan() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropnan(); });
+}
+
+Archive Archive::dropinvalid() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropinvalid(); });
+}
+
+Archive Archive::dropinf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropinf(); });
+}
+
+Archive Archive::dropposinf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropposinf(); });
+}
+
+Archive Archive::dropneginf() const {
+  return map_catalogs([](const Catalog& catalog) { return catalog.dropneginf(); });
+}
+
+Archive Archive::fillnan(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillnan(value); });
+}
+
+Archive Archive::fillinvalid(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillinvalid(value); });
+}
+
+Archive Archive::fillinf(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillinf(value); });
+}
+
+Archive Archive::fillposinf(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillposinf(value); });
+}
+
+Archive Archive::fillneginf(double value) const {
+  return map_catalogs([&](const Catalog& catalog) { return catalog.fillneginf(value); });
+}
+
 ArchiveCastAccessor Archive::cast() const {
   if (empty()) return ArchiveCastAccessor(*this, {}, {});
   return ArchiveCastAccessor(*this, catalog(0).keys(), {});
 }
 
-ArchiveCastAccessor Archive::cast(const pluss::table::SlateCastOptions& options) const {
+ArchiveCastAccessor Archive::cast(const pluss::table::ShelfCastOptions& options) const {
   if (empty()) return ArchiveCastAccessor(*this, {}, options);
   return ArchiveCastAccessor(*this, catalog(0).keys(), options);
 }
 
-Archive Archive::cast(pluss::table::SlateCastTarget target,
-                      const pluss::table::SlateCastOptions& options) const {
+Archive Archive::cast(pluss::table::ShelfCastTarget target,
+                      const pluss::table::ShelfCastOptions& options) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.cast(target, options); });
 }
 
@@ -351,9 +415,9 @@ pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {
     frames.push_back(c.tabelize(policy));
   }
 
-  std::optional<pluss::table::Slate> labels = std::nullopt;
+  std::optional<pluss::table::Shelf> labels = std::nullopt;
   if (impl_ref_().depth_labels_.has_value()) {
-    labels = impl_ref_().depth_labels_->to_slate();
+    labels = impl_ref_().depth_labels_->to_shelf();
   }
   return pluss::table::Atlas(std::move(frames), std::move(labels));
 }

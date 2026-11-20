@@ -19,17 +19,17 @@ pluss::Series column_from_matrix_(const pluss::Series& matrix, std::int64_t colu
 DataFrame frame_from_matrix_(const pluss::Series& matrix,
                              const pluss::Series& valid,
                              const std::vector<std::string>& names,
-                             const Slate& cases) {
+                             const Shelf& cases) {
   PLUSS_CHECK(matrix.dim() == 2, "frame_from_matrix: expected a two-dimensional value matrix");
   PLUSS_CHECK(matrix.sizes()[1] == static_cast<std::int64_t>(names.size()),
               "frame_from_matrix: feature count mismatch");
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(names.size());
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto value_column = column_from_matrix_(matrix, static_cast<std::int64_t>(i));
     const auto valid_column =
         valid.dim() == 1 ? valid : column_from_matrix_(valid, static_cast<std::int64_t>(i));
-    columns.emplace_back(names[i], Slate(value_column, valid_column));
+    columns.emplace_back(names[i], Shelf(value_column, valid_column));
   }
   return DataFrame(std::move(columns), cases);
 }
@@ -42,25 +42,25 @@ pluss::Series statistic_validity_(const ReduceMatrix_& matrix,
       static_cast<double>(min_count));
 }
 
-Slate labelled_statistic_(pluss::Series values,
+Shelf labelled_statistic_(pluss::Series values,
                            pluss::Series valid,
                            const detail::DataFrameImpl& src,
                            const ReduceMatrix_& matrix,
                            std::int64_t axis) {
   return with_reduce_labels_(
-      Slate(std::move(values), std::move(valid)), src, matrix.names, axis);
+      Shelf(std::move(values), std::move(valid)), src, matrix.names, axis);
 }
 
 template <class Operation>
-DataFrame delegate_numeric_slates_(const detail::DataFrameImpl& src,
+DataFrame delegate_numeric_shelves_(const detail::DataFrameImpl& src,
                                     Operation&& operation) {
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
     columns.emplace_back(
         src.names_[i],
-        source.kind() == SlateKind::Series &&
+        source.kind() == ShelfKind::Series &&
                 is_numeric_series_type(source.as_series())
             ? operation(source)
             : source);
@@ -69,7 +69,7 @@ DataFrame delegate_numeric_slates_(const detail::DataFrameImpl& src,
 }
 
 template <class Operation>
-Slate reduce_numeric_slates_(const detail::DataFrameImpl& src,
+Shelf reduce_numeric_shelves_(const detail::DataFrameImpl& src,
                                Operation&& operation,
                                std::string_view where) {
   std::vector<std::string> names;
@@ -77,28 +77,28 @@ Slate reduce_numeric_slates_(const detail::DataFrameImpl& src,
   std::vector<pluss::Series> validity;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != SlateKind::Series ||
+    if (source.kind() != ShelfKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       continue;
     }
-    auto reduced = operation(source).slate();
-    PLUSS_CHECK(reduced.kind() == SlateKind::Series && reduced.size() == 1,
+    auto reduced = operation(source).shelf();
+    PLUSS_CHECK(reduced.kind() == ShelfKind::Series && reduced.size() == 1,
                 std::string(where) +
-                    ": Slate reduction must return one numeric value");
+                    ": Shelf reduction must return one numeric value");
     names.push_back(src.names_[i]);
     values.push_back(reduced.as_series());
     validity.push_back(reduced.notnull().as_series());
   }
   PLUSS_CHECK(!values.empty(), std::string(where) + ": no numeric features");
-  return Slate(
+  return Shelf(
              pluss::series::pile(values, 0).reshape(
                  {static_cast<std::int64_t>(values.size())}),
              pluss::series::pile(validity, 0).reshape(
                  {static_cast<std::int64_t>(validity.size())}))
-      .label().set(make_note_slate(names));
+      .label().set(make_note_shelf(names));
 }
 
-Slate pad_modes_(const Slate& source, std::int64_t size) {
+Shelf pad_modes_(const Shelf& source, std::int64_t size) {
   PLUSS_CHECK(source.size() <= size, "pad_modes: invalid output size");
   if (source.size() == size) {
     return source;
@@ -106,18 +106,18 @@ Slate pad_modes_(const Slate& source, std::int64_t size) {
   const auto padding = size - source.size();
   auto valid_padding = pluss::Series::zeros(
       {padding}, pluss::codem::ScalarType::Bool);
-  if (source.kind() == SlateKind::Series) {
+  if (source.kind() == ShelfKind::Series) {
     const auto platform = source.as_series().platform();
     auto values = pluss::Series::zeros(
         {padding}, source.as_series().scalar_type(), platform);
     if (platform != pluss::codem::Platform::CPU) {
       valid_padding = valid_padding.to(platform);
     }
-    return Slate(
+    return Shelf(
         source.as_series().unite({values}, 0, true),
         source.notnull().as_series().unite({valid_padding}, 0, true));
   }
-  if (source.kind() == SlateKind::Timeline || source.kind() == SlateKind::Duration) {
+  if (source.kind() == ShelfKind::Timeline || source.kind() == ShelfKind::Duration) {
     std::vector<std::int64_t> indices;
     indices.reserve(static_cast<std::size_t>(size));
     for (std::int64_t i = 0; i < source.size(); ++i) {
@@ -128,7 +128,7 @@ Slate pad_modes_(const Slate& source, std::int64_t size) {
     auto output_valid =
         source.notnull().as_series().unite(
             {valid_padding}, 0, true);
-    const auto platform = output.kind() == SlateKind::Timeline
+    const auto platform = output.kind() == ShelfKind::Timeline
                               ? output.as_timeline().epoch_nanos().platform()
                               : pluss::codem::Platform::CPU;
     if (output_valid.platform() != platform) {
@@ -142,7 +142,7 @@ Slate pad_modes_(const Slate& source, std::int64_t size) {
     padded.emplace_back(value);
   }
   padded.resize(static_cast<std::size_t>(size));
-  return Slate(
+  return Shelf(
       pluss::make_note(padded),
       source.notnull().as_series().unite({valid_padding}, 0, true));
 }
@@ -153,11 +153,11 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
                              RunningOp_ op,
                              bool skip_nulls,
                              std::string_view where) {
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != SlateKind::Series ||
+    if (source.kind() != ShelfKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       columns.emplace_back(src.names_[i], source);
       continue;
@@ -168,16 +168,16 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
     pluss::Series result = pluss::series::undefined();
     switch (op) {
       case RunningOp_::Sum:
-        result = values.where(invalid, 0.0).cumsum(0);
+        result = pluss::series::where(invalid, 0.0, values).cumsum(0);
         break;
       case RunningOp_::Product:
-        result = values.where(invalid, 1.0).cumprod(0);
+        result = pluss::series::where(invalid, 1.0, values).cumprod(0);
         break;
       case RunningOp_::Minimum:
-        result = values.where(invalid, std::numeric_limits<double>::infinity()).cummin(0);
+        result = pluss::series::where(invalid, std::numeric_limits<double>::infinity(), values).cummin(0);
         break;
       case RunningOp_::Maximum:
-        result = values.where(invalid, -std::numeric_limits<double>::infinity()).cummax(0);
+        result = pluss::series::where(invalid, -std::numeric_limits<double>::infinity(), values).cummax(0);
         break;
     }
     auto out_valid = skip_nulls
@@ -185,7 +185,7 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
                          : valid.to(pluss::codem::ScalarType::Int64)
                                .cummin(0)
                                .to(pluss::codem::ScalarType::Bool);
-    columns.emplace_back(src.names_[i], Slate(result, out_valid));
+    columns.emplace_back(src.names_[i], Shelf(result, out_valid));
   }
   PLUSS_CHECK(!columns.empty(), std::string(where) + ": no features");
   return DataFrame(std::move(columns), src.cases_);
@@ -221,16 +221,16 @@ DataFrame running_statistic_matrix_(const detail::DataFrameImpl& src,
   pluss::Series result = pluss::series::undefined();
   switch (op) {
     case RunningOp_::Sum:
-      result = values.where(invalid, 0.0).cumsum(axis);
+      result = pluss::series::where(invalid, 0.0, values).cumsum(axis);
       break;
     case RunningOp_::Product:
-      result = values.where(invalid, 1.0).cumprod(axis);
+      result = pluss::series::where(invalid, 1.0, values).cumprod(axis);
       break;
     case RunningOp_::Minimum:
-      result = values.where(invalid, std::numeric_limits<double>::infinity()).cummin(axis);
+      result = pluss::series::where(invalid, std::numeric_limits<double>::infinity(), values).cummin(axis);
       break;
     case RunningOp_::Maximum:
-      result = values.where(invalid, -std::numeric_limits<double>::infinity()).cummax(axis);
+      result = pluss::series::where(invalid, -std::numeric_limits<double>::infinity(), values).cummax(axis);
       break;
   }
 
@@ -257,12 +257,12 @@ enum class MovingMomentOp_ : std::uint8_t {
   TailWeight,
 };
 
-Slate moving_statistic_(const Slate& source,
+Shelf moving_statistic_(const Shelf& source,
                          std::int64_t window,
                          const WindowOptions& options,
                          MovingOp_ op,
                          std::string_view where) {
-  PLUSS_CHECK(source.kind() == SlateKind::Series,
+  PLUSS_CHECK(source.kind() == ShelfKind::Series,
               std::string(where) + ": expected a Series feature");
   PLUSS_CHECK(is_numeric_series_type(source.as_series()),
               std::string(where) + ": expected a numeric feature");
@@ -276,14 +276,14 @@ Slate moving_statistic_(const Slate& source,
   const auto dtype = statistics_compute_type_(input);
   const auto platform = input.platform();
   if (n == 0) {
-    return Slate(
+    return Shelf(
         pluss::Series::empty({0}, dtype, platform),
         pluss::Series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
   }
   auto values = input.to(dtype);
   auto valid = source.notnull().as_series().to(platform);
-  auto prepared = values.where(valid.logical_not(), 0.0);
+  auto prepared = pluss::series::where(valid.logical_not(), 0.0, values);
   auto counts = valid.to(dtype);
 
   const auto prefix_difference = [window, n, dtype, platform](
@@ -312,7 +312,7 @@ Slate moving_statistic_(const Slate& source,
       const auto total_count = counts.sum();
       const auto origin = prepared.sum() / total_count;
       const auto shifted =
-          (values - origin).where(valid.logical_not(), 0.0);
+          pluss::series::where(valid.logical_not(), 0.0, (values - origin));
       const auto shifted_sums = prefix_difference(shifted);
       auto square_sums = prefix_difference(shifted * shifted);
       auto variance =
@@ -330,7 +330,7 @@ Slate moving_statistic_(const Slate& source,
     auto padding = pluss::Series::full(
         {window - 1}, fill, dtype, platform);
     auto padded = padding.unite(
-        {values.where(valid.logical_not(), fill)}, 0, true);
+        {pluss::series::where(valid.logical_not(), fill, values)}, 0, true);
     auto windows = padded.unfold(0, window, 1);
     result = op == MovingOp_::Minimum ? windows.min(1) : windows.max(1);
   }
@@ -338,11 +338,11 @@ Slate moving_statistic_(const Slate& source,
   if (options.centered && n > 0) {
     const auto offset = (window - 1) / 2;
     if (offset > 0) {
-      result = Slate(result, out_valid).shift(-offset).as_series();
-      out_valid = Slate(out_valid).shift(-offset).fillnull(0.0).as_series();
+      result = Shelf(result, out_valid).shift(-offset).as_series();
+      out_valid = Shelf(out_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
-  return Slate(result, out_valid);
+  return Shelf(result, out_valid);
 }
 
 DataFrame moving_frame_(const detail::DataFrameImpl& src,
@@ -350,11 +350,11 @@ DataFrame moving_frame_(const detail::DataFrameImpl& src,
                         const WindowOptions& options,
                         MovingOp_ op,
                         std::string_view where) {
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() == SlateKind::Series &&
+    if (source.kind() == ShelfKind::Series &&
         is_numeric_series_type(source.as_series())) {
       columns.emplace_back(
           src.names_[i], moving_statistic_(source, window, options, op, where));
@@ -365,12 +365,12 @@ DataFrame moving_frame_(const detail::DataFrameImpl& src,
   return DataFrame(std::move(columns), src.cases_);
 }
 
-Slate moving_moment_(const Slate& source,
+Shelf moving_moment_(const Shelf& source,
                       std::int64_t window,
                       const WindowOptions& options,
                       MovingMomentOp_ op,
                       std::string_view where) {
-  PLUSS_CHECK(source.kind() == SlateKind::Series &&
+  PLUSS_CHECK(source.kind() == ShelfKind::Series &&
                   is_numeric_series_type(source.as_series()),
               std::string(where) + ": expected a numeric Series feature");
   PLUSS_CHECK(window > 0, std::string(where) + ": window must be > 0");
@@ -389,7 +389,7 @@ Slate moving_moment_(const Slate& source,
   const auto dtype = statistics_compute_type_(source.as_series());
   const auto platform = source.as_series().platform();
   if (n == 0) {
-    return Slate(
+    return Shelf(
         pluss::Series::empty({0}, dtype, platform),
         pluss::Series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
@@ -403,15 +403,14 @@ Slate moving_moment_(const Slate& source,
           {window - 1}, pluss::codem::ScalarType::Bool, platform);
   const auto window_values =
       value_padding
-          .unite({values.where(valid.logical_not(), 0.0)}, 0, true)
+          .unite({pluss::series::where(valid.logical_not(), 0.0, values)}, 0, true)
           .unfold(0, window, 1);
   const auto window_valid =
       valid_padding.unite({valid}, 0, true).unfold(0, window, 1);
   const auto counts = window_valid.to(dtype).sum(1);
   const auto means = window_values.sum(1) / counts;
   const auto centered =
-      (window_values - means.reshape({n, 1}))
-          .where(window_valid.logical_not(), 0.0);
+      pluss::series::where(window_valid.logical_not(), 0.0, (window_values - means.reshape({n, 1})));
   const auto squares = centered * centered;
   pluss::Series result = pluss::series::undefined();
   if (op == MovingMomentOp_::MeanError) {
@@ -436,12 +435,12 @@ Slate moving_moment_(const Slate& source,
   if (options.centered && n > 0) {
     const auto offset = (window - 1) / 2;
     if (offset > 0) {
-      result = Slate(result, output_valid).shift(-offset).as_series();
+      result = Shelf(result, output_valid).shift(-offset).as_series();
       output_valid =
-          Slate(output_valid).shift(-offset).fillnull(0.0).as_series();
+          Shelf(output_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
-  return Slate(result, output_valid);
+  return Shelf(result, output_valid);
 }
 
 DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
@@ -449,11 +448,11 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
                                const WindowOptions& options,
                                MovingMomentOp_ op,
                                std::string_view where) {
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() == SlateKind::Series &&
+    if (source.kind() == ShelfKind::Series &&
         is_numeric_series_type(source.as_series())) {
       columns.emplace_back(
           src.names_[i], moving_moment_(source, window, options, op, where));
@@ -467,31 +466,31 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
 } // namespace
 
 DataFrame DataFrame::abs() const {
-  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
+  return delegate_numeric_shelves_(impl_ref_(), [](const Shelf& source) {
     return source.abs();
   });
 }
 
 DataFrame DataFrame::clip(double min_value, double max_value) const {
-  return delegate_numeric_slates_(impl_ref_(), [min_value, max_value](const Slate& source) {
+  return delegate_numeric_shelves_(impl_ref_(), [min_value, max_value](const Shelf& source) {
     return source.clip(min_value, max_value);
   });
 }
 
 DataFrame DataFrame::round(std::int64_t decimals) const {
-  return delegate_numeric_slates_(impl_ref_(), [decimals](const Slate& source) {
+  return delegate_numeric_shelves_(impl_ref_(), [decimals](const Shelf& source) {
     return source.round(decimals);
   });
 }
 
 DataFrame DataFrame::log() const {
-  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
+  return delegate_numeric_shelves_(impl_ref_(), [](const Shelf& source) {
     return source.log();
   });
 }
 
 DataFrame DataFrame::exp() const {
-  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
+  return delegate_numeric_shelves_(impl_ref_(), [](const Shelf& source) {
     return source.exp();
   });
 }
@@ -505,12 +504,11 @@ DataFrameView DataFrame::covar(const StatisticOptions& options, bool render) con
   const auto valid_numeric = matrix.valid.to(dtype);
   const auto feature_counts = valid_numeric.sum(0);
   const auto origins =
-      matrix.values.where(matrix.valid.logical_not(), 0.0).sum(0) /
+      pluss::series::where(matrix.valid.logical_not(), 0.0, matrix.values).sum(0) /
       feature_counts;
   const auto values =
-      (matrix.values - origins.reshape(
-                           {1, static_cast<std::int64_t>(matrix.names.size())}))
-          .where(matrix.valid.logical_not(), 0.0);
+      pluss::series::where(matrix.valid.logical_not(), 0.0,
+                           (matrix.values - origins.reshape({1, static_cast<std::int64_t>(matrix.names.size())})));
   const auto transposed_values = values.transpose(0, 1);
   const auto transposed_valid = valid_numeric.transpose(0, 1);
   const auto counts = transposed_valid.matmul(valid_numeric);
@@ -521,15 +519,15 @@ DataFrameView DataFrame::covar(const StatisticOptions& options, bool render) con
   const auto valid = counts.ge(static_cast<double>(
       std::max(options.min_count, options.ddof + 1)));
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(matrix.names.size());
   for (std::size_t i = 0; i < matrix.names.size(); ++i) {
     columns.emplace_back(
         matrix.names[i],
-        Slate(column_from_matrix_(covariance, static_cast<std::int64_t>(i)),
+        Shelf(column_from_matrix_(covariance, static_cast<std::int64_t>(i)),
                column_from_matrix_(valid, static_cast<std::int64_t>(i))));
   }
-  auto result = DataFrame(std::move(columns), make_note_slate(matrix.names));
+  auto result = DataFrame(std::move(columns), make_note_shelf(matrix.names));
   return DataFrameView(std::move(result), render, "covar", title());
 }
 
@@ -546,10 +544,10 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
   }
 
   const auto& src = impl_ref_();
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != SlateKind::Series ||
+    if (source.kind() != ShelfKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       continue;
     }
@@ -557,20 +555,20 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
         src.names_[i], source.percentiles(points, min_count));
   }
   PLUSS_CHECK(!columns.empty(), "DataFrame::percentiles: no numeric features");
-  return DataFrame(std::move(columns), make_note_slate(labels));
+  return DataFrame(std::move(columns), make_note_shelf(labels));
 }
 
 DataFrame DataFrame::mode(bool drop_nulls) const {
   const auto& src = impl_ref_();
-  std::vector<std::pair<std::string, Slate>> modes;
+  std::vector<std::pair<std::string, Shelf>> modes;
   std::int64_t output_size = 0;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if ((source.kind() == SlateKind::Series &&
+    if ((source.kind() == ShelfKind::Series &&
          is_numeric_series_type(source.as_series())) ||
-        source.kind() == SlateKind::Note ||
-        source.kind() == SlateKind::Timeline ||
-        source.kind() == SlateKind::Duration) {
+        source.kind() == ShelfKind::Note ||
+        source.kind() == ShelfKind::Timeline ||
+        source.kind() == ShelfKind::Duration) {
       auto values = source.mode(drop_nulls);
       output_size = std::max(output_size, values.size());
       modes.emplace_back(src.names_[i], std::move(values));
@@ -578,7 +576,7 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
   }
   PLUSS_CHECK(!modes.empty(), "DataFrame::mode: no supported features");
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(modes.size());
   for (auto& [name, values] : modes) {
     columns.emplace_back(name, pad_modes_(values, output_size));
@@ -588,78 +586,78 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
   for (std::int64_t i = 0; i < output_size; ++i) {
     case_labels.push_back(pluss::tils::OutputEngine::format("mode_{}", i));
   }
-  return DataFrame(std::move(columns), make_note_slate(case_labels));
+  return DataFrame(std::move(columns), make_note_shelf(case_labels));
 }
 
 DataFrame DataFrame::rank(RankTieRule ties,
                           RankNullRule nulls,
                           bool ascending,
                           bool percentage) const {
-  return delegate_numeric_slates_(
-      impl_ref_(), [&](const Slate& source) {
+  return delegate_numeric_shelves_(
+      impl_ref_(), [&](const Shelf& source) {
         return source.rank(ties, nulls, ascending, percentage);
       });
 }
 
-Slate DataFrame::skew(Axis axis, std::int64_t min_count) const {
+Shelf DataFrame::skew(Axis axis, std::int64_t min_count) const {
   const auto normalized = normalize_reduce_axis_(axis, "DataFrame::skew");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_slates_(
+    return reduce_numeric_shelves_(
         src,
-        [min_count](const Slate& source) {
+        [min_count](const Shelf& source) {
           return source.skew(min_count);
         },
         "DataFrame::skew");
   }
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::skew");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
-  auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
+  auto values = pluss::series::where(matrix.valid.logical_not(), 0.0, matrix.values);
   auto means = values.sum(normalized) / counts;
   auto means_2d = normalized == 0
                       ? means.reshape({1, static_cast<std::int64_t>(matrix.names.size())})
                       : means.reshape({matrix.ncases, 1});
-  auto centered = (matrix.values - means_2d).where(matrix.valid.logical_not(), 0.0);
+  auto centered = pluss::series::where(matrix.valid.logical_not(), 0.0, (matrix.values - means_2d));
   auto m2 = (centered * centered).sum(normalized) / counts;
   auto m3 = (centered * centered * centered).sum(normalized) / counts;
   auto skew = (m3 / (m2 * m2.sqrt())) *
               ((counts * (counts - 1.0)).sqrt() / (counts - 2.0));
-  skew = skew.where(m2.eq(0.0), 0.0);
+  skew = pluss::series::where(m2.eq(0.0), 0.0, skew);
   auto valid = statistic_validity_(matrix, normalized, std::max<std::int64_t>(3, min_count));
   return labelled_statistic_(std::move(skew), std::move(valid), src, matrix, normalized);
 }
 
-Slate DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
+Shelf DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
   const auto normalized = normalize_reduce_axis_(axis, "DataFrame::kurtosis");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_slates_(
+    return reduce_numeric_shelves_(
         src,
-        [min_count](const Slate& source) {
+        [min_count](const Shelf& source) {
           return source.kurtosis(min_count);
         },
         "DataFrame::kurtosis");
   }
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::kurtosis");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
-  auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
+  auto values = pluss::series::where(matrix.valid.logical_not(), 0.0, matrix.values);
   auto means = values.sum(normalized) / counts;
   auto means_2d = normalized == 0
                       ? means.reshape({1, static_cast<std::int64_t>(matrix.names.size())})
                       : means.reshape({matrix.ncases, 1});
-  auto centered = (matrix.values - means_2d).where(matrix.valid.logical_not(), 0.0);
+  auto centered = pluss::series::where(matrix.valid.logical_not(), 0.0, (matrix.values - means_2d));
   auto m2 = (centered * centered).sum(normalized) / counts;
   auto m4 = (centered * centered * centered * centered).sum(normalized) / counts;
   auto raw_excess = m4 / (m2 * m2) - 3.0;
   auto kurt = ((counts - 1.0) /
                ((counts - 2.0) * (counts - 3.0))) *
               ((counts + 1.0) * raw_excess + 6.0);
-  kurt = kurt.where(m2.eq(0.0), 0.0);
+  kurt = pluss::series::where(m2.eq(0.0), 0.0, kurt);
   auto valid = statistic_validity_(matrix, normalized, std::max<std::int64_t>(4, min_count));
   return labelled_statistic_(std::move(kurt), std::move(valid), src, matrix, normalized);
 }
 
-Slate DataFrame::var(
+Shelf DataFrame::var(
     Axis axis,
     const StatisticOptions& options) const {
   const auto normalized =
@@ -668,9 +666,9 @@ Slate DataFrame::var(
               "DataFrame::var: ddof and min_count must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_slates_(
+    return reduce_numeric_shelves_(
         src,
-        [&options](const Slate& source) {
+        [&options](const Shelf& source) {
           return source.var(options);
         },
         "DataFrame::var");
@@ -680,11 +678,10 @@ Slate DataFrame::var(
   const auto counts =
       matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
   const auto values =
-      matrix.values.where(matrix.valid.logical_not(), 0.0);
+      pluss::series::where(matrix.valid.logical_not(), 0.0, matrix.values);
   const auto means = values.sum(normalized) / counts;
   const auto centered =
-      (matrix.values - means.reshape({matrix.ncases, 1}))
-          .where(matrix.valid.logical_not(), 0.0);
+      pluss::series::where(matrix.valid.logical_not(), 0.0, (matrix.values - means.reshape({matrix.ncases, 1})));
   const auto result =
       (centered * centered).sum(normalized) /
       (counts - static_cast<double>(options.ddof));
@@ -695,17 +692,17 @@ Slate DataFrame::var(
       result.clamp_min(0.0), valid, src, matrix, normalized);
 }
 
-Slate DataFrame::std(
+Shelf DataFrame::std(
     Axis axis,
     const StatisticOptions& options) const {
   const auto result = var(axis, options);
-  return Slate(
+  return Shelf(
              result.as_series().clamp_min(0.0).sqrt(),
              result.validity_mask())
       .caselbl(detail::display_labels(result));
 }
 
-Slate DataFrame::se(Axis axis,
+Shelf DataFrame::se(Axis axis,
                      ErrorTarget target,
                      const StatisticOptions& options) const {
   PLUSS_CHECK(target == ErrorTarget::Mean,
@@ -714,21 +711,21 @@ Slate DataFrame::se(Axis axis,
   PLUSS_CHECK(options.ddof >= 0, "DataFrame::se: ddof must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_slates_(
+    return reduce_numeric_shelves_(
         src,
-        [&options](const Slate& source) {
+        [&options](const Shelf& source) {
           return source.se(ErrorTarget::Mean, options);
         },
         "DataFrame::se");
   }
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::se");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
-  auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
+  auto values = pluss::series::where(matrix.valid.logical_not(), 0.0, matrix.values);
   auto means = values.sum(normalized) / counts;
   auto means_2d = normalized == 0
                       ? means.reshape({1, static_cast<std::int64_t>(matrix.names.size())})
                       : means.reshape({matrix.ncases, 1});
-  auto centered = (matrix.values - means_2d).where(matrix.valid.logical_not(), 0.0);
+  auto centered = pluss::series::where(matrix.valid.logical_not(), 0.0, (matrix.values - means_2d));
   auto variance =
       (centered * centered).sum(normalized) /
       (counts - static_cast<double>(options.ddof));
@@ -783,7 +780,7 @@ DataFrame DataFrame::cummax(Axis axis, bool skip_nulls) const {
   return scan(ScanStatistic::Maximum, axis, skip_nulls);
 }
 
-Slate DataFrame::corr_with(const DataFrame& other,
+Shelf DataFrame::corr_with(const DataFrame& other,
                             CorrMethod method,
                             std::int64_t min_count) const {
   PLUSS_CHECK(min_count >= 1, "DataFrame::corr_with: min_count must be >= 1");
@@ -796,24 +793,24 @@ Slate DataFrame::corr_with(const DataFrame& other,
   std::vector<std::string> names;
   std::vector<pluss::Series> values;
   std::vector<pluss::Series> valid;
-  SlateCorrMethod slate_method = SlateCorrMethod::Pearson;
+  ShelfCorrMethod shelf_method = ShelfCorrMethod::Pearson;
   if (method == CorrMethod::Spearman) {
-    slate_method = SlateCorrMethod::Spearman;
+    shelf_method = ShelfCorrMethod::Spearman;
   } else if (method == CorrMethod::KendallTau) {
-    slate_method = SlateCorrMethod::KendallTau;
+    shelf_method = ShelfCorrMethod::KendallTau;
   }
   for (const auto& name : matched.left.features()) {
     const auto left = matched.left.features(name);
     const auto right = matched.right.features(name);
-    if (left.kind() != SlateKind::Series || right.kind() != SlateKind::Series ||
+    if (left.kind() != ShelfKind::Series || right.kind() != ShelfKind::Series ||
         !is_numeric_series_type(left.as_series()) ||
         !is_numeric_series_type(right.as_series())) {
       continue;
     }
     names.push_back(name);
     const auto correlated =
-        left.corr_with(right, slate_method, min_count);
-    valid.push_back(correlated.slate().notnull().as_series());
+        left.corr_with(right, shelf_method, min_count);
+    valid.push_back(correlated.shelf().notnull().as_series());
     values.push_back(correlated.as_series());
   }
   PLUSS_CHECK(!names.empty(), "DataFrame::corr_with: no common numeric features");
@@ -821,14 +818,14 @@ Slate DataFrame::corr_with(const DataFrame& other,
       {static_cast<std::int64_t>(values.size())});
   auto output_valid = pluss::series::pile(valid, 0).reshape(
       {static_cast<std::int64_t>(valid.size())});
-  return Slate(output, output_valid).caselbl(make_note_slate(names));
+  return Shelf(output, output_valid).caselbl(make_note_shelf(names));
 }
 
 DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others,
                                CorrMethod method,
                                std::int64_t min_count) const {
   PLUSS_CHECK(others.size() > 0, "DataFrame::corr_with: expected at least one comparison frame");
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(others.size());
   for (std::size_t i = 0; i < others.size(); ++i) {
     columns.emplace_back(pluss::tils::OutputEngine::format("frame_{}", i), corr_with(others[i], method, min_count));

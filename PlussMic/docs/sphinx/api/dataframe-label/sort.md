@@ -49,8 +49,8 @@ Example 1. Sort a single-level structured frame ascending and descending.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region", false);
 std::cout << labeled;
 
@@ -115,9 +115,9 @@ other, instead of the case axis's existing level order.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"west", "east", "west", "east"}))},
-     {"city",   Slate(pluss::make_note({"LA", "Boston", "SF", "NYC"}))},
-     {"sales",  Slate(pluss::make_series({30.0, 10.0, 40.0, 20.0}))}});
+    {{"region", Shelf(pluss::make_note({"west", "east", "west", "east"}))},
+     {"city",   Shelf(pluss::make_note({"LA", "Boston", "SF", "NYC"}))},
+     {"sales",  Shelf(pluss::make_series({30.0, 10.0, 40.0, 20.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 

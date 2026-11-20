@@ -1,0 +1,74 @@
+<!-- generated from drift.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Drift and fixation
+
+[Back to Biology 8: Genetics](../bio_08_genetics.md)
+
+In a finite population some alleles are lost by chance even if neutral, and a new advantageous mutant is often lost before it can spread. This page uses the Moran process, in which one individual reproduces and one dies at each step, to find the chance that a new mutant takes over and the time it takes, and compares that with random drift in simulated populations.
+
+## How it works
+
+`moran_transition(n, r)` returns the exact transition matrix of the number of mutants in a population of `n`, where a mutant has relative fitness `r`, and `absorption` of that matrix returns, for every number of mutants, the probability `fixation` that mutants eventually take over and the expected `time` until one type is left. `moran_fixation(r, n, start)` is the closed form of the same probability. `genetics::simulate(p0, population, w, max_generations, seed)` is the Wright-Fisher model: each generation draws the `2N` gametes at random from the expected frequency, so every lane of `p0` is an independent population.
+
+## Chance of takeover
+
+The program compares the exact chain with the closed form for three relative fitnesses in a population of `50`, prints takeover chances and mean times from several starting numbers, and then simulates `200` neutral populations of `100` starting at `50%`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace genetics = biology::genetics;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // a population of N = 50 in which a mutant with relative fitness r replaces others one at a time (Moran process)
+  const std::int64_t n = 50;
+  const auto start = vec({1.0, 10.0, 25.0});
+  for (double r : {1.0, 1.1, 1.5}) {
+    const auto exact = genetics::absorption(genetics::moran_transition(n, r));
+    out.writeln("r = ", r, ":  chance a lone mutant takes over = ", flat(exact.fixation)[1],
+                ", closed form = ", flat(genetics::moran_fixation(r, n, vec({1.0})))[0]);
+  }
+  const auto chain = genetics::absorption(genetics::moran_transition(n, 1.1));
+  out.writeln("r = 1.1: takeover chance from 1, 10, 25 mutants = ", flat(genetics::moran_fixation(1.1, n, start)));
+  out.writeln("r = 1.1: expected steps until one type is left, from 1, 10, 25 mutants = ",
+              std::vector<double>{flat(chain.time)[1], flat(chain.time)[10], flat(chain.time)[25]});
+
+  // finite populations with random drift: Wright-Fisher, 200 replicate populations of 100 individuals
+  const auto p0 = vec(std::vector<double>(200, 0.5));
+  const auto run = genetics::simulate(p0, 100, genetics::additive(0.0), 2000, 7);
+  const auto f = flat(run.frequency);
+  int fixed_a = 0;
+  for (double x : f) fixed_a += (x >= 1.0) ? 1 : 0;
+  out.writeln("neutral drift from 50%: ", fixed_a, " of 200 populations ended with A fixed, after ", run.generations, " generations, all absorbed: ", run.absorbed ? "yes" : "no");
+}
+```
+
+Output
+
+```text
+r = 1.0000:  chance a lone mutant takes over = 0.0200, closed form = 0.0200
+r = 1.1000:  chance a lone mutant takes over = 0.0917, closed form = 0.0917
+r = 1.5000:  chance a lone mutant takes over = 0.3333, closed form = 0.3333
+r = 1.1: takeover chance from 1, 10, 25 mutants = [0.0917, 0.6197, 0.9155]
+r = 1.1: expected steps until one type is left, from 1, 10, 25 mutants = [296.7290, 1311.9583, 1260.4430]
+neutral drift from 50%: 94 of 200 populations ended with A fixed, after 1296 generations, all absorbed: yes
+```
+
+A neutral mutant (`r = 1`) takes over with probability `1/50 = 0.02`; a mutant that is `10%` fitter with probability only `0.0917`, and one that is `50%` fitter with `0.3333`: even a large advantage is often lost to chance when the mutant is rare. The exact chain and the closed form agree to four digits. Starting from `25` mutants the takeover chance is `0.9155`. In the neutral simulation `94` of `200` populations ended with `A` fixed, about the expected half, and every one was absorbed in the end.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="selection.html">
+    <span class="label">Previous</span>
+    <span class="title">Selection</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,6 +1,6 @@
-# `control::mpc::Weights`
+# `control::Weights`
 
-Quadratic state, input, and terminal penalties for finite-horizon MPC.
+The cost weights of the predictive-control problem.
 
 ## Signature
 
@@ -10,63 +10,53 @@ control::mpc::Weights
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+The cost over the horizon is the sum of `(x - r)' Q (x - r) + u' R u` over the steps plus a terminal term `(x_N - r)' P (x_N - r)`. `Weights` holds `Q`, `R` and `P`.
 
 ## Fields
 
-### `state`
-
-Stage state-error weight `Q`, scalar/diagonal/full matrix or compatible batch.
-
-### `input`
-
-Stage input weight `R`, required to define the control penalty.
-
-### `terminal`
-
-Optional terminal state weight. An undefined value reuses the stage state weight.
+| Field | Meaning |
+|---|---|
+| `state` | `Q`, `[..., n, n]`, symmetric positive semidefinite: the cost of tracking error. |
+| `input` | `R`, `[..., m, m]`, symmetric positive definite: the cost of control effort. |
+| `terminal` | `P`, `[..., n, n]`, optional: the cost of the final tracking error; when omitted the state weight `Q` is used. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Member of the argument list of `build` and `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A state weight that is not positive semidefinite, an input weight that is not positive definite and weights of the wrong size throw `pluss::Error` when the plan is built.
 
 ## Interpretation and Use
 
-Larger state weights prioritize tracking; larger input weights reduce control effort. The terminal weight shapes the horizon boundary and should represent value beyond the final optimized step. Undefined terminal weight deliberately reuses the stage state weight.
+A heavier `R` makes effort costly: with `R = 10` the first move is 0.25 and the state reaches only 0.62 by the end of the horizon, against 0.99 and 1.00 for `R = 0.01` (the first example). A heavier `Q` tracks harder (the third example): the first move rises from 0.62 to 0.92 to 0.99 as `Q` goes from 0.1 to 1 to 10. The terminal weight pulls the end of the horizon onto the reference (the second example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Solve with explicit state/input weights and the default terminal fallback.
+The effect of the input weight.
 
-@@example Eng/api/control_mpc_options.cpp@@
+@@example Eng/api/control_mpcweights_input.cpp@@
 
 ### Example 2
 
-Add a stronger terminal weight and inspect the resulting trajectory.
+The effect of the terminal weight.
 
-@@example Eng/api/control_mpc.cpp@@
+@@example Eng/api/control_mpcweights_terminal.cpp@@
 
 ### Example 3
 
-See invalid planning contexts rejected before weights are used.
+The effect of the state weight.
 
-@@example Eng/api/control_mpc_errors.cpp@@
+@@example Eng/api/control_mpcweights_tracking.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="Bounds.html">
-    <span class="label">Next</span>
-    <span class="title">Bounds</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused weight.
+
+@@example Eng/api/control_mpcweights_errors.cpp@@
+

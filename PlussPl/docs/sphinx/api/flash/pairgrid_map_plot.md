@@ -72,6 +72,62 @@ fig.show();
 
 ![Output of Example 1](img/flash-pairgrid-map-plot-1-basic.svg)
 
+Example 2. A three by three grid: three diagonal cells and six off-diagonal cells.
+
+```cpp
+auto fig = studio("pairs_count");
+int diagonal = 0, off = 0;
+flash::pairgrid_map_plot(fig, 3, [&](Pane &pane, std::int64_t, std::int64_t, bool is_diagonal) {
+  (is_diagonal ? diagonal : off)++;
+  pane.trend(x, y);
+});
+std::cout << "diagonal cells " << diagonal << ", off-diagonal cells " << off << ", panes " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+diagonal cells 3, off-diagonal cells 6, panes 9
+```
+
+Example 3. Cells are visited row by row.
+
+```cpp
+auto fig = studio("pairs_order");
+std::string order;
+flash::pairgrid_map_plot(fig, 2, [&](Pane &pane, std::int64_t row, std::int64_t col, bool) {
+  order += "(" + std::to_string(row) + "," + std::to_string(col) + ") ";
+  pane.trend(x, y);
+});
+std::cout << "cells visited in order: " << order << "\n";
+```
+
+Output:
+
+```text
+cells visited in order: (0,0) (0,1) (1,0) (1,1) 
+```
+
+Example 4. A one by one grid has a single cell, and it is on the diagonal.
+
+```cpp
+auto fig = studio("pairs_one");
+int calls = 0;
+flash::pairgrid_map_plot(fig, 1, [&](Pane &pane, std::int64_t, std::int64_t, bool is_diagonal) {
+  ++calls;
+  std::cout << "one-by-one grid: the only cell is on the diagonal: " << is_diagonal << "\n";
+  pane.trend(x, y);
+});
+std::cout << "calls " << calls << ", panes " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+one-by-one grid: the only cell is on the diagonal: 1
+calls 1, panes 1
+```
+
 ## Notes
 
 - Not `noexcept`.

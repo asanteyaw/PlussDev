@@ -59,10 +59,10 @@ numeric feature, ignoring a non-numeric one.
 using namespace pluss::table;
 
 auto sample = DataFrame({
-    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"y", Slate(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
-    {"z", Slate(pluss::make_series({4.0, 1.0, 3.0, 2.0}))},
-    {"city", Slate(pluss::make_note({"A", "B", "C", "D"}))},
+    {"x", Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"y", Shelf(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
+    {"z", Shelf(pluss::make_series({4.0, 1.0, 3.0, 2.0}))},
+    {"city", Shelf(pluss::make_note({"A", "B", "C", "D"}))},
 });
 
 auto out = sample.covar();
@@ -75,9 +75,9 @@ std::cout << out;
 =================================================
      | x              y             z            
 -------------------------------------------------
-x    | 1.666666667    3.333333333   -0.6666666667
-y    | 3.333333333    6.666666667   -1.333333333 
-z    | -0.6666666667  -1.333333333  1.666666667  
+x    |  1.666666667    3.333333333  -0.6666666667
+y    |  3.333333333    6.666666667  -1.333333333 
+z    | -0.6666666667  -1.333333333   1.666666667 
 -------------------------------------------------
 [3 cs x 3 feat]
 ```
@@ -101,13 +101,13 @@ std::cout << out;
 ### Output
 
 ```text
-=======================
-     | x     y     z   
------------------------
-x    | 1.25  2.5   -0.5
-y    | 2.5   5     -1  
-z    | -0.5  -1    1.25
------------------------
+=========================
+     | x      y     z    
+-------------------------
+x    |  1.25   2.5  -0.5 
+y    |  2.5    5    -1   
+z    | -0.5   -1     1.25
+-------------------------
 [3 cs x 3 feat]
 ```
 
@@ -129,9 +129,9 @@ sample.covar({}, true);
 =================================================
      | x              y             z            
 -------------------------------------------------
-x    | 1.666666667    3.333333333   -0.6666666667
-y    | 3.333333333    6.666666667   -1.333333333 
-z    | -0.6666666667  -1.333333333  1.666666667  
+x    |  1.666666667    3.333333333  -0.6666666667
+y    |  3.333333333    6.666666667  -1.333333333 
+z    | -0.6666666667  -1.333333333   1.666666667 
 -------------------------------------------------
 [3 cs x 3 feat]
 ```
@@ -161,9 +161,9 @@ false`, the same unassigned call would produce no output.
   and standard deviation this matrix's diagonal generalizes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="count.html">
+  <a class="prev-link" href="count_kinds.html">
     <span class="label">Previous</span>
-    <span class="title">count</span>
+    <span class="title">count_kinds</span>
   </a>
   <a class="next-link" href="csmax.html">
     <span class="label">Next</span>

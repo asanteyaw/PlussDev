@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::distinct(bool dropnull = true) const
+Shelf DataFrameLabelAccessor::distinct(bool dropnull = true) const
 ```
 
 ## What It Does
@@ -27,7 +27,7 @@ Whether to exclude a null case label from the result. When `false`, at most one
 
 ## Returns
 
-`Slate`
+`Shelf`
     The distinct case-label values, in first-occurrence order.
 
 ## Examples
@@ -38,8 +38,8 @@ Example 1. Case labels with one repeated value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
 auto out = labeled.labels().distinct();
@@ -52,7 +52,7 @@ std::cout << out;
 0  east
 1  west
 2  north
-ptype: Note
+Name: distinct, ptype: Note
 ```
 
 `"east"` appears twice (rows `0` and `2`) but only once in the result, at the
@@ -65,9 +65,9 @@ excluding it.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({100.0, 150.0, 200.0, 90.0, 50.0}))}},
-    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(),
-                               20.0, std::numeric_limits<double>::quiet_NaN(), 10.0})));
+    {{"value", Shelf(pluss::make_series({100.0, 150.0, 200.0, 90.0, 50.0}))}},
+    Shelf(pluss::make_series({10.0, 0.0,
+                               20.0, 0.0, 10.0}), pluss::make_series(std::vector<bool>{true, false, true, false, true})));
 std::cout << readings;
 
 auto without_null = readings.labels().distinct();
@@ -97,7 +97,7 @@ NULL | 90
 ```text
 0  10
 1  20
-ptype: Series
+Name: distinct, ptype: Series
 ```
 
 ### Output (distinct(false))
@@ -106,7 +106,7 @@ ptype: Series
 0  10
 1  NULL
 2  20
-ptype: Series
+Name: distinct, ptype: Series
 ```
 
 With the default `dropnull = true`, the two `NULL` case labels are excluded
@@ -116,7 +116,7 @@ entirely, leaving only `10` and `20`. With `dropnull = false`, a single
 
 ## Notes
 
-- This operates on the flat case-label slate as a whole, even on a structured
+- This operates on the flat case-label shelf as a whole, even on a structured
   (multi-level) frame — it does not distinguish per level. Use
   [`levels()`](levels.md) for per-level distinct values.
 - The result carries no display labels of its own; it prints with a plain

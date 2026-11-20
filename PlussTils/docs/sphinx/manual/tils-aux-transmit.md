@@ -8,7 +8,7 @@
 
 Most programs apply one operation to many values: scale every reading, label every row, price every line. `transmit` is the auxiliary utility for that job. It takes a callable and a range, applies the callable to each element, and returns the results. This chapter covers the forms it takes, the position argument, streaming output, pairing two ranges, iterator pairs, the parallel option, and the single-value form, with a complete program for each.
 
-## The mental model
+## How it works
 
 `transmit(fn, input)` reads the input once, in order, and collects one result per element. The input is never changed, and the output is a new vector whose element type is whatever `fn` returns. If `fn` takes a second argument, `transmit` passes the element's position as well. Two inputs are paired element by element and stop at the shorter one. A value that is not a range is passed to `fn` on its own.
 

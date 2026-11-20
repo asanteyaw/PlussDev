@@ -61,7 +61,7 @@ questions.
    or `PlussWebViewOnly`); it is not being removed.
 
 5. BI should normalize inputs to one central table contract.
-   Low-level Flash may still admit `Slate`, `DataFrame`, `Atlas`, and other
+   Low-level Flash may still admit `Shelf`, `DataFrame`, `Atlas`, and other
    raw payload families directly. PlussBI itself should not branch wildly on
    payload family. It should resolve everything into one central table/query
    result contract, then bind visuals from that normalized result.
@@ -695,7 +695,7 @@ Required shared machinery:
 The dashboard layer should delegate vectorized work downward into:
 
 - `DataFrame`
-- `Slate`
+- `Shelf`
 - `Series`
 - `Note`
 - Flash

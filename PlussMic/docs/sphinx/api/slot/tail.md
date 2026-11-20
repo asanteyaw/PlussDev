@@ -59,9 +59,9 @@ size=2 vals=2,3
   `tail()` is built on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sum.html">
+  <a class="prev-link" href="tabelize.html">
     <span class="label">Previous</span>
-    <span class="title">sum</span>
+    <span class="title">tabelize</span>
   </a>
   <a class="next-link" href="take.html">
     <span class="label">Next</span>

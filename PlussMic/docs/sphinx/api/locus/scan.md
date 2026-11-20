@@ -51,3 +51,14 @@ scan ncases=5
 - [`audit_report`](audit_report.md): the same combined frame, under its
   integrity-focused name.
 - [`profile`](profile.md): the table-only version of this diagnostics view.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="run.html">
+    <span class="label">Previous</span>
+    <span class="title">run</span>
+  </a>
+  <a class="next-link" href="schema.html">
+    <span class="label">Next</span>
+    <span class="title">schema</span>
+  </a>
+</div>

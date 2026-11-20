@@ -40,7 +40,7 @@ last.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0}),
+    {"sales", Shelf(pluss::make_series({120.0, 100.0, 90.0}),
                      pluss::make_series(std::vector<bool>{true, false, true}))},
 });
 
@@ -62,8 +62,7 @@ default (nulls_last):
 0    | 120  
 1    | NULL 
 ------------
-[3 cs x 1 feat]
-nulls_first:
+[3 cs x 1 feat]nulls_first:
 ============
      | sales
 ------------

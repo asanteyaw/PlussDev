@@ -12,7 +12,7 @@ I would build a `FrameRegistry` as the first-class heterogeneous table workspace
 Long-term, the model should be:
 
 ```text
-Slate -> DataFrame -> Atlas
+Shelf -> DataFrame -> Atlas
             |
             -> FrameRegistry
 ```

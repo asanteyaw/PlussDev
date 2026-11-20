@@ -6,7 +6,7 @@
 
 Many problems have no closed-form answer but a loss you can differentiate. This page fits a line by gradient descent, letting the library compute the gradient, and checks the result against the exact least-squares solution.
 
-## The mental model
+## How it works
 
 A `Series` can **track slope**: after `tracks_slope_(true)`, every operation built from it is recorded. Calling `reverse()` on the final scalar walks the record backwards and stores, on each tracked series, its **sensitivity**: how much the final value changes per unit change of that series. For a loss and its parameters that sensitivity is the gradient. A training loop is then four lines: track, forward, reverse, step. The updated parameters start a fresh record on the next pass.
 
@@ -24,7 +24,7 @@ int main() {
   // Data from a known line y = 4 - 1.5 x plus a little noise.
   const std::int64_t n = 100;
   auto x = pluss::series::linspace(-2.0, 2.0, n, ScalarType::Float64);
-  auto y = x.mul(-1.5).add(4.0).add(pluss::series::randn({n}, ScalarType::Float64, 3).mul(0.2));
+  auto y = x * -1.5 + 4.0 + pluss::series::randn({n}, ScalarType::Float64, 3) * 0.2;
 
   auto w = pluss::make_series({0.0, 0.0});   // parameters: intercept, slope
   const double learning_rate = 0.1;
@@ -33,8 +33,8 @@ int main() {
     auto param = w.to(ScalarType::Float64);
     param.tracks_slope_(true);
     // 2. Forward pass and mean squared error.
-    auto prediction = param.select(0, 0).add(param.select(0, 1).mul(x));
-    auto loss = prediction.sub(y).square().mean();
+    auto prediction = param.select(0, 0) + param.select(0, 1) * x;
+    auto loss = (prediction - y).square().mean();
     // 3. Reverse pass: the sensitivity of the loss to each parameter is its gradient.
     loss.reverse();
     auto gradient = param.sensitivity();
@@ -42,7 +42,7 @@ int main() {
       std::cout << "step " << step << "  loss " << loss.item<double>() << "  intercept " << param.select(0, 0).item<double>()
                 << "  slope " << param.select(0, 1).item<double>() << "\n";
     // 4. Step against the gradient; the new parameters start a fresh graph on the next pass.
-    w = param.detach().sub(gradient.mul(learning_rate));
+    w = param.detach() - gradient * learning_rate;
   }
   auto closed = x.unsqueeze(1);
   std::cout << "least-squares answer for comparison: ";
@@ -95,20 +95,20 @@ int main() {
     param.tracks_slope_(true);
     auto w = param.softmax(0);
     // Maximise return minus a penalty on variance: minimise the negative.
-    auto expected = w.mul(mu).sum();
+    auto expected = (w * mu).sum();
     auto variance = w.unsqueeze(0).matmul(sigma).matmul(w.unsqueeze(1)).squeeze(1).squeeze(0);
-    auto loss = variance.mul(0.5 * risk_aversion).sub(expected);
+    auto loss = variance * (0.5 * risk_aversion) - expected;
     loss.reverse();
     if (step % 400 == 0)
       std::cout << "step " << step << "  objective " << -loss.item<double>() << "  return " << expected.item<double>() << "  variance " << variance.item<double>() << "\n";
-    theta = param.detach().sub(param.sensitivity().mul(learning_rate));
+    theta = param.detach() - param.sensitivity() * learning_rate;
   }
   auto weights = theta.softmax(0);
   show("optimal weights", weights);
   std::cout << "weights sum to " << weights.sum().item<double>() << "\n";
 
   // Check: at a constrained optimum the marginal utility mu - lambda Sigma w is equal across every asset that is held.
-  auto marginal = mu.sub(sigma.matmul(weights.unsqueeze(1)).squeeze(1).mul(risk_aversion));
+  auto marginal = mu - sigma.matmul(weights.unsqueeze(1)).squeeze(1) * risk_aversion;
   show("marginal utility per asset", marginal);
 }
 ```
@@ -147,8 +147,8 @@ int main() {
   // Observations of a logistic curve  y = K / (1 + exp(-r (t - t0)))  with K = 50, r = 0.8, t0 = 6 and a little noise.
   const std::int64_t n = 40;
   auto t = pluss::series::linspace(0.0, 12.0, n, ScalarType::Float64);
-  auto truth = t.sub(6.0).mul(-0.8).exp().add(1.0).reciprocal().mul(50.0);
-  auto y = truth.add(pluss::series::randn({n}, ScalarType::Float64, 31).mul(1.0));
+  auto truth = (((t - 6.0) * -0.8).exp() + 1.0).reciprocal() * 50.0;
+  auto y = truth + pluss::series::randn({n}, ScalarType::Float64, 31) * 1.0;
 
   // Parameters (K, r, t0) start away from the answer. Adam keeps a running mean of the gradient and of its square.
   auto p = pluss::make_series({30.0, 0.3, 4.0});
@@ -158,21 +158,21 @@ int main() {
   for (int step = 1; step <= 600; ++step) {
     auto param = p.clone();
     param.tracks_slope_(true);
-    auto curve = t.sub(param.select(0, 2)).mul(param.select(0, 1).neg()).exp().add(1.0).reciprocal().mul(param.select(0, 0));
-    auto loss = curve.sub(y).square().mean();
+    auto curve = (((t - param.select(0, 2)) * -param.select(0, 1)).exp() + 1.0).reciprocal() * param.select(0, 0);
+    auto loss = (curve - y).square().mean();
     loss.reverse();
     auto g = param.sensitivity();
-    m = m.mul(beta1).add(g.mul(1.0 - beta1));
-    v = v.mul(beta2).add(g.square().mul(1.0 - beta2));
-    auto m_hat = m.div(1.0 - std::pow(beta1, step));
-    auto v_hat = v.div(1.0 - std::pow(beta2, step));
-    p = param.detach().sub(m_hat.div(v_hat.sqrt().add(eps)).mul(lr));
+    m = m * beta1 + g * (1.0 - beta1);
+    v = v * beta2 + g.square() * (1.0 - beta2);
+    auto m_hat = m / (1.0 - std::pow(beta1, step));
+    auto v_hat = v / (1.0 - std::pow(beta2, step));
+    p = param.detach() - m_hat / (v_hat.sqrt() + eps) * lr;
     if (step == 1 || step % 100 == 0) std::cout << "step " << step << "  loss " << loss.item<double>() << "\n";
   }
   show("fitted (K, r, t0)", p);
   std::cout << "true   (K, r, t0): 50, 0.8, 6\n";
-  auto fitted = t.sub(p.select(0, 2)).mul(p.select(0, 1).neg()).exp().add(1.0).reciprocal().mul(p.select(0, 0));
-  std::cout << "residual standard deviation " << fitted.sub(y).std().item<double>() << " (noise 1.0)\n";
+  auto fitted = (((t - p.select(0, 2)) * -p.select(0, 1)).exp() + 1.0).reciprocal() * p.select(0, 0);
+  std::cout << "residual standard deviation " << (fitted - y).std().item<double>() << " (noise 1.0)\n";
 }
 ```
 

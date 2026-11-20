@@ -47,3 +47,14 @@ profile ncases=3
 - [`summary`](summary.md): the smaller inventory this builds on.
 - [`scan`](scan.md): table rows and relationship rows combined in one
   frame.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="policy.html">
+    <span class="label">Previous</span>
+    <span class="title">policy</span>
+  </a>
+  <a class="next-link" href="pull.html">
+    <span class="label">Next</span>
+    <span class="title">pull</span>
+  </a>
+</div>

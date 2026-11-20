@@ -15,7 +15,7 @@ std::int64_t DataFrame::nfeatures() const
 
 Returns the number of features (columns) in the frame. This is the second number in a
 printed frame's `[N cs x M feat]` footer, and the length every feature-aligned
-`Slate` argument (the `Axis::Feature` side of [`add()`](add.md), [`eq()`](eq.md), and
+`Shelf` argument (the `Axis::Feature` side of [`add()`](add.md), [`eq()`](eq.md), and
 similar methods) is checked against.
 
 ## Parameters
@@ -71,8 +71,8 @@ length of [`features()`](features.md)'s returned name list.
     <span class="label">Previous</span>
     <span class="title">ne</span>
   </a>
-  <a class="next-link" href="note.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">note</span>
+    <span class="title">notinf</span>
   </a>
 </div>

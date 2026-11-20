@@ -8,7 +8,7 @@
 
 A table has rows and columns, and many questions ask about one of them: the total of each row, the share of each column, the label for each slice. `map_axis` is the auxiliary utility for those questions. It cuts a Series, Note, or Timeline along one axis, passes each slice to a function, and collects the results. This chapter shows the axis rules, the index argument, the three value types, the parallel option, and an end-to-end task.
 
-## The mental model
+## How it works
 
 Choose an axis, and the table is cut into slices, one for each position along the other axes. Along the last axis, each slice is a row. Along the first axis, each slice is a column. A negative axis counts from the end, so -1 is the last axis. The function receives one slice at a time as a table of one lower rank, and the results come back in the order of the slices.
 

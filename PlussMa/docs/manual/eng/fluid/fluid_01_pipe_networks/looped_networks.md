@@ -6,7 +6,7 @@
 
 A real distribution system is rarely a tree. Pipes close into loops, so the water has more than one way to reach a junction and the split between the ways is part of the answer. A looped network has no closed-form solution: the head at every junction and the flow in every pipe have to be found together. This page explains how `steady` finds them, solves a network with two loops, checks the result against continuity and energy by hand, shows how the stopping rule works and what it costs, and shows how to solve in `Float32` and what to do when a solve does not converge.
 
-## The mental model
+## How it works
 
 `steady` solves one square nonlinear system: for each junction the continuity equation, and for each pipe the energy equation that ties the head drop to the flow. It is solved by Newton's method on the heads and the flows together, so each iteration is one linear solve of the whole network. The network of this page needs three iterations from the starting guess.
 

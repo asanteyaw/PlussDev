@@ -16,7 +16,7 @@ MatrixValues DataFrame::matrix() const
 Packs the frame's features into raw, matrix-shaped `pluss` payloads, grouped by
 payload kind — one packed matrix for the `Series` features (if any), one for the
 `Note` features (if any), one for the `Timeline` features, and one for the
-`TimeIndex` features. `matrix()` never coerces different kinds together into one
+`Duration` features. `matrix()` never coerces different kinds together into one
 mixed block; a frame with both numeric and text features gets one `Series` matrix
 and one `Note` matrix back, not a single combined block.
 
@@ -31,11 +31,11 @@ the packed matrix payload itself.
 ## Returns
 
 `MatrixValues`
-    A struct of four vectors (`Series`, `Note`, `Timeline`, `TimeIndex`), each holding
+    A struct of four vectors (`Series`, `Note`, `Timeline`, `Duration`), each holding
     zero or one packed matrix — never more than one per kind, since every feature of
     a given kind is packed together into a single block. `.series_span()` /
-    `.note_span()` / `.timeline_span()` / `.timeindex_span()` expose each vector
-    directly; `.as_series()` / `.as_note()` / `.as_timeline()` / `.as_timeindex()` are
+    `.note_span()` / `.timeline_span()` / `.duration_span()` expose each vector
+    directly; `.as_series()` / `.as_note()` / `.as_timeline()` / `.as_duration()` are
     convenience accessors that return the single block directly, throwing if that
     kind isn't present on the frame (or, in principle, if more than one block of that
     kind exists — which never happens in practice, since `matrix()` always packs a
@@ -49,9 +49,9 @@ Example 1. Inspect how many matrix blocks a mixed-kind frame produces.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -74,7 +74,7 @@ auto blocks = orders.matrix();
 std::cout << blocks.series_span().size() << "\n";
 std::cout << blocks.note_span().size() << "\n";
 std::cout << blocks.timeline_span().size() << "\n";
-std::cout << blocks.timeindex_span().size() << "\n";
+std::cout << blocks.duration_span().size() << "\n";
 ```
 
 ### Output
@@ -88,7 +88,7 @@ std::cout << blocks.timeindex_span().size() << "\n";
 
 `id` and `sales` (both `Series`) are packed together into one numeric matrix block;
 `city` (`Note`) is packed into its own separate text matrix block. There are no
-`Timeline` or `TimeIndex` features on this frame, so those two counts are `0`.
+`Timeline` or `Duration` features on this frame, so those two counts are `0`.
 
 Example 2. Pull out the packed numeric matrix directly.
 
@@ -108,9 +108,10 @@ std::cout << numeric_matrix.sizes()[0] << " x " << numeric_matrix.sizes()[1] << 
 
 ## Notes
 
+- All features of one kind are packed into a single block, so numeric features must share one dtype (here all `double`); mixing, for example, `int64` and `double` features raises a `pluss::Error` ("dtype mismatch"). Cast the features to a common dtype first.
 - `matrix()` groups by payload kind only; it never mixes `Series` and `Note` data
   into one block, since they have no shared numeric representation.
-- `.as_series()` (and its `Note` / `Timeline` / `TimeIndex` counterparts) throw if
+- `.as_series()` (and its `Note` / `Timeline` / `Duration` counterparts) throw if
   that kind isn't present on the frame at all — check `.series_span().size()` (or the
   equivalent for the kind you need) first if the frame's composition isn't already
   known.

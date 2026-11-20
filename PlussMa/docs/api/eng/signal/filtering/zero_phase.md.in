@@ -1,5 +1,7 @@
 # `signal::zero_phase`
 
+Filters forward and backward so that the output has no delay.
+
 ## Signature
 
 ```cpp
@@ -17,51 +19,52 @@ pluss::Series signal::zero_phase(
 
 ## What It Does
 
-Filters forward and backward so phase delay cancels. This is an offline smoothing operation: because the backward pass depends on future samples, it is not suitable for causal real-time output.
+Runs the filter over the signal, reverses the result, runs it again and reverses back. The delay of the first pass is undone by the second, so features stay at the sample where they occurred. The signal is first extended at both ends by the pad mode so that the start-up transients fall outside the kept samples. There is a polynomial overload and a sections overload.
 
 ## Parameters
 
 `input`
-: Complete sample block to smooth.
+: A floating or complex `Series`.
 
-`numerator`, `denominator`
-: Direct-form coefficients for the first overload.
-
-`sections`
-: Second-order-section matrix for the second overload.
+`numerator`, `denominator` or `sections`
+: The filter as polynomials or as `[section, 6]` biquads.
 
 `options`
-: Axis, extension length, and endpoint padding policy.
+: A `PhaseOpts`: the axis, the extension length and the pad mode.
 
 ## Returns
 
-A `Series` with the same shape as `input`; effective magnitude response is applied twice while net phase is zero.
+A `Series` with the shape of `input`.
 
 ## Errors
 
-Rejects too-short inputs for the requested edge extension, invalid coefficients, malformed sections, axes, dtypes, or platforms.
+An input no longer than the extension, a negative edge other than `-1`, an invalid axis and malformed coefficients or sections throw `pluss::Error`.
+
+## Interpretation and Use
+
+A causal filter delays a pulse; `zero_phase` does not (the first example: the causal filter moves the peak by one sample, `zero_phase` keeps it). The price is non-causality: the output at a sample depends on later samples, so use it offline, not in a stream.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A pulse through a causal and a zero-phase filter: where does the peak land?
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_zero_phase_lag.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+The sections overload agrees with the polynomial overload.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_zero_phase_sections.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_zero_phase_errors.cpp@@
 
 ## See Also
 

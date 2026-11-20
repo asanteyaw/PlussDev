@@ -105,9 +105,7 @@ inline Result solve(const thermo::Nasa7 &th, const Series &composition,
   // initial estimate: equal moles of every possible species summing to the atom
   // total
   const Series b_sum = b0.sum(-1, false);
-  Series ln_nj = active_b.where(
-      b_sum.div(n_active).log().unsqueeze(-1).add(active.mul(0.0)),
-      active.mul(0.0).add(-60.0));
+  Series ln_nj = pluss::series::where(active_b, b_sum.div(n_active).log().unsqueeze(-1).add(active.mul(0.0)), active.mul(0.0).add(-60.0));
   Series ln_n = b_sum.log();
 
   Series pres = zero, volume = zero, temp = zero, target = zero;
@@ -237,11 +235,10 @@ inline Result solve(const thermo::Nasa7 &th, const Series &composition,
     const Series den =
         d_ln_nj.sub(d_ln_n.unsqueeze(-1)).abs().clamp(1e-300, 1e300);
     const Series lam2 =
-        small.where(num.div(den), num.mul(0.0).add(1e300)).amin(-1, false);
+        pluss::series::where(small, num.div(den), num.mul(0.0).add(1e300)).amin(-1, false);
     const Series lam = lam1.minimum(lam2).minimum(zero.add(1.0));
 
-    ln_nj = active_b.where(
-        ln_nj.add(d_ln_nj.mul(lam.unsqueeze(-1))).clamp(-700.0, 700.0), ln_nj);
+    ln_nj = pluss::series::where(active_b, ln_nj.add(d_ln_nj.mul(lam.unsqueeze(-1))).clamp(-700.0, 700.0), ln_nj);
     if (has_n)
       ln_n = ln_n.add(d_ln_n.mul(lam));
     if (has_t)

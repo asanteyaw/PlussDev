@@ -56,3 +56,14 @@ in a chain.
 
 - [`apply_all`](apply_all.md): threading a transform through every catalog's
   data, rather than the whole `Locus`.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fingerprint.html">
+    <span class="label">Previous</span>
+    <span class="title">fingerprint</span>
+  </a>
+  <a class="next-link" href="from.html">
+    <span class="label">Next</span>
+    <span class="title">from</span>
+  </a>
+</div>

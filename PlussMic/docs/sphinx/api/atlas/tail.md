@@ -37,7 +37,7 @@ Example 1. Take the last two frames of a multi-frame atlas.
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 7; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Shelf(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);
@@ -76,9 +76,9 @@ The frame returned re-indexes from depth `0`, same as every other depth-selectin
 - [`Archive::tail`](../archive/tail.md): the depth-stacked-catalog analog of this method.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tabelize.html">
+  <a class="prev-link" href="squeeze.html">
     <span class="label">Previous</span>
-    <span class="title">tabelize</span>
+    <span class="title">squeeze</span>
   </a>
   <a class="next-link" href="tl.html">
     <span class="label">Next</span>

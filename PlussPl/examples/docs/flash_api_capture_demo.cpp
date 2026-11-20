@@ -981,7 +981,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
-    theme_preset3d(pane, ThemePreset3D::Graphite);
+    theme_preset3d(pane, ThemePreset3D::Slate);
     sheet(pane, gx, gy, gz).label("theme_preset3d");
     save(fig);
     return true;

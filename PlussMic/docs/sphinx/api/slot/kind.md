@@ -84,9 +84,9 @@ std::cout << (slot.kind() == pluss::scribble::SlotKind::Mixed);
   for diagnosing exactly *why* a slot came out `Mixed`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="kindelize.html">
     <span class="label">Next</span>

@@ -81,6 +81,7 @@ std::cout << out.registry(0).fields("id").to_json();
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - See the important callout above — this is the same surprising
   behavior documented for `Registry::fillnull()`, extended across every
   frame: a throw can come from a field with no nulls at all, just
@@ -101,12 +102,12 @@ std::cout << out.registry(0).fields("id").to_json();
   operation this method broadcasts across the depth stack.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fields.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">fields</span>
+    <span class="title">fillneginf</span>
   </a>
-  <a class="next-link" href="freq.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">freq</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

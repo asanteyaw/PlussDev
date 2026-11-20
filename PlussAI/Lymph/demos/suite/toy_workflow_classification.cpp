@@ -8,7 +8,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-2.5, 2.5, 72, ScalarType::Float64);
   const Series energy = x.square().add(x.sin());
@@ -16,11 +16,11 @@ int main() {
   const Series target = risk.gt(0.8).to(ScalarType::Float64);
 
   const DataFrame raw({
-      {"x", Slate(x)},
-      {"energy", Slate(energy)},
-      {"segment", Slate(pluss::make_note({"low", "low", "low", "low", "mid", "mid", "mid", "mid",
+      {"x", Shelf(x)},
+      {"energy", Shelf(energy)},
+      {"segment", Shelf(pluss::make_note({"low", "low", "low", "low", "mid", "mid", "mid", "mid",
                                             "high", "high", "high", "high"}).repeat({6}))},
-      {"target", Slate(target)},
+      {"target", Shelf(target)},
   });
 
   lymph::prep::SimpleImputerOptions mode{};

@@ -1,6 +1,6 @@
-# `control::mpc::Bounds`
+# `control::Bounds`
 
-Input and optional state bounds over the prediction horizon.
+The input and state limits of the predictive-control problem.
 
 ## Signature
 
@@ -10,71 +10,52 @@ control::mpc::Bounds
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Limits the input at every step and, optionally, the state. The optimiser keeps every predicted input and state inside them.
 
 ## Fields
 
-### `input_lower`
-
-Required lower input limits, broadcast across or specified over the horizon.
-
-### `input_upper`
-
-Required upper input limits matching `input_lower`.
-
-### `state_lower`
-
-Optional lower state limits; leave undefined with `state_upper` to disable state constraints.
-
-### `state_upper`
-
-Optional upper state limits paired with `state_lower`.
+| Field | Meaning |
+|---|---|
+| `input_lower`, `input_upper` | Per-input limits, `[inputs]`, with lower not above upper. |
+| `state_lower`, `state_upper` | Optional per-state limits, `[states]`. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Member of the argument list of `build` and `solve`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A lower bound above the upper bound and bounds of the wrong width throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Input bounds are mandatory and may be constant or horizon-shaped. State bounds are optional but must be supplied as a lower/upper pair. Tight bounds can make the QP infeasible; inspect optimizer convergence rather than assuming a returned trajectory is usable.
+The first example limits the input to `[-0.4, 0.4]`: the plan that would have moved 0.92 at once now moves 0.4 twice and then eases in (0.18, 0.016). A state bound of 0.5 keeps every predicted state at or below 0.5 (the second example). The third combines both bounds over a longer horizon and the problem remains solvable: the plan reaches the state limit and holds it. Choose bounds from the actuator and the physical limits, not as a way to shape the response.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Apply only input bounds and observe saturation.
+An input bound against no bound.
 
-@@example Eng/api/control_mpc_options.cpp@@
+@@example Eng/api/control_mpcbounds_input.cpp@@
 
 ### Example 2
 
-Add state bounds to the same regulation problem.
+A state bound.
 
-@@example Eng/api/control_mpc.cpp@@
+@@example Eng/api/control_mpcbounds_state.cpp@@
 
 ### Example 3
 
-Review plan validation before constrained solving.
+Input and state bounds together.
 
-@@example Eng/api/control_mpc_errors.cpp@@
+@@example Eng/api/control_mpcbounds_infeasible.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Weights.html">
-    <span class="label">Previous</span>
-    <span class="title">Weights</span>
-  </a>
-  <a class="next-link" href="Options.html">
-    <span class="label">Next</span>
-    <span class="title">Options</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused bound.
+
+@@example Eng/api/control_mpcbounds_errors.cpp@@
+

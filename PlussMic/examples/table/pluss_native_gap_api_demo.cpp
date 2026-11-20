@@ -13,25 +13,25 @@ int main() {
   using pluss::table::ScanStatistic;
   using pluss::table::StatisticOptions;
   using pluss::table::TextAlign;
-  using pluss::table::Slate;
-  using pluss::table::SlateValue;
+  using pluss::table::Shelf;
+  using pluss::table::ShelfValue;
   using pluss::table::TimeWindowStatistic;
   using pluss::table::UnicodeForm;
   using pluss::table::WindowClosure;
   using pluss::table::WindowOptions;
   using pluss::table::WindowStatistic;
 
-  auto ids = Slate(pluss::make_series(std::vector<std::int64_t>{
+  auto ids = Shelf(pluss::make_series(std::vector<std::int64_t>{
       1001, 1002, 1003, 1004, 1005, 1006}));
-  auto scores = Slate(pluss::make_series(std::vector<double>{
+  auto scores = Shelf(pluss::make_series(std::vector<double>{
       10.0, 20.0, 20.0, 40.0, 50.0, 50.0}));
-  auto costs = Slate(pluss::make_series(std::vector<double>{
+  auto costs = Shelf(pluss::make_series(std::vector<double>{
       2.0, 4.0, 5.0, 8.0, 10.0, 12.0}));
-  auto groups = Slate(pluss::make_note({
+  auto groups = Shelf(pluss::make_note({
       "west", "east", "west", "east", "west", "east"}));
-  auto labels = Slate(pluss::make_note({
+  auto labels = Shelf(pluss::make_note({
       "alpha-10", "Beta-20", "red|blue", "west-30", "east-40", "red|green"}));
-  auto dates = Slate(pluss::make_timeline({
+  auto dates = Shelf(pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-04T00:00:00Z",
@@ -124,12 +124,12 @@ int main() {
   auto label_indicators_df = df.features({"label"}).nt().indicate("|");
 
   auto mapped_scores = df.features({"score", "cost"}).map(
-      [](const SlateValue& value) {
-        return SlateValue(Slate(value.as_series() * 2.0));
+      [](const ShelfValue& value) {
+        return ShelfValue(Shelf(value.as_series() * 2.0));
       });
   auto row_score = df.transform(
       [](const DataFrame& row) {
-        return SlateValue(Slate(row.features("score").as_series() +
+        return ShelfValue(Shelf(row.features("score").as_series() +
                                   row.features("cost").as_series()));
       },
       Axis::Case);
@@ -141,7 +141,7 @@ int main() {
       pluss::table::ResultShape::Expand);
   auto folded_total = df.fold(
       [](const DataFrame& value) {
-        return Slate(value.features("score").sum().as_series());
+        return Shelf(value.features("score").sum().as_series());
       });
   auto flowed = df.flow(
       [](const DataFrame& value) {
@@ -157,11 +157,11 @@ int main() {
   auto df_relabelled = df.features({"score", "cost"}).rename({"amount", "expense"});
 
   auto left = DataFrame({
-      {"a", Slate(pluss::make_series(std::vector<double>{1.0, 3.0}))},
-      {"b", Slate(pluss::make_series(std::vector<double>{2.0, 4.0}))},
+      {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 3.0}))},
+      {"b", Shelf(pluss::make_series(std::vector<double>{2.0, 4.0}))},
   });
   auto right = DataFrame({
-      {"z", Slate(pluss::make_series(std::vector<double>{5.0, 6.0}))},
+      {"z", Shelf(pluss::make_series(std::vector<double>{5.0, 6.0}))},
   });
   auto product = left.matmul(right);
 
@@ -171,8 +171,8 @@ int main() {
   auto atlas = Atlas({numeric, numeric});
   auto text_atlas = Atlas({df, df});
   auto atlas_mapped = atlas.map(
-      [](const SlateValue& value) {
-        return SlateValue(Slate(value.as_series() + 1.0));
+      [](const ShelfValue& value) {
+        return ShelfValue(Shelf(value.as_series() + 1.0));
       });
   auto atlas_moving = atlas.ts().rolling(2, WindowStatistic::Sum);
   auto atlas_flowed = text_atlas.flow(

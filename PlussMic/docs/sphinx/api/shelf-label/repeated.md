@@ -1,0 +1,79 @@
+<!-- pluss-hand-authored -->
+
+# ShelfLabelAccessor::repeated
+
+[Back to ShelfLabelAccessor API Reference](../../shelf_label_accessor_api_reference)
+
+## Signature
+
+```cpp
+Shelf ShelfLabelAccessor::repeated() const
+```
+
+## What It Does
+
+Marks every row `true` whose case-label value occurs more than once anywhere
+in the shelf — including its *first* occurrence, unlike
+[`duplicated()`](duplicated.md), which spares one occurrence (by default,
+the first). A value that never repeats is `false` everywhere it appears.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Shelf`
+    A `Bool` shelf, one entry per row, `display_name` `"repeated"`,
+    displayed against the same case labels as `*this`.
+
+## Examples
+
+Example 1. Mark repeats on the case labels — every occurrence, not just the
+extras.
+
+```cpp
+using namespace pluss::table;
+
+auto tagged = Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))
+                  .label().set(Shelf(pluss::make_note({"east", "west", "east", "north"})));
+
+auto out = tagged.label().repeated();
+std::cout << out;
+```
+
+### Output
+
+```text
+ east  true
+ west  false
+ east  true
+north  false
+Name: repeated, ptype: Series
+```
+
+Both `"east"` rows are `true` — including row `0`, the first occurrence,
+which [`duplicated()`](duplicated.md) would mark `false` by default.
+
+## Notes
+
+- Unlike [`duplicated()`](duplicated.md), there's no `keep_first`/`keep_last`
+  option here — every occurrence of a repeated value is marked, with no
+  exception.
+- The result carries the same case labels as `*this`.
+
+## See Also
+
+- [`ShelfLabelAccessor::duplicated`](duplicated.md): spares one occurrence
+  of each repeated value (first, by default).
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="range.html">
+    <span class="label">Previous</span>
+    <span class="title">range</span>
+  </a>
+  <a class="next-link" href="reset.html">
+    <span class="label">Next</span>
+    <span class="title">reset</span>
+  </a>
+</div>

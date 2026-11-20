@@ -6,7 +6,7 @@
 
 LQR gives the optimal feedback when nothing is limited. Real actuators saturate, and real systems have states that must stay inside a range. **Model-predictive control** (MPC) handles both: at each step it solves an optimisation over the next `N` steps with the limits as constraints, applies the first move, and repeats. This page covers the optimisation itself: `mpc::solve` computes the best sequence of inputs for a given state, and `mpc::build` prepares the problem once so it can be solved quickly for many states. The next page closes the loop.
 
-## The mental model
+## How it works
 
 For the discrete plant `x[k+1] = A x[k] + B u[k]` and the current state `x0`, MPC chooses the inputs `u[0], ..., u[N-1]` to minimise
 

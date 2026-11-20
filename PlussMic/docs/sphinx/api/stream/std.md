@@ -15,7 +15,7 @@ Stream Stream::std(bool unbiased = true) const
 
 Returns the standard deviation of a `Series`-kind stream's non-`NULL` values, as a
 one-element `Stream` — the square root of [`var()`](var.md), with the identical
-`unbiased` flag. Delegates to `Slate::std()`, so it's `Series`-only, same as
+`unbiased` flag. Delegates to `Shelf::std()`, so it's `Series`-only, same as
 [`sum()`](sum.md)/[`mean()`](mean.md)/[`min()`](min.md)/[`max()`](max.md)/[`var()`](var.md).
 
 ## Parameters
@@ -80,7 +80,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Slate::std is only valid for Series payload"` on
+- `Series`-only; throws `"Shelf::std is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded, same as [`var()`](var.md)/[`mean()`](mean.md).
 - Always equals `sqrt(var(unbiased))` for the same `unbiased` argument.
@@ -91,9 +91,9 @@ label        | value
 - [`Stream::mean`](mean.md): the center this method measures dispersion around.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="stamp.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">stamp</span>
   </a>
   <a class="next-link" href="sum.html">
     <span class="label">Next</span>

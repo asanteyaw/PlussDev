@@ -4,7 +4,7 @@
 
 A town's demand is not constant: it peaks in the morning and the evening and sinks at night. A tank absorbs the difference, filling when the supply exceeds the draw and emptying when it does not, and a tank is what keeps the pressure up when the pumps cannot follow the peak. `fluid::run` simulates a day of this. It steps through time, applies the demand pattern, solves the network at every event with the same `steady` solver as before, and moves each tank's level by the flow the solver found. This page explains the clock and the tank's balance, runs a tank through a four-period demand pattern and checks the water it gained and lost against its level, runs a tank to its limits with and without overflow, and shows the descriptions the run refuses.
 
-## The mental model
+## How it works
 
 A run is a sequence of **events**. At each event the network is a steady one: the demands for the current pattern period, the tank heads for the current levels, and the pump speeds and valve settings for the current controls. `steady` solves it, and the flow into each tank holds until the next event. The tank level at the next event follows from conservation of volume:
 

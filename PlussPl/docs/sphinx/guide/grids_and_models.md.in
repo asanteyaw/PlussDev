@@ -1,0 +1,68 @@
+# Grids and linear models
+
+[Back to PlussPl by example](../guide.md)
+
+Small multiples (the same chart repeated across groups or variables) are laid out on a grid. This page fills grids by hand with mapper functions, uses the ready-made grid plots, draws a linear-model figure and category grids, and uses the three grid constructors.
+
+## How it works
+
+A grid is a studio with a fixed mosaic. The `*_map_plot` functions build the mosaic and call your function once per cell with the pane to draw into: `facet_map_plot` for a rows-by-columns grid, `pairgrid_map_plot` for a square of variables (the function also learns whether a cell is on the diagonal), and `jointgrid_map_plot` for a joint view with two marginals. The ready-made `relgridplot`, `disgridplot` and `catgridplot` take lists of series and draw a standard plot in each cell. `FacetGrid`, `PairGrid` and `JointGrid` only create the layout and leave you to fill the panes.
+
+## Small multiples of retail revenue
+
+Ten years of retail data as four quarters of revenue, every pair of three variables, revenue against promotion spend with its marginals, and the ready-made grids.
+
+@@example store_grids.cpp@@
+
+![Four panes, one per quarter of the first year](assets/grids_facet.svg)
+
+![A three by three grid of every variable against every other, with histograms on the diagonal](assets/grids_pair.svg)
+
+![Revenue against promotion spend with a histogram of each](assets/grids_joint.svg)
+
+![A ready-made relational grid](assets/grids_rel.svg)
+
+![A ready-made distribution grid](assets/grids_dis.svg)
+
+The program prints only that the series has `3650` days; the figures carry the content. The facet grid draws the same line plot for four consecutive quarters, so the shared pattern and the differences are visible side by side. The pair grid has a histogram on the diagonal (a variable against itself is its distribution) and a scatter everywhere else. The joint grid puts the scatter in the middle and a histogram of each variable on the sides. The mapper functions are ordinary C++ callables, so a cell can draw anything a pane can.
+
+## A linear model and category grids
+
+A commuting survey: duration against distance with a fitted line, category plots per mode, and the three grid constructors filled by hand.
+
+@@example commute_models.cpp@@
+
+![Duration against distance with the fitted line and its band](assets/commute_lm.svg)
+
+![A grid of category plots by mode](assets/commute_catgrid.svg)
+
+![A FacetGrid holding two histograms](assets/commute_facet_grid.svg)
+
+![A PairGrid of distance and duration](assets/commute_pair_grid.svg)
+
+![A JointGrid with a scatter and two marginals](assets/commute_joint_grid.svg)
+
+Across all modes a kilometre adds about `2.36` minutes. `lmplot` builds a whole figure from two series: the scatter, the fitted line and a band around it. The category grid draws one category plot per pair of group and value lists. The three constructors only create the layout (`FacetGrid(studio, rows, cols)`, `PairGrid(studio, n)`, `JointGrid(studio)`) and you add the panes in order, which is useful when each cell is a different kind of plot.
+
+## Decisions
+
+- **A mapper or a ready-made grid:** use the ready-made grids for standard plots and a mapper when each cell needs its own logic.
+- **Same axes across cells:** small multiples are only comparable if the scales match; keep the data units the same.
+- **Constructors for irregular layouts:** `FacetGrid`, `PairGrid` and `JointGrid` when the cells are different kinds of plot.
+
+## Pitfalls
+
+The program below makes 4 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_grids_and_models.cpp@@
+
+- **A fit with x and y of different lengths:** `regplot` and `residplot` pair each x with a y.
+- **Residuals of mismatched series:** Same rule for residuals.
+- **A joint view of mismatched series:** The joint view checks the lengths too.
+- **A fit with a single point:** A line needs at least two finite pairs.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`flash::facet_map_plot`](../api/flash/facet_map_plot.md), [`flash::pairgrid_map_plot`](../api/flash/pairgrid_map_plot.md), [`flash::jointgrid_map_plot`](../api/flash/jointgrid_map_plot.md), [`flash::relgridplot`](../api/flash/relgridplot.md), [`flash::disgridplot`](../api/flash/disgridplot.md), [`flash::catgridplot`](../api/flash/catgridplot.md), [`flash::lmplot`](../api/flash/lmplot.md), [`flash::FacetGrid`](../api/flash/FacetGrid.md), [`flash::PairGrid`](../api/flash/PairGrid.md), [`flash::JointGrid`](../api/flash/JointGrid.md). Next: [Time-series diagnostics](time_series_diagnostics.md).

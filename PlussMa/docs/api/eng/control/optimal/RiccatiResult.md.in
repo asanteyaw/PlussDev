@@ -1,6 +1,6 @@
 # `control::RiccatiResult`
 
-The complete output of a continuous or discrete algebraic Riccati solve.
+The solution, gain and closed loop of a Riccati problem.
 
 ## Signature
 
@@ -10,63 +10,47 @@ control::RiccatiResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-The three fields are deliberately returned together: a gain without its value matrix and resulting dynamics is difficult to audit.
+Returned by `care`, `dare` and `lqr`. It holds the Riccati solution `P` (the optimal cost-to-go matrix), the feedback gain `K` and the closed-loop matrix `A - B K`.
 
 ## Fields
 
-### `value`
-
-The stabilizing Riccati solution, conventionally written `X` or `P`, with shape `[..., states, states]`.
-
-### `gain`
-
-The optimal state-feedback gain `K`, with shape `[..., inputs, states]`. The synthesized law is `u = -K x`.
-
-### `closed_loop`
-
-The closed-loop dynamics `A - B K`, with shape `[..., states, states]`.
+| Field | Meaning | Shape |
+|---|---|---|
+| `value` | The stabilising Riccati solution `P`; the cost from state `x` is `x' P x`. | `[..., n, n]` |
+| `gain` | The optimal feedback `K`, so that `u = -K x`. | `[..., m, n]` |
+| `closed_loop` | `A - B K` (continuous) or the discrete equivalent. | `[..., n, n]` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `care`, `dare` and `lqr`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-Read `value` as the optimized cost-to-go curvature, `gain` as the implementable feedback law, and `closed_loop` as the immediate stability audit. Compare all three when changing costs: a numerically plausible gain is not sufficient if the resulting dynamics are not stabilizing.
+`gain` equals `R^{-1} B' P` and `closed_loop` equals `A - B K` (the second example checks both to rounding). A larger input weight `R` makes control expensive and shrinks the gain: for the double integrator the largest gain entry falls from 4.04 to 1.73 to 0.86 as `R` goes from 0.1 to 1 to 10 (the third example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect all three result fields from a continuous synthesis.
+The three fields and their shapes.
 
-@@example Eng/api/control_optimal.cpp@@
+@@example Eng/api/control_riccati_fields.cpp@@
 
 ### Example 2
 
-See how a state-input cross weight changes the returned value, gain, and pole.
+The relations between the fields.
 
-@@example Eng/api/control_care_cross.cpp@@
+@@example Eng/api/control_riccati_relations.cpp@@
 
 ### Example 3
 
-Compare the result contract across direct discrete solving and routed LQR.
+How the input weight changes the gain.
 
-@@example Eng/api/control_optimal_modes.cpp@@
+@@example Eng/api/control_riccati_weights.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="care.html">
-    <span class="label">Next</span>
-    <span class="title">care</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

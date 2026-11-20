@@ -72,8 +72,8 @@ std::cout << out.registry(0).nfields();
     <span class="label">Previous</span>
     <span class="title">distinct</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

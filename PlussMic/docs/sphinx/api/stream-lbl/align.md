@@ -9,14 +9,14 @@
 
 ```cpp
 Stream StreamLabelAccessor::align(const Stream& target_labels, const pluss::table::AlignOptions& options = {}) const
-Stream StreamLabelAccessor::align(const pluss::table::Slate& target_labels, const pluss::table::AlignOptions& options = {}) const
+Stream StreamLabelAccessor::align(const pluss::table::Shelf& target_labels, const pluss::table::AlignOptions& options = {}) const
 ```
 
 ## What It Does
 
 Reorders (and, depending on `options.align`, relabels) the bound stream to
 match `target_labels`, following exactly the same `AlignBy`/`AlignOptions`
-rules as [`Slate::align`](../slate/align.md):
+rules as [`Shelf::align`](../shelf/align.md):
 
 - **`AlignBy::Pos`** (the default): `target_labels` is used only for its
   *length* — the values and labels pass through positionally unchanged. See
@@ -29,13 +29,13 @@ rules as [`Slate::align`](../slate/align.md):
 ```{important} AlignBy::Both is rejected for a single Stream
 `AlignBy::Both` (matching by *both* case label and feature) is a
 `DataFrame`-only concept — passing it here throws, the same as it would for
-a bare [`Slate::align`](../slate/align.md) call. Only `Pos` and `Caselbl`
+a bare [`Shelf::align`](../shelf/align.md) call. Only `Pos` and `Caselbl`
 are meaningful for a single `Stream`.
 ```
 
 ## Parameters
 
-**target_labels** (`const Stream&` or `const pluss::table::Slate&`)
+**target_labels** (`const Stream&` or `const pluss::table::Shelf&`)
     The label set to align onto. Under `Pos`, only its length matters; under
     `Caselbl`, its entries are matched against the bound stream's own
     labels.
@@ -56,15 +56,15 @@ Example 1. `AlignBy::Caselbl` reorders and relabels by matching case
 labels — an unmatched target label (`"d"`) produces `NULL`.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using pluss::table::AlignOptions;
 using pluss::table::AlignBy;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .lbl().set(Slate(pluss::make_note({"b", "a", "c"})));
+                   .lbl().set(Shelf(pluss::make_note({"b", "a", "c"})));
 
 auto aligned = labeled.lbl().align(
-    Slate(pluss::make_note({"a", "b", "d"})),
+    Shelf(pluss::make_note({"a", "b", "d"})),
     AlignOptions{.align = AlignBy::Caselbl});
 std::cout << aligned;
 ```
@@ -80,7 +80,7 @@ label        | value
 ------------------------------------------------------------------------------------------------------------------------
 a            | 20                                                                                                       
 b            | 10                                                                                                       
-d            | NA                                                                                                       
+d            | NULL                                                                                                     
 ========================================================================================================================
 ```
 
@@ -91,15 +91,15 @@ Example 2. Setting `options.fill` replaces the unmatched-label `NULL` with
 a scalar instead.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using pluss::table::AlignOptions;
 using pluss::table::AlignBy;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .lbl().set(Slate(pluss::make_note({"b", "a", "c"})));
+                   .lbl().set(Shelf(pluss::make_note({"b", "a", "c"})));
 
 auto aligned = labeled.lbl().align(
-    Slate(pluss::make_note({"a", "b", "d"})),
+    Shelf(pluss::make_note({"a", "b", "d"})),
     AlignOptions{.align = AlignBy::Caselbl, .fill = -1.0});
 std::cout << aligned;
 ```
@@ -124,12 +124,12 @@ entirely — only its length is checked. The stream's own current values and
 labels pass through unchanged.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .lbl().set(Slate(pluss::make_note({"b", "a", "c"})));
+                   .lbl().set(Shelf(pluss::make_note({"b", "a", "c"})));
 
-auto aligned = labeled.lbl().align(Slate(pluss::make_note({"q", "r", "s"})));
+auto aligned = labeled.lbl().align(Shelf(pluss::make_note({"q", "r", "s"})));
 std::cout << aligned;
 ```
 
@@ -158,12 +158,12 @@ result — only its length (`3`) mattered, and the bound stream's own
   `Stream`.
 - `Pos` is the default; you must explicitly request `Caselbl` for
   label-matching behavior.
-- Both overloads (`Stream`/`Slate`) behave identically — pick whichever
+- Both overloads (`Stream`/`Shelf`) behave identically — pick whichever
   type your target labels already exist as.
 
 ## See Also
 
-- [`Slate::align`](../slate/align.md): the underlying single-column
+- [`Shelf::align`](../shelf/align.md): the underlying single-column
   alignment semantics this accessor's `align()` follows exactly.
 - [`StreamLabelAccessor::set`](set.md): attach a label outright instead of
   reordering by an existing one.

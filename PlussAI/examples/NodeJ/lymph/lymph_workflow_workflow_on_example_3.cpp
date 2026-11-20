@@ -8,7 +8,7 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -21,10 +21,10 @@ int main() {
       {1.0, 2.0, 1.0, 3.0, 2.0, 4.0, 3.0, 1.0, 2.0, 3.0}, {10}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
-  const DataFrame frame({{"num_income", Slate(num_income)},
-                         {"num_balance", Slate(num_balance)},
-                         {"num_tenure", Slate(num_tenure)},
-                         {"target", Slate(y)}});
+  const DataFrame frame({{"num_income", Shelf(num_income)},
+                         {"num_balance", Shelf(num_balance)},
+                         {"num_tenure", Shelf(num_tenure)},
+                         {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"num_income", "num_balance", "num_tenure"};

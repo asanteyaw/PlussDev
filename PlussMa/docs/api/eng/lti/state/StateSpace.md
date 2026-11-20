@@ -2,6 +2,8 @@
 
 # `lti::StateSpace`
 
+The validated state-space system returned by `state`.
+
 ## Signature
 
 ```cpp
@@ -19,166 +21,47 @@ std::int64_t lti::StateSpace::inputs() const;
 std::int64_t lti::StateSpace::outputs() const;
 ```
 
-## What It Represents
+## Construction
 
-An immutable, validated realization of `x' = A x + B u` and `y = C x + D u`. Accessors expose the promoted, batch-broadcast matrices without copying. A zero sample time means continuous dynamics; a positive sample time means discrete dynamics.
+Returned by `state`; consumed by `ctrb`, `obsv`, `gram`, `freqresp` and `sim`.
 
 ## Methods
 
-`a()`, `b()`, `c()`, `d()`
-: Return const references to the system matrices. Their trailing dimensions follow the state-space shape contract; leading dimensions are broadcast batch axes.
-
-`sample_time()`
-: Returns zero for continuous time or the positive discrete sampling interval.
-
-`is_cont()`, `is_disc()`
-: Mutually exclusive timebase predicates.
-
-`states()`, `inputs()`, `outputs()`
-: Return the structural dimensions derived from the matrix tails.
-
-## Returns
-
-Accessors return matrix references, scalar metadata, or dimension counts. Construct the object through `lti::state`.
-
-## Errors
-
-The object is already valid after construction; its accessors do not perform new validation.
+| Method | What it does |
+|---|---|
+| [`a`](StateSpace/a.md) | The state matrix `A` exactly as it was given to `state`. |
+| [`b`](StateSpace/b.md) | The input matrix `B` exactly as it was given to `state`. |
+| [`c`](StateSpace/c.md) | The output matrix `C` exactly as it was given to `state`. |
+| [`d`](StateSpace/d.md) | The feedthrough matrix `D` exactly as it was given to `state`. |
+| [`states`](StateSpace/states.md) | The number of states, `n`. |
+| [`inputs`](StateSpace/inputs.md) | The number of inputs, `m`. |
+| [`outputs`](StateSpace/outputs.md) | The number of outputs, `p`. |
+| [`sample_time`](StateSpace/sample_time.md) | The sample period in seconds; zero for a continuous-time system. |
+| [`is_cont`](StateSpace/is_cont.md) | Whether the system is continuous-time, that is, its sample time is zero. |
+| [`is_disc`](StateSpace/is_disc.md) | Whether the system is discrete-time, that is, its sample time is positive. |
 
 ## Changelog
 
-- **0.1** — Initial immutable batched state-space contract.
+- **0.1**: initial documented surface.
 
-## Practical Examples
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
-
-### Example 1
-
-Construct and inspect a second-order continuous state-space model.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <iostream>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-      pluss::make_series({0.0, 1.0}, {2, 1}),
-      pluss::make_series({{1.0, 0.0}}),
-      pluss::make_series({0.0}, {1, 1}));
-
-  std::cout << "states = " << system.states()
-            << ", inputs = " << system.inputs()
-            << ", outputs = " << system.outputs() << "\n";
-  out.writeln("continuous =", system.is_cont());
-  out.writeln("controllability =", lti::ctrb(system).flatten().items<double>());
-  out.writeln("observability =", lti::obsv(system).flatten().items<double>());
-}
+StateSpace/Introduction
+StateSpace/a
+StateSpace/b
+StateSpace/c
+StateSpace/d
+StateSpace/states
+StateSpace/inputs
+StateSpace/outputs
+StateSpace/sample_time
+StateSpace/is_cont
+StateSpace/is_disc
 ```
-
-Output
-
-```text
-states = 2, inputs = 1, outputs = 1
-continuous = true
-controllability = [0.0000, 1.0000, 1.0000, -3.0000]
-observability = [1.0000, 0.0000, 0.0000, 1.0000]
-```
-### Example 2
-
-Compare energy Gramians across continuous and discrete timebases.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({3.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::StateSpace discrete = lti::state(
-      pluss::make_series({0.5}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), 0.25);
-
-  out.writeln("continuous reach gram =",
-              lti::gram(continuous, lti::Gram::Reach).flatten().items<double>());
-  out.writeln("continuous observe gram =",
-              lti::gram(continuous, lti::Gram::Observe).flatten().items<double>());
-  out.writeln("discrete reach gram =",
-              lti::gram(discrete, lti::Gram::Reach).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-continuous reach gram = [2.0000]
-continuous observe gram = [4.5000]
-discrete reach gram = [1.3333]
-```
-### Example 3
-
-Exercise matrix-shape and sample-time validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
-#include <string>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({{1.0, 0.0}, {0.0, 1.0}}),
-        pluss::make_series({1.0, 0.0}, {2, 1}),
-        pluss::make_series({{1.0, 0.0}}),
-        pluss::make_series({{0.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("bad feedthrough rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), -0.1));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative sample time rejected =",
-                message.substr(0, message.find('\n')));
-  }
-}
-```
-
-Output
-
-```text
-bad feedthrough rejected = eng::lti::state: D must have shape [outputs, inputs]
-negative sample time rejected = eng::lti::state: sample_time must be finite and non-negative
-```
-## See Also
-
-See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
@@ -188,7 +71,3 @@ See the [State space](../state.md) family page for matrix shapes, batching, and 
   </a>
 </div>
 <!-- apiref:nav:end -->
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->

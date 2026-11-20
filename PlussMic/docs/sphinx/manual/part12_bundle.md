@@ -49,7 +49,7 @@ From there you can:
 - inspect workspace state with `summary()`, `profile()`, and `schema()`
 - assemble root-grain feature tables with `pull(...)`
 - validate relationships and workspace health with `audit()`, `validate_keys(...)`, `validate_relationship(...)`, and `relationship_audit(...)`
-- persist the workspace with `save(...)`, `load(...)`, and `store(...)`
+- persist the workspace with `save(...)`, restore it with `read(...)`, and keep named join plans with `store(...)`; `load(...)` is different: it scans a directory of raw table files and makes each file one table
 
 The practical split is:
 

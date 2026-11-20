@@ -1,6 +1,8 @@
 <!-- generated from gramian.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# `lti::gram`
+# `lti::gramian`
+
+Solves the Lyapunov equation of a stable system for its Gramian.
 
 ## Signature
 
@@ -13,153 +15,180 @@ pluss::Series lti::gram(
 
 ## What It Does
 
-Computes a reachability or observability Gramian by delegating to the shared continuous or discrete Lyapunov solver selected from the system timebase.
+Returns the reachability Gramian `W` with `A W + W A' + B B' = 0` or the observability Gramian with `A' W + W A + C' C = 0` for a continuous system, and the discrete equations `W = A W A' + B B'` and `W = A' W A + C' C` for a discrete one. The Gramian measures how much energy an input needs to reach each state direction, or how much output energy a state produces.
 
 ## Parameters
 
 `system`
-: State-space dynamics and input/output matrices.
+: A `StateSpace`. It must be stable.
 
 `side`
-: `Gram::Reach` uses `B Bᴴ`; `Gram::Observe` uses `Cᴴ C` and conjugate-transposed dynamics.
+: `Gram::Reach` or `Gram::Observe`.
 
 `options`
-: Public matrix-equation solver controls for tolerances and numerical policy.
+: Solver settings of the Lyapunov solver.
 
 ## Returns
 
-A square `Series` with tail `[states, states]` and broadcast system batch axes.
+A `Series` of shape `[n, n]` (with batch axes): symmetric and positive semidefinite.
 
 ## Errors
 
-May reject or fail to converge for invalid solver options, unstable or singular Lyapunov structure, or numerically ill-conditioned dynamics.
+An unstable or marginal system throws `pluss::Error`: the message names the stability condition that failed and appends the solver's own message.
+
+## Interpretation and Use
+
+For a scalar system `x' = a x + b u` the reachability Gramian is `b^2 / (2 |a|)` and the observability Gramian `c^2 / (2 |a|)`, which the first example checks. The second shows the residual of the Lyapunov equation at rounding level for the oscillator. Use the Gramians for balanced truncation, for the energy needed to reach a state and for the H2 norm.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+A scalar system against the closed form.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <iostream>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-      pluss::make_series({0.0, 1.0}, {2, 1}),
-      pluss::make_series({{1.0, 0.0}}),
-      pluss::make_series({0.0}, {1, 1}));
-
-  std::cout << "states = " << system.states()
-            << ", inputs = " << system.inputs()
-            << ", outputs = " << system.outputs() << "\n";
-  out.writeln("continuous =", system.is_cont());
-  out.writeln("controllability =", lti::ctrb(system).flatten().items<double>());
-  out.writeln("observability =", lti::obsv(system).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-states = 2, inputs = 1, outputs = 1
-continuous = true
-controllability = [0.0000, 1.0000, 1.0000, -3.0000]
-observability = [1.0000, 0.0000, 0.0000, 1.0000]
-```
-### Example 2
-
-Compare energy Gramians across continuous and discrete timebases.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({3.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::StateSpace discrete = lti::state(
-      pluss::make_series({0.5}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), 0.25);
-
-  out.writeln("continuous reach gram =",
-              lti::gram(continuous, lti::Gram::Reach).flatten().items<double>());
-  out.writeln("continuous observe gram =",
-              lti::gram(continuous, lti::Gram::Observe).flatten().items<double>());
-  out.writeln("discrete reach gram =",
-              lti::gram(discrete, lti::Gram::Reach).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-continuous reach gram = [2.0000]
-continuous observe gram = [4.5000]
-discrete reach gram = [1.3333]
-```
-### Example 3
-
-Exercise matrix-shape and sample-time validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({{1.0, 0.0}, {0.0, 1.0}}),
-        pluss::make_series({1.0, 0.0}, {2, 1}),
-        pluss::make_series({{1.0, 0.0}}),
-        pluss::make_series({{0.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("bad feedthrough rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), -0.1));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative sample time rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // dx/dt = -x + 2u, y = 3x. The Lyapunov equation A W + W A' + B B' = 0 gives W = b^2 / (2 |a|) = 2.
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({2.0}, 1, 1), mat({3.0}, 1, 1), mat({0.0}, 1, 1));
+  out.writeln("reachability Gramian =", lti::gram(s, lti::Gram::Reach).flatten().items<double>(), " expected b^2 / (2|a|) = 2");
+  out.writeln("observability Gramian =", lti::gram(s, lti::Gram::Observe).flatten().items<double>(), " expected c^2 / (2|a|) = 4.5");
 }
 ```
 
 Output
 
 ```text
-bad feedthrough rejected = eng::lti::state: D must have shape [outputs, inputs]
-negative sample time rejected = eng::lti::state: sample_time must be finite and non-negative
+reachability Gramian = [2.0000]  expected b^2 / (2|a|) = 2
+observability Gramian = [4.5000]  expected c^2 / (2|a|) = 4.5
+```
+### Example 2
+
+The residual of both Lyapunov equations for the oscillator.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  const pluss::Series w = lti::gram(s, lti::Gram::Reach);
+  const pluss::Series residual = s.a().matmul(w) + w.matmul(s.a().transpose(0, 1)) + s.b().matmul(s.b().transpose(0, 1));
+  out.writeln("reachability Gramian =", w.flatten().items<double>());
+  out.writeln("largest entry of A W + W A' + B B' =", residual.abs().max().item<double>());
+  const pluss::Series o = lti::gram(s, lti::Gram::Observe);
+  const pluss::Series residual_o = s.a().transpose(0, 1).matmul(o) + o.matmul(s.a()) + s.c().transpose(0, 1).matmul(s.c());
+  out.writeln("largest entry of A' W + W A + C' C for the observability Gramian =", residual_o.abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+reachability Gramian = [0.3125, 0.0000, 0.0000, 1.2500]
+largest entry of A W + W A' + B B' = 0.0000
+largest entry of A' W + W A + C' C for the observability Gramian = 0.0000
+```
+### Example 3
+
+Systems for which no Gramian exists.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace unstable = lti::state(mat({0.5}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  refused(out, "an unstable continuous system", [&] { lti::gram(unstable, lti::Gram::Reach); });
+  const lti::StateSpace marginal = lti::state(mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  refused(out, "a marginally stable system", [&] { lti::gram(marginal, lti::Gram::Reach); });
+  const lti::StateSpace outside = lti::state(mat({1.5}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 0.1);
+  refused(out, "a discrete system with a pole outside the unit circle", [&] { lti::gram(outside, lti::Gram::Reach); });
+}
+```
+
+Output
+
+```text
+an unstable continuous system : eng::lti::gram: the Gramian could not be computed; it exists only for a stable system (every eigenvalue of A in the left half-plane). Solver message: subsp::linearalg::dlyap: iteration produced non-finite values
+a marginally stable system : eng::lti::gram: the Gramian could not be computed; it exists only for a stable system (every eigenvalue of A in the left half-plane). Solver message: subsp::linearalg::lyap: continuous residual exceeds tolerance; A may not be Hurwitz stable
+a discrete system with a pole outside the unit circle : eng::lti::gram: the Gramian could not be computed; it exists only for a stable system (every eigenvalue of A inside the unit circle). Solver message: subsp::linearalg::dlyap: iteration produced non-finite values
 ```
 ## See Also
 

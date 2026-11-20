@@ -78,9 +78,7 @@ void test_high_rank_series_graph() {
                "strided temperature view lost its logical shape");
   expect(
       strided_cp.select(-1, 0)
-          .eq(strided.le(1000.0).where(
-              pluss::series::full(strided.sizes(), 3.0, ScalarType::Float64),
-              pluss::series::full(strided.sizes(), 4.0, ScalarType::Float64)))
+          .eq(pluss::series::where(strided.le(1000.0), pluss::series::full(strided.sizes(), 3.0, ScalarType::Float64), pluss::series::full(strided.sizes(), 4.0, ScalarType::Float64)))
           .all()
           .item<bool>(),
       "strided lanes were not evaluated in logical order");

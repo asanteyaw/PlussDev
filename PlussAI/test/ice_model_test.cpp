@@ -21,7 +21,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 namespace ice = pluss::ai::ice;
 
 Config float_cfg() {
@@ -405,9 +405,9 @@ bool run_ice_dataframe_standardize_checks(std::ostream* err = nullptr) {
   const Series label = x0.add(x1.div(1000.0)).gt(0.0).to(ScalarType::Float32);
 
   const DataFrame df({
-      {"x0", Slate(x0)},
-      {"x1", Slate(x1)},
-      {"label", Slate(label)},
+      {"x0", Shelf(x0)},
+      {"x1", Shelf(x1)},
+      {"label", Shelf(label)},
   });
 
   auto model = ice::Outline(pluss::nn::Fusion(2, 16), pluss::nn::ReLU(), pluss::nn::Fusion(16, 1));

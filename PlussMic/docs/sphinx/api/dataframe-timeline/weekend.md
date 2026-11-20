@@ -35,7 +35,7 @@ Example 1. Flag weekend rows in a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -85,7 +85,7 @@ Only `"2024-07-06"` (a Saturday) is a weekend row.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
-- A `NaT` row (or one already null on the underlying `Slate`) displays as
+- A `NaT` row (or one already null on the underlying `Shelf`) displays as
   `"NULL"`, not `false`.
 
 ## See Also

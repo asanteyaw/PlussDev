@@ -94,3 +94,14 @@ meta_ changed in place=true
   the same getter under its explicit name.
 - [`set_table_meta`](set_table_meta.md): the same setter under its explicit
   name.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="materialize.html">
+    <span class="label">Previous</span>
+    <span class="title">materialize</span>
+  </a>
+  <a class="next-link" href="nexus.html">
+    <span class="label">Next</span>
+    <span class="title">nexus</span>
+  </a>
+</div>

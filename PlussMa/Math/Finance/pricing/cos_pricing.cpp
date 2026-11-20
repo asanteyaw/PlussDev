@@ -464,8 +464,8 @@ Series detail::option_price_cos_v(OptionType type,
     const Series psi_general = ul_sin.mul(-1.0).div(u.clamp_min(kEps));
     const Series psi_zero = b.sub(lower);
     const Series zero_mask = k.eq(pluss::series::full({n, 1}, 0.0, out_cfg));
-    const Series psi = zero_mask.where(psi_zero, psi_general);
-    const Series wk = zero_mask.where(pluss::series::full({n, 1}, 0.5, out_cfg), pluss::series::full({n, 1}, 1.0, out_cfg));
+    const Series psi = pluss::series::where(zero_mask, psi_zero, psi_general);
+    const Series wk = pluss::series::where(zero_mask, pluss::series::full({n, 1}, 0.5, out_cfg), pluss::series::full({n, 1}, 1.0, out_cfg));
     const Series hk = chi.sub(strike2.mul(psi)).mul(2.0).div(width);
       call = kernel.mul(hk).mul(wk).sum(0, false).mul(tau2.mul(rate.neg()).exp()).clamp_min(0.0);
   }

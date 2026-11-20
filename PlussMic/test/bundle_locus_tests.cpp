@@ -351,7 +351,7 @@ void test_join_unkeyed_and_null_keys() {
   expect(inner.report.match.left_dropped == 2 && inner.report.match.left_unkeyed == 2,
          "...and says so: two records dropped, both unkeyed");
 
-  // Null and NaN keys never match, not even each other.
+  // A null key never matches anything, not even another null. NaN is a value, not a missing cell, so a NaN key matches a NaN key.
   Catalog a(Streams{{"k", with_nulls(nums({1.0, 2.0, 3.0}), {true, false, true})}, {"x", nums({1.0, 2.0, 3.0})}});
   Catalog b(Streams{{"k", with_nulls(nums({1.0, 2.0, 3.0}), {true, false, true})}, {"y", nums({4.0, 5.0, 6.0})}});
   const Locus nulls({{"a", a}, {"b", b}});
@@ -361,7 +361,7 @@ void test_join_unkeyed_and_null_keys() {
   Catalog nan_a(Streams{{"k", nums({1.0, std::nan(""), 3.0})}, {"x", nums({1.0, 2.0, 3.0})}});
   Catalog nan_b(Streams{{"k", nums({std::nan(""), 3.0})}, {"y", nums({5.0, 6.0})}});
   const Locus nans({{"a", nan_a}, {"b", nan_b}});
-  expect(values_of(nans.join("a", "b", on_k), "x") == std::vector<double>({3.0}), "NaN keys never match");
+  expect(values_of(nans.join("a", "b", on_k), "x") == std::vector<double>({2.0, 3.0}), "a NaN key matches a NaN key (it is a value), and 3 matches 3");
 }
 
 void test_join_key_kinds_and_forms() {
@@ -595,7 +595,7 @@ void expect_same_column(const Catalog& native, const pluss::table::DataFrame& ne
   for (std::size_t i = 0; i < my_valid.size(); ++i) {
     expect(their_null[i] == !my_valid[i], "column '" + name + "' should have the same nulls in both pulls");
   }
-  if (theirs.kind() == pluss::table::SlateKind::Note) {
+  if (theirs.kind() == pluss::table::ShelfKind::Note) {
     const auto a = theirs.as_note().vector();
     const auto b = mine.as_note().vector();
     for (std::size_t i = 0; i < a.size(); ++i) {
@@ -603,7 +603,7 @@ void expect_same_column(const Catalog& native, const pluss::table::DataFrame& ne
     }
     return;
   }
-  if (theirs.kind() == pluss::table::SlateKind::Timeline) {
+  if (theirs.kind() == pluss::table::ShelfKind::Timeline) {
     const auto a = theirs.as_timeline().epoch_nanos().host<std::int64_t>();
     const auto b = mine.as_timeline().epoch_nanos().host<std::int64_t>();
     for (std::size_t i = 0; i < a.size(); ++i) {
@@ -1169,8 +1169,8 @@ void test_hardening_edges() {
     const double nan = std::nan("");
     Catalog fx(Streams{{"k", nums({nan, INFINITY, -0.0, 1})}});
     Catalog fy(Streams{{"k", nums({nan, INFINITY, 0.0, 2})}, {"q", nums({1, 2, 3, 4})}});
-    expect(Locus({{"x", fx}, {"y", fy}}).join_detailed("x", "y", s).report.output_records == 2,
-           "NaN never matches, infinity matches itself, -0.0 equals +0.0");
+    expect(Locus({{"x", fx}, {"y", fy}}).join_detailed("x", "y", s).report.output_records == 3,
+           "NaN is a value and matches NaN, infinity matches itself, -0.0 equals +0.0");
   }
 
   // Empty workspaces and catalogs persist and reload.

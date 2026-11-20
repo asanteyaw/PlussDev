@@ -27,8 +27,8 @@ Unlike [`Catalog::nt()`](../catalog/nt.md), which binds every key of a multi-key
 collection, `Stream::nt()` binds a single stream — but that stream must already be
 `Note`-kind. Calling any `StreamNoteAccessor` method on a `Series`/`Timeline`/
 `TimeIndex` stream throws (the exact message names whichever method actually ran,
-e.g. `"Slate::strip is only valid for Note payload"`). Cast first with
-[`Stream::cast(SlateCastTarget::Note)`](cast.md) if the stream isn't already text.
+e.g. `"Shelf::strip is only valid for Note payload"`). Cast first with
+[`Stream::cast(ShelfCastTarget::Note)`](cast.md) if the stream isn't already text.
 ```
 
 ## Parameters
@@ -75,7 +75,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}));
 try {
   auto out = stream.nt().strip();
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -83,7 +83,7 @@ try {
 ### Output
 
 ```text
-Slate::strip is only valid for Note payload
+Shelf::strip is only valid for Note payload
 ```
 
 ## Notes

@@ -84,18 +84,18 @@ class Result final {
   [[nodiscard]] pluss::table::DataFrame board() const {
     const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(mean_.platform());
     return pluss::table::DataFrame({
-        {"feature", pluss::table::Slate(pluss::make_note(feature_names_))},
-        {"sample_count", pluss::table::Slate(pluss::series::full({feature_count()}, static_cast<double>(sample_count_), i64_cfg))},
-        {"mean", pluss::table::Slate(mean_)},
-        {"stddev", pluss::table::Slate(stddev_)},
-        {"min", pluss::table::Slate(minimum_)},
-        {"max", pluss::table::Slate(maximum_)},
-        {"skewness", pluss::table::Slate(skewness_)},
-        {"excess_kurtosis", pluss::table::Slate(excess_kurtosis_)},
-        {"missing_rate", pluss::table::Slate(missing_rate_)},
-        {"negative_rate", pluss::table::Slate(negative_rate_)},
-        {"zero_rate", pluss::table::Slate(zero_rate_)},
-        {"gaussianize_candidate", pluss::table::Slate(gaussianize_candidate_)},
+        {"feature", pluss::table::Shelf(pluss::make_note(feature_names_))},
+        {"sample_count", pluss::table::Shelf(pluss::series::full({feature_count()}, static_cast<double>(sample_count_), i64_cfg))},
+        {"mean", pluss::table::Shelf(mean_)},
+        {"stddev", pluss::table::Shelf(stddev_)},
+        {"min", pluss::table::Shelf(minimum_)},
+        {"max", pluss::table::Shelf(maximum_)},
+        {"skewness", pluss::table::Shelf(skewness_)},
+        {"excess_kurtosis", pluss::table::Shelf(excess_kurtosis_)},
+        {"missing_rate", pluss::table::Shelf(missing_rate_)},
+        {"negative_rate", pluss::table::Shelf(negative_rate_)},
+        {"zero_rate", pluss::table::Shelf(zero_rate_)},
+        {"gaussianize_candidate", pluss::table::Shelf(gaussianize_candidate_)},
     });
   }
 
@@ -211,7 +211,7 @@ class Runner final {
   DataFrameBatchOptions options{};
   options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
-  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
+  options.shelf_policy = DataShelfPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
   return options;
 }

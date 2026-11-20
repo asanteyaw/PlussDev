@@ -15,7 +15,7 @@ Use this when you need to merge compatible objects or extend the current one wit
 ## Parameters
 
 **other**
-    Second frame, slate, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+    Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 **spec**
     Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
@@ -50,12 +50,12 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
-  <a class="next-link" href="join_cache_stats.html">
+  <a class="next-link" href="join_detailed.html">
     <span class="label">Next</span>
-    <span class="title">join_cache_stats</span>
+    <span class="title">join_detailed</span>
   </a>
 </div>

@@ -154,8 +154,8 @@ int main(int argc, char** argv) {
   add_case("cumprod", [&]{ return mm.cumprod(1, false); });
 
   // Masking / clamping
-  add_case("where(series)", [&]{ return x.where(cond, y); });
-  add_case("where(scalar)", [&]{ return x.where(cond, 42.0); });
+  add_case("where(series)", [&]{ return pluss::series::where(cond, y, x); });
+  add_case("where(scalar)", [&]{ return pluss::series::where(cond, 42.0, x); });
   add_case("clamp_min(scalar)", [&]{ return x.clamp_min(0.0); });
   add_case("clamp_max(scalar)", [&]{ return x.clamp_max(0.0); });
   add_case("clamp_min(series)", [&]{ return x.clamp_min(y); });
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
   add_case("clamp_min_", [&]{ auto t = x.clone(); t.clamp_min_(0.0); return t; });
   add_case("clamp_max_", [&]{ auto t = x.clone(); t.clamp_max_(0.0); return t; });
   add_case("nan_to_num_", [&]{ auto t = x.clone(); t.nan_to_num_(0.0, 1e9, -1e9); return t; });
-  add_case("where_", [&]{ auto t = x.clone(); t.where_(cond, y); return t; });
+  add_case("where_", [&]{ auto t = x.clone(); t.where_(cond.logical_not(), y); return t; });
   add_case("scatter_", [&]{ auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_", t, {1LL, gather_idx, scatter_val}); return t; });
   add_case("scatter_add_", [&]{ auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_add_", t, {1LL, gather_idx, scatter_val}); return t; });
   add_case("masked_scatter_", [&]{ auto t = m.clone(); pluss::codem::_compat::invoke_("masked_scatter_", t, {mask, n}); return t; });

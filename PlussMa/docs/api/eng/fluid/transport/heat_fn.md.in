@@ -50,13 +50,11 @@ The following programs isolate this symbol's normal contract, a materially diffe
 A pipe cooling for four conductances.
 
 @@example Eng/api/fluid_heat_pipe.cpp@@
-
 ### Example 2
 
 A tank cooling.
 
 @@example Eng/api/fluid_heat_tank.cpp@@
-
 ### Example 3
 
 Descriptions that are refused.

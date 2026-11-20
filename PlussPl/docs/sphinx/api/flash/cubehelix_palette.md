@@ -39,26 +39,69 @@ algorithmic equivalence.
 
 ## Examples
 
-Example 1 (a comparison, not a new picture). Different stops from both
-`hls_palette`'s default and `husl_palette`'s output.
+The examples share one small helper that prints the number of stops and the first and last colour of a ramp as red, green, blue between 0 and 255.
 
 ```cpp
 using namespace pluss::pl;
 
-auto hls_default = flash::hls_palette();
-auto husl = flash::husl_palette(6);
-auto cube = flash::cubehelix_palette(6);
-std::cout << "cubehelix_palette(6) vs hls_palette(6) differ: "
-          << (cube.stops()[0].red != hls_default.stops()[0].red || cube.stops()[0].green != hls_default.stops()[0].green) << "\n";
-std::cout << "husl_palette(6) vs cubehelix_palette(6) differ: "
-          << (husl.stops()[0].red != cube.stops()[0].red || husl.stops()[0].green != cube.stops()[0].green) << "\n";
+auto describe = [](const PaletteRamp &ramp) {
+  auto c = [](const Rgba &x) {
+    return "(" + std::to_string(static_cast<int>(x.red * 255 + 0.5)) + ", " + std::to_string(static_cast<int>(x.green * 255 + 0.5)) + ", " +
+           std::to_string(static_cast<int>(x.blue * 255 + 0.5)) + ")";
+  };
+  const auto &s = ramp.stops();
+  std::cout << s.size() << " stops; first " << c(s.front()) << ", last " << c(s.back()) << "\n";
+};
+const auto blue = Rgba::from_u8(30, 80, 200);
+const auto red = Rgba::from_u8(200, 40, 40);
+```
+
+Example 1. The default six stops.
+
+```cpp
+describe(flash::cubehelix_palette());
 ```
 
 Output:
 
 ```text
-cubehelix_palette(6) vs hls_palette(6) differ: 1
-husl_palette(6) vs cubehelix_palette(6) differ: 1
+6 stops; first (185, 49, 49), last (185, 49, 185)
+```
+
+Example 2. Four stops.
+
+```cpp
+describe(flash::cubehelix_palette(4));
+```
+
+Output:
+
+```text
+4 stops; first (185, 49, 49), last (117, 49, 185)
+```
+
+Example 3. Nine stops.
+
+```cpp
+describe(flash::cubehelix_palette(9));
+```
+
+Output:
+
+```text
+9 stops; first (185, 49, 49), last (185, 49, 140)
+```
+
+Example 4. Zero colours is refused (the message names the generator it forwards to).
+
+```cpp
+try { flash::cubehelix_palette(0); } catch (const pluss::Error &e) { std::cout << e.message() << "\n"; }
+```
+
+Output:
+
+```text
+flash::hls_palette: n must be at least 1
 ```
 
 ## Notes

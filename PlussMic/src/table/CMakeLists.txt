@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.28)
 project(PlussMic_table NONE)
 
 target_sources(PlussMic PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/Slate.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Shelf.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/io/SlateIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/io/ShelfIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/DataFrameIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/AtlasIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/CsvSchemaConvert.cpp
@@ -13,13 +13,13 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ops/DataFrameReshape.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/ops/DataFrameAxisMatch.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlot.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/plot/SlatePlot.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/plot/ShelfPlot.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/detail/Plot3DConfig.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/sql/DataFrameSql.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/atlas/AtlasPlotAccessor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/display/Display.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Slate.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Shelf.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DFDataset.h
   ${CMAKE_CURRENT_SOURCE_DIR}/FlashDatasetInterop.h

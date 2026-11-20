@@ -1,0 +1,140 @@
+<!-- generated from c.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a85eca9f80cf -->
+
+# `lti::StateSpace::c`
+
+[Back to `lti::StateSpace`](../StateSpace.md)
+
+The output matrix `C` exactly as it was given to `state`.
+
+## Signature
+
+```cpp
+const pluss::Series& lti::StateSpace::c() const noexcept;
+```
+
+## What It Does
+
+Returns `C`, the output matrix, with the shape it was built with: `p x n` for `p` outputs and `n` states. The system stores the four matrices unchanged, so reading one never copies or rearranges data. Call it when you need the matrix itself, for a hand calculation, a plot or a comparison with another model; call [`states`](states.md), [`inputs`](inputs.md) or [`outputs`](outputs.md) when only a dimension matters. When the system was built with batch axes, those leading axes are present here too.
+
+## Returns
+
+A reference to the stored `C` as a `pluss::Series`. It stays valid for the life of the `StateSpace`.
+
+## Practical Examples
+
+### Example 1
+
+Read `C` of an oscillator and print its entries and its shape.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  out.writeln("C =", s.c().flatten().items<double>());
+  out.writeln("shape:", s.c().size(0), "x", s.c().size(1));
+}
+```
+
+Output
+
+```text
+C = [1.0000, 0.0000]
+shape: 1 x 2
+```
+
+### Example 2
+
+Which state is measured: the oscillator reports the position, the first state.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  out.writeln("C =", s.c().flatten().items<double>());
+}
+```
+
+Output
+
+```text
+C = [1.0000, 0.0000]
+```
+
+### Example 3
+
+Measuring both states gives a `2 x 2` output matrix.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0, 0.0, 1.0}, 2, 2), mat({0.0, 0.0}, 2, 1));
+  out.writeln("C shape:", s.c().size(0), "x", s.c().size(1), ", outputs() =", s.outputs());
+}
+```
+
+Output
+
+```text
+C shape: 2 x 2 , outputs() = 2
+```
+
+## See Also
+
+- [`states`](states.md): the number of states
+- [`inputs`](inputs.md): the number of inputs
+- [`outputs`](outputs.md): the number of outputs
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="b.html">
+    <span class="label">Previous</span>
+    <span class="title">b</span>
+  </a>
+  <a class="next-link" href="d.html">
+    <span class="label">Next</span>
+    <span class="title">d</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

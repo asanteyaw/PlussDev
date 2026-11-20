@@ -52,7 +52,7 @@ struct Symbol final {
     null_modes = a == 0 ? null_axis : null_modes.logical_and(null_axis);
   }
   const Series zero = lambda.mul(0.0);
-  return {null_modes.where(zero.add(1.0), lambda), null_modes.where(zero, zero.add(1.0))};
+  return {pluss::series::where(null_modes, zero.add(1.0), lambda), pluss::series::where(null_modes, zero, zero.add(1.0))};
 }
 
 // solution of laplacian(u) = rhs (or wide_laplacian) with the null-space component of u set to zero; rhs must already be compatible

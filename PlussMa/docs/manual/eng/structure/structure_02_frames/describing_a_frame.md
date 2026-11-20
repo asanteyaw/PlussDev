@@ -6,7 +6,7 @@
 
 A frame is a set of straight members joined rigidly at nodes. Unlike a truss bar, a frame member carries an axial force, a shear force and a bending moment, and a joint transmits a moment from one member to the next. `structure::frame` takes the geometry and the cross-section of every member and compiles them into a `Frame` that the solvers analyse. This page explains how a frame is written down: the nodes and the three degrees of freedom at each, the section properties and how to compute them, the local axes and sign conventions of member end actions, and the checks that reject a description that cannot be a frame.
 
-## The mental model
+## How it works
 
 A frame is described by a `Mesh` for the geometry and `Sections` for the members:
 

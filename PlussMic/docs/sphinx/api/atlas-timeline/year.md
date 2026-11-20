@@ -39,10 +39,10 @@ different years.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"ts", Slate(pluss::make_timeline({"2024-03-15T09:10:00Z", "2024-07-01T09:40:00Z"}))},
+    {"ts", Shelf(pluss::make_timeline({"2024-03-15T09:10:00Z", "2024-07-01T09:40:00Z"}))},
 });
 auto q2 = DataFrame({
-    {"ts", Slate(pluss::make_timeline({"2023-11-20T09:10:00Z", "2023-12-31T09:40:00Z"}))},
+    {"ts", Shelf(pluss::make_timeline({"2023-11-20T09:10:00Z", "2023-12-31T09:40:00Z"}))},
 });
 auto atlas = Atlas({q1, q2});
 
@@ -53,19 +53,19 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 ### Output
 
 ```text
-==========
+===========
      | ts  
-----------
+-----------
 0    | 2024
 1    | 2024
-----------
+-----------
 [2 cs x 1 feat]
-==========
+===========
      | ts  
-----------
+-----------
 0    | 2023
 1    | 2023
-----------
+-----------
 [2 cs x 1 feat]
 ```
 

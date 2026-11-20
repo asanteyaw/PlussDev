@@ -404,7 +404,7 @@ try {
 Output:
 
 ```text
-jointplot(dataset, unknown feature) threw: flash::jointplot(dataset): unknown continuous feature 'nonexistent'
+jointplot(dataset, unknown feature) threw: flash::jointplot(dataset): no numeric column named 'nonexistent'
 ```
 
 Example 14 (edge case). `MatrixJointOptions::x_feature == y_feature` throws.

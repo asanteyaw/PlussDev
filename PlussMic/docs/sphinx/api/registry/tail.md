@@ -80,9 +80,9 @@ std::cout << "]";
   model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="tabelize.html">
     <span class="label">Previous</span>
-    <span class="title">sum</span>
+    <span class="title">tabelize</span>
   </a>
   <a class="next-link" href="take.html">
     <span class="label">Next</span>

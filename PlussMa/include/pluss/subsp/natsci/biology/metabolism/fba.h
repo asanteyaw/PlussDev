@@ -84,7 +84,8 @@ inline Solution flux_balance(const Network &net, const Series &objective, const 
     p.warm_at_upper = warm->at_upper[0];
   }
   const auto r = linprog::solve(p, opt);
-  return {r.x, r.objective.neg(), r.status, r.dual_eq.neg(), r.basis, r.at_upper};
+  // adding 0.0 turns the -0.0 that negating a zero optimum produces into +0.0, so a lethal knock-out reports 0, not -0
+  return {r.x, r.objective.neg().add(0.0), r.status, r.dual_eq.neg().add(0.0), r.basis, r.at_upper};
 }
 
 struct Variability final {
@@ -155,7 +156,7 @@ inline Knockout knockouts(const Network &net, const Series &objective, const Ser
   const auto wt = flux_balance(net, c, opt);
   const auto ko = flux_balance(lane, c.unsqueeze(0).expand({mask.size(0), r}).contiguous(), opt, &wt);
   // an infeasible / non-optimal lane (e.g. a forced-flux reaction knocked out) is reported as lethal: objective 0
-  const Series obj = detail::succeeded(ko.status).where(ko.objective, ko.objective.mul(0.0));
+  const Series obj = pluss::series::where(detail::succeeded(ko.status), ko.objective, ko.objective.mul(0.0));
   return {obj, ko.status, obj.div(wt.objective)};
 }
 

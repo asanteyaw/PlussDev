@@ -97,7 +97,7 @@ inline Series detect_period(const Series &orbit, std::int64_t max_period, double
   Series found = orbit.select(-1, 0).mul(0.0);
   for (std::int64_t p = max_period; p >= 1; --p) {
     const Series d = orbit.slice(-1, p, keep, 1).sub(orbit.slice(-1, 0, keep - p, 1)).abs().amax(-1, false);
-    found = d.le(tol).where(found.mul(0.0).add(static_cast<double>(p)), found);
+    found = pluss::series::where(d.le(tol), found.mul(0.0).add(static_cast<double>(p)), found);
   }
   return found;
 }
@@ -150,7 +150,7 @@ inline Series superstable_parameter(const std::function<Series(const Series &, c
   Series g0 = g(r0), g1 = g(r1);
   for (std::int64_t it = 0; it < max_iterations; ++it) {
     const Series denom = g1.sub(g0);
-    const Series safe = denom.abs().lt(1e-300).where(denom.mul(0.0).add(1.0), denom);
+    const Series safe = pluss::series::where(denom.abs().lt(1e-300), denom.mul(0.0).add(1.0), denom);
     const Series r2 = r1.sub(g1.mul(r1.sub(r0)).div(safe));
     r0 = r1;
     g0 = g1;

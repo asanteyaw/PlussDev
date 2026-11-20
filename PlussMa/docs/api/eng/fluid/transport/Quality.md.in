@@ -43,13 +43,11 @@ The following programs isolate this symbol's normal contract, a materially diffe
 Two sources mixing.
 
 @@example Eng/api/fluid_transport_mix.cpp@@
-
 ### Example 2
 
 A decay reaction against its exact value.
 
 @@example Eng/api/fluid_transport_decay.cpp@@
-
 ### Example 3
 
 Age.

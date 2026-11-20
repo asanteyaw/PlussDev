@@ -4,7 +4,7 @@
 
 An estimate without an error bar is half a result. This page fits a line to noisy data with the linear-algebra accessor and reports how uncertain the coefficients are, then quantifies the uncertainty of an average by resampling, and ends with the numeric pitfalls that make estimates quietly wrong.
 
-## The mental model
+## How it works
 
 Everything is array arithmetic. A regression is a few matrix products; a bootstrap is a table in which each row is one resample, reduced along its axis. Random numbers come from factory functions that take a **seed**, so a result can be reproduced exactly. Matrix routines live behind an accessor: `x.linearalg().inverse()`.
 

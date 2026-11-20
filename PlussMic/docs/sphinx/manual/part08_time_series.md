@@ -3,11 +3,11 @@
 Time-series work in PlussMic is built from two ideas:
 
 1. A time axis is data, usually a `Timeline` or `TimeIndex` stored in a
-   `Slate`.
+   `Shelf`.
 2. Time-series calculations are ordinary table transformations that return
-   either a `Slate` or a `DataFrame`.
+   either a `Shelf` or a `DataFrame`.
 
-Use the Slate accessor when you are working on one numeric value stream:
+Use the Shelf accessor when you are working on one numeric value stream:
 
 ```cpp
 auto returns = df.features("close").ts().returns(1);
@@ -38,8 +38,8 @@ If a date column starts as text, parse it through explicit `cast(...)` first:
 auto parsed = df.cast({
     pluss::table::DataFrame::CastSpec{
         "date_text",
-        pluss::table::SlateCastTarget::Timeline,
-        pluss::table::SlateCastOptions{
+        pluss::table::ShelfCastTarget::Timeline,
+        pluss::table::ShelfCastOptions{
             .format = "%Y-%m-%d",
             .invalid = pluss::table::ParseInvalid::Null}},
 });
@@ -55,8 +55,8 @@ PlussMic represents time in three common ways:
 | `TimeIndex` | A timeline with index semantics. Use it when alignment and as-of operations matter. |
 | Numeric `Series` | A numeric value stream measured over time, such as close price, volume, demand, or latency. |
 
-Time-series value transforms require numeric `Series` slates. Time-axis
-methods require a `Timeline` or `TimeIndex` slate.
+Time-series value transforms require numeric `Series` shelves. Time-axis
+methods require a `Timeline` or `TimeIndex` shelf.
 
 This split is deliberate. A price column and a timestamp column have different
 semantics even though both can be represented internally as arrays.
@@ -89,12 +89,12 @@ If a column loaded as text or as a numeric `YYYYMMDD` series, cast it:
 ```cpp
 auto with_time = df.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::SlateCastTarget::Timeline, {}},
+        "date", pluss::table::ShelfCastTarget::Timeline, {}},
 });
 ```
 
 The current source supports conversion of integer `YYYYMMDD` values through
-`cast(..., SlateCastTarget::Timeline)`, which is useful for market-data files that store dates as
+`cast(..., ShelfCastTarget::Timeline)`, which is useful for market-data files that store dates as
 `19900102` instead of ISO strings.
 
 ## Sorting is your responsibility
@@ -113,42 +113,42 @@ auto returns = sorted.features({"close"}).ts().returns(1);
 This matters in production. A return computed on unsorted prices is not a
 slightly messy return; it is a different calculation.
 
-## Slate time-series accessor
+## Shelf time-series accessor
 
-`Slate::ts()` creates a `TimeSeriesAccessor` for one numeric `Series` payload:
+`Shelf::ts()` creates a `TimeSeriesAccessor` for one numeric `Series` payload:
 
 ```cpp
 auto close = df.features("close");
 auto r = close.ts().returns(1);
 ```
 
-The source slate must be defined, must be `SlateKind::Series`, and must be
+The source shelf must be defined, must be `ShelfKind::Series`, and must be
 numeric. If you call `ts()` on a `Note`, `Timeline`, or non-numeric payload, the
 operation throws when you call the accessor method.
 
-### Slate accessor methods
+### Shelf accessor methods
 
 | Method | Return | Meaning |
 | --- | --- | --- |
-| `returns(periods)` | `Slate` | Fractional return over `periods`. |
-| `log_returns(periods)` | `Slate` | Log return over `periods`. |
-| `diff(periods)` | `Slate` | Difference from the value `periods` rows earlier. |
-| `lag(periods)` | `Slate` | Shift values backward by `periods`; early rows become undefined numeric positions. |
-| `lead(periods)` | `Slate` | Shift values forward by `periods`; trailing rows become undefined numeric positions. |
-| `rolling(window, statistic, options)` | `Slate` | Observation-count rolling/window statistic. |
-| `expanding(statistic, options)` | `Slate` | Expanding statistic. |
-| `ewm(alpha, statistic, ...)` | `Slate` | Exponentially weighted statistic. |
-| `zscore_rolling(window, min_periods, epsilon)` | `Slate` | Rolling z-score. |
-| `fill_gaps(mode, constant)` | `Slate` | Fill numeric gaps according to a gap-fill mode. |
+| `returns(periods)` | `Shelf` | Fractional return over `periods`. |
+| `log_returns(periods)` | `Shelf` | Log return over `periods`. |
+| `diff(periods)` | `Shelf` | Difference from the value `periods` rows earlier. |
+| `lag(periods)` | `Shelf` | Shift values backward by `periods`; early rows become undefined numeric positions. |
+| `lead(periods)` | `Shelf` | Shift values forward by `periods`; trailing rows become undefined numeric positions. |
+| `rolling(window, statistic, options)` | `Shelf` | Observation-count rolling/window statistic. |
+| `expanding(statistic, options)` | `Shelf` | Expanding statistic. |
+| `ewm(alpha, statistic, ...)` | `Shelf` | Exponentially weighted statistic. |
+| `zscore_rolling(window, min_periods, epsilon)` | `Shelf` | Rolling z-score. |
+| `fill_gaps(mode, constant)` | `Shelf` | Fill numeric gaps according to a gap-fill mode. |
 | `resample(axis, freq, op, step)` | `TimeSeriesResample` | Resample one value stream against a time axis. |
 
-The return type is important. `Slate::ts()` methods return `Slate`, except
+The return type is important. `Shelf::ts()` methods return `Shelf`, except
 for `resample`, which returns a `TimeSeriesResample` with two fields:
 
 | Field | Meaning |
 |---|---|
-| `labels` | The resampled time labels as a `Slate`. |
-| `values` | The resampled values as a `Slate`. |
+| `labels` | The resampled time labels as a `Shelf`. |
+| `values` | The resampled values as a `Shelf`. |
 
 Use this form when you do not need a full DataFrame:
 
@@ -248,7 +248,7 @@ Use a domain-appropriate value if your data scale is unusual.
 
 ## Gap filling
 
-The Slate and DataFrame accessors expose `fill_gaps`:
+The Shelf and DataFrame accessors expose `fill_gaps`:
 
 ```cpp
 auto forward = close.ts().fill_gaps(
@@ -475,12 +475,12 @@ Use `.tl().span(...)` when you need elapsed calendar distances between timeline
 values:
 
 ```cpp
-auto start = pluss::table::Slate(pluss::make_timeline({
+auto start = pluss::table::Shelf(pluss::make_timeline({
     "2024-01-31T00:00:00Z",
     "2024-02-29T00:00:00Z",
     "2024-01-01T00:00:00Z"}));
 
-auto end = pluss::table::Slate(pluss::make_timeline({
+auto end = pluss::table::Shelf(pluss::make_timeline({
     "2024-02-01T00:00:00Z",
     "2025-02-28T00:00:00Z",
     "2024-01-05T00:00:00Z"}));
@@ -723,7 +723,7 @@ The output demonstrates several important details:
 | --- | --- |
 | One transformed value stream | `df.features("x").ts()` |
 | Several transformed value streams | `df.features({"x", "y"}).ts()` |
-| Resample one value stream and handle labels manually | `Slate::ts().resample(axis, ...)` |
+| Resample one value stream and handle labels manually | `Shelf::ts().resample(axis, ...)` |
 | Resample several value streams into a new frame | `df.labels().set("date").features({...}).ts().resample(...)` |
 | Add calendar model features | `df.features({"date"}).tl().year()` |
 | Build lagged model features | `df.features({...}).ts().lag_block(...)` |
@@ -751,7 +751,7 @@ Before using a time-series result in a report, model, or downstream pipeline:
 
 ### Calling the wrong accessor
 
-This returns a `Slate`:
+This returns a `Shelf`:
 
 ```cpp
 auto out = df.features("close").ts().returns(1);
@@ -790,7 +790,7 @@ Fix the schema first:
 ```cpp
 auto fixed = df.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::SlateCastTarget::Timeline, {}},
+        "date", pluss::table::ShelfCastTarget::Timeline, {}},
 });
 auto daily = fixed.labels().set("date", false).features({"close"}).ts().resample("D").mean();
 ```

@@ -19,7 +19,7 @@ The scoped spelling of [`LocusPull::std`](../locus-pull/std.md):
 `pull.std("events.spend", "sample_sd")`. Requires a numeric feature; like
 its unscoped counterpart, it's null for a root record with zero *or exactly
 one* related value, not just zero -- see [`sum`](sum.md) for the shared
-`NaN`-exclusion rule.
+missing-value rule.
 
 ## Parameters
 

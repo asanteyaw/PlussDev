@@ -94,6 +94,37 @@ pane count: 4 (top marginal, joint, right marginal, hidden corner)
 
 ![Output of Example 1](img/flash-jointgrid-map-plot-1-basic.svg)
 
+Example 2. The marginal callback runs twice, the top one first, and the joint callback once in between.
+
+```cpp
+auto fig = studio("joint_calls");
+std::string log;
+flash::jointgrid_map_plot(
+    fig, [&](Pane &pane) { log += "joint "; pane.cloud(x, y); },
+    [&](Pane &pane, bool top) { log += top ? "top " : "right "; pane.trend(x, y); });
+std::cout << "calls in order: " << log << "\n";
+```
+
+Output:
+
+```text
+calls in order: top joint right 
+```
+
+Example 3. The result always has four panes, the corner among them.
+
+```cpp
+auto fig = studio("joint_panes");
+flash::jointgrid_map_plot(fig, [&](Pane &pane) { pane.cloud(x, y); }, [&](Pane &pane, bool) { pane.trend(x, y); });
+std::cout << "panes: " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+panes: 4
+```
+
 ## Notes
 
 - Not `noexcept`.

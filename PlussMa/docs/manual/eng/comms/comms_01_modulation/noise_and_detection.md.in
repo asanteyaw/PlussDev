@@ -4,7 +4,7 @@
 
 A channel adds noise, and the receiver has to decide what was sent. This page adds noise at a chosen energy per bit, makes hard decisions and soft log-likelihood ratios, counts the errors, and compares the measured error rate with theory for BPSK, QPSK, 16-QAM and 64-QAM.
 
-## The mental model
+## How it works
 
 With unit-energy symbols the noise is set by `N0`, the complex noise variance per symbol, and the quality of a link is the energy per bit to noise ratio `Eb/N0`. `n0(ebn0_db, constellation)` converts one into the other: `N0 = 1 / (bits 10^(Eb/N0 / 10))`, smaller for more bits per symbol at the same `Eb/N0`. `noise(signal, noise_variance, seed)` adds that noise, reproducibly from the seed.
 

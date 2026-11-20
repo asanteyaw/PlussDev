@@ -30,9 +30,9 @@ unrecognized name.
     See the value table below.
 
 **name** (`std::string_view`, string overload)
-    Case-sensitive; only the five lowercase strings listed above are recognized. Any
-    other string (including `"Deep"`, `"DEEP"`, or an empty string) falls back to
-    `FlashPalette::Deep`.
+    Case-sensitive; the six lowercase names `"deep"`, `"muted"`, `"pastel"`, `"bright"`, `"dark"` and
+    `"colorblind"` are recognized. Any other string, including `"Deep"`, `"DEEP"` or an empty string,
+    is an error that lists the valid names.
 
 ## `FlashPalette` values
 
@@ -94,19 +94,25 @@ flash_palette(Muted) vs flash_palette("muted") name match: 1
 flash_palette() default name: deep
 ```
 
-Example 3 (edge case). An unrecognized string falls back to `Deep`.
+Example 3 (edge case). An unrecognized string is an error, and the match is case-sensitive.
 
 ```cpp
 using namespace pluss::pl;
 
-auto unknown = flash::flash_palette(std::string_view("not-a-real-name"));
-std::cout << "flash_palette(unknown-string) falls back to: " << unknown.name() << "\n";
+for (const char *bad : {"not-a-real-name", "Deep"}) {
+  try {
+    flash::flash_palette(std::string_view(bad));
+  } catch (const pluss::Error &e) {
+    std::cout << e.message() << "\n";
+  }
+}
 ```
 
 Output:
 
 ```text
-flash_palette(unknown-string) falls back to: deep
+flash::flash_palette: unknown palette 'not-a-real-name'; the palettes are deep, muted, pastel, bright, dark and colorblind (lower case)
+flash::flash_palette: unknown palette 'Deep'; the palettes are deep, muted, pastel, bright, dark and colorblind (lower case)
 ```
 
 ## Notes

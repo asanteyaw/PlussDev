@@ -50,12 +50,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy", "Cy2"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy", "Cy2"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 4.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 4.0}))},
 });
 
 auto biz = Nexus({
@@ -90,8 +90,8 @@ Example 2. An unknown relationship name throws.
 ```cpp
 try {
   auto bad = linked.validate_relationship("nope");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

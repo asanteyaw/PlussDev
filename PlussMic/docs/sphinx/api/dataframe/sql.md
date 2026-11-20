@@ -56,9 +56,9 @@ Example 1. Run a filtering `SELECT` statement with the default options.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto high_sales = orders.sql().execute("SELECT id, sales FROM df WHERE sales > 95");
@@ -119,13 +119,13 @@ std::cout << grouped;
 ### Output
 
 ```text
-==============================
-     | city    n      mean_sales
-------------------------------
-0    | Tema    1      120
-1    | Accra   1      100
-2    | Kumasi  1      90
-------------------------------
+===============================
+     | city    n     mean_sales
+-------------------------------
+0    | Tema    1     120       
+1    | Accra   1     100       
+2    | Kumasi  1     90        
+-------------------------------
 [3 cs x 3 feat]
 ```
 
@@ -151,9 +151,9 @@ than as a long sequence of C++ table verbs, you can just write the query.
   when a full SQL statement is more machinery than the task needs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort.html">
+  <a class="prev-link" href="split.html">
     <span class="label">Previous</span>
-    <span class="title">sort</span>
+    <span class="title">split</span>
   </a>
   <a class="next-link" href="stack.html">
     <span class="label">Next</span>

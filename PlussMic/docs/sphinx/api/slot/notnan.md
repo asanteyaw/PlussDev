@@ -1,0 +1,254 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 69a82712cfed -->
+
+# Slot::notnan
+
+[Back to Slot API Reference](../../slot_api_reference)
+
+## Signature
+
+```cpp
+Slot Slot::notnan() const
+```
+
+## What It Does
+
+Returns a Bool result of the same shape as the input that is `true` wherever a cell does **not** hold a `NaN`. The answer is about the **value** in the cell: a missing cell has no value, so it is never a `NaN` and never infinite.
+
+Three different things can sit in a numeric cell, and PlussMic keeps them apart on purpose:
+
+| A cell can be | It means | Ask about it with |
+|---|---|---|
+| `NULL` | no value was recorded (the validity mask says so) | `isnull`, `notnull`, `dropnull`, `fillnull` |
+| `NaN` | a value that is not a number: `0/0`, `x % 0`, `sqrt(-1)` | `isnan`, `notnan`, `dropnan`, `fillnan` |
+| `+inf` / `-inf` | a value that is unbounded: `5/0`, `log(0)`, overflow | `isinf`, `notinf`, `isposinf`, `isneginf`, `dropinf`, `dropposinf`, `dropneginf`, `fillinf`, `fillposinf`, `fillneginf` |
+| any of the three | not an ordinary number | `invalid`, `dropinvalid`, `fillinvalid` |
+
+`notnan()` answers one precise question. Here is what it says for each kind of cell:
+
+| A cell holding | `notnan()` |
+|---|---|
+| An ordinary number (`1`, `5`) | `true` |
+| `NaN` | `false` |
+| `+inf` | `true` |
+| `-inf` | `true` |
+| `NULL` (missing) | `true` |
+
+`Slot` holds the rule for scribble. A slot cell that is a one-element number is treated exactly like a `Stream` record. A cell that holds a list of numbers is flagged when **any** number inside it is flagged.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Slot`
+    A slot with one one-element Bool cell per input cell. An empty (`NULL`) cell gives `false` (or `true` for the `not...` methods).
+
+## Examples
+
+Example 1. Mark every cell that does **not** hold a `NaN`, in data that holds all four kinds of cell.
+
+```cpp
+using namespace pluss::scribble;
+
+const double nan = std::numeric_limits<double>::quiet_NaN();
+const double inf = std::numeric_limits<double>::infinity();
+
+// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
+auto column = [](const Slot& slot) {
+    std::vector<double> values;
+    std::vector<bool> present;
+    for (std::int64_t i = 0; i < slot.size(); ++i) {
+        const auto& cell = slot.at(i);
+        present.push_back(!std::holds_alternative<std::monostate>(cell));
+        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
+    }
+    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
+};
+
+auto x = Slot({
+    pluss::make_series({1.0}), pluss::make_series({nan}), pluss::make_series({inf}),
+    pluss::make_series({-inf}), std::monostate{}, pluss::make_series({5.0})});
+
+auto out = x.notnan();
+std::cout << column(out) << "\n";
+```
+
+### Output
+
+```text
+0  1
+1  0
+2  1
+3  1
+4  1
+5  1
+ptype: Series
+```
+
+Position 0 and 5 are ordinary numbers, position 1 is a `NaN`, positions 2 and 3 are `+inf` and `-inf`, and position 4 is `NULL`. `notnan` gives [true, false, true, true, true, true].
+
+Example 2. Ask the three questions on the same data, side by side.
+
+```cpp
+using namespace pluss::scribble;
+
+const double nan = std::numeric_limits<double>::quiet_NaN();
+const double inf = std::numeric_limits<double>::infinity();
+
+// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
+auto column = [](const Slot& slot) {
+    std::vector<double> values;
+    std::vector<bool> present;
+    for (std::int64_t i = 0; i < slot.size(); ++i) {
+        const auto& cell = slot.at(i);
+        present.push_back(!std::holds_alternative<std::monostate>(cell));
+        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
+    }
+    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
+};
+
+auto x = Slot({
+    pluss::make_series({1.0}), pluss::make_series({nan}), pluss::make_series({inf}),
+    pluss::make_series({-inf}), std::monostate{}, pluss::make_series({5.0})});
+
+auto missing = x.isnull();
+auto asked = x.notnan();
+auto either = x.invalid();
+std::cout << "isnull\n";
+std::cout << column(missing) << "\n";
+std::cout << "notnan\n";
+std::cout << column(asked) << "\n";
+std::cout << "invalid\n";
+std::cout << column(either) << "\n";
+```
+
+### Output
+
+```text
+isnull
+0  0
+1  0
+2  0
+3  0
+4  1
+5  0
+ptype: Series
+
+notnan
+0  1
+1  0
+2  1
+3  1
+4  1
+5  1
+ptype: Series
+
+invalid
+0  0
+1  1
+2  1
+3  1
+4  1
+5  0
+ptype: Series
+```
+
+`isnull` is `true` only for the `NULL` position. `notnan` answers the question about a `NaN` and is never `true` for `NULL`. `invalid` is `true` for all three kinds of not-an-ordinary-number at once: `NULL`, `NaN` and the infinities. The three are different questions; none of them is a synonym for another.
+
+Example 3. Data that cannot hold NaN or infinity: integers give the same answer everywhere.
+
+```cpp
+using namespace pluss::scribble;
+
+// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
+auto column = [](const Slot& slot) {
+    std::vector<double> values;
+    std::vector<bool> present;
+    for (std::int64_t i = 0; i < slot.size(); ++i) {
+        const auto& cell = slot.at(i);
+        present.push_back(!std::holds_alternative<std::monostate>(cell));
+        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
+    }
+    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
+};
+
+auto x = Slot({
+    pluss::make_series(std::vector<std::int64_t>{1}), pluss::make_series(std::vector<std::int64_t>{2}), pluss::make_series(std::vector<std::int64_t>{3}),
+    pluss::make_series(std::vector<std::int64_t>{4}), pluss::make_series(std::vector<std::int64_t>{5}), pluss::make_series(std::vector<std::int64_t>{6})});
+
+auto out = x.notnan();
+std::cout << column(out) << "\n";
+```
+
+### Output
+
+```text
+0  1
+1  1
+2  1
+3  1
+4  1
+5  1
+ptype: Series
+```
+
+An integer cell is never a `NaN` and never infinite, so `notnan` is `true` for all of them. There is no error and no conversion to a floating type: the question simply has the answer "no".
+
+Example 4. A cell that holds a list of numbers is flagged when the list contains one.
+
+```cpp
+using namespace pluss::scribble;
+
+const double nan = std::numeric_limits<double>::quiet_NaN();
+const double inf = std::numeric_limits<double>::infinity();
+
+auto x = Slot({
+    pluss::make_series({1.0, 2.0}), pluss::make_series({1.0, nan}), pluss::make_series({2.0, inf}),
+    pluss::make_series({-inf, 3.0}), std::monostate{}});
+
+auto out = x.notnan();
+for (std::int64_t i = 0; i < out.size(); ++i) {
+    std::cout << i << ": " << (std::get<pluss::Series>(out.at(i)).host<bool>()[0] ? "true" : "false") << "\n";
+}
+```
+
+### Output
+
+```text
+0: true
+1: false
+2: true
+3: true
+4: true
+```
+
+A cell that holds a list is **one** cell, so it gets one answer: `true` when the list contains something `notnan` asks about. The cells are `{1, 2}`, `{1, NaN}`, `{2, +inf}`, `{-inf, 3}` and an empty cell, and the answers are [true, false, true, true, true].
+
+## Notes
+
+- `NULL` is **not** `NaN`. A missing cell has no value, so `isnan`/`isinf`/`isposinf`/`isneginf` are `false` for it and the `not...` forms are `true`. Ask `isnull` for missing cells and `invalid` for "missing or not an ordinary number".
+- Data whose type cannot hold `NaN` or an infinity (integers, booleans, text, timestamps, durations) is never affected: it has none to find, so it is reported as having none, kept whole, and left unchanged.
+- Statistics skip `NULL` cells and **do not** skip `NaN`: a `NaN` makes `sum()`, `mean()`, `min()`, `max()`, `median()` and `std()` of its column `NaN`, and `count()` counts it as a value. An infinity propagates the way arithmetic says it should (`sum` of a column holding `+inf` is `+inf`). Use `dropnan()` (or `dropinvalid()`) first when a statistic should ignore them.
+- A cell that holds a list of numbers is one cell: it is flagged, dropped or filled according to what is **inside** it. A cell that holds text, a timestamp or a duration cannot hold `NaN` or an infinity and is never flagged.
+- A `Timeline`'s "not a time" (`NaT`) is a separate thing from `NaN`: it is asked about with `isnat`, never with this method.
+- Printing keeps the kinds apart: `head()`, `tail()` and `std::cout` show `NULL`, `NaN`, `inf` and `-inf`, and a PlussView window shows `NULL` on a red background and `NAN`, `INF` and `-INF` on a neutral one.
+
+## See Also
+
+- [`Slot::isnan`](isnan.md)
+- [`Slot::notinf`](notinf.md)
+- [`Slot::notnull`](notnull.md)
+- [`Slot::invalid`](invalid.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="notinf.html">
+    <span class="label">Previous</span>
+    <span class="title">notinf</span>
+  </a>
+  <a class="next-link" href="notnull.html">
+    <span class="label">Next</span>
+    <span class="title">notnull</span>
+  </a>
+</div>

@@ -54,15 +54,15 @@ was built without `libzip`.
 ```cpp
 try {
   auto rg = pluss::scribble::Registry::load_excel("cities.xlsx");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-read_excel_raw_batch: Excel support not built (libzip not available)
+read_excel_raw_batch: failed to open workbook
 ```
 
 ## Notes

@@ -48,9 +48,9 @@ form, per the important callout above.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0}, pluss::table::Slate(pluss::make_note({"jan"})));
+auto atlas = pluss::table::Atlas({f0}, pluss::table::Shelf(pluss::make_note({"jan"})));
 
 atlas.show(std::cout);
 ```
@@ -74,7 +74,7 @@ Example 2. Capture into an `std::ostringstream`; confirm it's one byte longer th
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 
@@ -106,9 +106,9 @@ longer than to_string() by: 1 byte(s)
   (single `std::ostream&` overload only, no no-argument hang).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="relabel_depth.html">
+  <a class="prev-link" href="scribbelize.html">
     <span class="label">Previous</span>
-    <span class="title">relabel_depth</span>
+    <span class="title">scribbelize</span>
   </a>
   <a class="next-link" href="slice_frames.html">
     <span class="label">Next</span>

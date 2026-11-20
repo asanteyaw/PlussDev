@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280.0000" height="820.0000" viewBox="0 0 1280.0000 820.0000">
+<rect x="0" y="0" width="1280.0000" height="820.0000" fill="rgb(255,252,248)" fill-opacity="1.0000"/>
+<path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 28.0000 28.0000 L 1252.0000 28.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="640.0000" y="50.0000" font-family="Helvetica, Arial, sans-serif" font-size="14.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">table</text>
+<text x="52.0000" y="102.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">case    sepal length   sepal width  petal length   petal width</text>
+<text x="52.0000" y="114.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">0             4.7200        3.5000        1.2400        0.1200</text>
+<text x="52.0000" y="126.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">1             4.8400        3.4700        1.4400        0.1000</text>
+<text x="52.0000" y="138.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">2             4.4800        3.5500        1.3400        0.2300</text>
+<text x="52.0000" y="150.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">3             4.8300        3.5300        1.1400        0.1700</text>
+<text x="52.0000" y="162.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">4             4.7600        3.4700        1.2000        0.1400</text>
+<text x="52.0000" y="174.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">5             4.8600        3.5900        1.1100        0.2500</text>
+<text x="52.0000" y="186.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">6             4.8300        3.5400        1.2200        0.1300</text>
+<text x="52.0000" y="198.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">7             4.5200        3.5900        1.2100        0.2300</text>
+<text x="52.0000" y="210.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">8             4.9700        3.6700        1.4000        0.1400</text>
+<text x="52.0000" y="222.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">9             4.9200        3.9300        1.2300        0.1700</text>
+<text x="52.0000" y="234.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">... (140 more cases)</text>
+<clipPath id="clip1"><rect x="44.0000" y="86.0000" width="1192.0000" height="684.0000"/></clipPath>
+<g clip-path="url(#clip1)">
+</g>
+</svg>

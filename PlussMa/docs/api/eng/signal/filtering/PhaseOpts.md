@@ -2,6 +2,8 @@
 
 # `signal::PhaseOpts`
 
+The axis, extension length and pad mode of `zero_phase`.
+
 ## Signature
 
 ```cpp
@@ -10,156 +12,167 @@ signal::PhaseOpts options{};
 
 ## What It Does
 
-Controls the axis and endpoint conditioning used by forward-backward zero-phase filtering.
+Groups the three settings of a zero-phase pass: which axis to filter along, how many samples to extend the signal by at each end, and how to extend it.
 
 ## Fields
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `dim` | `-1` | Axis containing ordered samples; `-1` selects the final dimension. |
-| `edge` | `-1` | Extension length. `-1` asks the implementation to choose from filter order and available samples. |
-| `pad` | `PadMode::Odd` | Endpoint extension policy. |
+| Field | Meaning | Default |
+|---|---|---|
+| `dim` | The axis to filter along. | `-1` |
+| `edge` | Extension length in samples; `-1` chooses three times the filter order. | `-1` |
+| `pad` | A `PadMode`. | `Odd` |
 
 ## Returns
 
-Pass this object to either `zero_phase` overload.
+Argument of `zero_phase`.
 
 ## Errors
 
-Rejects an invalid axis, negative edge values other than the `-1` sentinel, and edge lengths that cannot be formed from the input.
+An invalid axis, an `edge` below `-1` and an extension at least as long as the axis throw `pluss::Error`.
+
+## Interpretation and Use
+
+The automatic edge is `3 *` the filter order; the first example checks that it equals an explicit edge of 6 for a second-order filter. Build the options with designated initializers: `{.dim = 0, .edge = 3}`.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The defaults, and the automatic edge against an explicit one.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const sig::PhaseOpts defaults;
+  out.writeln("default axis =", defaults.dim, " default edge =", defaults.edge, " default pad is Odd:", defaults.pad == sig::PadMode::Odd);
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 4.0, 3.0, 5.0, 4.0, 6.0, 5.0, 7.0, 6.0, 8.0, 7.0, 9.0, 8.0, 10.0, 9.0});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  const auto automatic = sig::zero_phase(x, b, a).items<double>();
+  const auto explicit_edge = sig::zero_phase(x, b, a, {.dim = 0, .edge = 6}).items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < automatic.size(); ++i) worst = std::max(worst, std::abs(automatic[i] - explicit_edge[i]));
+  out.writeln("default options against edge 6 (three times the filter order of 2), largest difference =", worst);
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+default axis = -1  default edge = -1  default pad is Odd: true
+default options against edge 6 (three times the filter order of 2), largest difference = 0.0000
+```
+### Example 2
+
+Filtering along the second axis of a batch.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series rows = pluss::make_series({1.0, 2.0, 4.0, 3.0, 5.0, 4.0, 6.0, 5.0, 10.0, 20.0, 40.0, 30.0, 50.0, 40.0, 60.0, 50.0}).reshape({2, 8});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  const pluss::Series y = sig::zero_phase(rows, b, a, {.dim = 1, .edge = 3});
+  out.writeln("output shape", y.size(0), "x", y.size(1));
+  out.writeln("row 0 =", y.select(0, 0).items<double>());
+  out.writeln("row 1 =", y.select(0, 1).items<double>(), " (ten times row 0)");
+}
+```
+
+Output
+
+```text
+output shape 2 x 8
+row 0 = [1.0000, 2.1875, 3.1250, 3.7500, 4.2500, 4.7500, 5.0625, 5.0000]
+row 1 = [10.0000, 21.8750, 31.2500, 37.5000, 42.5000, 47.5000, 50.6250, 50.0000]  (ten times row 0)
+```
+### Example 3
+
+Every refused value.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+  refused(out, "an axis out of range", [&] { sig::zero_phase(x, b, a, {.dim = 3}); });
+  refused(out, "an edge below -1", [&] { sig::zero_phase(x, b, a, {.dim = 0, .edge = -5}); });
+  refused(out, "an edge longer than the axis", [&] { sig::zero_phase(x, b, a, {.dim = 0, .edge = 9}); });
+}
+```
+
+Output
+
+```text
+an axis out of range : eng::signal::zero_phase: dim out of range
+an edge below -1 : eng::signal::zero_phase: edge must be -1 or nonnegative
+an edge longer than the axis : eng::signal::zero_phase: sample axis must be longer than the edge extension
 ```
 ## See Also
 

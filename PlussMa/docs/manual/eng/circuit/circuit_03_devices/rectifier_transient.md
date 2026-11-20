@@ -6,7 +6,7 @@
 
 A diode in a transient run switches: it conducts for part of every cycle and blocks for the rest, and the capacitor it charges holds the voltage between the pulses. `circuit::tran` handles circuits with diodes and transistors by solving the nonlinear equation of every time step with Newton iteration. This page builds a half-wave rectifier, sweeps its filter capacitor, compares the two time-stepping rules on it, starts it from a charged capacitor, and shows what the step size does to the peak.
 
-## The mental model
+## How it works
 
 Everything about `tran` from [Circuits 2](../circuit_02_transient.md) holds: a uniform time grid, the first sample is the consistent starting state, `Drive` supplies waveforms and `Start` the stored energy, and every result gains a time axis. The devices add three things.
 

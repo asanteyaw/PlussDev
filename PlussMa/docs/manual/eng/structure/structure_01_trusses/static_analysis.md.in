@@ -4,7 +4,7 @@
 
 A truss under steady loads settles into an equilibrium: every joint moves a little, every bar stretches or shortens, and the supports push back. `structure::solve` finds that equilibrium. This page solves a plane truss and checks every number against a hand calculation, repeats the exercise for a space truss, shows a truss whose bar forces depend on the bar stiffnesses, and explains the diagnostics that tell you the solve can be trusted.
 
-## The mental model
+## How it works
 
 `solve(truss, load, fix)` takes the compiled `Truss`, a `load` array with one force vector per node (shape `[..., node, axis]`) and a `Fix` naming the supported degrees of freedom. It returns a `StaticResult`:
 

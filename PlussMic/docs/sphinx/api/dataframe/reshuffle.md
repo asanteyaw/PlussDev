@@ -56,9 +56,9 @@ same rows.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -86,7 +86,7 @@ std::cout << reshuffled.arrange({"id"}).equals(orders) << "\n";
 
 ```text
 3
-true
+1
 ```
 
 `reshuffled` still has `3` cases, and re-sorting it back by `id` ascending reproduces
@@ -108,7 +108,7 @@ std::cout << reordered_features.reorder(orders.features()).equals(orders) << "\n
 
 ```text
 3
-true
+1
 ```
 
 `reordered_features` still has all `3` original features, just in some permuted

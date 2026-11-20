@@ -83,8 +83,8 @@ important callout above.
 auto notes = pluss::scribble::Slot({pluss::make_note("a"), pluss::scribble::Slot::Value{std::monostate{}}});
 try {
   auto out = notes.fillnull(1.0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -97,6 +97,7 @@ Slot::fillnull(double): non-null Slot values must match fill payload type
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - See the important callout above — pick the overload matching the slot's
   actual kind, not just the kind you intend to fill with.
 - Filling an `int64` `Series` slot's null with a `double` only promotes
@@ -116,12 +117,12 @@ Slot::fillnull(double): non-null Slot values must match fill payload type
   equivalent, with the same important callout applying per field.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">fillneginf</span>
   </a>
-  <a class="next-link" href="filter.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">filter</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

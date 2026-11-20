@@ -1,5 +1,7 @@
 #include "kindle/Stream.h"
 
+#include <cstring>
+
 #include <algorithm>
 #include <unordered_set>
 #include <cmath>
@@ -80,45 +82,52 @@ void validate_mask_size(const std::optional<pluss::Series>& mask, std::int64_t n
   PLUSS_CHECK(mask->numel() == n, "Stream: validity mask length must match payload length");
 }
 
-void validate_label_size(const std::optional<pluss::table::Slate>& label, std::int64_t n) {
+void validate_label_size(const std::optional<pluss::table::Shelf>& label, std::int64_t n) {
   if (!label.has_value()) return;
   PLUSS_CHECK(label->defined(), "Stream: label axis is undefined");
   PLUSS_CHECK(label->size() == n, "Stream: label axis length must match payload length");
 }
 
-std::optional<pluss::table::Slate> copy_label(const Stream& stream) {
+std::optional<pluss::table::Shelf> copy_label(const Stream& stream) {
   if (!stream.has_label()) return std::nullopt;
   return *stream.label();
 }
 
-std::optional<pluss::table::Slate> slate_output_labels(const pluss::table::Slate& slate) {
-  if (slate.label().has()) return slate.label().values();
+std::optional<pluss::table::Shelf> shelf_output_labels(const pluss::table::Shelf& shelf) {
+  if (shelf.label().has()) return shelf.label().values();
   return std::nullopt;
+}
+
+// A stream derived from `source` by an operation that keeps the meaning of the values (clip, fill, cast, slice, filter, arithmetic)
+// keeps the source's metadata: "unit" and "sensor" still describe it. Flags (isnull, comparisons) and reductions do not use this.
+Stream carry_meta(Stream out, const Stream& source) {
+  for (const auto& [key, value] : source.meta()) out.with_meta_(key, value);
+  return out;
 }
 
 template <typename Op>
 Stream unary_stream_same_label(const Stream& stream, Op&& op) {
-  const auto out = std::forward<Op>(op)(stream.to_slate());
-  return Stream::from_slate(out, copy_label(stream));
+  const auto out = std::forward<Op>(op)(stream.to_shelf());
+  return carry_meta(Stream::from_shelf(out, copy_label(stream)), stream);
 }
 
 template <typename Op>
-Stream slate_accessor_stream_result(const Stream& stream, Op&& op) {
-  const auto out = std::forward<Op>(op)(stream.to_slate());
-  auto labels = slate_output_labels(out);
+Stream shelf_accessor_stream_result(const Stream& stream, Op&& op) {
+  const auto out = std::forward<Op>(op)(stream.to_shelf());
+  auto labels = shelf_output_labels(out);
   if (!labels.has_value() && out.size() == stream.size() && stream.has_label()) {
     labels = copy_label(stream);
   }
-  return Stream::from_slate(out, std::move(labels));
+  return Stream::from_shelf(out, std::move(labels));
 }
 
 template <typename Op>
 Stream rowwise_stream_transform(const Stream& stream, Op&& op) {
-  const auto source = stream.to_slate();
+  const auto source = stream.to_shelf();
   const auto out = std::forward<Op>(op)(source);
-  if (!stream.has_label()) return Stream::from_slate(out);
+  if (!stream.has_label()) return carry_meta(Stream::from_shelf(out), stream);
   const auto label_out = std::forward<Op>(op)(*stream.label());
-  return Stream::from_slate(out, label_out);
+  return carry_meta(Stream::from_shelf(out, label_out), stream);
 }
 } // namespace
 
@@ -128,14 +137,14 @@ public:
   using FieldValue = std::variant<
       Payload,
       pluss::Series,
-      pluss::table::Slate,
+      pluss::table::Shelf,
       std::string,
       std::int64_t,
       std::uint8_t>;
 
   explicit StreamImpl(Payload payload,
                       std::optional<pluss::Series> validity_mask,
-                      std::optional<pluss::table::Slate> cases)
+                      std::optional<pluss::table::Shelf> cases)
       : payload_(std::move(payload)),
         validity_mask_(std::move(validity_mask)),
         cases_(std::move(cases)),
@@ -159,7 +168,7 @@ public:
 
   Payload payload_;
   std::optional<pluss::Series> validity_mask_{std::nullopt};
-  std::optional<pluss::table::Slate> cases_{std::nullopt};
+  std::optional<pluss::table::Shelf> cases_{std::nullopt};
   std::int64_t size_{0};
   StreamKind kind_{StreamKind::Series};
   std::string dtype_{};

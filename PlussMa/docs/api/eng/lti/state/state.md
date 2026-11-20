@@ -2,6 +2,8 @@
 
 # `lti::state`
 
+Builds a state-space model from its four matrices.
+
 ## Signature
 
 ```cpp
@@ -15,159 +17,231 @@ lti::StateSpace lti::state(
 
 ## What It Does
 
-Validates and normalizes four state-space matrices into one immutable system. It broadcasts compatible leading batch axes and promotes all matrices to one floating or complex dtype.
+Validates and bundles `A`, `B`, `C` and `D` into a `StateSpace` for `x' = A x + B u`, `y = C x + D u` (continuous) or `x[k+1] = A x[k] + B u[k]` (discrete). The matrices carry their last two axes as the matrix and any leading axes as a batch of systems that share one sample time.
 
 ## Parameters
 
 `a`
-: Dynamics matrix with tail `[states, states]`; it must be square.
+: `[..., n, n]`, the dynamics. Floating or complex.
 
 `b`
-: Input matrix with tail `[states, inputs]`.
+: `[..., n, m]`, the input matrix.
 
 `c`
-: Output matrix with tail `[outputs, states]`.
+: `[..., p, n]`, the output matrix.
 
 `d`
-: Direct-feedthrough matrix with tail `[outputs, inputs]`.
+: `[..., p, m]`, the feedthrough.
 
 `sample_time`
-: Zero for continuous time or a finite positive discrete sampling interval.
+: Zero (the default) for a continuous system, a positive number of seconds for a discrete one.
 
 ## Returns
 
-A `StateSpace` owning promoted, batch-expanded matrices on their shared platform.
+A `StateSpace` with `n` states, `m` inputs and `p` outputs.
 
 ## Errors
 
-Rejects undefined, nonmatrix, empty, integer, shape-incompatible, non-broadcastable, or cross-platform matrices, and negative/nonfinite sample time.
+A non-square `A`, a `B`, `C` or `D` whose shape does not match, a rank below two, an integer dtype and a negative or non-finite sample time throw `pluss::Error`.
+
+## Interpretation and Use
+
+The sizes are read from the matrices: the first example shows a one-input, one-output oscillator and a three-state, two-input, two-output system. A leading axis holds a family of systems (the third example builds four oscillators with different damping) so that one call analyses or simulates them all.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct and inspect a second-order continuous state-space model.
+The state, input and output counts of a single-input and a multi-input system.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <iostream>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace system = lti::state(
-      pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-      pluss::make_series({0.0, 1.0}, {2, 1}),
-      pluss::make_series({{1.0, 0.0}}),
-      pluss::make_series({0.0}, {1, 1}));
-
-  std::cout << "states = " << system.states()
-            << ", inputs = " << system.inputs()
-            << ", outputs = " << system.outputs() << "\n";
-  out.writeln("continuous =", system.is_cont());
-  out.writeln("controllability =", lti::ctrb(system).flatten().items<double>());
-  out.writeln("observability =", lti::obsv(system).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-states = 2, inputs = 1, outputs = 1
-continuous = true
-controllability = [0.0000, 1.0000, 1.0000, -3.0000]
-observability = [1.0000, 0.0000, 0.0000, 1.0000]
-```
-### Example 2
-
-Compare energy Gramians across continuous and discrete timebases.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({3.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::StateSpace discrete = lti::state(
-      pluss::make_series({0.5}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), 0.25);
-
-  out.writeln("continuous reach gram =",
-              lti::gram(continuous, lti::Gram::Reach).flatten().items<double>());
-  out.writeln("continuous observe gram =",
-              lti::gram(continuous, lti::Gram::Observe).flatten().items<double>());
-  out.writeln("discrete reach gram =",
-              lti::gram(discrete, lti::Gram::Reach).flatten().items<double>());
-}
-```
-
-Output
-
-```text
-continuous reach gram = [2.0000]
-continuous observe gram = [4.5000]
-discrete reach gram = [1.3333]
-```
-### Example 3
-
-Exercise matrix-shape and sample-time validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({{1.0, 0.0}, {0.0, 1.0}}),
-        pluss::make_series({1.0, 0.0}, {2, 1}),
-        pluss::make_series({{1.0, 0.0}}),
-        pluss::make_series({{0.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("bad feedthrough rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(lti::state(
-        pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}), -0.1));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative sample time rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace siso = oscillator();
+  out.writeln("oscillator: states", siso.states(), "inputs", siso.inputs(), "outputs", siso.outputs(), " continuous:", siso.is_cont());
+  const lti::StateSpace mimo = lti::state(pluss::series::eye(3, pluss::ScalarType::Float64).mul(-1.0), pluss::series::ones({3, 2}, pluss::ScalarType::Float64),
+                                         pluss::series::ones({2, 3}, pluss::ScalarType::Float64), pluss::series::zeros({2, 2}, pluss::ScalarType::Float64));
+  out.writeln("three states, two inputs, two outputs: states", mimo.states(), "inputs", mimo.inputs(), "outputs", mimo.outputs());
 }
 ```
 
 Output
 
 ```text
-bad feedthrough rejected = eng::lti::state: D must have shape [outputs, inputs]
-negative sample time rejected = eng::lti::state: sample_time must be finite and non-negative
+oscillator: states 2 inputs 1 outputs 1  continuous: true
+three states, two inputs, two outputs: states 3 inputs 2 outputs 2
+```
+### Example 2
+
+A continuous and a discrete model: how the sample time is read back.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace continuous = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1));
+  const lti::StateSpace discrete = lti::state(mat({0.5}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 0.1);
+  out.writeln("continuous: is_cont", continuous.is_cont(), "is_disc", continuous.is_disc(), "sample time", continuous.sample_time());
+  out.writeln("discrete:   is_cont", discrete.is_cont(), "is_disc", discrete.is_disc(), "sample time", discrete.sample_time());
+}
+```
+
+Output
+
+```text
+continuous: is_cont true is_disc false sample time 0.0000
+discrete:   is_cont false is_disc true sample time 0.1000
+```
+### Example 3
+
+A batch of four systems on a leading axis.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A leading axis holds four systems that differ in their damping; the matrix axes stay last.
+  std::vector<double> a;
+  for (const double damping : {0.0, 0.2, 0.4, 0.8}) for (const double v : {0.0, 1.0, -4.0, -damping}) a.push_back(v);
+  const lti::StateSpace batch = lti::state(pluss::make_series(a, {4, 2, 2}), pluss::series::zeros({4, 2, 1}, pluss::ScalarType::Float64).add(mat({0.0, 1.0}, 2, 1)),
+                                          pluss::series::zeros({4, 1, 2}, pluss::ScalarType::Float64).add(mat({1.0, 0.0}, 1, 2)), pluss::series::zeros({4, 1, 1}, pluss::ScalarType::Float64));
+  out.writeln("A shape", batch.a().size(0), "x", batch.a().size(1), "x", batch.a().size(2), " states", batch.states(), "inputs", batch.inputs(), "outputs", batch.outputs());
+}
+```
+
+Output
+
+```text
+A shape 4 x 2 x 2  states 2 inputs 1 outputs 1
+```
+### Example 4
+
+Every refused matrix and sample time.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series a = mat({0.0, 1.0, -4.0, -0.4}, 2, 2), b = mat({0.0, 1.0}, 2, 1), c = mat({1.0, 0.0}, 1, 2), d = mat({0.0}, 1, 1);
+  refused(out, "a non-square A", [&] { lti::state(mat({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, 2, 3), b, c, d); });
+  refused(out, "B with the wrong number of rows", [&] { lti::state(a, mat({1.0, 2.0, 3.0}, 3, 1), c, d); });
+  refused(out, "C with the wrong number of columns", [&] { lti::state(a, b, mat({1.0, 0.0, 0.0}, 1, 3), d); });
+  refused(out, "D that does not match the outputs and inputs", [&] { lti::state(a, b, c, mat({0.0, 0.0}, 1, 2)); });
+  refused(out, "a negative sample time", [&] { lti::state(a, b, c, d, -0.1); });
+}
+```
+
+Output
+
+```text
+a non-square A : eng::lti::state: A must be square
+B with the wrong number of rows : eng::lti::state: B rows must equal the state count
+C with the wrong number of columns : eng::lti::state: C columns must equal the state count
+D that does not match the outputs and inputs : eng::lti::state: D must have shape [outputs, inputs]
+a negative sample time : eng::lti::state: sample_time must be finite and non-negative
 ```
 ## See Also
 

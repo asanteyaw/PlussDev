@@ -328,7 +328,7 @@ struct TransportEngine {
     };
 
     auto fixed_nodes = [&](const Series &base) {
-      Series value = reservoir_mask.eq(1.0).where(source, base);
+      Series value = pluss::series::where(reservoir_mask.eq(1.0), source, base);
       value = put_tanks(value, tank_quality);
       return value;
     };
@@ -338,8 +338,7 @@ struct TransportEngine {
       const Series positive = flow.clamp_min(0.0);
       const Series negative = flow.neg().clamp_min(0.0);
       const Series abs_flow = positive.add(negative);
-      const Series downstream = flow.ge(0.0).where(
-          current_field.select(-1, cells - 1), current_field.select(-1, 0));
+      const Series downstream = pluss::series::where(flow.ge(0.0), current_field.select(-1, cells - 1), current_field.select(-1, 0));
       const Series inflow_rate =
           matvec(to_put, positive).add(matvec(from_put, negative));
       const Series outflow_rate =
@@ -364,11 +363,11 @@ struct TransportEngine {
       const Series matrix = batch_diag(total).sub(forward.add(reverse));
       const Series active = junction_mask.eq(1.0).logical_and(
           total.gt(route_options.flow_tolerance));
-      const Series system = active.unsqueeze(-1).where(matrix, identity);
+      const Series system = pluss::series::where(active.unsqueeze(-1), matrix, identity);
       const Series mixed_rhs = pipe_inflow_mass.mul(junction_mask)
                                    .add(injection.mul(source));
       const Series fixed = fixed_nodes(current_node);
-      const Series rhs = active.where(mixed_rhs, fixed);
+      const Series rhs = pluss::series::where(active, mixed_rhs, fixed);
       if (system.scalar_type() != rhs.scalar_type())
         throw std::logic_error(
             std::string(route.operation) +
@@ -376,10 +375,9 @@ struct TransportEngine {
       const Series mixed =
           system.linearalg.lu_solve(rhs.unsqueeze(-1)).squeeze(-1).to(dtype);
       const Series solved_node = fixed_nodes(mixed);
-      const Series solved_upstream = flow.ge(0.0).where(
-          matvec(from_map, solved_node), matvec(to_map, solved_node));
+      const Series solved_upstream = pluss::series::where(flow.ge(0.0), matvec(from_map, solved_node), matvec(to_map, solved_node));
       const Series link_out =
-          pipe_mask.eq(1.0).where(downstream, solved_upstream);
+          pluss::series::where(pipe_mask.eq(1.0), downstream, solved_upstream);
       const Series inflow_mass =
           matvec(to_put, positive.mul(link_out))
               .add(matvec(from_put, negative.mul(link_out)));
@@ -390,9 +388,8 @@ struct TransportEngine {
     auto link_quality = [&](const Series &flow, const Series &current_node,
                             const Series &current_field) {
       const Series average = current_field.mean(-1, false);
-      const Series upstream = flow.ge(0.0).where(matvec(from_map, current_node),
-                                                matvec(to_map, current_node));
-      return pipe_mask.eq(1.0).where(average, upstream);
+      const Series upstream = pluss::series::where(flow.ge(0.0), matvec(from_map, current_node), matvec(to_map, current_node));
+      return pluss::series::where(pipe_mask.eq(1.0), average, upstream);
     };
 
     std::vector<Series> node_values;
@@ -444,7 +441,7 @@ struct TransportEngine {
             pipe_mask.eq(1.0).logical_and(
                 abs_flow.gt(route_options.flow_tolerance));
         const double pipe_limit =
-            active_pipe.where(cell_volume.div(abs_flow.clamp_min(1e-30)), inf)
+            pluss::series::where(active_pipe, cell_volume.div(abs_flow.clamp_min(1e-30)), inf)
                 .amin()
                 .item<double>();
 
@@ -460,8 +457,7 @@ struct TransportEngine {
           const Series tank_inf = pluss::series::full_like(
               tank_out, std::numeric_limits<double>::infinity());
           tank_limit =
-              tank_out.gt(route_options.flow_tolerance)
-                  .where(tank_volume.div(tank_out.clamp_min(1e-30)), tank_inf)
+              pluss::series::where(tank_out.gt(route_options.flow_tolerance), tank_volume.div(tank_out.clamp_min(1e-30)), tank_inf)
                   .amin()
                   .item<double>();
         }
@@ -506,16 +502,14 @@ struct TransportEngine {
 
         const MixState state = mix(sample_flow, demand, node, field);
         node = state.node;
-        const Series boundary = sample_flow.ge(0.0).where(
-            matvec(from_map, node), matvec(to_map, node));
+        const Series boundary = pluss::series::where(sample_flow.ge(0.0), matvec(from_map, node), matvec(to_map, node));
         const Series routed_boundary =
             age ? boundary.add(pipe_mask.mul(dt))
                 : pipe_equilibrium.add(
                       boundary.sub(pipe_equilibrium).mul(pipe_step_factor));
         cumulative_reaction = cumulative_reaction.add(
             routed_boundary.sub(boundary).mul(abs_flow).mul(dt).sum(-1, false));
-        const Series safe_cell = pipe_mask.eq(1.0).where(
-            cell_volume, pluss::series::ones_like(cell_volume));
+        const Series safe_cell = pluss::series::where(pipe_mask.eq(1.0), cell_volume, pluss::series::ones_like(cell_volume));
         const Series cfl = abs_flow.mul(dt).div(safe_cell).mul(pipe_mask);
         const Series left =
             cells == 1
@@ -531,9 +525,8 @@ struct TransportEngine {
             left.sub(field).mul(cfl.unsqueeze(-1)));
         const Series reverse = field.add(
             right.sub(field).mul(cfl.unsqueeze(-1)));
-        const Series routed = sample_flow.ge(0.0).unsqueeze(-1).where(
-            forward, reverse);
-        field = pipe_mask.eq(1.0).unsqueeze(-1).where(routed, field);
+        const Series routed = pluss::series::where(sample_flow.ge(0.0).unsqueeze(-1), forward, reverse);
+        field = pluss::series::where(pipe_mask.eq(1.0).unsqueeze(-1), routed, field);
 
         if (tanks > 0) {
           const Series tank_in =

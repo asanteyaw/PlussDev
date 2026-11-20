@@ -54,8 +54,8 @@ Example 1. Forward-fill and backward-fill the same gapped feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"reading_id", Slate(pluss::make_series({1, 2, 3, 4, 5}))},
-    {"temp",       Slate(pluss::make_series({68.0, std::nullopt, std::nullopt, 72.0, std::nullopt}))},
+    {"reading_id", Shelf(pluss::make_series({1, 2, 3, 4, 5}))},
+    {"temp",       Shelf(pluss::make_series({68.0, std::nullopt, std::nullopt, 72.0, std::nullopt}))},
 });
 std::cout << readings;
 ```
@@ -63,16 +63,16 @@ std::cout << readings;
 ### Output (before)
 
 ```text
-===========
-     | temp
------------
-0    | 68  
-1    | NULL
-2    | NULL
-3    | 72  
-4    | NULL
------------
-[5 cs x 1 feat]
+=======================
+     | reading_id  temp
+-----------------------
+0    | 1           68  
+1    | 2           NaN 
+2    | 3           NaN 
+3    | 4           72  
+4    | 5           NaN 
+-----------------------
+[5 cs x 2 feat]
 ```
 
 ```cpp
@@ -161,10 +161,10 @@ std::cout << constant;
 ===========
      | temp
 -----------
-0    | 68  
+0    |  68 
 1    | -1  
 2    | -1  
-3    | 72  
+3    |  72 
 4    | -1  
 -----------
 [5 cs x 1 feat]
@@ -178,8 +178,8 @@ Example 4. `Constant` without a `constant` value throws.
 ```cpp
 try {
   auto out = readings.features({"temp"}).ts().fill_gaps(pluss::subsp::stats::ts::GapFillMode::Constant);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

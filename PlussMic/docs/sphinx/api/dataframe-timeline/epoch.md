@@ -39,7 +39,7 @@ Example 1. Extract the epoch second from every row of a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "1970-01-01T00:00:00Z",
           "2024-01-01T00:00:10Z",
       }))}});
@@ -83,7 +83,7 @@ Example 2. Call `epoch()` with no argument to confirm the default unit is
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "1970-01-01T00:00:00Z",
           "2024-01-01T00:00:10Z",
       }))}});
@@ -115,7 +115,7 @@ fractional part truncate rather than round.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "1970-01-01T00:00:00.000000000Z",
           "2024-01-01T00:00:10.123456789Z",
       }))}});
@@ -160,7 +160,7 @@ count.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({
+    {{"ts", Shelf(pluss::make_timeline({
           "1970-01-01T00:00:00Z",
           "2024-01-01T12:00:00Z",
       }))}});
@@ -204,12 +204,12 @@ result.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+    {{"ts", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 
 try {
   auto out = events.tl().epoch(TimeUnit::Months);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -217,7 +217,7 @@ try {
 ### Output
 
 ```text
-Slate::tl().epoch: unit is span-only; use Slate::tl().span
+Shelf::tl().epoch: unit is span-only; use Shelf::tl().span
 ```
 
 `Months` (like `Weeks`, `Years`, and `BusinessDays`) only makes sense as a
@@ -236,7 +236,7 @@ outright — see [`span()`](span.md) for the method that does accept it.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
-- A `NaT` row (or one already null on the underlying `Slate`) displays as
+- A `NaT` row (or one already null on the underlying `Shelf`) displays as
   `"NULL"`, not a sentinel epoch value.
 
 ## See Also

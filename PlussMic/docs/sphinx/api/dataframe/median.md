@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::median(Axis axis = Axis::Case, bool skipnull = true) const
+Shelf DataFrame::median(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does
 
-Reduces every numeric feature to its median, returning one `Slate` whose entries line
+Reduces every numeric feature to its median, returning one `Shelf` whose entries line
 up with the frame's numeric feature names — the same shape [`mean()`](mean.md) and
 [`sum()`](sum.md) return. Non-numeric features are skipped entirely rather than coerced
 into a statistic that wouldn't mean anything.
@@ -43,7 +43,7 @@ Controls how a missing value affects that feature's result:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's median.
 
@@ -56,10 +56,10 @@ default).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto middles = orders.median();

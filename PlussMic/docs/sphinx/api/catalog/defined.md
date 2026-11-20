@@ -14,7 +14,7 @@ bool Catalog::defined() const noexcept
 ## What It Does
 
 Reports whether the catalog owns a concrete backing handle at all — the same
-undefined/defined distinction `Slate::defined()` and `DataFrame::defined()` make. A
+undefined/defined distinction `Shelf::defined()` and `DataFrame::defined()` make. A
 default-constructed `Catalog` is **undefined**; almost every other method throws
 `"Catalog: undefined handle"` if called on one. A `Catalog` built from an explicit (even
 empty) stream list is defined — `defined()` is about handle existence, not about whether
@@ -68,8 +68,8 @@ std::cout << std::boolalpha << ct.defined() << "\n";
 
 try {
   auto n = ct.nkeys();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -113,9 +113,9 @@ true
   storage, a separate question from whether that storage exists.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="similarity.html">
+  <a class="prev-link" href="count_kinds.html">
     <span class="label">Previous</span>
-    <span class="title">similarity</span>
+    <span class="title">count_kinds</span>
   </a>
   <a class="next-link" href="display.html">
     <span class="label">Next</span>

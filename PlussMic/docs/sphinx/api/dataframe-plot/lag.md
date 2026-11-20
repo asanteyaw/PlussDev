@@ -72,7 +72,7 @@ the series.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"level", Slate(pluss::make_series({10.0, 10.5, 11.0, 10.8, 11.2, 11.5, 11.3, 11.8}))},
+    {"level", Shelf(pluss::make_series({10.0, 10.5, 11.0, 10.8, 11.2, 11.5, 11.3, 11.8}))},
 });
 
 auto chart = readings.plot().lag("level");
@@ -123,7 +123,7 @@ for (int i = 0; i < 5000; ++i) {
 }
 
 auto big = DataFrame({
-    {"trend", Slate(pluss::make_series(long_series))},
+    {"trend", Shelf(pluss::make_series(long_series))},
 });
 
 LagPlotOptions capped;
@@ -155,13 +155,13 @@ Example 6. Fewer than two rows throws.
 
 ```cpp
 auto single_row = DataFrame({
-    {"level", Slate(pluss::make_series({10.0}))},
+    {"level", Shelf(pluss::make_series({10.0}))},
 });
 
 try {
   auto bad = single_row.plot().lag("level");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

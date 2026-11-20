@@ -38,7 +38,7 @@ this same asymmetry.
 Calling any method on this accessor with a non-numeric stream (`Note`,
 `Timeline`, `TimeIndex`) throws — the exact message names whichever method
 actually ran, e.g. `"TimeSeriesAccessor::diff: source must be Series"`. Cast
-first with [`Stream::cast(SlateCastTarget::Series)`](cast.md) if the stream
+first with [`Stream::cast(ShelfCastTarget::Series)`](cast.md) if the stream
 isn't already numeric.
 ```
 
@@ -69,11 +69,11 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=3
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
+0            | NULL                                                                                                     
 1            | 10                                                                                                       
 2            | -5                                                                                                       
 ========================================================================================================================
@@ -87,7 +87,7 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 try {
   auto out = stream.ts().diff(1);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -115,13 +115,13 @@ TimeSeriesAccessor::diff: source must be Series
 - [`Stream::cast`](cast.md): convert a non-numeric stream to `Series` first.
 - [`Catalog::ts`](../catalog/ts.md): the whole-catalog equivalent, with a much
   smaller method surface — see the important callout above.
-- [`TimeSeriesAccessor` (Slate)](../slate-ts/returns.md): the underlying
+- [`TimeSeriesAccessor` (Shelf)](../shelf-ts/returns.md): the underlying
   single-column engine this accessor's methods delegate to.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_slate.html">
+  <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
-    <span class="title">to_slate</span>
+    <span class="title">to_string</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>

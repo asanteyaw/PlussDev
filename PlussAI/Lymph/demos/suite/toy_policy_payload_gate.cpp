@@ -8,15 +8,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(1.0, 40.0, 40, ScalarType::Float64);
   const Series y = x.mul(0.7).add(x.sqrt());
   const DataFrame raw({
-      {"record_id", Slate(pluss::series::arange(0, 40, 1, pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU)))},
-      {"x", Slate(x)},
-      {"sqrt_x", Slate(x.sqrt())},
-      {"y", Slate(y)},
+      {"record_id", Shelf(pluss::series::arange(0, 40, 1, pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU)))},
+      {"x", Shelf(x)},
+      {"sqrt_x", Shelf(x.sqrt())},
+      {"y", Shelf(y)},
   });
 
   lymph::workflow::Policy gate{

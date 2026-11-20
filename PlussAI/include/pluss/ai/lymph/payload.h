@@ -142,8 +142,8 @@ class Payload final {
     return *this;
   }
 
-  Payload& slate(DataSlatePolicy policy) noexcept {
-    options_.slate_policy = policy;
+  Payload& shelf(DataShelfPolicy policy) noexcept {
+    options_.shelf_policy = policy;
     return *this;
   }
 

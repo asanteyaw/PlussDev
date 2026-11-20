@@ -2,6 +2,8 @@
 
 # `lti::to_sos`
 
+Realises a discrete pole-zero system as second-order sections.
+
 ## Signature
 
 ```cpp
@@ -10,145 +12,231 @@ pluss::Series lti::to_sos(const lti::PoleZero& system);
 
 ## What It Does
 
-Pairs poles and zeros into numerically ordered biquadratic sections. The first section absorbs system gain, producing rows directly consumable by `signal::sos`.
+Pairs the poles and zeros into biquads and returns one row `b0 b1 b2 a0 a1 a2` per section, in the layout `signal::sos` consumes. A system of order `n` gives `ceil(n / 2)` sections, so an odd order uses one more section than half of it.
 
 ## Parameters
 
 `system`
-: Discrete pole-zero system carrying one explicit zero per pole. Conjugate-paired real systems produce real coefficients.
+: A discrete `PoleZero`.
 
 ## Returns
 
-A matrix with shape `[sections, 6]`; each row is `[b0,b1,b2,a0,a1,a2]`.
+A `Series` of shape `[sections, 6]`; `sections` is `ceil(order / 2)`.
 
 ## Errors
 
-Rejects continuous systems, unequal zero/pole counts, or root configurations that cannot be paired into a valid realization.
+A continuous system and an improper system throw `pluss::Error`.
+
+## Interpretation and Use
+
+The cascade of the sections reproduces the response of the pole-zero model to rounding (the second example evaluates both at five frequencies). Pass the rows to `signal::sos` to filter.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect stability, response, and second-order-section realization.
+The number of sections for orders 2 to 5.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::PoleZero system = lti::zpk(
-      pluss::make_series({0.0}), pluss::make_series({0.5}),
-      pluss::make_series(0.5), 1.0);
-  const pluss::Series response =
-      lti::freqresp(system, pluss::make_series({0.0, 3.141592653589793}));
-
-  std::cout << std::boolalpha << "discrete = " << system.is_disc()
-            << ", stable = " << system.is_stable() << "\n";
-  out.writeln("zeros =", system.zeros().items<std::complex<double>>());
-  out.writeln("poles =", system.poles().items<std::complex<double>>());
-  out.writeln("response =", response.items<std::complex<double>>());
-  out.writeln("sos =", lti::to_sos(system).flatten().items<double>());
+  for (const std::int64_t order : {2, 3, 4, 5}) {
+    const lti::PoleZero design = sig::butter(order, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+    const pluss::Series sos = lti::to_sos(design);
+    out.writeln("order", order, ": sections", sos.size(0), "by", sos.size(1));
+  }
 }
 ```
 
 Output
 
 ```text
-discrete = true, stable = true
-zeros = [(0,0)]
-poles = [(0.5,0)]
-response = [(1,0), (0.333333,-1.36072e-17)]
-sos = [0.5000, 0.0000, 0.0000, 1.0000, -0.5000, 0.0000]
+order 2 : sections 1 by 6
+order 3 : sections 2 by 6
+order 4 : sections 2 by 6
+order 5 : sections 3 by 6
 ```
 ### Example 2
 
-Compare frequency response across equivalent system representations.
+The cascade against the pole-zero response.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
+#include <optional>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-
-namespace lti = pluss::subsp::eng::lti;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-
-  const lti::StateSpace state_system = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const lti::PoleZero root_system = lti::zpk(
-      pluss::series::empty({0}, pluss::ScalarType::Float64),
-      pluss::make_series({-1.0}),
-      pluss::make_series(1.0));
-  const pluss::Series omega = pluss::make_series({0.0, 1.0, 2.0});
-
-  out.writeln("state response =",
-              lti::freqresp(state_system, omega).flatten().items<std::complex<double>>());
-  out.writeln("root response =",
-              lti::freqresp(root_system, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-state response = [(1,0), (0.5,-0.5), (0.2,-0.4)]
-root response = [(1,0), (0.5,-0.5), (0.2,-0.4)]
-```
-### Example 3
-
-Exercise frequency-grid and realization validation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
 
 int main() {
   OutputEngine out;
-  const lti::PoleZero system = lti::zpk(
-      pluss::series::empty({0}, pluss::ScalarType::Float64),
-      pluss::make_series({-1.0}),
-      pluss::make_series(1.0));
-  try {
-    static_cast<void>(lti::freqresp(system, pluss::make_series({0, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer grid rejected =", message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::PoleZero design = sig::butter(4, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  const pluss::Series sections = lti::to_sos(design);
+  const double pi = std::acos(-1.0);
+  double worst = 0.0;
+  for (const double hertz : {10.0, 50.0, 100.0, 200.0, 400.0}) {
+    const double w = 2.0 * pi * hertz / 1000.0;
+    std::complex<double> product = 1.0;
+    for (std::int64_t s = 0; s < sections.size(0); ++s) {
+      const auto row = sections.select(0, s).items<double>();
+      product *= sig::freqz(pluss::make_series({row[0], row[1], row[2]}), pluss::make_series({row[3], row[4], row[5]}), pluss::make_series({w})).items<std::complex<double>>()[0];
+    }
+    const std::complex<double> direct = lti::freqresp(design, pluss::make_series({2.0 * pi * hertz})).items<std::complex<double>>()[0];
+    worst = std::max(worst, std::abs(product - direct));
   }
-  try {
-    static_cast<void>(lti::to_sos(system));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous SOS rejected =", message.substr(0, message.find('\n')));
-  }
+  out.writeln("largest difference between the cascade and the pole-zero response =", worst);
 }
 ```
 
 Output
 
 ```text
-integer grid rejected = eng::lti::freqresp: omega must have a real floating dtype
-continuous SOS rejected = eng::lti::to_sos: only discrete systems can be realized by the delay-form SOS filter
+largest difference between the cascade and the pole-zero response = 0.0000
+```
+### Example 3
+
+The layout of one section.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::PoleZero design = sig::butter(2, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  const pluss::Series sos = lti::to_sos(design);
+  out.writeln("one section b0 b1 b2 a0 a1 a2 =", sos.flatten().items<double>());
+  out.writeln("the denominator leader a0 is", sos.select(1, 3).items<double>()[0], "so the section can be run by signal::sos directly");
+}
+```
+
+Output
+
+```text
+one section b0 b1 b2 a0 a1 a2 = [0.0675, 0.1349, 0.0675, 1.0000, -1.1430, 0.4128]
+the denominator leader a0 is 1.0000 so the section can be run by signal::sos directly
+```
+### Example 4
+
+Every refused system.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+#include <optional>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator() { return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1)); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "a continuous system", [] { lti::to_sos(lti::zpk(pluss::series::empty({0}, pluss::ScalarType::Float64), pluss::make_series({-1.0}), pluss::make_series(1.0))); });
+  refused(out, "more zeros than poles", [] { lti::to_sos(lti::zpk(pluss::make_series({1.0, 2.0}), pluss::make_series({0.5}), pluss::make_series(1.0), 0.1)); });
+}
+```
+
+Output
+
+```text
+a continuous system : eng::lti::to_sos: only discrete systems can be realized by the delay-form SOS filter
+more zeros than poles : eng::lti::zpk: a proper system cannot have more zeros than poles
 ```
 ## See Also
 

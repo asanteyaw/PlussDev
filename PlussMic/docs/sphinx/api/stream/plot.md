@@ -19,7 +19,7 @@ The entry point into the stream-level plotting accessor — `line`/`bar`/`scatte
 figures. Like `Catalog::plot()`, there is no separate `StreamPlotOptions` type — the
 accessor reuses `pluss::table::DataFramePlotOptions` as-is. Every method on the returned
 `StreamPlotAccessor` is itself a thin forward into
-[`SlatePlotAccessor`](../../slate_plot_api_reference) (via `Stream::to_slate()`), so the
+[`ShelfPlotAccessor`](../../shelf_plot_api_reference) (via `Stream::to_shelf()`), so the
 Stream-level pages focus on what's different at this layer — mainly that `Stream` has no
 `name()`, so every chart's axis labels use the generic fallback names (`"value"`, `"x"`,
 `"hue"`) rather than any name of your own. Every method has its own page, with real
@@ -57,22 +57,22 @@ auto chart = revenue.plot().line();
   accessor's methods to actually build a chart.
 - Reuses `pluss::table::DataFramePlotOptions` directly — there is no `StreamPlotOptions`.
 - Every method on the returned accessor is a subset of, and forwards to,
-  [`SlatePlotAccessor`](../../slate_plot_api_reference)'s own methods — `Stream` exposes
+  [`ShelfPlotAccessor`](../../shelf_plot_api_reference)'s own methods — `Stream` exposes
   `line`/`bar`/`scatter`/`hist`/`density`/`auto_plot` only, not the full
-  `step`/`area`/`box`/`violin`/`pie` set `SlatePlotAccessor` has.
+  `step`/`area`/`box`/`violin`/`pie` set `ShelfPlotAccessor` has.
 
 ## See Also
 
 - [`StreamPlotAccessor` API Reference](../../stream_plot_accessor_api_reference): every
   chart method on the accessor this call returns, each with a real rendered example.
-- [`SlatePlotAccessor`](../../slate_plot_api_reference): the accessor every
+- [`ShelfPlotAccessor`](../../shelf_plot_api_reference): the accessor every
   `StreamPlotAccessor` method delegates to underneath.
-- [`Stream::to_slate`](to_slate.md): the conversion every plotting method runs first.
+- [`Stream::to_shelf`](to_shelf.md): the conversion every plotting method runs first.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nrecords.html">
+  <a class="prev-link" href="nt.html">
     <span class="label">Previous</span>
-    <span class="title">nrecords</span>
+    <span class="title">nt</span>
   </a>
   <a class="next-link" href="ptype.html">
     <span class="label">Next</span>

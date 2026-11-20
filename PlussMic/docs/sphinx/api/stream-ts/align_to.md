@@ -87,8 +87,8 @@ label        | value
 ------------------------------------------------------------------------------------------------------------------------
 2024-01-01T~ | 100                                                                                                      
 2024-01-02T~ | 102                                                                                                      
-2024-01-03T~ | NA                                                                                                       
-2024-01-04T~ | NA                                                                                                       
+2024-01-03T~ | NULL                                                                                                     
+2024-01-04T~ | NULL                                                                                                     
 2024-01-05T~ | 110                                                                                                      
 ========================================================================================================================
 ```
@@ -110,8 +110,8 @@ label        | value
 - [`StreamTimeSeriesAccessor::fill_gaps`](fill_gaps.md): the gap-fill step
   the `fill_mode`/`constant` overload applies automatically.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::align_to`](../slate-ts/align_to.md): the underlying
-  single-slate engine, with the full comparison of all four `mode`s and the
+- [`TimeSeriesAccessor::align_to`](../shelf-ts/align_to.md): the underlying
+  single-shelf engine, with the full comparison of all four `mode`s and the
   `fill_mode`/`constant` overload example.
 
 <div class="pluss-inline-prev-next">

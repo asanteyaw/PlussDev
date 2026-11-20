@@ -140,7 +140,7 @@ inline SteadyState steady_state(const Network &net, const Series &k,
                            .add(defect.matmul(l)); // L^T defect
     const Series step = dynamics::solve(lhs, rhs);
     const Series ratio = x.div(step.neg().clamp(1e-300, 1e300));
-    const Series limit = step.lt(0.0).where(ratio, ratio.mul(0.0).add(1e300))
+    const Series limit = pluss::series::where(step.lt(0.0), ratio, ratio.mul(0.0).add(1e300))
                              .amin(-1, true).mul(0.9);
     const Series alpha = limit.clamp(0.0, 1.0);
     x = x.add(step.mul(alpha));

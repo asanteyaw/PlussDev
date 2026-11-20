@@ -75,8 +75,8 @@ auto ragged = pluss::kindle::Archive({c0, c1});
 
 try {
   ragged.nkeys();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -104,8 +104,8 @@ Archive::nkeys: catalogs have different key counts
     <span class="label">Previous</span>
     <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="notnull.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">notnull</span>
+    <span class="title">notinf</span>
   </a>
 </div>

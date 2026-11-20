@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrameTsAccessor::timed(std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
-DataFrame DataFrameTsAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
+DataFrame DataFrameTsAccessor::timed(const Shelf& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does
@@ -29,7 +29,7 @@ is **included**. `Left` flips which end is inclusive; `Both` includes both bound
 ticks; `Neither` excludes both.
 
 The no-`axis` overload uses this accessor's own time axis (the frame's case labels,
-or an explicit `TsOptions.axis`); the `axis` overload takes an explicit `Slate`
+or an explicit `TsOptions.axis`); the `axis` overload takes an explicit `Shelf`
 instead, useful when the desired time axis isn't the frame's own case labels. Groups
 (`TsOptions.group`) are not supported here — use [`rolling(duration)`](rolling.md)
 instead for grouped calendar-duration windows.
@@ -40,9 +40,9 @@ instead for grouped calendar-duration windows.
 
 The trailing window width, in nanoseconds. Must be positive.
 
-**axis** (`const Slate&`, explicit-axis overload)
+**axis** (`const Shelf&`, explicit-axis overload)
 
-A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Slate`, the same length as the
+A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Shelf`, the same length as the
 frame's case count, sorted ascending, with no missing values — used as the time axis
 instead of this accessor's own.
 
@@ -76,8 +76,8 @@ Example 1. A 2-day trailing sum, using the default `Right` closure.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0, 25.0}))}},
-    Slate(pluss::make_timeline({
+    {{"load", Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0, 25.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z",
         "2024-01-04T00:00:00Z", "2024-01-05T00:00:00Z"})));
 std::cout << readings;
@@ -90,30 +90,30 @@ std::cout << out;
 ### Output (before)
 
 ```text
-==================
+=================
            | load
-------------------
+-----------------
 2024-01-01 | 10  
 2024-01-02 | 20  
 2024-01-03 | 15  
 2024-01-04 | 30  
 2024-01-05 | 25  
-------------------
+-----------------
 [5 cs x 1 feat]
 ```
 
 ### Output (after)
 
 ```text
-==================
+=================
            | load
-------------------
+-----------------
 2024-01-01 | 10  
 2024-01-02 | 30  
 2024-01-03 | 35  
 2024-01-04 | 45  
 2024-01-05 | 55  
-------------------
+-----------------
 [5 cs x 1 feat]
 ```
 
@@ -137,15 +137,15 @@ std::cout << out_left;
 ### Output
 
 ```text
-==================
+=================
            | load
-------------------
+-----------------
 2024-01-01 | NULL
 2024-01-02 | 10  
 2024-01-03 | 30  
-2024-01-04 | 20  
-2024-01-05 | 15  
-------------------
+2024-01-04 | 35  
+2024-01-05 | 45  
+-----------------
 [5 cs x 1 feat]
 ```
 

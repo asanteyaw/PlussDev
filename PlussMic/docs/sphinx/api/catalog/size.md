@@ -81,9 +81,9 @@ std::cout << ct.size();
 - [`Catalog::empty`](empty.md): shorthand for `size() == 0`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="show.html">
+  <a class="prev-link" href="similarity.html">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">similarity</span>
   </a>
   <a class="next-link" href="slice.html">
     <span class="label">Next</span>

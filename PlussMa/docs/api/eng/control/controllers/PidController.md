@@ -2,7 +2,7 @@
 
 # `control::Pid`
 
-An immutable validated parallel-form PID controller.
+A PID controller returned by `pid`.
 
 ## Signature
 
@@ -18,169 +18,46 @@ control::PidRule control::Pid::int_rule() const noexcept;
 control::PidRule control::Pid::diff_rule() const noexcept;
 ```
 
-## What It Does
+## Construction
 
-`Pid` stores proportional, integral, derivative, derivative-filter, timebase, and discretization data after `control::pid` has validated them. The object is immutable so it can be shared safely between repeated frequency-response analyses.
+Returned by `pid`.
 
 ## Methods
 
-`kp()`, `ki()`, `kd()`
-: Return the controller gains without copying.
-
-`filter()`
-: Returns the non-negative derivative-filter time constant.
-
-`sample_time()`
-: Returns zero for continuous time or the positive sampling interval for discrete time.
-
-`is_cont()`, `is_disc()`
-: Report the mutually exclusive timebase state.
-
-`int_rule()`, `diff_rule()`
-: Return the selected discrete substitutions.
-
-## Returns
-
-Accessors return const `Series` references, scalar metadata, or `PidRule` values.
-
-## Errors
-
-Accessors do not fail. Invalid gains, filter values, or sample times are rejected by `control::pid` before a `Pid` exists.
+| Method | What it does |
+|---|---|
+| [`kp`](PidController/kp.md) | The proportional gain `Kp`. |
+| [`ki`](PidController/ki.md) | The integral gain `Ki`. |
+| [`kd`](PidController/kd.md) | The derivative gain `Kd`. |
+| [`filter`](PidController/filter.md) | The derivative-filter time constant. |
+| [`sample_time`](PidController/sample_time.md) | The sample period in seconds; zero for a continuous controller. |
+| [`is_cont`](PidController/is_cont.md) | Whether the controller is continuous-time. |
+| [`is_disc`](PidController/is_disc.md) | Whether the controller is discrete-time. |
+| [`int_rule`](PidController/int_rule.md) | The rule used to form the integral of a discrete controller. |
+| [`diff_rule`](PidController/diff_rule.md) | The rule used to form the filtered derivative of a discrete controller. |
 
 ## Changelog
 
-- **0.1** — Initial immutable continuous/discrete parallel PID contract.
+- **0.1**: initial documented surface.
 
-## Interpretation and Use
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-`Pid` is immutable: construction validates the controller, and accessors expose its stored contract without recomputation. Use `is_cont()`/`is_disc()` before interpreting rules, and preserve the object for repeated frequency sweeps.
-
-## Practical Examples
-
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
-
-### Example 1
-
-Inspect and evaluate a continuous PID controller.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <complex>
-#include <iostream>
-
-namespace control = pluss::subsp::eng::control;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(2.0), pluss::make_series(3.0),
-      pluss::make_series(4.0), pluss::make_series(0.5));
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 1.0}));
-
-  std::cout << std::boolalpha << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  out.writeln("response =", response.items<std::complex<double>>());
-}
+PidController/Introduction
+PidController/kp
+PidController/ki
+PidController/kd
+PidController/filter
+PidController/sample_time
+PidController/is_cont
+PidController/is_disc
+PidController/int_rule
+PidController/diff_rule
 ```
+<!-- apiref:toctree:end -->
 
-Output
-
-```text
-continuous = true, discrete = false
-response = [(2.47059,-4.11765), (3.6,0.2)]
-```
-### Example 2
-
-Inspect timebase and rule accessors on a sampled controller.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <complex>
-#include <iostream>
-
-namespace control = pluss::subsp::eng::control;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(1.5), pluss::make_series(0.4),
-      pluss::make_series(0.2), pluss::make_series(0.05), 0.1,
-      control::PidRule::Trapezoid, control::PidRule::Backward);
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 2.0}));
-
-  std::cout << std::boolalpha
-            << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  std::cout << "sample time = " << controller.sample_time()
-            << ", integral rule = " << static_cast<int>(controller.int_rule())
-            << ", derivative rule = " << static_cast<int>(controller.diff_rule())
-            << "\n";
-  out.writeln("discrete response =",
-              response.items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-continuous = false, discrete = true
-sample time = 0.1, integral rule = 2, derivative rule = 1
-discrete response = [(1.50499,-0.700062), (1.57742,0.18647)]
-```
-### Example 3
-
-See invalid construction rejected before an object exists.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <complex>
-#include <exception>
-#include <string>
-
-namespace control = pluss::subsp::eng::control;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  try {
-    static_cast<void>(control::place(
-        pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-        pluss::series::zeros({2, 1}, pluss::ScalarType::Float64),
-        pluss::make_series({std::complex<double>{-4.0, 0.0},
-                            std::complex<double>{-5.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("uncontrollable plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::pid(
-        pluss::make_series(1.0), pluss::make_series(0.0),
-        pluss::make_series(0.0), pluss::make_series(-0.1)));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative filter rejected =",
-                message.substr(0, message.find('\n')));
-  }
-}
-```
-
-Output
-
-```text
-uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
-negative filter rejected = eng::control::pid: filter must be non-negative
-```
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="PidRule.html">
@@ -193,7 +70,3 @@ negative filter rejected = eng::control::pid: filter must be non-negative
   </a>
 </div>
 <!-- apiref:nav:end -->
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->

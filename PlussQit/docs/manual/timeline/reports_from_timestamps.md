@@ -6,7 +6,7 @@
 
 Three operational reports built from nothing but instants and the lengths between them: a support desk measured against its promise, subscription renewals with a fair refund, and a service's availability from its heartbeats. Each is one complete program using only `Timeline`, `Duration` and `Series`.
 
-## The mental model
+## How it works
 
 Every report here follows one pattern. Take two `Timeline`s, subtract them to get a `Duration` per row, compare the `Duration` with a limit to get a Boolean `Series`, and convert the `Duration` to numbers (`host()` gives nanoseconds) when you need statistics. Calendar questions (which weekday, which hour, which month end) are asked of the `Timeline` itself, and calendar moves (`add_months`) are kept apart from elapsed lengths (`duration::days`) because they disagree exactly where the money is.
 

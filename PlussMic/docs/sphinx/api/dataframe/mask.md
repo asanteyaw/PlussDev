@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features = {}) const
-DataFrame DataFrame::mask(const Slate& bool_mask, const AlignOptions& options, pluss::RangeView<std::string_view> features = {}) const
-DataFrame DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features, const AlignOptions& options) const
+DataFrame DataFrame::mask(const Shelf& bool_mask, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::mask(const Shelf& bool_mask, const AlignOptions& options, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::mask(const Shelf& bool_mask, pluss::RangeView<std::string_view> features, const AlignOptions& options) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ original shape and case count.
 
 ## Parameters
 
-**bool_mask** (`const Slate&`)
+**bool_mask** (`const Shelf&`)
 
 A boolean mask with one entry per case. `true` nulls the corresponding row's selected
 cells; `false` (or a missing mask entry, treated the same as `false`) leaves it alone.
@@ -54,8 +54,8 @@ Example 1. Null out every feature on rows where a threshold is crossed.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"score", Slate(pluss::make_series({45.0, 88.0, 30.0}))},
-    {"bonus", Slate(pluss::make_series({5.0, 10.0, 2.0}))},
+    {"score", Shelf(pluss::make_series({45.0, 88.0, 30.0}))},
+    {"bonus", Shelf(pluss::make_series({5.0, 10.0, 2.0}))},
 });
 std::cout << orders;
 ```

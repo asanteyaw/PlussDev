@@ -47,7 +47,7 @@ int main() {
 
   // from_nexus: bridges an existing DataFrame-based Nexus into a Locus.
   pluss::bundle::Nexus nexus_ws({
-      {"customers", pluss::table::DataFrame({{"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))}})},
+      {"customers", pluss::table::DataFrame({{"id", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))}})},
   });
   auto from_nx = Locus::from_nexus(nexus_ws);
   std::cout << "from_nexus ntables: " << from_nx.ntables() << '\n';

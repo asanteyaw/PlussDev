@@ -185,7 +185,7 @@ using pluss::ScalarType;
   const Series idx = pluss::series::arange(0, n, i64_on(platform));
   const Series eye = idx.reshape({n, 1}).eq(idx.reshape({1, n}));
   const Series large = dist2.max().reshape({1, 1}).add(1.0).mul(static_cast<double>(n + 1));
-  return eye.where(large.expand(std::vector<std::int64_t>{n, n}), dist2).reshape({n, n});
+  return pluss::series::where(eye, large.expand(std::vector<std::int64_t>{n, n}), dist2).reshape({n, n});
 }
 
 [[nodiscard]] Series targetable_clean_mask(const Series& labels,

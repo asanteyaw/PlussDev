@@ -6,7 +6,7 @@
 
 A structure is only as well defined as its supports. This page covers how supports are described with `Fix`, which support arrangements make a truss solvable and which leave it free to move as a mechanism, how a support that moves (a settlement) loads an indeterminate structure, and how to solve many load cases and many designs in a single call instead of a loop.
 
-## The mental model
+## How it works
 
 A `Fix` lists the constrained degrees of freedom as pairs. `node[i]` and `axis[i]` name one degree of freedom, node `node[i]` in direction `axis[i]`, and the support holds it at a value: zero when `value` is left empty, or `value[i]` when it is given. A **pin** fixes every axis of a node; a **roller** fixes only the axis it cannot move along and lets the node slide in the others.
 

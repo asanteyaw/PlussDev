@@ -14,7 +14,7 @@ LocusPull& LocusPull::max(std::string_view source, std::string_view alias = {})
 
 The highest usable (non-null) related value of `source` for each root
 record. Requires a numeric stream; see [`sum`](sum.md) for the shared
-null-for-empty and `NaN`-exclusion rules. Omitting `alias` derives one from
+null-for-empty and missing-value rules. Omitting `alias` derives one from
 the source: `"events.spend"` becomes `"events_spend_max"`.
 
 ## Parameters
@@ -70,4 +70,4 @@ text max: Stream::reduce_groups: this reduction needs a numeric Series stream
 ## See Also
 
 - [`min`](min.md): the matching lower extreme.
-- [`sum`](sum.md): the shared null-for-empty and `NaN`-exclusion rules.
+- [`sum`](sum.md): the shared null-for-empty and missing-value rules.

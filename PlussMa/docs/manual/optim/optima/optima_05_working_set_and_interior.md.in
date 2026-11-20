@@ -4,7 +4,7 @@ Chapter 4 opened sequential QP. This chapter opens the other two quadratic-model
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 An inequality constraint is either pushing on the answer (active) or irrelevant (inactive). The three algorithms handle that fact differently.
 

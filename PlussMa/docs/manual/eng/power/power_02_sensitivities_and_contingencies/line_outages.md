@@ -6,7 +6,7 @@
 
 A network must survive the loss of any one line without overloading another, the N-1 criterion. Checking it means solving the network once for every possible outage. The DC model makes that a single matrix computation: the **line outage distribution factors** give the new flow on every line for the loss of any one. `power::lodf` returns the factors, and `power::outages` applies them to the base flows and returns the flows after every outage. This page explains the factors, checks them against a re-solved network, screens a five-bus network for overloads, handles the lines whose loss splits the network, and compares the DC answer with the AC one.
 
-## The mental model
+## How it works
 
 When line `k` is lost, the flow it carried, `F_k`, has to go somewhere, and it redistributes over the remaining lines. The share that goes to monitored line `m` is its **LODF** for outage `k`, so that
 

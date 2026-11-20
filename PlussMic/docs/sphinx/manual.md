@@ -7,7 +7,7 @@ tool, not only look up signatures.
 PlussMic has four related models:
 
 ```text
-table  -> DataFrame, Slate, Atlas
+table  -> DataFrame, Shelf, Atlas
 kindle -> Stream, Catalog, Archive
 bundle -> Nexus, NexusTraverse, NexusQuery
 scribble -> Slot, Registry, Axel
@@ -15,7 +15,7 @@ scribble -> Slot, Registry, Axel
 
 Most users start with `DataFrame`, because it is the table abstraction used for
 CSV, Excel, JSON, Parquet, feature engineering, exploratory analysis, plotting,
-and export. `Slate` is the typed column model underneath `DataFrame`. `Atlas`
+and export. `Shelf` is the typed column model underneath `DataFrame`. `Atlas`
 stacks related frames. `Kindle` is the aligned stream layer. `Scribble` covers
 heterogeneous records, while `Bundle` covers the multi-table `Nexus` workbench
 when the job is broader than one rectangular table.
@@ -53,7 +53,7 @@ operations. I/O chapters use files such as `"sales.csv"` and
 The manual shows the relevant input file contents before the code. Public
 examples never contain paths from the author's machine.
 
-Pluss values are passed directly where `Slate` conversion is implicit:
+Pluss values are passed directly where `Shelf` conversion is implicit:
 
 ```cpp
 DataFrame sales({
@@ -62,7 +62,7 @@ DataFrame sales({
 });
 ```
 
-Explicit `Slate` construction appears only when the example needs Slate
+Explicit `Shelf` construction appears only when the example needs Shelf
 metadata, a validity mask, or a named standalone column.
 
 ## Verified examples
@@ -99,7 +99,7 @@ manual/part02_installation
 manual/part03_table_model
 manual/part04_io
 manual/part05_dataframe_workflows
-manual/part06_slate_workflows
+manual/part06_shelf_workflows
 manual/part07_query_sql
 manual/part08_time_series
 manual/part09_plotting

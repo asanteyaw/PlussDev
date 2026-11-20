@@ -47,11 +47,11 @@ namespace bi = pluss::bi;
 // Three sales rows: regions north, south, north; amounts 10, 20, 30.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -110,11 +110,11 @@ namespace bi = pluss::bi;
 // Three sales rows: regions north, south, north; amounts 10, 20, 30.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }
@@ -183,11 +183,11 @@ namespace bi = pluss::bi;
 // Three sales rows: regions north, south, north; amounts 10, 20, 30.
 pluss::bundle::Nexus make_nexus() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame sales({
-      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
-      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+      {"region", Shelf(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
   });
   return pluss::bundle::Nexus({{"sales", sales}});
 }

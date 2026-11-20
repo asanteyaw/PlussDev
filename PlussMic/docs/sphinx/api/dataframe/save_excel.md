@@ -72,9 +72,9 @@ Example 1. Save with the default sheet name (`"Sheet1"`), no case-axis column.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({101, 102, 103}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units", Slate(pluss::make_series({2, 1, 4}))},
+    {"id",    Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Shelf(pluss::make_series({2, 1, 4}))},
 });
 
 orders.save_excel("orders_out.xlsx");
@@ -135,6 +135,7 @@ name (`"case"`).
 
 ## Notes
 
+- A frame is written as one sheet. To write several sheets into one file, pass a `pluss::loader::Workbook` (a list of name and frame pairs) to `pluss::loader::save_excel`; [`load_excel`](load_excel.md) reads such a workbook back, and its first example builds one.
 - Only one sheet is written per call — there's no multi-sheet write overload the way
   [`load_excel()`](load_excel.md) has multi-sheet *read* overloads. Writing several
   sheets into one workbook means saving to the same `filepath` multiple times with

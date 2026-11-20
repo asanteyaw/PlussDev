@@ -70,8 +70,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.fields({"city"}).cast().timeline();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

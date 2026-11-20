@@ -6,7 +6,7 @@ A function of several variables has a derivative for every variable, and for eve
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **The derivative axes come last.** Whatever the batch shape of the arguments, `gradient` appends one axis of length `n`, `hessian` appends two and `jacobian` appends two (outputs, then variables).
 - **The variable list decides the layout.** `gradient()` with no list uses every variable in declared order; a list picks and orders the components. The order you give is the order you get.

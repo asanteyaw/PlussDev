@@ -86,15 +86,15 @@ auto short_mask = pluss::make_series(std::vector<bool>{true, false});
 
 try {
   auto out = stream.filter(short_mask);
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 39);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 39);
 }
 ```
 
 ### Output
 
 ```text
-Slate::filter: bool mask length mismat
+Shelf::filter: bool mask length mismatc
 ```
 
 ## Notes
@@ -115,12 +115,12 @@ Slate::filter: bool mask length mismat
   mask this method consumes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fillnull.html">
+  <a class="prev-link" href="fillposinf.html">
     <span class="label">Previous</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillposinf</span>
   </a>
-  <a class="next-link" href="freq.html">
+  <a class="next-link" href="fingerprint.html">
     <span class="label">Next</span>
-    <span class="title">freq</span>
+    <span class="title">fingerprint</span>
   </a>
 </div>

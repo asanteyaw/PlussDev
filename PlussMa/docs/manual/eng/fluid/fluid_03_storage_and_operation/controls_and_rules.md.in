@@ -4,7 +4,7 @@
 
 Nobody stands at a pump station to switch the pump on when the tank is low. A rule does it: when the water level falls below a mark the pump starts, and when it rises above another the pump stops. Rules of this kind decide how a system behaves over a day, and getting them wrong is one of the commonest ways to empty a tank. `Schedule::state` holds rules that watch a level or a pressure, `Schedule::time` holds actions that fire at a given second, and `fluid::run` applies both. This page explains what a rule is and how it is persistent, runs a pump on a two-level rule and checks the cycle against the arithmetic of the tank, applies timed actions including the one that sets a pump speed, and shows the rules that fail.
 
-## The mental model
+## How it works
 
 An **action** is a change to one pump or one valve: `Open`, `Close` or `Set`. It names the `Device` (`Pump` or `Valve`), the `index` among the pumps or the valves, the `Act`, and for `Set` a `value`. `Close` shuts the link, and a closed link carries no flow. `Open` reopens it, and clears any value that an earlier `Set` had latched, so the device returns to what its pattern says. `Set` opens the device and latches a value: a relative speed for a pump, the loss coefficient for a throttle valve, the flow for a flow valve, the pressure head for a pressure valve.
 

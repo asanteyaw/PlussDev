@@ -218,8 +218,9 @@ Example 1. Build a classic two-way table, then render it.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto ct = df.contingency("city", "channel");
@@ -242,9 +243,9 @@ Example 2. Keep three dimensions, then choose a projection later.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto ct = df.contingency({"city", "channel", "weekend"});
@@ -254,12 +255,12 @@ std::cout << ct.to_frame({"city"}, {"channel"});
 ### Output
 
 ```text
-===============================================================
-     | city  channel=Card | weekend=no  channel=Card | weekend=yes  channel=Cash | weekend=no  channel=Cash | weekend=yes
--------------------------------------------------------------------------------------------------------------------------------
-0    | A     1                          0                           1                          0                         
-1    | B     0                          1                           1                          1                         
--------------------------------------------------------------------------------------------------------------------------------
+===========================================================================================================
+     | city  channel=Card | weeken~  channel=Card | weeken~  channel=Cash | weeken~  channel=Cash | weeken~
+-----------------------------------------------------------------------------------------------------------
+0    | A     1                       0                       1                       0                     
+1    | B     0                       1                       1                       1                     
+-----------------------------------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
 
@@ -273,12 +274,12 @@ std::cout << ct.to_frame();
 ### Output
 
 ```text
-===============================================================
-     | city  channel=Card | weekend=no  channel=Card | weekend=yes  channel=Cash | weekend=no  channel=Cash | weekend=yes
--------------------------------------------------------------------------------------------------------------------------------
-0    | A     1                          0                           1                          0
-1    | B     0                          1                           1                          1
--------------------------------------------------------------------------------------------------------------------------------
+===========================================================================================================
+     | city  channel=Card | weeken~  channel=Card | weeken~  channel=Cash | weeken~  channel=Cash | weeken~
+-----------------------------------------------------------------------------------------------------------
+0    | A     1                       0                       1                       0                     
+1    | B     0                       1                       1                       1                     
+-----------------------------------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
 
@@ -321,13 +322,13 @@ std::cout << ct.to_frame();
 ### Output
 
 ```text
-==============================
+===============================
      | city   Card  Cash  Total
-------------------------------
-0    | A      1     1     2
-1    | B      1     2     3
-2    | Total  2     3     5
-------------------------------
+-------------------------------
+0    | A      1     1     2    
+1    | B      1     2     3    
+2    | Total  2     3     5    
+-------------------------------
 [3 cs x 4 feat]
 ```
 
@@ -349,12 +350,12 @@ std::cout << ct.to_frame({"city"}, {"channel"}, options);
 ### Output
 
 ```text
-=====================================================================
-     | city  channel=Card -> weekend=no  channel=Card -> weekend=yes  channel=Cash -> weekend=no  channel=Cash -> weekend=yes
----------------------------------------------------------------------
-0    | A     1                           0                            1                           0
-1    | B     0                           1                            1                           1
----------------------------------------------------------------------
+===========================================================================================================
+     | city  channel=Card -> weeke~  channel=Card -> weeke~  channel=Cash -> weeke~  channel=Cash -> weeke~
+-----------------------------------------------------------------------------------------------------------
+0    | A     1                       0                       1                       0                     
+1    | B     0                       1                       1                       1                     
+-----------------------------------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
 

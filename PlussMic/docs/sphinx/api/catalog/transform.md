@@ -88,8 +88,8 @@ metric                   | Series       | Series[float64]  | 3       | [11, 21, 
     <span class="label">Previous</span>
     <span class="title">to_string</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="ts.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">ts</span>
   </a>
 </div>

@@ -84,11 +84,12 @@ std::cout << out.to_string();
 ### Output
 
 ```text
+==================
      | customer_id
 ------------------
-0    | 1
-1    | 2
-2    | 3
+0    | 1          
+1    | 2          
+2    | 3          
 ------------------
 [3 cs x 1 feat]
 ```
@@ -113,6 +114,7 @@ std::cout << west.to_string();
 ```text
 region 10: 2 rows
 region 20: 1 rows
+=============================
      | customer_id  region_id
 -----------------------------
 0    | 1            10
@@ -127,7 +129,7 @@ runtime choice, bound via `identifier_params` rather than `params`.
 ```cpp
 auto stmt = nx.query().prepare("SELECT {@col} FROM customers ORDER BY customer_id");
 auto out = stmt.execute({}, {{"col", "customer_id"}});
-std::cout << out.features();
+for (const auto& name : out.features()) std::cout << name << " ";
 ```
 
 ### Output

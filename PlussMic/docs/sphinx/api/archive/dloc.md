@@ -15,7 +15,7 @@ Catalog Archive::dloc(std::int64_t i) const
 
 An exact synonym for [`catalog(i)`](catalog.md) — implemented as a direct forwarding call
 (`return catalog(i);`). Use whichever name reads better at the call site; `dloc` echoes the
-depth-axis wording used elsewhere on this class (`slice_depth`, `aggregate_over_catalogs`).
+depth-axis wording used elsewhere on this class (`slice_depth`, `aggregate_depth`).
 
 ## Parameters
 

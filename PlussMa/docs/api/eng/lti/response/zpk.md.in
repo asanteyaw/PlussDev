@@ -1,5 +1,7 @@
 # `lti::zpk`
 
+Builds a pole-zero-gain model.
+
 ## Signature
 
 ```cpp
@@ -12,51 +14,61 @@ lti::PoleZero lti::zpk(
 
 ## What It Does
 
-Constructs a proper zero-pole-gain system, promotes roots and gain to one complex precision, and records a continuous or discrete timebase.
+Bundles the zeros, poles and gain of `G = k (s - z_1)...(s - z_m) / ((s - p_1)...(s - p_n))` (or the same in `z` for a discrete system) into a `PoleZero`. A system is proper only if it has no more zeros than poles.
 
 ## Parameters
 
 `zeros`
-: Finite rank-one floating or complex transmission zeros.
+: A rank-one `Series` of zeros; an empty series for none. Floating or complex.
 
 `poles`
-: Finite rank-one floating or complex poles. A proper system has at least as many poles as zeros.
+: A rank-one `Series` of poles.
 
 `gain`
-: One finite floating or complex value.
+: A scalar `Series`, the gain `k`.
 
 `sample_time`
-: Zero for continuous time or finite positive sampling interval for discrete time.
+: Zero (the default) for a continuous system, positive for a discrete one.
 
 ## Returns
 
-A `PoleZero` on the common input platform with normalized complex root storage and scalar gain.
+A `PoleZero`.
 
 ## Errors
 
-Rejects undefined, nonvector, nonfinite, integer, cross-platform, or improper root data; nonscalar gain; and invalid sample time.
+A non-finite pole or zero, more zeros than poles, an integer dtype and a negative or non-finite sample time throw `pluss::Error`.
+
+## Interpretation and Use
+
+The first example builds `2 / (s + 2)` and checks its gain at zero frequency (1) and at the corner frequency (`1/sqrt(2)`). Complex poles come in conjugate pairs, as the second example shows for a damped oscillator.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect stability, response, and second-order-section realization.
+A first-order lag: accessors and gain at DC and at the corner.
 
-@@example Eng/api/lti_pole_zero.cpp@@
+@@example Eng/api/lti_zpk_build.cpp@@
 
 ### Example 2
 
-Compare frequency response across equivalent system representations.
+A conjugate pole pair and a zero.
 
-@@example Eng/api/lti_response.cpp@@
+@@example Eng/api/lti_zpk_complex.cpp@@
 
 ### Example 3
 
-Exercise frequency-grid and realization validation.
+A discrete system, stable and unstable.
 
-@@example Eng/api/lti_response_errors.cpp@@
+@@example Eng/api/lti_zpk_discrete.cpp@@
+
+### Example 4
+
+Every refused input.
+
+@@example Eng/api/lti_zpk_errors.cpp@@
 
 ## See Also
 

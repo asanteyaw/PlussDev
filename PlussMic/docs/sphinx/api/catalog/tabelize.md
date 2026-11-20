@@ -117,8 +117,9 @@ std::cout << frame;
 -----------------
 0    | 1     10  
 1    | 2     20  
+2    | 3     NULL
 -----------------
-[2 cs x 2 feat]
+[3 cs x 2 feat]
 ```
 
 Example 3. The same ragged catalog with `Align::Outer` — every row is preserved, with the

@@ -150,7 +150,7 @@ inline SteadyState steady_state(const RateFn &v, const Series &stoichiometry, co
     }
     const Series step = dynamics::solve(lhs, rhs);
     const Series ratio = x.div(step.neg().clamp(1e-300, 1e300));
-    const Series limit = step.lt(0.0).where(ratio, ratio.mul(0.0).add(1e300)).amin(-1, true).mul(0.9);
+    const Series limit = pluss::series::where(step.lt(0.0), ratio, ratio.mul(0.0).add(1e300)).amin(-1, true).mul(0.9);
     x = x.add(step.mul(limit.clamp(0.0, 1.0)));
     out.iterations = it + 1;
     out.residual = rate(x).abs().amax(-1, false);

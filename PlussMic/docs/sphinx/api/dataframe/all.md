@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate DataFrame::all(bool skipnull = true) const
-Slate DataFrame::all(Axis axis, bool skipnull = true) const
+Shelf DataFrame::all(bool skipnull = true) const
+Shelf DataFrame::all(Axis axis, bool skipnull = true) const
 ```
 
 ## What It Does
@@ -49,7 +49,7 @@ computed result is trusted:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One `Bool` entry per participating feature (`Axis::Case`, the default) or per case
     (`Axis::Feature`), holding whether every value was `true`.
 
@@ -61,9 +61,9 @@ Example 1. Check whether each flag was true on every case, the default axis.
 using namespace pluss::table;
 
 auto checks = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"in_stock", Slate(pluss::make_series({true, true, false, true, false, true}, pluss::ScalarType::Bool))},
-    {"paid",     Slate(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"in_stock", Shelf(pluss::make_series({true, true, false, true, false, true}, pluss::ScalarType::Bool))},
+    {"paid",     Shelf(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
 });
 
 auto always_true = checks.features({"in_stock", "paid"}).all();
@@ -113,7 +113,7 @@ Example 3. See how `skipnull` affects a reduction that includes a missing value.
 ```cpp
 auto priority_valid = pluss::make_series({true, true, false, true}, pluss::ScalarType::Bool);
 auto flags = DataFrame({
-    {"is_priority", Slate(pluss::make_series({true, false, false, false}, pluss::ScalarType::Bool), priority_valid)},
+    {"is_priority", Shelf(pluss::make_series({true, false, false, false}, pluss::ScalarType::Bool), priority_valid)},
 });
 
 auto lenient = flags.all();

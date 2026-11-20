@@ -54,7 +54,7 @@ public:
   Axel fields(const NameRange& keys) const;
   AxelFieldAxisAccessor fieldaxis() const;
   AxelCastAccessor cast() const;
-  AxelCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  AxelCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
   AxelNoteAccessor nt() const;
   AxelTimelineAccessor tl() const;
   Registry registry(std::int64_t i) const;
@@ -79,12 +79,31 @@ public:
   Axel isnull() const;
   Axel notnull() const;
   Axel invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h): isnull / dropnull / fillnull never touch them and
+  // these never touch a null.
+  Axel isnan() const;
+  Axel notnan() const;
+  Axel isinf() const;
+  Axel isposinf() const;
+  Axel isneginf() const;
+  Axel notinf() const;
+  Axel dropnan() const;
+  Axel dropinvalid() const;
+  Axel dropinf() const;
+  Axel dropposinf() const;
+  Axel dropneginf() const;
+  Axel fillnan(double value) const;
+  Axel fillinvalid(double value) const;
+  Axel fillinf(double value) const;
+  Axel fillposinf(double value) const;
+  Axel fillneginf(double value) const;
   Axel fillnull(double value) const;
   Axel fillnull(std::string_view value) const;
   Axel fillnull(const char* value) const {
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Axel fillnull(const pluss::Timeline& value) const;
+  Axel fillnull(const pluss::Duration& value) const;
   Axel dropnull() const;
   Axel distinct(pluss::kindle::DistinctOptions options = {}) const;
   Axel freq(pluss::kindle::FreqOptions options = {}) const;
@@ -130,7 +149,7 @@ class AxelCastAccessor {
 public:
   explicit AxelCastAccessor(Axel base,
                             std::vector<std::string> keys,
-                            pluss::table::SlateCastOptions options = {});
+                            pluss::table::ShelfCastOptions options = {});
 
   Axel series() const;
   Axel note() const;
@@ -140,7 +159,7 @@ public:
 private:
   Axel base_{};
   std::vector<std::string> keys_{};
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class AxelNoteAccessor {

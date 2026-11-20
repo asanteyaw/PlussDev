@@ -70,8 +70,8 @@ auto ct = pluss::kindle::Catalog({
 });
 try {
   auto out = ct.cast().timeline();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

@@ -225,6 +225,9 @@ void test_base_static_and_legacy_surface() {
   expect_true(!leap.is_weekend_scalar(), "is_weekend_scalar");
   expect_true(!leap.weekday_name(true).empty(), "base weekday_name(abbrev)");
   expect_true(!leap.month_name(true).empty(), "base month_name(abbrev)");
+  // The no-argument call is the Note-returning form: it must not be ambiguous with the scalar string form.
+  expect_true(leap.weekday_name().numel() == 1, "weekday_name() returns a Note");
+  expect_true(leap.month_name().numel() == 1, "month_name() returns a Note");
 
   const Timeline adjusted =
       leap.set_day(1).set_month(3).set_year(2025).set_hour(8).set_minute(9).set_second(10);

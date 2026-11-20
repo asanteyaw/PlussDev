@@ -149,18 +149,18 @@ BsSeriesCore bs_core_(OptionType type,
   const Series intrinsic_put = full_like_(s, strike, out_cfg).sub(s).clamp_min(0.0);
   const Series intrinsic = (type == OptionType::Call) ? intrinsic_call : intrinsic_put;
 
-  Series delta_call_0 = s.gt(strike).where(ones, zeros);
-  delta_call_0 = s.eq(strike).where(half, delta_call_0);
-  Series delta_put_0 = s.lt(strike).where(neg_ones, zeros);
-  delta_put_0 = s.eq(strike).where(neg_half, delta_put_0);
+  Series delta_call_0 = pluss::series::where(s.gt(strike), ones, zeros);
+  delta_call_0 = pluss::series::where(s.eq(strike), half, delta_call_0);
+  Series delta_put_0 = pluss::series::where(s.lt(strike), neg_ones, zeros);
+  delta_put_0 = pluss::series::where(s.eq(strike), neg_half, delta_put_0);
   const Series delta_0 = (type == OptionType::Call) ? delta_call_0 : delta_put_0;
 
-  price = maturity_mask.where(intrinsic, price);
-  delta = maturity_mask.where(delta_0, delta);
-  const Series gamma_out = maturity_mask.where(zeros, gamma);
-  const Series vega_out = maturity_mask.where(zeros, vega);
-  const Series theta_out = maturity_mask.where(zeros, theta);
-  const Series rho_out = maturity_mask.where(zeros, rho);
+  price = pluss::series::where(maturity_mask, intrinsic, price);
+  delta = pluss::series::where(maturity_mask, delta_0, delta);
+  const Series gamma_out = pluss::series::where(maturity_mask, zeros, gamma);
+  const Series vega_out = pluss::series::where(maturity_mask, zeros, vega);
+  const Series theta_out = pluss::series::where(maturity_mask, zeros, theta);
+  const Series rho_out = pluss::series::where(maturity_mask, zeros, rho);
 
   PLUSS_CHECK(price.isfinite().all().item<double>() == 1.0,
               std::string("subsp::math::finance::pricing::") + op + ": price produced non-finite values");

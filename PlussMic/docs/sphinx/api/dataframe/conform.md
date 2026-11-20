@@ -51,10 +51,10 @@ column order and a different (reordered) subset of case labels.
 using namespace pluss::table;
 
 auto raw = DataFrame({
-    {"b", Slate(pluss::make_series({1, 2, 3}))},
-    {"a", Slate(pluss::make_series({10, 20, 30}))},
-    {"c", Slate(pluss::make_note({"p", "q", "r"}))},
-}, Slate(pluss::make_note({"x", "y", "z"})));
+    {"b", Shelf(pluss::make_series({1, 2, 3}))},
+    {"a", Shelf(pluss::make_series({10, 20, 30}))},
+    {"c", Shelf(pluss::make_note({"p", "q", "r"}))},
+}, Shelf(pluss::make_note({"x", "y", "z"})));
 std::cout << raw;
 ```
 
@@ -73,10 +73,10 @@ z    | 3     30    r
 
 ```cpp
 auto reference = DataFrame({
-    {"a", Slate(pluss::make_series({0, 0, 0}))},
-    {"b", Slate(pluss::make_series({0, 0, 0}))},
-    {"c", Slate(pluss::make_note({"", "", ""}))},
-}, Slate(pluss::make_note({"z", "x", "y"})));
+    {"a", Shelf(pluss::make_series({0, 0, 0}))},
+    {"b", Shelf(pluss::make_series({0, 0, 0}))},
+    {"c", Shelf(pluss::make_note({"", "", ""}))},
+}, Shelf(pluss::make_note({"z", "x", "y"})));
 
 auto conformed = raw.conform(reference);
 std::cout << conformed;
@@ -105,14 +105,14 @@ Example 2. A case label present in `other` but absent from this frame becomes a
 
 ```cpp
 auto raw2 = DataFrame({
-    {"a", Slate(pluss::make_series({1, 2}))},
-    {"b", Slate(pluss::make_series({10, 20}))},
-}, Slate(pluss::make_note({"x", "y"})));
+    {"a", Shelf(pluss::make_series({1, 2}))},
+    {"b", Shelf(pluss::make_series({10, 20}))},
+}, Shelf(pluss::make_note({"x", "y"})));
 
 auto reference2 = DataFrame({
-    {"a", Slate(pluss::make_series({0, 0, 0}))},
-    {"b", Slate(pluss::make_series({0, 0, 0}))},
-}, Slate(pluss::make_note({"x", "z", "y"})));
+    {"a", Shelf(pluss::make_series({0, 0, 0}))},
+    {"b", Shelf(pluss::make_series({0, 0, 0}))},
+}, Shelf(pluss::make_note({"x", "z", "y"})));
 
 auto conformed2 = raw2.conform(reference2);
 std::cout << conformed2;
@@ -143,12 +143,12 @@ call throw.
 ```cpp
 try {
   auto bad_reference = DataFrame({
-      {"a", Slate(pluss::make_series({0, 0}))},
-      {"c", Slate(pluss::make_series({0, 0}))},
-  }, Slate(pluss::make_note({"x", "y"})));
+      {"a", Shelf(pluss::make_series({0, 0}))},
+      {"c", Shelf(pluss::make_series({0, 0}))},
+  }, Shelf(pluss::make_note({"x", "y"})));
   auto out = raw2.conform(bad_reference);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -195,8 +195,8 @@ exist on `raw2` at all, so the call rejects it before reordering anything.
     <span class="label">Previous</span>
     <span class="title">compare</span>
   </a>
-  <a class="next-link" href="copy.html">
+  <a class="next-link" href="contingency.html">
     <span class="label">Next</span>
-    <span class="title">copy</span>
+    <span class="title">contingency</span>
   </a>
 </div>

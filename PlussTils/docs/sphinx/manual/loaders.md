@@ -24,7 +24,7 @@ complete, and every printed line is copied from the program's real output.
 Loader utilities are optional. A program can process containers directly, and
 it can adopt the loader only where batching or splitting earns its place.
 
-## The mental model
+## How it works
 
 A loader reads a **source** and delivers **batches**. The source is either a
 list of aligned fields or a dataset that produces one sample at a time. Every
@@ -765,7 +765,7 @@ Choose the order first, then the boundary, then the repetition.
 | Equal batch sizes | `drop_last = true` | Drops the short final batch |
 | Background batches | `num_workers > 0`, `prefetch_factor` | Requires workers; in-order by default |
 | Batches in another dtype | `target_dtype` | Converts each batch on delivery |
-| Slate-local setup per worker | `worker_init_fn` | Runs once per worker thread |
+| Shelf-local setup per worker | `worker_init_fn` | Runs once per worker thread |
 
 Two of these choices hide the most trouble, so decide them deliberately. First,
 keep the seed with the run. A shuffled loader is reproducible only when its seed

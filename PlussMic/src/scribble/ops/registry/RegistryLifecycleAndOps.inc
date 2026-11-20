@@ -201,7 +201,7 @@ RegistryCastAccessor Registry::cast() const {
   return RegistryCastAccessor(*this, fields(), {});
 }
 
-RegistryCastAccessor Registry::cast(const pluss::table::SlateCastOptions& options) const {
+RegistryCastAccessor Registry::cast(const pluss::table::ShelfCastOptions& options) const {
   return RegistryCastAccessor(*this, fields(), options);
 }
 
@@ -617,6 +617,70 @@ Registry Registry::fillnull(const pluss::Duration& value) const {
 
 Registry Registry::dropnull() const {
   return map([](const Slot& s) { return s.dropnull(); });
+}
+
+Registry Registry::isnan() const {
+  return map([](const Slot& s) { return s.isnan(); });
+}
+
+Registry Registry::notnan() const {
+  return map([](const Slot& s) { return s.notnan(); });
+}
+
+Registry Registry::isinf() const {
+  return map([](const Slot& s) { return s.isinf(); });
+}
+
+Registry Registry::isposinf() const {
+  return map([](const Slot& s) { return s.isposinf(); });
+}
+
+Registry Registry::isneginf() const {
+  return map([](const Slot& s) { return s.isneginf(); });
+}
+
+Registry Registry::notinf() const {
+  return map([](const Slot& s) { return s.notinf(); });
+}
+
+Registry Registry::dropnan() const {
+  return map([](const Slot& s) { return s.dropnan(); });
+}
+
+Registry Registry::dropinvalid() const {
+  return map([](const Slot& s) { return s.dropinvalid(); });
+}
+
+Registry Registry::dropinf() const {
+  return map([](const Slot& s) { return s.dropinf(); });
+}
+
+Registry Registry::dropposinf() const {
+  return map([](const Slot& s) { return s.dropposinf(); });
+}
+
+Registry Registry::dropneginf() const {
+  return map([](const Slot& s) { return s.dropneginf(); });
+}
+
+Registry Registry::fillnan(double value) const {
+  return map([&](const Slot& s) { return s.fillnan(value); });
+}
+
+Registry Registry::fillinvalid(double value) const {
+  return map([&](const Slot& s) { return s.fillinvalid(value); });
+}
+
+Registry Registry::fillinf(double value) const {
+  return map([&](const Slot& s) { return s.fillinf(value); });
+}
+
+Registry Registry::fillposinf(double value) const {
+  return map([&](const Slot& s) { return s.fillposinf(value); });
+}
+
+Registry Registry::fillneginf(double value) const {
+  return map([&](const Slot& s) { return s.fillneginf(value); });
 }
 
 Registry Registry::distinct(pluss::kindle::DistinctOptions options) const {

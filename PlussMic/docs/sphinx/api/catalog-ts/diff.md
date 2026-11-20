@@ -64,11 +64,11 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 10, -5, 15]                                
+metric                   | Series       | Series[float64]  | 4       | [NULL, 10, -5, 15]                               
 ========================================================================================================================
 ```
 
-Position `0` has no prior position, so it's `nan`. Position `1` is
+Position `0` has no prior position, so it's `NULL`. Position `1` is
 `20 - 10 = 10`; position `2` is `15 - 20 = -5`; position `3` is `30 - 15 = 15`.
 
 Example 2. `periods = 0` produces an all-zero result rather than throwing.
@@ -111,8 +111,8 @@ auto ct = pluss::kindle::Catalog({
 });
 try {
   auto out = ct.ts().diff(1);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -141,8 +141,8 @@ TimeSeriesAccessor::diff: source must be Series
 - [`CatalogTimeSeriesAccessor::lag`](lag.md), [`lead()`](lead.md): the
   underlying shift this method's comparison base is built from.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::diff`](../slate-ts/diff.md): the underlying
-  single-slate engine this method delegates to, with additional edge-case
+- [`TimeSeriesAccessor::diff`](../shelf-ts/diff.md): the underlying
+  single-shelf engine this method delegates to, with additional edge-case
   examples (missing-entry propagation).
 
 <div class="pluss-inline-prev-next">

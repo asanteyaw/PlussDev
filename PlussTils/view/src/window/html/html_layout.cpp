@@ -10,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -18,6 +19,7 @@
 
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window/text_layout.h"
+#include "../render/text_raster.h"
 
 namespace pluss::view::window {
 
@@ -771,10 +773,51 @@ struct LinearGradientSpec {
   return target;
 }
 
+// Sort arrows at the right edge of every table header: two click targets, each kSortArrowPx
+// wide. Column widths and header text both leave kSortGutterPx for them.
+constexpr int kSortArrowPx = 14;
+constexpr int kSortGutterPx = 2 * kSortArrowPx + 6;
+// A header alone never makes a column wider than this much text; longer names wrap onto a
+// second line (and end in "...") so the sort arrows always stay on screen.
+constexpr int kHeaderTextBudgetPx = 200;
+// Every column starts this wide (like a spreadsheet) and is resized by dragging its
+// header border; nothing is sized from the content.
+constexpr int kDefaultColumnPx = 170;
+constexpr int kMinColumnPx = 48;
+constexpr int kResizeHandlePx = 8;
+
+// Order-independent fingerprint of a table's user-set column widths.
+[[nodiscard]] std::uint64_t column_override_signature(const std::unordered_map<int, int>* overrides) {
+  std::uint64_t signature = 0;
+  if (overrides != nullptr) {
+    for (const auto& [column, width] : *overrides) {
+      std::uint64_t h = static_cast<std::uint64_t>(column) * 0x9E3779B97F4A7C15ULL ^
+                        (static_cast<std::uint64_t>(width) + 0x7F4A7C15ULL) * 0xC2B2AE3D27D4EB4FULL;
+      h ^= h >> 29;
+      signature += h;
+    }
+  }
+  return signature;
+}
+
 [[nodiscard]] std::optional<double> parse_numeric_text(std::string_view value) {
-  const std::string token = trim_copy(value);
+  std::string token = trim_copy(value);
   if (token.empty()) {
     return std::nullopt;
+  }
+  // Thousands separators ("1,234.56"): drop commas that sit between two digits.
+  if (token.find(',') != std::string::npos) {
+    std::string plain;
+    plain.reserve(token.size());
+    for (std::size_t i = 0; i < token.size(); ++i) {
+      const bool between_digits = token[i] == ',' && i > 0 && i + 1 < token.size() &&
+                                  std::isdigit(static_cast<unsigned char>(token[i - 1])) != 0 &&
+                                  std::isdigit(static_cast<unsigned char>(token[i + 1])) != 0;
+      if (!between_digits) {
+        plain.push_back(token[i]);
+      }
+    }
+    token = std::move(plain);
   }
   char* end = nullptr;
   const double parsed = std::strtod(token.c_str(), &end);
@@ -903,6 +946,64 @@ struct LinearGradientSpec {
   lines.resize(static_cast<std::size_t>(max_lines));
   if (!lines.empty()) {
     lines.back() = truncate_to_width(lines.back() + "...", font_size, max_width);
+  }
+  return lines;
+}
+
+// Header text: one line when it fits, otherwise broken after '_' '-' '.' '/' or a space (or
+// mid-word as a last resort) over at most `max_lines` lines, ending in "..." if it still
+// does not fit. Unlike ordinary word wrapping this also breaks long tokens such as
+// snake_case names.
+[[nodiscard]] std::vector<std::string> layout_header_lines(const std::string& raw,
+                                                           const int font_size,
+                                                           const int max_width,
+                                                           const int max_lines) {
+  std::string rest = trim_copy(raw);
+  std::vector<std::string> lines;
+  while (!rest.empty() && static_cast<int>(lines.size()) < std::max(1, max_lines)) {
+    if (layout_math_text(rest, font_size).width <= max_width) {
+      lines.push_back(std::move(rest));
+      rest.clear();
+      break;
+    }
+    if (static_cast<int>(lines.size()) + 1 == std::max(1, max_lines)) {
+      lines.push_back(truncate_to_width(rest, font_size, max_width));
+      rest.clear();
+      break;
+    }
+    std::size_t fit = 0;  // longest prefix that fits, never splitting a UTF-8 code point
+    for (std::size_t i = 1; i <= rest.size(); ++i) {
+      if (i < rest.size() && (static_cast<unsigned char>(rest[i]) & 0xC0) == 0x80) {
+        continue;
+      }
+      if (layout_math_text(rest.substr(0, i), font_size).width > max_width) {
+        break;
+      }
+      fit = i;
+    }
+    if (fit == 0) {
+      fit = 1;
+    }
+    std::size_t cut = fit;  // prefer a delimiter in the back 60% of what fits
+    for (std::size_t i = fit; i > fit * 2 / 5 && i > 0; --i) {
+      const char ch = rest[i - 1];
+      if (ch == '_' || ch == '-' || ch == '.' || ch == '/' || ch == ' ') {
+        cut = i;
+        break;
+      }
+    }
+    std::string line = rest.substr(0, cut);
+    while (!line.empty() && line.back() == ' ') {
+      line.pop_back();
+    }
+    lines.push_back(std::move(line));
+    rest.erase(0, cut);
+    while (!rest.empty() && rest.front() == ' ') {
+      rest.erase(rest.begin());
+    }
+  }
+  if (lines.empty()) {
+    lines.emplace_back();
   }
   return lines;
 }
@@ -1125,6 +1226,20 @@ void apply_style_property(ResolvedStyle& style,
     if (val.find("bold") != std::string::npos) {
       style.font_weight = std::max(style.font_weight, 700);
     }
+    // A bare number from 100 to 900 before the size is the weight ("600 0.82rem/1 ...").
+    {
+      std::istringstream tokens(val);
+      std::string token;
+      while (tokens >> token) {
+        if (token.size() == 3 && token[1] == '0' && token[2] == '0' && token[0] >= '1' && token[0] <= '9') {
+          style.font_weight = (token[0] - '0') * 100;
+          break;
+        }
+        if (token.find_first_of("0123456789") != std::string::npos) {
+          break;  // reached the size
+        }
+      }
+    }
     // Family is usually the final token chunk after size/line-height.
     std::size_t family_pos = std::string::npos;
     if (slash != std::string::npos) {
@@ -1205,7 +1320,9 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
     i = j;
     if (token.empty()) continue;
     if (token == ">" || token == "+" || token == "~") continue;
-    if (token.find(':') != std::string::npos) {
+    // Pseudo-classes and attribute selectors are not supported: such a rule never matches
+    // (it may be meant for a full browser only).
+    if (token.find(':') != std::string::npos || token.find('[') != std::string::npos) {
       return {};
     }
 
@@ -1241,6 +1358,9 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
       const std::size_t begin = p;
       while (p < token.size() && token[p] != '.' && token[p] != '#' && token[p] != ':' && token[p] != '[') ++p;
       part.tag = token.substr(begin, p - begin);
+      if (p == begin) {
+        ++p;  // an unrecognised character: skip it, never stall
+      }
     }
     parts.push_back(std::move(part));
   }
@@ -1655,8 +1775,12 @@ void collect_table_rows_recursive(const HtmlNode& node,
       continue;
     }
 
-    int max_w = sticky_left[c] ? 72 : 112;
-    const std::size_t probe_rows = sticky_left[c] ? rows.size() : sample;
+    if (!sticky_left[c]) {
+      desired[c] = kDefaultColumnPx;
+      continue;
+    }
+    int max_w = 72;
+    const std::size_t probe_rows = rows.size();
     for (std::size_t r = 0; r < probe_rows; ++r) {
       if (c >= rows[r].cells.size()) continue;
       const auto& cell = rows[r].cells[c];
@@ -1664,10 +1788,13 @@ void collect_table_rows_recursive(const HtmlNode& node,
                                     ? cell.text
                                     : truncate_to_width(cell.text, table_style.font_size, probe_cap_px);
       const int text_w = layout_math_text(probe, table_style.font_size).width;
-      const int pad = cell.is_header ? 36 : 28;
-      const int capped_w = sticky_left[c]
-                               ? text_w + pad
-                               : std::min(probe_cap_px + pad, text_w + pad);
+      const int pad = cell.is_header ? 36 + kSortGutterPx : 28;
+      int capped_w = sticky_left[c]
+                         ? text_w + pad
+                         : std::min(probe_cap_px + pad, text_w + pad);
+      if (cell.is_header && !sticky_left[c]) {
+        capped_w = std::min(capped_w, kHeaderTextBudgetPx + pad);
+      }
       max_w = std::max(max_w, capped_w);
     }
     desired[c] = max_w;
@@ -1686,29 +1813,6 @@ void collect_table_rows_recursive(const HtmlNode& node,
   if (plan.widths.empty()) {
     plan.source_indices.push_back(0);
     plan.widths.push_back(std::max(56, inner_width > 0 ? inner_width : 160));
-  }
-
-  int used = 0;
-  for (const int w : plan.widths) {
-    used += w;
-  }
-  if (used < inner_width && !plan.widths.empty()) {
-    int extra = inner_width - used;
-    std::vector<std::size_t> expandable;
-    for (std::size_t c = 0; c < plan.widths.size(); ++c) {
-      if (!sticky_left[c]) {
-        expandable.push_back(c);
-      }
-    }
-    if (expandable.empty()) {
-      expandable.push_back(0);
-    }
-    std::size_t cursor = 0;
-    while (extra > 0) {
-      plan.widths[expandable[cursor % expandable.size()]] += 1;
-      --extra;
-      ++cursor;
-    }
   }
 
   return plan;
@@ -1738,12 +1842,17 @@ void collect_table_rows_recursive(const HtmlNode& node,
     }
     const int line_height = resolve_line_height_value(cell_style.line_height, cell_style.font_size);
     const int cell_padding = std::max(2, cell_style.padding);
-    const int inner_width = std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4);
-    const int max_lines = cell.is_header ? 2 : 5;
-    const auto wrapped = limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
-                                     max_lines,
-                                     cell_style.font_size,
-                                     inner_width);
+    const int inner_width =
+        std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? kSortGutterPx : 0));
+    // Header and row-label cells break long names at _ - . / (a label column keeps its width).
+    const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
+    const int max_lines = cell.is_header ? 3 : (breaks_names ? 3 : 5);
+    const auto wrapped = breaks_names
+                             ? layout_header_lines(cell.text, cell_style.font_size, inner_width, max_lines)
+                             : limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
+                                           max_lines,
+                                           cell_style.font_size,
+                                           inner_width);
     const int lines = std::max<int>(1, wrapped.size());
     const int content_h = lines * line_height;
     const int box_h = content_h + (cell_padding * 2) + (cell_style.border * 2) + 4;
@@ -1962,6 +2071,25 @@ void collect_table_rows_recursive(const HtmlNode& node,
   return (margin * 2) + (padding * 2) + (border * 2) + content_height;
 }
 
+// Width of `text` as the renderer will actually paint it (native font, weight and family),
+// falling back to the approximate math metrics where no native measurement exists. Used for
+// centring and right-alignment so bold or custom-font labels land where they should.
+[[nodiscard]] int painted_text_width(const std::string_view text,
+                                     const int font_size,
+                                     const int font_weight,
+                                     const std::string_view font_family) {
+  if (const auto native = detail::measure_text_width_native(TextCommand{
+          .text = std::string(text),
+          .pixel_size = font_size,
+          .font_weight = font_weight,
+          .font_family = std::string(font_family),
+      });
+      native.has_value() && *native > 0) {
+    return *native;
+  }
+  return layout_math_text(text, font_size).width;
+}
+
 void draw_text_lines(Scene& scene,
                      const std::vector<std::string>& lines,
                      const int font_size,
@@ -1976,10 +2104,10 @@ void draw_text_lines(Scene& scene,
   for (const auto& line : lines) {
     const TextLayout layout = layout_math_text(line, font_size);
     int text_x = x;
-    if (text_align == "center") {
-      text_x = x + std::max(0, (content_width - layout.width) / 2);
-    } else if (text_align == "right") {
-      text_x = x + std::max(0, content_width - layout.width);
+    if (text_align == "center" || text_align == "right") {
+      const int painted_w = painted_text_width(line, font_size, font_weight, font_family);
+      text_x = text_align == "center" ? x + std::max(0, (content_width - painted_w) / 2)
+                                      : x + std::max(0, content_width - painted_w);
     }
     scene.add(TextCommand{PointI{text_x, y + layout.ascent}, line, font_size,
                           color, font_weight, std::string(font_family)});
@@ -2927,6 +3055,11 @@ int render_virtual_table(
             RectI{column.x + 1, row_y + 1,
                   std::max(1, column.width - 2), std::max(1, row_h - 2)},
             Color::rgba(255, 240, 238, 255)});
+      } else if (value.nonfinite) {
+        scene.add(FillRectCommand{
+            RectI{column.x + 1, row_y + 1,
+                  std::max(1, column.width - 2), std::max(1, row_h - 2)},
+            Color::rgba(236, 238, 242, 255)});
       }
       scene.add(LineCommand{PointI{column.x, row_y},
                             PointI{column.x, row_y + row_h}, 1, grid});
@@ -3075,9 +3208,14 @@ int render_table(Scene& scene,
                  const ResolvedStyle* parent_style,
                  const int viewport_width) {
   const ResolvedStyle style = resolve_style(document, node, lineage, parent_style, viewport_width);
+  // The model paints only the table marked as virtual; any other table on the page (a stats
+  // view next to a long data table, say) is laid out from its own rows.
   if (render_config.virtual_table_model != nullptr) {
-    return render_virtual_table(scene, node, x, y, width, bottom, style,
-                                render_config, parent_style);
+    const HtmlAttribute* virtual_attr = find_attribute(node, "data-virtual-table");
+    if (virtual_attr != nullptr && virtual_attr->value == "true") {
+      return render_virtual_table(scene, node, x, y, width, bottom, style,
+                                  render_config, parent_style);
+    }
   }
   const int total_h = measure_table_height(document, node, width, style, lineage, viewport_width);
   if (total_h <= 0 || y >= bottom) {
@@ -3115,6 +3253,15 @@ int render_table(Scene& scene,
     column_count = std::max(column_count, row.cells.size());
   }
 
+  const std::unordered_map<int, int>* width_overrides = nullptr;
+  if (render_config.table_column_widths != nullptr) {
+    const auto found = render_config.table_column_widths->find(table_target);
+    if (found != render_config.table_column_widths->end() && !found->second.empty()) {
+      width_overrides = &found->second;
+    }
+  }
+  const std::uint64_t override_signature = column_override_signature(width_overrides);
+
   TableColumnPlan plan;
   std::vector<int> row_heights;
   bool geometry_cache_hit = false;
@@ -3128,6 +3275,7 @@ int render_table(Scene& scene,
           entry.content_width == content_w &&
           entry.row_count == rows.size() &&
           entry.column_count == column_count &&
+          entry.column_override_signature == override_signature &&
           entry.row_heights.size() == rows.size();
       if (geometry_cache_hit) {
         plan.source_indices = entry.source_indices;
@@ -3140,6 +3288,31 @@ int render_table(Scene& scene,
     const auto declared_widths =
         extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
     plan = build_table_column_plan(rows, style, content_w, declared_widths);
+    if (width_overrides != nullptr) {
+      for (const auto& [column, width] : *width_overrides) {
+        if (column >= 0 && static_cast<std::size_t>(column) < plan.widths.size()) {
+          int target = width;
+          if (width <= 0) {
+            // Double-click on a border: fit the column to its widest value (first 2,000 rows).
+            const auto source = plan.source_indices.size() > static_cast<std::size_t>(column)
+                                    ? plan.source_indices[static_cast<std::size_t>(column)]
+                                    : static_cast<std::size_t>(column);
+            int widest = 0;
+            const std::size_t scan = std::min<std::size_t>(rows.size(), 2000);
+            for (std::size_t r = 0; r < scan; ++r) {
+              if (source >= rows[r].cells.size()) continue;
+              const auto& cell = rows[r].cells[source];
+              widest = std::max(widest, painted_text_width(cell.text, style.font_size,
+                                                           cell.is_header ? 700 : style.font_weight,
+                                                           style.font_family) +
+                                            (cell.is_header ? kSortGutterPx : 0));
+            }
+            target = std::clamp(widest + 2 * (std::max(2, style.padding) + style.border) + 12, kMinColumnPx, 640);
+          }
+          plan.widths[static_cast<std::size_t>(column)] = std::max(kMinColumnPx, target);
+        }
+      }
+    }
     row_heights.reserve(rows.size());
     for (const auto& row : rows) {
       row_heights.push_back(
@@ -3156,6 +3329,7 @@ int render_table(Scene& scene,
               .source_indices = plan.source_indices,
               .column_widths = plan.widths,
               .row_heights = row_heights,
+              .column_override_signature = override_signature,
           };
     }
   }
@@ -3260,19 +3434,39 @@ int render_table(Scene& scene,
   if (sort_target_matches && render_config.table_sort_column >= 0 &&
       static_cast<std::size_t>(render_config.table_sort_column) < plan.source_indices.size()) {
     const std::size_t source_col = plan.source_indices[static_cast<std::size_t>(render_config.table_sort_column)];
+    // Order within a column: numbers, then text, then missing cells ("NULL" / empty), with
+    // missing cells last in either direction. A fixed category order keeps the comparison a
+    // strict weak ordering even when a column mixes number-like and plain text values.
     std::stable_sort(body_order.begin(), body_order.end(), [&](const std::size_t lhs_r, const std::size_t rhs_r) {
       const std::string lhs = source_col < rows[lhs_r].cells.size() ? rows[lhs_r].cells[source_col].text : std::string{};
       const std::string rhs = source_col < rows[rhs_r].cells.size() ? rows[rhs_r].cells[source_col].text : std::string{};
       const auto lhs_num = parse_numeric_text(lhs);
       const auto rhs_num = parse_numeric_text(rhs);
-      if (lhs_num.has_value() && rhs_num.has_value()) {
+      const std::string lhs_norm = to_lower(trim_copy(lhs));
+      const std::string rhs_norm = to_lower(trim_copy(rhs));
+      const auto category = [](const std::optional<double>& number, const std::string& normalized) {
+        if (normalized.empty() || normalized == "null") {
+          return 2;  // missing
+        }
+        if (number.has_value() && std::isnan(*number)) {
+          return 3;  // NaN: after numbers and text, just before missing cells
+        }
+        return number.has_value() ? 0 : 1;
+      };
+      const int lhs_cat = category(lhs_num, lhs_norm);
+      const int rhs_cat = category(rhs_num, rhs_norm);
+      if (lhs_cat >= 2 || rhs_cat >= 2) {
+        return lhs_cat != rhs_cat ? lhs_cat < rhs_cat : lhs_r < rhs_r;
+      }
+      if (lhs_cat != rhs_cat) {
+        return render_config.table_sort_ascending ? lhs_cat < rhs_cat : lhs_cat > rhs_cat;
+      }
+      if (lhs_cat == 0) {
         if (*lhs_num == *rhs_num) {
           return lhs_r < rhs_r;
         }
         return render_config.table_sort_ascending ? (*lhs_num < *rhs_num) : (*lhs_num > *rhs_num);
       }
-      const std::string lhs_norm = to_lower(trim_copy(lhs));
-      const std::string rhs_norm = to_lower(trim_copy(rhs));
       if (lhs_norm == rhs_norm) {
         return lhs_r < rhs_r;
       }
@@ -3354,7 +3548,58 @@ int render_table(Scene& scene,
     }
   }
 
+  // Sort arrows at the right edge of a header cell: an up and a down arrow, each its own
+  // click target ("table.sort.asc" / "table.sort.desc"). The active direction of the sorted
+  // column is drawn in full strength, every other arrow faint. Because they sit on the
+  // headers themselves, nothing has to enumerate columns, however many there are.
+  const auto draw_sort_arrows = [&](const int cell_x,
+                                    const int cell_w,
+                                    const int row_y,
+                                    const int row_h,
+                                    const std::size_t column,
+                                    const Color ink,
+                                    const Color paper,
+                                    const int font_px,
+                                    const int clip_left,
+                                    const int clip_right) {
+    const bool active = sort_target_matches && render_config.table_sort_column >= 0 &&
+                        column == static_cast<std::size_t>(render_config.table_sort_column);
+    // Inactive arrows: the text colour mixed most of the way into the header's own
+    // background (text drawing ignores alpha), so they recede in any theme.
+    const auto mix = [](const int a, const int b) { return static_cast<std::uint8_t>((a * 35 + b * 65) / 100); };
+    const Color faint = Color::rgba(mix(ink.r, paper.r), mix(ink.g, paper.g), mix(ink.b, paper.b), 255);
+    const int glyph_px = std::max(9, font_px - 3);
+    const int baseline = row_y + (row_h + glyph_px) / 2 - 2;
+    const int down_x = cell_x + cell_w - 6 - kSortArrowPx;
+    const int up_x = down_x - kSortArrowPx;
+    for (int k = 0; k < 2; ++k) {
+      const bool up = k == 0;
+      const int gx = up ? up_x : down_x;
+      const bool lit = active && (render_config.table_sort_ascending == up);
+      scene.add(TextCommand{PointI{gx + 3, baseline}, up ? "\u25B2" : "\u25BC", glyph_px, lit ? ink : faint});
+      if (render_config.hit_regions != nullptr) {
+        const int x0 = std::max(gx, clip_left);
+        const int x1 = std::min(gx + kSortArrowPx, clip_right);
+        if (x1 > x0) {
+          render_config.hit_regions->push_back(HtmlHitRegion{
+              .rect = RectI{x0, row_y, x1 - x0, row_h},
+              .action = up ? "table.sort.asc" : "table.sort.desc",
+              .target = table_target,
+              .value = static_cast<int>(column),
+          });
+        }
+      }
+    }
+  };
+
   auto render_row = [&](const std::size_t r, const int row_y) {
+    std::vector<HtmlHitRegion> resize_handles;  // drawn last so they win over neighbouring headers
+    struct HandleLook {
+      int edge;
+      int column;
+      Color ink;
+    };
+    std::vector<HandleLook> handle_looks;
     const auto& row = rows[r];
     const bool header_row = std::any_of(row.cells.begin(), row.cells.end(), [](const TableCellData& cell) {
       return cell.is_header;
@@ -3362,7 +3607,27 @@ int render_table(Scene& scene,
 
     const int row_h = row_heights[r];
 
-    const Color fill = header_row ? Color::rgba(235, 240, 246, 255)
+    // The header band spans the whole viewport (columns may no longer fill it), so it takes
+    // the colour of the header cells rather than a fixed one.
+    Color header_fill = Color::rgba(235, 240, 246, 255);
+    if (header_row) {
+      for (auto cell = row.cells.rbegin(); cell != row.cells.rend(); ++cell) {
+        if (cell->node == nullptr) {
+          continue;
+        }
+        std::vector<const HtmlNode*> header_lineage = row.lineage;
+        if (row.node != nullptr) {
+          header_lineage.push_back(row.node);
+        }
+        const ResolvedStyle header_style =
+            resolve_style(document, *cell->node, header_lineage, &style, viewport_width);
+        if (header_style.has_background) {
+          header_fill = header_style.background_color;
+        }
+        break;
+      }
+    }
+    const Color fill = header_row ? header_fill
                                   : ((r % 2 == 0) ? Color::rgba(255, 255, 255, 255)
                                                   : Color::rgba(248, 250, 252, 255));
     if (header_row && row_y == content_y) {
@@ -3400,30 +3665,44 @@ int render_table(Scene& scene,
       }
 
       const int cell_padding = std::max(2, cell_style.padding);
-      const int text_max_w = std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2);
-      const int max_lines = header_row ? 2 : 5;
-      const auto wrapped = limit_lines(layout_text_lines(value, cell_style, text_max_w),
-                                       max_lines,
-                                       cell_style.font_size,
-                                       text_max_w);
+      const int text_max_w =
+          std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? kSortGutterPx : 0));
+      const int max_lines = header_row ? 3 : 5;
+      const auto wrapped = header_row
+                               ? layout_header_lines(value, cell_style.font_size, text_max_w, max_lines)
+                               : limit_lines(layout_text_lines(value, cell_style, text_max_w),
+                                             max_lines,
+                                             cell_style.font_size,
+                                             text_max_w);
       if (cell_style.has_background) {
         draw_style_fill(scene, RectI{cell_x + 1, row_y + 1, std::max(1, cell_w - 2), std::max(1, row_h - 2)}, cell_style);
       }
       const int text_block_h =
           std::max(1, static_cast<int>(wrapped.size())) * cell_style.line_height;
-      const int text_y = header_row
-                             ? row_y + cell_padding
-                             : row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
+      const int text_y = row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
+      // A wrapped, centred header keeps its lines aligned with each other: the block is
+      // centred as a whole and every line starts at the block's left edge.
+      int text_x = cell_x + cell_padding;
+      std::string text_align = cell_style.text_align;
+      if (header_row && wrapped.size() > 1 && text_align == "center") {
+        int block_w = 0;
+        for (const auto& line : wrapped) {
+          block_w = std::max(block_w, painted_text_width(line, cell_style.font_size, cell_style.font_weight,
+                                                        cell_style.font_family));
+        }
+        text_x += std::max(0, (text_max_w - block_w) / 2);
+        text_align = "left";
+      }
       draw_text_lines(scene,
                       wrapped,
                       cell_style.font_size,
                       cell_style.font_weight,
                       cell_style.font_family,
                       cell_style.text_color,
-                      cell_x + cell_padding,
+                      text_x,
                       text_y,
                       cell_style.line_height,
-                      cell_style.text_align,
+                      text_align,
                       text_max_w);
       if (header_row && render_config.hit_regions != nullptr) {
         const int x0 = std::max(cell_x, scrollable_left);
@@ -3437,6 +3716,22 @@ int render_table(Scene& scene,
           });
         }
       }
+      if (header_row) {
+        draw_sort_arrows(cell_x, cell_w, row_y, row_h, c, cell_style.text_color,
+                         cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
+                         cell_style.font_size, scrollable_left, scrollable_right);
+        const int edge = cell_x + cell_w;
+        const int hx0 = std::max(edge - kResizeHandlePx / 2, scrollable_left);
+        const int hx1 = std::min(edge + kResizeHandlePx / 2, scrollable_right);
+        if (hx1 > hx0) {
+          resize_handles.push_back(HtmlHitRegion{.rect = RectI{hx0, row_y, hx1 - hx0, row_h},
+                                                 .action = "table.resize.column",
+                                                 .target = table_target,
+                                                 .value = static_cast<int>(c),
+                                                 .aux = cell_w});
+          handle_looks.push_back(HandleLook{edge, static_cast<int>(c), cell_style.text_color});
+        }
+      }
     }
     scene.add(LineCommand{PointI{table_origin_x + row_total_w, row_y},
                           PointI{table_origin_x + row_total_w, row_y + row_h},
@@ -3444,6 +3739,7 @@ int render_table(Scene& scene,
                           Color::rgba(216, 222, 228, 255)});
 
     if (sticky_prefix_count > 0) {
+      Color sticky_divider = Color::rgba(79, 137, 148, 255);  // overridden by the sticky cell's border-color
       int sticky_x = content_x;
       for (std::size_t s = 0; s < sticky_prefix_count; ++s) {
         const std::size_t source_index = sticky_sources[s];
@@ -3463,13 +3759,12 @@ int render_table(Scene& scene,
           }
           cell_style = resolve_style(document, *row.cells[source_index].node, cell_lineage, &style, viewport_width);
         }
+        sticky_divider = cell_style.border_color;  // themed via `.sticky-left { border-color }`
         const int cell_padding = std::max(2, cell_style.padding);
-        const int text_max_w = std::max(20, sticky_w - ((cell_padding + cell_style.border) * 2) - 2);
-        const int max_lines = header_row ? 2 : 5;
-        const auto wrapped = limit_lines(layout_text_lines(value, cell_style, text_max_w),
-                                         max_lines,
-                                         cell_style.font_size,
-                                         text_max_w);
+        const int text_max_w =
+            std::max(20, sticky_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? kSortGutterPx : 0));
+        // Every cell here is a row label or its header: names break at _ - . / over up to 3 lines.
+        const auto wrapped = layout_header_lines(value, cell_style.font_size, text_max_w, 3);
         if (cell_style.has_background) {
           draw_style_fill(
               scene,
@@ -3478,19 +3773,28 @@ int render_table(Scene& scene,
         }
         const int text_block_h =
             std::max(1, static_cast<int>(wrapped.size())) * cell_style.line_height;
-        const int text_y = header_row
-                               ? row_y + cell_padding
-                               : row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
+        const int text_y = row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
+        int text_x = sticky_x + cell_padding;
+        std::string text_align = cell_style.text_align;
+        if (header_row && wrapped.size() > 1 && text_align == "center") {
+          int block_w = 0;
+          for (const auto& line : wrapped) {
+            block_w = std::max(block_w, painted_text_width(line, cell_style.font_size, cell_style.font_weight,
+                                                        cell_style.font_family));
+          }
+          text_x += std::max(0, (text_max_w - block_w) / 2);
+          text_align = "left";
+        }
         draw_text_lines(scene,
                         wrapped,
                         cell_style.font_size,
                         cell_style.font_weight,
                         cell_style.font_family,
                         cell_style.text_color,
-                        sticky_x + cell_padding,
+                        text_x,
                         text_y,
                         cell_style.line_height,
-                        cell_style.text_align,
+                        text_align,
                         text_max_w);
         scene.add(LineCommand{PointI{sticky_x, row_y},
                               PointI{sticky_x + sticky_w, row_y},
@@ -3504,12 +3808,37 @@ int render_table(Scene& scene,
               .value = static_cast<int>(s),
           });
         }
+        if (header_row) {
+          draw_sort_arrows(sticky_x, sticky_w, row_y, row_h, s, cell_style.text_color,
+                           cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
+                           cell_style.font_size, sticky_x, sticky_x + sticky_w);
+          resize_handles.push_back(HtmlHitRegion{
+              .rect = RectI{sticky_x + sticky_w - kResizeHandlePx / 2, row_y, kResizeHandlePx, row_h},
+              .action = "table.resize.column",
+              .target = table_target,
+              .value = static_cast<int>(s),
+              .aux = sticky_w});
+          handle_looks.push_back(HandleLook{sticky_x + sticky_w, static_cast<int>(s), cell_style.text_color});
+        }
         sticky_x += sticky_w;
       }
       scene.add(LineCommand{PointI{content_x + sticky_total_w, row_y},
                             PointI{content_x + sticky_total_w, row_y + row_h},
                             2,
-                            Color::rgba(79, 137, 148, 255)});
+                            sticky_divider});
+    }
+    if (header_row && !render_config.hover_resize_target.empty() &&
+        render_config.hover_resize_target == table_target) {
+      for (const auto& look : handle_looks) {
+        if (look.column == render_config.hover_resize_column) {
+          scene.add(LineCommand{PointI{look.edge, row_y}, PointI{look.edge, row_y + row_h}, 3, look.ink});
+        }
+      }
+    }
+    if (render_config.hit_regions != nullptr) {
+      for (auto& handle : resize_handles) {
+        render_config.hit_regions->push_back(std::move(handle));
+      }
     }
   };
 
@@ -3796,11 +4125,15 @@ int render_node(Scene& scene,
     const bool has_value = (use_override && !render_config.active_input_value.empty()) ||
                            (!use_override && value_attr != nullptr && !value_attr->value.empty());
     const Color text_color = has_value ? style.text_color : Color::rgba(132, 141, 151, 255);
+    const int input_font = style.font_size + 2;  // text boxes read a little larger than body text
     const std::string transformed = apply_text_transform(text, style.text_transform);
-    const std::string clipped = truncate_to_width(transformed, style.font_size, std::max(20, content_w - 12));
-    const TextLayout text_layout = layout_math_text(clipped, style.font_size);
+    const std::string clipped =
+        painted_text_width(transformed, input_font, style.font_weight, style.font_family) <= std::max(20, content_w - 12)
+            ? transformed
+            : truncate_to_width(transformed, input_font, std::max(20, content_w - 12));
+    const TextLayout text_layout = layout_math_text(clipped, input_font);
     const int glyph_h = std::max(1, text_layout.ascent + text_layout.descent);
-    const int text_top = outer_y + std::max(0, (outer_h - glyph_h) / 2);
+    const int text_top = outer_y + std::max(0, (outer_h - glyph_h) / 2) - std::max(1, input_font / 7);
     const int text_area_x = content_x + 6;
     const int text_area_w = std::max(20, content_w - 12);
     int text_x = text_area_x;
@@ -3811,7 +4144,7 @@ int render_node(Scene& scene,
     }
     draw_text_lines(scene,
                     {clipped},
-                    style.font_size,
+                    input_font,
                     style.font_weight,
                     style.font_family,
                     text_color,
@@ -3829,7 +4162,7 @@ int render_node(Scene& scene,
             .text_anchor = PointI{has_value ? text_x : text_area_x,
                                   text_top + text_layout.ascent},
             .text = has_value ? clipped : std::string{},
-            .pixel_size = style.font_size,
+            .pixel_size = input_font,
             .font_weight = style.font_weight,
             .font_family = style.font_family,
             .fallback_width = has_value ? text_layout.width : 0,
@@ -3860,7 +4193,9 @@ int render_node(Scene& scene,
     }
     const TextLayout text_layout = layout_math_text(clipped, style.font_size);
     const int glyph_h = std::max(1, text_layout.ascent + text_layout.descent);
-    const int text_top = outer_y + std::max(0, (outer_h - glyph_h) / 2);
+    // Centre on the cap height (about 0.36 em above the baseline), which reads as centred.
+    const int baseline = outer_y + outer_h / 2 + static_cast<int>(std::lround(style.font_size * 0.14));
+    const int text_top = baseline - text_layout.ascent;
     draw_text_lines(scene,
                     {clipped},
                     style.font_size,
@@ -4039,6 +4374,29 @@ int render_node(Scene& scene,
   return total_h;
 }
 
+const HtmlNode* find_body_node(const HtmlNode& node) {
+  if (node.tag == "body") {
+    return &node;
+  }
+  for (const auto& child : node.children) {
+    if (const auto* found = find_body_node(child)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
+// Page canvas colour: the <body> background when the stylesheet sets one.
+Color page_background_color(const HtmlDocument& document, const int viewport_width) {
+  constexpr auto fallback = Color::rgba(245, 248, 252, 255);
+  const HtmlNode* body = find_body_node(document.root);
+  if (body == nullptr) {
+    return fallback;
+  }
+  const auto style = resolve_style(document, *body, {}, nullptr, viewport_width);
+  return style.has_background ? style.background_color : fallback;
+}
+
 } // namespace
 
 Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewport, const HtmlRenderConfig config) {
@@ -4052,7 +4410,7 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
   const int height = std::max(240, viewport.height);
 
   Scene scene;
-  scene.add(ClearCommand{Color::rgba(245, 248, 252, 255)});
+  scene.add(ClearCommand{page_background_color(document, width)});
 
   int body_top = config.root_padding_px;
   if (config.draw_top_bar) {

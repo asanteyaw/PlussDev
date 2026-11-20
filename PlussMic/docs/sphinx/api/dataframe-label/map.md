@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame DataFrameLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const
+DataFrame DataFrameLabelAccessor::map(const std::function<ShelfValue(const ShelfValue&)>& fn) const
 ```
 
 ## What It Does
@@ -17,14 +17,14 @@ Applies `fn` to every case label individually and replaces the case labels
 with the results. Only works on an **unstructured** frame (no `case_axis_` —
 i.e. not one built by promoting a named feature via [`set(feature_name)`](set.md));
 calling it on a structured, multi-level frame throws, since there's no single
-flat slate to map over. Map an individual level via
+flat shelf to map over. Map an individual level via
 [`part(name)`](part.md) and [`set()`](set.md) it back instead.
 
 ## Parameters
 
-**fn** (`const std::function<SlateValue(const SlateValue&)>&`)
+**fn** (`const std::function<ShelfValue(const ShelfValue&)>&`)
 
-A callback receiving one case label at a time (wrapped in a `SlateValue`) and
+A callback receiving one case label at a time (wrapped in a `ShelfValue`) and
 returning its replacement.
 
 ## Returns
@@ -41,12 +41,12 @@ Example 1. Append a suffix to every case label on an unstructured `Note` axis.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto tagged = orders.labels().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
+    {{"sales", Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+auto tagged = orders.labels().set(Shelf(pluss::make_note({"r1", "r2", "r3", "r4"})));
 std::cout << tagged;
 
-auto out = tagged.labels().map([](const SlateValue& v) {
-  return SlateValue(Slate(pluss::make_note({v.to_str() + "!"})));
+auto out = tagged.labels().map([](const ShelfValue& v) {
+  return ShelfValue(Shelf(pluss::make_note({v.to_str() + "!"})));
 });
 std::cout << out;
 ```
@@ -79,7 +79,7 @@ r4!  | 90
 [4 cs x 1 feat]
 ```
 
-`tagged`'s case labels came from `set(const Slate&)`, so `has()` is `false`
+`tagged`'s case labels came from `set(const Shelf&)`, so `has()` is `false`
 and `map()` is reachable; each label is transformed by appending `"!"`.
 
 Example 2. Call `map()` on a structured frame, to see it throw.
@@ -88,17 +88,17 @@ Example 2. Call `map()` on a structured frame, to see it throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 std::cout << labeled.labels().has();
 
 try {
-  auto out = labeled.labels().map([](const SlateValue& v) {
-    return SlateValue(Slate(pluss::make_note({v.to_str() + "!"})));
+  auto out = labeled.labels().map([](const ShelfValue& v) {
+    return ShelfValue(Shelf(pluss::make_note({v.to_str() + "!"})));
   });
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -106,7 +106,7 @@ try {
 ### Output
 
 ```text
-true DataFrame::labels().map: structured labels are not supported; map a label part instead
+1DataFrame::labels().map: structured labels are not supported; map a label part instead
 ```
 
 `labeled`'s case labels came from `set("region")`, which always creates a
@@ -119,12 +119,12 @@ throws instead of silently doing nothing.
   [`has()`](has.md) first, or map a single level with
   [`part(name)`](part.md) and reattach it with [`set()`](set.md), if that's
   what you need.
-- `fn` must return a `SlateValue` of a kind consistent with the rest of the
-  output (a length-1 `Slate` wrapped in `SlateValue`, as constructed above).
+- `fn` must return a `ShelfValue` of a kind consistent with the rest of the
+  output (a length-1 `Shelf` wrapped in `ShelfValue`, as constructed above).
 
 ## See Also
 
-- [`DataFrameLabelAccessor::values`](values.md): pull the raw label slate if you
+- [`DataFrameLabelAccessor::values`](values.md): pull the raw label shelf if you
   need to cast or otherwise transform label payloads outside `map(...)`.
 - [`DataFrameLabelAccessor::set`](set.md): the underlying mechanism this method
   applies its result through.

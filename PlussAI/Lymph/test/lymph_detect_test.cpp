@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -44,8 +44,8 @@ FeatureBatch anomaly_batch() {
 DataFrame anomaly_frame() {
   const Series x = anomaly_batch().x;
   return DataFrame({
-      {"x0", Slate(x.narrow_copy(1, 0, 1).reshape({26}))},
-      {"x1", Slate(x.narrow_copy(1, 1, 1).reshape({26}))},
+      {"x0", Shelf(x.narrow_copy(1, 0, 1).reshape({26}))},
+      {"x1", Shelf(x.narrow_copy(1, 1, 1).reshape({26}))},
   });
 }
 

@@ -56,7 +56,7 @@ using namespace pluss::table;
 
 auto scores = DataFrame({
     {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
-    {"score",   pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN(), 5.0})},
+    {"score",   Shelf(pluss::make_series({10.0, 20.0, 0.0, 5.0}), pluss::make_series(std::vector<bool>{true, true, false, true}))},
 });
 
 std::cout << scores;

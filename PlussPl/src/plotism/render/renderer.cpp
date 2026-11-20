@@ -212,6 +212,7 @@ struct DrawList {
 struct PaneLayout {
   Rect outer{};
   Rect plot{};
+  double auto_x_tick_rotation{0.0}; // degrees the supplied x labels are turned to fit their slots; 0 when upright
 };
 
 struct KeyEntry {
@@ -1186,7 +1187,8 @@ class ScopedSeriesVectorCache {
       }
     }
   }
-  if (axis.tick_format == TickFormat::Auto &&
+  // Labels the caller supplied (x_ticks, x_categories) are kept as given; only generated ticks are reformatted.
+  if (!axis.ticks.has_value() && axis.tick_format == TickFormat::Auto &&
       (axis.scale.kind == ScaleKind::Linear || axis.scale.kind == ScaleKind::SymLog)) {
     return harmonize_auto_tick_labels(std::move(clipped), axis.auto_tick_decimals);
   }
@@ -1316,6 +1318,49 @@ class ScopedSeriesVectorCache {
 
   std::sort(minor.begin(), minor.end());
   return minor;
+}
+
+// A line with far more vertices than the plot has columns draws the same picture from its per-column envelope: for each
+// half-point column of x it keeps the first, lowest, highest and last vertex, in drawing order. Only a path whose x runs
+// one way qualifies; a parametric curve that doubles back would lose its shape, so it is drawn in full.
+[[nodiscard]] std::vector<Point2d> decimate_monotone_polyline(const std::vector<Point2d>& path, double bucket_width) {
+  if (path.size() < 3 || !(bucket_width > 0.0)) {
+    return path;
+  }
+  bool rising = true;
+  bool falling = true;
+  for (std::size_t i = 1; i < path.size(); ++i) {
+    rising = rising && path[i].x >= path[i - 1].x;
+    falling = falling && path[i].x <= path[i - 1].x;
+  }
+  if (!rising && !falling) {
+    return path;
+  }
+  std::vector<Point2d> out;
+  out.reserve(path.size() / 8 + 8);
+  std::size_t begin = 0;
+  const auto column_of = [&](const Point2d& point) { return std::floor(point.x / bucket_width); };
+  while (begin < path.size()) {
+    const double column = column_of(path[begin]);
+    std::size_t end = begin + 1;
+    std::size_t lowest = begin;
+    std::size_t highest = begin;
+    while (end < path.size() && column_of(path[end]) == column) {
+      if (path[end].y < path[lowest].y) lowest = end;
+      if (path[end].y > path[highest].y) highest = end;
+      ++end;
+    }
+    std::size_t keep[4] = {begin, std::min(lowest, highest), std::max(lowest, highest), end - 1};
+    std::size_t previous = path.size();
+    for (const std::size_t index : keep) {
+      if (index != previous) {
+        out.push_back(path[index]);
+        previous = index;
+      }
+    }
+    begin = end;
+  }
+  return out;
 }
 
 [[nodiscard]] SeriesPairData normalize_pairs(const Series& first, const Series& second) {
@@ -2415,6 +2460,44 @@ struct FiniteMinMax {
          (!axis.label_centered_explicit && axis.label_rotation_deg.has_value() && near_vertical);
 }
 
+// Supplied (categorical) x labels that would run into one another are turned the way MATLAB's boxchart turns them: to 30,
+// then 45, then 90 degrees, whichever first lets every label keep its own slot. Needs the axis limits to know the slot
+// width; a rotation set by hand is never overridden. Layout and drawing both use the value the layout stores.
+[[nodiscard]] double auto_x_tick_rotation(const AxisState& axis, double plot_width, double tick_font) {
+  if (!axis.ticks.has_value() || !axis.tick_labels_visible || axis.tick_rotation_deg.has_value() || !axis.limits.has_value() ||
+      axis.ticks->labels.size() < 2 || !(plot_width > 0.0)) {
+    return 0.0;
+  }
+  const Range1d range = *axis.limits;
+  if (!(range.high > range.low)) {
+    return 0.0;
+  }
+  const std::vector<double> positions = axis.ticks->positions.defined() ? to_f64(flatten_f64(axis.ticks->positions)) : std::vector<double>{};
+  double min_gap = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 1; i < positions.size(); ++i) {
+    const double gap = positions[i] - positions[i - 1];
+    if (gap > 0.0) min_gap = std::min(min_gap, gap);
+  }
+  if (!std::isfinite(min_gap)) {
+    return 0.0;
+  }
+  std::size_t longest = 1;
+  for (const auto& label : axis.ticks->labels) {
+    longest = std::max(longest, label.size());
+  }
+  const double slot = min_gap * plot_width / (range.high - range.low);
+  const double upright = static_cast<double>(longest) * tick_font * look().estimated_glyph_width_em * look().tick_label_spacing_factor;
+  if (upright <= slot) {
+    return 0.0;
+  }
+  for (const double degrees : {30.0, 45.0}) {
+    if (tick_font * look().tick_label_spacing_factor / std::sin(degrees * (kPi / 180.0)) <= slot) {
+      return degrees;
+    }
+  }
+  return 90.0;
+}
+
 [[nodiscard]] std::vector<PaneLayout> layout_panes(const Studio& studio) {
   std::vector<PaneLayout> layouts;
   if (studio.panes().empty()) {
@@ -2432,7 +2515,7 @@ struct FiniteMinMax {
     }
     return chars;
   };
-  const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane) {
+  const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane, double outer_width) {
     double top = look().pane_top_inset.of(tight);
     double left = look().pane_left_inset.of(tight);
     const bool axes_visible = pane.axes_visible();
@@ -2442,6 +2525,7 @@ struct FiniteMinMax {
       right = std::max(right, look().pane_outside_legend_right_inset.of(tight));
     }
     double bottom = look().pane_bottom_inset.of(tight);
+    double auto_rotation = 0.0;
 
     const double tick_font = tick_font_for(pane);
     const double axis_font = axis_label_font_for(pane);
@@ -2468,13 +2552,13 @@ struct FiniteMinMax {
           }
         }
       }
-      const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars, bool x_axis) {
+      const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars, bool x_axis, double auto_rotation) {
         if (!axis.tick_labels_visible) {
           return axes_visible ? tick_length_for(tick_font) : 0.0;
         }
         const auto chars = max_tick_label_chars(axis, fallback_chars);
         const double extent = std::max(1.0, static_cast<double>(chars)) * tick_font * look().estimated_glyph_width_em;
-        const double rotation = axis.tick_rotation_deg.value_or(0.0);
+        const double rotation = axis.tick_rotation_deg.value_or(auto_rotation);
         // x tick labels hang below the axis (centred when upright, anchored at the tick when turned); y tick labels
         // are right-aligned to the left of it.
         const double reach = x_axis ? text_box_reach(extent, tick_font, rotation,
@@ -2485,13 +2569,20 @@ struct FiniteMinMax {
                + reach;
       };
 
-      const double x_depth = axis_tick_depth(pane.x_axis(), 8, true);
+      // The slot a categorical label gets is the plot's width over its groups; the plot is the pane less its side insets,
+      // which the y axis fixes first.
+      const double y_depth_first = axis_tick_depth(pane.y_axis(), 6, false, 0.0);
+      const double y_label_pad_first =
+          pane.y_axis().label.empty() ? look().empty_axis_label_pad : resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_font, false);
+      const double left_first = std::max(left, y_depth_first + y_label_pad_first + (pane.y_axis().label.empty() ? 0.0 : axis_font));
+      auto_rotation = auto_x_tick_rotation(pane.x_axis(), outer_width - left_first - right, tick_font);
+      const double x_depth = axis_tick_depth(pane.x_axis(), 8, true, auto_rotation);
       const double x_label_extent = pane.x_axis().label.empty() ? 0.0 : axis_font;
       const double x_label_pad =
           pane.x_axis().label.empty() ? look().empty_axis_label_pad : resolved_axis_label_gap(pane.x_axis(), axes_visible, axis_font, true);
       bottom = std::max(bottom, x_depth + x_label_pad + x_label_extent);
 
-      const double y_depth = axis_tick_depth(pane.y_axis(), 6, false);
+      const double y_depth = axis_tick_depth(pane.y_axis(), 6, false, 0.0);
       const double y_label_extent = pane.y_axis().label.empty() ? 0.0 : axis_font;
       const double y_label_pad =
           pane.y_axis().label.empty() ? look().empty_axis_label_pad : resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_font, false);
@@ -2521,7 +2612,7 @@ struct FiniteMinMax {
       top = std::max(top, near_pad + look().volume_top_tick_share * x_extent + (pane.title_text().empty() ? 0.0 : axis_font * look().volume_title_em));
     }
 
-    return std::array<double, 4>{left, top, right, bottom};
+    return std::array<double, 5>{left, top, right, bottom, auto_rotation};
   };
 
   // A caption only claims margin when some visible pane is in its group and the text is not empty.
@@ -2648,10 +2739,11 @@ struct FiniteMinMax {
           placement.col,
           placement.row_span,
           placement.col_span);
-      const auto insets = pane_insets(pane);
+      const auto insets = pane_insets(pane, outer.width);
       layouts[pane_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
+          insets[4],
       };
       assigned[pane_index] = true;
     }
@@ -2671,10 +2763,11 @@ struct FiniteMinMax {
           inner_width,
           pane_height,
       };
-      const auto insets = pane_insets(pane);
+      const auto insets = pane_insets(pane, outer.width);
       layouts[pane_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
+          insets[4],
       };
       assigned[pane_index] = true;
     }
@@ -2765,10 +2858,11 @@ struct FiniteMinMax {
         };
       }
       const Rect outer = claim(placement.row, placement.col, placement.row_span, placement.col_span);
-      const auto insets = pane_insets(pane);
+      const auto insets = pane_insets(pane, outer.width);
       layouts[child_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
+          insets[4],
       };
       assigned[child_index] = true;
     }
@@ -5308,7 +5402,7 @@ void render_planar_axes(
 
   const double tick_font = tick_font_for(pane);
   const double axis_label_font = axis_label_font_for(pane);
-  const double x_tick_rotation = pane.x_axis().tick_rotation_deg.value_or(0.0);
+  const double x_tick_rotation = pane.x_axis().tick_rotation_deg.value_or(layout.auto_x_tick_rotation);
   const double y_tick_rotation = pane.y_axis().tick_rotation_deg.value_or(0.0);
   const double x_label_rotation = pane.x_axis().label_rotation_deg.value_or(0.0);
   const double y_label_rotation = pane.y_axis().label_rotation_deg.value_or(0.0);
@@ -5364,6 +5458,33 @@ void render_planar_axes(
         ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}),
         {bounds.min_y, bounds.max_y},
         pane.y_axis());
+    // Supplied (categorical) x labels that would run into one another are thinned to every k-th, so the axis stays
+    // readable with dozens or hundreds of groups. A rotation set by hand is the caller's call and is left alone.
+    if (pane.x_axis().ticks.has_value() && pane.x_axis().tick_labels_visible && !pane.x_axis().tick_rotation_deg.has_value() &&
+        x_ticks_cache.size() > 1 && bounds.max_x > bounds.min_x) {
+      double min_gap = std::numeric_limits<double>::infinity();
+      std::size_t longest_label = 1;
+      for (std::size_t i = 0; i < x_ticks_cache.size(); ++i) {
+        longest_label = std::max(longest_label, x_ticks_cache[i].second.size());
+        if (i > 0) {
+          const double gap = x_ticks_cache[i].first - x_ticks_cache[i - 1].first;
+          if (gap > 0.0) min_gap = std::min(min_gap, gap);
+        }
+      }
+      const double gap_pt = min_gap * layout.plot.width / (bounds.max_x - bounds.min_x);
+      // An upright label needs its width; a turned one needs about its height over the sine of the turn.
+      const double turn = std::abs(layout.auto_x_tick_rotation) * (kPi / 180.0);
+      const double label_pt = turn > 1e-9 ? tick_font / std::sin(turn)
+                                          : static_cast<double>(longest_label) * tick_font * look().estimated_glyph_width_em;
+      if (std::isfinite(gap_pt) && gap_pt > 0.0 && label_pt * look().tick_label_spacing_factor > gap_pt) {
+        const auto stride = static_cast<std::size_t>(std::ceil(label_pt * look().tick_label_spacing_factor / gap_pt));
+        std::vector<std::pair<double, std::string>> kept;
+        for (std::size_t i = 0; i < x_ticks_cache.size(); i += stride) {
+          kept.push_back(x_ticks_cache[i]);
+        }
+        x_ticks_cache = std::move(kept);
+      }
+    }
     const auto& x_ticks = x_ticks_cache;
     const auto& y_ticks = y_ticks_cache;
     const auto x_minor = pane.x_axis().minor_grid
@@ -5685,6 +5806,9 @@ void render_planar_traces(
             std::vector<Point2d> path;
             auto flush_segment = [&]() {
               if (path.size() >= 2) {
+                if (static_cast<double>(path.size()) > look().line_decimation_points_per_pt * layout.plot.width) {
+                  path = decimate_monotone_polyline(path, look().line_decimation_bucket_pt);
+                }
                 add_path(
                     list,
                     path,
@@ -5727,13 +5851,37 @@ void render_planar_traces(
               const int marker_steps = std::max(look().marker_min_steps, static_cast<int>(std::ceil(radius * look().marker_steps_per_radius)));
               std::vector<Point2d> marker_points;
               std::vector<std::size_t> subpath_starts;
-              marker_points.reserve(cloud.count * static_cast<std::size_t>(marker_steps));
-              subpath_starts.reserve(cloud.count);
+              // A very dense cloud draws only as many markers per cell (about one marker diameter wide) as it takes for the
+              // stack to look opaque: past that, another marker lies under the others and changes nothing visible, but
+              // costs its full outline in the file. A fill of alpha a saturates to 99.5% after log(0.005) / log(1 - a)
+              // markers (4 at the default 0.82; 1 when opaque).
+              const bool thin = cloud.count > static_cast<std::size_t>(look().cloud_thin_threshold);
+              const double stack_alpha = std::clamp(fill.alpha, 0.01, 0.999999);
+              const auto per_cell = static_cast<std::uint8_t>(
+                  std::clamp(std::ceil(std::log(0.005) / std::log(1.0 - stack_alpha)), 1.0, 250.0));
+              const double cell = std::max(1e-6, 2.0 * radius * look().cloud_thin_cell_diameters);
+              const std::size_t cell_columns = thin ? static_cast<std::size_t>(std::ceil(layout.plot.width / cell)) + 1U : 0U;
+              const std::size_t cell_rows = thin ? static_cast<std::size_t>(std::ceil(layout.plot.height / cell)) + 1U : 0U;
+              std::vector<std::uint8_t> occupied(cell_columns * cell_rows, 0);
+              marker_points.reserve((thin ? std::min(cloud.count, cell_columns * cell_rows) : cloud.count) *
+                                    static_cast<std::size_t>(marker_steps));
+              subpath_starts.reserve(thin ? std::min(cloud.count, cell_columns * cell_rows) : cloud.count);
               for (std::size_t i = 0; i < cloud.count; ++i) {
                 const Point2d center =
                     map_planar_point(cloud.x.at(i), cloud.y.at(i), pane, bounds, layout.plot, false);
                 if (!std::isfinite(center.x) || !std::isfinite(center.y)) {
                   continue;
+                }
+                if (thin) {
+                  const double fx = (center.x - layout.plot.x) / cell;
+                  const double fy = (center.y - layout.plot.y) / cell;
+                  if (fx >= 0.0 && fy >= 0.0 && fx < static_cast<double>(cell_columns) && fy < static_cast<double>(cell_rows)) {
+                    const std::size_t slot = static_cast<std::size_t>(fy) * cell_columns + static_cast<std::size_t>(fx);
+                    if (occupied[slot] >= per_cell) {
+                      continue;
+                    }
+                    ++occupied[slot];
+                  }
                 }
                 append_marker_circle(marker_points, subpath_starts, center, radius, marker_steps);
               }
@@ -5769,6 +5917,48 @@ void render_planar_traces(
               return;
             }
             const Range1d color_range = surface_color_range(pane, trace, *grid);
+            // One digit count and one font for the whole map, sized for its tightest cell and longest value: the
+            // configured size when every value fits, else fewer digits and a smaller font. If even the smallest
+            // legible size does not fit, the values are left off rather than drawn over their neighbours.
+            int annotation_digits = 3;
+            double annotation_font = 0.0;
+            if (trace.annotate_levels()) {
+              double min_width = std::numeric_limits<double>::infinity();
+              double min_height = std::numeric_limits<double>::infinity();
+              for (std::int64_t row = 0; row < grid->rows; ++row) {
+                for (std::int64_t col = 0; col < grid->cols; ++col) {
+                  double lo_x = std::numeric_limits<double>::infinity(), hi_x = -lo_x, lo_y = lo_x, hi_y = -lo_x;
+                  for (const Point2d& corner : center_cell_polygon(*grid, row, col)) {
+                    const Point2d mapped = map_planar_point(corner.x, corner.y, pane, bounds, layout.plot, false);
+                    lo_x = std::min(lo_x, mapped.x);
+                    hi_x = std::max(hi_x, mapped.x);
+                    lo_y = std::min(lo_y, mapped.y);
+                    hi_y = std::max(hi_y, mapped.y);
+                  }
+                  min_width = std::min(min_width, hi_x - lo_x);
+                  min_height = std::min(min_height, hi_y - lo_y);
+                }
+              }
+              const auto& shown = grid->color.has_value() ? *grid->color : grid->z;
+              for (const int digits : {3, 2, 1}) {
+                std::size_t longest = 1;
+                for (const double value : shown) {
+                  if (std::isfinite(value)) {
+                    std::ostringstream label;
+                    label << std::setprecision(digits) << value;
+                    longest = std::max(longest, label.str().size());
+                  }
+                }
+                const double fit = std::min(
+                    min_height * look().field_label_height_share,
+                    min_width * look().field_label_width_share / (static_cast<double>(longest) * look().estimated_glyph_width_em));
+                annotation_digits = digits;
+                annotation_font = std::min(look().field_label_font_pt, fit);
+                if (annotation_font >= look().field_label_min_font_pt) {
+                  break;
+                }
+              }
+            }
             for (std::int64_t row = 0; row < grid->rows; ++row) {
               for (std::int64_t col = 0; col < grid->cols; ++col) {
                 const auto index = static_cast<std::size_t>(row * grid->cols + col);
@@ -5781,6 +5971,9 @@ void render_planar_traces(
                 }
                 const double color_value =
                     grid->color.has_value() ? (*grid->color)[index] : grid->z[index];
+                if (!std::isfinite(color_value)) {
+                  continue; // a masked or missing cell is a gap, not a colour
+                }
                 const Rgba fill = palette_lookup(trace.palette_ramp(), color_range, color_value);
                 add_path(
                     list,
@@ -5801,15 +5994,11 @@ void render_planar_traces(
                   const Rgba text_color = luminance > look().field_label_luma_threshold
                       ? look().field_label_on_light
                       : look().field_label_on_dark;
-                  std::ostringstream label;
-                  label << std::setprecision(3) << color_value;
-                  add_text(
-                      list,
-                      center,
-                      label.str(),
-                      look().field_label_font_pt,
-                      text_color,
-                      TextCommand::Align::Middle);
+                  if (annotation_font >= look().field_label_min_font_pt) {
+                    std::ostringstream label;
+                    label << std::setprecision(annotation_digits) << color_value;
+                    add_text(list, center, label.str(), annotation_font, text_color, TextCommand::Align::Middle);
+                  }
                 }
               }
             }

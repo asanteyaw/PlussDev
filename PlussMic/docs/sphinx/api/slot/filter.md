@@ -54,8 +54,8 @@ auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   std::function<bool(const pluss::scribble::Slot::Value&)> empty_pred;
   slot.filter(empty_pred);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -82,9 +82,9 @@ Slot::filter: predicate is empty
   values, already built in.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fillnull.html">
+  <a class="prev-link" href="fillposinf.html">
     <span class="label">Previous</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillposinf</span>
   </a>
   <a class="next-link" href="freq.html">
     <span class="label">Next</span>

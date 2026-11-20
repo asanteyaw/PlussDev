@@ -1,0 +1,65 @@
+# Kepler orbits
+
+[Back to Physics 1: Orbits](../phys_01_orbits.md)
+
+A satellite moves along an ellipse around the body it orbits. Two ways describe the same orbit: its position and velocity at one instant, and six numbers that give the shape and orientation of the ellipse. This page converts between the two, reads the period and the closest and farthest distances, flies the satellite forward in time, and checks that the energy stays constant and that one period brings it back.
+
+## How it works
+
+Quantities carry their unit: `common::SeriesQuantity<common::Length>::from_si(x)` is a length given in metres, and the gravitational parameter of the central body is a `common::ScalarQuantity<astro::GravParam>`. `astro::make_state(position, velocity)` makes an orbit from the instantaneous state; `astro::to_elem(state, mu)` turns it into orbital elements, of which `axis()`, `ecc()` and `tilt()` are the semi-major axis, eccentricity and inclination. `astro::period`, `astro::peri` and `astro::apo` return the orbital period and the closest and farthest distances, and `astro::energy` the specific energy, which does not change along a Kepler orbit. `astro::advance(state, elapsed, mu)` moves the state forward by the elapsed time, exactly, by solving Kepler's equation instead of stepping.
+
+## A satellite around the Earth
+
+The satellite starts `7000` km from the centre of the Earth with a velocity of `7.5` km/s sideways and `1` km/s along the axis. The program prints the elements, the period and the extremes of the orbit, and then advances the satellite by a quarter, a half and a whole period.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace natsci = pluss::ma::natsci;
+namespace astro = natsci::physics::astro;
+namespace common = natsci::common;
+
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double km = 1000.0;
+  const auto mu = common::ScalarQuantity<astro::GravParam>::from_si(3.986004418e14);   // Earth, m^3/s^2
+
+  // a satellite 7000 km from the centre of the Earth, moving at 7.5 km/s mostly sideways
+  const auto start = astro::make_state(
+      common::SeriesQuantity<common::Length>::from_si(pluss::series::make({7000.0 * km, 0.0, 0.0})),
+      common::SeriesQuantity<common::Speed>::from_si(pluss::series::make({0.0, 7.5 * km, 1.0 * km})));
+
+  const auto elements = astro::to_elem(start, mu);
+  out.writeln("semi-major axis (km)  = ", flat(elements.axis().si_value().div(km)));
+  out.writeln("eccentricity          = ", flat(elements.ecc().si_value()));
+  out.writeln("inclination (deg)     = ", flat(elements.tilt().si_value().mul(180.0 / 3.141592653589793)));
+  out.writeln("period (min)          = ", flat(astro::period(elements, mu).si_value().div(60.0)));
+  out.writeln("closest approach (km) = ", flat(astro::peri(elements).si_value().div(km)));
+  out.writeln("farthest point (km)   = ", flat(astro::apo(elements).si_value().div(km)));
+  out.writeln("energy (MJ/kg)        = ", flat(astro::energy(start, mu).si_value().div(1e6)));
+
+  // fly the satellite for a quarter, half and one full period
+  const double period = flat(astro::period(elements, mu).si_value())[0];
+  for (double fraction : {0.25, 0.5, 1.0}) {
+    const auto later = astro::advance(start, common::ScalarQuantity<common::Time>::from_si(period * fraction), mu);
+    const auto radius = later.state.position().si_value().norm(2.0, -1, false);
+    out.writeln(fraction, " of a period: distance (km) = ", flat(radius.div(km)),
+                ", energy (MJ/kg) = ", flat(astro::energy(later.state, mu).si_value().div(1e6)));
+  }
+  const auto round = astro::advance(start, common::ScalarQuantity<common::Time>::from_si(period), mu);
+  out.writeln("distance from the start after one period (m) = ", flat(round.state.position().si_value().sub(start.position().si_value()).norm(2.0, -1, false)));
+}
+```
+
+The orbit is nearly circular: eccentricity `0.0054`, with the distance between `7000` km at the start (the closest point) and `7075.9081` km half a period later. The period is `97.9331` minutes, the inclination `7.59` degrees, and the energy is `-28.3179` MJ/kg at every instant, as it must be. After a whole period the satellite is back within `0.0000` m of where it began.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

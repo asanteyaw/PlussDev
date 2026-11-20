@@ -279,7 +279,6 @@ no initial temperature: eng::fluid::heat: initial temperature is required
 a zero specific heat: eng::fluid::heat: cp must be finite and positive
 a negative conductance: eng::fluid::heat: ua values must be nonnegative
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="transport.html">

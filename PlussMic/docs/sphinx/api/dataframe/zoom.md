@@ -89,7 +89,7 @@ auto grid = DataFrame({
     {"x", pluss::make_series(std::vector<std::int64_t>{5, 6, 7, 8})},
     {"y", pluss::make_series(std::vector<std::int64_t>{9, 10, 11, 12})},
     {"z", pluss::make_series(std::vector<std::int64_t>{13, 14, 15, 16})},
-}).label().set(pluss::make_note({"r0", "r1", "r2", "r3"}));
+}).labels().set(pluss::make_note({"r0", "r1", "r2", "r3"}));
 
 auto out = grid.zoom(1, 3, 1, 4);
 std::cout << out;
@@ -98,12 +98,12 @@ std::cout << out;
 ### Output
 
 ```text
-================
-     | x   y   z
-----------------
-r1   | 6   10  14
-r2   | 7   11  15
-----------------
+=======================
+     | x     y     z   
+-----------------------
+r1   | 6     10    14  
+r2   | 7     11    15  
+-----------------------
 [2 cs x 3 feat]
 ```
 
@@ -124,12 +124,12 @@ std::cout << tail_block;
 ### Output
 
 ```text
-============
-     | x   y
-------------
-r2   | 7   11
-r3   | 8   12
-------------
+=================
+     | x     y   
+-----------------
+r2   | 7     11  
+r3   | 8     12  
+-----------------
 [2 cs x 2 feat]
 ```
 
@@ -151,12 +151,12 @@ std::cout << block;
 ### Output
 
 ```text
-============
-     | w   x
-------------
-r0   | 1   5
-r1   | 2   6
-------------
+=================
+     | w     x   
+-----------------
+r0   | 1     5   
+r1   | 2     6   
+-----------------
 [2 cs x 2 feat]
 ```
 
@@ -178,13 +178,13 @@ std::cout << via_zoom;
 ### Output
 
 ```text
-============
-     | y   z
-------------
-r1   | 10  14
-r2   | 11  15
-r3   | 12  16
-------------
+=================
+     | y     z   
+-----------------
+r1   | 10    14  
+r2   | 11    15  
+r3   | 12    16  
+-----------------
 [3 cs x 2 feat]
 ```
 
@@ -230,7 +230,7 @@ as one rectangular cut.
 - [`DataFrame::features`](features.md): feature-only projection by name.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="width.md">
+  <a class="prev-link" href="width.html">
     <span class="label">Previous</span>
     <span class="title">width</span>
   </a>

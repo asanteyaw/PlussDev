@@ -39,6 +39,9 @@ void validate_common(std::int64_t order, const IirOptions &options,
   PLUSS_CHECK(options.dtype == ScalarType::Float32 ||
                   options.dtype == ScalarType::Float64,
               std::string(operation) + ": dtype must be Float32 or Float64");
+  PLUSS_CHECK(options.platform != Platform::MPS || options.dtype == ScalarType::Float32,
+              std::string(operation) +
+                  ": float64 is unsupported on the MPS; set dtype to Float32 to design on it");
   if (options.sample_rate.has_value()) {
     PLUSS_CHECK(
         std::isfinite(*options.sample_rate) && *options.sample_rate > 0.0,

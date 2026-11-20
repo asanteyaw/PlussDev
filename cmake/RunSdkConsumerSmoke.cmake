@@ -26,8 +26,10 @@ set(configure_command
     ${CMAKE_COMMAND}
     -S ${SDK_CONSUMER_SOURCE_DIR}
     -B ${SDK_CONSUMER_BUILD_DIR}
-    -DCMAKE_PREFIX_PATH=${SDK_STAGE_DIR})
-foreach(package_dir IN ITEMS Arrow_DIR Parquet_DIR Torch_DIR)
+    "-DCMAKE_PREFIX_PATH=${SDK_STAGE_DIR}\\;${PARENT_PREFIX_PATH}")
+# The consumer must see the same toolchain and SDK as the build that staged the SDK, or it resolves a different (possibly missing)
+# macOS SDK and cannot find system packages such as CURL.
+foreach(package_dir IN ITEMS Arrow_DIR Parquet_DIR Torch_DIR CMAKE_OSX_SYSROOT CMAKE_C_COMPILER CMAKE_CXX_COMPILER CURL_LIBRARY CURL_INCLUDE_DIR)
   if(DEFINED ${package_dir} AND NOT "${${package_dir}}" STREQUAL "")
     list(APPEND configure_command "-D${package_dir}=${${package_dir}}")
   endif()

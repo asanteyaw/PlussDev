@@ -26,7 +26,7 @@ lymph::selection::SpecTuneResult lymph::selection::tune_specs(
 ```
 
 The `/* data */` slot is one of `const LabeledBatch&`, `(const DataFrame& x,
-const Series& y)`, `(const DataFrame& x, const pluss::table::Slate& y)`, or
+const Series& y)`, `(const DataFrame& x, const pluss::table::Shelf& y)`, or
 `(const DataFrame& frame, const DataFrameBatchOptions& data_options)`.
 
 There is also a lower-level family that takes a pre-built `ModelSpec` list plus a
@@ -129,7 +129,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -140,7 +140,7 @@ int main() {
       {3., 1., 4., 1., 5., 9., 2., 6., 5., 3., 5., 8., 9., 7., 9., 3.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24., 26., 28., 30., 32.}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};
@@ -215,7 +215,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -226,7 +226,7 @@ int main() {
       {3., 1., 4., 1., 5., 9., 2., 6., 5., 3., 5., 8., 9., 7., 9., 3.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24., 26., 28., 30., 32.}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};
@@ -300,7 +300,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -311,7 +311,7 @@ int main() {
       {3., 1., 4., 1., 5., 9., 2., 6., 5., 3., 5., 8., 9., 7., 9., 3.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24., 26., 28., 30., 32.}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};

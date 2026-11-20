@@ -289,7 +289,7 @@ public:
       const Series f_troe =
           log_fc.div(f1.square().add(1.0)).mul(std::log(10.0)).exp();
       const Series f =
-          fall_is_troe_.gt(0.0).where(f_troe, f_troe.mul(0.0).add(1.0));
+          pluss::series::where(fall_is_troe_.gt(0.0), f_troe, f_troe.mul(0.0).add(1.0));
       const Series k_fall = kinf.mul(pr.div(pr.add(1.0))).mul(f); // [..., nf]
       k = k.add(k_fall.matmul(fall_select_)); // scatter to [..., R]
     }

@@ -4,7 +4,7 @@ Chapter 1 introduced the two methods and chapter 2 the prices and certificates. 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Real work with linear programs is rarely one solve. You change a price and ask again, or you trace a trade-off by sweeping a weight, or you check a hundred scenarios. The library supports that in two ways.
 

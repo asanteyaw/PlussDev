@@ -2,6 +2,8 @@
 
 # `signal::cheby2`
 
+Designs a Chebyshev type II filter: a flat passband and an equal-ripple stopband.
+
 ## Signature
 
 ```cpp
@@ -20,172 +22,185 @@ lti::PoleZero signal::cheby2(
 
 ## What It Does
 
-Designs a Chebyshev type-II system. Its passband is monotonic while finite transmission zeros create equiripple attenuation in the stopband.
+Returns the poles, zeros and gain of a Chebyshev type II (inverse Chebyshev) filter. The passband is monotone and the stopband gain never rises above `-attenuation` dB. Unlike the other designs, the cutoff is the edge of the stopband: the gain there is exactly `-attenuation` dB, not -3 dB.
 
 ## Parameters
 
 `order`
-: Positive prototype order. Band-pass and band-stop transformations produce the corresponding doubled system order.
+: Positive prototype order. Band-pass and band-stop designs double it.
 
 `attenuation`
-: Positive minimum stopband attenuation in decibels.
+: Minimum stopband attenuation in decibels, finite and positive.
 
 `cutoff`
-: A finite positive scalar for low/high designs or an increasing positive pair for pass/stop designs. Digital cutoffs must remain below Nyquist.
+: A finite positive scalar for `Low` and `High`, or an increasing positive pair for `Pass` and `Stop`. For this design it is the stopband edge. In a digital design it is in the units of `sample_rate` and must be below the Nyquist frequency (half the sample rate).
 
 `options`
-: Band, sample-rate interpretation, dtype, and platform policy.
+: An `IirOptions`: band, sample rate, dtype and platform.
 
 ## Returns
 
-An `lti::PoleZero` system. Digital results are discrete and should have poles inside the unit circle; analog results are continuous and should have poles in the left half-plane.
+An `lti::PoleZero` with stable poles.
 
 ## Errors
 
-Rejects nonpositive order, invalid or unordered cutoffs, digital cutoffs at or above Nyquist, invalid prototype ripple/attenuation, and cutoff-form/band mismatches.
+A nonpositive order or attenuation, a bad cutoff and a cutoff form that does not match the band throw `pluss::Error`.
+
+## Interpretation and Use
+
+Because the cutoff is where the stopband starts, the -3 dB point lies below it (about 50 Hz for the design in the examples). The first example scans from the stopband edge to the Nyquist frequency and finds the highest gain at -40.000 dB. The second shows the trade against Butterworth: far better rejection just above the edge, but a stopband that stays near -40 dB where a Butterworth filter keeps falling (at 300 Hz Butterworth is lower).
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+The stopband bound and the monotone passband of a fourth-order filter with 40 dB of attenuation.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-
-  const sig::IirOptions options{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  const lti::PoleZero butter = sig::butter(4, 100.0, options);
-  const lti::PoleZero cheby1 = sig::cheby1(4, 1.0, 100.0, options);
-  const lti::PoleZero cheby2 = sig::cheby2(4, 40.0, 100.0, options);
-
-  out.writeln("Butterworth poles =", butter.poles().numel());
-  out.writeln("Butterworth stable =", butter.is_stable());
-  out.writeln("Chebyshev I stable =", cheby1.is_stable());
-  out.writeln("Chebyshev II stable =", cheby2.is_stable());
-  out.writeln("SOS shape =", lti::to_sos(butter).sizes());
-}
-```
-
-Output
-
-```text
-Butterworth poles = 4
-Butterworth stable = true
-Chebyshev I stable = true
-Chebyshev II stable = true
-SOS shape = [2, 6]
-```
-### Example 2
-
-Exercise band transformations and analog-versus-digital interpretation.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
+#include <algorithm>
 #include <cmath>
-#include <optional>
-
-namespace lti = pluss::subsp::eng::lti;
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const lti::PoleZero pass = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Pass, .sample_rate = 1000.0});
-  const lti::PoleZero stop = sig::butter(
-      3, {100.0, 200.0},
-      {.band = sig::Band::Stop, .sample_rate = 1000.0});
-  const lti::PoleZero analog = sig::butter(
-      3, 2.0,
-      {.band = sig::Band::Low, .sample_rate = std::nullopt});
-  const pluss::Series omega =
-      pluss::make_series({0.0, 150.0 * 2.0 * std::acos(-1.0)});
-
-  out.writeln("pass magnitude =", lti::freqresp(pass, omega).abs().items<double>());
-  out.writeln("stop magnitude =", lti::freqresp(stop, omega).abs().items<double>());
-  out.writeln("analog continuous =", analog.is_cont());
-  out.writeln("analog gain =", analog.gain().real().item<double>());
-}
-```
-
-Output
-
-```text
-pass magnitude = [0.0000, 1.0000]
-stop magnitude = [1.0000, 0.0015]
-analog continuous = true
-analog gain = 8.0000
-```
-### Example 3
-
-Observe validation of cutoffs, ripple, and band/cutoff shape.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
 
 int main() {
   OutputEngine out;
-  const sig::IirOptions low{
-      .band = sig::Band::Low,
-      .sample_rate = 1000.0,
-  };
-  try {
-    static_cast<void>(sig::butter(3, 500.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("Nyquist cutoff rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::cheby1(3, 0.0, 100.0, low));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero ripple rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::butter(
-        3, 100.0,
-        {.band = sig::Band::Pass, .sample_rate = 1000.0}));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("scalar passband rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const lti::PoleZero design = sig::cheby2(4, 40.0, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  double highest_stop = -1e9;
+  for (double f = 100.0; f <= 499.0; f += 1.0) highest_stop = std::max(highest_stop, gain_db(design, f));
+  out.writeln("highest gain from 100 Hz to the Nyquist frequency =", highest_stop, "dB for an attenuation of 40 dB");
+  for (const double f : {0.0, 25.0, 50.0, 75.0}) out.writeln("passband gain at", f, "Hz =", gain_db(design, f), "dB");
 }
 ```
 
 Output
 
 ```text
-Nyquist cutoff rejected = eng::signal::butter: a digital cutoff must be below the Nyquist frequency
-zero ripple rejected = eng::signal::cheby1: ripple must be finite and positive
-scalar passband rejected = eng::signal::butter: a scalar cutoff requires Band::Low or Band::High
+highest gain from 100 Hz to the Nyquist frequency = -40.000 dB for an attenuation of 40 dB
+passband gain at 0.000 Hz = -0.000 dB
+passband gain at 25.000 Hz = -0.009 dB
+passband gain at 50.000 Hz = -2.651 dB
+passband gain at 75.000 Hz = -17.672 dB
+```
+### Example 2
+
+The same cutoff against a Butterworth filter: where each is lower.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const lti::PoleZero inverse = sig::cheby2(4, 40.0, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  const lti::PoleZero butterworth = sig::butter(4, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0});
+  for (const double f : {50.0, 100.0, 150.0, 300.0}) out.writeln("at", f, "Hz: Chebyshev II", gain_db(inverse, f), "dB, Butterworth", gain_db(butterworth, f), "dB");
+}
+```
+
+Output
+
+```text
+at 50.000 Hz: Chebyshev II -2.651 dB, Butterworth -0.014 dB
+at 100.000 Hz: Chebyshev II -40.000 dB, Butterworth -3.010 dB
+at 150.000 Hz: Chebyshev II -40.628 dB, Butterworth -15.748 dB
+at 300.000 Hz: Chebyshev II -44.746 dB, Butterworth -50.157 dB
+```
+### Example 3
+
+Every refused argument.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+// Gain in decibels of a design at a physical frequency in hertz.
+static double gain_db(const lti::PoleZero &design, double hertz) {
+  const pluss::Series omega = pluss::make_series({2.0 * std::acos(-1.0) * hertz});
+  return 20.0 * std::log10(lti::freqresp(design, omega).abs().items<double>()[0]);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  refused(out, "zero attenuation", [] { sig::cheby2(3, 0.0, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0}); });
+  refused(out, "negative attenuation", [] { sig::cheby2(3, -40.0, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0}); });
+  refused(out, "order zero", [] { sig::cheby2(0, 40.0, 100.0, {.band = sig::Band::Low, .sample_rate = 1000.0}); });
+  refused(out, "a cutoff at the Nyquist frequency", [] { sig::cheby2(3, 40.0, 500.0, {.band = sig::Band::Low, .sample_rate = 1000.0}); });
+}
+```
+
+Output
+
+```text
+zero attenuation : eng::signal::cheby2: attenuation must be finite and positive
+negative attenuation : eng::signal::cheby2: attenuation must be finite and positive
+order zero : eng::signal::cheby2: order must be positive
+a cutoff at the Nyquist frequency : eng::signal::cheby2: a digital cutoff must be below the Nyquist frequency
 ```
 ## See Also
 

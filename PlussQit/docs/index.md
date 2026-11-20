@@ -16,13 +16,13 @@
 <div class="pluss-card">
 <span class="card-name">Series</span>
 <span class="card-model">Numeric &middot; Boolean</span>
-<p class="card-desc">The tensor-style numeric and boolean object underneath every numeric <code>Slate</code> column.</p>
+<p class="card-desc">The tensor-style numeric and boolean object underneath every numeric <code>Shelf</code> column.</p>
 </div>
 
 <div class="pluss-card">
 <span class="card-name">Note</span>
 <span class="card-model">Text</span>
-<p class="card-desc">The vectorized text object underneath every string-like <code>Slate</code> column.</p>
+<p class="card-desc">The vectorized text object underneath every string-like <code>Shelf</code> column.</p>
 </div>
 
 <div class="pluss-card">

@@ -35,12 +35,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0}))},
 });
 
 auto biz = Nexus({
@@ -79,9 +79,9 @@ std::cout << biz.nrelationships() << " " << linked.nrelationships();
 - [`Nexus::ntables`](ntables.md): the analogous count for tables instead of relationships.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="neighbors.html">
+  <a class="prev-link" href="notnull.html">
     <span class="label">Previous</span>
-    <span class="title">neighbors</span>
+    <span class="title">notnull</span>
   </a>
   <a class="next-link" href="ntables.html">
     <span class="label">Next</span>

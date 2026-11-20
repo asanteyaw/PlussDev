@@ -75,8 +75,9 @@ Example 1. Default 2D render from a two-way table.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 std::cout << df.contingency("city", "channel").to_frame();
@@ -98,9 +99,9 @@ Example 2. Explicitly project a 3D retained table to 2D.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 std::cout << df.contingency({"city", "channel", "weekend"})
@@ -110,12 +111,12 @@ std::cout << df.contingency({"city", "channel", "weekend"})
 ### Output
 
 ```text
-===============================================================
-     | city  channel=Card | weekend=no  channel=Card | weekend=yes  channel=Cash | weekend=no  channel=Cash | weekend=yes
--------------------------------------------------------------------------------------------------------------------------------
-0    | A     1                          0                           1                          0                         
-1    | B     0                          1                           1                          1                         
--------------------------------------------------------------------------------------------------------------------------------
+===========================================================================================================
+     | city  channel=Card | weeken~  channel=Card | weeken~  channel=Cash | weeken~  channel=Cash | weeken~
+-----------------------------------------------------------------------------------------------------------
+0    | A     1                       0                       1                       0                     
+1    | B     0                       1                       1                       1                     
+-----------------------------------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
 
@@ -131,13 +132,13 @@ std::cout << df.contingency("city", "channel").to_frame(options);
 ### Output
 
 ```text
-==============================
+===============================
      | city   Card  Cash  Total
-------------------------------
-0    | A      1     1     2
-1    | B      1     2     3
-2    | Total  2     3     5
-------------------------------
+-------------------------------
+0    | A      1     1     2    
+1    | B      1     2     3    
+2    | Total  2     3     5    
+-------------------------------
 [3 cs x 4 feat]
 ```
 
@@ -154,12 +155,12 @@ std::cout << out;
 ### Output
 
 ```text
-=============
+=================
      | city  freq
--------------
-0    | A     2
-1    | B     3
--------------
+-----------------
+0    | A     2   
+1    | B     3   
+-----------------
 [2 cs x 2 feat]
 ```
 

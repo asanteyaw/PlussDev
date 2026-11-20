@@ -227,10 +227,12 @@ public:
   // contents until one of them is edited (edits clone). Valid as a cache key
   // only while a copy of the handle is kept alive.
   const void* identity() const noexcept;
-  // Content fingerprint: key names plus every stream's fingerprint. Equal while
-  // nothing changed (including in-place edits of shared Series storage); valid
-  // as a cache key only while a copy of the catalog is kept alive.
+  // Hash of the contents: key names and every stream's fingerprint(). Equal for catalogs with equal contents however they were built.
+  // Costs one pass over the data.
   std::uint64_t fingerprint() const;
+  // Cache token: key names plus every stream's stamp(). Equal for copies that share storage and while nothing was edited, but NOT for
+  // a table rebuilt separately with the same values; O(1); valid only while a copy of the catalog is kept alive.
+  std::uint64_t stamp() const;
   explicit Catalog(std::vector<std::pair<std::string, Stream>> streams);
   Catalog(std::initializer_list<std::pair<std::string, Stream>> streams);
   Catalog(std::initializer_list<NamedStream> streams);
@@ -293,14 +295,14 @@ public:
   Catalog filter(const pluss::Series& condition) const;
   Catalog where(const pluss::Series& condition) const;
   Catalog query(const QueryFn& fn) const;
-  static Catalog select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
+  static Catalog select(pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
                         pluss::msharp::RangeView::Of<Catalog> choices,
                         const Catalog& default_value);
-  static Catalog select(std::initializer_list<pluss::table::Slate> conditions,
+  static Catalog select(std::initializer_list<pluss::table::Shelf> conditions,
                         std::initializer_list<Catalog> choices,
                         const Catalog& default_value) {
     return select(
-        pluss::msharp::RangeView::Of<pluss::table::Slate>(conditions),
+        pluss::msharp::RangeView::Of<pluss::table::Shelf>(conditions),
         pluss::msharp::RangeView::Of<Catalog>(choices),
         default_value);
   }
@@ -338,12 +340,32 @@ public:
   Catalog ffill() const;
   Catalog bfill() const;
   Catalog isnull() const;
+  // One row per stream counting NULL / NaN / +inf / -inf / finite cells (see DataFrame::count_kinds); streams may differ in length.
+  pluss::table::DataFrame count_kinds() const;
   Catalog notnull() const;
   Catalog invalid() const;
+  // NaN and infinity are values, not missing cells (see table/NonFinite.h): isnull / dropnull / fillnull never touch them and
+  // these never touch a null.
+  Catalog isnan() const;
+  Catalog notnan() const;
+  Catalog isinf() const;
+  Catalog isposinf() const;
+  Catalog isneginf() const;
+  Catalog notinf() const;
+  Catalog dropnan() const;
+  Catalog dropinf() const;
+  Catalog dropposinf() const;
+  Catalog dropneginf() const;
+  Catalog dropinvalid() const;
+  Catalog fillinvalid(double value) const;
+  Catalog fillnan(double value) const;
+  Catalog fillinf(double value) const;
+  Catalog fillposinf(double value) const;
+  Catalog fillneginf(double value) const;
   CatalogCastAccessor cast() const;
-  CatalogCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
-  Catalog cast(pluss::table::SlateCastTarget target,
-               const pluss::table::SlateCastOptions& options = {}) const;
+  CatalogCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
+  Catalog cast(pluss::table::ShelfCastTarget target,
+               const pluss::table::ShelfCastOptions& options = {}) const;
   CatalogNoteAccessor nt() const;
   CatalogTimelineAccessor tl() const;
   CatalogTimeSeriesAccessor ts() const;
@@ -399,9 +421,9 @@ public:
                           std::optional<relational::RelationshipCardinality> validate = std::nullopt,
                           const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) const;
   // Joins reuse the hashed right-hand side of a recent join on the same data and
-  // keys (non-text keys, large sides). (hits, misses) since start; clear drops it.
-  static std::pair<std::int64_t, std::int64_t> join_cache_stats();
-  static void clear_join_cache();
+  // keys (non-text keys, large sides). (hits, misses) since start; clear_cache drops it.
+  static std::pair<std::int64_t, std::int64_t> cache_stats();
+  static void clear_cache();
   CatalogKeyAudit audit_keys(const Catalog& other, const std::vector<std::string>& left_keys,
                              const std::vector<std::string>& right_keys,
                              const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) const;
@@ -490,7 +512,7 @@ public:
   CatalogKeyAccessor(Catalog base, std::vector<std::string> keys);
 
   CatalogCastAccessor cast() const;
-  CatalogCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  CatalogCastAccessor cast(const pluss::table::ShelfCastOptions& options) const;
   CatalogNoteAccessor nt() const;
   CatalogTimelineAccessor tl() const;
   CatalogTimeSeriesAccessor ts() const;
@@ -549,7 +571,7 @@ class CatalogCastAccessor {
 public:
   CatalogCastAccessor(Catalog base,
                       std::vector<std::string> keys,
-                      pluss::table::SlateCastOptions options = {});
+                      pluss::table::ShelfCastOptions options = {});
 
   Catalog series() const;
   Catalog note() const;
@@ -558,7 +580,7 @@ public:
 
 private:
   CatalogKeyAccessor keysel_;
-  pluss::table::SlateCastOptions options_{};
+  pluss::table::ShelfCastOptions options_{};
 };
 
 class CatalogNoteAccessor {

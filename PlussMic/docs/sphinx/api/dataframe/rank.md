@@ -118,7 +118,7 @@ and `4` (`95`). `Ada` and `Chen` — both at `80` — split the difference and e
 Example 2. Break the same tie by row order instead of averaging.
 
 ```cpp
-auto ranked_first = scores.rank(DataFrame::RankTieRule::First);
+auto ranked_first = scores.rank(RankTieRule::First);
 std::cout << ranked_first;
 ```
 

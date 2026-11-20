@@ -4,7 +4,7 @@ The earlier chapters used a `module::Field` to price, always with one model and 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A `Field` is data.** Its five members (`instrument`, `market`, `model`, `controls`, `paths`) are plain structs of `Series`; change any one and price again.
 - **The model is a value.** A `module::Model` holds one of `BlackScholes`, `Sabr`, `Heston`, `Bates`, `RoughHeston`, `RoughBergomi`, exposes its parameters as a flat vector, and can be replaced or priced as a candidate without touching the `Field`.

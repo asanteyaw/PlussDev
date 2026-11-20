@@ -77,8 +77,8 @@ Example 1. Default options: explicit label feature, showing label and percentage
 using namespace pluss::table;
 
 auto budget = DataFrame({
-    {"category", Slate(pluss::make_note({"Engineering", "Sales", "Support", "Marketing"}))},
-    {"spend",    Slate(pluss::make_series({420.0, 180.0, 90.0, 130.0}))},
+    {"category", Shelf(pluss::make_note({"Engineering", "Sales", "Support", "Marketing"}))},
+    {"spend",    Shelf(pluss::make_series({420.0, 180.0, 90.0, 130.0}))},
 });
 
 auto chart = budget.plot().pie("spend", "category");
@@ -94,8 +94,8 @@ Example 2. No `label_feature`: falls back to the frame's own row labels.
 
 ```cpp
 auto by_case = DataFrame({
-    {"spend", Slate(pluss::make_series({420.0, 180.0, 90.0, 130.0}))},
-}, Slate(pluss::make_note({"eng", "sales", "support", "marketing"})));
+    {"spend", Shelf(pluss::make_series({420.0, 180.0, 90.0, 130.0}))},
+}, Shelf(pluss::make_note({"eng", "sales", "support", "marketing"})));
 
 auto chart = by_case.plot().pie("spend");
 chart.show();
@@ -111,8 +111,8 @@ percentages are computed against the smaller, filtered total.
 
 ```cpp
 auto mixed = DataFrame({
-    {"category", Slate(pluss::make_note({"A", "B", "C", "D"}))},
-    {"spend",    Slate(pluss::make_series({100.0, -50.0, 0.0, 300.0}))},
+    {"category", Shelf(pluss::make_note({"A", "B", "C", "D"}))},
+    {"spend",    Shelf(pluss::make_series({100.0, -50.0, 0.0, 300.0}))},
 });
 
 auto chart = mixed.plot().pie("spend", "category");
@@ -159,13 +159,13 @@ Example 6. Every row filtered out throws.
 
 ```cpp
 auto empty_after_filter = DataFrame({
-    {"spend", Slate(pluss::make_series({0.0, -5.0, -10.0}))},
+    {"spend", Shelf(pluss::make_series({0.0, -5.0, -10.0}))},
 });
 
 try {
   auto bad = empty_after_filter.plot().pie("spend");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

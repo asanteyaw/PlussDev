@@ -9,14 +9,14 @@
 
 ```cpp
 DataFrame DataFrame::where(const pluss::Series& bool_mask) const
-DataFrame DataFrame::where(const Slate& bool_mask) const
-DataFrame DataFrame::where(const Slate& bool_mask, const AlignOptions& options) const
+DataFrame DataFrame::where(const Shelf& bool_mask) const
+DataFrame DataFrame::where(const Shelf& bool_mask, const AlignOptions& options) const
 ```
 
 ## What It Does
 
 An exact alias for [`filter()`](filter.md) — `where(bool_mask, ...)` literally
-delegates to `filter(bool_mask, ...)` for both the `pluss::Series` and `Slate` mask
+delegates to `filter(bool_mask, ...)` for both the `pluss::Series` and `Shelf` mask
 overloads, keeping only the rows where the mask is `true` and dropping the rest.
 Note this is **not** numpy/pandas `.where()`'s replace-in-place semantics (which
 keeps every row and only replaces individual masked-out *values*) — for that kind
@@ -24,14 +24,14 @@ of masked replacement within a single feature, reach for [`put()`](put.md) inste
 
 ## Parameters
 
-**bool_mask** (`const pluss::Series&` or `const Slate&`)
+**bool_mask** (`const pluss::Series&` or `const Shelf&`)
 
 A boolean mask whose length must equal the frame's case count. Rows where the mask
 is `true` are kept; rows where it's `false` (or `NULL`) are dropped.
 
-**options** (`const AlignOptions&`, `Slate`-mask overload only)
+**options** (`const AlignOptions&`, `Shelf`-mask overload only)
 
-Alignment options controlling how a case-label-bearing `Slate` mask is matched
+Alignment options controlling how a case-label-bearing `Shelf` mask is matched
 against this frame's own case labels before filtering.
 
 ## Returns
@@ -47,9 +47,9 @@ Example 1. Filter rows with an explicit boolean mask.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```

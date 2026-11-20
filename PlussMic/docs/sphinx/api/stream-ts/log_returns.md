@@ -53,14 +53,14 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | nan                                                                                                      
-1            | 0.6931471806                                                                                             
-2            | -0.2876820725                                                                                            
-3            | 0.6931471806                                                                                             
+0            | NULL                                                                                                     
+1            | 0.69314718056                                                                                            
+2            | -0.287682072452                                                                                          
+3            | 0.69314718056                                                                                            
 ========================================================================================================================
 ```
 
@@ -91,8 +91,8 @@ both but a different one for the halving case.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::log_returns`](../catalog-ts/log_returns.md):
   the whole-catalog equivalent.
-- [`TimeSeriesAccessor::log_returns`](../slate-ts/log_returns.md): the
-  underlying single-slate engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::log_returns`](../shelf-ts/log_returns.md): the
+  underlying single-shelf engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lead.html">

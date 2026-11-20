@@ -63,7 +63,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 0.69314718056, -0.287682072452, 0.69314718~
+metric                   | Series       | Series[float64]  | 4       | [NULL, 0.69314718056, -0.287682072452, 0.6931471~
 ========================================================================================================================
 ```
 
@@ -93,13 +93,13 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 3       | [nan, nan, nan]                                  
+metric                   | Series       | Series[float64]  | 3       | [NULL, NULL, NULL]                               
 ========================================================================================================================
 ```
 
 `log_returns()` requires **both** sides to be strictly positive; since every
 comparison here involves the negative `-5`, all three positions come back
-`nan`.
+`NULL`.
 
 ## Notes
 
@@ -122,8 +122,8 @@ comparison here involves the negative `-5`, all three positions come back
 - [`CatalogTimeSeriesAccessor::diff`](diff.md): the absolute
   period-over-period change.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::log_returns`](../slate-ts/log_returns.md): the
-  underlying single-slate engine this method delegates to.
+- [`TimeSeriesAccessor::log_returns`](../shelf-ts/log_returns.md): the
+  underlying single-shelf engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lead.html">

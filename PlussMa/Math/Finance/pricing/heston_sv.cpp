@@ -1653,7 +1653,7 @@ McStripGreeks mc_strip_core_(const McSimulateFn_& simulate,
   for (std::size_t i = 0; i < n; ++i) {
     const bool call = is_call[i];
     const Series itm = call ? terminal.gt(strikes[i]) : terminal.lt(strikes[i]);
-    const Series ind = itm.where(terminal, terminal.mul(0.0));                       // S_T on the exercise region
+    const Series ind = pluss::series::where(itm, terminal, terminal.mul(0.0));                       // S_T on the exercise region
     const double sign = call ? 1.0 : -1.0;
     out.delta[i] = sign * disc * ind.mul(lr).mean().item<double>() / spot;
     const Series payoff = discounted_payoff_(type_of(i), terminal, strikes[i], rate, maturity);
@@ -1802,7 +1802,7 @@ std::vector<McStripGreeks> detail::sv_mc_assets(const std::vector<McAsset>& asse
       results[a].price[i] = p0;
       if (!greeks) continue;
       const Series itm = call ? terminal.gt(k) : terminal.lt(k);
-      const double indicator_mean = itm.where(terminal, terminal.mul(0.0)).mean().item<double>();
+      const double indicator_mean = pluss::series::where(itm, terminal, terminal.mul(0.0)).mean().item<double>();
       results[a].delta[i] = sign * disc * indicator_mean / spot;
       results[a].rho[i] = maturity * (sign * disc * indicator_mean - p0);
       results[a].gamma[i] = (plain(base, a, i, options.steps, 1.0 + eps, 0.0) - 2.0 * p0 + plain(base, a, i, options.steps, 1.0 - eps, 0.0)) / (eps * eps * spot * spot);

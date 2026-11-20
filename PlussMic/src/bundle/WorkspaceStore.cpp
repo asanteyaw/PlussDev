@@ -11,7 +11,7 @@ namespace {
 
 using namespace pluss::relational;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using pluss::table::snapshot::bool_cell;
 using pluss::table::snapshot::double_cell;
 using pluss::table::snapshot::int_cell;
@@ -36,15 +36,15 @@ DataFrame meta_frame(const std::vector<std::string>& tables,
     notes.push_back(meta ? optional_text(meta->note) : "");
   }
   return DataFrame({
-      {"table", Slate(pluss::make_note(names))},
-      {"grain", Slate(pluss::make_note(grains))},
-      {"pkey", Slate(pluss::make_note(pkeys))},
-      {"ckeys", Slate(pluss::make_note(ckeys))},
-      {"time", Slate(pluss::make_note(times))},
-      {"labels", Slate(pluss::make_note(labels))},
-      {"source", Slate(pluss::make_note(sources))},
-      {"provenance", Slate(pluss::make_note(provenances))},
-      {"note", Slate(pluss::make_note(notes))},
+      {"table", Shelf(pluss::make_note(names))},
+      {"grain", Shelf(pluss::make_note(grains))},
+      {"pkey", Shelf(pluss::make_note(pkeys))},
+      {"ckeys", Shelf(pluss::make_note(ckeys))},
+      {"time", Shelf(pluss::make_note(times))},
+      {"labels", Shelf(pluss::make_note(labels))},
+      {"source", Shelf(pluss::make_note(sources))},
+      {"provenance", Shelf(pluss::make_note(provenances))},
+      {"note", Shelf(pluss::make_note(notes))},
   });
 }
 
@@ -86,16 +86,16 @@ DataFrame graph_frame(const std::vector<Relationship>& relationships) {
     notes.push_back(optional_text(rel.note));
   }
   return DataFrame({
-      {"name", Slate(pluss::make_note(names))},
-      {"left", Slate(pluss::make_note(lefts))},
-      {"right", Slate(pluss::make_note(rights))},
-      {"keys", Slate(pluss::make_note(keys))},
-      {"cardinality", Slate(pluss::make_note(cards))},
-      {"left_optional", Slate(pluss::make_series(left_optional))},
-      {"right_optional", Slate(pluss::make_series(right_optional))},
-      {"confidence", Slate(pluss::make_series(confidences))},
-      {"status", Slate(pluss::make_note(statuses))},
-      {"note", Slate(pluss::make_note(notes))},
+      {"name", Shelf(pluss::make_note(names))},
+      {"left", Shelf(pluss::make_note(lefts))},
+      {"right", Shelf(pluss::make_note(rights))},
+      {"keys", Shelf(pluss::make_note(keys))},
+      {"cardinality", Shelf(pluss::make_note(cards))},
+      {"left_optional", Shelf(pluss::make_series(left_optional))},
+      {"right_optional", Shelf(pluss::make_series(right_optional))},
+      {"confidence", Shelf(pluss::make_series(confidences))},
+      {"status", Shelf(pluss::make_note(statuses))},
+      {"note", Shelf(pluss::make_note(notes))},
   });
 }
 
@@ -152,18 +152,18 @@ DataFrame views_frame(const std::vector<std::pair<std::string, JoinPlan>>& plans
     }
   }
   return DataFrame({
-      {"view", Slate(pluss::make_note(view_names))},
-      {"step", Slate(pluss::make_series(step_indices))},
-      {"root", Slate(pluss::make_note(roots))},
-      {"result", Slate(pluss::make_note(results))},
-      {"left", Slate(pluss::make_note(lefts))},
-      {"right", Slate(pluss::make_note(rights))},
-      {"how", Slate(pluss::make_note(hows))},
-      {"keys", Slate(pluss::make_note(keys))},
-      {"right_suffix", Slate(pluss::make_note(suffixes))},
-      {"validate", Slate(pluss::make_note(validates))},
-      {"relationship", Slate(pluss::make_note(relationships))},
-      {"step_result", Slate(pluss::make_note(step_results))},
+      {"view", Shelf(pluss::make_note(view_names))},
+      {"step", Shelf(pluss::make_series(step_indices))},
+      {"root", Shelf(pluss::make_note(roots))},
+      {"result", Shelf(pluss::make_note(results))},
+      {"left", Shelf(pluss::make_note(lefts))},
+      {"right", Shelf(pluss::make_note(rights))},
+      {"how", Shelf(pluss::make_note(hows))},
+      {"keys", Shelf(pluss::make_note(keys))},
+      {"right_suffix", Shelf(pluss::make_note(suffixes))},
+      {"validate", Shelf(pluss::make_note(validates))},
+      {"relationship", Shelf(pluss::make_note(relationships))},
+      {"step_result", Shelf(pluss::make_note(step_results))},
   });
 }
 

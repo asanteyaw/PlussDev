@@ -14,7 +14,7 @@ Stream Stream::exp() const
 ## What It Does
 
 Applies the elementwise exponential (`e^x`) to a `Series`-kind stream. Delegates to
-`Slate::exp()`, so it's `Series`-only, same as
+`Shelf::exp()`, so it's `Series`-only, same as
 [`abs()`](abs.md)/[`clip()`](clip.md)/[`log()`](log.md) — the inverse of
 [`log()`](log.md).
 
@@ -84,15 +84,15 @@ auto note = pluss::kindle::Stream(pluss::make_note({"a", "b"}));
 
 try {
   auto out = note.exp();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 44);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 44);
 }
 ```
 
 ### Output
 
 ```text
-Slate::exp is only valid for Series payload
+Shelf::exp is only valid for Series payload
 ```
 
 ## Notes

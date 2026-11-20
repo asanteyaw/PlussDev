@@ -20,12 +20,12 @@ Stream Stream::fillnull(const pluss::Duration& value) const
 Replaces every `NULL` cell in the stream with `value`, returning a new stream. `value`'s
 C++ type must match the stream's own payload kind exactly — `double` for `Series`,
 `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for `Timeline`,
-`pluss::Duration` for `Duration`. Delegates straight to `Slate::fillnull()`.
+`pluss::Duration` for `Duration`. Delegates straight to `Shelf::fillnull()`.
 
 ```{important} Kind mismatch throws here — unlike Catalog::fillnull()'s silent skip
 `Stream::fillnull()` operates on a single, already-typed stream, so a kind mismatch throws
 immediately (e.g. calling the `string_view` overload on a `Series`-kind stream throws
-`"Slate::fillnull(string) is only valid for Note payload"`). This is the opposite of
+`"Shelf::fillnull(string) is only valid for Note payload"`). This is the opposite of
 [`Catalog::fillnull()`](../catalog/fillnull.md), which silently skips any stream whose kind
 doesn't match `value`'s type across the whole collection — there, kind selection is the
 point; here, on a single stream, a mismatch is a caller error worth surfacing.
@@ -102,11 +102,11 @@ auto stream = pluss::kindle::Stream(
     pluss::duration::nanos({1'000'000'000LL, pluss::Duration::kNaT, -2'000'000'000LL}));
 
 auto out = stream.fillnull(pluss::duration::nanos(9));
-assert(out.to_slate().as_duration().host() ==
+assert(out.to_shelf().as_duration().host() ==
        std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
 ```
 
-Same mechanics as [`Slate::fillnull(Duration)`](../slate/fillnull.md) — it also clears
+Same mechanics as [`Shelf::fillnull(Duration)`](../shelf/fillnull.md) — it also clears
 intrinsic `NaT` lanes, not just validity-mask-flagged ones.
 
 Example 4. Calling the `string_view` overload on a `Series`-kind stream throws — a kind
@@ -118,19 +118,20 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}), mask);
 
 try {
   auto out = stream.fillnull("nope");
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 51);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 51);
 }
 ```
 
 ### Output
 
 ```text
-Slate::fillnull(string) is only valid for Note pay
+Shelf::fillnull(string) is only valid for Note payl
 ```
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - `value`'s C++ type selects both the overload and the required payload kind — see the
   important callout above for what happens on a mismatch.
 - Requires a defined stream; throws `"Stream: undefined handle"` on a default-constructed
@@ -149,12 +150,12 @@ Slate::fillnull(string) is only valid for Note pay
   silently skips kind-mismatched streams instead of throwing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ffill.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">ffill</span>
+    <span class="title">fillneginf</span>
   </a>
-  <a class="next-link" href="filter.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">filter</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

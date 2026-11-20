@@ -1,52 +1,53 @@
 # `signal::WindowMode`
 
+Chooses where a window places its endpoints.
+
 ## Signature
 
 ```cpp
-signal::WindowMode signal::WindowMode::Symmetric;
-signal::WindowMode signal::WindowMode::Periodic;
+enum class signal::WindowMode { Symmetric, Periodic };
 ```
 
 ## What It Does
 
-Selects how the finite coefficient vector treats its endpoints. The choice changes the denominator used by cosine windows and therefore changes every interior coefficient except in trivial sizes.
+A window of length `n` can be sampled over a span that ends on its last coefficient or one that stops just short of it. `Symmetric` samples `n` points over a full period so the window is its own mirror image: `w[i] = w[n-1-i]`. `Periodic` samples the first `n` points of a window one coefficient longer, so the next copy would start where this one ends and the window tiles.
 
-## Fields
+## Values
 
 | Value | Meaning |
 |---|---|
-| `Symmetric` | Makes the returned vector symmetric about its midpoint. Use it for finite-window analysis or FIR coefficient construction. |
-| `Periodic` | Samples a window that would close at the omitted next point. Use it when the returned coefficients precede a same-length DFT. |
-
-## Returns
-
-The enum is stored in `WindowOptions::mode`; it does not allocate data by itself.
+| `Symmetric` | Mirror-symmetric, the right choice for filter design and for displaying a taper. |
+| `Periodic` | The first `n` coefficients of the symmetric window of length `n + 1`, the right choice for spectral analysis with an `n`-point transform. |
 
 ## Errors
 
-The enum has no invalid public enumerators. Window factories still validate size, dtype, and platform.
+The enum has no invalid values; the window functions validate their own size, dtype and platform.
+
+## Interpretation and Use
+
+The two modes differ by one coefficient of the underlying window, and the difference shrinks as `n` grows. For an `n`-point DFT, use `Periodic`: its spectrum matches the analytic window spectrum without the small asymmetry error that a symmetric window brings. For a filter designed by windowing an ideal impulse response, use `Symmetric` so that the filter keeps linear phase.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+For every window, the periodic form is the first n coefficients of the symmetric form of length n + 1.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_window_mode_relation.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+The symmetric window is a mirror image and the periodic one is not; the periodic peak is exactly one.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_window_mode_symmetry.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+The periodic Hann window overlap-adds to a constant; the symmetric one ripples.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_window_mode_spectrum.cpp@@
 
 ## See Also
 

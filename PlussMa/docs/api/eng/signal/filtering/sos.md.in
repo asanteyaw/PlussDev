@@ -1,5 +1,7 @@
 # `signal::sos`
 
+Applies a cascade of second-order sections.
+
 ## Signature
 
 ```cpp
@@ -17,51 +19,55 @@ signal::FilterRun signal::sos(
 
 ## What It Does
 
-Applies a cascade of biquadratic second-order sections. Cascades are generally more numerically robust than one high-order direct polynomial, especially for narrow or high-order IIR designs.
+Filters through a cascade of biquads. `sections` has one row per section in the order `b0 b1 b2 a0 a1 a2`, and the output of each section feeds the next. The designs of `butter`, `cheby1` and `cheby2` convert to this layout through `lti::to_sos`.
 
 ## Parameters
 
 `input`
-: Floating or complex samples.
+: A floating or complex `Series`.
 
 `sections`
-: Coefficient matrix with one six-coefficient row per section, conventionally `[b0,b1,b2,a0,a1,a2]`.
+: A `[section, 6]` `Series`; every `a0` (column 3) must be nonzero.
 
 `state`
-: Optional per-section continuation state from a compatible run.
+: Optional initial state, as returned in `FilterRun::state` by a previous run of the same sections.
 
 `dim`
-: Ordered sample axis.
+: The axis to filter along; default `-1`.
 
 ## Returns
 
-`FilterRun` containing the cascade output and terminal state for every section.
+A `FilterRun`: the cascade output and the state of every section.
 
 ## Errors
 
-Rejects malformed section shape, zero section denominator leaders, invalid axes, incompatible state, dtype, platform, or batch shape.
+Sections that are not `[section, 6]`, a zero leading denominator coefficient in any section and an incompatible state throw `pluss::Error`.
+
+## Interpretation and Use
+
+The cascade of two sections gives the same samples as the single polynomial filter whose numerator and denominator are the products of the sections (the first example). Use the cascade for the designs from `signal::butter` and its relatives.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A two-section cascade against the single-polynomial filter.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_sos_vs_filter.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+Block-wise filtering with the carried state.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_sos_blocks.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_sos_errors.cpp@@
 
 ## See Also
 

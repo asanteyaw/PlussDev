@@ -17,7 +17,7 @@ LocusPullAgg& LocusPullAgg::mean(std::initializer_list<std::pair<std::string_vie
 The scoped spelling of [`LocusPull::mean`](../locus-pull/mean.md):
 `scope.mean("spend", "average")` inside an `agg("events")` scope is exactly
 `pull.mean("events.spend", "average")`. Requires a numeric feature; see
-[`sum`](sum.md) for the shared null-for-empty and `NaN`-exclusion rules.
+[`sum`](sum.md) for the shared null-for-empty and missing-value rules.
 
 ## Parameters
 

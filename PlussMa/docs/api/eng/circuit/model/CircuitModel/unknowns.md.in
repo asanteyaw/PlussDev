@@ -1,0 +1,121 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e48c761baecc -->
+
+# `circuit::Circuit::unknowns`
+
+[Back to `circuit::Circuit`](../CircuitModel.md)
+
+The number of unknowns of the nodal equations.
+
+## Signature
+
+```cpp
+std::int64_t circuit::Circuit::unknowns() const noexcept;
+```
+
+## What It Does
+
+Returns the size of the linear system solved at each operating point: the non-ground node voltages, plus one current for every voltage source, inductor, voltage-controlled voltage source and op amp. Use it to size anything that accompanies a solution. It does not depend on batch axes.
+
+## Returns
+
+The number of unknowns.
+
+## Practical Examples
+
+### Example 1
+
+Two node voltages and the source current make three unknowns.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000.0, 3000.0})};
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("unknowns =", obj.unknowns(), " nodes", obj.nodes());
+}
+```
+
+### Example 2
+
+A circuit using every linear element: resistor, capacitor, inductor, both sources, both controlled sources and an op amp.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 6;
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  net.inductors = {{2}, {3}, vec({1e-3})};
+  net.current_sources = {{0}, {3}, vec({0.001})};
+  net.voltage_sources = {{1}, {0}, vec({5.0})};
+  net.vccs = {{4}, {0}, {1}, {0}, vec({0.002})};
+  net.vcvs = {{5}, {0}, {1}, {0}, vec({2.0})};
+  net.amps = {{4}, {0}, {0}, {3}};
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("unknowns =", obj.unknowns(), " nodes", obj.nodes());
+}
+```
+
+### Example 3
+
+Batching does not change the size of one circuit's system.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ckt = pluss::subsp::eng::circuit;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000, 1000, 1000, 2000, 1000, 4000}).reshape({3, 2})};
+  const ckt::Circuit obj = ckt::make(net);
+  out.writeln("unknowns =", obj.unknowns(), " nodes", obj.nodes());
+}
+```
+
+## See Also
+
+- [`nodes`](nodes.md): the number of nodes
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="transistors.html">
+    <span class="label">Previous</span>
+    <span class="title">transistors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -88,15 +88,15 @@ auto right = pluss::kindle::Catalog({"id"_k = pluss::kindle::Stream(pluss::make_
 
 try {
   auto out = left.merge(right, "id", "left");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Catalog::merge currently supports only how='inner'
+
 ```
 
 Example 3. A key that doesn't exist on one side throws, naming which side.
@@ -107,15 +107,15 @@ auto right = pluss::kindle::Catalog({"other_id"_k = pluss::kindle::Stream(pluss:
 
 try {
   auto out = left.merge(right, "id");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Catalog::merge: right key not found 'id'
+Catalog::join: right catalog has no key 'id'
 ```
 
 ## Notes

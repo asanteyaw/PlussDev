@@ -59,8 +59,8 @@ Example 1. Condition on the row dimension.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
 });
 
 auto out = df.contingency("city", "channel")
@@ -72,12 +72,12 @@ std::cout << out;
 ### Output
 
 ```text
-=============================
-     | city  Card      Cash
------------------------------
-0    | A     0.5       0.5
-1    | B     0.333333  0.666667
------------------------------
+=======================================
+     | city  Card          Cash        
+---------------------------------------
+0    | A     0.5           0.5         
+1    | B     0.3333333333  0.6666666667
+---------------------------------------
 [2 cs x 3 feat]
 ```
 
@@ -93,12 +93,12 @@ std::cout << out;
 ### Output
 
 ```text
-=============================
-     | city  Card  Cash
------------------------------
-0    | A     0.5   0.333333
-1    | B     0.5   0.666667
------------------------------
+===============================
+     | city  Card  Cash        
+-------------------------------
+0    | A     0.5   0.3333333333
+1    | B     0.5   0.6666666667
+-------------------------------
 [2 cs x 3 feat]
 ```
 
@@ -107,9 +107,9 @@ rather than the original whole table.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto out = df.contingency({"city", "channel", "weekend"})

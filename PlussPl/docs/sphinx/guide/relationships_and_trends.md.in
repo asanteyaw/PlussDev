@@ -1,0 +1,64 @@
+# Relationships and trends
+
+[Back to PlussPl by example](../guide.md)
+
+Two questions drive most plots of paired data: how does one quantity depend on another, and how does a quantity change over time. This page answers the first with a restaurant dataset (does a bigger bill mean a bigger tip?) and the second with monthly passenger counts, and then puts error bars and bands on a typical year.
+
+## How it works
+
+The relational functions take two series of the same length. `scatterplot(pane, x, y)` draws points and, given a text or numeric third argument, colours them by it. `lineplot`, `stepplot` and `areaplot` draw the same data as a line, as steps and as a filled area. `regplot` adds a fitted straight line to a scatter, and `residplot`, `resid_histplot` and `qqplot` draw what the line leaves behind. The native traces `ribbon`, `spike` and `whisk` draw a band, vertical stems and error bars. All of them are pane methods or `flash::` functions that take a pane, so they can share a mosaic.
+
+## Does a bigger bill mean a bigger tip?
+
+Two hundred and forty parties. The program scatters tip against bill coloured by day of the week, fits a line, plots the residuals and their histogram, and checks them with a normal quantile plot.
+
+@@example tips_study.cpp@@
+
+![Tip against bill coloured by day, the fitted line, the residuals and their histogram](assets/tips_study.svg)
+
+![A normal quantile plot of the residuals](assets/tips_qq.svg)
+
+The first line gives the sizes (a mean bill of `24.97` and a mean tip of `2.92`). The fitted line is `tip = -0.04 + 0.119 x bill`: each extra unit of bill adds about `0.12` of tip, close to a flat 12 per cent, with a correlation of `0.896`. The four panes then test that story. The coloured scatter shows no day standing apart. The residuals against the bill (bottom left) should look like a shapeless cloud, and they do, spread between about `-0.45` and `+0.47`, with a standard deviation of `0.229`. Their histogram is the bell shape of the usual error model, and the quantile plot confirms it: points close to the diagonal mean the residuals behave as a normal sample.
+
+## One series, six views
+
+Twelve years of monthly passengers shown as a line coloured by season, as steps, as a filled area, as stems from the mean delay, as a ribbon from the lowest fare, and against the fare.
+
+@@example flights_trends.cpp@@
+
+![The flights series as a line, steps, an area, stems, a ribbon and a scatter against fare](assets/flights_trends.svg)
+
+The numbers say what the shapes do: mean passengers rise from `136.2` in the first year to `164.8` in the last, and the busiest month of the last year is April (month 4). The correlation of passengers with the fare index is `-0.0006`, essentially none, which is why the last pane is a shapeless cloud: this dataset's two series are independent. The six panes are worth comparing: the line shows the seasonal rhythm and the trend, the steps emphasise that a monthly value holds for a month, the filled area gives the series weight, and the stems show a quantity measured from a baseline (here the delay from its mean).
+
+## The typical year, with its uncertainty
+
+Averaging each calendar month over twelve years gives a typical year; the spread across years is the uncertainty. The program draws it four ways.
+
+@@example seasonal_bands.cpp@@
+
+![The mean per calendar month with error bars, as a whisk, a whiskplot, a point plot and a ribbon band](assets/seasonal_bands.svg)
+
+The typical year peaks in April at `168.95` passengers and bottoms out in October at `132.25`, and the month with the largest year-to-year spread is January (a standard deviation of `9.37`). The first three panes show the same means with error bars through the native `whisk` trace, `flash::whiskplot` and `flash::pointplot`; the fourth builds a band from three traces, the mean and the mean plus and minus one standard deviation.
+
+## Decisions
+
+- **Scatter, line or step:** a scatter when the points are unordered observations; a line when order matters; steps when a value holds until the next one.
+- **Colour by a third variable:** pass it as an extra argument, and prefer a text variable with few levels.
+- **Check the fit:** always look at the residuals; a pattern against the predictor means the line is the wrong shape.
+- **Error bars or band:** bars for a few points, a band for a continuous curve.
+
+## Pitfalls
+
+The program below makes 3 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_relationships_and_trends.cpp@@
+
+- **A line of an empty series:** An empty series cannot be drawn.
+- **X and y of different lengths:** The two series must have the same length, or one must be a scalar.
+- **A hue of the wrong length:** The hue needs one label per point.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`flash::scatterplot`](../api/flash/scatterplot.md), [`flash::lineplot`](../api/flash/lineplot.md), [`flash::stepplot`](../api/flash/stepplot.md), [`flash::areaplot`](../api/flash/areaplot.md), [`flash::relplot`](../api/flash/relplot.md), [`flash::regplot`](../api/flash/regplot.md), [`flash::residplot`](../api/flash/residplot.md), [`flash::resid_histplot`](../api/flash/resid_histplot.md), [`flash::qqplot`](../api/flash/qqplot.md), [`flash::whiskplot`](../api/flash/whiskplot.md), [`flash::pointplot`](../api/flash/pointplot.md), [`Pane::ribbon`](../api/pane/ribbon.md), [`Pane::spike`](../api/pane/spike.md), [`Pane::whisk`](../api/pane/whisk.md). Next: [Distributions and groups](distributions_and_groups.md).

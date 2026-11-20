@@ -8,13 +8,13 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const
+Shelf DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const
 ```
 
 ## What It Does
 
 Reduces every numeric feature to its (bias-adjusted) sample skewness — a measure of how
-asymmetric the distribution of values is around its mean — returning one `Slate` whose
+asymmetric the distribution of values is around its mean — returning one `Shelf` whose
 entries line up with the frame's numeric feature names, the same shape
 [`std()`](std.md) and [`var()`](var.md) return. A skewness of `0` describes a
 symmetric distribution; a positive value describes a right (long upper) tail; a
@@ -46,7 +46,7 @@ statistically-required minimum of three.
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's sample skewness.
 
@@ -58,10 +58,10 @@ Example 1. Compute the skewness of every numeric feature, the default `min_count
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto skewness = orders.skew();

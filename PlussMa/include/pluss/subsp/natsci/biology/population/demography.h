@@ -145,8 +145,8 @@ inline Amplification amplification(const Series &matrix, std::int64_t horizon) {
     power = power.matmul(a_hat);
     const Series s = pluss::subsp::linearalg::svd_s(power, false).amax(-1, false);
     const Series better = s.gt(out.maximum);
-    out.time_of_maximum = better.where(out.time_of_maximum.mul(0.0).add(static_cast<double>(t)), out.time_of_maximum);
-    out.maximum = better.where(s, out.maximum);
+    out.time_of_maximum = pluss::series::where(better, out.time_of_maximum.mul(0.0).add(static_cast<double>(t)), out.time_of_maximum);
+    out.maximum = pluss::series::where(better, s, out.maximum);
   }
   return out;
 }

@@ -63,3 +63,14 @@ nrelationships after dropping items=1
 
 - [`without`](without.md): the single-catalog form of the same idea.
 - [`select`](select.md): keep named catalogs instead of removing them.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="deduce.html">
+    <span class="label">Previous</span>
+    <span class="title">deduce</span>
+  </a>
+  <a class="next-link" href="dropinf.html">
+    <span class="label">Next</span>
+    <span class="title">dropinf</span>
+  </a>
+</div>

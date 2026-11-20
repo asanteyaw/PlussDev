@@ -661,9 +661,9 @@ Series norm_logcdf_(const Series& x) {
                           .clamp_min(kEps);
   const Series left = x_left.square().mul(-0.5).sub(x_left.mul(-1.0).log()).sub(0.5 * kLog2Pi).add(corr.log());
 
-  Series out = central_mask.where(central, zeros_like_f64_(xx));
-  out = left_mask.where(left, out);
-  out = right_mask.where(right, out);
+  Series out = pluss::series::where(central_mask, central, zeros_like_f64_(xx));
+  out = pluss::series::where(left_mask, left, out);
+  out = pluss::series::where(right_mask, right, out);
   return out.masked_fill(nan_mask, std::numeric_limits<double>::quiet_NaN());
 }
 
@@ -706,7 +706,7 @@ Series lognormal_pdf_(const Series& x, double mu, double sigma) {
   const Series z = safe_x.log().sub(mu).div(sigma);
   const Series core =
       z.square().mul(-0.5).exp().div(safe_x.mul(sigma * std::sqrt(2.0 * std::numbers::pi_v<double>)));
-  return xx.gt(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.gt(0.0), core, zeros_like_f64_(xx));
 }
 
 Series lognormal_logpdf_(const Series& x, double mu, double sigma) {
@@ -715,7 +715,7 @@ Series lognormal_logpdf_(const Series& x, double mu, double sigma) {
   const Series safe_x = xx.clamp_min(kEps);
   const Series z = safe_x.log().sub(mu).div(sigma);
   const Series core = z.square().mul(-0.5).sub(safe_x.log()).sub(std::log(sigma)).sub(0.5 * kLog2Pi);
-  return xx.gt(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(xx.gt(0.0), core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series lognormal_cdf_(const Series& x, double mu, double sigma) {
@@ -723,7 +723,7 @@ Series lognormal_cdf_(const Series& x, double mu, double sigma) {
   const Series xx = as_f64_(x, "cdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = norm_cdf_(safe_x.log().sub(mu).div(sigma));
-  return xx.gt(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.gt(0.0), core, zeros_like_f64_(xx));
 }
 
 Series lognormal_logcdf_(const Series& x, double mu, double sigma) {
@@ -731,7 +731,7 @@ Series lognormal_logcdf_(const Series& x, double mu, double sigma) {
   const Series xx = as_f64_(x, "logcdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = normal_logcdf_(safe_x.log(), mu, sigma);
-  return xx.gt(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(xx.gt(0.0), core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series lognormal_sample_(double mu,
@@ -753,9 +753,7 @@ Series uniform_logpdf_(const Series& x, double lo, double hi) {
   PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform logpdf: expected hi > lo");
   const Series xx = as_f64_(x, "logpdf");
   const Series mask = xx.ge(lo).logical_and(xx.le(hi));
-  return mask.where(
-      full_like_f64_(xx, -std::log(hi - lo)),
-      full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(mask, full_like_f64_(xx, -std::log(hi - lo)), full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series uniform_cdf_(const Series& x, double lo, double hi) {
@@ -772,9 +770,7 @@ Series uniform_logcdf_(const Series& x, double lo, double hi) {
   const Series central = below.logical_or(above).logical_not();
   const Series core = xx.sub(lo).div(hi - lo).log();
   const Series neg_inf = full_like_f64_(xx, -std::numeric_limits<double>::infinity());
-  return below.where(
-      neg_inf,
-      above.where(full_like_f64_(xx, 0.0), central.where(core, neg_inf)));
+  return pluss::series::where(below, neg_inf, pluss::series::where(above, full_like_f64_(xx, 0.0), pluss::series::where(central, core, neg_inf)));
 }
 
 Series uniform_sample_(double lo,
@@ -790,7 +786,7 @@ Series exponential_pdf_(const Series& x, double rate) {
   PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential pdf: rate must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series core = xx.mul(-rate).exp().mul(rate);
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series exponential_logpdf_(const Series& x, double rate) {
@@ -805,7 +801,7 @@ Series exponential_cdf_(const Series& x, double rate) {
   PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential cdf: rate must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series core = xx.mul(-rate).exp().mul(-1.0).add(1.0);
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series exponential_sample_(double rate,
@@ -826,9 +822,7 @@ Series bernoulli_pdf_(const Series& x, double p) {
 Series bernoulli_logpdf_(const Series& x, double p) {
   PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli logpdf: expected 0 <= p <= 1");
   const Series probs = bernoulli_pdf_(x, p);
-  return probs.gt(0.0).where(
-      probs.log(),
-      full_like_f64_(probs, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(probs.gt(0.0), probs.log(), full_like_f64_(probs, -std::numeric_limits<double>::infinity()));
 }
 
 Series bernoulli_cdf_(const Series& x, double p) {
@@ -836,8 +830,8 @@ Series bernoulli_cdf_(const Series& x, double p) {
   const Series xx = as_f64_(x, "cdf");
   const Series zero = zeros_like_f64_(xx);
   const Series one = ones_like_f64_(xx);
-  const Series mid_or_one = xx.lt(1.0).where(full_like_f64_(xx, 1.0 - p), one);
-  return xx.lt(0.0).where(zero, mid_or_one);
+  const Series mid_or_one = pluss::series::where(xx.lt(1.0), full_like_f64_(xx, 1.0 - p), one);
+  return pluss::series::where(xx.lt(0.0), zero, mid_or_one);
 }
 
 Series bernoulli_sample_(double p,
@@ -900,7 +894,7 @@ Series laplace_cdf_(const Series& x, double location, double scale) {
   const Series centered = xx.sub(location);
   const Series left = centered.div(scale).exp().mul(0.5);
   const Series right = centered.div(scale).mul(-1.0).exp().mul(-0.5).add(1.0);
-  return centered.lt(0.0).where(left, right);
+  return pluss::series::where(centered.lt(0.0), left, right);
 }
 
 Series laplace_logcdf_(const Series& x, double location, double scale) {
@@ -969,7 +963,7 @@ Series geometric_pdf_(const Series& x, double p) {
   const Series k = xx.floor();
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
   const Series core = k.sub(1.0).mul(std::log1p(-p)).exp().mul(p);
-  return valid.where(core, zeros_like_f64_(xx));
+  return pluss::series::where(valid, core, zeros_like_f64_(xx));
 }
 
 Series geometric_logpdf_(const Series& x, double p) {
@@ -978,7 +972,7 @@ Series geometric_logpdf_(const Series& x, double p) {
   const Series k = xx.floor();
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
   const Series core = k.sub(1.0).mul(std::log1p(-p)).add(std::log(p));
-  return valid.where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(valid, core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series geometric_cdf_(const Series& x, double p) {
@@ -986,7 +980,7 @@ Series geometric_cdf_(const Series& x, double p) {
   const Series xx = as_f64_(x, "cdf");
   const Series floored = xx.floor().clamp_min(0.0);
   const Series core = floored.mul(std::log1p(-p)).exp().mul(-1.0).add(1.0);
-  return xx.lt(1.0).where(zeros_like_f64_(xx), core);
+  return pluss::series::where(xx.lt(1.0), zeros_like_f64_(xx), core);
 }
 
 Series geometric_sample_(double p,
@@ -1009,7 +1003,7 @@ Series rayleigh_pdf_(const Series& x, double sigma) {
   const Series xx = as_f64_(x, "pdf");
   const double sigma2 = sigma * sigma;
   const Series core = xx.div(sigma2).mul(xx.square().div(2.0 * sigma2).mul(-1.0).exp());
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series rayleigh_logpdf_(const Series& x, double sigma) {
@@ -1026,7 +1020,7 @@ Series rayleigh_cdf_(const Series& x, double sigma) {
   const Series xx = as_f64_(x, "cdf");
   const double sigma2 = sigma * sigma;
   const Series core = xx.square().div(2.0 * sigma2).mul(-1.0).exp().mul(-1.0).add(1.0);
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series rayleigh_logcdf_(const Series& x, double sigma) {
@@ -1052,7 +1046,7 @@ Series weibull_pdf_(const Series& x, double shape, double scale) {
   const Series safe = xx.clamp_min(kEps);
   const Series z = safe.div(scale);
   const Series core = z.pow(shape - 1.0).mul(shape / scale).mul(z.pow(shape).mul(-1.0).exp());
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series weibull_logpdf_(const Series& x, double shape, double scale) {
@@ -1062,7 +1056,7 @@ Series weibull_logpdf_(const Series& x, double shape, double scale) {
   const Series safe = xx.clamp_min(kEps);
   const Series z = safe.div(scale);
   const Series core = z.log().mul(shape - 1.0).add(std::log(shape / scale)).sub(z.pow(shape));
-  return xx.ge(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(xx.ge(0.0), core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series weibull_cdf_(const Series& x, double shape, double scale) {
@@ -1070,7 +1064,7 @@ Series weibull_cdf_(const Series& x, double shape, double scale) {
               "subsp::stats::distr::weibull cdf: shape and scale must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series core = xx.clamp_min(0.0).div(scale).pow(shape).mul(-1.0).exp().mul(-1.0).add(1.0);
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series weibull_sample_(double shape,
@@ -1301,7 +1295,7 @@ Series lognormal_pdf_series_(const Series& x, const Series& mu, const Series& si
                           .mul(-0.5)
                           .exp()
                           .div(safe_x.mul(sigma_s).mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
-  return xx.gt(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.gt(0.0), core, zeros_like_f64_(xx));
 }
 
 Series lognormal_logpdf_series_(const Series& x, const Series& mu, const Series& sigma) {
@@ -1312,7 +1306,7 @@ Series lognormal_logpdf_series_(const Series& x, const Series& mu, const Series&
   const Series safe_x = xx.clamp_min(kEps);
   const Series z = safe_x.log().sub(mu_s).div(sigma_s);
   const Series core = z.square().mul(-0.5).sub(safe_x.log()).sub(sigma_s.log()).sub(0.5 * kLog2Pi);
-  return xx.gt(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(xx.gt(0.0), core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series lognormal_cdf_series_(const Series& x, const Series& mu, const Series& sigma) {
@@ -1322,7 +1316,7 @@ Series lognormal_cdf_series_(const Series& x, const Series& mu, const Series& si
   PLUSS_CHECK(sigma_s.gt(0.0).all().item<bool>(), "subsp::stats::distr::lognormal cdf: stddev_log must be > 0");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = norm_cdf_(safe_x.log().sub(mu_s).div(sigma_s));
-  return xx.gt(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.gt(0.0), core, zeros_like_f64_(xx));
 }
 
 Series lognormal_logcdf_series_(const Series& x, const Series& mu, const Series& sigma) {
@@ -1332,7 +1326,7 @@ Series lognormal_logcdf_series_(const Series& x, const Series& mu, const Series&
   PLUSS_CHECK(sigma_s.gt(0.0).all().item<bool>(), "subsp::stats::distr::lognormal logcdf: stddev_log must be > 0");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = norm_logcdf_(safe_x.log().sub(mu_s).div(sigma_s));
-  return xx.gt(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(xx.gt(0.0), core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series laplace_pdf_series_(const Series& x, const Series& location, const Series& scale) {
@@ -1359,7 +1353,7 @@ Series laplace_cdf_series_(const Series& x, const Series& location, const Series
   const Series centered = xx.sub(loc);
   const Series left = centered.div(sc).exp().mul(0.5);
   const Series right = centered.div(sc).mul(-1.0).exp().mul(-0.5).add(1.0);
-  return centered.lt(0.0).where(left, right);
+  return pluss::series::where(centered.lt(0.0), left, right);
 }
 
 Series laplace_logcdf_series_(const Series& x, const Series& location, const Series& scale) {
@@ -1370,7 +1364,7 @@ Series laplace_logcdf_series_(const Series& x, const Series& location, const Ser
   const Series centered = xx.sub(loc);
   const Series left = centered.div(sc).sub(std::log(2.0));
   const Series right = centered.neg().div(sc).exp().mul(-0.5).add(1.0).log();
-  return centered.lt(0.0).where(left, right);
+  return pluss::series::where(centered.lt(0.0), left, right);
 }
 
 Series uniform_pdf_series_(const Series& x, const Series& low, const Series& high) {
@@ -1388,9 +1382,7 @@ Series uniform_logpdf_series_(const Series& x, const Series& low, const Series& 
   const Series hi = param_for_x_(high, xx, "uniform logpdf", "high");
   PLUSS_CHECK(hi.gt(lo).all().item<bool>(), "subsp::stats::distr::uniform logpdf: expected high > low");
   const Series mask = xx.ge(lo).logical_and(xx.le(hi));
-  return mask.where(
-      hi.sub(lo).log().neg(),
-      full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(mask, hi.sub(lo).log().neg(), full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series uniform_cdf_series_(const Series& x, const Series& low, const Series& high) {
@@ -1411,7 +1403,7 @@ Series uniform_logcdf_series_(const Series& x, const Series& low, const Series& 
   const Series central = below.logical_or(above).logical_not();
   const Series core = xx.sub(lo).div(hi.sub(lo)).log();
   const Series neg_inf = full_like_f64_(xx, -std::numeric_limits<double>::infinity());
-  return below.where(neg_inf, above.where(full_like_f64_(xx, 0.0), central.where(core, neg_inf)));
+  return pluss::series::where(below, neg_inf, pluss::series::where(above, full_like_f64_(xx, 0.0), pluss::series::where(central, core, neg_inf)));
 }
 
 Series exponential_pdf_series_(const Series& x, const Series& rate) {
@@ -1419,7 +1411,7 @@ Series exponential_pdf_series_(const Series& x, const Series& rate) {
   const Series rt = param_for_x_(rate, xx, "exponential pdf", "rate");
   PLUSS_CHECK(rt.gt(0.0).all().item<bool>(), "subsp::stats::distr::exponential pdf: rate must be > 0");
   const Series core = rt.mul(rt.mul(xx).mul(-1.0).exp());
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series exponential_logpdf_series_(const Series& x, const Series& rate) {
@@ -1436,7 +1428,7 @@ Series exponential_cdf_series_(const Series& x, const Series& rate) {
   PLUSS_CHECK(rt.gt(0.0).all().item<bool>(), "subsp::stats::distr::exponential cdf: rate must be > 0");
   const Series nonneg = xx.clamp_min(0.0);
   const Series core = nonneg.mul(rt).mul(-1.0).exp().mul(-1.0).add(1.0);
-  return xx.ge(0.0).where(core, zeros_like_f64_(xx));
+  return pluss::series::where(xx.ge(0.0), core, zeros_like_f64_(xx));
 }
 
 Series logistic_pdf_series_(const Series& x, const Series& location, const Series& scale) {
@@ -1474,7 +1466,7 @@ Series logistic_logcdf_series_(const Series& x, const Series& location, const Se
   const Series pos = z.ge(0.0);
   const Series left = z.neg().exp().log1p().neg();
   const Series right = z.sub(z.exp().log1p());
-  return pos.where(left, right);
+  return pluss::series::where(pos, left, right);
 }
 
 Series gamma_pdf_series_(const Series& x,
@@ -1521,7 +1513,7 @@ Series gamma_cdf_series_(const Series& x,
   PLUSS_CHECK(sh.gt(0.0).all().item<bool>(), "subsp::stats::distr::gamma cdf: shape must be > 0");
   const Series z = xx.sub(loc).div(sc);
   const Series c = sh.igamma(z.clamp_min(0.0));
-  return z.gt(0.0).where(c, zeros_like_f64_(xx));
+  return pluss::series::where(z.gt(0.0), c, zeros_like_f64_(xx));
 }
 
 Series beta_pdf_series_(const Series& x,
@@ -1546,7 +1538,7 @@ Series beta_pdf_series_(const Series& x,
                               .add(be.sub(1.0).mul(safe_t.neg().log1p()))
                               .sub(log_beta)
                               .sub(width.log());
-  return valid.where(log_core.exp(), zeros_like_f64_(xx));
+  return pluss::series::where(valid, log_core.exp(), zeros_like_f64_(xx));
 }
 
 Series beta_logpdf_series_(const Series& x,
@@ -1987,7 +1979,7 @@ Series chisq_cdf_series_(const Series& x, const Series& dof) {
               "subsp::stats::distr::chisquare cdf: degrees_of_freedom must be positive integers");
   const Series z = xx.mul(0.5);
   const Series c = df.mul(0.5).igamma(z.clamp_min(0.0));
-  return xx.gt(0.0).where(c, zeros_like_f64_(xx));
+  return pluss::series::where(xx.gt(0.0), c, zeros_like_f64_(xx));
 }
 
 Series hypergeom_pdf_series_(const Series& x,
@@ -2025,7 +2017,7 @@ Series hypergeom_pdf_series_(const Series& x,
           .add(d.add(1.0).lgamma())
           .add(n.sub(d).add(1.0).lgamma())
           .sub(n.add(1.0).lgamma());
-  return valid.where(log_core.exp(), zeros_like_f64_(xx));
+  return pluss::series::where(valid, log_core.exp(), zeros_like_f64_(xx));
 }
 
 Series hypergeom_logpdf_series_(const Series& x,
@@ -2112,7 +2104,7 @@ Series geometric_pdf_series_(const Series& x, const Series& p) {
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
   const Series log_one_minus_p = pp.mul(-1.0).log1p();
   const Series core = k.sub(1.0).mul(log_one_minus_p).exp().mul(pp);
-  return valid.where(core, zeros_like_f64_(xx));
+  return pluss::series::where(valid, core, zeros_like_f64_(xx));
 }
 
 Series geometric_logpdf_series_(const Series& x, const Series& p) {
@@ -2123,7 +2115,7 @@ Series geometric_logpdf_series_(const Series& x, const Series& p) {
   const Series k = xx.floor();
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
   const Series core = k.sub(1.0).mul(pp.mul(-1.0).log1p()).add(pp.log());
-  return valid.where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return pluss::series::where(valid, core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series geometric_cdf_series_(const Series& x, const Series& p) {
@@ -2133,7 +2125,7 @@ Series geometric_cdf_series_(const Series& x, const Series& p) {
               "subsp::stats::distr::geometric cdf: expected 0 < p <= 1");
   const Series floored = xx.floor().clamp_min(0.0);
   const Series core = floored.mul(pp.mul(-1.0).log1p()).exp().mul(-1.0).add(1.0);
-  return xx.lt(1.0).where(zeros_like_f64_(xx), core);
+  return pluss::series::where(xx.lt(1.0), zeros_like_f64_(xx), core);
 }
 
 Series negbin_pdf_series_(const Series& x, const Series& r, const Series& p) {
@@ -4371,7 +4363,7 @@ Series mixture_normal_component_pdf_(const Series& x,
                                      const Series& stddevs,
                                      const Series& zero,
                                      const Series& one) {
-  const Series safe_std = stddevs.gt(0.0).where(stddevs, one);
+  const Series safe_std = pluss::series::where(stddevs.gt(0.0), stddevs, one);
   const Series z = x.sub(means).div(safe_std);
   Series out = z.square().mul(-0.5).exp().div(safe_std.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
   const Series degenerate = stddevs.eq(0.0);
@@ -4388,12 +4380,12 @@ Series mixture_normal_component_cdf_(const Series& x,
                                      const Series& stddevs,
                                      const Series& zero,
                                      const Series& one) {
-  const Series safe_std = stddevs.gt(0.0).where(stddevs, one);
+  const Series safe_std = pluss::series::where(stddevs.gt(0.0), stddevs, one);
   Series out = norm_cdf_(x.sub(means).div(safe_std));
   const Series degenerate = stddevs.eq(0.0);
   if (degenerate.any().item<bool>()) {
-    const Series step = x.ge(means).where(one, zero);
-    out = degenerate.where(step, out);
+    const Series step = pluss::series::where(x.ge(means), one, zero);
+    out = pluss::series::where(degenerate, step, out);
   }
   return out;
 }
@@ -4403,7 +4395,7 @@ Series mixture_normal_component_logcdf_(const Series& x,
                                         const Series& stddevs,
                                         const Series& zero,
                                         const Series& one) {
-  const Series safe_std = stddevs.gt(0.0).where(stddevs, one);
+  const Series safe_std = pluss::series::where(stddevs.gt(0.0), stddevs, one);
   Series out = norm_logcdf_(x.sub(means).div(safe_std));
   const Series degenerate = stddevs.eq(0.0);
   if (degenerate.any().item<bool>()) {
@@ -5546,7 +5538,7 @@ Series logcdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       const Series xx = as_f64_(x, "logcdf");
       const Series pos = xx.gt(0.0);
       const Series core = xx.mul(-rate).exp().neg().log1p();
-      return pos.where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+      return pluss::series::where(pos, core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
     }
     case Family::Rayleigh:
       expect_param_count_("rayleigh logcdf", params, {0, 1});
@@ -5582,7 +5574,7 @@ Series logcdf(dst::Kind kind, const Series& x, pluss::msharp::RangeView::Series 
       PLUSS_CHECK(rt.gt(0.0).all().item<bool>(), "subsp::stats::distr::exponential logcdf: rate must be > 0");
       const Series pos = xx.gt(0.0);
       const Series core = xx.mul(rt.mul(-1.0)).exp().neg().log1p();
-      return pos.where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+      return pluss::series::where(pos, core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
     }
     case Family::Laplace:
       expect_param_count_series_("laplace logcdf", params, {0, 2});

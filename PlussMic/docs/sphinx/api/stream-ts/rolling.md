@@ -114,7 +114,7 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
@@ -208,8 +208,8 @@ Group `"A"` (positions `0`, `1`) windows independently from group `"B"`
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md): the
   whole-catalog equivalent, with only the fixed-window overload.
-- [`TimeSeriesAccessor::rolling`](../slate-ts/rolling.md): the underlying
-  single-slate engine.
+- [`TimeSeriesAccessor::rolling`](../shelf-ts/rolling.md): the underlying
+  single-shelf engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

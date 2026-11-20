@@ -4,7 +4,7 @@
 
 Economic dispatch works on the lossless DC model. Real networks have losses, reactive power, and voltage limits that shape the dispatch: a generator far from the load wastes power in the lines, and a load bus that sags needs reactive support. The **AC optimal power flow** chooses the active and reactive output of every generator and every bus voltage at least cost, subject to the exact AC network equations and to limits on generator reactive power, bus voltages and line loading. `power::opf` solves it. This page explains the problem, solves a network and checks the answer against an independent solver and against the incremental cost, shows each kind of limit binding, reads the prices, and controls the optimiser.
 
-## The mental model
+## How it works
 
 The unknowns are the voltage angle and magnitude of every bus and the active and reactive output of every generator. The constraints are the complex power balance at every bus, as in the [AC power flow](../power_01_networks_and_power_flow/ac_power_flow.md), plus the limits: generator active output between `lower` and `upper` (the same `GenCost` as the DC dispatch), generator reactive output between `q_lower` and `q_upper`, bus voltage magnitude between `vm_lower` and `vm_upper`, and, if given, the apparent power at each end of every line below `flow`. The objective is the total generation cost, `a g^2 + b g + c` for the active output, and optionally a polynomial in the reactive output.
 

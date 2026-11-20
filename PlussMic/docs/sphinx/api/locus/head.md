@@ -55,3 +55,14 @@ refused.
 
 - [`select`](select.md): keep catalogs by name instead of position.
 - [`drop`](drop.md): remove catalogs by name instead of keeping a slice.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="has_table_meta.html">
+    <span class="label">Previous</span>
+    <span class="title">has_table_meta</span>
+  </a>
+  <a class="next-link" href="inject.html">
+    <span class="label">Next</span>
+    <span class="title">inject</span>
+  </a>
+</div>

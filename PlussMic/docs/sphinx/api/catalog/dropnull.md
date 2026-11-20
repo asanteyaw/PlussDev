@@ -67,6 +67,7 @@ each was only `NULL` in *one* of the two streams.
 
 ## Notes
 
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - A row is kept only if it's valid in **every** stream — a single `NULL` anywhere in that
   row drops it from the whole catalog.
 - Every stream stays aligned to the same reduced row set afterward.
@@ -79,12 +80,12 @@ each was only `NULL` in *one* of the two streams.
   validity without dropping any rows.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">drop</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

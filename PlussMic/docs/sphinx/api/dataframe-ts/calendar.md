@@ -42,8 +42,8 @@ Example 1. Extract calendar components from a frame's own `Timeline` case labels
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({1.0, 2.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-03-14T09:30:00Z", "2024-12-25T00:00:00Z"})));
 
 auto out = events.ts().calendar();
@@ -53,12 +53,12 @@ std::cout << out;
 ### Output
 
 ```text
-===================================================================
-     | axis_year  axis_month  axis_day  axis_hour  axis_weekday    
--------------------------------------------------------------------
-0    | 2024       3           14        9          2024-03-14 (Thu)
-1    | 2024       12          25        0          2024-12-25 (Wed)
--------------------------------------------------------------------
+==============================================================================
+                    | axis_year  axis_month  axis_day  axis_hour  axis_weekday
+------------------------------------------------------------------------------
+2024-03-14 09:30:00 | 2024       3           14        9          Thursday    
+2024-12-25 00:00:00 | 2024       12          25        0          Wednesday   
+------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
 
@@ -72,9 +72,9 @@ a separate bound numeric feature.
 
 ```cpp
 auto events_named = DataFrame(
-    {{"event_time", Slate(pluss::make_timeline({
+    {{"event_time", Shelf(pluss::make_timeline({
           "2024-03-14T09:30:00Z", "2024-12-25T00:00:00Z"}))},
-     {"value", Slate(pluss::make_series({1.0, 2.0}))}});
+     {"value", Shelf(pluss::make_series({1.0, 2.0}))}});
 std::cout << events_named;
 
 auto out2 = events_named.ts().calendar("event_time");
@@ -99,8 +99,8 @@ std::cout << out2;
 =============================================================================================
      | event_time_year  event_time_month  event_time_day  event_time_hour  event_time_weekday
 ---------------------------------------------------------------------------------------------
-0    | 2024             3                 14              9                2024-03-14 (Thu)  
-1    | 2024             12                25              0                2024-12-25 (Wed)  
+0    | 2024             3                 14              9                Thursday          
+1    | 2024             12                25              0                Wednesday         
 ---------------------------------------------------------------------------------------------
 [2 cs x 5 feat]
 ```
@@ -117,12 +117,12 @@ default integer index, to see it throw.
 using namespace pluss::table;
 
 auto untimed = DataFrame(
-    {{"value", Slate(pluss::make_series({1.0, 2.0}))}});
+    {{"value", Shelf(pluss::make_series({1.0, 2.0}))}});
 
 try {
   auto out = untimed.ts().calendar();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -130,7 +130,7 @@ try {
 ### Output
 
 ```text
-DataFrameTsAccessor::calendar: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
+DataFrameTsAccessor::calendar: cases must be Timeline. Use df.labels().set("date") first
 ```
 
 `untimed` never had a `Timeline`/`TimeIndex` axis attached — no `TsOptions.axis`

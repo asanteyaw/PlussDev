@@ -1,0 +1,36 @@
+# `control::Pid` Introduction
+
+Holds the four gains, the sample time and the two discrete rules of a PID controller. It is created only through `pid`, which validates the combination, and consumed by `control::freqresp`.
+
+The gains are stored promoted to one common dtype (the second example gives a float32 and three float64 gains and reads back float64 for all four). The rules are meaningful only for a discrete controller.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every accessor.
+
+@@example Eng/api/control_pid_accessors.cpp@@
+
+### Example 2
+
+Gains promoted to one dtype.
+
+@@example Eng/api/control_pid_dtype.cpp@@
+
+### Example 3
+
+Construction errors seen through the type.
+
+@@example Eng/api/control_pid_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="diff_rule.html">
+    <span class="label">Next</span>
+    <span class="title">diff_rule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

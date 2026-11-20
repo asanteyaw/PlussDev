@@ -16,7 +16,7 @@ DataFrame DataFrameLabelAccessor::levels() const
 Lists the distinct values of each case-label level, one column per level, in
 first-occurrence order — the values that [`codes()`](codes.md)'s integer
 codes index into. For an unstructured frame, this is a single `label` column of
-the flat case-label slate's own distinct values.
+the flat case-label shelf's own distinct values.
 
 Levels naturally hold different numbers of distinct values; shorter columns
 are padded to match the longest one.
@@ -35,9 +35,9 @@ Example 1. Distinct values per level, with `region` shorter than `city`.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Shelf(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
 auto out = grouped.labels().levels();

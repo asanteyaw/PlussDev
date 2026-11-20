@@ -6,7 +6,7 @@
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -23,7 +23,7 @@ int main() {
   flow.learn(batch);
 
   const DataFrame frame({
-      {"reading", Slate(pluss::make_series({50.0}, {1}, f64))},
+      {"reading", Shelf(pluss::make_series({50.0}, {1}, f64))},
   });
   cls::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"reading"};

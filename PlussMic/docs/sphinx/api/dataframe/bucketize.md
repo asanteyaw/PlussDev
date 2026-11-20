@@ -75,7 +75,7 @@ value.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"amount", Slate(pluss::make_series({5.0, 15.0, 25.0, 35.0, 45.0, 100.0}))},
+    {"amount", Shelf(pluss::make_series({5.0, 15.0, 25.0, 35.0, 45.0, 100.0}))},
 });
 std::cout << readings;
 ```
@@ -126,7 +126,7 @@ see how a boundary value moves between buckets.
 
 ```cpp
 auto readings2 = DataFrame({
-    {"amount", Slate(pluss::make_series({0.0, 10.0, 20.0, 30.0}))},
+    {"amount", Shelf(pluss::make_series({0.0, 10.0, 20.0, 30.0}))},
 });
 
 auto bucketed2 = readings2.bucketize(
@@ -161,9 +161,9 @@ with [`update()`](update.md).
 
 ```cpp
 auto orders = DataFrame({
-    {"amount", Slate(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
-    {"weight", Slate(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
-    {"region", Slate(pluss::make_note({"north", "south", "north", "east"}))},
+    {"amount", Shelf(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
+    {"weight", Shelf(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
+    {"region", Shelf(pluss::make_note({"north", "south", "north", "east"}))},
 });
 
 auto bucketed_pair = orders.features({"amount", "weight"}).bucketize({0.0, 10.0, 20.0, 30.0, 40.0});
@@ -190,14 +190,14 @@ std::cout << bucketed3;
 ### Output (merged back into the full frame)
 
 ```text
-==============================
+=============================
      | amount  weight  region
-------------------------------
+-----------------------------
 0    | 0       0       north 
 1    | 1       2       south 
 2    | 2       1       north 
 3    | 3       3       east  
-------------------------------
+-----------------------------
 [4 cs x 3 feat]
 ```
 
@@ -213,7 +213,7 @@ lowest edge fall out of every bucket.
 
 ```cpp
 auto edge_case = DataFrame({
-    {"amount", Slate(pluss::make_series({0.0, 10.0, 25.0}))},
+    {"amount", Shelf(pluss::make_series({0.0, 10.0, 25.0}))},
 });
 
 auto default_lowest = edge_case.bucketize({0.0, 10.0, 20.0, 30.0});
@@ -263,8 +263,8 @@ throw.
 ```cpp
 try {
   auto out = edge_case.bucketize({0.0, 20.0, 10.0, 30.0});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -272,7 +272,7 @@ try {
 ### Output
 
 ```text
-Slate::bucketize: bin edges must be strictly increasing
+Shelf::bucketize: bin edges must be strictly increasing
 ```
 
 `20.0` followed by `10.0` decreases, violating the strictly-increasing

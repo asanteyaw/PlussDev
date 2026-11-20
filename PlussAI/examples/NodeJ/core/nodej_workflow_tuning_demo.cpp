@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   using DataFrame = pluss::table::DataFrame;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   using namespace pluss::ai::nodej;
   namespace nja = pluss::ai::lymph;
 
@@ -145,9 +145,9 @@ int main(int argc, char** argv) {
     const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
     const Series y_pred = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()});
     DataFrame pred_frame({
-        {"y_true", Slate(y_true)},
-        {"y_pred", Slate(y_pred)},
-        {"residual", Slate(y_true.sub(y_pred))},
+        {"y_true", Shelf(y_true)},
+        {"y_pred", Shelf(y_pred)},
+        {"residual", Shelf(y_true.sub(y_pred))},
     });
     pred_frame.save_csv((out_dir / "hour_workflow_tuning_predictions.csv").string());
     pred_frame.plot()

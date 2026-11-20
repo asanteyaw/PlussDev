@@ -9,7 +9,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-3.0, 3.0, 96, ScalarType::Float64);
   const Series wave = x.sin().add(x.mul(0.7).cos().mul(0.35));
@@ -17,10 +17,10 @@ int main() {
   const Series target = wave.add(trend).add(2.0);
 
   const DataFrame raw({
-      {"x", Slate(x)},
-      {"wave", Slate(wave)},
-      {"trend", Slate(trend)},
-      {"target", Slate(target)},
+      {"x", Shelf(x)},
+      {"wave", Shelf(wave)},
+      {"trend", Shelf(trend)},
+      {"target", Shelf(target)},
   });
 
   lymph::prep::SimpleImputerOptions fill{};

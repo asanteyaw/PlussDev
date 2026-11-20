@@ -60,6 +60,7 @@ id                       | Series       | Series[bool]     | 3       | [true, fa
 
 ## Notes
 
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction.
 - Every resulting stream is `Series[bool]`, regardless of its original kind.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
@@ -73,9 +74,9 @@ id                       | Series       | Series[bool]     | 3       | [true, fa
   applies to every catalog.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nkeys.html">
+  <a class="prev-link" href="notnan.html">
     <span class="label">Previous</span>
-    <span class="title">nkeys</span>
+    <span class="title">notnan</span>
   </a>
   <a class="next-link" href="nrecords.html">
     <span class="label">Next</span>

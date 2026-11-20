@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
-DataFrame DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
-DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
-DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
+DataFrame DataFrameTsAccessor::align_to(const Shelf& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
+DataFrame DataFrameTsAccessor::align_to(const Shelf& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
+DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Shelf& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
+DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Shelf& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
 ```
 
 ## What It Does
@@ -34,7 +34,7 @@ still-unmatched cells as `NULL`.
 
 ## Parameters
 
-**target_axis** (`const Slate&`)
+**target_axis** (`const Shelf&`)
 
 The new time axis (`Timeline`/`TimeIndex`) to reindex onto. Becomes the result's
 case labels.
@@ -72,12 +72,12 @@ modes.
 using namespace pluss::table;
 
 auto prices = DataFrame(
-    {{"value", Slate(pluss::make_series({100.0, 102.0, 110.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({100.0, 102.0, 110.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z"})));
 std::cout << prices;
 
-auto grid = Slate(pluss::make_timeline({
+auto grid = Shelf(pluss::make_timeline({
     "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z",
     "2024-01-04T00:00:00Z", "2024-01-05T00:00:00Z"}));
 
@@ -147,9 +147,9 @@ instead of case labels.
 
 ```cpp
 auto prices_named = DataFrame(
-    {{"price_time", Slate(pluss::make_timeline({
+    {{"price_time", Shelf(pluss::make_timeline({
           "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z"}))},
-     {"value", Slate(pluss::make_series({100.0, 102.0, 110.0}))}});
+     {"value", Shelf(pluss::make_series({100.0, 102.0, 110.0}))}});
 std::cout << prices_named;
 
 auto exact_named = prices_named.ts().align_to("price_time", grid, TsAlignMode::Exact);
@@ -203,11 +203,11 @@ std::cout << filled;
 ==================
            | value
 ------------------
-2024-01-01 | 100  
-2024-01-02 | 102  
+2024-01-01 |  100 
+2024-01-02 |  102 
 2024-01-03 | -1   
 2024-01-04 | -1   
-2024-01-05 | 110  
+2024-01-05 |  110 
 ------------------
 [5 cs x 1 feat]
 ```
@@ -223,8 +223,8 @@ throw.
 ```cpp
 try {
   auto out = prices.ts().align_to(grid, TsAlignMode::Exact, TsReindexFill::Constant);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

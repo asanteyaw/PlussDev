@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::min(Axis axis = Axis::Case, bool skipnull = true) const
+Shelf DataFrame::min(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does
 
-Reduces every numeric feature to its smallest observed value, returning one `Slate`
+Reduces every numeric feature to its smallest observed value, returning one `Shelf`
 whose entries line up with the frame's numeric feature names — the same shape
 [`max()`](max.md), [`sum()`](sum.md), and [`mean()`](mean.md) return. Non-numeric
 features are skipped entirely rather than compared as an error.
@@ -37,7 +37,7 @@ Controls how a missing value affects that feature's result:
 
 ## Returns
 
-`Slate`
+`Shelf`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's smallest observed value.
 
@@ -50,10 +50,10 @@ default).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Shelf(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, 0.0}), pluss::make_series(std::vector<bool>{true, true, true, true, true, false}))},
+    {"discount",   Shelf(pluss::make_series({0.1, 0.05, 0.0, 0.08, 0.05, 0.12}), pluss::make_series(std::vector<bool>{true, true, false, true, true, true}))},
 });
 
 auto smallest = orders.min();
@@ -100,7 +100,7 @@ missing values, are unaffected either way.
 - `min()`'s result is labeled by feature name and prints like a small labeled `Series`,
   not like a row sliced from the source frame.
 - Non-numeric features never appear in the result; text and time features are not
-  compared as an error, they are simply absent from the returned `Slate`.
+  compared as an error, they are simply absent from the returned `Shelf`.
 - `min()` reports the smallest *value*, not the case it came from — pair it with
   [`arrange()`](arrange.md) or a boolean mask built from
   [`filter()`](filter.md) if you also need the row that produced it.

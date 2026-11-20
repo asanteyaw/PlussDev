@@ -127,7 +127,7 @@ Series freqresp(const Pid &controller, const Series &omega) {
   const Series filter = controller.filter().to(work_dtype).unsqueeze(-1);
 
   if (controller.is_cont()) {
-    const Series integral = ki.eq(0.0).where(ki, ki.div(s));
+    const Series integral = pluss::series::where(ki.eq(0.0), ki, ki.div(s));
     const Series derivative = kd.mul(s).div(filter.mul(s).add(1.0));
     return kp.add(integral).add(derivative);
   }
@@ -137,7 +137,7 @@ Series freqresp(const Pid &controller, const Series &omega) {
       integration_rule(z, controller.sample_time(), controller.int_rule());
   const Series diff_op =
       integration_rule(z, controller.sample_time(), controller.diff_rule());
-  const Series integral = ki.eq(0.0).where(ki, ki.mul(int_op));
+  const Series integral = pluss::series::where(ki.eq(0.0), ki, ki.mul(int_op));
   const Series derivative = kd.div(filter.add(diff_op));
   return kp.add(integral).add(derivative);
 }

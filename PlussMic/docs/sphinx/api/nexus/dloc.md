@@ -61,7 +61,7 @@ std::cout << (biz.dloc(1).equals(biz.frame(1)));
 ### Output
 
 ```text
-true
+1
 ```
 
 ## Notes

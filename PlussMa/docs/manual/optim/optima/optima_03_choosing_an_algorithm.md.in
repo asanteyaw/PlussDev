@@ -4,7 +4,7 @@
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 All four algorithms answer the same question: given where I am, how do I take a step that lowers the objective without breaking the constraints? They answer it differently.
 

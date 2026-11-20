@@ -1,0 +1,118 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1b5c71b02e29 -->
+
+# `control::Pid::ki`
+
+[Back to `control::Pid`](../PidController.md)
+
+The integral gain `Ki`.
+
+## Signature
+
+```cpp
+const pluss::Series& control::Pid::ki() const noexcept;
+```
+
+## What It Does
+
+Returns the integral gain `Ki` as a `Series`, stored as given to `pid` (promoted to the common floating dtype of the four gains). A single controller holds one element; a batch of controllers holds one element per controller on the leading axes. Read it to check what was configured or to rebuild the controller with one value changed.
+
+## Returns
+
+A reference to the stored integral gain `Ki`.
+
+## Practical Examples
+
+### Example 1
+
+A controller with `Kp = 2`, `Ki = 1`, `Kd = 0.5`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = controller();
+  out.writeln("ki =", c.ki().item<double>());
+}
+```
+
+### Example 2
+
+`Ki = 0` removes the integral action, leaving a PD controller.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = ctl::pid(s(2.0), s(0.0), s(0.5), s(0.1));
+  out.writeln("ki =", c.ki().item<double>());
+}
+```
+
+### Example 3
+
+The integral gain next to the other two.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = controller();
+  out.writeln("kp", c.kp().item<double>(), " ki", c.ki().item<double>(), " kd", c.kd().item<double>());
+}
+```
+
+## See Also
+
+- [`kp`](kp.md): the proportional gain
+- [`ki`](ki.md): the integral gain
+- [`kd`](kd.md): the derivative gain
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kd.html">
+    <span class="label">Previous</span>
+    <span class="title">kd</span>
+  </a>
+  <a class="next-link" href="kp.html">
+    <span class="label">Next</span>
+    <span class="title">kp</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

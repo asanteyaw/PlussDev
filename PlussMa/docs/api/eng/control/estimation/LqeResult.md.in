@@ -1,6 +1,6 @@
 # `control::LqeResult`
 
-The complete steady-state linear-estimator design.
+The covariance, gain and estimator dynamics of `lqe`.
 
 ## Signature
 
@@ -10,63 +10,41 @@ control::LqeResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Returned by `lqe`. It holds the steady-state estimation covariance, the observer gain and the matrix `A - L C` that governs the estimation error.
 
 ## Fields
 
-### `covariance`
-
-The stabilizing estimator error covariance.
-
-### `gain`
-
-The steady-state estimator gain mapping innovations into state corrections.
-
-### `closed_loop`
-
-The estimator error dynamics after applying the gain.
+| Field | Meaning | Shape |
+|---|---|---|
+| `covariance` | The steady-state error covariance `P`. | `[..., n, n]` |
+| `gain` | The observer gain `L`. | `[..., n, p]` |
+| `closed_loop` | `A - L C` (discrete: the equivalent error dynamics). | `[..., n, n]` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `lqe`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-The covariance quantifies steady-state uncertainty, the gain determines innovation correction, and `closed_loop` records estimator error dynamics. Treat the three as one design artifact: gain magnitude alone does not establish a stable or well-conditioned estimator.
+The steady gain is the limit of the time-varying Kalman gain: after 40 samples the filter gain equals the `lqe` gain to four places (the second example). `closed_loop` has all its eigenvalues stable, which is the reason to use the steady gain in an observer.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Inspect covariance, gain, and estimator pole from a successful design.
+The three fields for the scalar walk.
 
-@@example Eng/api/control_lqe.cpp@@
+@@example Eng/api/control_lqeresult_fields.cpp@@
 
 ### Example 2
 
-Reject an invalid measurement-noise covariance.
+The `lqe` gain against the gain of a long Kalman run.
 
-@@example Eng/api/control_estimation_errors.cpp@@
+@@example Eng/api/control_lqeresult_filter.cpp@@
 
-### Example 3
-
-Contrast steady-state design with a time-varying forward filter.
-
-@@example Eng/api/control_estimation.cpp@@
-
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="next-link" href="KalmanOptions.html">
-    <span class="label">Next</span>
-    <span class="title">KalmanOptions</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

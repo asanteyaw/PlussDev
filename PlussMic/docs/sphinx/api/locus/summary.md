@@ -45,3 +45,14 @@ summary ncases=3
 - [`profile`](profile.md): the deeper, per-feature diagnostics version of
   this same inventory.
 - [`schema`](schema.md): the structural, `TableMeta`-combined version.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stream.html">
+    <span class="label">Previous</span>
+    <span class="title">stream</span>
+  </a>
+  <a class="next-link" href="with.html">
+    <span class="label">Next</span>
+    <span class="title">with</span>
+  </a>
+</div>

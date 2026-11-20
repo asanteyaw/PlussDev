@@ -23,3 +23,8 @@ foreach(test_src ${FIN_PRICING_TESTS})
         add_test(NAME ${test_name} COMMAND ${test_name})
     endif()
 endforeach()
+
+# The pipeline test takes about two minutes and a large working set; run alone it passes, but alongside many parallel tests it is killed.
+if(TEST pipeline_module_test)
+    set_tests_properties(pipeline_module_test PROPERTIES RUN_SERIAL TRUE TIMEOUT 900)
+endif()

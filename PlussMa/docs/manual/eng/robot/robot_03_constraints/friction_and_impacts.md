@@ -6,7 +6,7 @@
 
 A floor that only pushes lets a block slide forever. Real contacts have friction, and real collisions lose speed. This page adds Coulomb friction to the contacts, so that a block sticks or slides on a slope, and Newton's impact law, so that a block that arrives with speed rebounds, stops or skids.
 
-## The mental model
+## How it works
 
 **Friction.** Give `Contacts` a `friction` coefficient `mu` per contact. The tangential force of the contact is then limited to `mu` times its normal force, along the two tangent directions of the plane. A contact whose point is not accelerating along the plane is **sticking** and carries whatever friction it needs, up to the limit; one that slides carries exactly the limit against the sliding. `constrain` solves this as a quadratic program for the whole batch: the friction bound of each round is `mu` times the normal force of the previous round, which settles in a few rounds (`ConstraintOptions::friction_iterations`). The limit is a pyramid, not a cone: exact when the motion is along a tangent direction, slightly generous in between.
 

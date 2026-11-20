@@ -6,7 +6,7 @@ Chapter 1 minimized a function with nothing in its way. Real problems have limit
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 Septima uses only gradients, so it enforces constraints in the way first-order methods do. It treats the three kinds differently.
 

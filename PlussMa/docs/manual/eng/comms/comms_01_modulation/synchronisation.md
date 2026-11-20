@@ -6,7 +6,7 @@
 
 A receiver does not know when the symbols start or at what frequency and phase the carrier was sent. This page estimates the symbol timing of a shaped waveform and removes it, estimates a carrier frequency offset and removes it, and tracks the remaining phase with a phase-locked loop.
 
-## The mental model
+## How it works
 
 **Timing.** The squared magnitude of a pulse-shaped waveform has a tone at the symbol rate whose phase is the timing offset (the Oerder-Meyr estimator), whatever the symbols are. `timing` returns that offset in samples, modulo one symbol, and `delay` removes it by a fractional shift (a linear phase in the frequency domain, exact for a band-limited waveform and circular at the ends).
 

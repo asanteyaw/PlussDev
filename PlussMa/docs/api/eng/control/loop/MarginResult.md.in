@@ -1,6 +1,6 @@
 # `control::MarginResult`
 
-Classical loop margins and the frequencies where they occur.
+The gain, phase and stability margins with their frequencies.
 
 ## Signature
 
@@ -10,79 +10,50 @@ control::MarginResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Returned by `margin`. Each margin is paired with the frequency at which it occurs; infinity means the corresponding crossover does not exist on the grid.
 
 ## Fields
 
-### `gain`
-
-Gain margin as a multiplicative factor, not decibels.
-
-### `phase`
-
-Phase margin in degrees.
-
-### `stability`
-
-Minimum sampled/interpolated Nyquist distance to `-1`.
-
-### `gain_freq`
-
-Angular frequency of the phase crossover used for gain margin.
-
-### `phase_freq`
-
-Angular frequency of the gain crossover used for phase margin.
-
-### `stability_freq`
-
-Angular frequency of the minimum Nyquist distance.
+| Field | Meaning |
+|---|---|
+| `gain` | Gain margin: a linear factor, greater than one for a stable loop. |
+| `phase` | Phase margin in degrees. |
+| `stability` | The smallest `|1 + L|` over the grid. |
+| `gain_freq` | Frequency of the gain margin (the phase crossover), rad/s. |
+| `phase_freq` | Frequency of the phase margin (the gain crossover), rad/s. |
+| `stability_freq` | Frequency of the closest approach to `-1`, rad/s. |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `margin`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-`gain` is multiplicative rather than decibels, `phase` is degrees, and every frequency is angular. Infinite margins are meaningful when no relevant crossover exists. Stability margin complements classical margins by measuring the closest Nyquist approach to `-1`.
+A stable loop has a gain margin above one and a positive phase margin; the second example of `margin` shows both turning bad together as the gain grows (a negative phase margin at `k = 7`). The stability margin is the more honest robustness number: it is the minimum of `|1 + L|` over the grid, which the second example here reproduces independently (0.6376). As a common rule of thumb, look for a gain margin above 2, a phase margin above 30 degrees and a stability margin above about 0.5.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Print every classical margin and its crossover frequency.
+The six fields for a third-order loop.
 
-@@example Eng/api/control_margin.cpp@@
+@@example Eng/api/control_marginresult_fields.cpp@@
 
 ### Example 2
 
-Inspect the response from which margins are derived.
+The stability margin against the minimum of `|1 + L|`.
 
-@@example Eng/api/control_loop.cpp@@
+@@example Eng/api/control_marginresult_stability.cpp@@
 
 ### Example 3
 
-Reject unsuitable MIMO and real-only response inputs.
+A batch of three loops with different gains.
 
-@@example Eng/api/control_loop_errors.cpp@@
+@@example Eng/api/control_marginresult_batch.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="LoopResult.html">
-    <span class="label">Previous</span>
-    <span class="title">LoopResult</span>
-  </a>
-  <a class="next-link" href="loop.html">
-    <span class="label">Next</span>
-    <span class="title">loop</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

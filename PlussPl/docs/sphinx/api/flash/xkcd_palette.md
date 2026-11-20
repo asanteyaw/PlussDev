@@ -29,19 +29,59 @@ None.
 
 ## Examples
 
-Example 1.
+The examples share one small helper that prints the number of stops and the first and last colour of a ramp as red, green, blue between 0 and 255.
 
 ```cpp
 using namespace pluss::pl;
 
-auto xkcd = flash::xkcd_palette();
-std::cout << "xkcd_palette name=" << xkcd.name() << " stops=" << xkcd.stops().size() << "\n";
+auto describe = [](const PaletteRamp &ramp) {
+  auto c = [](const Rgba &x) {
+    return "(" + std::to_string(static_cast<int>(x.red * 255 + 0.5)) + ", " + std::to_string(static_cast<int>(x.green * 255 + 0.5)) + ", " +
+           std::to_string(static_cast<int>(x.blue * 255 + 0.5)) + ")";
+  };
+  const auto &s = ramp.stops();
+  std::cout << s.size() << " stops; first " << c(s.front()) << ", last " << c(s.back()) << "\n";
+};
+const auto blue = Rgba::from_u8(30, 80, 200);
+const auto red = Rgba::from_u8(200, 40, 40);
+```
+
+Example 1. The ramp has fixed stops: print its size and the first and last colour.
+
+```cpp
+describe(flash::xkcd_palette());
 ```
 
 Output:
 
 ```text
-xkcd_palette name=xkcd stops=3
+3 stops; first (49, 117, 187), last (89, 182, 116)
+```
+
+Example 2. The ramp carries its name.
+
+```cpp
+std::cout << "name \"" << flash::xkcd_palette().name() << "\"\n";
+```
+
+Output:
+
+```text
+name "xkcd"
+```
+
+Example 3. The palette takes no arguments, so there is nothing to refuse; to use a ramp with a different number of stops, sample it at positions between 0 and 1.
+
+```cpp
+const auto ramp = flash::xkcd_palette();
+const auto mid = ramp.sample(0.5);
+std::cout << static_cast<int>(mid.red * 255 + 0.5) << ", " << static_cast<int>(mid.green * 255 + 0.5) << ", " << static_cast<int>(mid.blue * 255 + 0.5) << "\n";
+```
+
+Output:
+
+```text
+255, 160, 64
 ```
 
 ## Notes

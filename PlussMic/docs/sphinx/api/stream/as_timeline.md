@@ -55,8 +55,8 @@ auto series = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}));
 
 try {
   auto out = series.as_timeline();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 28);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 28);
 }
 ```
 
@@ -83,6 +83,10 @@ Stream payload is not Timeli
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="as_series.html">
+    <span class="label">Previous</span>
+    <span class="title">as_series</span>
+  </a>
   <a class="next-link" href="astype.html">
     <span class="label">Next</span>
     <span class="title">astype</span>

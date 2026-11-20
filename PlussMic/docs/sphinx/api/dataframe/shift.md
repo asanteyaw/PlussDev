@@ -51,9 +51,9 @@ untouched.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```
@@ -82,13 +82,13 @@ std::cout << shifted_sales;
 ### Output (narrowed, shifted-only result)
 
 ```text
-===========
+============
      | sales
------------
+------------
 0    | NULL 
 1    | NULL 
 2    | 100  
------------
+------------
 [3 cs x 1 feat]
 ```
 
@@ -98,8 +98,8 @@ std::cout << shifted_sales;
 ==========================
      | id    sales  city  
 --------------------------
-0    | 1     NULL   Accra 
-1    | 2     NULL   Tema  
+0    | 1     100    Accra 
+1    | 2     120    Tema  
 2    | 3     100    Kumasi
 --------------------------
 [3 cs x 3 feat]

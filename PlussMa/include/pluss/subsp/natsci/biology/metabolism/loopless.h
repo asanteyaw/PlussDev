@@ -46,10 +46,10 @@ inline CycleBox cycle_box(const Network &net, const Series &v) {
   const Series zero = v.mul(0.0);
   const Series lo = net.lower.unsqueeze(0).add(zero), hi = net.upper.unsqueeze(0).add(zero);
   const Series slack = v.abs().add(1.0).mul(1e-7);
-  Series int_lo = pos.where(lo.clamp_min(0.0), lo.maximum(v.sub(slack)));
-  Series int_hi = pos.where(hi.minimum(v.add(slack)), hi.clamp_max(0.0));
+  Series int_lo = pluss::series::where(pos, lo.clamp_min(0.0), lo.maximum(v.sub(slack)));
+  Series int_hi = pluss::series::where(pos, hi.minimum(v.add(slack)), hi.clamp_max(0.0));
   const Series is_b = boundary.add(zero).gt(0.5);
-  Series lower = is_b.where(v.sub(slack), int_lo), upper = is_b.where(v.add(slack), int_hi);
+  Series lower = pluss::series::where(is_b, v.sub(slack), int_lo), upper = pluss::series::where(is_b, v.add(slack), int_hi);
   // always contain the (projected) starting point itself: the LP is then feasible by construction
   return {lower.minimum(v), upper.maximum(v)};
 }
@@ -75,7 +75,7 @@ inline Series cycle_free_lp(const Network &net, const Series &v_in, const Series
   (void)r;
   const auto sol = linprog::solve(p, opt);
   // keep the original flux for lanes where the cleaning LP did not succeed
-  return detail::succeeded(sol.status).unsqueeze(-1).where(sol.x, v_in);
+  return pluss::series::where(detail::succeeded(sol.status).unsqueeze(-1), sol.x, v_in);
 }
 } // namespace detail
 
@@ -275,8 +275,8 @@ inline Variability loopless_flux_variability(const Network &net, const Series &o
   Series lowerC = box_s.lower, upperC = box_s.upper;
   const Series target_sel = c_s.abs().gt(0.5);
   const Series cur_slack = cur_s.abs().add(1.0).mul(1e-7).unsqueeze(-1);
-  lowerC = target_sel.where(cur_s.unsqueeze(-1).sub(cur_slack).add(zero_s), lowerC);
-  upperC = target_sel.where(cur_s.unsqueeze(-1).add(cur_slack).add(zero_s), upperC);
+  lowerC = pluss::series::where(target_sel, cur_s.unsqueeze(-1).sub(cur_slack).add(zero_s), lowerC);
+  upperC = pluss::series::where(target_sel, cur_s.unsqueeze(-1).add(cur_slack).add(zero_s), upperC);
   linprog::Problem pc;
   pc.c = pos.mul(2.0).sub(1.0).mul(boundary.neg().add(1.0).unsqueeze(0));
   pc.a_eq = net.stoichiometry;
@@ -288,7 +288,7 @@ inline Variability loopless_flux_variability(const Network &net, const Series &o
   const auto almost = linprog::solve(pc, opt);
   // stage D: forbid the reactions that are zero in the cleaned solution but non-zero in the almost-clean one
   const Series forbid = ll_s.abs().lt(cutoff).logical_and(almost.x.abs().gt(cutoff));
-  const Series lowerD = forbid.where(lo.clamp_min(0.0), lo), upperD = forbid.where(hi.clamp_max(0.0), hi);
+  const Series lowerD = pluss::series::where(forbid, lo.clamp_min(0.0), lo), upperD = pluss::series::where(forbid, hi.clamp_max(0.0), hi);
   linprog::Problem pd;
   pd.c = c_s;
   pd.a_eq = net.stoichiometry;
@@ -299,7 +299,7 @@ inline Variability loopless_flux_variability(const Network &net, const Series &o
   pd.upper = upperD;
   const auto best = linprog::solve(pd, opt);
   const Series best_target = best.x.mul(c_s.abs()).sum(-1, false);
-  const Series fixed_val = detail::succeeded(best.status).where(best_target, cur_s);
+  const Series fixed_val = pluss::series::where(detail::succeeded(best.status), best_target, cur_s);
   // scatter the re-optimised values back into their lanes (host-indexed, S entries)
   const auto fv = fixed_val.host<double>();
   std::vector<double> rh = result.host<double>();

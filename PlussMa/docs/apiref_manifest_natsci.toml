@@ -1,0 +1,290 @@
+# apiref_manifest_natsci.toml -- the `Natural sciences` guides of PlussMa.
+
+[framework.natsci]
+nav_title = "Natural sciences guide"
+nav_prefix = "manual/natsci/"
+root_page = "manual/natsci.html"
+title = "Natural sciences"
+summary = "Biology, chemistry and physics models: populations, kinetics, flows and fields."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "natsci/biology/bio_01_growth"
+page = "manual/natsci/biology/bio_01_growth.md"
+title = "Biology 1: Growth"
+maxdepth = 2
+children = ["bio_01_growth/growth_laws", "bio_01_growth/allee_and_theta", "bio_01_growth/age_structure"]
+
+[[family]]
+path = "natsci/biology/bio_02_interactions"
+page = "manual/natsci/biology/bio_02_interactions.md"
+title = "Biology 2: Interacting Species"
+maxdepth = 2
+children = ["bio_02_interactions/predators_and_prey", "bio_02_interactions/competition"]
+
+[[family]]
+path = "natsci/biology/bio_03_demography"
+page = "manual/natsci/biology/bio_03_demography.md"
+title = "Biology 3: Demography and Extinction"
+maxdepth = 2
+children = ["bio_03_demography/stage_matrices", "bio_03_demography/extinction"]
+
+[[family]]
+path = "natsci/biology/bio_04_metabolism"
+page = "manual/natsci/biology/bio_04_metabolism.md"
+title = "Biology 4: Metabolism"
+maxdepth = 2
+children = ["bio_04_metabolism/flux_balance"]
+
+[[family]]
+path = "natsci/biology/bio_05_enzymes"
+page = "manual/natsci/biology/bio_05_enzymes.md"
+title = "Biology 5: Enzymes"
+maxdepth = 2
+children = ["bio_05_enzymes/rate_laws", "bio_05_enzymes/progress_curves"]
+
+[[family]]
+path = "natsci/biology/bio_06_epidemics"
+page = "manual/natsci/biology/bio_06_epidemics.md"
+title = "Biology 6: Epidemics"
+maxdepth = 2
+children = ["bio_06_epidemics/sir_model"]
+
+[[family]]
+path = "natsci/biology/bio_07_pharmacokinetics"
+page = "manual/natsci/biology/bio_07_pharmacokinetics.md"
+title = "Biology 7: Pharmacokinetics"
+maxdepth = 2
+children = ["bio_07_pharmacokinetics/compartment_models"]
+
+[[family]]
+path = "natsci/biology/bio_08_genetics"
+page = "manual/natsci/biology/bio_08_genetics.md"
+title = "Biology 8: Genetics"
+maxdepth = 2
+children = ["bio_08_genetics/selection", "bio_08_genetics/drift"]
+
+[[family]]
+path = "natsci/biology/bio_09_neurons"
+page = "manual/natsci/biology/bio_09_neurons.md"
+title = "Biology 9: Neurons"
+maxdepth = 2
+children = ["bio_09_neurons/leaky_neuron", "bio_09_neurons/firing_patterns"]
+
+[[family]]
+path = "natsci/biology/bio_10_proteins"
+page = "manual/natsci/biology/bio_10_proteins.md"
+title = "Biology 10: Proteins"
+maxdepth = 2
+children = ["bio_10_proteins/charge_and_ph"]
+
+[[family]]
+path = "natsci/biology/bio_11_muscle"
+page = "manual/natsci/biology/bio_11_muscle.md"
+title = "Biology 11: Muscle"
+maxdepth = 2
+children = ["bio_11_muscle/force_curves", "bio_11_muscle/isometric_force"]
+
+[[family]]
+path = "natsci/biology/bio_12_patterns"
+page = "manual/natsci/biology/bio_12_patterns.md"
+title = "Biology 12: Patterns"
+maxdepth = 2
+children = ["bio_12_patterns/turing_instability"]
+
+[[family]]
+path = "natsci/biology/bio_13_blood_flow"
+page = "manual/natsci/biology/bio_13_blood_flow.md"
+title = "Biology 13: Blood Flow"
+maxdepth = 2
+children = ["bio_13_blood_flow/arteries"]
+
+[[family]]
+path = "natsci/biology"
+page = "manual/natsci/biology.md"
+title = "Biology"
+maxdepth = 2
+children = ["biology/bio_01_growth", "biology/bio_02_interactions", "biology/bio_03_demography", "biology/bio_04_metabolism", "biology/bio_05_enzymes", "biology/bio_06_epidemics", "biology/bio_07_pharmacokinetics", "biology/bio_08_genetics", "biology/bio_09_neurons", "biology/bio_10_proteins", "biology/bio_11_muscle", "biology/bio_12_patterns", "biology/bio_13_blood_flow"]
+
+[[family]]
+path = "natsci/physics/phys_01_orbits"
+page = "manual/natsci/physics/phys_01_orbits.md"
+title = "Physics 1: Orbits"
+maxdepth = 2
+children = ["phys_01_orbits/kepler_orbits"]
+
+[[family]]
+path = "natsci/physics/phys_02_fluids"
+page = "manual/natsci/physics/phys_02_fluids.md"
+title = "Physics 2: Fluids"
+maxdepth = 2
+children = ["phys_02_fluids/taylor_green_vortex"]
+
+[[family]]
+path = "natsci/physics"
+page = "manual/natsci/physics.md"
+title = "Physics"
+maxdepth = 2
+children = ["physics/phys_01_orbits", "physics/phys_02_fluids"]
+
+[[symbol]]
+qualname = "natsci::bio_01_growth::Growth laws"
+kind = "page"
+family = "natsci/biology/bio_01_growth"
+page = "manual/natsci/biology/bio_01_growth/growth_laws.md"
+summary = "Growth laws"
+
+[[symbol]]
+qualname = "natsci::bio_01_growth::Thresholds and shape"
+kind = "page"
+family = "natsci/biology/bio_01_growth"
+page = "manual/natsci/biology/bio_01_growth/allee_and_theta.md"
+summary = "Thresholds and shape"
+
+[[symbol]]
+qualname = "natsci::bio_01_growth::Age structure"
+kind = "page"
+family = "natsci/biology/bio_01_growth"
+page = "manual/natsci/biology/bio_01_growth/age_structure.md"
+summary = "Age structure"
+
+[[symbol]]
+qualname = "natsci::bio_02_interactions::Predators and prey"
+kind = "page"
+family = "natsci/biology/bio_02_interactions"
+page = "manual/natsci/biology/bio_02_interactions/predators_and_prey.md"
+summary = "Predators and prey"
+
+[[symbol]]
+qualname = "natsci::bio_02_interactions::Competing species"
+kind = "page"
+family = "natsci/biology/bio_02_interactions"
+page = "manual/natsci/biology/bio_02_interactions/competition.md"
+summary = "Competing species"
+
+[[symbol]]
+qualname = "natsci::bio_03_demography::Stage matrices"
+kind = "page"
+family = "natsci/biology/bio_03_demography"
+page = "manual/natsci/biology/bio_03_demography/stage_matrices.md"
+summary = "Stage matrices"
+
+[[symbol]]
+qualname = "natsci::bio_03_demography::Extinction"
+kind = "page"
+family = "natsci/biology/bio_03_demography"
+page = "manual/natsci/biology/bio_03_demography/extinction.md"
+summary = "Extinction"
+
+[[symbol]]
+qualname = "natsci::bio_04_metabolism::Flux balance"
+kind = "page"
+family = "natsci/biology/bio_04_metabolism"
+page = "manual/natsci/biology/bio_04_metabolism/flux_balance.md"
+summary = "Flux balance"
+
+[[symbol]]
+qualname = "natsci::bio_05_enzymes::Rate laws"
+kind = "page"
+family = "natsci/biology/bio_05_enzymes"
+page = "manual/natsci/biology/bio_05_enzymes/rate_laws.md"
+summary = "Rate laws"
+
+[[symbol]]
+qualname = "natsci::bio_05_enzymes::Progress curves"
+kind = "page"
+family = "natsci/biology/bio_05_enzymes"
+page = "manual/natsci/biology/bio_05_enzymes/progress_curves.md"
+summary = "Progress curves"
+
+[[symbol]]
+qualname = "natsci::bio_06_epidemics::The SIR model"
+kind = "page"
+family = "natsci/biology/bio_06_epidemics"
+page = "manual/natsci/biology/bio_06_epidemics/sir_model.md"
+summary = "The SIR model"
+
+[[symbol]]
+qualname = "natsci::bio_07_pharmacokinetics::Compartment models"
+kind = "page"
+family = "natsci/biology/bio_07_pharmacokinetics"
+page = "manual/natsci/biology/bio_07_pharmacokinetics/compartment_models.md"
+summary = "Compartment models"
+
+[[symbol]]
+qualname = "natsci::bio_08_genetics::Selection"
+kind = "page"
+family = "natsci/biology/bio_08_genetics"
+page = "manual/natsci/biology/bio_08_genetics/selection.md"
+summary = "Selection"
+
+[[symbol]]
+qualname = "natsci::bio_08_genetics::Drift and fixation"
+kind = "page"
+family = "natsci/biology/bio_08_genetics"
+page = "manual/natsci/biology/bio_08_genetics/drift.md"
+summary = "Drift and fixation"
+
+[[symbol]]
+qualname = "natsci::bio_09_neurons::The leaky neuron"
+kind = "page"
+family = "natsci/biology/bio_09_neurons"
+page = "manual/natsci/biology/bio_09_neurons/leaky_neuron.md"
+summary = "The leaky neuron"
+
+[[symbol]]
+qualname = "natsci::bio_09_neurons::Firing patterns"
+kind = "page"
+family = "natsci/biology/bio_09_neurons"
+page = "manual/natsci/biology/bio_09_neurons/firing_patterns.md"
+summary = "Firing patterns"
+
+[[symbol]]
+qualname = "natsci::bio_10_proteins::Charge and pH"
+kind = "page"
+family = "natsci/biology/bio_10_proteins"
+page = "manual/natsci/biology/bio_10_proteins/charge_and_ph.md"
+summary = "Charge and pH"
+
+[[symbol]]
+qualname = "natsci::bio_11_muscle::Force curves"
+kind = "page"
+family = "natsci/biology/bio_11_muscle"
+page = "manual/natsci/biology/bio_11_muscle/force_curves.md"
+summary = "Force curves"
+
+[[symbol]]
+qualname = "natsci::bio_11_muscle::Isometric force"
+kind = "page"
+family = "natsci/biology/bio_11_muscle"
+page = "manual/natsci/biology/bio_11_muscle/isometric_force.md"
+summary = "Isometric force"
+
+[[symbol]]
+qualname = "natsci::bio_12_patterns::Turing instability"
+kind = "page"
+family = "natsci/biology/bio_12_patterns"
+page = "manual/natsci/biology/bio_12_patterns/turing_instability.md"
+summary = "Turing instability"
+
+[[symbol]]
+qualname = "natsci::bio_13_blood_flow::Arteries"
+kind = "page"
+family = "natsci/biology/bio_13_blood_flow"
+page = "manual/natsci/biology/bio_13_blood_flow/arteries.md"
+summary = "Arteries"
+
+[[symbol]]
+qualname = "natsci::phys_01_orbits::Kepler orbits"
+kind = "page"
+family = "natsci/physics/phys_01_orbits"
+page = "manual/natsci/physics/phys_01_orbits/kepler_orbits.md"
+summary = "Kepler orbits"
+
+[[symbol]]
+qualname = "natsci::phys_02_fluids::The Taylor-Green vortex"
+kind = "page"
+family = "natsci/physics/phys_02_fluids"
+page = "manual/natsci/physics/phys_02_fluids/taylor_green_vortex.md"
+summary = "The Taylor-Green vortex"

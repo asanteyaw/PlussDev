@@ -8,7 +8,7 @@
 
 #include "PlatformHtmlViewer.h"
 
-@interface PlussTilsViewHtmlWindowController : NSObject <NSWindowDelegate>
+@interface PlussTilsViewHtmlWindowController : NSObject <NSWindowDelegate, WKNavigationDelegate>
 
 - (instancetype)initWithTitle:(NSString*)title
                          html:(NSString*)html
@@ -18,6 +18,7 @@
 - (NSWindow*)window;
 - (void)present;
 - (void)savePNG:(id)sender;
+- (void)selectView:(id)sender;
 
 @end
 
@@ -25,6 +26,7 @@
   NSWindow* window_;
   WKWebView* webView_;
   NSString* snapshotName_;
+  NSPopUpButton* viewButton_;
 }
 
 - (instancetype)initWithTitle:(NSString*)title
@@ -63,8 +65,18 @@
   [saveButton setTranslatesAutoresizingMaskIntoConstraints:NO];
   [toolbar addSubview:saveButton];
 
+  // "View" pull-down beside Save PNG, filled from the page's own view tabs once it has loaded
+  // (and hidden when the page has none). It replaces the in-page picker, which sat above the table.
+  viewButton_ = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:YES];
+  [viewButton_ setBezelStyle:NSBezelStyleRounded];
+  [viewButton_ setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [viewButton_ addItemWithTitle:@"View"];
+  [viewButton_ setHidden:YES];
+  [toolbar addSubview:viewButton_];
+
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
   webView_ = [[WKWebView alloc] initWithFrame:NSZeroRect configuration:configuration];
+  [webView_ setNavigationDelegate:self];
   [webView_ setTranslatesAutoresizingMaskIntoConstraints:NO];
   [webView_ loadHTMLString:html baseURL:nil];
   [contentView addSubview:webView_];
@@ -78,6 +90,9 @@
     [saveButton.trailingAnchor constraintEqualToAnchor:toolbar.trailingAnchor constant:-12.0],
     [saveButton.centerYAnchor constraintEqualToAnchor:toolbar.centerYAnchor],
 
+    [viewButton_.trailingAnchor constraintEqualToAnchor:saveButton.leadingAnchor constant:-8.0],
+    [viewButton_.centerYAnchor constraintEqualToAnchor:toolbar.centerYAnchor],
+
     [webView_.topAnchor constraintEqualToAnchor:toolbar.bottomAnchor],
     [webView_.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
     [webView_.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
@@ -89,6 +104,52 @@
 
 - (NSWindow*)window {
   return window_;
+}
+
+// Reads the page's view tabs (button.tab: id, label, active) and builds the View menu from them.
+- (void)webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {
+  (void)navigation;
+  NSString* script =
+      @"(function(){const v=window.plussViews;if(!v||v.length<2){return '[]';}"
+      @"const a=document.querySelector('button.tab.active');const activeId=a?a.id:'';"
+      @"const p=document.querySelector('.view-picker');if(p){p.remove();}"
+      @"return JSON.stringify(v.map(x=>({id:x.id,label:x.label,active:x.id===activeId})));})()";
+  [webView evaluateJavaScript:script completionHandler:^(id result, NSError* error) {
+    if (error != nil || ![result isKindOfClass:[NSString class]]) {
+      return;
+    }
+    NSData* data = [(NSString*)result dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* tabs = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    if (![tabs isKindOfClass:[NSArray class]] || [tabs count] < 2) {
+      return;
+    }
+    NSMenu* menu = [self->viewButton_ menu];
+    while ([menu numberOfItems] > 1) {
+      [menu removeItemAtIndex:1];
+    }
+    for (NSDictionary* tab in tabs) {
+      NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:tab[@"label"] action:@selector(selectView:) keyEquivalent:@""];
+      [item setTarget:self];
+      [item setRepresentedObject:tab[@"id"]];
+      [item setState:[tab[@"active"] boolValue] ? NSControlStateValueOn : NSControlStateValueOff];
+      [menu addItem:item];
+    }
+    [self->viewButton_ setHidden:NO];
+  }];
+}
+
+// Picks a view through the page's own plussSelectView, so the page's script does the switching.
+- (void)selectView:(id)sender {
+  NSMenuItem* item = [sender isKindOfClass:[NSMenuItem class]] ? (NSMenuItem*)sender : nil;
+  NSString* tab_id = [item representedObject];
+  if (tab_id == nil) {
+    return;
+  }
+  for (NSMenuItem* other in [[viewButton_ menu] itemArray]) {
+    [other setState:other == item ? NSControlStateValueOn : NSControlStateValueOff];
+  }
+  NSString* script = [NSString stringWithFormat:@"window.plussSelectView('%@');", tab_id];
+  [webView_ evaluateJavaScript:script completionHandler:nil];
 }
 
 - (void)present {

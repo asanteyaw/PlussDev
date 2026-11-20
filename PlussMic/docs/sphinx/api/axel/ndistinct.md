@@ -66,8 +66,8 @@ std::cout << std::get<pluss::Series>(out.registry(0).fields("id").at(0)).host<st
     <span class="label">Previous</span>
     <span class="title">map</span>
   </a>
-  <a class="next-link" href="notnull.html">
+  <a class="next-link" href="notinf.html">
     <span class="label">Next</span>
-    <span class="title">notnull</span>
+    <span class="title">notinf</span>
   </a>
 </div>

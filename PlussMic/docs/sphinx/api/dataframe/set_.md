@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame& DataFrame::set_(std::string_view name, const Slate& value)
-DataFrame& DataFrame::set_(std::string_view name, const Slate& value, const AlignOptions& options)
-DataFrame& DataFrame::set_(pluss::RangeView<std::string_view> names, pluss::RangeView<Slate> values)
+DataFrame& DataFrame::set_(std::string_view name, const Shelf& value)
+DataFrame& DataFrame::set_(std::string_view name, const Shelf& value, const AlignOptions& options)
+DataFrame& DataFrame::set_(pluss::RangeView<std::string_view> names, pluss::RangeView<Shelf> values)
 ```
 
 ## What It Does
@@ -27,7 +27,7 @@ The feature name (or names) to create or overwrite in place.
 
 **value** / **values**
 
-The replacement `Slate` (or a matching range of `Slate`s for the multi-name
+The replacement `Shelf` (or a matching range of `Shelf`s for the multi-name
 overload).
 
 **options** (`const AlignOptions&`, optional)
@@ -48,12 +48,12 @@ Example 1. Overwrite an existing feature's values in place.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-orders.set_("sales", Slate(pluss::make_series({0.0, 0.0, 0.0})));
+orders.set_("sales", Shelf(pluss::make_series({0.0, 0.0, 0.0})));
 std::cout << orders;
 ```
 
@@ -76,8 +76,8 @@ Example 2. Create a brand-new feature in place via the multi-name overload.
 
 ```cpp
 std::vector<std::string_view> names{"profit"};
-std::vector<Slate> values{Slate(pluss::make_series({40.0, 35.0, 30.0}))};
-orders.set_(pluss::RangeView<std::string_view>(names), pluss::RangeView<Slate>(values));
+std::vector<Shelf> values{Shelf(pluss::make_series({40.0, 35.0, 30.0}))};
+orders.set_(pluss::RangeView<std::string_view>(names), pluss::RangeView<Shelf>(values));
 std::cout << orders;
 ```
 
@@ -112,7 +112,7 @@ std::cout << orders;
 - [`DataFrame::set`](set.md): the assignment-target builder style for in-place
   assignment via `operator=`.
 - [`DataFrame::assign`](assign.md): derive new features from expressions evaluated
-  against the frame, rather than assigning pre-built `Slate`s.
+  against the frame, rather than assigning pre-built `Shelf`s.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="set.html">

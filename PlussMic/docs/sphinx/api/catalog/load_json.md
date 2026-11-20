@@ -35,6 +35,12 @@ key across the objects, with per-column dtype inference — the same underlying 
 
 Example 1. Load a JSON array of objects.
 
+Given `cities.json`:
+
+```text
+[{"city": "Accra", "population": 2500000}, {"city": "Tema", "population": 161000}, {"city": "Kumasi", "population": 3000000}]
+```
+
 ```cpp
 auto ct = pluss::kindle::Catalog::load_json("cities.json");
 std::cout << ct;
@@ -44,14 +50,13 @@ std::cout << ct;
 
 ```text
 ========================================================================================================================
-kindle::Catalog  keys=3
-keys: [id, city, population]
+kindle::Catalog  keys=2
+keys: [city, population]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[int64]    | 3       | [1, 2, 3]                                        
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-population               | Series       | Series[int64]    | 3       | [2388000, 300000, 3348000]                       
+population               | Series       | Series[int64]    | 3       | [2500000, 161000, 3000000]                       
 ========================================================================================================================
 ```
 
@@ -75,8 +80,8 @@ population               | Series       | Series[int64]    | 3       | [2388000,
     <span class="label">Previous</span>
     <span class="title">load_excel</span>
   </a>
-  <a class="next-link" href="load_parquet.html">
+  <a class="next-link" href="load_labeled.html">
     <span class="label">Next</span>
-    <span class="title">load_parquet</span>
+    <span class="title">load_labeled</span>
   </a>
 </div>

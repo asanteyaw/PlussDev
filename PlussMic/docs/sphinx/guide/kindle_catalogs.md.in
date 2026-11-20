@@ -4,7 +4,7 @@
 
 Kindle is PlussMic's stream-first model. Where a `DataFrame` is a table, a `Catalog` is a named set of typed streams that you can transform one at a time, with reports on what every operation did. This page redoes the common table jobs the Kindle way: a sales report, an audited join, a text search, a file round trip, time-series features, feature preparation and change detection.
 
-## The mental model
+## How it works
 
 A `Stream` is one typed vector with an optional validity mask, labels and metadata. A `Catalog` is a set of streams with names, and its natural verbs are the stream verbs: `set` a stream, `keys` to pick some, `map` a function over streams, `group().by(key)` to split. Printing a catalog shows each stream's kind, dtype, length and a preview rather than a table; `tabelize()` converts to a `DataFrame` when you want rows and columns.
 
@@ -58,18 +58,18 @@ A household table with three numeric streams and an identifier. The program stan
 
 ## Detecting change
 
-Two loads of an inventory table. The program compares the streams and explains the difference, and then shows what a fingerprint is.
+Two loads of an inventory table. The program compares the catalogs by fingerprint, finds the stream that changed and explains the difference, and then shows how a stamp differs.
 
 @@example catalog_change_detection.cpp@@
 
-Comparing stream by stream finds that only `stock` changed, by `-3` for the second item, so only the reorder report needs rebuilding. The fingerprint lines are a different tool: a fingerprint identifies the *storage* a catalog shares. A copy has the same fingerprint, and a table built separately with identical content does not, so a fingerprint is a cache key and not a content check.
+The fingerprint is a hash of the values themselves, so equal contents give equal fingerprints however the catalog was built: the whole-catalog fingerprints differ, and comparing stream by stream finds that only `stock` changed, by `-3` for the second item, so only the reorder report needs rebuilding. The last two lines show the other tool, the stamp, which identifies the *storage* a catalog shares and is a cache token: a copy has the same stamp, while a table built separately with identical content has its own stamp (and the same fingerprint). Use `fingerprint()` to ask whether data changed and leave `stamp()` to caches, which use it because it never reads the data.
 
 ## Decisions
 
 - **Stream or table:** use a catalog when the unit of work is a stream (clean, filter, fill, join per stream); convert with `tabelize()` for row-oriented reports.
 - **Joins:** audit the keys first, state the relationship you expect, and read the report afterwards.
 - **Reductions give streams:** `mean()` and `std()` return one-record streams; read them as numbers before using them in arithmetic.
-- **Change detection:** compare content, not fingerprints.
+- **Change detection:** compare `fingerprint()`s (contents), not `stamp()`s (storage identity).
 
 ## Where next
 

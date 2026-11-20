@@ -6,10 +6,10 @@ instead of strict DataFrame ergonomics.
 
 ## Stream
 
-A `Stream` is similar to a `Slate`, with optional cases and metadata.
+A `Stream` is similar to a `Shelf`, with optional cases and metadata.
 
 ```cpp
-auto stream = pluss::kindle::Stream::from_slate(df.features("balance"));
+auto stream = pluss::kindle::Stream::from_shelf(df.features("balance"));
 ```
 
 Common stream operations:

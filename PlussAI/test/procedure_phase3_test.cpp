@@ -20,7 +20,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -44,10 +44,10 @@ lymph::LabeledBatch regression_batch() {
 
 DataFrame raw_frame() {
   return DataFrame({
-      {"id", Slate(pluss::make_series(std::vector<double>{100, 101, 102, 103}, {4}, f64()))},
-      {"timestamp", Slate(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {4}, f64()))},
-      {"x", Slate(pluss::make_series(std::vector<double>{0, 1, 2, 3}, {4}, f64()))},
-      {"y", Slate(pluss::make_series(std::vector<double>{0, 2, 4, 6}, {4}, f64()))},
+      {"id", Shelf(pluss::make_series(std::vector<double>{100, 101, 102, 103}, {4}, f64()))},
+      {"timestamp", Shelf(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {4}, f64()))},
+      {"x", Shelf(pluss::make_series(std::vector<double>{0, 1, 2, 3}, {4}, f64()))},
+      {"y", Shelf(pluss::make_series(std::vector<double>{0, 2, 4, 6}, {4}, f64()))},
   });
 }
 

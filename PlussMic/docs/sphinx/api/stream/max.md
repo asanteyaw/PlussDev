@@ -14,7 +14,7 @@ Stream Stream::max() const
 ## What It Does
 
 Returns the maximum of a `Series`-kind stream's non-`NULL` values, as a one-element
-`Stream`. Delegates to `Slate::max()`, so it's `Series`-only, same as
+`Stream`. Delegates to `Shelf::max()`, so it's `Series`-only, same as
 [`sum()`](sum.md)/[`mean()`](mean.md)/[`min()`](min.md)/[`var()`](var.md)/
 [`std()`](std.md).
 
@@ -54,7 +54,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Slate::max is only valid for Series payload"` on
+- `Series`-only; throws `"Shelf::max is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded from consideration.
 - Returns a one-element `Stream`, not a raw scalar, same as every other reduction in this
@@ -66,9 +66,9 @@ label        | value
 - [`Stream::sum`](sum.md) / [`Stream::mean`](mean.md): the other reductions in this family.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="log.html">
+  <a class="prev-link" href="map.html">
     <span class="label">Previous</span>
-    <span class="title">log</span>
+    <span class="title">map</span>
   </a>
   <a class="next-link" href="mean.html">
     <span class="label">Next</span>

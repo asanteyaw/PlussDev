@@ -1,6 +1,6 @@
 # `control::pid`
 
-Constructs a continuous or discrete PID controller.
+Builds a PID controller with a filtered derivative.
 
 ## Signature
 
@@ -17,74 +17,65 @@ control::Pid control::pid(
 
 ## What It Does
 
-The represented continuous transfer function is `Kp + Ki/s + Kd*s/(filter*s + 1)`. For discrete controllers, the selected rules replace the integral and filtered-derivative factors.
+Creates a `Pid` whose continuous transfer function is `C(s) = Kp + Ki / s + Kd s / (T_f s + 1)`, where `T_f` is the derivative-filter time constant. A positive `sample_time` makes it a discrete controller: the integral and the filtered derivative are replaced by the substitutions chosen with `PidRule`. The gains may carry leading batch axes, one controller per lane.
 
 ## Parameters
 
-`kp`
-: Proportional gain, scalar or batched.
-
-`ki`
-: Integral gain, broadcast-compatible with the other gains.
-
-`kd`
-: Derivative gain.
+`kp`, `ki`, `kd`
+: Proportional, integral and derivative gains: real floating `Series`, scalar or batched.
 
 `filter`
-: Non-negative derivative-filter time constant in `Kd*s/(filter*s+1)`.
+: The derivative-filter time constant `T_f`, non-negative. Zero leaves the derivative unfiltered.
 
 `sample_time`
-: Zero for continuous time or a positive discrete sampling interval.
+: Zero (the default) for a continuous controller, otherwise the sample period in seconds.
 
-`int_rule`
-: Discrete integrator substitution.
-
-`diff_rule`
-: Discrete filtered-derivative substitution.
+`int_rule`, `diff_rule`
+: The discrete substitutions for the integrator and the derivative (`PidRule`); ignored when continuous.
 
 ## Returns
 
-A validated immutable `control::Pid`.
+A `Pid`. Gains of different dtypes promote to a common floating dtype.
 
 ## Errors
 
-Throws when gains cannot broadcast, the filter is negative, or the sample time is negative/non-finite.
+A negative filter, a negative or non-finite sample time, an integer gain, gains on different platforms or of incompatible batch shapes, an unfiltered derivative with the `Trapezoid` rule, and a `Forward` derivative with `sample_time >= 2 * filter` throw `pluss::Error`; the last two would give an unstable discrete derivative.
 
 ## Interpretation and Use
 
-A zero sample time creates the continuous parallel form. A positive sample time activates the stored substitution rules. Keep `filter` positive when derivative action is nonzero to limit high-frequency amplification; zero remains valid when an ideal derivative is intentional.
+The first example evaluates a controller with `Kp = 2`, `Ki = 1`, `Kd = 0.5`, `T_f = 0.1` at three frequencies and finds no difference from the closed form. The second shows the same controller discretised with backward-Euler rules at 100 Hz: it follows the continuous one closely at low frequency and departs from it as `omega T` grows. The third builds three controllers at once from a vector of gains.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct a continuous filtered PID.
+A continuous controller against its closed form.
 
-@@example Eng/api/control_pid.cpp@@
+@@example Eng/api/control_pid_continuous.cpp@@
 
 ### Example 2
 
-Construct a sampled controller with explicit rules.
+The same controller discretised at 100 Hz against the continuous one.
 
 @@example Eng/api/control_pid_discrete.cpp@@
 
 ### Example 3
 
-Reject a negative derivative-filter constant.
+Three controllers from a vector of proportional gains.
 
-@@example Eng/api/control_controller_errors.cpp@@
+@@example Eng/api/control_pid_batch.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="place.html">
-    <span class="label">Previous</span>
-    <span class="title">place</span>
-  </a>
-  <a class="next-link" href="freqresp.html">
-    <span class="label">Next</span>
-    <span class="title">freqresp</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Gains promoted to one dtype.
+
+@@example Eng/api/control_pid_dtype.cpp@@
+
+### Example 5
+
+Every refused construction.
+
+@@example Eng/api/control_pid_errors.cpp@@
+

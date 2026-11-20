@@ -41,7 +41,7 @@ in a trailing value from a different catalog in the stack.
 ## Examples
 
 Example 1. Lag a numeric key by one position; position `0` has no
-predecessor, so it's `nan`.
+predecessor, so it's `NULL`.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -62,7 +62,7 @@ keys: [metric]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-metric                   | Series       | Series[float64]  | 4       | [nan, 10, 20, 15]                                
+metric                   | Series       | Series[float64]  | 4       | [NULL, 10, 20, 15]                               
 ========================================================================================================================
 ```
 

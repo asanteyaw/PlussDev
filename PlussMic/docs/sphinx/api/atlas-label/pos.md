@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-Slate AtlasLabelAccessor::pos(double value) const
-Slate AtlasLabelAccessor::pos(std::string_view value) const
-Slate AtlasLabelAccessor::pos(const char* value) const
+Shelf AtlasLabelAccessor::pos(double value) const
+Shelf AtlasLabelAccessor::pos(std::string_view value) const
+Shelf AtlasLabelAccessor::pos(const char* value) const
 ```
 
 ## What It Does
 
 Looks up the position of a single `value` within the atlas's current depth labels,
-returning it wrapped in a one-element `Slate` — the single-value counterpart to
+returning it wrapped in a one-element `Shelf` — the single-value counterpart to
 [`find()`](find.md), which looks up several values at once. The `double` overload is for
 numeric depth labels; the `std::string_view`/`const char*` overloads are for text depth
 labels (`const char*` is a thin convenience wrapper that forwards to the
@@ -30,8 +30,8 @@ labels (`const char*` is a thin convenience wrapper that forwards to the
 
 ## Returns
 
-`Slate`
-    A one-element `Slate` named `"pos"` holding `value`'s position, or `-1` if `value`
+`Shelf`
+    A one-element `Shelf` named `"pos"` holding `value`'s position, or `-1` if `value`
     isn't one of the atlas's depth labels (same no-throw behavior as
     [`find()`](find.md)).
 
@@ -41,15 +41,15 @@ Example 1. Look up a text depth label's position with the `std::string_view` ove
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Shelf(pluss::make_note({"jan", "feb", "mar"})));
 
 std::cout << atlas.label().pos("mar");
 ```
@@ -66,15 +66,15 @@ Example 2. The `const char*` overload behaves identically — it forwards to the
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Shelf(pluss::make_note({"jan", "feb", "mar"})));
 
 const char* label = "jan";
 std::cout << atlas.label().pos(label);
@@ -91,15 +91,15 @@ Example 3. Look up a numeric depth label's position with the `double` overload.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Shelf(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})));
 
 std::cout << atlas.label().pos(20.0);
 ```
@@ -115,7 +115,7 @@ Name: pos, ptype: Series
 
 - Same no-throw-on-miss behavior as [`find()`](find.md): an unmatched `value` yields
   `-1` in the result rather than raising.
-- The result is always a one-element `Slate`, not a bare integer — chain `.at(0)` (or
+- The result is always a one-element `Shelf`, not a bare integer — chain `.at(0)` (or
   similar scalar access) if you need the raw position value.
 
 ## See Also

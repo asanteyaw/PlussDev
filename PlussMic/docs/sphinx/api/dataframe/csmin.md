@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::csmin(Axis axis = Axis::Case, bool skipnull = true) const
+Shelf DataFrame::csmin(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does
 
 Reports *where* each numeric feature's minimum value occurs, not the minimum value
 itself — the argmin-style companion to [`min()`](min.md), and the mirror of
-[`csmax()`](csmax.md). The returned `Slate` always holds label strings (case labels or
+[`csmax()`](csmax.md). The returned `Shelf` always holds label strings (case labels or
 feature names), never numeric values, so it always prints with `ptype: Note`.
 
 ## Parameters
@@ -36,8 +36,8 @@ Missing-value policy while searching for the minimum.
 
 ## Returns
 
-`Slate`
-    A `Note`-typed label slate: case labels (`Axis::Case`) or feature names
+`Shelf`
+    A `Note`-typed label shelf: case labels (`Axis::Case`) or feature names
     (`Axis::Feature`), one per participating numeric feature or case respectively.
 
 ## Examples
@@ -111,7 +111,7 @@ default `skipnull = true`.
 
 ```cpp
 auto regions2 = DataFrame({
-    {"sales", pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0})},
+    {"sales", Shelf(pluss::make_series({100.0, 0.0, 90.0}), pluss::make_series(std::vector<bool>{true, false, true}))},
     {"cost",  pluss::make_series({60.0, 80.0, 95.0})},
 }, pluss::make_note({"q1", "q2", "q3"}));
 

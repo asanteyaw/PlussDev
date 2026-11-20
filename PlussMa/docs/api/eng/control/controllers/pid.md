@@ -2,7 +2,7 @@
 
 # `control::pid`
 
-Constructs a continuous or discrete PID controller.
+Builds a PID controller with a filtered derivative.
 
 ## Signature
 
@@ -19,178 +19,302 @@ control::Pid control::pid(
 
 ## What It Does
 
-The represented continuous transfer function is `Kp + Ki/s + Kd*s/(filter*s + 1)`. For discrete controllers, the selected rules replace the integral and filtered-derivative factors.
+Creates a `Pid` whose continuous transfer function is `C(s) = Kp + Ki / s + Kd s / (T_f s + 1)`, where `T_f` is the derivative-filter time constant. A positive `sample_time` makes it a discrete controller: the integral and the filtered derivative are replaced by the substitutions chosen with `PidRule`. The gains may carry leading batch axes, one controller per lane.
 
 ## Parameters
 
-`kp`
-: Proportional gain, scalar or batched.
-
-`ki`
-: Integral gain, broadcast-compatible with the other gains.
-
-`kd`
-: Derivative gain.
+`kp`, `ki`, `kd`
+: Proportional, integral and derivative gains: real floating `Series`, scalar or batched.
 
 `filter`
-: Non-negative derivative-filter time constant in `Kd*s/(filter*s+1)`.
+: The derivative-filter time constant `T_f`, non-negative. Zero leaves the derivative unfiltered.
 
 `sample_time`
-: Zero for continuous time or a positive discrete sampling interval.
+: Zero (the default) for a continuous controller, otherwise the sample period in seconds.
 
-`int_rule`
-: Discrete integrator substitution.
-
-`diff_rule`
-: Discrete filtered-derivative substitution.
+`int_rule`, `diff_rule`
+: The discrete substitutions for the integrator and the derivative (`PidRule`); ignored when continuous.
 
 ## Returns
 
-A validated immutable `control::Pid`.
+A `Pid`. Gains of different dtypes promote to a common floating dtype.
 
 ## Errors
 
-Throws when gains cannot broadcast, the filter is negative, or the sample time is negative/non-finite.
+A negative filter, a negative or non-finite sample time, an integer gain, gains on different platforms or of incompatible batch shapes, an unfiltered derivative with the `Trapezoid` rule, and a `Forward` derivative with `sample_time >= 2 * filter` throw `pluss::Error`; the last two would give an unstable discrete derivative.
 
 ## Interpretation and Use
 
-A zero sample time creates the continuous parallel form. A positive sample time activates the stored substitution rules. Keep `filter` positive when derivative action is nonzero to limit high-frequency amplification; zero remains valid when an ideal derivative is intentional.
+The first example evaluates a controller with `Kp = 2`, `Ki = 1`, `Kd = 0.5`, `T_f = 0.1` at three frequencies and finds no difference from the closed form. The second shows the same controller discretised with backward-Euler rules at 100 Hz: it follows the continuous one closely at low frequency and departs from it as `omega T` grows. The third builds three controllers at once from a vector of gains.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Construct a continuous filtered PID.
+A continuous controller against its closed form.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(2.0), pluss::make_series(3.0),
-      pluss::make_series(4.0), pluss::make_series(0.5));
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 1.0}));
-
-  std::cout << std::boolalpha << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  out.writeln("response =", response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // C(s) = kp + ki / s + kd s / (filter s + 1) with kp = 2, ki = 1, kd = 0.5 and filter = 0.1.
+  const ctl::Pid c = ctl::pid(pluss::make_series(2.0), pluss::make_series(1.0), pluss::make_series(0.5), pluss::make_series(0.1));
+  const pluss::Series omega = pluss::make_series({0.1, 1.0, 10.0});
+  const auto h = ctl::freqresp(c, omega).items<std::complex<double>>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < h.size(); ++i) {
+    const double w = omega.items<double>()[i];
+    const std::complex<double> s(0.0, w);
+    const std::complex<double> exact = 2.0 + 1.0 / s + 0.5 * s / (0.1 * s + 1.0);
+    worst = std::max(worst, std::abs(h[i] - exact));
+    out.writeln("omega", w, ": |C| =", std::abs(h[i]), " phase (rad) =", std::arg(h[i]));
+  }
+  out.writeln("largest difference from the closed form =", worst);
 }
 ```
 
 Output
 
 ```text
-continuous = true, discrete = false
-response = [(2.47059,-4.11765), (3.6,0.2)]
+omega 0.1000 : |C| = 10.1491  phase (rad) = -1.3724
+omega 1.0000 : |C| = 2.1108  phase (rad) = -0.2416
+omega 10.0000 : |C| = 5.1000  phase (rad) = 0.4900
+largest difference from the closed form = 0.0000
 ```
 ### Example 2
 
-Construct a sampled controller with explicit rules.
+The same controller discretised at 100 Hz against the continuous one.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <iostream>
+#include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const control::Pid controller = control::pid(
-      pluss::make_series(1.5), pluss::make_series(0.4),
-      pluss::make_series(0.2), pluss::make_series(0.05), 0.1,
-      control::PidRule::Trapezoid, control::PidRule::Backward);
-  const pluss::Series response =
-      control::freqresp(controller, pluss::make_series({0.5, 2.0}));
-
-  std::cout << std::boolalpha
-            << "continuous = " << controller.is_cont()
-            << ", discrete = " << controller.is_disc() << "\n";
-  std::cout << "sample time = " << controller.sample_time()
-            << ", integral rule = " << static_cast<int>(controller.int_rule())
-            << ", derivative rule = " << static_cast<int>(controller.diff_rule())
-            << "\n";
-  out.writeln("discrete response =",
-              response.items<std::complex<double>>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // Backward-Euler integrator and derivative at 100 Hz against the continuous controller.
+  const auto scalar = [](double v) { return pluss::make_series(v); };
+  const ctl::Pid continuous = ctl::pid(scalar(2.0), scalar(1.0), scalar(0.5), scalar(0.1));
+  const ctl::Pid discrete = ctl::pid(scalar(2.0), scalar(1.0), scalar(0.5), scalar(0.1), 0.01, ctl::PidRule::Backward, ctl::PidRule::Backward);
+  const pluss::Series omega = pluss::make_series({0.1, 1.0, 10.0, 50.0});
+  const auto a = ctl::freqresp(continuous, omega).items<std::complex<double>>();
+  const auto b = ctl::freqresp(discrete, omega).items<std::complex<double>>();
+  for (std::size_t i = 0; i < a.size(); ++i) out.writeln("omega", omega.items<double>()[i], ": |C| continuous", std::abs(a[i]), " discrete", std::abs(b[i]));
+  out.writeln("sample time", discrete.sample_time(), " discrete:", discrete.is_disc());
 }
 ```
 
 Output
 
 ```text
-continuous = false, discrete = true
-sample time = 0.1, integral rule = 2, derivative rule = 1
-discrete response = [(1.50499,-0.700062), (1.57742,0.18647)]
+omega 0.1000 : |C| continuous 10.1491  discrete 10.1501
+omega 1.0000 : |C| continuous 2.1108  discrete 2.1181
+omega 10.0000 : |C| continuous 5.1000  discrete 5.0474
+omega 50.0000 : |C| continuous 6.8725  discrete 6.6599
+sample time 0.0100  discrete: true
 ```
 ### Example 3
 
-Reject a negative derivative-filter constant.
+Three controllers from a vector of proportional gains.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
+#include <cmath>
 #include <complex>
-#include <exception>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(control::place(
-        pluss::make_series({{0.0, 1.0}, {-2.0, -3.0}}),
-        pluss::series::zeros({2, 1}, pluss::ScalarType::Float64),
-        pluss::make_series({std::complex<double>{-4.0, 0.0},
-                            std::complex<double>{-5.0, 0.0}})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("uncontrollable plant rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::pid(
-        pluss::make_series(1.0), pluss::make_series(0.0),
-        pluss::make_series(0.0), pluss::make_series(-0.1)));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("negative filter rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // Three controllers that differ in their proportional gain, evaluated at two frequencies.
+  const ctl::Pid c = ctl::pid(pluss::make_series({1.0, 2.0, 4.0}), pluss::make_series(0.0), pluss::make_series(0.0), pluss::make_series(0.0));
+  const pluss::Series h = ctl::freqresp(c, pluss::make_series({1.0, 10.0}));
+  out.writeln("response shape", h.size(0), "x", h.size(1), " (controllers by frequencies)");
+  out.writeln("proportional-only gains =", h.real().select(1, 0).items<double>());
 }
 ```
 
 Output
 
 ```text
-uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
-negative filter rejected = eng::control::pid: filter must be non-negative
+response shape 3 x 2  (controllers by frequencies)
+proportional-only gains = [1.0000, 2.0000, 4.0000]
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="place.html">
-    <span class="label">Previous</span>
-    <span class="title">place</span>
-  </a>
-  <a class="next-link" href="freqresp.html">
-    <span class="label">Next</span>
-    <span class="title">freqresp</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Gains promoted to one dtype.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::Pid c = ctl::pid(pluss::make_series(2.0f), pluss::make_series(1.0), pluss::make_series(0.5), pluss::make_series(0.1));
+  out.writeln("gains promote to a common dtype:", c.kp().scalar_type(), c.ki().scalar_type(), c.kd().scalar_type(), c.filter().scalar_type());
+}
+```
+
+Output
+
+```text
+gains promote to a common dtype: float64 float64 float64 float64
+```
+### Example 5
+
+Every refused construction.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto s = [](double v) { return pluss::make_series(v); };
+  refused(out, "a negative derivative filter", [&] { ctl::pid(s(1.0), s(0.0), s(0.5), s(-0.1)); });
+  refused(out, "a negative sample time", [&] { ctl::pid(s(1.0), s(0.0), s(0.0), s(0.0), -0.01); });
+  refused(out, "an unfiltered trapezoidal derivative", [&] { ctl::pid(s(1.0), s(0.0), s(0.5), s(0.0), 0.01, ctl::PidRule::Forward, ctl::PidRule::Trapezoid); });
+  refused(out, "a forward derivative with sample_time >= 2 filter", [&] { ctl::pid(s(1.0), s(0.0), s(0.5), s(0.004), 0.01, ctl::PidRule::Forward, ctl::PidRule::Forward); });
+  refused(out, "an integer gain", [&] { ctl::pid(pluss::make_series(1), s(0.0), s(0.0), s(0.0)); });
+}
+```
+
+Output
+
+```text
+a negative derivative filter : eng::control::pid: filter must be non-negative
+a negative sample time : eng::control::pid: sample_time must be finite and non-negative
+an unfiltered trapezoidal derivative : eng::control::pid: an unfiltered trapezoidal derivative is unstable
+a forward derivative with sample_time >= 2 filter : eng::control::pid: forward derivative requires sample_time < 2*filter
+an integer gain : eng::control::pid: Kp must have a real floating dtype
+```

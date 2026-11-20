@@ -47,9 +47,9 @@ Example 1. Contrast `invalid()` against `isnull()` on a frame with both an unmas
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"a", Slate(pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 3.0, 0.0}),
+    {"a", Shelf(pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 3.0, 0.0}),
                 pluss::make_series({true, true, true, false}, pluss::ScalarType::Bool))},
-    {"b", Slate(pluss::make_note({"x", "y", "", "z"}),
+    {"b", Shelf(pluss::make_note({"x", "y", "", "z"}),
                 pluss::make_series({true, true, false, true}, pluss::ScalarType::Bool))},
 });
 std::cout << readings;
@@ -62,7 +62,7 @@ std::cout << readings;
      | a     b   
 -----------------
 0    | 1     x   
-1    | nan   y   
+1    | NaN   y   
 2    | 3     NULL
 3    | NULL  z   
 -----------------
@@ -113,6 +113,7 @@ whether a validity mask was ever attached to that cell.
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - For any non-`Series` feature, `invalid()` and `isnull()` produce identical results —
   the "non-finite" extension only applies to numeric `Series` data, since concepts like
   `NaN` and `Infinity` are specific to floating-point representation.
@@ -137,8 +138,8 @@ whether a validity mask was ever attached to that cell.
     <span class="label">Previous</span>
     <span class="title">interp</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

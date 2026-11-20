@@ -78,8 +78,8 @@ id                       | Series       | Series[float64]  | 3       | [1, 1, 3]
     <span class="label">Previous</span>
     <span class="title">empty</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

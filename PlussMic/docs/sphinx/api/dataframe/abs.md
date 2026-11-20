@@ -37,7 +37,7 @@ Example 1. Take the absolute value of a signed numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"delta", pluss::make_series({-5.0, 3.0, std::numeric_limits<double>::quiet_NaN(), -2.5})},
+    {"delta", Shelf(pluss::make_series({-5.0, 3.0, 0.0, -2.5}), pluss::make_series(std::vector<bool>{true, true, false, true}))},
     {"city",  pluss::make_note({"Accra", "Tema", "Kumasi", "Ho"})},
 });
 
@@ -51,7 +51,7 @@ std::cout << readings;
      | delta  city  
 --------------------
 0    | -5     Accra 
-1    | 3      Tema  
+1    |  3     Tema  
 2    | NULL   Kumasi
 3    | -2.5   Ho    
 --------------------

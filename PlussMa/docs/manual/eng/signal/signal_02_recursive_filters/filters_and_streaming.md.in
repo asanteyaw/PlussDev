@@ -4,7 +4,7 @@
 
 You want a filter whose output depends on its own past output: an exponential smoother, a low-pass or high-pass design, a resonator. Such a filter is described by two coefficient vectors, and it can run on a signal that arrives in blocks, because the filter hands back the few numbers it needs to carry on. This page covers `filter`, what its coefficients mean, and how to run a long signal block by block with a result identical to processing it whole.
 
-## The mental model
+## How it works
 
 A recursive filter computes each output from the current and past inputs and from past outputs:
 

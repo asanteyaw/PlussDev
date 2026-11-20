@@ -61,14 +61,14 @@ overlapping feature names.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Slate(pluss::make_series({2, 1, 4}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Shelf(pluss::make_series({2, 1, 4}))},
 });
 
 auto logistics = DataFrame({
-    {"warehouse",  Slate(pluss::make_note({"WH-Accra", "WH-Tema", "WH-Kumasi"}))},
-    {"ship_days",  Slate(pluss::make_series({2, 3, 5}))},
+    {"warehouse",  Shelf(pluss::make_note({"WH-Accra", "WH-Tema", "WH-Kumasi"}))},
+    {"ship_days",  Shelf(pluss::make_series({2, 3, 5}))},
 });
 
 auto out = orders.join(logistics);
@@ -101,14 +101,14 @@ Example 2. Feature name collisions get the suffix.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Slate(pluss::make_series({2, 1, 4}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Shelf(pluss::make_series({2, 1, 4}))},
 });
 
 auto region_lookup = DataFrame({
-    {"city",       Slate(pluss::make_note({"Accra Region", "Tema Region", "Kumasi Region"}))},
-    {"ship_days",  Slate(pluss::make_series({2, 3, 5}))},
+    {"city",       Shelf(pluss::make_note({"Accra Region", "Tema Region", "Kumasi Region"}))},
+    {"ship_days",  Shelf(pluss::make_series({2, 3, 5}))},
 });
 
 auto out = orders.join(region_lookup);  // collision_suffix defaults to "_right"
@@ -158,9 +158,9 @@ frame you are attaching.
   axis, which is often the right step to take *before* a positional `join()`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="isposinf.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">isposinf</span>
   </a>
   <a class="next-link" href="kindelize.html">
     <span class="label">Next</span>

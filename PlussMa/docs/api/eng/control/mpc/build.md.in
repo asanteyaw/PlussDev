@@ -1,6 +1,6 @@
-# `control::mpc::build`
+# `control::build`
 
-Compiles a reusable finite-horizon MPC plan.
+Compiles a model-predictive control problem into a reusable plan.
 
 ## Signature
 
@@ -14,65 +14,53 @@ control::mpc::Plan control::mpc::build(
 
 ## What It Does
 
-`build` performs work that does not depend on the current state or reference: prediction assembly, cost condensation, constraint assembly, and solver factorization. Reusing the result is the preferred receding-horizon path.
+Condenses the prediction of a discrete linear system over a horizon, together with the cost weights and the input and state bounds, into a quadratic program and prepares its solver. The result is a `Plan` that `solve` can run many times, once per sample, for different initial states and references.
 
 ## Parameters
 
 `system`
-: A discrete state-space model.
+: A discrete `StateSpace` (a positive sample time).
 
 `weights`
-: State, input, and optional terminal quadratic weights.
+: The `Weights` of the cost.
 
 `bounds`
-: Input and optional state bounds.
+: The `Bounds` on the input and, optionally, the state.
 
 `options`
-: Prediction horizon and QP settings.
+: `Options`: the horizon and the quadratic-programming settings.
 
 ## Returns
 
-A reusable `control::mpc::Plan` with condensed matrices and factorization.
+A `Plan`.
 
 ## Errors
 
-Throws for continuous models, non-positive horizons, invalid weights, inconsistent bounds, or QP preparation failures.
+A continuous system, weights of the wrong size, a state weight that is not positive semidefinite, an input weight that is not positive definite, bounds of the wrong width or with a lower bound above the upper one, and a non-positive horizon throw `pluss::Error`.
 
 ## Interpretation and Use
 
-Call `build` outside the real-time update loop. It validates the discrete model, expands horizon matrices, assembles constraints, and prepares the QP solver once. The resulting plan preserves dtype and platform from its inputs.
+Build once and solve every sample: the condensing happens in `build`, and a `Plan` is reused. The first example builds plans of two sizes and reads their dimensions, including a two-state plant; the second applies the same plan in a loop and the state climbs by the input bound (0.4) for two steps and then settles on the reference 1.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Build once and solve twice.
+The dimensions of plans for a one-state and a two-state plant.
 
-@@example Eng/api/control_mpc_plan.cpp@@
+@@example Eng/api/control_mpcbuild_shapes.cpp@@
 
 ### Example 2
 
-Compile non-default horizon and QP settings.
+One plan solved at every step of a loop.
 
-@@example Eng/api/control_mpc_options.cpp@@
+@@example Eng/api/control_mpcbuild_reuse.cpp@@
 
 ### Example 3
 
-See build-time rejection of continuous models and zero horizons.
+Every refused argument.
 
-@@example Eng/api/control_mpc_errors.cpp@@
+@@example Eng/api/control_mpcbuild_errors.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Plan.html">
-    <span class="label">Previous</span>
-    <span class="title">Plan</span>
-  </a>
-  <a class="next-link" href="solve.html">
-    <span class="label">Next</span>
-    <span class="title">solve</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

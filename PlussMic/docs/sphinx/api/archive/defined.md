@@ -61,8 +61,8 @@ std::cout << "defined: " << undef.defined() << "\n";
 
 try {
   undef.depth();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 25);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 25);
 }
 ```
 

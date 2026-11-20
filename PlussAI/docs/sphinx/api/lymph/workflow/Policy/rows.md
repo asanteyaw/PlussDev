@@ -82,15 +82,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"label", Slate(pluss::make_series({0.0, nan_val, 1.0, 1.0, nan_val, 0.0}, {6}, f64))},
-      {"income", Slate(pluss::make_series({1.0, 1.4, nan_val, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"label", Shelf(pluss::make_series({0.0, nan_val, 1.0, 1.0, nan_val, 0.0}, {6}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, 1.4, nan_val, 2.2, 3.8, 4.2}, {6}, f64))},
   });
 
   workflow::Policy policy{};
@@ -127,16 +127,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
-      {"status", Slate(pluss::make_series({0.0, 1.0, 0.0, 1.0}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
+      {"status", Shelf(pluss::make_series({0.0, 1.0, 0.0, 1.0}, {4}, f64))},
   });
 
   workflow::Policy policy{};
@@ -174,15 +174,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"income", Slate(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
-      {"balance", Slate(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
+      {"income", Shelf(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
+      {"balance", Shelf(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
   });
 
   workflow::Policy broad{};

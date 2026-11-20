@@ -1,0 +1,42 @@
+# `control::mpc::Plan` Introduction
+
+The condensed quadratic program of a model, weights, bounds and horizon, with its solver prepared. A `Plan` can be created only by `build` and is solved by `solve`. It is immutable, so one plan can serve every sample of a control loop.
+
+Reuse the plan: the second example solves one plan for four initial states and shows the bounded first move (0.4 for the far states, falling to 0.09 near the reference and turning negative once the state has overshot it). A plan gives exactly the controls of the one-shot `solve` (the third example).
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The accessors.
+
+@@example Eng/api/control_mpcplan_accessors.cpp@@
+
+### Example 2
+
+One plan for several initial states.
+
+@@example Eng/api/control_mpcplan_reuse.cpp@@
+
+### Example 3
+
+A plan against the one-shot solve.
+
+@@example Eng/api/control_mpcplan_oneshot.cpp@@
+
+### Example 4
+
+Every refused plan.
+
+@@example Eng/api/control_mpcplan_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="dtype.html">
+    <span class="label">Next</span>
+    <span class="title">dtype</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

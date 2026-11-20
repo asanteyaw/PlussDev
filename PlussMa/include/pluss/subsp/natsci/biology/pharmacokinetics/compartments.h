@@ -82,10 +82,10 @@ inline Series bateman(const Series &t, const dynamics::Coeff &dose, const dynami
   const Series a = ka.on(t), e = ke.on(t), d = dose.on(t);
   const Series diff = a.sub(e);
   const Series degenerate = diff.abs().lt(1e-9);
-  const Series safe = degenerate.where(diff.mul(0.0).add(1.0), diff);
+  const Series safe = pluss::series::where(degenerate, diff.mul(0.0).add(1.0), diff);
   const Series regular = d.mul(a).div(safe).mul(t.mul(e.neg()).exp().sub(t.mul(a.neg()).exp()));
   const Series limit = d.mul(a).mul(t).mul(t.mul(a.neg()).exp());
-  return degenerate.where(limit, regular);
+  return pluss::series::where(degenerate, limit, regular);
 }
 
 // Two-compartment (central 1, peripheral 2) disposition rates: macro-constants alpha > beta from

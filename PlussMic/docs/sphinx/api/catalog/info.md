@@ -16,8 +16,8 @@ void Catalog::info() const
 Renders the catalog's ASCII-table view to `std::cout`.
 
 ```{important} No separate metadata summary — identical to display()/show()/operator<<
-Despite the name suggesting a metadata-only summary (the way `Slate::info()` prints a
-name/kind/dtype/null-count block distinct from `Slate::to_string()`'s row rendering),
+Despite the name suggesting a metadata-only summary (the way `Shelf::info()` prints a
+name/kind/dtype/null-count block distinct from `Shelf::to_string()`'s row rendering),
 `Catalog::info()` renders **exactly** the same full row-and-column table as
 [`display()`](display.md), [`show()`](show.md), and `operator<<`. There is currently no
 lighter-weight metadata view for `Catalog` — if you only want counts, use
@@ -75,9 +75,9 @@ id                       | Series       | Series[float64]  | 3       | [1, 2, 3]
   you actually want instead of the full rendered table.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="head.html">
+  <a class="prev-link" href="identity.html">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">identity</span>
   </a>
   <a class="next-link" href="invalid.html">
     <span class="label">Next</span>

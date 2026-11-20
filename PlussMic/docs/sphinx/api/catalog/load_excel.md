@@ -83,15 +83,15 @@ without `libzip`.
 ```cpp
 try {
   auto ct = pluss::kindle::Catalog::load_excel("cities.xlsx");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-read_excel_raw_batch: Excel support not built (libzip not available)
+read_excel_raw_batch: failed to open workbook
 ```
 
 ## Notes
@@ -110,9 +110,9 @@ read_excel_raw_batch: Excel support not built (libzip not available)
   `libzip` requirement.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_labeled.html">
+  <a class="prev-link" href="load_csv.html">
     <span class="label">Previous</span>
-    <span class="title">load_labeled</span>
+    <span class="title">load_csv</span>
   </a>
   <a class="next-link" href="load_json.html">
     <span class="label">Next</span>

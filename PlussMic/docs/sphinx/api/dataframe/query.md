@@ -79,7 +79,7 @@ or any other runtime to use `query()`. The patterns documented above (numeric an
 comparisons, `and` / `or` combinators, quoted literals, and backtick-quoted feature
 names) are the supported core; if a more elaborate expression does not parse the way you
 expect, fall back to building the mask explicitly with [`filter()`](filter.md), which
-accepts any boolean `Slate` you can construct in ordinary C++.
+accepts any boolean `Shelf` you can construct in ordinary C++.
 
 ## Examples
 
@@ -165,8 +165,6 @@ s3   | Kumasi  middle  12     2.5
 -----------------------------------
 [3 cs x 4 feat]
 ```
-
-
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="put_.html">

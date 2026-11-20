@@ -1,6 +1,6 @@
 # `control::lqr`
 
-Synthesizes optimal feedback from a state-space model.
+Computes the optimal state-feedback gain of a state-space system.
 
 ## Signature
 
@@ -21,64 +21,59 @@ control::RiccatiResult control::lqr(
 
 ## What It Does
 
-`lqr` is the timebase-aware router: a continuous model delegates to `care`, while a discrete model delegates to `dare`. It avoids duplicating the model matrices at the call site.
+Chooses `care` for a continuous system and `dare` for a discrete one from the sample time of `system`, and returns the same `RiccatiResult`. It is the convenience entry point: pass the model and the two weights.
 
 ## Parameters
 
 `system`
-: A validated continuous or discrete `lti::StateSpace` model.
+: A `StateSpace`; continuous systems solve the continuous equation and discrete ones the discrete equation.
 
-`q`
-: State cost `Q`.
-
-`r`
-: Input cost `R`.
+`q`, `r`
+: The state and input weights.
 
 `cross`
-: Optional state-input cross cost `S`.
+: Optional cross-weight `N`.
 
 `options`
-: Numerical matrix-equation controls passed to the selected solver.
+: `MatrixEqOptions` of the underlying solver.
 
 ## Returns
 
-The same `control::RiccatiResult` as direct `care` or `dare`.
+A `RiccatiResult`.
 
 ## Errors
 
-Throws under the corresponding Riccati solver's shape, cost, or convergence failures.
+The errors of `care` and `dare`.
 
 ## Interpretation and Use
 
-Prefer `lqr` when the plant already exists as `StateSpace`: it reads the timebase and delegates to the correct Riccati kernel. This prevents an accidental continuous solve on discrete matrices. Use direct `care` or `dare` only when matrix-level control is intentional.
+The first two examples show that `lqr` gives exactly the `care` gain for a continuous system and the `dare` gain for a discrete one. The third checks optimality directly: from the initial state `(1, 0)` the integrated closed-loop cost is `1.7321`, equal to `x0' P x0`. Choose `Q` and `R` by what each state and each unit of effort should cost.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Synthesize and inspect a continuous state-space regulator.
+A continuous system against `care`.
 
-@@example Eng/api/control_optimal.cpp@@
+@@example Eng/api/control_lqr_continuous.cpp@@
 
 ### Example 2
 
-Route a discrete model and compare it with direct `dare`.
+A discrete system against `dare`.
 
-@@example Eng/api/control_optimal_modes.cpp@@
+@@example Eng/api/control_lqr_discrete.cpp@@
 
 ### Example 3
 
-Observe the cost validation inherited from the delegated solver.
+The simulated closed-loop cost against `x0' P x0`.
 
-@@example Eng/api/control_optimal_errors.cpp@@
+@@example Eng/api/control_lqr_cost.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dare.html">
-    <span class="label">Previous</span>
-    <span class="title">dare</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+@@example Eng/api/control_lqr_errors.cpp@@
+

@@ -55,12 +55,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+=============================
      | customer_id  min_spend
-------------------------------
-0    | 1            5
-1    | 2            2
-2    | 3            NULL
-------------------------------
+-----------------------------
+0    | 1            5        
+1    | 2            2        
+2    | 3            NULL     
+-----------------------------
 [3 cs x 2 feat]
 ```
 
@@ -77,7 +78,7 @@ auto pulled = nx.pull("customers")
         .min({{"spend", "min_spend"}, {"event_id", "min_event_id"}})
     .end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -96,7 +97,7 @@ auto pulled = nx.pull("customers")
     .take("customer_id")
     .agg("events").min(fields).end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

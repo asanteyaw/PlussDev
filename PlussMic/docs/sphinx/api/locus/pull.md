@@ -93,7 +93,12 @@ result only at `collect()`. Reuse one named builder when specifications are adde
 incrementally; construct separate builders when plans must remain independent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from.html"><span class="label">Previous</span><span class="title">from</span></a>
-  <a class="next-link" href="query.html"><span class="label">Next</span><span class="title">query</span></a>
+  <a class="prev-link" href="profile.html">
+    <span class="label">Previous</span>
+    <span class="title">profile</span>
+  </a>
+  <a class="next-link" href="query.html">
+    <span class="label">Next</span>
+    <span class="title">query</span>
+  </a>
 </div>
-

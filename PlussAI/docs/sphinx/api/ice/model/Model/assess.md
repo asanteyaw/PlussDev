@@ -149,7 +149,7 @@ int main() {
   namespace ice = pluss::ai::ice;
   namespace nn = pluss::nn;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   ice::Outline model(nn::Fusion(2, 1));
   const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
@@ -162,9 +162,9 @@ int main() {
   model.learn(x, y, options);
 
   const DataFrame df({
-      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
-      {"label", Slate(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
+      {"a", Shelf(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Shelf(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"label", Shelf(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
   });
   const auto report = model.assess(df, "label", ice::LossKind::MSE);
   std::cout << "metric_name = " << report.metric_name << " metric = " << report.metric << "\n";

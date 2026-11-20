@@ -4,7 +4,7 @@ A formula is the thing calculus acts on, and in most code a formula is trapped i
 
 Every program is complete and its output is the output of that program. Values are printed with `OutputEngine` and shown to the digits that are meaningful for the point being made.
 
-## The mental model
+## How it works
 
 The header is `<pluss/ma.h>`; the types are `pluss::math::Function` and, from Chapter 5, `pluss::operators::Operator`. The programs use the aliases `namespace math = pluss::math;` and `namespace operators = pluss::operators;`.
 

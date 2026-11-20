@@ -77,7 +77,7 @@ keys: [id, city]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 id                       | Series       | Series[float64]  | 3       | [1, 0, 3]                                        
-city                     | Note         | Note             | 3       | [Accra, Tema, NA]                                
+city                     | Note         | Note             | 3       | [Accra, Tema, NULL]                              
 ========================================================================================================================
 ```
 
@@ -105,13 +105,14 @@ keys: [id, city]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[float64]  | 3       | [1, NA, 3]                                       
+id                       | Series       | Series[float64]  | 3       | [1, NULL, 3]                                     
 city                     | Note         | Note             | 3       | [Accra, Tema, MISSING]                           
 ========================================================================================================================
 ```
 
 ## Notes
 
+- `fillnull` fills missing cells only; a `NaN` or an infinity is a value and is left as it is. Use [`fillnan`](fillnan.md), [`fillinf`](fillinf.md) / [`fillposinf`](fillposinf.md) / [`fillneginf`](fillneginf.md) or [`fillinvalid`](fillinvalid.md) for those, and chain them to give each kind its own value. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Kind-selective and silent about it — see the important callout above. This is the
   single most important thing to know about this method before relying on it.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
@@ -129,12 +130,12 @@ city                     | Note         | Note             | 3       | [Accra, T
   kind-selective skip semantics.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ffill.html">
+  <a class="prev-link" href="fillneginf.html">
     <span class="label">Previous</span>
-    <span class="title">ffill</span>
+    <span class="title">fillneginf</span>
   </a>
-  <a class="next-link" href="filter.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">filter</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

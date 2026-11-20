@@ -1,56 +1,55 @@
 # `signal::Band`
 
+Which part of the spectrum a designed filter passes.
+
 ## Signature
 
 ```cpp
-signal::Band signal::Band::Low;
-signal::Band signal::Band::High;
-signal::Band signal::Band::Pass;
-signal::Band signal::Band::Stop;
+enum class signal::Band { Low, High, Pass, Stop };
 ```
 
 ## What It Does
 
-Selects the frequency transformation applied to an analog low-pass prototype before optional digital conversion.
+The prototypes `butter`, `cheby1` and `cheby2` are low-pass filters. `Band` selects the transformation applied to the prototype: `Low` keeps it, `High` mirrors it to pass the highs, `Pass` keeps a band between two cutoffs and `Stop` removes one. The transformations that need two edges double the order.
 
-## Fields
+## Values
 
-| Value | Cutoff form | Meaning |
-|---|---|---|
-| `Low` | scalar | Retains frequencies below the edge. |
-| `High` | scalar | Retains frequencies above the edge. |
-| `Pass` | ordered pair | Retains frequencies between lower and upper edges. |
-| `Stop` | ordered pair | Rejects frequencies between lower and upper edges. |
-
-## Returns
-
-Stored in `IirOptions::band` and interpreted by `butter`, `cheby1`, and `cheby2`.
+| Value | Passes | Cutoff argument | Poles of an order-`n` design |
+|---|---|---|---|
+| `Low` | Below the cutoff. | One scalar. | `n` |
+| `High` | Above the cutoff. | One scalar. | `n` |
+| `Pass` | Between two cutoffs. | An increasing pair. | `2n` |
+| `Stop` | Outside two cutoffs. | An increasing pair. | `2n` |
 
 ## Errors
 
-Scalar and pair overloads enforce the corresponding band kinds; mismatches are rejected.
+A scalar cutoff with `Pass` or `Stop`, a pair with `Low` or `High`, and a pair with an edge at or above the Nyquist frequency throw `pluss::Error`.
+
+## Interpretation and Use
+
+Pick the band by what must survive: a low-pass removes noise above a frequency, a high-pass removes drift below one, a band-pass isolates a signal and a band-stop removes an interferer such as mains hum. The examples show the gain at the band edges and in the rejected region for each.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare the three prototype families and inspect a second-order-section conversion.
+Low-pass and high-pass at the same cutoff: opposite behaviour, the same gain at the edge.
 
-@@example Eng/api/signal_design.cpp@@
+@@example Eng/api/signal_band_kinds.cpp@@
 
 ### Example 2
 
-Exercise band transformations and analog-versus-digital interpretation.
+Band-pass and band-stop between 100 and 200 Hz: complementary gains and doubled order.
 
-@@example Eng/api/signal_design_bands.cpp@@
+@@example Eng/api/signal_band_pass_stop.cpp@@
 
 ### Example 3
 
-Observe validation of cutoffs, ripple, and band/cutoff shape.
+Every mismatch between a band and its cutoff.
 
-@@example Eng/api/signal_design_errors.cpp@@
+@@example Eng/api/signal_band_errors.cpp@@
 
 ## See Also
 

@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-const std::optional<pluss::table::Slate>& Stream::label() const
+const std::optional<pluss::table::Shelf>& Stream::label() const
 ```
 
 ## What It Does
 
-Returns the stream's row-label axis as a raw `std::optional<pluss::table::Slate>` — engaged
+Returns the stream's row-label axis as a raw `std::optional<pluss::table::Shelf>` — engaged
 when a label has been set (via a constructor's `cases` argument,
 [`with_label()`](with_label.md)/[`with_label_()`](with_label_.md), or
 [`lbl().set()`](lbl.md)), and `std::nullopt` otherwise. It is the plain getter counterpart
@@ -27,8 +27,8 @@ synthesis only happens on [`lbl().values()`](lbl.md)'s richer surface, not this 
 
 ## Returns
 
-`const std::optional<pluss::table::Slate>&`
-    The label `Slate` if one is set; `std::nullopt` otherwise. Returned by reference — no
+`const std::optional<pluss::table::Shelf>&`
+    The label `Shelf` if one is set; `std::nullopt` otherwise. Returned by reference — no
     copy is made.
 
 ## Examples
@@ -50,7 +50,7 @@ std::cout << stream.label().has_value();
 Example 2. A label set via the constructor's `cases` argument is returned as-is.
 
 ```cpp
-auto cases = pluss::table::Slate(pluss::make_note({"a", "b", "c"}));
+auto cases = pluss::table::Shelf(pluss::make_note({"a", "b", "c"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}), std::nullopt, cases);
 
 std::cout << stream.label().value();
@@ -88,8 +88,8 @@ no label set
 
 - Returns the raw optional by `const&` — no default-value synthesis, unlike
   [`lbl().values()`](lbl.md).
-- The returned `Slate` is whatever kind was originally supplied as `cases` — commonly
-  `Note` for string labels, but any `Slate` payload kind is accepted.
+- The returned `Shelf` is whatever kind was originally supplied as `cases` — commonly
+  `Note` for string labels, but any `Shelf` payload kind is accepted.
 
 ## See Also
 

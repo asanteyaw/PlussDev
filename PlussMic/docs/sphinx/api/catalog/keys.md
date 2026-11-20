@@ -142,7 +142,7 @@ keys: [city, score]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-score                    | Series       | Series[float64]  | 3       | [1, NA, 3]                                       
+score                    | Series       | Series[float64]  | 3       | [1, NULL, 3]                                     
 ========================================================================================================================
 ```
 
@@ -157,14 +157,14 @@ auto ct = pluss::kindle::Catalog({
 });
 try {
   auto bad = ct.keys("nope");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << "single: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 try {
   auto bad = ct.keys({"nope"});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << "multi: " << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -203,8 +203,8 @@ multi: Catalog::keys: unknown key 'nope'
     <span class="label">Previous</span>
     <span class="title">keyaxis</span>
   </a>
-  <a class="next-link" href="kindelize.html">
+  <a class="next-link" href="keywords.html">
     <span class="label">Next</span>
-    <span class="title">kindelize</span>
+    <span class="title">keywords</span>
   </a>
 </div>

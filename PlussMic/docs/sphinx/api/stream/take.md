@@ -64,22 +64,22 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 try {
   std::vector<std::int64_t> bad{5};
   auto out = stream.take(bad);
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 24);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 24);
 }
 ```
 
 ### Output
 
 ```text
-Slate: index out of bou
+Shelf: index out of boun
 ```
 
 ## Notes
 
 - Order and repetition are both meaningful — the result has exactly `indices.size()` rows,
   in the order given, with duplicates preserved.
-- An out-of-range index throws `"Slate: index out of bounds"` — unlike
+- An out-of-range index throws `"Shelf: index out of bounds"` — unlike
   [`head()`](head.md)/[`tail()`](tail.md)/[`slice()`](slice.md), which clamp instead.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.
@@ -96,8 +96,8 @@ Slate: index out of bou
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
-  <a class="next-link" href="to_json.html">
+  <a class="next-link" href="tl.html">
     <span class="label">Next</span>
-    <span class="title">to_json</span>
+    <span class="title">tl</span>
   </a>
 </div>

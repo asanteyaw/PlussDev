@@ -61,12 +61,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
-     | customer_id  event_count  total_spend  mean_spend
-----------------------------------------------------------
-0    | 1            2            15           7.5
+=========================================================
+     | customer_id  event_count  total_spend  mean_spend 
+---------------------------------------------------------
+0    | 1            2            15           7.5        
 1    | 2            3            14           4.666666667
-2    | 3            0            NULL         NULL
-----------------------------------------------------------
+2    | 3            0            NULL         NULL       
+---------------------------------------------------------
 [3 cs x 4 feat]
 ```
 
@@ -80,7 +81,7 @@ auto pulled = nx.pull("customers")
     .agg("events").sum("spend", "total_spend").end()
     .take("region_id")
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -94,8 +95,8 @@ Example 3. An empty table name throws immediately.
 ```cpp
 try {
   auto bad = nx.pull("customers").agg("");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

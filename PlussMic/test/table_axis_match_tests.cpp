@@ -17,7 +17,7 @@ using pluss::table::Axis;
 using pluss::table::FrameMatchOptions;
 using pluss::table::FrameMatchRule;
 using pluss::table::RepeatedCaseRule;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using pluss::table::Atlas;
 using pluss::scribble::Registry;
 using pluss::scribble::Axel;
@@ -53,24 +53,24 @@ void expect_throw(Fn&& fn, std::string_view message) {
 }
 
 DataFrame make_frame(
-    std::initializer_list<std::pair<std::string, Slate>> features,
+    std::initializer_list<std::pair<std::string, Shelf>> features,
     std::initializer_list<std::string_view> cases) {
   return DataFrame(
       features,
-      Slate(pluss::make_note(cases)));
+      Shelf(pluss::make_note(cases)));
 }
 
 void test_union_matching_for_frame_math() {
   const auto left = make_frame(
       {
-          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
-          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"z", Shelf(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -107,14 +107,14 @@ void test_union_matching_for_frame_math() {
 void test_explicit_common_matching() {
   const auto left = make_frame(
       {
-          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
-          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"z", Shelf(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -138,10 +138,10 @@ void test_explicit_common_matching() {
 
 void test_repeated_caselbl_pair_in_order() {
   const auto left = make_frame(
-      {{"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
+      {{"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
       {"A", "A"});
   const auto right = make_frame(
-      {{"x", Slate(pluss::make_series(std::vector<double>{10.0}))}},
+      {{"x", Shelf(pluss::make_series(std::vector<double>{10.0}))}},
       {"A"});
 
   expect_throw(
@@ -164,11 +164,11 @@ void test_repeated_caselbl_pair_in_order() {
 
 void test_matching_rejects_incompatible_case_types() {
   const auto text_cases = make_frame(
-      {{"x", Slate(pluss::make_series(std::vector<double>{1.0}))}},
+      {{"x", Shelf(pluss::make_series(std::vector<double>{1.0}))}},
       {"A"});
   const auto numeric_cases = DataFrame(
-      {{"x", Slate(pluss::make_series(std::vector<double>{2.0}))}},
-      Slate(pluss::make_series(std::vector<std::int64_t>{0})));
+      {{"x", Shelf(pluss::make_series(std::vector<double>{2.0}))}},
+      Shelf(pluss::make_series(std::vector<std::int64_t>{0})));
 
   expect_throw(
       [&]() { (void)text_cases.match(numeric_cases); },
@@ -177,10 +177,10 @@ void test_matching_rejects_incompatible_case_types() {
 
 void test_case_aware_horizontal_composition() {
   const auto left = make_frame(
-      {{"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
+      {{"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
       {"A", "C"});
   const auto right = make_frame(
-      {{"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))}},
+      {{"y", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))}},
       {"B", "A"});
 
   const auto combined = left.combine(right);
@@ -199,7 +199,7 @@ void test_case_aware_horizontal_composition() {
 
   const auto updated = left.update(
       make_frame(
-          {{"x", Slate(pluss::make_series(std::vector<double>{9.0}))}},
+          {{"x", Shelf(pluss::make_series(std::vector<double>{9.0}))}},
           {"A"}));
   expect(updated.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
@@ -212,14 +212,14 @@ void test_case_aware_horizontal_composition() {
 void test_vertical_case_extension() {
   const auto left = make_frame(
       {
-          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+          {"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{3.0, 4.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Slate(pluss::make_series(std::vector<double>{5.0, 6.0}))},
-          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Shelf(pluss::make_series(std::vector<double>{5.0, 6.0}))},
+          {"z", Shelf(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -252,15 +252,15 @@ void test_vertical_case_extension() {
 
 DataFrame make_unify_left() {
   return DataFrame({
-      {"id", Slate(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
-      {"left_value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+      {"id", Shelf(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
+      {"left_value", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))},
   });
 }
 
 DataFrame make_unify_right() {
   return DataFrame({
-      {"id", Slate(pluss::make_series(std::vector<std::int64_t>{2, 3}))},
-      {"right_value", Slate(pluss::make_series(std::vector<double>{200.0, 300.0}))},
+      {"id", Shelf(pluss::make_series(std::vector<std::int64_t>{2, 3}))},
+      {"right_value", Shelf(pluss::make_series(std::vector<double>{200.0, 300.0}))},
   });
 }
 
@@ -309,10 +309,10 @@ void test_unify_modes() {
 
 void test_vectorized_group_reductions() {
   const auto frame = DataFrame({
-      {"group", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-      {"value", Slate(pluss::make_series(
+      {"group", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+      {"value", Shelf(pluss::make_series(
           std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
-      {"label", Slate(pluss::make_note({"x", "y", "z", "z", "w"}))},
+      {"label", Shelf(pluss::make_note({"x", "y", "z", "z", "w"}))},
   });
   const std::vector<DataFrame::GroupSpec> specs{
       {"n", "", DataFrame::GroupOp::Count},
@@ -371,9 +371,9 @@ void test_vectorized_group_reductions() {
          "group variance should use sample degrees of freedom");
 
   const auto pivot_frame = DataFrame({
-      {"case", Slate(pluss::make_note({"r1", "r1", "r2", "r2"}))},
-      {"feature", Slate(pluss::make_note({"c1", "c1", "c1", "c1"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 5.0, 2.0, 8.0}))},
+      {"case", Shelf(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Shelf(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 5.0, 2.0, 8.0}))},
   });
   const auto pivoted = pivot_frame.pivot_table(
       "case", "feature", "value", DataFrame::GroupOp::Median, true, false);
@@ -382,9 +382,9 @@ void test_vectorized_group_reductions() {
          "pivot_table median should aggregate duplicate cells");
 
   const auto sparse_counts = DataFrame({
-      {"case", Slate(pluss::make_note({"r1", "r2"}))},
-      {"feature", Slate(pluss::make_note({"c1", "c2"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+      {"case", Shelf(pluss::make_note({"r1", "r2"}))},
+      {"feature", Shelf(pluss::make_note({"c1", "c2"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))},
   }).pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, true, false);
   expect(pluss::table::detail::validity_mask(sparse_counts.features("c1"))->host<bool>() ==
              std::vector<bool>({true, false}),
@@ -393,13 +393,13 @@ void test_vectorized_group_reductions() {
              std::vector<bool>({false, true}),
          "pivot_table count should preserve sparsity per pivoted feature");
 
-  const auto feature_keys = Slate(
+  const auto feature_keys = Shelf(
       pluss::make_note(std::vector<std::string>{"NULL", "unused"}),
       pluss::make_series(std::vector<bool>{true, false}));
   const auto collision_frame = DataFrame({
-      {"case", Slate(pluss::make_note({"r1", "r2"}))},
+      {"case", Shelf(pluss::make_note({"r1", "r2"}))},
       {"feature", feature_keys},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
   });
   const auto collision_pivot =
       collision_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, false, false);
@@ -430,9 +430,9 @@ void test_vectorized_group_reductions() {
          "pivot_table(var) should support sample variance per cell");
 
   const auto mode_frame = DataFrame({
-      {"case", Slate(pluss::make_note({"r1", "r1", "r2", "r2"}))},
-      {"feature", Slate(pluss::make_note({"c1", "c1", "c1", "c1"}))},
-      {"value", Slate(pluss::make_note({"x", "x", "z", "z"}))},
+      {"case", Shelf(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Shelf(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Shelf(pluss::make_note({"x", "x", "z", "z"}))},
   });
   const auto pivot_mode =
       mode_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Mode, true, false);
@@ -446,11 +446,11 @@ void test_vectorized_group_reductions() {
   multi_options.values = {"units", "revenue"};
   multi_options.aggfuncs = {DataFrame::GroupOp::Sum};
   auto sales = DataFrame({
-      {"city", Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-      {"quarter", Slate(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
-      {"product", Slate(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
-      {"units", Slate(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 1.0, 5.0}))},
-      {"revenue", Slate(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
+      {"city", Shelf(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+      {"quarter", Shelf(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+      {"product", Shelf(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+      {"units", Shelf(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 1.0, 5.0}))},
+      {"revenue", Shelf(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
   });
   const auto multi_pivot = sales.pivot_table(multi_options);
   expect(multi_pivot.labels().names() == std::vector<std::string>({"city", "quarter"}),
@@ -476,7 +476,7 @@ void test_vectorized_group_reductions() {
                  std::vector<bool>({true, true, true, false}),
          "pivot_table(options) should populate the requested value-column aggregates per pivoted column");
 
-  multi_options.fill_value = pluss::table::SlateValue::HostAny::floating(0.0);
+  multi_options.fill_value = pluss::table::ShelfValue::HostAny::floating(0.0);
   multi_options.margins = true;
   const auto pivot_with_totals = sales.pivot_table(multi_options);
   expect(pivot_with_totals.get("units_sum :: All").has_value() &&
@@ -495,9 +495,9 @@ void test_vectorized_group_reductions() {
 
 void test_group_phase5_contracts() {
   const auto frame = DataFrame({
-      {"group", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
-      {"label", Slate(pluss::make_note({"x", "y", "z", "z", "w"}))},
+      {"group", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
+      {"label", Shelf(pluss::make_note({"x", "y", "z", "z", "w"}))},
   });
 
   const auto counted = frame.group().by({"group"}).count();
@@ -571,13 +571,13 @@ void test_group_phase5_contracts() {
 }
 
 void test_group_transform_and_filter() {
-  const auto groups = Slate(
+  const auto groups = Shelf(
       pluss::make_note({"A", "A", "B", "drop", "B"}),
       pluss::make_series(std::vector<bool>{true, true, true, false, true}));
   const auto frame = DataFrame({
       {"group", groups},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 9.0, 6.0}))},
-      {"label", Slate(pluss::make_note({"x", "y", "z", "skip", "w"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 9.0, 6.0}))},
+      {"label", Shelf(pluss::make_note({"x", "y", "z", "skip", "w"}))},
   });
 
   const auto value_mean = frame.features("value")
@@ -586,10 +586,10 @@ void test_group_transform_and_filter() {
                               .transform(pluss::table::GroupOp::Mean);
   expect(value_mean.as_series().host<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}),
-         "SlateGrouped::transform should broadcast grouped reductions back to row space");
+         "ShelfGrouped::transform should broadcast grouped reductions back to row space");
   expect(pluss::table::detail::validity_mask(value_mean)->host<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
-         "SlateGrouped::transform should null out rows excluded by dropnull keys");
+         "ShelfGrouped::transform should null out rows excluded by dropnull keys");
 
   const auto multi_value =
       frame.features("value")
@@ -601,15 +601,15 @@ void test_group_transform_and_filter() {
           });
   expect(multi_value.ncases() == frame.ncases() &&
              multi_value.features() == std::vector<std::string>({"value_mean", "value_count"}),
-         "SlateGrouped::transform(specs) should return broadcasted output features only");
+         "ShelfGrouped::transform(specs) should return broadcasted output features only");
   expect(multi_value.features("value_mean").as_series().host<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
              multi_value.features("value_count").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 2, 2, 2, 2}),
-         "SlateGrouped::transform(specs) should broadcast multiple grouped reductions");
+         "ShelfGrouped::transform(specs) should broadcast multiple grouped reductions");
   expect(pluss::table::detail::validity_mask(multi_value.features("value_count"))->host<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
-         "SlateGrouped::transform(specs) should preserve dropped-key nulls");
+         "ShelfGrouped::transform(specs) should preserve dropped-key nulls");
 
   const auto transformed = frame.group({.dropnull = true}).by({"group"}).transform({
       {"value_mean", "value", DataFrame::GroupOp::Mean},
@@ -643,18 +643,18 @@ void test_group_transform_and_filter() {
 }
 
 void test_group_yield_and_ndistinct() {
-  const auto groups = Slate(
+  const auto groups = Shelf(
       pluss::make_note({"B", "A", "B", "A", "skip", "B"}),
       pluss::make_series(std::vector<bool>{true, true, true, true, false, true}));
   const auto frame = DataFrame(
       {
           {"group", groups},
-          {"month_code", Slate(
+          {"month_code", Shelf(
                              pluss::make_series(std::vector<double>{2.0, 1.0, 2.0, 3.0, 9.0, 0.0}),
                              pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
-          {"amount", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0, 50.0, 60.0}))},
+          {"amount", Shelf(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0, 50.0, 60.0}))},
       },
-      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4", "r5"})));
+      Shelf(pluss::make_note({"r0", "r1", "r2", "r3", "r4", "r5"})));
 
   const auto yielded = frame.group({.dropnull = true, .sort = true}).by({"group"}).yield();
   expect(yielded.ncases() == 5,
@@ -677,9 +677,9 @@ void test_group_yield_and_ndistinct() {
          "grouped ndistinct should count unique non-null values per group");
 
   const auto indexed = DataFrame({
-      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
-      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"region", Shelf(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Shelf(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
+      {"sales", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
   }).labels().set(
       DataFrame::SetLabelOptions{
           .features = {"region", "account"},
@@ -697,12 +697,12 @@ void test_group_yield_and_ndistinct() {
 void test_contingency_and_split() {
   const auto cont_frame = DataFrame(
       {
-          {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
-          {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-          {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
-          {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+          {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "B"}))},
+          {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+          {"weekend", Shelf(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+          {"amount", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
       },
-      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+      Shelf(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
   const auto counts_ct = cont_frame.contingency("city", "channel");
   expect(counts_ct.ndim() == 2,
@@ -808,12 +808,12 @@ void test_contingency_and_split() {
 
   const auto split_frame = DataFrame(
       {
-          {"city", Slate(pluss::make_note({"A", "A", "B", "B", "C"}))},
-          {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
-          {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
-          {"score", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}))},
+          {"city", Shelf(pluss::make_note({"A", "A", "B", "B", "C"}))},
+          {"channel", Shelf(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
+          {"amount", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+          {"score", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}))},
       },
-      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+      Shelf(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
   const auto ordered_case = split_frame.split(0.4);
   expect(ordered_case.first.ncases() == 3 && ordered_case.second.ncases() == 2,
@@ -844,25 +844,32 @@ void test_contingency_and_split() {
              std::vector<std::string_view>({"r0", "r1", "r2", "r3", "r4"}),
          "randomized row split should partition the original rows without loss");
 
+  // NaN is a value ("not a number"), NULL is a missing cell: they must print differently.
   const auto nan_render = DataFrame({
-      {"value", Slate(pluss::make_series(std::vector<double>{
+      {"value", Shelf(pluss::make_series(std::vector<double>{
           1.0,
           std::numeric_limits<double>::quiet_NaN(),
+          std::numeric_limits<double>::infinity(),
+          -std::numeric_limits<double>::infinity(),
       }))},
   }).to_string();
-  expect(nan_render.find("nan") == std::string::npos &&
-             nan_render.find("NaN") == std::string::npos,
-         "display rendering should not print literal nan for floating values");
-  expect(nan_render.find("NULL") != std::string::npos,
-         "display rendering should present floating NaN values as NULL");
+  expect(nan_render.find("NaN") != std::string::npos, "display rendering should print floating NaN as NaN");
+  expect(nan_render.find("inf") != std::string::npos && nan_render.find("-inf") != std::string::npos,
+         "display rendering should print infinities as inf / -inf");
+  expect(nan_render.find("NULL") == std::string::npos, "display rendering must not show NaN or inf as NULL");
+  const auto null_render = DataFrame({
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}),
+                      pluss::make_series(std::vector<bool>{true, false}).to(pluss::codem::ScalarType::Bool))},
+  }).to_string();
+  expect(null_render.find("NULL") != std::string::npos, "display rendering should show a masked cell as NULL");
 }
 
 void test_temporal_subtraction_and_sort_builder() {
-  const auto left = Slate(pluss::make_timeline({
+  const auto left = Shelf(pluss::make_timeline({
       "2024-01-03T00:00:00Z",
       "2024-01-05T00:00:00Z",
   }));
-  const auto right = Slate(pluss::make_timeline({
+  const auto right = Shelf(pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
   }));
@@ -873,7 +880,7 @@ void test_temporal_subtraction_and_sort_builder() {
              right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().host<std::int64_t>(),
          "Timeline - Timeline should preserve subtraction direction while matching tl().span(..., Nanos)");
 
-  const auto idx = Slate(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
+  const auto idx = Shelf(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
   expect((left - idx).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
          "Timeline subtraction should produce nanosecond deltas for indexed axes");
@@ -881,18 +888,18 @@ void test_temporal_subtraction_and_sort_builder() {
              idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().host<std::int64_t>(),
          "indexed Timeline subtraction should match tl().span(..., Nanos) with direction preserved");
 
-  const auto values = Slate(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
-  const Slate sorted_slate = values.sort();
-  expect(sorted_slate.as_series().host<double>() == std::vector<double>({1.0, 2.0, 3.0}),
-         "Slate::sort() should remain usable through implicit conversion");
+  const auto values = Shelf(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
+  const Shelf sorted_shelf = values.sort();
+  expect(sorted_shelf.as_series().host<double>() == std::vector<double>({1.0, 2.0, 3.0}),
+         "Shelf::sort() should remain usable through implicit conversion");
 
   const auto frame = DataFrame(
       {
-          {"a", Slate(pluss::make_series(std::vector<std::int64_t>{2, 1, 2, 1}))},
-          {"b", Slate(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 1}))},
-          {"v", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+          {"a", Shelf(pluss::make_series(std::vector<std::int64_t>{2, 1, 2, 1}))},
+          {"b", Shelf(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 1}))},
+          {"v", Shelf(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
       },
-      Slate(pluss::make_note({"r2", "r1", "r3", "r0"})));
+      Shelf(pluss::make_note({"r2", "r1", "r3", "r0"})));
 
   const auto by = frame.sort().by({"a", "b"}).yield();
   expect(by.features("v").as_series().host<double>() ==
@@ -920,11 +927,11 @@ void test_temporal_subtraction_and_sort_builder() {
 
   const auto grouped = DataFrame(
       {
-          {"g", Slate(pluss::make_note({"B", "A", "B", "A", "C"}))},
-          {"score", Slate(pluss::make_series(std::vector<std::int64_t>{3, 1, 2, 4, 0}))},
-          {"v2", Slate(pluss::make_series(std::vector<std::int64_t>{30, 10, 20, 40, 0}))},
+          {"g", Shelf(pluss::make_note({"B", "A", "B", "A", "C"}))},
+          {"score", Shelf(pluss::make_series(std::vector<std::int64_t>{3, 1, 2, 4, 0}))},
+          {"v2", Shelf(pluss::make_series(std::vector<std::int64_t>{30, 10, 20, 40, 0}))},
       },
-      Slate(pluss::make_note({"b0", "a0", "b1", "a1", "c0"})));
+      Shelf(pluss::make_note({"b0", "a0", "b1", "a1", "c0"})));
   const auto within = grouped.sort().within("g").by("score").desc().yield();
   expect(within.features("g").as_note().vector() ==
              std::vector<std::string_view>({"B", "B", "A", "A", "C"}),
@@ -941,9 +948,9 @@ void test_temporal_subtraction_and_sort_builder() {
 void test_bundelize_and_tabelize_interop() {
   const auto orders = make_frame(
       {
-          {"id", Slate(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
-          {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-          {"sales", Slate(pluss::make_series(std::vector<double>{100.0, 150.0, 90.0}))},
+          {"id", Shelf(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
+          {"city", Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+          {"sales", Shelf(pluss::make_series(std::vector<double>{100.0, 150.0, 90.0}))},
       },
       {"o1", "o2", "o3"});
 
@@ -981,14 +988,14 @@ void test_group_phase7_hardening() {
   const auto value_validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false, true});
   const auto frame = DataFrame({
-      {"k1", Slate(
+      {"k1", Shelf(
                  pluss::make_note({"b", "a", "b", "drop", "a", "b"}),
                  key_validity)},
-      {"k2", Slate(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 9, 1, 2}))},
-      {"value", Slate(
+      {"k2", Shelf(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 9, 1, 2}))},
+      {"value", Shelf(
                     pluss::make_series(std::vector<double>{5.0, 1.0, 3.0, 7.0, 9.0, 11.0}),
                     value_validity)},
-      {"label", Slate(pluss::make_note({"u", "v", "u", "w", "x", "u"}))},
+      {"label", Shelf(pluss::make_note({"u", "v", "u", "w", "x", "u"}))},
   });
 
   const auto first_seen = frame.group({.dropnull = true, .sort = false}).by({"k1", "k2"});
@@ -1023,10 +1030,10 @@ void test_group_phase7_hardening() {
          "reusing the same grouped handle for count then filter should retain cached grouping semantics");
 
   const auto all_null = DataFrame({
-      {"group", Slate(
+      {"group", Shelf(
                     pluss::make_note({"A", "B", "C"}),
                     pluss::make_series(std::vector<bool>{false, false, false}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
   }).group({.dropnull = true}).by({"group"});
   const auto empty = all_null.agg({
       {"n", "", DataFrame::GroupOp::Count},
@@ -1043,7 +1050,7 @@ void test_group_phase7_hardening() {
              pluss::table::detail::validity_mask(empty_tx.features("total"))->host<bool>() ==
                  std::vector<bool>({false, false, false}),
          "all-null keys should broadcast all-invalid grouped transform results");
-  const auto none = all_null.filter(Slate(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
+  const auto none = all_null.filter(Shelf(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
   expect(none.ncases() == 0,
          "all-null keys should allow a zero-length keep mask and return no rows");
 
@@ -1056,8 +1063,8 @@ void test_group_phase7_hardening() {
     values.push_back(static_cast<double>(i));
   }
   const auto high_cardinality = DataFrame({
-      {"group", Slate(pluss::make_note(ids))},
-      {"value", Slate(pluss::make_series(values))},
+      {"group", Shelf(pluss::make_note(ids))},
+      {"value", Shelf(pluss::make_series(values))},
   }).group({.dropnull = true, .sort = false}).by({"group"}).count();
   expect(high_cardinality.ncases() == 128 &&
              high_cardinality.features("value_count").as_series().host<std::int64_t>()[127] == 1,
@@ -1067,11 +1074,11 @@ void test_group_phase7_hardening() {
 void test_lengthen_reshape() {
   const auto frame = DataFrame(
       {
-          {"id", Slate(pluss::make_note({"r1", "r2"}))},
-          {"a", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"b", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+          {"id", Shelf(pluss::make_note({"r1", "r2"}))},
+          {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"b", Shelf(pluss::make_series(std::vector<double>{3.0, 4.0}))},
       },
-      Slate(pluss::make_note({"C1", "C2"})));
+      Shelf(pluss::make_note({"C1", "C2"})));
 
   const auto long_form = frame.lengthen({"id"}, {"a", "b"});
   expect(long_form.features() ==
@@ -1103,11 +1110,11 @@ void test_lengthen_reshape() {
 
 void test_hierarchical_case_axis_engine() {
   const auto frame = DataFrame({
-      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{102, 101, 201, 202}))},
-      {"quarter", Slate(pluss::make_note({"Q2", "Q1", "Q1", "Q2"}))},
-      {"sales", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
-      {"cost", Slate(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
+      {"region", Shelf(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Shelf(pluss::make_series(std::vector<std::int64_t>{102, 101, 201, 202}))},
+      {"quarter", Shelf(pluss::make_note({"Q2", "Q1", "Q1", "Q2"}))},
+      {"sales", Shelf(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+      {"cost", Shelf(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
   });
 
   const auto indexed = frame.labels().set(
@@ -1191,15 +1198,15 @@ void test_hierarchical_case_axis_engine() {
          "label().reset should materialize case labels as ordinary features and clear hierarchy");
 
   const auto collision_left = DataFrame({
-      {"region", Slate(pluss::make_note({"A"}))},
-      {"account", Slate(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{10.0}))},
+      {"region", Shelf(pluss::make_note({"A"}))},
+      {"account", Shelf(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{10.0}))},
   }).labels().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision_right = DataFrame({
-      {"region", Slate(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
-      {"account", Slate(pluss::make_note({"C"}))},
-      {"value", Slate(pluss::make_series(std::vector<double>{1.0}))},
+      {"region", Shelf(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
+      {"account", Shelf(pluss::make_note({"C"}))},
+      {"value", Shelf(pluss::make_series(std::vector<double>{1.0}))},
   }).labels().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision = collision_left.add(
@@ -1213,10 +1220,10 @@ void test_hierarchical_case_axis_engine() {
 
 void test_stack_unstack_hierarchical_cases() {
   const auto frame = DataFrame({
-      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
-      {"quarter", Slate(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
-      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"region", Shelf(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Shelf(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Shelf(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
   }).labels().set({"region", "account", "quarter"}, true);
 
   const auto wide = frame.unstack("quarter");
@@ -1237,9 +1244,9 @@ void test_stack_unstack_hierarchical_cases() {
          "stack should move features into the case hierarchy and keep typed values");
 
   const auto duplicate = DataFrame({
-      {"region", Slate(pluss::make_note({"West", "West"}))},
-      {"quarter", Slate(pluss::make_note({"Q1", "Q1"}))},
-      {"sales", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"region", Shelf(pluss::make_note({"West", "West"}))},
+      {"quarter", Shelf(pluss::make_note({"Q1", "Q1"}))},
+      {"sales", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
   }).labels().set({"region", "quarter"}, true);
   expect_throw([&]() { (void)duplicate.unstack("quarter"); },
                "unstack should reject duplicate output cells");
@@ -1247,11 +1254,11 @@ void test_stack_unstack_hierarchical_cases() {
 
 void test_transform_axis_surface() {
   const auto frame = DataFrame({
-      {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-      {"y", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+      {"x", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"y", Shelf(pluss::make_series(std::vector<double>{3.0, 4.0}))},
   });
   const auto by_feature = frame.transform(
-      [](const Slate& value) {
+      [](const Shelf& value) {
         return value + 10.0;
       },
       pluss::table::Axis::Feature);
@@ -1259,47 +1266,47 @@ void test_transform_axis_surface() {
              std::vector<double>({11.0, 12.0}) &&
              by_feature.features("y").as_series().host<double>() ==
                  std::vector<double>({13.0, 14.0}),
-         "transform(slate_fn, Axis::Feature) should apply column-wise");
+         "transform(shelf_fn, Axis::Feature) should apply column-wise");
 
-  const auto slate_transformed = frame.features("x").transform(
-      [](const pluss::table::SlateValue& value) {
-        return pluss::table::SlateValue(value.slate() + 5.0);
+  const auto shelf_transformed = frame.features("x").transform(
+      [](const pluss::table::ShelfValue& value) {
+        return pluss::table::ShelfValue(value.shelf() + 5.0);
       });
-  expect(slate_transformed.as_series().host<double>() ==
+  expect(shelf_transformed.as_series().host<double>() ==
              std::vector<double>({6.0, 7.0}),
-         "Slate::transform(value_fn) should apply element-wise");
+         "Shelf::transform(value_fn) should apply element-wise");
 
-  const auto whole_slate_default = frame.features("x").transform(
-      [](const Slate& value) {
+  const auto whole_shelf_default = frame.features("x").transform(
+      [](const Shelf& value) {
         return value + 20.0;
       });
-  expect(whole_slate_default.as_series().host<double>() ==
+  expect(whole_shelf_default.as_series().host<double>() ==
              std::vector<double>({21.0, 22.0}),
-         "Slate::transform(slate_fn) should preserve length by default");
+         "Shelf::transform(shelf_fn) should preserve length by default");
 
-  const auto whole_slate_reduce = frame.features("x").transform(
-      [](const Slate& value) {
-        return Slate(pluss::make_series({value.sum().to_dbl()}));
+  const auto whole_shelf_reduce = frame.features("x").transform(
+      [](const Shelf& value) {
+        return Shelf(pluss::make_series({value.sum().to_dbl()}));
       },
       pluss::table::ResultShape::Reduce);
-  expect(whole_slate_reduce.as_series().host<double>() ==
+  expect(whole_shelf_reduce.as_series().host<double>() ==
              std::vector<double>({3.0}),
-         "Slate::transform(slate_fn, Reduce) should accept one-row output");
+         "Shelf::transform(shelf_fn, Reduce) should accept one-row output");
 
   expect_throw(
       [&]() {
-        (void)frame.features("x").transform([](const Slate& value) {
-          return Slate(pluss::make_series({value.sum().to_dbl()}));
+        (void)frame.features("x").transform([](const Shelf& value) {
+          return Shelf(pluss::make_series({value.sum().to_dbl()}));
         });
       },
-      "Slate::transform(slate_fn) should reject reduction output under the Preserve default");
+      "Shelf::transform(shelf_fn) should reject reduction output under the Preserve default");
 }
 
 void test_category_factor() {
   const auto validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false});
   const auto frame = DataFrame({
-      {"city", Slate(
+      {"city", Shelf(
           pluss::make_note({"Calgary", "Edmonton", "Calgary", "Banff", ""}),
           validity)},
   });
@@ -1365,17 +1372,17 @@ void test_streamed_csv_case_batches() {
 void test_case_aligned_set_and_reduction_axis_rules() {
   auto df = DataFrame(
       {
-          {"student", Slate(pluss::make_note({"Alice", "Bob", "Carol", "David"}))},
-          {"A1", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-          {"A2", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+          {"student", Shelf(pluss::make_note({"Alice", "Bob", "Carol", "David"}))},
+          {"A1", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+          {"A2", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
       },
-      Slate(pluss::make_series(std::vector<std::int64_t>{1001, 1002, 1003, 1004})));
+      Shelf(pluss::make_series(std::vector<std::int64_t>{1001, 1002, 1003, 1004})));
 
   expect(df.shape() == std::pair<std::int64_t, std::int64_t>{4, 3},
          "DataFrame::shape should report cases x features");
   expect(df.features("A1").ncases() == 4 &&
              df.features("A1").shape() == std::pair<std::int64_t, std::int64_t>{4, 1},
-         "Slate::ncases/shape should report a 1D case vector");
+         "Shelf::ncases/shape should report a 1D case vector");
 
   const auto row_totals = df.features({"A1", "A2"}).sum(Axis::Feature);
   expect(row_totals.as_series().host<double>() ==
@@ -1403,9 +1410,9 @@ void test_case_aligned_set_and_reduction_axis_rules() {
              std::vector<bool>({false, false, false, false}),
          "explicit case-label assignment should make feature-indexed reduction null when labels do not match");
 
-  const auto scholarship = Slate(pluss::make_series(
+  const auto scholarship = Shelf(pluss::make_series(
                                std::vector<double>{1500.0, 2500.0, 1000.0}))
-                               .label().set(Slate(pluss::make_series(
+                               .label().set(Shelf(pluss::make_series(
                                    std::vector<std::int64_t>{1003, 1001, 1004})));
   bool scholarship_default_threw = false;
   try {
@@ -1432,23 +1439,23 @@ void test_case_aligned_set_and_reduction_axis_rules() {
 
   bool one_row_default_threw = false;
   try {
-    df.set("one_row_series") = Slate(pluss::make_series(std::vector<double>{7235.0}));
+    df.set("one_row_series") = Shelf(pluss::make_series(std::vector<double>{7235.0}));
   } catch (const std::exception&) {
     one_row_default_threw = true;
   }
   expect(one_row_default_threw,
-         "plain 1D length-one Slate assignment should not broadcast or align by default");
+         "plain 1D length-one Shelf assignment should not broadcast or align by default");
 }
 
 void test_align_reindex_equivalent() {
   const auto frame = make_frame(
       {
-          {"A", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
-          {"B", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"A", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"B", Shelf(pluss::make_series(std::vector<double>{100.0, 200.0}))},
       },
       {"r1", "r2"});
 
-  const auto cases = frame.labels().align(Slate(pluss::make_note({"r2", "missing", "r1"})));
+  const auto cases = frame.labels().align(Shelf(pluss::make_note({"r2", "missing", "r1"})));
   expect(cases.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing", "r1"}),
          "align_caselbl should conform the case-label axis exactly");
@@ -1460,7 +1467,7 @@ void test_align_reindex_equivalent() {
          "align_caselbl should mark missing case labels null");
 
   const auto both = frame.align(DataFrame::AlignSpec{
-      .label = Slate(pluss::make_note({"r2", "missing"})),
+      .label = Shelf(pluss::make_note({"r2", "missing"})),
       .features = {"B", "C", "A"},
       .fill = 0.0,
   });
@@ -1487,20 +1494,20 @@ void test_timeline_epoch_days_surface() {
       "1970-01-02T00:00:00Z",
       "1970-01-03T00:00:00Z",
   });
-  const auto slate_days =
-      Slate(timeline).tl().epoch(pluss::table::TimeUnit::Days);
-  expect(slate_days.as_series().host<std::int64_t>() ==
+  const auto shelf_days =
+      Shelf(timeline).tl().epoch(pluss::table::TimeUnit::Days);
+  expect(shelf_days.as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
-         "Slate::tl().epoch(TimeUnit::Days) should return epoch-day integers");
+         "Shelf::tl().epoch(TimeUnit::Days) should return epoch-day integers");
 
   const auto frame = DataFrame({
-      {"when", Slate(timeline)},
-      {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
+      {"when", Shelf(timeline)},
+      {"value", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
   });
   const auto frame_days = frame.features({"when"}).tl().epoch(pluss::table::TimeUnit::Days);
   expect(frame_days.features("when").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
-         "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Slate::tl()");
+         "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Shelf::tl()");
 }
 
 void test_timeline_span_surface() {
@@ -1511,12 +1518,12 @@ void test_timeline_span_surface() {
     return std::find(calendar.holidays.begin(), calendar.holidays.end(), label) != calendar.holidays.end();
   };
 
-  const auto starts = Slate(pluss::make_timeline({
+  const auto starts = Shelf(pluss::make_timeline({
       "2024-01-31T00:00:00Z",
       "2024-02-29T00:00:00Z",
       "2024-01-01T00:00:00Z",
   }));
-  const auto ends = Slate(pluss::make_timeline({
+  const auto ends = Shelf(pluss::make_timeline({
       "2024-02-01T00:00:00Z",
       "2025-02-28T00:00:00Z",
       "2024-01-05T00:00:00Z",
@@ -1526,7 +1533,7 @@ void test_timeline_span_surface() {
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 365, 4}),
-         "Slate::tl().span(Days) should use fixed UTC 24-hour spans");
+         "Shelf::tl().span(Days) should use fixed UTC 24-hour spans");
 
   pluss::table::TimelineSpanOptions complete_months;
   complete_months.unit = pluss::table::TimeUnit::Months;
@@ -1534,7 +1541,7 @@ void test_timeline_span_surface() {
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
-         "Slate::tl().span(Months, Complete) should count completed calendar months");
+         "Shelf::tl().span(Months, Complete) should count completed calendar months");
 
   pluss::table::TimelineSpanOptions boundary_years;
   boundary_years.unit = pluss::table::TimeUnit::Years;
@@ -1543,29 +1550,29 @@ void test_timeline_span_surface() {
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0}),
-         "Slate::tl().span(Years, Boundary) should count crossed year labels");
+         "Shelf::tl().span(Years, Boundary) should count crossed year labels");
 
   pluss::table::TimelineSpanOptions month_end_months;
   month_end_months.unit = pluss::table::TimeUnit::Months;
   month_end_months.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
-  expect(Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))
+  expect(Shelf(pluss::make_timeline({"2024-01-31T00:00:00Z"}))
              .tl()
-             .span(Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
+             .span(Shelf(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
-         "Slate::tl().span(Months, MonthEnd) should treat paired month ends as complete");
+         "Shelf::tl().span(Months, MonthEnd) should treat paired month ends as complete");
 
   pluss::table::TimelineSpanOptions month_end_years;
   month_end_years.unit = pluss::table::TimeUnit::Years;
   month_end_years.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
-  expect(Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))
+  expect(Shelf(pluss::make_timeline({"2024-02-29T00:00:00Z"}))
              .tl()
-             .span(Slate(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
+             .span(Shelf(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
-         "Slate::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
+         "Shelf::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
 
   const auto holiday =
       pluss::make_timeline({"2024-01-03T00:00:00Z"}).epoch_days().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0));
@@ -1573,51 +1580,51 @@ void test_timeline_span_surface() {
   business.unit = pluss::table::TimeUnit::BusinessDays;
   business.calendar.holidays = {holiday};
   expect(starts.tl().span(ends, business).as_series().host<std::int64_t>()[2] == 3,
-         "Slate::tl().span(BusinessDays) should honor explicit holiday calendars");
+         "Shelf::tl().span(BusinessDays) should honor explicit holiday calendars");
 
-  const auto business_start = Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
-  const auto business_end = Slate(pluss::make_timeline({"2024-01-05T00:00:00Z"}));
+  const auto business_start = Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
+  const auto business_end = Shelf(pluss::make_timeline({"2024-01-05T00:00:00Z"}));
   pluss::table::TimelineSpanOptions closed;
   closed.unit = pluss::table::TimeUnit::BusinessDays;
   closed.closed = pluss::table::TimelineSpanClosed::Right;
   expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({4}),
-         "Slate::tl().span(BusinessDays, Right) should use (start,end]");
+         "Shelf::tl().span(BusinessDays, Right) should use (start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Both;
   expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({5}),
-         "Slate::tl().span(BusinessDays, Both) should use [start,end]");
+         "Shelf::tl().span(BusinessDays, Both) should use [start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Neither;
   expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({3}),
-         "Slate::tl().span(BusinessDays, Neither) should use (start,end)");
+         "Shelf::tl().span(BusinessDays, Neither) should use (start,end)");
 
   pluss::table::TimelineSpanOptions bad_weekmask;
   bad_weekmask.unit = pluss::table::TimeUnit::BusinessDays;
   bad_weekmask.calendar.weekmask = 0;
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_weekmask); },
-      "Slate::tl().span(BusinessDays) should reject empty business weekmasks");
+      "Shelf::tl().span(BusinessDays) should reject empty business weekmasks");
 
   pluss::table::TimelineSpanOptions bad_holiday;
   bad_holiday.unit = pluss::table::TimeUnit::BusinessDays;
   bad_holiday.calendar.holidays = {1'700'000'000'000'000'000LL};
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_holiday); },
-      "Slate::tl().span(BusinessDays) should reject holiday values that look like epoch nanos");
+      "Shelf::tl().span(BusinessDays) should reject holiday values that look like epoch nanos");
 
   pluss::table::TimelineSpanOptions bad_calendar_tz;
   bad_calendar_tz.unit = pluss::table::TimeUnit::BusinessDays;
   bad_calendar_tz.calendar.timezone = "America/Edmonton";
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_calendar_tz); },
-      "Slate::tl().span(BusinessDays) should reject calendar timezone mismatches");
+      "Shelf::tl().span(BusinessDays) should reject calendar timezone mismatches");
 
-  const auto edmonton_end = Slate(pluss::make_timeline({"2024-01-05T00:00:00Z"})
+  const auto edmonton_end = Shelf(pluss::make_timeline({"2024-01-05T00:00:00Z"})
                                       .tz_convert("America/Edmonton"));
   expect_throw(
       [&] { (void)business_start.tl().span(edmonton_end, business); },
-      "Slate::tl().span(BusinessDays) should reject timeline timezone mismatches");
+      "Shelf::tl().span(BusinessDays) should reject timeline timezone mismatches");
 
   const auto monfri = pluss::table::BusinessCalendar::monfri();
   expect(monfri.weekmask == 0b0111110 && monfri.holidays.empty(),
@@ -1659,9 +1666,9 @@ void test_timeline_span_surface() {
   pluss::table::TimelineSpanOptions nyse_span;
   nyse_span.unit = pluss::table::TimeUnit::BusinessDays;
   nyse_span.calendar = nyse;
-  expect(Slate(pluss::make_timeline({"2026-04-02T00:00:00Z"}).tz_convert("America/New_York"))
+  expect(Shelf(pluss::make_timeline({"2026-04-02T00:00:00Z"}).tz_convert("America/New_York"))
              .tl()
-             .span(Slate(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
+             .span(Shelf(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
              .as_series()
              .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
@@ -1688,7 +1695,7 @@ void test_timeline_span_surface() {
       frame.features({"start"}).tl().span(frame.features("end"), complete_months);
   expect(frame_months.features("start").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
-         "DataFrame::tl().span should delegate through Slate::tl().span");
+         "DataFrame::tl().span should delegate through Shelf::tl().span");
 }
 
 } // namespace

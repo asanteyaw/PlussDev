@@ -32,7 +32,7 @@ TEST_CASE("where/nonzero basic routing", "[where][nonzero]") {
   auto cond = pluss::make_series({true,false,true});
   auto x = pluss::make_series({1,2,3}, pluss::ScalarType::Int64);
   auto y = pluss::make_series({10,20,30}, pluss::ScalarType::Int64);
-  auto out = cond.where(x, y);
+  auto out = pluss::series::where(cond, x, y);
   REQUIRE(out.numel() == 3);
 
   auto nz = out.nonzero();

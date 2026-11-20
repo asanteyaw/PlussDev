@@ -65,6 +65,7 @@ std::cout << "]";
 
 ## Notes
 
+- `invalid` is the union of the three kinds: `true` for `NULL` ([`isnull`](isnull.md)), `NaN` ([`isnan`](isnan.md)) and both infinities ([`isinf`](isinf.md)). Its partners are [`dropinvalid`](dropinvalid.md) and [`fillinvalid`](fillinvalid.md). See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Never throws on a mismatched field kind — unlike [`fillnull()`](fillnull.md).
 - Full per-value semantics (what counts as invalid for each domain kind) are
   documented on [`Slot::invalid`](../slot/invalid.md).
@@ -84,8 +85,8 @@ std::cout << "]";
     <span class="label">Previous</span>
     <span class="title">head</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">isinf</span>
   </a>
 </div>

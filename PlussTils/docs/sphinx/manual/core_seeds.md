@@ -22,7 +22,7 @@ explicit rule for when a seed is "not given". The examples below build those
 three things up in order. Every program is complete, and every printed line is
 copied from the program's real output.
 
-## The mental model
+## How it works
 
 The family holds two numbers. The first is the **base**, a 64-bit value that
 identifies the sequence. The second is the **stream position**, a counter of

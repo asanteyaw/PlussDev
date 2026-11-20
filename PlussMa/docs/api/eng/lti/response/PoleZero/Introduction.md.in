@@ -1,0 +1,36 @@
+# `lti::PoleZero` Introduction
+
+Holds the zeros, poles and gain of a transfer function and its sample time. It is returned by `zpk` and by the filter designs (`butter`, `cheby1`, `cheby2`), and consumed by `freqresp` and `to_sos`.
+
+`is_stable` is strict: a pole at the origin or on the imaginary axis (continuous), or on the unit circle (discrete), is not stable, as the second example shows. A fourth-order Butterworth design has all four poles inside the unit circle (largest magnitude about 0.80).
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The three components and the time base.
+
+@@example Eng/api/lti_polezero_accessors.cpp@@
+
+### Example 2
+
+`is_stable` for continuous and discrete poles on and off the boundary.
+
+@@example Eng/api/lti_polezero_stability.cpp@@
+
+### Example 3
+
+A filter design as a `PoleZero`.
+
+@@example Eng/api/lti_polezero_design.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="gain.html">
+    <span class="label">Next</span>
+    <span class="title">gain</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

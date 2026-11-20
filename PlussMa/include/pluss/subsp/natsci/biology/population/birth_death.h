@@ -129,7 +129,7 @@ inline Series quasi_extinction_cdf(const Series &mu, const Series &sigma2, const
 }
 inline Series ultimate_quasi_extinction(const Series &mu, const Series &sigma2, const Series &x_d) {
   const Series p = mu.mul(x_d).mul(-2.0).div(sigma2).exp();
-  return mu.le(0.0).where(mu.mul(0.0).add(1.0), p);
+  return pluss::series::where(mu.le(0.0), mu.mul(0.0).add(1.0), p);
 }
 struct DiffusionEstimate final {
   Series mu = pluss::series::undefined();

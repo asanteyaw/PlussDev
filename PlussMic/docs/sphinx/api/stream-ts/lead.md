@@ -50,19 +50,19 @@ std::cout << out;
 ```text
 ========================================================================================================================
 kindle::Stream  kind=Series  dtype=Series[float64]  records=4
-label=no  mask=no  meta=0
+label=no  mask=yes  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
 0            | 20                                                                                                       
 1            | 15                                                                                                       
 2            | 30                                                                                                       
-3            | nan                                                                                                      
+3            | NULL                                                                                                     
 ========================================================================================================================
 ```
 
 Each position now shows the next position's value; position `3` has no
-successor, so it's `nan` — the `nan` lands at the opposite end from
+successor, so it's `NULL` — the `NULL` lands at the opposite end from
 [`lag()`](lag.md).
 
 ## Notes

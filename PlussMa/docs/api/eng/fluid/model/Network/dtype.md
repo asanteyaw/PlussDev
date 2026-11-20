@@ -1,0 +1,164 @@
+<!-- generated from dtype.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 52987732f94e -->
+
+# `fluid::Network::dtype`
+
+[Back to `fluid::Network`](../Network.md)
+
+The precision of the compiled arrays, `Float32` or `Float64`.
+
+## Signature
+
+```cpp
+pluss::ScalarType fluid::Network::dtype() const noexcept;
+```
+
+## What It Does
+
+Returns the floating-point precision the network was compiled in; results use the same type. Data given as doubles compile to `Float64`.
+
+## Returns
+
+The `ScalarType`.
+
+## Practical Examples
+
+### Example 1
+
+One pipe from a reservoir to a demand junction.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.02});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  const auto obj = fluid::network(net);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+Output
+
+```text
+dtype = float64
+```
+
+### Example 2
+
+Three demand scenarios on the one-pipe network: the demand carries a leading axis of length 3.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.02});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  net.nodes.demand = vec({0.0, 0.01, 0.0, 0.02, 0.0, 0.04}).reshape({3, 2});
+  const auto obj = fluid::network(net);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+Output
+
+```text
+dtype = float64
+```
+
+### Example 3
+
+A pump lifting water from one reservoir to a junction that drains to a second reservoir.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fluid = pluss::subsp::eng::fluid;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Reservoir};
+  net.nodes.elevation = vec({0.0, 5.0, 0.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.0});
+  net.nodes.head = vec({10.0, 40.0, 40.0});
+  net.pumps.from = {0};
+  net.pumps.to = {1};
+  net.pumps.shutoff_head = vec({60.0});
+  net.pumps.resistance = vec({4000.0});
+  net.pumps.exponent = vec({2.0});
+  net.pumps.speed = vec({1.0});
+  net.pipes.from = {1};
+  net.pipes.to = {2};
+  net.pipes.length = vec({500.0});
+  net.pipes.diameter = vec({0.20});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  const auto obj = fluid::network(net);
+  out.writeln("dtype =", dtype_of(obj.dtype()).name);
+}
+```
+
+Output
+
+```text
+dtype = float64
+```
+
+## See Also
+
+- [`platform`](platform.md): the device
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batch_shape.html">
+    <span class="label">Previous</span>
+    <span class="title">batch_shape</span>
+  </a>
+  <a class="next-link" href="junctions.html">
+    <span class="label">Next</span>
+    <span class="title">junctions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

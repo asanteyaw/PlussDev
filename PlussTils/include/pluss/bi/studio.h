@@ -64,7 +64,7 @@ struct TileRender {
   std::optional<Filter> active_filter{};
   std::shared_ptr<pluss::pl::Studio> plot{};
   std::shared_ptr<pluss::table::DataFrame> table{};
-  std::optional<pluss::table::SlateValue> scalar{};
+  std::optional<pluss::table::ShelfValue> scalar{};
 };
 
 struct BoardRender {
@@ -155,7 +155,7 @@ namespace detail {
       continue;
     }
     const auto column = frame.features(name);
-    if (column.kind() == pluss::table::SlateKind::Series &&
+    if (column.kind() == pluss::table::ShelfKind::Series &&
         is_numeric_series(column.as_series())) {
       out.push_back(name);
     }
@@ -208,12 +208,12 @@ namespace detail {
   return duration;
 }
 
-[[nodiscard]] inline pluss::table::Slate apply_scalar_filter_(
-    const pluss::table::Slate& column,
+[[nodiscard]] inline pluss::table::Shelf apply_scalar_filter_(
+    const pluss::table::Shelf& column,
     FilterOp op,
     const FilterScalar& value) {
   switch (column.kind()) {
-    case pluss::table::SlateKind::Series: {
+    case pluss::table::ShelfKind::Series: {
       PLUSS_CHECK(std::holds_alternative<double>(value),
                   "pluss::bi: numeric filter payload must be a double");
       const double scalar = std::get<double>(value);
@@ -228,7 +228,7 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::SlateKind::Note: {
+    case pluss::table::ShelfKind::Note: {
       PLUSS_CHECK(std::holds_alternative<std::string>(value),
                   "pluss::bi: text filter payload must be a string");
       const auto& scalar = std::get<std::string>(value);
@@ -243,9 +243,9 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::SlateKind::Timeline: {
+    case pluss::table::ShelfKind::Timeline: {
       // A timeline column compares position by position, so a single bound is
-      // broadcast to the column's length first. Comparing a length-one Slate
+      // broadcast to the column's length first. Comparing a length-one Shelf
       // with a longer column would be rejected as a length mismatch.
       const auto iso = scalar_temporal_iso_(value);
       const auto scalar = pluss::make_timeline(std::vector<std::string>(
@@ -261,15 +261,15 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::SlateKind::Duration: {
+    case pluss::table::ShelfKind::Duration: {
       const auto scalar = scalar_duration_(value);
       switch (op) {
-        case FilterOp::Eq: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Eq);
-        case FilterOp::Ne: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Ne);
-        case FilterOp::Gt: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Gt);
-        case FilterOp::Ge: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Ge);
-        case FilterOp::Lt: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Lt);
-        case FilterOp::Le: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Le);
+        case FilterOp::Eq: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Eq);
+        case FilterOp::Ne: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Ne);
+        case FilterOp::Gt: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Gt);
+        case FilterOp::Ge: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Ge);
+        case FilterOp::Lt: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Lt);
+        case FilterOp::Le: return column.compare(scalar, pluss::table::ShelfBinaryCompareOp::Le);
         default: break;
       }
       break;
@@ -278,38 +278,38 @@ namespace detail {
   PLUSS_FAIL("pluss::bi: unsupported scalar filter operator");
 }
 
-[[nodiscard]] inline pluss::table::Slate apply_between_filter_(
-    const pluss::table::Slate& column,
+[[nodiscard]] inline pluss::table::Shelf apply_between_filter_(
+    const pluss::table::Shelf& column,
     const FilterRange& range) {
   switch (column.kind()) {
-    case pluss::table::SlateKind::Series:
+    case pluss::table::ShelfKind::Series:
       PLUSS_CHECK(std::holds_alternative<double>(range.low) &&
                       std::holds_alternative<double>(range.high),
                   "pluss::bi: numeric between filter requires double bounds");
       return (column >= std::get<double>(range.low)) &
              (column <= std::get<double>(range.high));
-    case pluss::table::SlateKind::Timeline:
+    case pluss::table::ShelfKind::Timeline:
       return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
-    case pluss::table::SlateKind::Note:
+    case pluss::table::ShelfKind::Note:
       PLUSS_FAIL("pluss::bi: between filter is not supported for text features");
-    case pluss::table::SlateKind::Duration: {
+    case pluss::table::ShelfKind::Duration: {
       auto low = scalar_duration_(range.low);
       auto high = scalar_duration_(range.high);
       if (low.host().front() > high.host().front()) {
         std::swap(low, high);
       }
-      return column.compare(low, pluss::table::SlateBinaryCompareOp::Ge) &
-             column.compare(high, pluss::table::SlateBinaryCompareOp::Le);
+      return column.compare(low, pluss::table::ShelfBinaryCompareOp::Ge) &
+             column.compare(high, pluss::table::ShelfBinaryCompareOp::Le);
     }
   }
   PLUSS_FAIL("pluss::bi: unsupported between filter payload");
 }
 
-[[nodiscard]] inline pluss::table::Slate apply_set_filter_(
-    const pluss::table::Slate& column,
+[[nodiscard]] inline pluss::table::Shelf apply_set_filter_(
+    const pluss::table::Shelf& column,
     const FilterSet& set_value) {
   if (std::holds_alternative<std::vector<double>>(set_value)) {
-    PLUSS_CHECK(column.kind() == pluss::table::SlateKind::Series,
+    PLUSS_CHECK(column.kind() == pluss::table::ShelfKind::Series,
                 "pluss::bi: numeric set filter requires a numeric feature");
     const auto& values = std::get<std::vector<double>>(set_value);
     PLUSS_CHECK(!values.empty(), "pluss::bi: set filter cannot be empty");
@@ -320,7 +320,7 @@ namespace detail {
     return mask;
   }
 
-  PLUSS_CHECK(column.kind() == pluss::table::SlateKind::Note,
+  PLUSS_CHECK(column.kind() == pluss::table::ShelfKind::Note,
               "pluss::bi: text set filter requires a text feature");
   const auto& values = std::get<std::vector<std::string>>(set_value);
   PLUSS_CHECK(!values.empty(), "pluss::bi: set filter cannot be empty");
@@ -331,8 +331,8 @@ namespace detail {
   return mask;
 }
 
-[[nodiscard]] inline pluss::table::Slate apply_filter_(
-    const pluss::table::Slate& column,
+[[nodiscard]] inline pluss::table::Shelf apply_filter_(
+    const pluss::table::Shelf& column,
     const Filter& filter) {
   if (std::holds_alternative<FilterScalar>(filter.payload)) {
     return apply_scalar_filter_(column, filter.op, std::get<FilterScalar>(filter.payload));
@@ -518,7 +518,7 @@ namespace detail {
   return out;
 }
 
-[[nodiscard]] inline pluss::table::SlateValue reduce_kpi_(
+[[nodiscard]] inline pluss::table::ShelfValue reduce_kpi_(
     const pluss::table::DataFrame& frame,
     const BindSpec& bind) {
   PLUSS_CHECK(bind.feature.has_value(),
@@ -534,7 +534,7 @@ namespace detail {
     case pluss::table::GroupOp::Max: return column.max();
     case pluss::table::GroupOp::Std: return column.std(true);
     case pluss::table::GroupOp::Var: return column.var(true);
-    case pluss::table::GroupOp::Mode: return pluss::table::SlateValue(column.mode());
+    case pluss::table::GroupOp::Mode: return pluss::table::ShelfValue(column.mode());
   }
   PLUSS_FAIL("pluss::bi: unsupported KPI reducer");
 }
@@ -547,7 +547,7 @@ namespace detail {
 }
 
 [[nodiscard]] inline std::string scalar_text_(
-    const pluss::table::SlateValue& value,
+    const pluss::table::ShelfValue& value,
     std::optional<int> decimals = std::nullopt) {
   try {
     const double number = pluss::tils::as_f64(value.as_series());
@@ -2278,13 +2278,13 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
          "</html>\n";
 }
 
-[[nodiscard]] inline std::string slate_scalar_text_at_(
-    const pluss::table::Slate& slate,
+[[nodiscard]] inline std::string shelf_scalar_text_at_(
+    const pluss::table::Shelf& shelf,
     std::int64_t row) {
-  if (!pluss::table::detail::valid_at(slate, row)) {
+  if (!pluss::table::detail::valid_at(shelf, row)) {
     return "NULL";
   }
-  return scalar_text_(slate.slice(row, row + 1).min());
+  return scalar_text_(shelf.slice(row, row + 1).min());
 }
 
 [[nodiscard]] inline std::optional<pluss::table::DataFrame> control_source_frame_(
@@ -2446,7 +2446,7 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
           << "onchange=\"plussBiSyncSelect('" << control_id << "')\">";
       out << "<option value=\"\">All</option>";
       for (std::int64_t row = 0; row < option_count; ++row) {
-        const auto value = slate_scalar_text_at_(values, row);
+        const auto value = shelf_scalar_text_at_(values, row);
         const auto escaped = escape_html_(value);
         out << "<option value=\"" << escaped << "\">" << escaped << "</option>";
       }

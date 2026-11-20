@@ -44,7 +44,7 @@ Series column_(const Series& x, std::int64_t j) {
 Series floor_positive_(const Series& x, double eps, Config cfg) {
   const Series s = x.to(cfg.platform, cfg.dtype);
   const Series floor_s = pluss::series::full({}, eps, cfg);
-  return s.ge(floor_s).where(s, floor_s);
+  return pluss::series::where(s.ge(floor_s), s, floor_s);
 }
 
 Series stabilize_corr_(const Series& corr_in, double jitter, Config cfg, const char* op) {

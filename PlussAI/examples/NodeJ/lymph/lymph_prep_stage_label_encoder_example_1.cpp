@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -19,15 +19,15 @@ int main() {
   const pluss::Series grade = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series score = pluss::make_series({0.2, 0.5, 0.9, 0.3, 0.6, 0.8}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"grade", Slate(grade)}, {"score", Slate(score)}});
+  const DataFrame x({{"grade", Shelf(grade)}, {"score", Shelf(score)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::label_encoder(), lymph::prep::route::names({"grade"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"grade", Slate(grade)}, {"actual", Slate(y)},
-                          {"predicted", Slate(model.infer(x))}});
+  std::cout << DataFrame({{"grade", Shelf(grade)}, {"actual", Shelf(y)},
+                          {"predicted", Shelf(model.infer(x))}});
 
   return 0;
 }

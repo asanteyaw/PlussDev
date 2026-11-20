@@ -44,13 +44,11 @@ The following programs isolate this symbol's normal contract, a materially diffe
 Two sources mixing, with the mass balance.
 
 @@example Eng/api/fluid_transport_mix.cpp@@
-
 ### Example 2
 
 Decay and the mass error.
 
 @@example Eng/api/fluid_transport_decay.cpp@@
-
 ### Example 3
 
 Age at the nodes.

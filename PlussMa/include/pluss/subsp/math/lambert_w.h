@@ -17,18 +17,18 @@ namespace pluss::subsp::math::special {
 inline Series lambert_w0_from_log(const Series &z, int iterations = 40) {
   const Series x = z.clamp(-700.0, 700.0).exp();
   const Series large = z.gt(1.0);
-  Series w = large.where(z.sub(z.clamp(1.0, 1e300).log()), x.div(x.add(1.0)));
+  Series w = pluss::series::where(large, z.sub(z.clamp(1.0, 1e300).log()), x.div(x.add(1.0)));
   w = w.clamp(1e-300, 1e300);
   for (int i = 0; i < iterations; ++i) {
     const Series step = w.mul(w.add(w.log()).sub(z)).div(w.add(1.0));
     Series next = w.sub(step);
-    next = next.gt(0.0).where(next, w.mul(0.5)); // safeguard (never triggered from a left start)
+    next = pluss::series::where(next.gt(0.0), next, w.mul(0.5)); // safeguard (never triggered from a left start)
     w = next.clamp(1e-300, 1e300);
   }
   return w;
 }
 
 // W0(x) for x >= 0
-inline Series lambert_w0(const Series &x) { return x.eq(0.0).where(x.mul(0.0), lambert_w0_from_log(x.clamp(1e-300, 1e300).log())); }
+inline Series lambert_w0(const Series &x) { return pluss::series::where(x.eq(0.0), x.mul(0.0), lambert_w0_from_log(x.clamp(1e-300, 1e300).log())); }
 
 } // namespace pluss::subsp::math::special

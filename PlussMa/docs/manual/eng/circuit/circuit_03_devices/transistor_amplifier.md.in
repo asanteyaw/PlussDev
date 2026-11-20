@@ -4,7 +4,7 @@
 
 A bipolar transistor is a small current controlling a large one: a current `Ib` into the base makes a current of about `beta Ib` flow into the collector. This page finds the bias point of a common-emitter stage, sweeps the base resistor to move the stage from its linear region into saturation, mirrors the stage with a PNP, and then computes the small-signal gain of the stage with `ac` around its bias point.
 
-## The mental model
+## How it works
 
 `circuit::Transistors` holds a bipolar transistor by its three terminals, `collector`, `base` and `emitter`, its `polarity` (`+1` NPN, `-1` PNP), its `saturation` current `Is`, its `forward_gain` `beta_f` and an optional `reverse_gain` `beta_r` (default `1`). The model is the Ebers-Moll transport model: two junctions, base-emitter and base-collector, each like a diode of saturation current `Is`, coupled so that the forward junction current `Is exp(vbe / Vt)` appears at the collector and `1 / beta_f` of it at the base. It is deliberately limited: there is no stored charge and no terminal resistance, and the Early effect is optional, so the collector current is flat in `Vce` while the transistor is active unless an Early voltage is given.
 

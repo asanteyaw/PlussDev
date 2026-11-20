@@ -4,7 +4,7 @@ The derivative of a `Function` is another `Function`. `operators::differential` 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A derivative is an `Operator` applied to a `Function`.** `operators::differential("x", 2)` is a value describing "differentiate twice in `x`"; calling it on a function applies it. The operator can be stored, passed around and composed (Chapter 5).
 - **The result keeps the variables of the input.** A derivative with respect to `x` of a function of `x` and `y` is still a function of `x` and `y`.

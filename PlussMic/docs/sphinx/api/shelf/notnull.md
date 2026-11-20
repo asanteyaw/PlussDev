@@ -1,0 +1,81 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8007230a14aa -->
+
+# Shelf::notnull
+
+[Back to Shelf API Reference](../../shelf_api_reference)
+
+## Signature
+
+```cpp
+Shelf Shelf::notnull() const
+```
+
+## What It Does
+
+Returns a `Bool`-typed `Series` shelf, same length as `*this`, marking `true`
+wherever the source shelf is valid (not `NULL`) and `false` wherever it's `NULL` —
+the exact logical inverse of [`isnull()`](isnull.md). Works on every payload kind,
+with the same validity-mask-only semantics (and the same `Timeline`/`TimeIndex`
+internal-validity folding) described on that page.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Shelf`
+    A new `Bool`-typed `Series` shelf, same length as `*this`.
+
+## Examples
+
+Example 1. `notnull()` and `isnull()` are exact opposites, elementwise.
+
+```cpp
+using namespace pluss::table;
+
+auto numbers = Shelf(pluss::make_series({1.0, 2.0, 3.0}),
+    pluss::make_series(std::vector<bool>{true, false, true}));
+std::cout << numbers.notnull() << "\n";
+std::cout << numbers.isnull();
+```
+
+### Output
+
+```text
+0  true
+1  false
+2  true
+
+ptype: Series
+0  false
+1  true
+2  false
+
+ptype: Series
+```
+
+## Notes
+
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
+- The exact logical inverse of [`isnull()`](isnull.md); see that page for the
+  validity-mask-only semantics and the `Timeline`/`TimeIndex` nuance.
+- A shelf with no validity mask at all reports `true` at every position.
+
+## See Also
+
+- [`Shelf::isnull`](isnull.md): the logical inverse.
+- [`Shelf::dropnull`](dropnull.md): remove `NULL` rows using the same underlying
+  check.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="notnan.html">
+    <span class="label">Previous</span>
+    <span class="title">notnan</span>
+  </a>
+  <a class="next-link" href="nposinf.html">
+    <span class="label">Next</span>
+    <span class="title">nposinf</span>
+  </a>
+</div>

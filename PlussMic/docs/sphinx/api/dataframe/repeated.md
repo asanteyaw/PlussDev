@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::repeated() const
+Shelf DataFrame::repeated() const
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ some features should form the composite key.
 
 ## Returns
 
-`Slate`
+`Shelf`
     A boolean `Series`, one entry per case, labeled `"repeated"`. `true` marks every
     row belonging to a key that occurs more than once anywhere in the frame; `false`
     marks a row whose key is unique.
@@ -45,7 +45,7 @@ Example 1. Flag every row belonging to a repeated student group.
 using namespace pluss::table;
 
 auto roster = DataFrame({
-    {"student", Slate(pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"}))},
+    {"student", Shelf(pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"}))},
 });
 std::cout << roster;
 ```

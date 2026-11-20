@@ -10,7 +10,7 @@ fresh build-and-run, so printed output in a chapter can never be typed by hand o
 drift from the code. Paths are relative to PlussMa/Math/examples.
 
 An example may write figures (for instance SVG files) into the directory named by the environment variable PLUSSMA_GUIDE_ASSETS; they are
-copied to an `assets` folder next to the template, so a chapter can embed them as `![caption](assets/name.svg)`.
+copied to an `assets` folder next to the template (PlussPl programs call `Studio::show()`; with PLUSSPL_CAPTURE_DIR set it records the figure there instead of opening a window), so a chapter can embed them as `![caption](assets/name.svg)`.
 
 Usage:
     python3 PlussMa/docs/tools/render_guide.py            # render every template
@@ -32,6 +32,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 EXAMPLES = ROOT / "PlussMa" / "Math" / "examples"
+# Other packages keep their guide programs beside their own sources; a marker path is looked up in each root in turn.
+EXAMPLE_ROOTS = (EXAMPLES, ROOT / "PlussQit" / "examples" / "guide", ROOT / "PlussMic" / "examples" / "guide", ROOT / "PlussPl" / "examples" / "guide")
 COMPILE = Path(os.environ.get("PLUSSMA_GUIDE_COMPILE", ROOT / "PlussTils" / "tools" / "verify_example.sh"))
 MARKER = re.compile(r"^@@example (\S+)@@\s*$", re.M)
 # A page may carry its own program: the fenced cpp block that follows an `@@run@@` line is compiled and run, and its output is placed
@@ -42,7 +44,7 @@ CACHE = Path(tempfile.gettempdir()) / "plussma_guide_cache"
 
 
 def run_example(rel: str, assets: Path | None = None) -> tuple[str, str]:
-    src = EXAMPLES / rel
+    src = next((r / rel for r in EXAMPLE_ROOTS if (r / rel).exists()), EXAMPLES / rel)
     text = src.read_text()
     if BANNED.search(text):
         raise SystemExit(f"{rel}: banned wording in example source")
@@ -67,7 +69,7 @@ def run_example(rel: str, assets: Path | None = None) -> tuple[str, str]:
         raise SystemExit(f"{rel}: compile failed\n{build.stderr[-3000:]}")
     shutil.rmtree(kept, ignore_errors=True)
     kept.mkdir()
-    run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=300, env={**os.environ, "PLUSSMA_GUIDE_ASSETS": str(kept)})
+    run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=300, env={**os.environ, "PLUSSMA_GUIDE_ASSETS": str(kept), "PLUSSPL_CAPTURE_DIR": str(kept)})
     if run.returncode != 0:
         raise SystemExit(f"{rel}: exit code {run.returncode}\n{run.stdout[-1500:]}\n{run.stderr[-1500:]}")
     cached.write_text(run.stdout)
@@ -101,7 +103,7 @@ def run_source(text: str, label: str, assets: Path | None = None) -> str:
         raise SystemExit(f"{label}: compile failed\n{build.stdout[-1500:]}\n{build.stderr[-3000:]}")
     shutil.rmtree(kept, ignore_errors=True)
     kept.mkdir()
-    run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=300, env={**os.environ, "PLUSSMA_GUIDE_ASSETS": str(kept)})
+    run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=300, env={**os.environ, "PLUSSMA_GUIDE_ASSETS": str(kept), "PLUSSPL_CAPTURE_DIR": str(kept)})
     if run.returncode != 0:
         raise SystemExit(f"{label}: exit code {run.returncode}\n{run.stdout[-1500:]}\n{run.stderr[-1500:]}")
     cached.write_text(run.stdout)

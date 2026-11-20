@@ -1,5 +1,7 @@
 # `signal::hamming`
 
+Creates the Hamming window, a raised cosine that does not reach zero at the ends.
+
 ## Signature
 
 ```cpp
@@ -10,15 +12,15 @@ pluss::Series signal::hamming(
 
 ## What It Does
 
-Creates a raised-cosine Hamming window. Unlike Hann, symmetric Hamming endpoints remain nonzero, reducing the discontinuity without forcing samples completely to zero.
+The symmetric Hamming window is `w[i] = 0.54 - 0.46 cos(2 pi i / (n - 1))`. The coefficient 0.54 instead of 0.5 leaves a pedestal of 0.08 at both ends, visible as the first and last coefficient in the examples.
 
 ## Parameters
 
 `size`
-: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+: Number of coefficients. Zero returns an empty rank-one `Series`; one returns the single coefficient `1`.
 
 `options`
-: Endpoint, dtype, and platform policy. Hamming is often selected where sidelobe suppression matters but discarding endpoint contribution is undesirable.
+: A `WindowOptions`: the endpoint convention (`mode`), the floating dtype and the platform. The default is a symmetric float64 window on the CPU.
 
 ## Returns
 
@@ -26,29 +28,40 @@ A rank-one floating `Series` of length `size`, allocated with the requested dtyp
 
 ## Errors
 
-Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+A negative `size`, a dtype other than `Float32` or `Float64`, and a platform that cannot hold the dtype (float64 on the MPS) throw `pluss::Error`.
+
+## Interpretation and Use
+
+Because the ends do not vanish, a Hamming-windowed frame still has a small step at its edges. The coherent gain tends to 0.54. The fourth example measures a main lobe of 2.07 bins and a highest sidelobe 42.45 dB below it, about 11 dB better than Hann's 31.47 dB at nearly the same main-lobe width. Use it when the nearest sidelobe matters more than the far ones.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Generate and compare every built-in window at a common length.
+Eight coefficients in both modes, and the closed form.
 
-@@example Eng/api/signal_windows.cpp@@
+@@example Eng/api/signal_hamming_values.cpp@@
 
 ### Example 2
 
-Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+Coherent gain and mean square at three lengths.
 
-@@example Eng/api/signal_window_options.cpp@@
+@@example Eng/api/signal_hamming_gain.cpp@@
 
 ### Example 3
 
-Observe the validation errors for invalid size and dtype requests.
+Every refused input and the size-zero and size-one cases.
 
-@@example Eng/api/signal_window_errors.cpp@@
+@@example Eng/api/signal_hamming_errors.cpp@@
+
+### Example 4
+
+The spectrum of a 64-point window: main-lobe width and highest sidelobe.
+
+@@example Eng/api/signal_hamming_spectrum.cpp@@
+
 
 ## See Also
 

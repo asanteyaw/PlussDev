@@ -107,8 +107,8 @@ auto labeled = pluss::kindle::Archive({c0, c1})
 
 try {
   auto aligned = labeled.label().align(pluss::kindle::Stream(pluss::make_note({"z"})));
-} catch (const std::exception& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 

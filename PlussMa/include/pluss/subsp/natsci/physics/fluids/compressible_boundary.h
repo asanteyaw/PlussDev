@@ -396,9 +396,9 @@ inline detail::Raw from_primitive(const Primitive &source,
 
 inline detail::Raw choose(const Series &mask, const detail::Raw &yes,
                           const detail::Raw &no, std::int64_t component) {
-  return {mask.where(yes.rho, no.rho),
-          mask.unsqueeze(component).where(yes.mom, no.mom),
-          mask.where(yes.energy, no.energy)};
+  return {pluss::series::where(mask, yes.rho, no.rho),
+          pluss::series::where(mask.unsqueeze(component), yes.mom, no.mom),
+          pluss::series::where(mask, yes.energy, no.energy)};
 }
 
 inline detail::Raw characteristic_far(const detail::Raw &inside,
@@ -443,8 +443,8 @@ inline detail::Raw characteristic_far(const detail::Raw &inside,
       inside_pressure.div(inside.rho.pow(model.gamma));
   const Series ambient_entropy =
       ambient_pressure.div(ambient.rho.pow(model.gamma));
-  const Series entropy = flow_out.where(inside_entropy, ambient_entropy);
-  const Series safe_sound = valid_sound.where(sound, inside_sound);
+  const Series entropy = pluss::series::where(flow_out, inside_entropy, ambient_entropy);
+  const Series safe_sound = pluss::series::where(valid_sound, sound, inside_sound);
   const Series rho = safe_sound.square()
                          .div(entropy.mul(model.gamma))
                          .pow(1.0 / (model.gamma - 1.0));
@@ -457,8 +457,7 @@ inline detail::Raw characteristic_far(const detail::Raw &inside,
       components.push_back(normal.mul(sign));
     } else {
       components.push_back(
-          flow_out.where(inside_velocity.select(component, index),
-                         ambient_velocity.select(component, index)));
+          pluss::series::where(flow_out, inside_velocity.select(component, index), ambient_velocity.select(component, index)));
     }
   }
   const Series velocity =
@@ -588,8 +587,8 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
     for (std::int64_t iteration = 0; iteration < 48; ++iteration) {
       const Series middle = low.add(high).mul(0.5);
       const Series positive = residual(middle).gt(0.0);
-      low = positive.where(middle, low);
-      high = positive.where(high, middle);
+      low = pluss::series::where(positive, middle, low);
+      high = pluss::series::where(positive, high, middle);
     }
     const Series mach = low.add(high).mul(0.5);
     const Series ratio = mach.square().mul(expansion).add(1.0);
@@ -838,9 +837,7 @@ inline Series velocity_ghost(const detail::Raw &inside,
     const Series mask =
         expand_mask(*rule.mask(), inside.rho,
                     "natsci::fluids::gas::viscous_boundary");
-    return mask.unsqueeze(component_axis)
-        .where(velocity_ghost(inside, grid, *rule.when_true(), model),
-               velocity_ghost(inside, grid, *rule.when_false(), model));
+    return pluss::series::where(mask.unsqueeze(component_axis), velocity_ghost(inside, grid, *rule.when_true(), model), velocity_ghost(inside, grid, *rule.when_false(), model));
   }
   if (rule.kind() == BoundKind::Wall)
     return wall_velocity(rule, velocity, component_axis, grid.dim())
@@ -1006,9 +1003,7 @@ inline Series boundary_velocity(const detail::Raw &inside,
     const Series mask =
         expand_mask(*rule.mask(), inside.rho,
                     "natsci::fluids::gas::viscous_boundary");
-    return mask.unsqueeze(component)
-        .where(boundary_velocity(inside, grid, *rule.when_true(), model),
-               boundary_velocity(inside, grid, *rule.when_false(), model));
+    return pluss::series::where(mask.unsqueeze(component), boundary_velocity(inside, grid, *rule.when_true(), model), boundary_velocity(inside, grid, *rule.when_false(), model));
   }
   if (rule.kind() == BoundKind::Wall)
     return wall_velocity(rule, velocity, component, grid.dim());
@@ -1076,9 +1071,8 @@ inline Series boundary_conduction(
     const Series mask =
         expand_mask(*rule.mask(), inside.rho,
                     "natsci::fluids::gas::viscous_boundary");
-    return mask.where(boundary_conduction(inside, grid, *rule.when_true(),
-                                          model, conductivity, sutherland),
-                      boundary_conduction(inside, grid, *rule.when_false(),
+    return pluss::series::where(mask, boundary_conduction(inside, grid, *rule.when_true(),
+                                          model, conductivity, sutherland), boundary_conduction(inside, grid, *rule.when_false(),
                                           model, conductivity, sutherland));
   }
   const double sign = rule.face().side == spatial::Side::Low ? -1.0 : 1.0;
@@ -1101,10 +1095,9 @@ inline Series boundary_conduction(
   const Series sum = conductivity.add(wall_conductivity);
   const Series active = sum.gt(0.0);
   const Series face_conductivity =
-      active.where(conductivity.mul(wall_conductivity)
+      pluss::series::where(active, conductivity.mul(wall_conductivity)
                        .mul(2.0)
-                       .div(active.where(sum, pluss::series::ones_like(sum))),
-                   pluss::series::zeros_like(sum));
+                       .div(pluss::series::where(active, sum, pluss::series::ones_like(sum))), pluss::series::zeros_like(sum));
   return target->sub(inside_temperature)
       .mul(face_conductivity)
       .mul(sign * 2.0 / grid.spacing(rule.face().axis).si_value());
@@ -1119,9 +1112,8 @@ boundary_viscosity(const detail::Raw &inside, const spatial::BoxGrid &grid,
     const Series mask =
         expand_mask(*rule.mask(), inside.rho,
                     "natsci::fluids::gas::viscous_boundary");
-    return mask.where(boundary_viscosity(inside, grid, *rule.when_true(), model,
-                                         viscosity, sutherland),
-                      boundary_viscosity(inside, grid, *rule.when_false(),
+    return pluss::series::where(mask, boundary_viscosity(inside, grid, *rule.when_true(), model,
+                                         viscosity, sutherland), boundary_viscosity(inside, grid, *rule.when_false(),
                                          model, viscosity, sutherland));
   }
   if (!sutherland)
@@ -1188,12 +1180,9 @@ visc_rate_impl(const detail::Raw &state, const spatial::BoxGrid &grid,
         edge_neighbor(conductivity, grid, axis, true);
     const Series conductivity_sum = conductivity.add(next_conductivity);
     const Series conducting = conductivity_sum.gt(0.0);
-    const Series conductivity_face = conducting.where(
-        conductivity.mul(next_conductivity)
+    const Series conductivity_face = pluss::series::where(conducting, conductivity.mul(next_conductivity)
             .mul(2.0)
-            .div(conducting.where(conductivity_sum,
-                                  pluss::series::ones_like(conductivity_sum))),
-        pluss::series::zeros_like(conductivity_sum));
+            .div(pluss::series::where(conducting, conductivity_sum, pluss::series::ones_like(conductivity_sum))), pluss::series::zeros_like(conductivity_sum));
     Series heat_high = edge_neighbor(temperature, grid, axis, true)
                            .sub(temperature)
                            .div(width)
@@ -1504,10 +1493,8 @@ step_limit(const State &state, const spatial::BoxGrid &grid, const Model &model,
       momentum_diff.maximum(thermal_diff).amax(axes, false).mul(inverse_h2);
   const Series infinite =
       pluss::series::full_like(rate, std::numeric_limits<double>::infinity());
-  const Series viscous = rate.gt(0.0).where(
-      pluss::codem::make_scalar_like(rate, diffusion)
-          .div(rate.add(rate.eq(0.0).to(rate.scalar_type()))),
-      infinite);
+  const Series viscous = pluss::series::where(rate.gt(0.0), pluss::codem::make_scalar_like(rate, diffusion)
+          .div(rate.add(rate.eq(0.0).to(rate.scalar_type()))), infinite);
   return common::SeriesQuantity<common::Time>::from_si(
       acoustic.minimum(viscous));
 }

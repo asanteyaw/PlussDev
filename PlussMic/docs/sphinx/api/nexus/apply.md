@@ -78,23 +78,23 @@ auto print_keys = [](const Nexus& nx) {
 };
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0}))},
 });
 
 auto payments = DataFrame({
-    {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
-    {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
+    {"payment_id", Shelf(pluss::make_series({9001.0, 9002.0}))},
+    {"order_id",   Shelf(pluss::make_series({101.0, 102.0}))},
 });
 
 auto refunds = DataFrame({
-    {"refund_id", Slate(pluss::make_series({77.0}))},
-    {"order_id",  Slate(pluss::make_series({102.0}))},
+    {"refund_id", Shelf(pluss::make_series({77.0}))},
+    {"order_id",  Shelf(pluss::make_series({102.0}))},
 });
 
 auto biz = Nexus({
@@ -164,8 +164,8 @@ unknown keys, and undefined callback results all throw.
 try {
   std::function<DataFrame(const DataFrame&)> empty;
   auto bad = biz.apply("orders", empty);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
@@ -173,8 +173,8 @@ try {
   auto bad = biz.apply("missing", [](const DataFrame& frame) {
     return frame;
   });
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
@@ -182,8 +182,8 @@ try {
   auto bad = biz.apply("orders", [](const DataFrame&) {
     return DataFrame();
   });
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

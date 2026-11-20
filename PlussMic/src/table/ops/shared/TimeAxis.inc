@@ -1,12 +1,12 @@
 namespace {
 
-// Keeps Slate metadata beside one lazily-built core index. Exact matching
+// Keeps Shelf metadata beside one lazily-built core index. Exact matching
 // reads the Timeline directly; ordered operations request ordered(), which
 // validates once and lets the core index retain that state for every later
 // kernel call.
 class TimeAxis {
 public:
-  explicit TimeAxis(Slate axis) : axis_(std::move(axis)) {}
+  explicit TimeAxis(Shelf axis) : axis_(std::move(axis)) {}
 
   const pluss::Timeline& timeline() const noexcept { return axis_.as_timeline(); }
 
@@ -30,7 +30,7 @@ public:
   std::int64_t size() const { return axis_.size(); }
 
 private:
-  Slate axis_;
+  Shelf axis_;
   mutable std::optional<pluss::Timeline::TimelineIndexAccessor> index_;
 };
 

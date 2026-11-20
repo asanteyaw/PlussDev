@@ -14,7 +14,7 @@ bool Registry::defined() const noexcept
 ## What It Does
 
 Reports whether the registry owns a concrete backing handle at all — the same
-undefined/defined distinction `Slate::defined()`, `DataFrame::defined()`, and
+undefined/defined distinction `Shelf::defined()`, `DataFrame::defined()`, and
 `Catalog::defined()` make. A default-constructed `Registry` is **undefined**; almost
 every other method throws `"Registry: undefined handle"` if called on one. A
 `Registry` built from an explicit (even empty) field list is defined — `defined()`
@@ -66,8 +66,8 @@ std::cout << std::boolalpha << rg.defined() << "\n";
 
 try {
   auto n = rg.nfields();
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

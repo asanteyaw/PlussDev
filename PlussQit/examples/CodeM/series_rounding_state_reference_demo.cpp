@@ -116,7 +116,7 @@ int main() {
 
   heading("invalid_fill_constant");
   auto repaired_constant = invalid_values.clone();
-  repaired_constant.where_(repaired_constant.invalid(), -99.0);
+  repaired_constant.where_(repaired_constant.invalid().logical_not(), -99.0);
   pluss::series::print(std::cout, repaired_constant) << "\n\n";
 
   heading("invalid_fill_array");

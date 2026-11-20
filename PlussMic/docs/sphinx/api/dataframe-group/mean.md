@@ -45,9 +45,9 @@ Example 1. Mean of both remaining value features per city.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Slate(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
-    {"units", Slate(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
+    {"units", Shelf(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
 });
 
 auto out = sales.features({"city", "amount", "units"})
@@ -85,12 +85,12 @@ std::cout << out2;
 ### Output
 
 ```text
-========================
+=========================
      | city   amount_mean
-------------------------
-0    | Accra  90
-1    | Tema   45
-------------------------
+-------------------------
+0    | Accra  90         
+1    | Tema   45         
+-------------------------
 [2 cs x 2 feat]
 ```
 

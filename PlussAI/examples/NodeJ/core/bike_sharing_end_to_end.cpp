@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   using DataFrame = pluss::table::DataFrame;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   using namespace pluss::ai::nodej;
   namespace lymph = pluss::ai::lymph;
 
@@ -122,9 +122,9 @@ int main(int argc, char** argv) {
     std::cout << "linear restored prediction max_abs_diff: " << linear_max_abs_diff << "\n";
 
     DataFrame linear_frame({
-        {"y_true", Slate(y_true)},
-        {"y_pred", Slate(linear_pred)},
-        {"residual", Slate(y_true.sub(linear_pred))},
+        {"y_true", Shelf(y_true)},
+        {"y_pred", Shelf(linear_pred)},
+        {"residual", Shelf(y_true.sub(linear_pred))},
     });
     linear_frame.save_csv((out_dir / "bike_sharing_test_predictions_linear.csv").string());
     linear_frame.plot()
@@ -162,9 +162,9 @@ int main(int argc, char** argv) {
 
     // New Model
     DataFrame tree_frame({
-        {"y_true", Slate(y_true)},
-        {"y_pred", Slate(tree_pred)},
-        {"residual", Slate(y_true.sub(tree_pred))},
+        {"y_true", Shelf(y_true)},
+        {"y_pred", Shelf(tree_pred)},
+        {"residual", Shelf(y_true.sub(tree_pred))},
     });
     tree_frame.save_csv((out_dir / "bike_sharing_test_predictions_tree.csv").string());
     tree_frame.plot()

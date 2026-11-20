@@ -34,7 +34,7 @@ The `/* data */` slot is one of:
 |-------|-------|
 | `const LabeledBatch& batch` | pre-split features / labels (GPU-resident data path) |
 | `const pluss::table::DataFrame& x, const Series& y` | features-only frame + label series |
-| `const pluss::table::DataFrame& x, const pluss::table::Slate& y` | same, label as a `Slate` |
+| `const pluss::table::DataFrame& x, const pluss::table::Shelf& y` | same, label as a `Shelf` |
 | `const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options` | column-named frame + `DataFrameBatchOptions` (the one shape that can carry a `note_policy`) |
 
 ## What It Does
@@ -127,7 +127,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -138,7 +138,7 @@ int main() {
       {1., 2., 3., 4., 5., 6., 7., 8., 7., 10., 11., 12., 13., 14., 15., 16.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};
@@ -199,7 +199,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -210,7 +210,7 @@ int main() {
       {1., 2., 3., 4., 5., 6., 7., 8., 7., 10., 11., 12., 13., 14., 15., 16.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame x({{"x0", Slate(x0)}, {"x1", Slate(x1)}});
+  const DataFrame x({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}});
 
   std::vector<lymph::selection::Candidate> candidates;
   candidates.emplace_back("logreg", lymph::models::logistic_regression());
@@ -266,7 +266,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -277,7 +277,7 @@ int main() {
       {1., 2., 3., 4., 5., 6., 7., 8., 7., 10., 11., 12., 13., 14., 15., 16.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};
@@ -340,7 +340,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -351,7 +351,7 @@ int main() {
       {1., 2., 3., 4., 5., 6., 7., 8., 7., 10., 11., 12., 13., 14., 15., 16.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
+  const DataFrame frame({{"x0", Shelf(x0)}, {"x1", Shelf(x1)}, {"target", Shelf(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};

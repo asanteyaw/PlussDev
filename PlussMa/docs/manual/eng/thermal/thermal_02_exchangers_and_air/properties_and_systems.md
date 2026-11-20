@@ -6,7 +6,7 @@
 
 Every thermal calculation needs density, specific heat and conductivity, and an easy way to get a project wrong is to type them in from different places. This page uses the property provider, reads where its numbers come from, and then combines everything in the chapter in a heat-recovery ventilator.
 
-## The mental model
+## How it works
 
 The provider is one function, `props`, that takes a fluid and a temperature in kelvin and returns density, specific heat, conductivity, viscosity and the Prandtl number. Each fluid has an explicit **state** (saturated liquid water; dry air as an ideal gas at the pressure you give), a **range** in which it is valid, and a **provenance** string. A temperature outside the range is an error: nothing is extrapolated, so a model that has left its validity says so.
 

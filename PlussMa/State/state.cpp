@@ -295,7 +295,7 @@ FilterResult filter(const Series &observations, const LinearModel &model,
                                          .add(r_used)
                                          .add(jitter_diag));
     const Series safe_innovation =
-        mask.where(innovation, pluss::series::zeros(innovation.sizes(), cfg));
+        pluss::series::where(mask, innovation, pluss::series::zeros(innovation.sizes(), cfg));
     const Series cross = p_pred.matmul(c_used.transpose(-2, -1));
     const Series factor = s_used.linearalg.cholesky(false);
     const Series gain =

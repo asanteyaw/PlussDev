@@ -28,3 +28,13 @@ keys row-by-row (`ReduceAxis::Key`).
 - [`Catalog::min`](min.md)
 - [`Catalog::sum`](sum.md)
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="match_keys.html">
+    <span class="label">Previous</span>
+    <span class="title">match_keys</span>
+  </a>
+  <a class="next-link" href="maxrows.html">
+    <span class="label">Next</span>
+    <span class="title">maxrows</span>
+  </a>
+</div>

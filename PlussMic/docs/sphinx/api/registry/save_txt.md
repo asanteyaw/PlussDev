@@ -85,6 +85,6 @@ id	city
   </a>
   <a class="next-link" href="set.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">set</span>
   </a>
 </div>

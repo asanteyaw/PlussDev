@@ -17,7 +17,7 @@ LocusPullAgg& LocusPullAgg::max(std::initializer_list<std::pair<std::string_view
 The scoped spelling of [`LocusPull::max`](../locus-pull/max.md):
 `scope.max("spend", "high")` inside an `agg("events")` scope is exactly
 `pull.max("events.spend", "high")`. Requires a numeric feature; see
-[`sum`](sum.md) for the shared null-for-empty and `NaN`-exclusion rules.
+[`sum`](sum.md) for the shared null-for-empty and missing-value rules.
 
 ## Parameters
 

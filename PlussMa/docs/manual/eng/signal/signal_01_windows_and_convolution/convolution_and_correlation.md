@@ -6,7 +6,7 @@
 
 You want to apply a short set of weights along a signal: smooth it with a moving average, take a difference, apply a finite-impulse-response filter, or find where one signal best matches another. All of these are a sliding weighted sum. `conv` computes it with the kernel reversed, `corr` computes it without reversing (and conjugates complex kernels), and `fir` is `conv` cut to the length of the input so it can be used as a causal filter.
 
-## The mental model
+## How it works
 
 For an input `x` of length `N` and a kernel `h` of length `K`, the **full** convolution has length `N + K - 1` and entry
 

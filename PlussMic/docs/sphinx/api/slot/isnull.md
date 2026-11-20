@@ -47,6 +47,7 @@ false true false
 
 ## Notes
 
+- `isnull` finds missing cells only. A `NaN` or an infinity is a **value**, so it is not flagged here: ask [`isnan`](isnan.md) or [`isinf`](isinf.md) for those, and [`invalid`](invalid.md) for all three at once. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Considers both `std::monostate` and `NaN` (inside `Series[float32]`/
   `Series[float64]` values) as missing — see [`invalid()`](invalid.md) for
   the related, broader check.
@@ -62,12 +63,12 @@ false true false
   the missing values instead of just flagging them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid.html">
+  <a class="prev-link" href="isneginf.html">
     <span class="label">Previous</span>
-    <span class="title">invalid</span>
+    <span class="title">isneginf</span>
   </a>
-  <a class="next-link" href="kind.html">
+  <a class="next-link" href="isposinf.html">
     <span class="label">Next</span>
-    <span class="title">kind</span>
+    <span class="title">isposinf</span>
   </a>
 </div>

@@ -133,9 +133,9 @@ Example 1. Save with the simple, filepath-only overload.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Slate(pluss::make_series({2, 1, 4}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Shelf(pluss::make_series({2, 1, 4}))},
 });
 
 orders.save_csv("orders_out.csv");
@@ -179,6 +179,10 @@ restores `case_id` as the case axis instead of leaving it as an ordinary feature
 - `save_csv` never mutates the frame it is called on — it is a pure side-effecting write.
 - Missing values are written as `null_rep` (an empty field by default), never as the
   literal text `"nan"` or `"NULL"` unless you set `null_rep` to that string explicitly.
+- A `NaN` **value** is not a missing value, so it is not written as `null_rep`: it is written
+  as the word `NaN`, and the infinities as `inf` and `-inf`. Because `load_csv` reads the
+  word `nan` as a missing value, a `NaN` written to a file comes back as missing; repair
+  `NaN` cells (`fillnan`) before saving when the difference matters.
 - Set `float_format` when downstream tooling expects a fixed number of decimal places
   (for example `"{:.2f}"` for currency-style output) instead of the default
   significant-digits formatting.

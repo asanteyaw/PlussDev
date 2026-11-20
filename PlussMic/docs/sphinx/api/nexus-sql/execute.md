@@ -72,11 +72,12 @@ std::cout << out.to_string();
 ### Output
 
 ```text
+===========================================
      | customers.customer_id  orders.amount
 -------------------------------------------
-0    | 2                      75
-1    | 1                      50
-2    | 2                      20
+0    | 2                      75           
+1    | 1                      50           
+2    | 2                      20           
 -------------------------------------------
 [3 cs x 2 feat]
 ```
@@ -100,8 +101,8 @@ Example 3. Malformed SQL throws with the underlying SQLite error message.
 ```cpp
 try {
   auto out = nx.query().execute("SELEKT customer_id FROM customers");
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```

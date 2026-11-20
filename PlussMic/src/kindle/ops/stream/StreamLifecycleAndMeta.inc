@@ -4,22 +4,22 @@ Stream::Stream() = default;
 
 Stream::Stream(const pluss::Series& data,
                std::optional<pluss::Series> validity_mask,
-               std::optional<pluss::table::Slate> cases)
+               std::optional<pluss::table::Shelf> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
 
 Stream::Stream(const pluss::Note& data,
                std::optional<pluss::Series> validity_mask,
-               std::optional<pluss::table::Slate> cases)
+               std::optional<pluss::table::Shelf> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
 
 Stream::Stream(const pluss::Timeline& data,
                std::optional<pluss::Series> validity_mask,
-               std::optional<pluss::table::Slate> cases)
+               std::optional<pluss::table::Shelf> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
 
 Stream::Stream(const pluss::Duration& data,
                std::optional<pluss::Series> validity_mask,
-               std::optional<pluss::table::Slate> cases)
+               std::optional<pluss::table::Shelf> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
 
 Stream::Stream(const Stream& other) = default;
@@ -28,19 +28,19 @@ Stream& Stream::operator=(const Stream& other) = default;
 Stream& Stream::operator=(Stream&& other) noexcept = default;
 Stream::~Stream() = default;
 
-Stream Stream::from_slate(const pluss::table::Slate& slate, std::optional<pluss::table::Slate> cases) {
-  PLUSS_CHECK(slate.defined(), "Stream::from_slate requires a defined slate");
-  switch (slate.kind()) {
-    case pluss::table::SlateKind::Series:
-      return Stream(slate.as_series(), pluss::table::detail::validity_mask(slate), std::move(cases));
-    case pluss::table::SlateKind::Note:
-      return Stream(slate.as_note(), pluss::table::detail::validity_mask(slate), std::move(cases));
-    case pluss::table::SlateKind::Timeline:
-      return Stream(slate.as_timeline(), pluss::table::detail::validity_mask(slate), std::move(cases));
-    case pluss::table::SlateKind::Duration:
-      return Stream(slate.as_duration(), pluss::table::detail::validity_mask(slate), std::move(cases));
+Stream Stream::from_shelf(const pluss::table::Shelf& shelf, std::optional<pluss::table::Shelf> cases) {
+  PLUSS_CHECK(shelf.defined(), "Stream::from_shelf requires a defined shelf");
+  switch (shelf.kind()) {
+    case pluss::table::ShelfKind::Series:
+      return Stream(shelf.as_series(), pluss::table::detail::validity_mask(shelf), std::move(cases));
+    case pluss::table::ShelfKind::Note:
+      return Stream(shelf.as_note(), pluss::table::detail::validity_mask(shelf), std::move(cases));
+    case pluss::table::ShelfKind::Timeline:
+      return Stream(shelf.as_timeline(), pluss::table::detail::validity_mask(shelf), std::move(cases));
+    case pluss::table::ShelfKind::Duration:
+      return Stream(shelf.as_duration(), pluss::table::detail::validity_mask(shelf), std::move(cases));
   }
-  pluss::codem::throw_error("Stream::from_slate: unsupported slate kind");
+  pluss::codem::throw_error("Stream::from_shelf: unsupported shelf kind");
 }
 
 bool Stream::defined() const noexcept { return static_cast<bool>(impl_); }
@@ -89,59 +89,114 @@ std::string Stream::dtype() const {
 
 Stream Stream::isnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().isnull(), copy_label(*this));
+  return Stream::from_shelf(to_shelf().isnull(), copy_label(*this));
 }
 
 Stream Stream::notnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().notnull(), copy_label(*this));
+  return Stream::from_shelf(to_shelf().notnull(), copy_label(*this));
 }
 
 Stream Stream::invalid() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_slate(to_slate().invalid(), copy_label(*this));
+  return Stream::from_shelf(to_shelf().invalid(), copy_label(*this));
+}
+
+Stream Stream::isnan() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().isnan(), copy_label(*this));
+}
+
+Stream Stream::notnan() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().notnan(), copy_label(*this));
+}
+
+Stream Stream::isinf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().isinf(), copy_label(*this));
+}
+
+Stream Stream::isposinf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().isposinf(), copy_label(*this));
+}
+
+Stream Stream::isneginf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().isneginf(), copy_label(*this));
+}
+
+Stream Stream::notinf() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return Stream::from_shelf(to_shelf().notinf(), copy_label(*this));
+}
+
+Stream Stream::fillnan(double value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillnan(value); });
+}
+
+Stream Stream::fillinvalid(double value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillinvalid(value); });
+}
+
+Stream Stream::fillinf(double value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillinf(value); });
+}
+
+Stream Stream::fillposinf(double value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillposinf(value); });
+}
+
+Stream Stream::fillneginf(double value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillneginf(value); });
 }
 
 Stream Stream::fillnull(double value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(std::string_view value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(const pluss::Timeline& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.fillnull(value); });
 }
 
 Stream Stream::fillnull(const pluss::Duration& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) {
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) {
     return t.fillnull(value);
   });
 }
 
 Stream Stream::abs() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.abs(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.abs(); });
 }
 
 Stream Stream::clip(double min_value, double max_value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.clip(min_value, max_value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Shelf& t) { return t.clip(min_value, max_value); });
 }
 
 Stream Stream::log() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.log(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.log(); });
 }
 
 Stream Stream::exp() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.exp(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.exp(); });
 }
 
 bool Stream::has_validity_mask() const {
@@ -190,19 +245,19 @@ bool Stream::has_label() const {
   return impl_ref_().cases_.has_value();
 }
 
-const std::optional<pluss::table::Slate>& Stream::label() const {
+const std::optional<pluss::table::Shelf>& Stream::label() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return impl_ref_().cases_;
 }
 
-Stream Stream::with_label(const pluss::table::Slate& label) const {
+Stream Stream::with_label(const pluss::table::Shelf& label) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = *this;
   out.with_label_(label);
   return out;
 }
 
-Stream& Stream::with_label_(const pluss::table::Slate& label) {
+Stream& Stream::with_label_(const pluss::table::Shelf& label) {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto& w = mut_impl_();
   validate_label_size(label, w.size_);

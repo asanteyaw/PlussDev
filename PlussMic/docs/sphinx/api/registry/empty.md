@@ -98,9 +98,9 @@ true
 - [`Catalog::empty`](../catalog/empty.md): the equivalent check on the kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dropnull.html">
+  <a class="prev-link" href="dropposinf.html">
     <span class="label">Previous</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropposinf</span>
   </a>
   <a class="next-link" href="end.html">
     <span class="label">Next</span>

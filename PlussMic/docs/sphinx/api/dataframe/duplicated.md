@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const
+Shelf DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does
@@ -51,7 +51,7 @@ occurrences.
 
 ## Returns
 
-`Slate`
+`Shelf`
     One `Bool` entry per case, labeled by case index and named `"duplicated"`,
     `true` wherever that row is considered a duplicate under the current
     `keep_first` / `keep_last` policy.
@@ -65,9 +65,9 @@ default policy.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
-    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Shelf(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
 auto dupes = orders.features({"city", "product"}).duplicated();

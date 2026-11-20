@@ -112,7 +112,7 @@ using namespace pluss::bundle;
 // with customers.region_id -[ManyToOne]-> regions.region_id and
 // customers.customer_id -[OneToMany]-> events.customer_id.
 auto pulled = nx.pull("customers").take({"customer_id", "region_id"}).collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -133,7 +133,7 @@ auto a = nx.pull("customers").take(view_fields).collect();
 std::vector<std::string> owned_fields = {"customer_id", "region_id"};
 auto b = nx.pull("customers").take(owned_fields).collect();
 
-std::cout << a.features() << "\n" << b.features();
+for (const auto& n : a.features()) std::cout << n << " "; std::cout << "\n"; for (const auto& n : b.features()) std::cout << n << " "; std::cout << "\n";
 ```
 
 ### Output
@@ -147,7 +147,7 @@ Example 3. A single field with an explicit rename.
 
 ```cpp
 auto pulled = nx.pull("customers").take("customer_id", "cust_id").collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -172,7 +172,7 @@ auto b = nx.pull("customers").take(as_map).collect();
 std::unordered_map<std::string, std::string> as_umap = {{"customer_id", "cust_id"}};
 auto c = nx.pull("customers").take(as_umap).collect();
 
-std::cout << a.features() << "\n" << b.features() << "\n" << c.features();
+for (const auto& n : a.features()) std::cout << n << " "; std::cout << "\n"; for (const auto& n : b.features()) std::cout << n << " "; std::cout << "\n"; for (const auto& n : c.features()) std::cout << n << " "; std::cout << "\n";
 ```
 
 ### Output
@@ -198,6 +198,7 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+========================
      | customer_id  zone
 ------------------------
 0    | 1            west
@@ -219,7 +220,7 @@ auto a = nx.pull("customers").take("regions", as_vector).collect();
 std::map<std::string, std::string> as_map = {{"zone", "region_zone"}};
 auto b = nx.pull("customers").take("regions", as_map).collect();
 
-std::cout << a.features() << "\n" << b.features();
+for (const auto& n : a.features()) std::cout << n << " "; std::cout << "\n"; for (const auto& n : b.features()) std::cout << n << " "; std::cout << "\n";
 ```
 
 ### Output

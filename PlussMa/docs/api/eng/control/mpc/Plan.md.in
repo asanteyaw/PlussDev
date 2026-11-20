@@ -1,6 +1,6 @@
 # `control::mpc::Plan`
 
-A compiled finite-horizon MPC problem whose invariant prediction matrices and QP factorization can be reused.
+A compiled predictive-control problem.
 
 ## Signature
 
@@ -12,58 +12,37 @@ pluss::ScalarType control::mpc::Plan::dtype() const noexcept;
 pluss::Platform control::mpc::Plan::platform() const noexcept;
 ```
 
-## What It Does
+## Construction
 
-`Plan` separates expensive invariant compilation from per-state optimization. Build it once when the model, horizon, weights, and bounds are fixed; pass changing initial states, references, and warm starts to `solve`.
+Returned by `build`.
 
 ## Methods
 
-`horizon()`
-: Returns the compiled prediction horizon.
-
-`states()`, `inputs()`
-: Return the model's state and input dimensions.
-
-`dtype()`, `platform()`
-: Report the scalar type and execution platform retained by the condensed solver.
-
-## Returns
-
-Accessors return immutable plan metadata. The plan itself is created by `control::mpc::build`.
-
-## Errors
-
-Accessors do not fail. Model, weight, bound, horizon, and solver configuration errors are rejected during `build`.
+| Method | What it does |
+|---|---|
+| [`horizon`](Plan/horizon.md) | The prediction horizon the plan was built with. |
+| [`states`](Plan/states.md) | The number of states of the planned system. |
+| [`inputs`](Plan/inputs.md) | The number of inputs of the planned system. |
+| [`dtype`](Plan/dtype.md) | The floating dtype of the plan's solver. |
+| [`platform`](Plan/platform.md) | The device the plan's solver lives on. |
 
 ## Changelog
 
-- **0.1** — Initial reusable condensed-MPC plan.
+- **0.1**: initial documented surface.
 
-## Interpretation and Use
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-A plan owns invariant condensation and factorization, so reuse it whenever model, horizon, weights, and bounds are unchanged. Rebuild after any of those change. State and reference changes belong to `solve` and do not invalidate the plan.
-
-## Practical Examples
-
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
-
-### Example 1
-
-Inspect plan dimensions and reuse it with a warm start.
-
-@@example Eng/api/control_mpc_plan.cpp@@
-
-### Example 2
-
-See which options become fixed at compilation.
-
-@@example Eng/api/control_mpc_options.cpp@@
-
-### Example 3
-
-Reject unsupported timebases and horizons during build.
-
-@@example Eng/api/control_mpc_errors.cpp@@
+Plan/Introduction
+Plan/horizon
+Plan/states
+Plan/inputs
+Plan/dtype
+Plan/platform
+```
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
@@ -77,7 +56,3 @@ Reject unsupported timebases and horizons during build.
   </a>
 </div>
 <!-- apiref:nav:end -->
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->

@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::place(std::string name,
-                           const Slate& feature,
+                           const Shelf& feature,
                            std::string_view anchor_feature,
                            bool after = false) const
 DataFrame DataFrame::place(std::string_view name,
@@ -37,7 +37,7 @@ The feature to insert or move. For the first overload, a name not already on the
 frame inserts `feature` as new; a name that already exists replaces that column's
 values with `feature` and relocates it next to `anchor_feature`.
 
-**feature** (`const Slate&`, first overload only)
+**feature** (`const Shelf&`, first overload only)
 
 The column data to write at the target position. Its length must match the frame's
 case count (when the frame already has features).
@@ -66,12 +66,12 @@ Example 1. Insert a brand-new feature right after an existing one.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto profit = Slate(pluss::make_series({40.0, 35.0, 30.0}));
+auto profit = Shelf(pluss::make_series({40.0, 35.0, 30.0}));
 auto with_profit = orders.place("profit", profit, "sales", /*after=*/true);
 std::cout << with_profit;
 ```

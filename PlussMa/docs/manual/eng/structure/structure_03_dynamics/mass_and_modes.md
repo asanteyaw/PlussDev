@@ -6,7 +6,7 @@
 
 A structure that is disturbed and then left alone vibrates in a combination of its **natural modes**: shapes that it can move in, each at its own frequency, with every part moving in step. The lowest few frequencies matter most. They decide whether a floor feels lively, whether a machine's running speed excites a resonance, and how the structure responds to a gust or an earthquake. `structure::modes` finds them. This page gives the frame a mass, checks the mass against the physical mass, finds the modes of a cantilever against the closed formulas, and shows how the mode shapes are scaled and how many to ask for.
 
-## The mental model
+## How it works
 
 Give each member a density, and the frame has a **mass** as well as a stiffness. Free vibration without damping is governed by
 

@@ -281,6 +281,102 @@ Nexus Nexus::apply_all(const std::function<pluss::table::DataFrame(const pluss::
   return Nexus(std::move(next));
 }
 
+Nexus Nexus::isnull() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.isnull(); });
+}
+
+Nexus Nexus::notnull() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.notnull(); });
+}
+
+Nexus Nexus::invalid() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.invalid(); });
+}
+
+Nexus Nexus::isnan() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.isnan(); });
+}
+
+Nexus Nexus::notnan() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.notnan(); });
+}
+
+Nexus Nexus::isinf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.isinf(); });
+}
+
+Nexus Nexus::isposinf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.isposinf(); });
+}
+
+Nexus Nexus::isneginf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.isneginf(); });
+}
+
+Nexus Nexus::notinf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.notinf(); });
+}
+
+Nexus Nexus::dropnull() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropnull(); });
+}
+
+Nexus Nexus::dropnan() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropnan(); });
+}
+
+Nexus Nexus::dropinvalid() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropinvalid(); });
+}
+
+Nexus Nexus::dropinf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropinf(); });
+}
+
+Nexus Nexus::dropposinf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropposinf(); });
+}
+
+Nexus Nexus::dropneginf() const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.dropneginf(); });
+}
+
+Nexus Nexus::fillnull(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillnull(value); });
+}
+
+Nexus Nexus::fillnull(std::string_view value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillnull(value); });
+}
+
+Nexus Nexus::fillnull(const pluss::Timeline& value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillnull(value); });
+}
+
+Nexus Nexus::fillnull(const pluss::Duration& value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillnull(value); });
+}
+
+Nexus Nexus::fillnan(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillnan(value); });
+}
+
+Nexus Nexus::fillinvalid(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillinvalid(value); });
+}
+
+Nexus Nexus::fillinf(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillinf(value); });
+}
+
+Nexus Nexus::fillposinf(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillposinf(value); });
+}
+
+Nexus Nexus::fillneginf(double value) const {
+  return map_frames([&](const pluss::table::DataFrame& f) { return f.fillneginf(value); });
+}
+
 Nexus Nexus::map_frames(const std::function<pluss::table::DataFrame(const pluss::table::DataFrame&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn), "Nexus::map_frames: callback is empty");
   const auto& src = impl_ref_();
@@ -319,8 +415,8 @@ pluss::table::DataFrame Nexus::summary() const {
   }
 
   return pluss::table::DataFrame({
-      {"table", pluss::table::Slate(pluss::make_note(names))},
-      {"ncases", pluss::table::Slate(pluss::make_series(row_counts))},
-      {"nfeatures", pluss::table::Slate(pluss::make_series(feature_counts))},
+      {"table", pluss::table::Shelf(pluss::make_note(names))},
+      {"ncases", pluss::table::Shelf(pluss::make_series(row_counts))},
+      {"nfeatures", pluss::table::Shelf(pluss::make_series(feature_counts))},
   });
 }

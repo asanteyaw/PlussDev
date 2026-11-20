@@ -1,5 +1,7 @@
 # `lti::SimRun`
 
+The result of `sim`.
+
 ## Signature
 
 ```cpp
@@ -8,44 +10,48 @@ lti::SimRun run = lti::sim(system, input, time);
 
 ## What It Does
 
-Owns both externally visible outputs and internal state history from one simulation, allowing diagnostics and chained analysis without rerunning dynamics.
+The output samples and the state trajectory. `values` has one row per time point and one column per output; `states` has one row per time point and one column per state. The first row of `states` is the initial state.
 
 ## Fields
 
-| Field | Meaning |
-|---|---|
-| `values` | Output history with shape `[..., time, outputs]`. |
-| `states` | State history with shape `[..., time, states]`, including the state associated with each output sample. |
+| Field | Meaning | Shape |
+|---|---|---|
+| `values` | `y = C x + D u` at every time point. | `[time, outputs]` |
+| `states` | The state at every time point. | `[time, states]` |
 
 ## Returns
 
-Returned by both `lti::sim` overloads.
+Returned by `sim`.
 
 ## Errors
 
-The result itself is valid by construction; errors occur during simulation before a `SimRun` is returned.
+Reading a field does not run again.
+
+## Interpretation and Use
+
+Because both are returned, the outputs can be recomputed from the states and the input: the second example reconstructs `C x + D u` and finds no difference at rounding. Pass the last row of `states` as `initial` to continue a simulation.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+The shapes and the initial state in the first row.
 
-@@example Eng/api/lti_sim.cpp@@
+@@example Eng/api/lti_simrun_fields.cpp@@
 
 ### Example 2
 
-Compare hold policies with an explicit initial state.
+The outputs recomputed from the states and the input.
 
-@@example Eng/api/lti_sim_modes.cpp@@
+@@example Eng/api/lti_simrun_output.cpp@@
 
 ### Example 3
 
-Exercise timestamp and input-shape validation.
+An initial state of the wrong size.
 
-@@example Eng/api/lti_sim_errors.cpp@@
+@@example Eng/api/lti_simrun_errors.cpp@@
 
 ## See Also
 

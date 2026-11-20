@@ -36,12 +36,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0}))},
 });
 
 auto biz = Nexus({
@@ -95,9 +95,9 @@ false
 - [`Nexus::add_relationship`](add_relationship.md): declare a new relationship.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pull.html">
+  <a class="prev-link" href="read.html">
     <span class="label">Previous</span>
-    <span class="title">pull</span>
+    <span class="title">read</span>
   </a>
   <a class="next-link" href="relationship_audit.html">
     <span class="label">Next</span>

@@ -1,6 +1,6 @@
 # `control::lqe`
 
-Designs a steady-state linear quadratic estimator.
+Computes the steady-state Kalman gain of a state-space system.
 
 ## Signature
 
@@ -21,68 +21,59 @@ control::LqeResult control::lqe(
 
 ## What It Does
 
-`lqe` applies Riccati duality to estimator design. The model timebase selects continuous or discrete equations while preserving the state-space batch contract.
+Solves the dual of the regulator Riccati equation for the steady-state estimation error covariance and returns it with the observer gain `L` and the estimator dynamics `A - L C`. A continuous system solves the continuous Riccati equation and a discrete one the discrete equation. An overload takes the cross-covariance between the process and measurement noise.
 
 ## Parameters
 
 `system`
-: The continuous or discrete plant whose state is estimated.
+: A `StateSpace`; the pair `(A, C)` must be detectable.
 
-`process_cov`
-: Process-noise covariance in state coordinates.
-
-`noise_cov`
-: Measurement-noise covariance in output coordinates.
+`process_cov`, `noise_cov`
+: `Q` and `R`; `R` must be positive definite.
 
 `cross`
-: Optional process/measurement cross covariance.
+: Optional cross-covariance of the two noises (second overload).
 
 `options`
-: Matrix-equation numerical controls.
+: `MatrixEqOptions` of the underlying solver.
 
 ## Returns
 
-An `LqeResult` with covariance, gain, and estimator error dynamics.
+An `LqeResult` with `covariance`, `gain` and `closed_loop`.
 
 ## Errors
 
-Throws for incompatible dimensions, invalid covariance matrices, or a failed stabilizing Riccati solve.
+A noise covariance that is not positive definite, covariances of the wrong size, and a system with an unstable mode that the outputs cannot see throw `pluss::Error`; the last names the detectability condition and appends the solver message.
 
 ## Interpretation and Use
 
-`lqe` is a design calculation, not a trajectory filter. It produces a steady-state gain from a model and noise covariances. Use `kalman` when actual observations must be processed, and use `smooth` when future observations may refine earlier states.
+For the discrete scalar walk the steady predicted covariance satisfies `p = p - p^2 / (p + r) + q`, which the first example verifies; the gain is `p / (p + r)` and the estimator pole `1 - gain`. For the continuous system `x' = -x + w` with unit covariances the covariance is `sqrt(2) - 1` (the second example). The third checks the Riccati residual for a two-state system.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Design a continuous steady-state estimator.
+A discrete scalar system against its closed form.
 
-@@example Eng/api/control_lqe.cpp@@
+@@example Eng/api/control_lqe_scalar.cpp@@
 
 ### Example 2
 
-Reject a singular measurement covariance.
+A continuous scalar system against its closed form.
 
-@@example Eng/api/control_estimation_errors.cpp@@
+@@example Eng/api/control_lqe_continuous.cpp@@
 
 ### Example 3
 
-Contrast the design result with finite-trajectory filtering.
+The Riccati residual for a two-state system.
 
-@@example Eng/api/control_estimation.cpp@@
+@@example Eng/api/control_lqe_residual.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="SmoothResult.html">
-    <span class="label">Previous</span>
-    <span class="title">SmoothResult</span>
-  </a>
-  <a class="next-link" href="kalman.html">
-    <span class="label">Next</span>
-    <span class="title">kalman</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+@@example Eng/api/control_lqe_errors.cpp@@
+

@@ -149,7 +149,7 @@ Route two column groups through separate stages with the workflow DSL. The progr
 
 namespace lymph = pluss::ai::lymph;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
   const pluss::Series x = pluss::make_series(std::vector<double>{
@@ -219,7 +219,7 @@ re-typing it.
 `Policy::apply(...)` only ever sees a raw `DataFrame` argument — the
 `LabeledBatch` overload of every verb skips it entirely (a `LabeledBatch` is
 already past the raw-admission stage). The `(DataFrame x, Series y)` /
-`(DataFrame x, Slate y)` overloads apply `Policy` to `x` but reject a
+`(DataFrame x, Shelf y)` overloads apply `Policy` to `x` but reject a
 `Policy` with `filter_nulls` set (dropping rows there would desynchronize `x`
 from the already-separate `y`) — use the `(frame, DataFrameBatchOptions)`
 overload instead when the policy needs to filter rows.

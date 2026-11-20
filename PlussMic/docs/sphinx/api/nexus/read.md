@@ -42,12 +42,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 2.0}))},
 });
 
 auto biz = Nexus({
@@ -98,12 +98,12 @@ true one row per customer
 - [`Nexus::load`](load.md): raw directory ingestion instead of store restoration.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="links.html">
+  <a class="prev-link" href="query.html">
     <span class="label">Previous</span>
-    <span class="title">links</span>
+    <span class="title">query</span>
   </a>
-  <a class="next-link" href="map_frames.html">
+  <a class="next-link" href="relationship.html">
     <span class="label">Next</span>
-    <span class="title">map_frames</span>
+    <span class="title">relationship</span>
   </a>
 </div>

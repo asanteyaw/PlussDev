@@ -108,9 +108,9 @@ hint that the two catalogs actually disagree (`2` vs `4` records).
   values `shape()` reports for its second and third elements.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rename.html">
+  <a class="prev-link" href="scribbelize.html">
     <span class="label">Previous</span>
-    <span class="title">rename</span>
+    <span class="title">scribbelize</span>
   </a>
   <a class="next-link" href="show.html">
     <span class="label">Next</span>

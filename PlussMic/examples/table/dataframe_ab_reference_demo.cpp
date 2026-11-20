@@ -5,7 +5,7 @@
 
 namespace {
 
-pluss::table::Slate total_grade(const pluss::table::DataFrame& df) {
+pluss::table::Shelf total_grade(const pluss::table::DataFrame& df) {
   return df.features("assignment") + df.features("final");
 }
 
@@ -100,9 +100,9 @@ int main() {
   std::cout << "ANY_AXIS0\n" << flags.any().to_string() << "\n\n";
   std::cout << "ANY_AXIS1\n" << flags.any(Axis::Case).to_string() << "\n\n";
 
-  std::cout << "ASSIGN_SLATE\n";
+  std::cout << "ASSIGN_SHELF\n";
   std::cout << grades.assign({
-      std::pair<std::string, pluss::table::Slate>{"total", total_grade(grades)},
+      std::pair<std::string, pluss::table::Shelf>{"total", total_grade(grades)},
   }).to_string() << "\n\n";
 
   std::cout << "ASSIGN_SPEC\n";

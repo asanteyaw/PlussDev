@@ -85,8 +85,8 @@ auto ragged = pluss::scribble::Registry({
 
 try {
   auto out = ragged.sample(1, 42);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

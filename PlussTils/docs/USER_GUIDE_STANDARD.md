@@ -38,7 +38,7 @@ standard.
 Every guide page contains, in this order:
 
 1. **Opening paragraph:** the task and when a reader needs this page.
-2. **Mental model:** the one picture or rule that makes the rest predictable.
+2. **How it works:** the one picture or rule that makes the rest predictable. Give the section the heading `## How it works`; do not title it "mental model".
 3. **Worked tour:** a sequence of examples that build up from the simplest
    correct use to the edge cases, each with a sentence explaining what the next
    example adds.
@@ -98,7 +98,7 @@ Every guide page contains, in this order:
 A guide page is accepted when all of these hold:
 
 - [ ] The opening states the task and the reader's situation.
-- [ ] A mental model appears before the first example.
+- [ ] A "How it works" section appears before the first example.
 - [ ] Every example is a complete program.
 - [ ] Every printed output is copied verbatim from the permanent executable.
 - [ ] Each overload and each toggle the page covers has its own example.

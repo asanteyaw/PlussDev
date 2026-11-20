@@ -4,7 +4,7 @@ A model has states that nobody observes: the short rate behind bond prices, the 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A state-space model has two equations**: how the hidden state moves, and how the observation depends on it.
 - **The Kalman filter is exact for linear Gaussian models**; its covariance says how uncertain each estimate is, and its innovations give the likelihood.

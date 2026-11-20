@@ -90,8 +90,8 @@ Example 3. Calling an ordinary method on a moved-from handle throws.
 ```cpp
 try {
   auto n = biz.ntables();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

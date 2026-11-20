@@ -64,7 +64,7 @@ alternative to a broader [`fillnull(0.0)`](fillnull.md) call).
 
 ## Parameters
 
-**from** (`double` / `std::string_view` / `const char*` / `const pluss::Series&` /
+**from** (`double` / `std::string_view` / `const char*` / `const pluss::Series&` (one value) /
 `const pluss::Note&` / `const pluss::Timeline&` / `const pluss::Duration&` /
 `pluss::null_t`)
 
@@ -96,8 +96,8 @@ Example 1. Replace a specific text value in one feature.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"order_id", Shelf(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
 });
 
 auto out = orders.replace("Kumasi", "Kumasi City");
@@ -127,8 +127,8 @@ Example 2. Turn a specific sentinel value into a genuine null.
 
 ```cpp
 auto orders_with_price = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
 });
 
 // Suppose 42.0 was actually a placeholder for "price not yet set" upstream.
@@ -183,18 +183,16 @@ want the "search for a value" framing to read consistently alongside other
 `replace(...)` calls in the same block of code, rather than switching vocabulary to
 `fillnull` mid-pipeline.
 
-Example 4. Replace several distinct values in one call using the `Series`-range overload.
+Example 4. The `Series` overload takes a single value: a one-element `Series` for `from` and for `to`.
 
 ```cpp
 auto ids = DataFrame({
-    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104}))},
-    {"unit_price", Slate(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
+    {"order_id",   Shelf(pluss::make_series({101, 102, 103, 104}))},
+    {"unit_price", Shelf(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
 });
-
-// Renumber two specific order IDs in one call instead of two chained replace() calls.
 auto renumbered = ids.replace(
-    pluss::make_series({101, 103}),
-    pluss::make_series({9101, 9103}),
+    pluss::make_series({101}),
+    pluss::make_series({9101}),
     {"order_id"});
 std::cout << renumbered;
 ```
@@ -207,19 +205,16 @@ std::cout << renumbered;
 ---------------------------
 0    | 9101      1200      
 1    | 102       42        
-2    | 9103      1150      
+2    | 103       1150      
 3    | 104       320       
 ---------------------------
 [4 cs x 2 feat]
 ```
 
-The two `pluss::Series` arguments are matched up positionally: every occurrence of
-`from[i]` becomes `to[i]`, for every `i`, in a single pass over the frame. `order_id`
-`101` and `103` are renumbered to `9101` and `9103` respectively; `102` and `104` never
-appear in `from`, so they pass through unchanged. This is the overload to reach for when
-you have a whole lookup table of value substitutions rather than a single `from`/`to`
-pair — build the two `Series` from a mapping and pass them straight through, instead of
-writing one `replace()` call per pair.
+`from` and `to` must each hold exactly one value (a longer `Series` throws a `pluss::Error`
+saying it "must be scalar"). Every occurrence of `101` in `order_id` becomes `9101`; the other
+order ids and the whole `unit_price` feature are untouched. To renumber several values, chain
+one `replace` call per pair.
 
 ## Notes
 

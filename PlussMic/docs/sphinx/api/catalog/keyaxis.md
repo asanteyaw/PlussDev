@@ -188,9 +188,9 @@ std::cout << out.nkeys();
   key transformation rather than selection.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnull.html">
+  <a class="prev-link" href="join_detailed.html">
     <span class="label">Previous</span>
-    <span class="title">isnull</span>
+    <span class="title">join_detailed</span>
   </a>
   <a class="next-link" href="keys.html">
     <span class="label">Next</span>

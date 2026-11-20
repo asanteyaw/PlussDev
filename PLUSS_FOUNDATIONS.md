@@ -1,25 +1,25 @@
-# Pluss Foundations
+# PlussII Foundations
 
-This document defines the baseline product narrative for `Plusses`: what it is, who it is for, what it solves, and how we decide what belongs in the repo.
+This document defines the baseline product narrative for `PlussII`: what it is, who it is for, what it solves, and how we decide what belongs in the repo.
 
 ## Positioning
 
-`Plusses` is a C++20-first technical computing stack that unifies numeric tensors, text tensors, time indexes, tabular analytics, optimization, scientific computing, plotting, and ML workflows behind one coherent API family.
+`PlussII` is a C++20 technical computing stack that unifies numeric tensors, text tensors, time indexes, tabular analytics, optimization, scientific computing, plotting, and ML workflows behind one coherent API family.
 
 It is positioned as:
 
-- a production-capable C++ stack,
+- a production-capable C++ ecosystem,
 - a collection of high performance spaces for any technical computing task
 - a single-toolchain alternative to stitching many disconnected libraries,
 - an SDK-style package that downstream projects can consume.
 
 Vision framing:
 
-- one integrated C++ stack that plays the role of multiple major technical-computing libraries in one place.
+- one integrated C++ ecosystem that plays the role of multiple major technical-computing libraries in one place.
 
 ## Nutshell
 Namespace: `pluss`
-Product: `Plusses` (satirically can be referred to as `the Plusses`)
+Product: `PlussII` (satirically can be referred to as `the Plusses`)
 Spaces: PlussQit, PlussMa, PlussMic, PlussPl, PlussAI, PlussTils
 
 ## Problem We Are Solving
@@ -31,15 +31,15 @@ Modern C++ data/ML/scientific workflows are fragmented:
 - API styles differ by subsystem, increasing integration cost and maintenance burden,
 - platform behavior (CPU/GPU) is inconsistent across modules.
 
-`Plusses` addresses this by making end-to-end workflows possible within one runtime and one API vocabulary.
+`PlussII` addresses this by making end-to-end workflows possible within one runtime and one API vocabulary.
 
 ## Stack Mapping
 
-Conceptual mapping of Plusses spaces:
+Conceptual mapping of PlussII spaces (libraries):
 
-- The `PlussQit` space: This is the core space, with numerical computing, temporal and text processing engine supporting the other spaces.
+- The `PlussQit` space: This is the core library, with numerical computing, temporal and text processing engine supporting the other spaces.
 - The `PlussMic` space: Efficient data analysis and manipulation functionalities and utilities.
-- The `PlussPl` space: Immersive plotting engine for visual workflows and pictorial representations of data.
+- The `PlussPl` space: Immersive plotting library for visual workflows and pictorial representations of data.
 - The `PlussMa` space: High performance scientific computing spanning across different scientific and engineering domains, with numerical methods and optimization engines.
 - The `PlussAI` space: Artificial intelligence with machine learning, deep learning, robotics and other AI functionalities
 - The `PlussTils` space: General utility space for convenience. Also provides graphical user interface for outputting results and visualizing workflows in real time.
@@ -50,17 +50,17 @@ This mapping is directional and maturity-dependent, with growing implementations
 
 Top-level organization model:
 
-- `space -> subspaces -> libraries -> packages -> modules`
+- `spaces -> subspaces -> frameworks -> packages -> modules`
 
 Examples:
 
-- `PlussAI` (space) -> `NodeJ` / `NodeK` (subspaces)
-- `PlussMa` (space) -> math/stat/finance/natsci (subspaces)
-- `PlussQit` (space) -> `CodeM` / `CodeN` / `CodeH` (subspaces)
+- `PlussAI` (space) -> `Classic` / `NN` (subspaces)
+- `PlussMa` (space) -> Math/Stat/NatSci/Eng (subspaces)
+- `PlussQit` (space) -> `Series` / `Note` / `Timeline` (subspaces)
 
 ## Primary Users
 
-`Plusses` targets users who need one or more of:
+`PlussII` targets users who need one or more of:
 
 - C++-native quantitative/scientific modeling with strong performance control,
 - Data engineering + modeling without jumping across multiple languages,
@@ -77,15 +77,21 @@ Users should be able to:
 - Keep compute platform behavior explicit and consistent.
 
 ## Scope By Space
-`PlussQit` is the core and fundamental space fuelling the `Plusses`. All other spaces are built on top of it.
+`PlussQit` is the core and fundamental space fuelling `PlussII`. All other spaces are built on top of it.
 
-Current stack structure by space:
+Current stack structure by spaces:
 
-- `PlussQit` space: core primitives and runtime (`Series`, `Note`, `Timeline/Timeline/Duration`). `Series` is the core tensor engine for numerical computing. `Note` is the core tensor-like engine for word and text processing. `Duration`, `Timeline` and `TimeIndex` provide utilities temporal data processing.
-- `PlussMic` space: Offers three data processing models. `Table` provides `DataFrame` for 2D structured data processing and `Atlas` for 3D structured data processing. It also offers `Nexus`, a workspace for cordinating a collection of dataframes. `Kindle` provides a more slightly more general 2D(`Catalog`) and 3D(`Archive`) for data processing. Unlike `Table`, it can handle data of unequal column length. `Bundle` is the most general data processing model on offer. Unlike the other two, it can handle data with columns of heterogeneous types, with `Registry` for 2D and `Axel` for 3D data processing. I/O workflows are also offered in the space.
-- `PlussPl` space: Responsible for all plotting utilities and functionalities. Offers the platform for `Flash`, a higher level engine built on top of `PlussPl` functionalities to provide a convenient way of plotting, with complex plots made easier.
-- `PlussMa` space: Provides several subspaces for a wide range of scientific computing tasks, quantiative modelling and numerical optimization work. The `Math` subspace provides libraries for tasks in linear algebra, optimization, finance, etc. The `Stats` subspace provides various libraries for statistical tasks like hypothesis testing, time series analysis and inference. `NatSci` and `Eng` subspaces provide the platform natural sciences and engineering work.
-- `PlussAI` space: Provides Machine and Deep learning surfaces (functional and module-style APIs), robotics and other artificial intelligence tools for AI work. 
+- `PlussQit`: core primitives and runtime (`Series`, `Note`, `Timeline/Duration`). `Series` is the core tensor engine for numerical computing. `Note` is the core tensor-like engine for word and text processing. `Timeline` and `Duration` provide utilities for temporal data processing.
+
+- `PlussMic`: Offers three data processing models. `Table` provides `DataFrame` for 2D structured data processing and `Atlas` for 3D structured data processing. `Kindle` provides a more slightly more general 2D(`Catalog`) and 3D(`Archive`) for data processing. Unlike `Table`, it can handle data of unequal column length. `Scribble` is the most general data processing model on offer. Unlike the other two, it can handle data with columns of heterogeneous types, with `Registry` for 2D and `Axel` for 3D data processing. I/O workflows are also offered in the space.
+Finally `Bundle` offers `Nexus` and `Locus`, workspaces for cordinating a collection of dataframes and catalogs respectively.
+
+- `PlussPl`: Responsible for all plotting utilities and functionalities. Offers the platform for `Flash`, a higher level engine built on top of `PlussPl` functionalities to provide a convenient way of plotting, with complex plots made easier.
+
+- `PlussMa`: Provides several subspaces for a wide range of scientific computing tasks, quantiative modelling and numerical optimization work. The `Math` subspace provides libraries for tasks in linear algebra, optimization, finance, etc. The `Stats` subspace provides various libraries for statistical tasks like regression, time series analysis and inference. `NatSci` and `Eng` subspaces provide the platform natural sciences and engineering work.
+
+- `PlussAI`: Provides Machine and Deep learning surfaces with functional and module-style APIs, robotics and other artificial intelligence tools for AI work. 
+
 - `PlussTils` space: Responsible for rendering/window/session infrastructure and general convenient utilities.
 
 ## Product Goals

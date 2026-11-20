@@ -106,7 +106,7 @@ inline Series salt_correction(const Series &na, const Series &k, const Series &t
   const Series other = k.add(mg).add(tris).add(dntps);
   const Series eq = other.gt(0.0).logical_and(dntps.lt(mg)).logical_and(zero.add(method != 7 ? 1.0 : 0.0).gt(0.0));
   const Series extra = mg.sub(dntps).clamp(0.0, 1e300).sqrt().mul(120.0);
-  mon_mm = eq.where(mon_mm.add(extra), mon_mm);
+  mon_mm = pluss::series::where(eq, mon_mm.add(extra), mon_mm);
   const Series mon = mon_mm.mul(1e-3);
   const Series ln_mon = mon.log();
   const double gc = duplex.gc_fraction;
@@ -130,7 +130,7 @@ inline Series salt_correction(const Series &na, const Series &k, const Series &t
   const double ka = 3e4;
   const Series q = dn.mul(ka).sub(mgm.mul(ka)).add(1.0);
   const Series free_mg = q.mul(-1.0).add(q.square().add(mgm.mul(4.0 * ka)).sqrt()).div(2.0 * ka);
-  mgm = dntps.gt(0.0).where(free_mg, mgm);
+  mgm = pluss::series::where(dntps.gt(0.0), free_mg, mgm);
   const Series ln_mg = mgm.clamp(1e-300, 1e300).log();
   const Series ratio = mgm.sqrt().div(mon.clamp(1e-300, 1e300));
   const double b = -0.911, c = 6.26, e = -48.2, f = 52.5;
@@ -139,12 +139,12 @@ inline Series salt_correction(const Series &na, const Series &k, const Series &t
   const Series a2 = ln_mon.mul(mon.sqrt()).mul(-0.352).add(0.843).mul(3.92);
   const Series d2 = ln_mon.mul(-4.03e-3).add(1.279).sub(ln_mon.square().mul(8.03e-3)).mul(1.42);
   const Series g2 = ln_mon.mul(-0.258).add(0.486).add(ln_mon.pow(3.0).mul(5.25e-3)).mul(8.31);
-  a = mid.where(a2, a);
-  d = mid.where(d2, d);
-  g = mid.where(g2, g);
+  a = pluss::series::where(mid, a2, a);
+  d = pluss::series::where(mid, d2, d);
+  g = pluss::series::where(mid, g2, g);
   const Series full = a.add(ln_mg.mul(b)).add(d.mul(ln_mg).add(c).mul(gc)).add(g.mul(ln_mg.square()).add(ln_mg.mul(f)).add(e).mul(1.0 / (2.0 * (n - 1.0)))).mul(1e-5);
   const Series low = mon_mm.gt(0.0).logical_and(ratio.lt(0.22));
-  return low.where(corr6, full);
+  return pluss::series::where(low, corr6, full);
 }
 
 // Melting temperature in deg C. c1, c2: strand concentrations in nM (lanes); for a self-complementary duplex only c1 is used.
@@ -180,7 +180,7 @@ inline Series duplex_fraction(const Series &k, const Series &ca_molar, const Ser
   const Series b = k.mul(ca_molar.add(cb_molar)).add(1.0);
   const Series disc = b.square().sub(k.mul(k).mul(ca_molar).mul(cb_molar).mul(4.0)).clamp(0.0, 1e300).sqrt();
   const Series x = b.sub(disc).div(k.mul(2.0));
-  const Series limiting = ca_molar.lt(cb_molar).where(ca_molar, cb_molar);
+  const Series limiting = pluss::series::where(ca_molar.lt(cb_molar), ca_molar, cb_molar);
   return x.div(limiting);
 }
 

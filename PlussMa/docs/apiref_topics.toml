@@ -101,3 +101,11 @@ code = "eng"
 summary = "Signal processing, dynamic systems, controls, circuits, power, fluids and structures."
 guide = "manual/eng.md"
 reference = "api/plussma_eng.md"
+
+[[topic]]
+slug = "natsci"
+title = "Natural sciences"
+code = "natsci"
+summary = "Biology, chemistry and physics models: populations, kinetics, flows and fields."
+guide = "manual/natsci.md"
+reference = ""

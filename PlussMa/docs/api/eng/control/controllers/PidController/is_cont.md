@@ -1,0 +1,132 @@
+<!-- generated from is_cont.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 48dd66622cd5 -->
+
+# `control::Pid::is_cont`
+
+[Back to `control::Pid`](../PidController.md)
+
+Whether the controller is continuous-time.
+
+## Signature
+
+```cpp
+bool control::Pid::is_cont() const noexcept;
+```
+
+## What It Does
+
+True when `sample_time()` is zero. The discrete integration and differentiation rules are ignored for a continuous controller. It is the negation of [`is_disc`](is_disc.md).
+
+## Returns
+
+`true` for a continuous controller.
+
+## Practical Examples
+
+### Example 1
+
+The default is continuous.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("continuous:", controller().is_cont());
+}
+```
+
+Output
+
+```text
+continuous: true
+```
+
+### Example 2
+
+A sample time makes it discrete.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("continuous:", controller(0.1).is_cont());
+}
+```
+
+Output
+
+```text
+continuous: false
+```
+
+### Example 3
+
+Branch on the domain.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+static pluss::Series s(double v) { return pluss::make_series(v); }
+static ctl::Pid controller(double ts = 0.0, ctl::PidRule i = ctl::PidRule::Forward, ctl::PidRule d = ctl::PidRule::Forward) {
+  return ctl::pid(s(2.0), s(1.0), s(0.5), s(0.1), ts, i, d);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const double ts : {0.0, 0.1}) out.writeln(controller(ts).is_cont() ? "use frequency s = jw" : "use frequency z = exp(jwTs)");
+}
+```
+
+Output
+
+```text
+use frequency s = jw
+use frequency z = exp(jwTs)
+```
+
+## See Also
+
+- [`is_disc`](is_disc.md): its negation
+- [`sample_time`](sample_time.md): the period
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="int_rule.html">
+    <span class="label">Previous</span>
+    <span class="title">int_rule</span>
+  </a>
+  <a class="next-link" href="is_disc.html">
+    <span class="label">Next</span>
+    <span class="title">is_disc</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

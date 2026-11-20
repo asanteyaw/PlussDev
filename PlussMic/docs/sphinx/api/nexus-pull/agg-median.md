@@ -59,12 +59,13 @@ std::cout << pulled.to_string();
 ### Output
 
 ```text
+================================
      | customer_id  median_spend
----------------------------------
-0    | 1            7.5
-1    | 2            4
-2    | 3            NULL
----------------------------------
+--------------------------------
+0    | 1            7.5         
+1    | 2            4           
+2    | 3            NULL        
+--------------------------------
 [3 cs x 2 feat]
 ```
 
@@ -82,7 +83,7 @@ auto pulled = nx.pull("customers")
         .median({{"spend", "median_spend"}, {"event_id", "median_event_id"}})
     .end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output
@@ -101,7 +102,7 @@ auto pulled = nx.pull("customers")
     .take("customer_id")
     .agg("events").median(fields).end()
     .collect();
-std::cout << pulled.features();
+for (const auto& name : pulled.features()) std::cout << name << " ";
 ```
 
 ### Output

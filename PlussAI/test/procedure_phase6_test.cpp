@@ -27,7 +27,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -39,9 +39,9 @@ Series vec(std::vector<double> values) {
 
 DataFrame raw_frame() {
   return DataFrame({
-      {"id", Slate(vec({100, 101, 102}))},
-      {"x", Slate(vec({1.0, 2.0, 3.0}))},
-      {"y", Slate(vec({4.0, 5.0, 6.0}))},
+      {"id", Shelf(vec({100, 101, 102}))},
+      {"x", Shelf(vec({1.0, 2.0, 3.0}))},
+      {"y", Shelf(vec({4.0, 5.0, 6.0}))},
   });
 }
 

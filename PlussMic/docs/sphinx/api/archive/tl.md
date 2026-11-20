@@ -114,8 +114,8 @@ auto archive = pluss::kindle::Archive({c0, c1});
 
 try {
   auto out = archive.tl();
-} catch (const std::exception& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 

@@ -60,3 +60,14 @@ gains the metadata -- only `described` does.
 
 - [`meta`](meta.md): the getter/setter pair this page's probes complement.
 - [`set_table_meta`](set_table_meta.md): the explicitly-named setter.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="has_store.html">
+    <span class="label">Previous</span>
+    <span class="title">has_store</span>
+  </a>
+  <a class="next-link" href="head.html">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>

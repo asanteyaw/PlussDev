@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::unite(const Slate& other) const
+Shelf DataFrameLabelAccessor::unite(const Shelf& other) const
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ first-occurrence order), then `other`'s distinct values not already seen.
 
 ## Parameters
 
-**other** (`const Slate&`)
+**other** (`const Shelf&`)
 
 The values to union with.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The distinct values from both sides combined, `display_name` `"unite"`.
 
 ## Examples
@@ -37,11 +37,11 @@ overlapping value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
-auto other = Slate(pluss::make_note({"west", "south"}));
+auto other = Shelf(pluss::make_note({"west", "south"}));
 auto out = labeled.labels().unite(other);
 std::cout << out;
 ```

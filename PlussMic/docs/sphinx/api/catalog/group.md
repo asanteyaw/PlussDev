@@ -91,13 +91,13 @@ auto ct = pluss::kindle::Catalog({
 
 try {
   auto out = ct.group().by("nope");
-} catch (const std::exception& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 try {
   auto out = ct.group().by("");
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -129,9 +129,9 @@ Catalog::group().by: key field cannot be empty
   avoid the unknown-key throw.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="get.html">
+  <a class="prev-link" href="grep.html">
     <span class="label">Previous</span>
-    <span class="title">get</span>
+    <span class="title">grep</span>
   </a>
   <a class="next-link" href="has.html">
     <span class="label">Next</span>

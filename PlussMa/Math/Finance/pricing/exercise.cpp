@@ -129,7 +129,7 @@ double lsm_fit_(OptionType type, ExerciseStyle style, double strike, double rate
     const Series coef = pluss::subsp::math::linalg::cholesky_solve(weighted.matmul(cash.unsqueeze(1)), pluss::subsp::math::linalg::cholesky(normal));
     const Series continuation = phi.matmul(coef).squeeze(1);
     const Series stop = now.gt(continuation).to(ScalarType::Float64).mul(itm).gt(0.5);
-    cash = stop.where(now, cash);
+    cash = pluss::series::where(stop, now, cash);
     if (policy) {
       policy->steps.insert(policy->steps.begin(), j);
       policy->coefficients.insert(policy->coefficients.begin(), coef);
@@ -188,7 +188,7 @@ ScalarGreeks detail::lsm_greeks(OptionType type, ExerciseStyle style, double spo
       const Series now = payoff_(type, s, strike);
       const Series continuation = s.div(strike).unsqueeze(1).pow(powers).matmul(policy.coefficients[k]).squeeze(1);
       const Series stop = now.gt(continuation).to(ScalarType::Float64).mul(now.gt(0.0).to(ScalarType::Float64)).gt(0.5);
-      idx = stop.where(pluss::series::full({p.size(0)}, static_cast<double>(policy.steps[k]), cfg), idx);
+      idx = pluss::series::where(stop, pluss::series::full({p.size(0)}, static_cast<double>(policy.steps[k]), cfg), idx);
     }
     return idx;
   };

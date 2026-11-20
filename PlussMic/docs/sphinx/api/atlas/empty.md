@@ -35,8 +35,8 @@ Example 1. A non-empty atlas.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Shelf(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Shelf(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.empty();
@@ -101,9 +101,9 @@ empty: 1
   frame count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dloc.html">
+  <a class="prev-link" href="dropposinf.html">
     <span class="label">Previous</span>
-    <span class="title">dloc</span>
+    <span class="title">dropposinf</span>
   </a>
   <a class="next-link" href="features.html">
     <span class="label">Next</span>

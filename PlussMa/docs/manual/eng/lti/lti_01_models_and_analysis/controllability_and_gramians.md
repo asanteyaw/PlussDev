@@ -6,7 +6,7 @@
 
 Before you design a controller or an observer you want to know whether it can work: can the inputs move the system anywhere in its state space, and do the outputs reveal what the states are doing? `ctrb` and `obsv` build the matrices whose rank answers those two questions, and `gram` computes the two gramians that say how strongly each state direction is driven and seen. This page shows all three with systems small enough to check by hand.
 
-## The mental model
+## How it works
 
 A system is **controllable** if some input takes the state from zero to any target. It is **observable** if the initial state can be recovered from the outputs. For a system with `n` states both are rank conditions:
 

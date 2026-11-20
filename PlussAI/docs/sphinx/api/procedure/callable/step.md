@@ -108,10 +108,10 @@ parameter type `Fn` accepts.
 int main() {
   namespace ai = pluss::ai;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame df({{"x", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}, {2}, cfg))}});
+  const DataFrame df({{"x", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0}, {2}, cfg))}});
 
   const ai::Procedure proc = ai::procedure::make({
       ai::procedure::step("columns", "raw", "count", [](const DataFrame& frame) {

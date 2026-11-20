@@ -133,8 +133,8 @@ std::cout << out.nfields() << " " << std::get<pluss::Note>(out.fields("city").at
     <span class="label">Previous</span>
     <span class="title">fieldaxis</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

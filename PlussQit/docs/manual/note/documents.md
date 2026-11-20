@@ -6,7 +6,7 @@
 
 Text is also something you produce and verify. This page personalises a message for every row of a table and then checks a LaTeX manuscript for the mistakes that cost a rejected submission: references to labels that do not exist, and citations with no bibliography entry.
 
-## The mental model
+## How it works
 
 Generating text is replacement with data: a template with placeholders, one value per row. Checking text is extraction plus set arithmetic: pull out what is used, pull out what is defined, and compare the two sets. The extraction side has accessors for structured formats; for LaTeX, `note.tex()` knows sections, labels, references and citations.
 

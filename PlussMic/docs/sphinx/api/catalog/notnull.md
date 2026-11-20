@@ -61,6 +61,7 @@ city                     | Series       | Series[bool]     | 3       | [true, tr
 
 ## Notes
 
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Every resulting stream is `Series[bool]`, regardless of the source stream's own payload
   kind.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
@@ -74,9 +75,9 @@ city                     | Series       | Series[bool]     | 3       | [true, tr
   just reporting it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nkeys.html">
+  <a class="prev-link" href="notnan.html">
     <span class="label">Previous</span>
-    <span class="title">nkeys</span>
+    <span class="title">notnan</span>
   </a>
   <a class="next-link" href="nrows.html">
     <span class="label">Next</span>

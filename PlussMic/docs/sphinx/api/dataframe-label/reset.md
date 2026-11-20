@@ -51,8 +51,8 @@ own name.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region", true); // drop_feature=true
 std::cout << labeled;
 
@@ -78,12 +78,12 @@ north | 90
 
 ```text
 ====================
-     | region  sales
+     | sales  region
 --------------------
-0    | east    100  
-1    | west    200  
-2    | east    150  
-3    | north   90   
+0    | 100    east  
+1    | 200    west  
+2    | 150    east  
+3    | 90     north 
 --------------------
 [4 cs x 2 feat]
 ```
@@ -102,12 +102,12 @@ std::cout << out2;
 
 ```text
 =========================
-     | custom_name  sales
+     | sales  custom_name
 -------------------------
-0    | east         100  
-1    | west         200  
-2    | east         150  
-3    | north        90   
+0    | 100    east       
+1    | 200    west       
+2    | 150    east       
+3    | 90     north      
 -------------------------
 [4 cs x 2 feat]
 ```

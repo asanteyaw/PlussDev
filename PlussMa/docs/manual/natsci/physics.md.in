@@ -1,0 +1,21 @@
+# Physics
+
+Physical models describe motion and flow with equations that are solved on many cases at once. The guides begin with two systems that have exact solutions to check against: a body orbiting another under gravity, and an incompressible flow in a periodic box.
+
+1. **How does a body orbit?** Orbital elements, period, exact propagation and conserved energy.
+2. **How does a fluid flow?** Incompressible flow, the pressure projection and convergence against an exact solution.
+
+Chapters, in reading order:
+
+- [Physics 1: Orbits](physics/phys_01_orbits.md)
+- [Physics 2: Fluids](physics/phys_02_fluids.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+physics/phys_01_orbits
+physics/phys_02_fluids
+```
+<!-- apiref:toctree:end -->

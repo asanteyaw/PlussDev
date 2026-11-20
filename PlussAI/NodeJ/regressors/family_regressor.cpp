@@ -406,9 +406,7 @@ struct LinearPenalty {
     const Series pred = design.matmul(weights.reshape({p, 1})).reshape({n});
     const Series residual = pred.sub(labels);
     const Series abs_residual = residual.abs();
-    const Series huber_grad = abs_residual.le(robust_transition).where(
-        residual,
-        residual.sign().mul(robust_transition));
+    const Series huber_grad = pluss::series::where(abs_residual.le(robust_transition), residual, residual.sign().mul(robust_transition));
 
     Series grad = design_t.matmul(huber_grad.reshape({n, 1})).div(static_cast<double>(n)).reshape({p});
     if (lambda_l2 > 0.0) {
@@ -540,9 +538,7 @@ struct LinearPenalty {
   const Series zero = pluss::series::zeros_like(sst, ScalarType::Float64);
   const Series one = pluss::series::ones_like(sst, ScalarType::Float64);
   const Series sse_small = sse.le(std::numeric_limits<double>::epsilon()).to(ScalarType::Float64);
-  const Series r2 = sst.gt(std::numeric_limits<double>::epsilon())
-                        .where(one.sub(sse.div(sst)),
-                               sse_small.where(one, zero));
+  const Series r2 = pluss::series::where(sst.gt(std::numeric_limits<double>::epsilon()), one.sub(sse.div(sst)), pluss::series::where(one, zero, sse_small));
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -869,7 +865,7 @@ struct LinearPenalty {
   const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
   const Series wsum = weights.sum(1, false);
   const Series ysum = weights.mul(y_knn).sum(1, false);
-  return wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
+  return pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
 }
 
 [[nodiscard]] Series radius_predict_series(const Series& query_rows,
@@ -896,13 +892,13 @@ struct LinearPenalty {
     const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask));
     const Series wsum = weights.sum(1, false);
     const Series ysum = weights.mul(y_train_2d).sum(1, false);
-    radius_pred = wsum.gt(0.0).where(ysum.div(wsum), fallback);
+    radius_pred = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), fallback);
   } else {
     const Series ysum = y_train_2d.mul(mask).sum(1, false);
-    radius_pred = in_count.gt(0.0).where(ysum.div(in_count.clamp_min(1.0)), fallback);
+    radius_pred = pluss::series::where(in_count.gt(0.0), ysum.div(in_count.clamp_min(1.0)), fallback);
   }
 
-  return in_count.gt(0.0).where(radius_pred, fallback);
+  return pluss::series::where(in_count.gt(0.0), radius_pred, fallback);
 }
 
 class NeighborRegressor final : public RegressorBase {
@@ -1005,7 +1001,7 @@ public:
           const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
           const Series wsum = weights.sum(1, false);
           const Series ysum = weights.mul(y_knn).sum(1, false);
-          pred = wsum.gt(0.0).where(ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
+          pred = pluss::series::where(wsum.gt(0.0), ysum.div(wsum), pluss::series::zeros_like(wsum, ScalarType::Float64));
         } else {
           pred = y_knn.mean(1, false);
         }

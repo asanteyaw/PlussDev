@@ -4,7 +4,7 @@
 
 A load that changes with time, a footfall, a gust, a shock or a machine switching on, sets a structure moving, and what matters is how far, how fast and for how long. `structure::motion` steps a frame through time under a load history. This page applies a sudden load and checks the peak against the known doubling, releases a beam from a given shape and checks the decay against the damping that was asked for, shows what the numerical damping control does, and drives a beam at its resonance and watches the response build up.
 
-## The mental model
+## How it works
 
 `motion(frame, load, time, fix, initial, options)` integrates
 

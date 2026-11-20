@@ -178,15 +178,38 @@ An integer-valued scalar leaves the result in `int64`, so this update is safe.
 Replacing `2.0` with `2.5` would require a floating result and therefore cannot
 be performed in place on this integer receiver; use `floor_divide(2.5)` instead.
 
+Example 5. A zero integer divisor gives `inf`, `-inf` or `NaN` instead of raising an error.
+
+```cpp
+pluss::series::print(
+    std::cout,
+    pluss::make_series({7, -7, 0, 5}).floor_divide(pluss::make_series({0, 0, 0, 3})));
+```
+
+### Output
+
+```text
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[inf, -inf, nan, 1.0000]
+```
+
+A positive integer divided by zero is `inf`, a negative one is `-inf` and `0 / 0` is
+`nan`, exactly as for floating operands, and the last pair (`5 // 3`) is the ordinary
+`1`. Because those three values cannot be stored in an integer Series, the result
+here is a floating Series. The dtype changes only when a divisor is zero: the same
+call with no zero divisor (`{7, -7, 0, 5}` by `{2, 2, 2, 5}`) stays `int64` and gives
+`[3, -4, 0, 1]`. The behaviour is the same on every platform.
+
 ## Gotchas And Failure Modes
 
 - It floors, it does not truncate: a negative quotient rounds *away* from zero.
   For truncation toward zero, use `div()` then [`trunc()`](trunc.md).
 - Two integer operands give an integer result; do not expect a float back from
   `int.floor_divide(int)`.
-- A zero divisor has no valid integer floor quotient. Validate or mask divisors
-  before calling when zero is possible; do not build an algorithm around a
-  backend-specific `inf` or `NaN` result from floating division by zero.
+- A zero integer divisor does not raise. It gives `inf`, `-inf` or `nan` (Example 5)
+  and turns the result into a floating Series; with no zero divisor the result stays
+  an integer. Check for `inf` and `nan` in the result (`isinf()`, `isnan()`) when a
+  zero divisor is possible.
 - `floor_divide_()` preserves storage. It rejects a broadcast that changes the
   receiver shape and a result dtype that cannot be stored safely in the receiver.
 - Not differentiable.

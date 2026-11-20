@@ -39,8 +39,8 @@ inline Series lif_interspike_interval(const Coeff &tau, const Coeff &e_leak, con
   const Series drive = resistance.on(like).mul(current.on(like)).add(e_leak.on(like));
   const Series num = drive.sub(v_reset.on(like)), den = drive.sub(v_threshold.on(like));
   const Series fires = den.gt(0.0);
-  const Series safe = fires.where(den, den.mul(0.0).add(1.0));
-  return fires.where(tau.on(like).mul(num.div(safe).log()), like.mul(0.0).add(std::numeric_limits<double>::infinity()));
+  const Series safe = pluss::series::where(fires, den, den.mul(0.0).add(1.0));
+  return pluss::series::where(fires, tau.on(like).mul(num.div(safe).log()), like.mul(0.0).add(std::numeric_limits<double>::infinity()));
 }
 
 struct IzhikevichParams final {
@@ -110,14 +110,14 @@ inline SpikeResult simulate_spiking(const dynamics::RateFn &rate, const ResetFn 
     // linear interpolation of the crossing time inside the step
     const Series dv = v_after.sub(v_before);
     const Series flat = dv.abs().lt(1e-300);
-    const Series frac = flat.where(dv.mul(0.0), v_before.neg().add(opt.threshold)).div(flat.where(dv.mul(0.0).add(1.0), dv));
+    const Series frac = pluss::series::where(flat, dv.mul(0.0), v_before.neg().add(opt.threshold)).div(pluss::series::where(flat, dv.mul(0.0).add(1.0), dv));
     const Series t_cross = frac.clamp(0.0, 1.0).mul(opt.dt).add(t0);
     const Series slot_hit = slots.eq(count.unsqueeze(-1)).to(state.scalar_type()).mul(spiked.unsqueeze(-1).to(state.scalar_type()));
-    times = slot_hit.gt(0.0).where(t_cross.unsqueeze(-1).add(slots.mul(0.0)), times);
+    times = pluss::series::where(slot_hit.gt(0.0), t_cross.unsqueeze(-1).add(slots.mul(0.0)), times);
     count = count.add(spiked.to(state.scalar_type()));
     // state at the crossing instant (linear interpolation of every component), then the reset
     const Series at_crossing = before.add(next.sub(before).mul(frac.clamp(0.0, 1.0).unsqueeze(-1)));
-    state = reset(spiked.unsqueeze(-1).where(at_crossing, next), spiked.to(state.scalar_type()));
+    state = reset(pluss::series::where(spiked.unsqueeze(-1), at_crossing, next), spiked.to(state.scalar_type()));
     // The reset happened at t_cross, not at the end of the step: advance each spiking lane by the
     // remaining time t0 + dt - t_cross. The rate is autonomous, so a per-lane time rescaling
     // s = remaining/dt (0 for lanes that did not spike) turns this into one ordinary RK4 step of
@@ -137,8 +137,8 @@ inline SpikeResult simulate_izhikevich(const Series &state0, const Coeff &curren
   const auto reset = [&](const Series &s, const Series &spiked) {
     const Series v = s.select(-1, 0), u = s.select(-1, 1);
     const Series fire = spiked.gt(0.0);
-    const Series v_new = fire.where(p.c.on(v).add(v.mul(0.0)), v);
-    const Series u_new = fire.where(u.add(p.d.on(v)), u);
+    const Series v_new = pluss::series::where(fire, p.c.on(v).add(v.mul(0.0)), v);
+    const Series u_new = pluss::series::where(fire, u.add(p.d.on(v)), u);
     return v_new.unsqueeze(-1).unite(std::vector<Series>{u_new.unsqueeze(-1)}, -1);
   };
   return simulate_spiking(rate, reset, state0, opt);
@@ -152,7 +152,7 @@ inline SpikeResult simulate_lif(const Series &v0, const Coeff &tau, const Coeff 
     return lif_rate(s.select(-1, 0), tau, e_leak, resistance, current).unsqueeze(-1);
   };
   const auto reset = [&](const Series &s, const Series &spiked) {
-    return spiked.gt(0.0).unsqueeze(-1).where(s.mul(0.0).add(v_reset), s);
+    return pluss::series::where(spiked.gt(0.0).unsqueeze(-1), s.mul(0.0).add(v_reset), s);
   };
   // LIF has a single variable: carry it as [..., 1]
   return simulate_spiking(rate, reset, v0.unsqueeze(-1), opt);

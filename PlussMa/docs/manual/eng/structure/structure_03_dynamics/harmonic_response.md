@@ -6,7 +6,7 @@
 
 A machine turning at a steady speed pushes on its supports with a force that varies sinusoidally, and after a while the structure settles into a steady oscillation at the same frequency. How large is that oscillation, and how does it depend on the frequency? `structure::harmonic` computes the steady response to a sinusoidal load directly, for many frequencies in one call, with no time stepping. This page sweeps the frequency of a load on a cantilever, checks the sweep against a sum over the natural modes, shows how damping controls the resonance peak, and reads the support reactions that a vibrating structure sends into its foundation.
 
-## The mental model
+## How it works
 
 For a load `f e^{i omega t}` the steady response is `u e^{i omega t}`, with a complex amplitude `u` (its size is the amplitude and its angle is the phase lag behind the load), found from
 

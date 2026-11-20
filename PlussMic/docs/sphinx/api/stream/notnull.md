@@ -15,7 +15,7 @@ Stream Stream::notnull() const
 
 Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which rows
 have a value — the exact logical complement of [`isnull()`](isnull.md). Works uniformly
-across all four payload kinds; delegates to `Slate::notnull()`.
+across all four payload kinds; delegates to `Shelf::notnull()`.
 
 ## Parameters
 
@@ -56,6 +56,7 @@ label        | value
 
 ## Notes
 
+- `notnull` is `true` for every cell that is not missing, including a `NaN` or an infinity (they are values). Use [`notnan`](notnan.md) / [`notinf`](notinf.md) to ask about those, and see [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Works on every payload kind — no `Series`-only restriction.
 - The result is always `Series`-kind (`Series[bool]`), regardless of the receiver's own
   kind.
@@ -70,9 +71,9 @@ label        | value
   directly.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ndistinct.html">
+  <a class="prev-link" href="notnan.html">
     <span class="label">Previous</span>
-    <span class="title">ndistinct</span>
+    <span class="title">notnan</span>
   </a>
   <a class="next-link" href="nrecords.html">
     <span class="label">Next</span>

@@ -138,6 +138,57 @@ kernel void cumprod_dim_i32(
   }
   out[gid] = acc;
 }
+kernel void cumsum_dim_i64(
+    const device long* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    constant CumMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong dim_i = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.sizes[d];
+    const ulong coord = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    in_off += coord * meta.in_strides[d];
+    if (static_cast<uint>(d) == meta.dim) {
+      dim_i = coord;
+    }
+  }
+  const ulong step = meta.in_strides[meta.dim];
+  const ulong base = in_off - dim_i * step;
+  long acc = 0;
+  for (ulong r = 0; r <= dim_i; ++r) {
+    acc += in[base + r * step];
+  }
+  out[gid] = acc;
+}
+
+kernel void cumprod_dim_i64(
+    const device long* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    constant CumMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong dim_i = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.sizes[d];
+    const ulong coord = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    in_off += coord * meta.in_strides[d];
+    if (static_cast<uint>(d) == meta.dim) {
+      dim_i = coord;
+    }
+  }
+  const ulong step = meta.in_strides[meta.dim];
+  const ulong base = in_off - dim_i * step;
+  long acc = 1;
+  for (ulong r = 0; r <= dim_i; ++r) {
+    acc *= in[base + r * step];
+  }
+  out[gid] = acc;
+}
 )metal";
 
 struct CumMetaHost {
@@ -156,6 +207,8 @@ struct Context {
   id<MTLComputePipelineState> cumprod_dim_f32{nil};
   id<MTLComputePipelineState> cumsum_dim_i32{nil};
   id<MTLComputePipelineState> cumprod_dim_i32{nil};
+  id<MTLComputePipelineState> cumsum_dim_i64{nil};
+  id<MTLComputePipelineState> cumprod_dim_i64{nil};
   std::string error{};
 };
 
@@ -226,6 +279,8 @@ Context& ctx_() {
       if (!make_pipeline("cumprod_dim_f32", &ctx.cumprod_dim_f32)) return;
       if (!make_pipeline("cumsum_dim_i32", &ctx.cumsum_dim_i32)) return;
       if (!make_pipeline("cumprod_dim_i32", &ctx.cumprod_dim_i32)) return;
+      if (!make_pipeline("cumsum_dim_i64", &ctx.cumsum_dim_i64)) return;
+      if (!make_pipeline("cumprod_dim_i64", &ctx.cumprod_dim_i64)) return;
       ctx.ready = true;
     }
   });
@@ -308,6 +363,8 @@ std::size_t element_size_for_cum_dtype_(ScalarType dtype) {
     case ScalarType::Float32:
     case ScalarType::Int32:
       return 4;
+    case ScalarType::Int64:
+      return 8;
     default:
       fail_("mps::cum: unsupported dtype");
   }
@@ -362,11 +419,11 @@ void encode_cum_(id<MTLComputePipelineState> pso,
 } // namespace
 
 bool supports_cumsum_dim(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32 || dt == ScalarType::Int64;
 }
 
 bool supports_cumprod_dim(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32 || dt == ScalarType::Int64;
 }
 
 void cumsum_dim(const Series& in, std::int64_t dim, Series& out) {
@@ -382,6 +439,9 @@ void cumsum_dim(const Series& in, std::int64_t dim, Series& out) {
       return;
     case ScalarType::Int32:
       encode_cum_(c.cumsum_dim_i32, in, out, meta, "mps::cumsum_dim");
+      return;
+    case ScalarType::Int64:
+      encode_cum_(c.cumsum_dim_i64, in, out, meta, "mps::cumsum_dim");
       return;
     default:
       fail_("mps::cumsum_dim: unsupported dtype");
@@ -401,6 +461,9 @@ void cumprod_dim(const Series& in, std::int64_t dim, Series& out) {
       return;
     case ScalarType::Int32:
       encode_cum_(c.cumprod_dim_i32, in, out, meta, "mps::cumprod_dim");
+      return;
+    case ScalarType::Int64:
+      encode_cum_(c.cumprod_dim_i64, in, out, meta, "mps::cumprod_dim");
       return;
     default:
       fail_("mps::cumprod_dim: unsupported dtype");

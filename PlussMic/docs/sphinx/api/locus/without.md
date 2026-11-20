@@ -67,3 +67,10 @@ unknown without: Locus::without: unknown catalog 'nope'
 
 - [`drop`](drop.md): the multi-name form of the same operation.
 - [`with`](with.md): adding or replacing a catalog, the inverse direction.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with.html">
+    <span class="label">Previous</span>
+    <span class="title">with</span>
+  </a>
+</div>

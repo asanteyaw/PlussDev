@@ -6,7 +6,7 @@
 
 Real data comes from files, has holes, and has dates. This page reads a messy CSV, repairs it, summarises it, writes it back and checks the round trip; and then turns daily prices into a monthly view.
 
-## The mental model
+## How it works
 
 A loaded frame remembers which values are missing. `NULL` is a state of the value, not a number, and the table operations (`aggregate`, `group`, `fillnull`, `dropnull`) respect it. The numbers underneath, which you reach with `as_series()`, are an array with a placeholder where a value is missing; that is the escape hatch to the full `Series` API, and it does not know about missingness. Time works the same way: dates live in a `Timeline` feature, numeric streams are read with `.ts()`, and resampling needs the dates on the case axis.
 
@@ -50,10 +50,10 @@ int main() {
   auto means = kept.aggregate({{"temperature", "temperature", DataFrame::SummaryOp::Mean}, {"humidity", "humidity", DataFrame::SummaryOp::Mean}}, false);
   const double temp_mean = means.features("temperature").as_series().items<double>()[0];
   const double hum_mean = means.features("humidity").as_series().items<double>()[0];
-  // humidity was read as a whole-number feature, so fill it with a whole number: round the mean yourself.
-  const double hum_fill = std::round(hum_mean);
-  auto clean = kept.fillnull(temp_mean, {"temperature"}).fillnull(hum_fill, {"humidity"});
-  std::cout << "after cleaning: " << clean.ncases() << " rows; filled temperature with " << temp_mean << " and humidity with " << hum_fill << " (mean " << hum_mean << ")" << "\n";
+  // humidity was read as a whole-number feature; its mean is fractional, so filling widens the feature to floating point rather than
+  // truncating the fill value.
+  auto clean = kept.fillnull(temp_mean, {"temperature"}).fillnull(hum_mean, {"humidity"});
+  std::cout << "after cleaning: " << clean.ncases() << " rows; filled temperature with " << temp_mean << " and humidity with " << hum_mean << "\n";
   std::cout << clean.to_string() << "\n";
 
   // 3. Summarise per station.
@@ -86,14 +86,14 @@ read 6 rows, 4 features
 5    | north    2026-11-03  11.8         85      
 -------------------------------------------------
 [6 cs x 4 feat]
-after cleaning: 5 rows; filled temperature with 13.85 and humidity with 79 (mean 78.75)
+after cleaning: 5 rows; filled temperature with 13.85 and humidity with 78.75
 =================================================
      | station  date        temperature  humidity
 -------------------------------------------------
 0    | north    2026-11-01  12.5         81      
 1    | north    2026-11-02  13.85        79      
 2    | south    2026-11-01  15           70      
-4    | south    2026-11-03  16.1         79      
+4    | south    2026-11-03  16.1         78.75   
 5    | north    2026-11-03  11.8         85      
 -------------------------------------------------
 [5 cs x 4 feat]
@@ -101,12 +101,12 @@ after cleaning: 5 rows; filled temperature with 13.85 and humidity with 79 (mean
      | station  days  mean_temp    max_humidity
 -----------------------------------------------
 0    | north    3     12.71666667  85          
-1    | south    2     15.55        79          
+1    | south    2     15.55        78.75       
 -----------------------------------------------
 [2 cs x 4 feat]
-reloaded 5 rows; humidity total 394 vs 394
+reloaded 5 rows; humidity total 393.75 vs 393.75
 ```
-The frame arrives with `NULL` where the file was empty. `dropnull({"station"}, true)` removes the one row whose station is missing, so five rows remain. The fills use each feature's mean: `13.85` for temperature, and for humidity a mean of `78.75` that the program rounds to `79` itself, because the humidity feature was read as whole numbers and so cannot hold a fraction. The per-station report then has two rows, and the reloaded file has five rows and the same humidity total as the table that was saved, which is the check that the round trip lost nothing.
+The frame arrives with `NULL` where the file was empty. `dropnull({"station"}, true)` removes the one row whose station is missing, so five rows remain. The fills use each feature's mean: `13.85` for temperature and `78.75` for humidity. The humidity feature was read as whole numbers, and filling a whole-number feature with a fractional value widens it to floating point instead of truncating the fill, so the stored value is exactly `78.75`; a whole-number fill would have kept the feature integer. The per-station report then has two rows, and the reloaded file has five rows and the same humidity total as the table that was saved, which is the check that the round trip lost nothing.
 
 ## Missing is not zero
 
@@ -228,7 +228,7 @@ The first return is `nan` because the first day has no predecessor. Resampling w
 ## Decisions
 
 - **Missing values:** decide the rule once (drop the row, fill with a statistic, keep the null) and apply it with `dropnull` and `fillnull` before summarising.
-- **Fill type:** a whole-number feature takes a whole-number fill; round it yourself so the table shows what is stored.
+- **Fill type:** a fill keeps the feature's type when the value fits it and widens it to floating point when it does not, so the fill is never truncated; check the printed table if the dtype matters downstream.
 - **Round trips:** always read back what you wrote and compare a total.
 - **Time:** parse dates into a `Timeline` early, keep them on the case axis for resampling, and use `.ts()` for returns and rolling work.
 

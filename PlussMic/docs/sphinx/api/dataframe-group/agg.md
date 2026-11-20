@@ -59,9 +59,9 @@ Example 1. Mixed operations in one grouped pass.
 using namespace pluss::table;
 
 auto loans = DataFrame({
-    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
-    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-    {"status", Slate(pluss::make_note({"good", "good", "bad", "good"}))},
+    {"region", Shelf(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"status", Shelf(pluss::make_note({"good", "good", "bad", "good"}))},
 });
 
 auto out = loans.group({.dropnull = true})
@@ -91,7 +91,7 @@ That single call mixes row count, numeric reduction, and categorical mode under 
 stable grouping plan. `South`'s `status` values are `"bad"` and `"good"`, tied at one
 occurrence each; `status_mode` picks `"bad"` because it was seen first (row `2`), not
 because it sorts first alphabetically — the same first-occurrence tie-break
-[`Slate::freq()`](../slate/freq.md) uses.
+[`Shelf::freq()`](../shelf/freq.md) uses.
 
 Example 2. Let output names be inferred.
 
@@ -125,10 +125,10 @@ Example 3. Aggregate by case-label levels.
 
 ```cpp
 auto indexed = DataFrame({
-    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
-    {"year", Slate(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
-    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-}).label().set({"region", "year"});
+    {"region", Shelf(pluss::make_note({"North", "North", "South", "South"}))},
+    {"year", Shelf(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
+    {"amount", Shelf(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+}).labels().set({"region", "year"});
 
 auto out = indexed.group()
                   .by(DataFrame::LabelGroup{.names = {"region", "year"}})

@@ -48,10 +48,10 @@ Example 1. Count observed values per city, with one missing `amount`.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Slate(pluss::make_series(
-        {100.0, std::numeric_limits<double>::quiet_NaN(), 50.0, 40.0}))},
-    {"units", Slate(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Shelf(pluss::make_series(
+        {100.0, 0.0, 50.0, 40.0}), pluss::make_series(std::vector<bool>{true, false, true, true}))},
+    {"units", Shelf(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
 });
 std::cout << sales;
 
@@ -88,7 +88,7 @@ std::cout << out;
 [2 cs x 3 feat]
 ```
 
-`"Accra"` has two rows, but one `amount` value is `NaN` (missing), so
+`"Accra"` has two rows, but one `amount` value is missing (`NULL`), so
 `amount_count` is `1`, not `2`. `units_count` is unaffected because neither of
 `"Accra"`'s `units` values is missing.
 
@@ -104,12 +104,12 @@ std::cout << out2;
 ### Output (out2)
 
 ```text
-========================
+==========================
      | city   amount_count
-------------------------
-0    | Accra  1
-1    | Tema   2
-------------------------
+--------------------------
+0    | Accra  1           
+1    | Tema   2           
+--------------------------
 [2 cs x 2 feat]
 ```
 

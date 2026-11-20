@@ -4,7 +4,7 @@
 
 Most analysis is a summary: who is best, how much per group, how does this year compare with that one. This page works three such questions end to end: ranking candidates, totalling sales by region and reading a year-by-month table.
 
-## The mental model
+## How it works
 
 Three families of operations do nearly all the work.
 

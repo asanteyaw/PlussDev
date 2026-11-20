@@ -4,7 +4,7 @@
 
 Dates drive money and rosters: when is an invoice due, who paid late, when does a shift end in another city, and what happens on the night the clocks change. This page answers those questions with `Timeline` for instants and `Duration` for elapsed time, in complete programs that print their results.
 
-## The mental model
+## How it works
 
 Two types, kept apart on purpose.
 

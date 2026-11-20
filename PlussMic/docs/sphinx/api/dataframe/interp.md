@@ -68,14 +68,13 @@ Example 1. Interpolate an interior gap with no limit.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"reading", pluss::make_series({
-        std::numeric_limits<double>::quiet_NaN(),
+    {"reading", Shelf(pluss::make_series({
+        0.0,
         10.0,
-        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN(),
+        0.0,
+        0.0,
         40.0,
-        std::numeric_limits<double>::quiet_NaN(),
-    })},
+        0.0}), pluss::make_series(std::vector<bool>{false, true, false, false, true, false}))},
 });
 
 std::cout << readings;

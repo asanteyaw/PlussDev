@@ -1,6 +1,6 @@
 # `control::margin`
 
-Interpolates classical SISO stability margins.
+Computes the gain, phase and stability margins of a single-input loop.
 
 ## Signature
 
@@ -20,58 +20,59 @@ control::MarginResult control::margin(
 
 ## What It Does
 
-Crossings are interpolated between adjacent samples rather than snapped to bins. Supply a sufficiently resolved grid around expected crossovers; no sampled-data method can recover a crossing absent from the covered band.
+Finds on a frequency grid where the Nyquist curve of `L` crosses the unit circle and the negative real axis. The gain margin is the factor by which the loop gain can grow before the closed loop is unstable (linear, not decibels); the phase margin is the extra phase lag, in degrees, that the loop tolerates at the gain crossover; the stability margin is the smallest distance `|1 + L|` from the Nyquist curve to the critical point `-1`. Each margin comes with the frequency where it occurs. The loop may be given as a precomputed response, a `StateSpace` or a `PoleZero`.
 
 ## Parameters
 
 `response`
-: A one-dimensional complex open-loop response sampled at `omega`.
-
-`system`
-: A SISO LTI model evaluated internally before margin extraction.
+: A complex `Series` of loop responses with the frequency on its last axis; or `system` (a single-input, single-output `StateSpace` or `PoleZero`) to have the response computed.
 
 `omega`
-: Strictly ordered real angular frequencies.
+: A strictly increasing real rank-one `Series` of at least two frequencies, rad/s.
 
 ## Returns
 
-A `MarginResult` containing gain, phase, and stability measures plus their angular frequencies.
+A `MarginResult`. For a batch of responses each field has the batch shape.
 
 ## Errors
 
-Throws for real-only response data, MIMO models, incompatible response/frequency lengths, or invalid frequency ordering.
+A grid with fewer than two points or that does not increase, a response whose frequency axis does not match `omega`, and a system with more than one input or output throw `pluss::Error`.
 
 ## Interpretation and Use
 
-The response overload is best when frequency data already exists; model overloads avoid separately calling `freqresp`. Crossing interpolation improves on selecting the nearest sample but cannot recover behavior outside the supplied band, so widen and refine `omega` before trusting absent crossovers.
+For `L = 1 / (s (s + 1) (s + 2))` the phase reaches -180 degrees at `sqrt(2)`, where `|L| = 1/6`, so the gain margin is 6 at 1.4142 rad/s; the first example finds 6.0001, the difference being the resolution of the grid. The gain margin scales as `6 / k` with the loop gain `k` (the second example: 12, 6, 3, 1.2 and, for `k = 7`, 0.857, below one, meaning the closed loop is unstable). When nothing crosses, the margins are infinite and their frequencies are NaN (the third example). The accuracy is set by the frequency grid: use a grid dense around the crossovers.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compute margins directly from a model over a dense grid.
+The three margins of a third-order loop against the exact values.
 
-@@example Eng/api/control_margin.cpp@@
+@@example Eng/api/control_margin_known.cpp@@
 
 ### Example 2
 
-Produce open-loop response data suitable for the direct overload.
+The gain margin as the loop gain grows, until the loop is unstable.
 
-@@example Eng/api/control_loop.cpp@@
+@@example Eng/api/control_margin_gain_scaling.cpp@@
 
 ### Example 3
 
-See response dtype and SISO validation.
+A loop with no crossover.
 
-@@example Eng/api/control_loop_errors.cpp@@
+@@example Eng/api/control_margin_no_crossover.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="loop.html">
-    <span class="label">Previous</span>
-    <span class="title">loop</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+A precomputed response against the system form.
+
+@@example Eng/api/control_margin_response_form.cpp@@
+
+### Example 5
+
+Every refused grid.
+
+@@example Eng/api/control_margin_errors.cpp@@
+

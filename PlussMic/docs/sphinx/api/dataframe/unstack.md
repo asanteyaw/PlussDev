@@ -63,9 +63,9 @@ remaining feature (no column prefix).
 using namespace pluss::table;
 
 auto grades = DataFrame({
-    {"student", Slate(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
-    {"term",    Slate(pluss::make_note({"mid", "final", "mid", "final"}))},
-    {"score",   Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+    {"student", Shelf(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
+    {"term",    Shelf(pluss::make_note({"mid", "final", "mid", "final"}))},
+    {"score",   Shelf(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
 std::cout << grades;
 ```
@@ -85,7 +85,7 @@ std::cout << grades;
 ```
 
 ```cpp
-auto keyed = grades.label().set({"student", "term"}, /*drop_features=*/true, "|");
+auto keyed = grades.labels().set({"student", "term"}, /*drop_features=*/true, "|");
 auto by_term = keyed.unstack("term");
 std::cout << by_term;
 ```
@@ -96,8 +96,8 @@ std::cout << by_term;
 ==================
      | final  mid 
 ------------------
-Ada  | 91     88  
-Kojo | 89     84  
+Ada  | 88     91  
+Kojo | 84     89  
 ------------------
 [2 cs x 2 feat]
 ```
@@ -115,13 +115,13 @@ feature name.
 
 ```cpp
 auto grades_with_attendance = DataFrame({
-    {"student",    Slate(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
-    {"term",       Slate(pluss::make_note({"mid", "final", "mid", "final"}))},
-    {"score",      Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
-    {"attendance", Slate(pluss::make_series({95.0, 90.0, 98.0, 92.0}))},
+    {"student",    Shelf(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
+    {"term",       Shelf(pluss::make_note({"mid", "final", "mid", "final"}))},
+    {"score",      Shelf(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+    {"attendance", Shelf(pluss::make_series({95.0, 90.0, 98.0, 92.0}))},
 });
 
-auto keyed_multi = grades_with_attendance.label().set({"student", "term"}, true, "|");
+auto keyed_multi = grades_with_attendance.labels().set({"student", "term"}, true, "|");
 auto wide = keyed_multi.unstack("term");
 std::cout << wide;
 ```
@@ -132,8 +132,8 @@ std::cout << wide;
 ===============================================================
      | score_final  score_mid  attendance_final  attendance_mid
 ---------------------------------------------------------------
-Ada  | 91           88         90                95            
-Kojo | 89           84         92                98            
+Ada  | 88           91         95                90            
+Kojo | 84           89         98                92            
 ---------------------------------------------------------------
 [2 cs x 4 feat]
 ```

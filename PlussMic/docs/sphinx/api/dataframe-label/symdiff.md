@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate DataFrameLabelAccessor::symdiff(const Slate& other) const
+Shelf DataFrameLabelAccessor::symdiff(const Shelf& other) const
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ deduplicated, in this accessor's first-occurrence order followed by `other`'s.
 
 ## Parameters
 
-**other** (`const Slate&`)
+**other** (`const Shelf&`)
 
 The values to compare against.
 
 ## Returns
 
-`Slate`
+`Shelf`
     The distinct values found in exactly one of the two sides, `display_name`
     `"symdiff"`.
 
@@ -38,11 +38,11 @@ set.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.labels().set("region");
 
-auto other = Slate(pluss::make_note({"west", "south"}));
+auto other = Shelf(pluss::make_note({"west", "south"}));
 auto out = labeled.labels().symdiff(other);
 std::cout << out;
 ```

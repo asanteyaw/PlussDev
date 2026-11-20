@@ -16,6 +16,5 @@ Guide pages are task-oriented. This page points to generated signature/call inde
 
 ## How to use these files
 
-- Start with guide pages (`series`, `note`, `timeline_timeindex`).
-- Use the `*_all_methods_usage` pages for full call patterns.
+- Start with the PlussQit guides (Series, Note, Timeline and Duration by example).
 - Use generated index files when you need exact spelling/signature checks.

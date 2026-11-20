@@ -106,12 +106,12 @@ template <std::size_t N>
     const Series f = horner(q, u).sub(target);
     if (it % 4 == 3 && f.abs().max().item<double>() < 4e-16 * (1.0 + target.abs().max().item<double>())) break; // every lane converged to rounding level
     const Series above = increasing ? f.gt(0.0) : f.lt(0.0);   // the root lies below u
-    hi = above.where(u, hi);
-    lo = above.where(lo, u);
+    hi = pluss::series::where(above, u, hi);
+    lo = pluss::series::where(above, lo, u);
     const Series slope = horner(dq, u);
     const Series newton = u.sub(f.div(increasing ? slope.clamp(1e-300, 1e300) : slope.clamp(-1e300, -1e-300)));
     const Series inside = newton.gt(lo).logical_and(newton.lt(hi));
-    u = inside.where(newton, lo.add(hi).mul(0.5));
+    u = pluss::series::where(inside, newton, lo.add(hi).mul(0.5));
   }
   return u;
 }
@@ -143,13 +143,13 @@ struct Result final {
     const Series in_segment = last ? inside_x.ge(seg.x.front()) : inside_x.ge(seg.x.front()).logical_and(inside_x.lt(seg.x.back()));
     if (!in_segment.any().item<bool>()) continue;
     const detail::Evaluation e = detail::segment_eval(seg, inside_x.clamp(seg.x.front(), seg.x.back()), iterations);
-    value = in_segment.where(e.value, value);
-    slope = in_segment.where(e.d1, slope);
-    curvature = in_segment.where(e.d2, curvature);
+    value = pluss::series::where(in_segment, e.value, value);
+    slope = pluss::series::where(in_segment, e.d1, slope);
+    curvature = pluss::series::where(in_segment, e.d2, curvature);
   }
-  value = below.where(x.sub(x0).mul(curve.slope_below).add(curve.y_first()), above.where(x.sub(x1).mul(curve.slope_above).add(curve.y_last()), value));
-  slope = below.where(zero.add(curve.slope_below), above.where(zero.add(curve.slope_above), slope));
-  curvature = below.logical_or(above).where(zero, curvature);
+  value = pluss::series::where(below, x.sub(x0).mul(curve.slope_below).add(curve.y_first()), pluss::series::where(above, x.sub(x1).mul(curve.slope_above).add(curve.y_last()), value));
+  slope = pluss::series::where(below, zero.add(curve.slope_below), pluss::series::where(above, zero.add(curve.slope_above), slope));
+  curvature = pluss::series::where(below.logical_or(above), zero, curvature);
   return {value, slope, curvature};
 }
 // y(x) only
@@ -167,10 +167,10 @@ struct Result final {
     const Series in_segment = last ? yc.ge(seg.y.front()) : yc.ge(seg.y.front()).logical_and(yc.lt(seg.y.back()));
     if (!in_segment.any().item<bool>()) continue;
     const Series u = detail::solve_u(detail::power_basis(seg.y), yc.clamp(seg.y.front(), seg.y.back()), iterations);
-    x = in_segment.where(detail::horner(detail::power_basis(seg.x), u), x);
+    x = pluss::series::where(in_segment, detail::horner(detail::power_basis(seg.x), u), x);
   }
   const Series left = y.sub(y_first).div(curve.slope_below).add(curve.x_first()), right = y.sub(y_last).div(curve.slope_above).add(curve.x_last());
-  return y.lt(y_first).where(left, y.gt(y_last).where(right, x));
+  return pluss::series::where(y.lt(y_first), left, pluss::series::where(y.gt(y_last), right, x));
 }
 
 } // namespace pluss::subsp::math::bezier

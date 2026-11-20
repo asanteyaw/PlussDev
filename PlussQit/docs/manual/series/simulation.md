@@ -6,7 +6,7 @@
 
 When there is no formula, simulate. This page prices an option whose payoff depends on the whole price path, with fifty thousand paths generated at once, and reports the answer with its Monte Carlo error.
 
-## The mental model
+## How it works
 
 A simulation is an array of random numbers with one axis for the *scenario* and one for *time*, followed by a few array operations that turn shocks into prices and prices into payoffs. `cumsum` along the time axis turns a series of steps into a path; reductions along the scenario axis turn many payoffs into one estimate and its error. No loop over scenarios is ever written.
 
@@ -30,14 +30,14 @@ int main() {
   auto z = pluss::series::randn({paths, steps}, ScalarType::Float64, 2024);
 
   // 2. Geometric Brownian motion: each step multiplies the price by exp((r - vol^2 / 2) dt + vol sqrt(dt) z).
-  auto log_step = z.mul(vol * std::sqrt(dt)).add((rate - 0.5 * vol * vol) * dt);
-  auto price = log_step.cumsum(1).exp().mul(spot);
+  auto log_step = z * (vol * std::sqrt(dt)) + (rate - 0.5 * vol * vol) * dt;
+  auto price = log_step.cumsum(1).exp() * spot;
   std::cout << "paths " << price.size(0) << ", steps " << price.size(1) << "\n";
   std::cout << "mean final price " << price.select(1, steps - 1).mean().item<double>() << " (forward " << spot * std::exp(rate * years) << ")\n";
 
   // 3. Payoff of an Asian call: the average price over the path against the strike.
-  auto payoff = price.mean(1).sub(strike).clamp_min(0.0);
-  auto discounted = payoff.mul(std::exp(-rate * years));
+  auto payoff = (price.mean(1) - strike).clamp_min(0.0);
+  auto discounted = payoff * std::exp(-rate * years);
 
   // 4. The estimate and its Monte Carlo standard error.
   const double estimate = discounted.mean().item<double>();
@@ -77,14 +77,14 @@ int main() {
   //    length estimates the integral, and the standard deviation of the integrand over sqrt(N) is the error.
   for (const std::int64_t n : {100, 10000, 1000000}) {
     auto x = pluss::series::rand({n}, ScalarType::Float64, 17);
-    auto f = x.square().add(1.0).reciprocal().mul(4.0);
+    auto f = (x.square() + 1.0).reciprocal() * 4.0;
     std::cout << "N = " << n << ": " << f.mean().item<double>() << " +/- " << f.std().item<double>() / std::sqrt(static_cast<double>(n)) << "   (pi = " << pi << ")\n";
   }
 
   // 2. Volume of the unit ball in five dimensions: sample the cube [-1, 1]^5 and count the points inside the ball.
   //    The cube has volume 32; the exact ball volume is 8 pi^2 / 15.
   const std::int64_t n = 2000000;
-  auto points = pluss::series::rand({n, 5}, ScalarType::Float64, 99).mul(2.0).sub(1.0);
+  auto points = pluss::series::rand({n, 5}, ScalarType::Float64, 99) * 2.0 - 1.0;
   auto inside = points.square().sum(1).le(1.0).to(ScalarType::Float64);
   const double fraction = inside.mean().item<double>();
   const double volume = 32.0 * fraction;
@@ -96,7 +96,7 @@ int main() {
   const std::int64_t m = 20000;
   auto u = pluss::series::rand({m}, ScalarType::Float64, 5);
   auto plain = u.exp();
-  auto paired = u.exp().add(u.neg().add(1.0).exp()).mul(0.5);
+  auto paired = (u.exp() + (-u + 1.0).exp()) * 0.5;
   std::cout << "plain      " << plain.mean().item<double>() << " +/- " << plain.std().item<double>() / std::sqrt(static_cast<double>(m)) << "\n";
   std::cout << "antithetic " << paired.mean().item<double>() << " +/- " << paired.std().item<double>() / std::sqrt(static_cast<double>(m)) << "   (exact " << std::exp(1.0) - 1.0 << ")\n";
 }

@@ -7,14 +7,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   // Three distinct categories over six rows.
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
-  const DataFrame frame({{"region", Slate(region)}});
+  const DataFrame frame({{"region", Shelf(region)}});
 
   // The stage factory and the standalone prep::OneHotEncoder take the same
   // option struct. The standalone object shows the expansion directly.

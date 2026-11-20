@@ -14,7 +14,7 @@ Stream Stream::min() const
 ## What It Does
 
 Returns the minimum of a `Series`-kind stream's non-`NULL` values, as a one-element
-`Stream`. Delegates to `Slate::min()`, so it's `Series`-only, same as
+`Stream`. Delegates to `Shelf::min()`, so it's `Series`-only, same as
 [`sum()`](sum.md)/[`mean()`](mean.md)/[`max()`](max.md)/[`var()`](var.md)/
 [`std()`](std.md).
 
@@ -54,7 +54,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Slate::min is only valid for Series payload"` on
+- `Series`-only; throws `"Shelf::min is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded from consideration.
 - Returns a one-element `Stream`, not a raw scalar, same as every other reduction in this

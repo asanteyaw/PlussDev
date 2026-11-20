@@ -352,11 +352,11 @@ inline Sample sample_fluxes(const Network &net, std::int64_t chains, std::int64_
     Series dir = g.matmul(basis);                                          // [chains, r]
     dir = dir.div(dir.square().sum(-1, true).sqrt());
     const Series small = dir.abs().lt(1e-12);
-    const Series safe = small.where(dir.mul(0.0).add(1.0), dir);
+    const Series safe = pluss::series::where(small, dir.mul(0.0).add(1.0), dir);
     const Series t_hi = hi_c.sub(v).div(safe), t_lo = lo_c.sub(v).div(safe);     // roots of the two bounds along the line
-    const Series upper_t = dir.gt(0.0).where(t_hi, t_lo), lower_t = dir.gt(0.0).where(t_lo, t_hi);
+    const Series upper_t = pluss::series::where(dir.gt(0.0), t_hi, t_lo), lower_t = pluss::series::where(dir.gt(0.0), t_lo, t_hi);
     const Series inf = dir.mul(0.0).add(1e300);
-    const Series tmax = small.where(inf, upper_t).amin(-1, true), tmin = small.where(inf.neg(), lower_t).amax(-1, true);
+    const Series tmax = pluss::series::where(small, inf, upper_t).amin(-1, true), tmin = pluss::series::where(small, inf.neg(), lower_t).amax(-1, true);
     const Series u = pluss::series::rand({chains, 1}, cfg.dtype, base + (++counter));
     v = v.add(dir.mul(tmin.add(u.mul(tmax.sub(tmin)))));
     if ((s + 1) % thinning == 0)

@@ -1,5 +1,7 @@
 # `signal::fir`
 
+Applies a finite impulse response filter causally.
+
 ## Signature
 
 ```cpp
@@ -11,48 +13,52 @@ pluss::Series signal::fir(
 
 ## What It Does
 
-Applies a causal finite-impulse-response filter with zero initial history. Unlike full convolution, the result is aligned to the input and has the same sample-axis length.
+Convolves with the taps and keeps the first `N` samples, the causal part: `y[n] = sum_{m <= n} h[m] x[n - m]`, with the signal taken as zero before its first sample. The output has the same length as the input.
 
 ## Parameters
 
 `input`
-: Floating or complex samples.
+: A floating or complex `Series`.
 
 `taps`
-: Feed-forward coefficients ordered from current sample to older samples.
+: A rank-one floating or complex `Series`, the impulse response.
 
 `dim`
-: Ordered sample axis.
+: The axis to filter along; default `-1`.
 
 ## Returns
 
-A same-length filtered `Series` on the promoted dtype and input platform.
+A `Series` with the shape of `input`.
 
 ## Errors
 
-Rejects invalid axes, non-floating/non-complex data, empty taps, and incompatible batch structure.
+An integer input, empty taps and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+The first `K - 1` outputs are the start-up transient of a `K`-tap filter. A causal filter delays features of the signal; use `zero_phase` when the delay is not acceptable.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A three-point moving average, with the start-up transient visible.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_fir_basic.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+`fir` against the causal part of the full convolution.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_fir_vs_conv.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+Every refused input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_fir_errors.cpp@@
 
 ## See Also
 

@@ -5,16 +5,16 @@
 
 int main() {
   namespace cls = pluss::ai::classic;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const Slate train(pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64));
-  const Slate probe(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64));
+  const Shelf train(pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64));
+  const Shelf probe(pluss::make_series({1.0, 2.0, 3.0}, {3}, f64));
 
-  cls::prep::OneHotEncoder via_slate;
-  via_slate.learn(train);
-  const pluss::Series slate_result = via_slate.map(probe).value();
+  cls::prep::OneHotEncoder via_shelf;
+  via_shelf.learn(train);
+  const pluss::Series shelf_result = via_shelf.map(probe).value();
 
   cls::FeatureBatch train_batch{};
   train_batch.x = pluss::make_series({1.0, 2.0, 3.0, 1.0, 2.0}, {5}, f64).reshape({5, 1});
@@ -25,8 +25,8 @@ int main() {
   via_batch.learn(train_batch);
   const pluss::Series batch_result = via_batch.map(probe_batch).value();
 
-  const double max_abs_diff = (slate_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
-  std::cout << "max abs diff between Slate and FeatureBatch forms = " << max_abs_diff << "\n";
+  const double max_abs_diff = (shelf_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
+  std::cout << "max abs diff between Shelf and FeatureBatch forms = " << max_abs_diff << "\n";
 
   return 0;
 }

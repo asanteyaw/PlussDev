@@ -6,7 +6,7 @@ Some decisions come in whole units: a project is taken or not, a machine is boug
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 An integer program is a linear program with a list of variables that must be integer:
 

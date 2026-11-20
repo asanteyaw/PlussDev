@@ -4,7 +4,7 @@ The three algorithms of chapters 4 and 5 differ in how they treat constraints. T
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 A step of any of these methods minimizes a quadratic model of the problem. The model has a gradient and a curvature matrix `B`, an approximation to the Hessian of the Lagrangian (the objective plus the multiplier-weighted constraints). Three layers sit under every iteration.
 

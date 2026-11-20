@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-Slate DataFrame::freq() const
-Slate DataFrame::freq(FreqOptions options) const
+Shelf DataFrame::freq() const
+Shelf DataFrame::freq(FreqOptions options) const
 ```
 
 ## What It Does
 
-Counts distinct rows of the current frame and returns the result as a `Slate`.
+Counts distinct rows of the current frame and returns the result as a `Shelf`.
 This is the features-first value-count surface:
 
 ```cpp
@@ -62,7 +62,7 @@ Keeps only the first `top` rows after ordering. `0` keeps every group.
 
 ## Returns
 
-`Slate`
+`Shelf`
     A frequency series named `count` or `prop`.
 
 - With one grouping feature, labels are the distinct values of that feature.
@@ -77,8 +77,8 @@ Example 1. Count distinct combinations of two grouping features.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"default",  Slate(pluss::make_note({"yes", "yes", "yes", "no", "yes", "no"}))},
-    {"is_adult", Slate(pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
+    {"default",  Shelf(pluss::make_note({"yes", "yes", "yes", "no", "yes", "no"}))},
+    {"is_adult", Shelf(pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
 });
 
 auto counts = df.features({"default", "is_adult"}).freq();
@@ -89,10 +89,10 @@ std::cout << counts;
 
 ```text
 default  is_adult
-yes      true        3
-no       true        1
-yes      false       1
-no       false       1
+yes      true      3
+no       true      1
+yes      false     1
+no       false     1
 Name: count, ptype: Series
 ```
 
@@ -109,10 +109,10 @@ std::cout << prop;
 
 ```text
 default  is_adult
-yes      true        0.5
-no       true        0.1666666667
-yes      false       0.1666666667
-no       false       0.1666666667
+yes      true               0.5
+no       true      0.1666666667
+yes      false     0.1666666667
+no       false     0.1666666667
 Name: prop, ptype: Series
 ```
 
@@ -120,8 +120,8 @@ Example 3. Keep missing grouping values instead of dropping them, and skip sorti
 
 ```cpp
 auto keep_null = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema"}))},
-    {"zone", Slate(pluss::make_note({"West", "", "North"}),
+    {"city", Shelf(pluss::make_note({"Accra", "Accra", "Tema"}))},
+    {"zone", Shelf(pluss::make_note({"West", "", "North"}),
                     pluss::make_series(std::vector<bool>{true, false, true}, pluss::ScalarType::Bool))},
 });
 
@@ -135,10 +135,10 @@ std::cout << out;
 ### Output
 
 ```text
-city   zone
-Accra  West    1
-Accra  NULL    1
-Tema   North   1
+city   zone 
+Accra  West   1
+Accra  NULL   1
+Tema   North  1
 Name: count, ptype: Series
 ```
 
@@ -150,7 +150,7 @@ Name: count, ptype: Series
 ## See Also
 
 - [`DataFrame::tally`](tally.md)
-- [`Slate::freq`](../slate/freq.md)
+- [`Shelf::freq`](../shelf/freq.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

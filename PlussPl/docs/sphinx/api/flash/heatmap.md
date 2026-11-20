@@ -18,7 +18,7 @@ Trace& flash::heatmap(Pane& pane, Series x, Series y, Series z, Series c, const 
 
 ## What It Does
 
-Draws a grid heatmap via [`Pane::fieldmap`](../pane/fieldmap.md), with value clamping,
+Draws a grid heatmap via [`Pane::fieldmap`](../pane/fieldmap.md), with a fixed colour scale,
 masking, and axis/grid styling layered on top. Four overloads:
 
 - **`heatmap(pane, x, y, z[, options])`** — cells colored directly from `z`.
@@ -43,7 +43,7 @@ using the c-parameter overload, clamp/mask c yourself before passing it in.
 | `annotate_levels` | `bool`, default `false` | Forwarded to `Trace::annotate_levels` — whether to draw each cell's numeric value as text overlaid on the cell. |
 | `scale_guide` | `bool`, default `true` | Forwarded to `Pane::scale_guide` — whether to draw a color-scale legend/guide. |
 | `borderless` | `bool`, default `true` | When `true` (the default), applies a bundle of pane styling suited to a clean grid-only look: `GridStyle::None`, all four grid-line toggles off, axes hidden (`axes_visible(false)`), tick *labels* kept visible (`x_tick_labels(true)`, `y_tick_labels(true)`), and both axes' limit method set to `LimitMethod::Tight`. When `false`, none of this styling is applied — the pane keeps whatever grid/axis appearance it already had. |
-| `vmin`, `vmax` | `std::optional<double>`, default unset | Clamp `z`'s values to `[vmin, vmax]` before rendering (only when both bounds resolve to finite values with `vmin <= vmax` — otherwise clamping is silently skipped). See the important callout above for why this has no effect in the `c`-taking overloads. |
+| `vmin`, `vmax` | `std::optional<double>`, default unset | Fix the colour scale to `[vmin, vmax]`: the palette and the colour bar span exactly that range even when no cell reaches a bound, and `z`'s values are clamped to it. A bound left unset follows the finite data. Applies only when both bounds resolve to finite values with `vmin < vmax`; otherwise it is ignored. See the important callout above for why this has no effect in the `c`-taking overloads. |
 | `mask` | `std::optional<Series>`, default unset | A same-shape-as-`z` series where zero means "hide this cell" (replaced with `NaN`) and any non-zero means "keep it". Must flatten to exactly `z`'s element count — a mismatch throws `pluss::Error("flash::heatmap mask must match z element count")` (see the important callout below on this validation being broken until this fix). |
 
 ## Parameters
@@ -90,8 +90,9 @@ fig.show();
 
 ![Output of Example 1](img/flash-heatmap-1-default.svg)
 
-Example 2. `vmin`/`vmax` clamping — changes the rendered output when
-`z` itself carries the color.
+Example 2. `vmin`/`vmax` clamp the values and fix the colour scale. Here `4` and `8` are
+narrower than the data, so cells outside them are clamped and the colour bar spans exactly `4 .. 8`;
+this changes the rendered output when `z` itself carries the color.
 
 ```cpp
 using namespace pluss::pl;
@@ -122,6 +123,30 @@ vmin/vmax clamp changes output: 1
 
 ![No clamping](img/flash-heatmap-2a-no-clamp.svg)
 ![vmin=4, vmax=8 clamping](img/flash-heatmap-2b-clamp.svg)
+
+Example 2b. A scale wider than the data. Every value lies between `4` and `8`, but `vmin = 0` and `vmax = 12` keep
+the colour bar on `0 .. 12`, so the cells use the middle of the palette. This is how to compare several maps on one
+scale, or to keep a correlation map on `-1 .. 1` when no pair reaches either end.
+
+```cpp
+using namespace pluss::pl;
+
+std::vector<double> x{0.0, 1.0, 2.0, 3.0};
+std::vector<double> y{0.0, 1.0, 2.0};
+// Every value lies between 4 and 8, but the scale is fixed to 0 .. 12.
+std::vector<double> z{4.0, 5.0, 6.0, 7.0, 8.0, 7.0, 6.0, 5.0, 4.0, 5.0, 6.0, 7.0};
+auto zs = pluss::make_series(z).reshape({3, 4});
+
+auto fig = studio("flash_heatmap_wider_scale");
+auto& pane = fig.pane2();
+flash::HeatmapOptions opts;
+opts.vmin = 0.0;
+opts.vmax = 12.0;
+flash::heatmap(pane, x, y, zs, opts);
+fig.show();
+```
+
+![Output of Example 2b](img/flash-heatmap-2c-wider-scale.svg)
 
 Example 3. `mask` — hiding a rectangular region of cells.
 

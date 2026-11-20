@@ -66,13 +66,12 @@ std::cout << out.catalog(0);
 
 ```text
 ========================================================================================================================
-kindle::Catalog  keys=2
-keys: [id, city]
+kindle::Catalog  keys=1
+keys: [id]
 ------------------------------------------------------------------------------------------------------------------------
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 id                       | Series       | Series[float64]  | 2       | [1, 0]                                           
-city                     | Note         | Note             | 2       | [Accra, Tema]                                    
 ========================================================================================================================
 ```
 
@@ -98,8 +97,8 @@ archive directly.
     <span class="label">Previous</span>
     <span class="title">keyaxis</span>
   </a>
-  <a class="next-link" href="kindelize.html">
+  <a class="next-link" href="label.html">
     <span class="label">Next</span>
-    <span class="title">kindelize</span>
+    <span class="title">label</span>
   </a>
 </div>

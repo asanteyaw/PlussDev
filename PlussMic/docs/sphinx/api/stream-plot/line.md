@@ -18,26 +18,26 @@ pluss::pl::Studio StreamPlotAccessor::line(const Stream& x, const LinePlotOption
 
 Draws a single line trace of the bound stream's own values, against either a plain case
 index (no `x` given) or an explicit companion `Stream` used as the x-axis. Every overload
-is a one-line forward — `base_.to_slate().plot(options_).line(...)` — into
-[`SlatePlotAccessor::line`](../slate-plot/line.md), converting the bound stream (and, if
-given, `x`) to `Slate` first via `Stream::to_slate()`. See that page for the full
+is a one-line forward — `base_.to_shelf().plot(options_).line(...)` — into
+[`ShelfPlotAccessor::line`](../shelf-plot/line.md), converting the bound stream (and, if
+given, `x`) to `Shelf` first via `Stream::to_shelf()`. See that page for the full
 mechanics; this page covers what's specific to the `Stream` layer.
 
 ```{important} Stream has no name() — every chart is column-named "value"/"x"/"hue"
-`SlatePlotAccessor::line`'s naming rule names the wrapped column after the source
-`Slate`'s own `name()` if it has one, falling back to `"value"` (the bound slate) or
-`"x"` (a companion slate) otherwise. `Stream::to_slate()` never sets a name on the
-`Slate` it produces — `Stream` has no `name()`/`named()` concept at all — so every
+`ShelfPlotAccessor::line`'s naming rule names the wrapped column after the source
+`Shelf`'s own `name()` if it has one, falling back to `"value"` (the bound shelf) or
+`"x"` (a companion shelf) otherwise. `Stream::to_shelf()` never sets a name on the
+`Shelf` it produces — `Stream` has no `name()`/`named()` concept at all — so every
 `StreamPlotAccessor` chart's axis labels are **always** the generic fallback names: `"value"`
 for the bound stream, `"x"` for a companion stream (other methods on this accessor use
 `"hue"` for their own second-stream argument). There is no way to get a custom column name
-out of a `Stream`-sourced chart the way a named `Slate` or a `DataFrame` feature can.
+out of a `Stream`-sourced chart the way a named `Shelf` or a `DataFrame` feature can.
 ```
 
 ```{important} Row (case) labels are still inherited, via with_label()
-Unlike naming, **row labels do carry through**: `Stream::to_slate()` copies the bound
+Unlike naming, **row labels do carry through**: `Stream::to_shelf()` copies the bound
 stream's own label (attached via [`Stream::with_label`](../stream/with_label.md)) onto the
-resulting `Slate`'s row labels. `SlatePlotAccessor::line`'s own inheritance rule then
+resulting `Shelf`'s row labels. `ShelfPlotAccessor::line`'s own inheritance rule then
 applies — the bound stream's label wins if present, otherwise a companion `x` stream's
 label, otherwise a plain case index. See Examples 1 and 2.
 ```
@@ -46,8 +46,8 @@ label, otherwise a plain case index. See Examples 1 and 2.
 
 **x** (`const Stream&`, optional)
     A companion stream used as the x-axis. Must be the same size as the bound stream — a
-    mismatched size throws `"Slate::plot: slate size mismatch"` (the message still refers
-    to `Slate`, since that's where the size check actually runs after both streams
+    mismatched size throws `"Shelf::plot: shelf size mismatch"` (the message still refers
+    to `Shelf`, since that's where the size check actually runs after both streams
     convert). Omitted means the x-axis falls back to the bound stream's own label, or a
     plain case index if it has none — see the important callout above.
 
@@ -56,7 +56,7 @@ label, otherwise a plain case index. See Examples 1 and 2.
     [`CatalogPlotAccessor::line`](../catalog-plot/line.md) (`alpha`, `line_width`,
     `y_limit_method`, `align`) — see that page for each field's meaning. `align` is
     accepted for shape-compatibility but has no observable effect here: `Stream::line()`
-    only ever wraps at most two operands (the bound stream and `x`) into a `Slate`-level
+    only ever wraps at most two operands (the bound stream and `x`) into a `Shelf`-level
     call, which has no multi-key alignment step to configure.
 
 ## Returns
@@ -91,7 +91,7 @@ becomes the x-axis instead of a bare case index.
 using namespace pluss::kindle;
 
 auto labeled_revenue = Stream(pluss::make_series({100.0, 120.0, 90.0, 150.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"Q1", "Q2", "Q3", "Q4"})));
 
 auto chart = labeled_revenue.plot().line();
 chart.show();
@@ -163,25 +163,25 @@ auto short_month = Stream(pluss::make_note({"Jan", "Feb", "Mar"}));
 
 try {
   auto bad = revenue.plot().line(short_month);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::plot: slate size mismatch
+Shelf::plot: shelf size mismatch
 ```
 
 ## Notes
 
-- Delegates straight to [`SlatePlotAccessor::line`](../slate-plot/line.md) after
-  `Stream::to_slate()` — see that page (and, beneath it,
+- Delegates straight to [`ShelfPlotAccessor::line`](../shelf-plot/line.md) after
+  `Stream::to_shelf()` — see that page (and, beneath it,
   [`DataFramePlotAccessor::line`](../dataframe-plot/line.md)) for the full mechanics.
 - Column naming is always the generic fallback (`"value"`/`"x"`) — `Stream` has no
-  `name()`/`named()` the way `Slate` does. See the important callout above.
-- Row labels **do** carry through, via `Stream::with_label()` → `Stream::to_slate()`.
+  `name()`/`named()` the way `Shelf` does. See the important callout above.
+- Row labels **do** carry through, via `Stream::with_label()` → `Stream::to_shelf()`.
 - A mismatched-size companion `x` throws — see Example 6.
 - Returns a `pluss::pl::Studio` — see
   [`CatalogPlotAccessor::line`](../catalog-plot/line.md)'s important callout for how to view
@@ -189,7 +189,7 @@ Slate::plot: slate size mismatch
 
 ## See Also
 
-- [`SlatePlotAccessor::line`](../slate-plot/line.md): the method this delegates to.
+- [`ShelfPlotAccessor::line`](../shelf-plot/line.md): the method this delegates to.
 - [`StreamPlotAccessor::bar`](bar.md): the same shape, drawn as bars instead of a connected
   line.
 - [`StreamPlotAccessor::scatter`](scatter.md): points against a required companion stream,

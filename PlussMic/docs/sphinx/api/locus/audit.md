@@ -148,3 +148,14 @@ workspace usable."
 - [`link`](link.md): declaring the relationships these checks examine.
 - [`join`](join.md): where a link's declared cardinality is actually enforced, not
   just reported.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="apply_all.html">
+    <span class="label">Previous</span>
+    <span class="title">apply_all</span>
+  </a>
+  <a class="next-link" href="audit_report.html">
+    <span class="label">Next</span>
+    <span class="title">audit_report</span>
+  </a>
+</div>

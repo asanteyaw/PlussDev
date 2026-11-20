@@ -4,7 +4,7 @@
 
 The optimisation on the previous page gives a whole sequence of inputs, but the model is only approximate and the world moves, so MPC uses just the first move. At the next step it measures the state again and re-optimises over a horizon that has moved forward: the **receding horizon**. This page runs that loop, prepares the problem once with `mpc::build` so that each step is cheap, shows what constraints on the states do, and explains the solver settings and the diagnostics that tell you when to trust a step.
 
-## The mental model
+## How it works
 
 At each time step `k`:
 

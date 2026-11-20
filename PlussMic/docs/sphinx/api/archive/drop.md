@@ -87,8 +87,8 @@ auto ragged = pluss::kindle::Archive({c0, c1});
 
 try {
   ragged.drop({"city"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -115,8 +115,8 @@ Catalog::drop: unknown key 'city'
     <span class="label">Previous</span>
     <span class="title">dloc</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="dropinf.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">dropinf</span>
   </a>
 </div>

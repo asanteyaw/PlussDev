@@ -1,0 +1,142 @@
+<!-- generated from platform.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 79377ce9b126 -->
+
+# `robot::Robot::platform`
+
+[Back to `robot::Robot`](../RobotModel.md)
+
+The device the compiled data lives on.
+
+## Signature
+
+```cpp
+pluss::Platform robot::Robot::platform() const noexcept;
+```
+
+## What It Does
+
+Returns the platform of the model data, the CPU for ordinary arrays.
+
+## Returns
+
+The `Platform`.
+
+## Practical Examples
+
+### Example 1
+
+A planar two-link arm with masses 1 kg and 2 kg.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, 0, 0, 1}, {2, 3});
+  links.translation = mat({0, 0, 0, 0.5, 0, 0}, {2, 3});
+  links.mass = vec({1.0, 2.0});
+  links.center = mat({0.25, 0, 0, 0.2, 0, 0}, {2, 3});
+  links.inertia = mat({0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("on the CPU =", obj.platform() == pluss::Platform::CPU);
+}
+```
+
+Output
+
+```text
+on the CPU = true
+```
+
+### Example 2
+
+A four-link branching tree with one prismatic joint and no mass properties.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 0, 2};
+  links.prismatic = {0, 0, 1, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0}, {4, 3});
+  links.translation = mat({0, 0, 0.3, 0.2, 0, 0.1, -0.2, 0, 0.1, 0, 0, 0.3}, {4, 3});
+  links.rpy = mat({0, 0, 0, 0.2, 0, 0.1, 0, -0.1, 0, 0.3, 0.2, 0}, {4, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("on the CPU =", obj.platform() == pluss::Platform::CPU);
+}
+```
+
+Output
+
+```text
+on the CPU = true
+```
+
+### Example 3
+
+A serial chain of three revolute joints, with no mass properties.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace rb = pluss::subsp::eng::robot;
+using namespace pluss::tils;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0, 1};
+  links.prismatic = {0, 0, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0}, {3, 3});
+  links.translation = mat({0, 0, 0.3, 0.3, 0, 0, 0.3, 0, 0}, {3, 3});
+  const rb::Robot obj = rb::make(links);
+  out.writeln("on the CPU =", obj.platform() == pluss::Platform::CPU);
+}
+```
+
+Output
+
+```text
+on the CPU = true
+```
+
+## See Also
+
+- [`dtype`](dtype.md): the dtype
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="parent.html">
+    <span class="label">Previous</span>
+    <span class="title">parent</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

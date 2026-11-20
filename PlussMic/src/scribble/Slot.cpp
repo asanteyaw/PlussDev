@@ -15,6 +15,7 @@
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "kindle/Stream.h"
+#include "table/NonFinite.h"
 #include <pluss/tils/kit/output.h>
 
 namespace pluss::scribble {
@@ -318,7 +319,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         }
       }
       // A kindle::Stream's Timeline column carries exactly one shared tz label
-      // (mirroring Slate/DataFrame). An all-null slot has nothing to derive a
+      // (mirroring Shelf/DataFrame). An all-null slot has nothing to derive a
       // tz from, so it falls back to "UTC" -- same default every other
       // tz-less Timeline factory in this codebase already uses.
       return pluss::kindle::Stream(
@@ -351,42 +352,42 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
   PLUSS_FAIL("Slot accessor: unsupported slot family");
 }
 
-pluss::table::Slate slate_from_slot_value(const Slot::Value& value) {
+pluss::table::Shelf shelf_from_slot_value(const Slot::Value& value) {
   return std::visit(
-      [](const auto& v) -> pluss::table::Slate {
+      [](const auto& v) -> pluss::table::Shelf {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) {
-          PLUSS_FAIL("Slot: null value has no Slate payload");
+          PLUSS_FAIL("Slot: null value has no Shelf payload");
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
-          return pluss::table::Slate(v);
+          return pluss::table::Shelf(v);
         } else if constexpr (std::is_same_v<T, pluss::Note>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Note value must be scalar-like for Slate delegation");
-          return pluss::table::Slate(pluss::make_note(std::vector<std::string>{std::string(v.at(0))}));
+          PLUSS_CHECK(v.numel() == 1, "Slot: Note value must be scalar-like for Shelf delegation");
+          return pluss::table::Shelf(pluss::make_note(std::vector<std::string>{std::string(v.at(0))}));
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Slate delegation");
+          PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Shelf delegation");
           const auto ticks = v.ticks();
-          return pluss::table::Slate(pluss::timeline::from_epoch(
+          return pluss::table::Shelf(pluss::timeline::from_epoch(
               std::vector<std::int64_t>{ticks[0]},
               std::vector<std::int64_t>{1}));
         } else if constexpr (std::is_same_v<T, pluss::Duration>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Duration value must be scalar-like for Slate delegation");
-          return pluss::table::Slate(pluss::duration::nanos(
+          PLUSS_CHECK(v.numel() == 1, "Slot: Duration value must be scalar-like for Shelf delegation");
+          return pluss::table::Shelf(pluss::duration::nanos(
               std::vector<std::int64_t>{v.host()[0]}));
         }
       },
       value);
 }
 
-Slot::Value slot_value_from_slate_payload(const pluss::table::Slate& slate) {
-  switch (slate.kind()) {
-    case pluss::table::SlateKind::Series:
-      return slate.as_series();
-    case pluss::table::SlateKind::Note:
-      return slate.as_note();
-    case pluss::table::SlateKind::Timeline:
-      return slate.as_timeline();
-    case pluss::table::SlateKind::Duration:
-      return slate.as_duration();
+Slot::Value slot_value_from_shelf_payload(const pluss::table::Shelf& shelf) {
+  switch (shelf.kind()) {
+    case pluss::table::ShelfKind::Series:
+      return shelf.as_series();
+    case pluss::table::ShelfKind::Note:
+      return shelf.as_note();
+    case pluss::table::ShelfKind::Timeline:
+      return shelf.as_timeline();
+    case pluss::table::ShelfKind::Duration:
+      return shelf.as_duration();
   }
   return std::monostate{};
 }
@@ -442,40 +443,40 @@ Slot::Value slot_value_to_note(const Slot::Value& value) {
 }
 
 bool slot_value_matches_target(const Slot::Value& value,
-                               pluss::table::SlateCastTarget target) {
+                               pluss::table::ShelfCastTarget target) {
   return std::visit(
       [&](const auto& v) -> bool {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) {
           return true;
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
-          return target == pluss::table::SlateCastTarget::Series;
+          return target == pluss::table::ShelfCastTarget::Series;
         } else if constexpr (std::is_same_v<T, pluss::Note>) {
-          return target == pluss::table::SlateCastTarget::Note;
+          return target == pluss::table::ShelfCastTarget::Note;
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
-          return target == pluss::table::SlateCastTarget::Timeline;
+          return target == pluss::table::ShelfCastTarget::Timeline;
         } else if constexpr (std::is_same_v<T, pluss::Duration>) {
-          return target == pluss::table::SlateCastTarget::Duration;
+          return target == pluss::table::ShelfCastTarget::Duration;
         }
       },
       value);
 }
 
-Slot::Value scalar_fill_value_for_target(pluss::table::SlateCastTarget target,
+Slot::Value scalar_fill_value_for_target(pluss::table::ShelfCastTarget target,
                                          double numeric,
                                          std::string_view text,
                                          const pluss::Timeline* timeline,
                                          const pluss::Duration* duration) {
   switch (target) {
-    case pluss::table::SlateCastTarget::Series:
+    case pluss::table::ShelfCastTarget::Series:
       return pluss::make_series(numeric, pluss::codem::ScalarType::Float64);
-    case pluss::table::SlateCastTarget::Note:
+    case pluss::table::ShelfCastTarget::Note:
       return pluss::make_note(text);
-    case pluss::table::SlateCastTarget::Timeline:
+    case pluss::table::ShelfCastTarget::Timeline:
       PLUSS_CHECK(timeline != nullptr, "Slot::fillnull(Timeline): fill value missing");
       PLUSS_CHECK(timeline->numel() == 1, "Slot::fillnull(Timeline): fill value must be scalar-like");
       return *timeline;
-    case pluss::table::SlateCastTarget::Duration:
+    case pluss::table::ShelfCastTarget::Duration:
       PLUSS_CHECK(duration != nullptr, "Slot::fillnull(Duration): fill value missing");
       PLUSS_CHECK(duration->numel() == 1,
                   "Slot::fillnull(Duration): fill value must be scalar-like");
@@ -485,7 +486,7 @@ Slot::Value scalar_fill_value_for_target(pluss::table::SlateCastTarget target,
 }
 
 Slot fill_slot_nulls(const Slot& slot,
-                     pluss::table::SlateCastTarget target,
+                     pluss::table::ShelfCastTarget target,
                      std::string_view where,
                      Slot::Value monostate_fill) {
   PLUSS_CHECK(slot.defined(), "Slot: undefined handle");
@@ -523,7 +524,7 @@ bool slot_value_invalid(const Slot::Value& value) {
           return false;
         } else {
           try {
-            return pluss::table::Slate(v).invalid().any(false).to_int() != 0;
+            return pluss::table::Shelf(v).invalid().any(false).to_int() != 0;
           } catch (const std::exception&) {
             return false;
           }
@@ -539,21 +540,39 @@ bool slot_value_isnull(const Slot::Value& value) {
         if constexpr (std::is_same_v<T, std::monostate>) {
           return true;
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
-          const auto dtype = v.scalar_type();
-          if (dtype == pluss::codem::ScalarType::Float32) {
-            const auto x = v.to(pluss::codem::ScalarType::Float32).template host<float>();
-            return std::any_of(x.begin(), x.end(), [](float z) { return std::isnan(z); });
-          }
-          if (dtype == pluss::codem::ScalarType::Float64) {
-            const auto x = v.to(pluss::codem::ScalarType::Float64).template host<double>();
-            return std::any_of(x.begin(), x.end(), [](double z) { return std::isnan(z); });
-          }
+          // A Series carries no validity mask: only an empty slot is null. A NaN or +-inf inside it is a value
+          // (see invalid() for "null or not finite").
           return false;
         } else {
           return false;
         }
       },
       value);
+}
+
+
+// Whether a Slot cell holds at least one NaN (or +-inf). Only a floating Series can; everything else holds none.
+bool slot_value_has_nonfinite(const Slot::Value& value, pluss::table::nonfinite::Kind kind) {
+  if (const auto* series = std::get_if<pluss::Series>(&value)) {
+    if (!pluss::table::nonfinite::can_hold(*series) || series->numel() == 0) {
+      return false;
+    }
+    const auto flags = pluss::table::nonfinite::flags(*series, kind, std::nullopt);
+    return flags.any().template item<bool>();
+  }
+  return false;
+}
+
+// The cell with every NaN (or +-inf) inside it replaced by `fill`.
+Slot::Value slot_value_fill_nonfinite(const Slot::Value& value, pluss::table::nonfinite::Kind kind, double fill) {
+  if (const auto* series = std::get_if<pluss::Series>(&value)) {
+    if (!pluss::table::nonfinite::can_hold(*series)) {
+      return value;
+    }
+    const auto flags = pluss::table::nonfinite::flags(*series, kind, std::nullopt);
+    return pluss::table::nonfinite::fill(*series, flags, fill);
+  }
+  return value;
 }
 
 } // namespace

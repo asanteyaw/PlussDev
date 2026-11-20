@@ -47,9 +47,9 @@ Example 1. Save with the default tab delimiter.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({101, 102, 103}))},
-    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units", Slate(pluss::make_series({2, 1, 4}))},
+    {"id",    Shelf(pluss::make_series({101, 102, 103}))},
+    {"city",  Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Shelf(pluss::make_series({2, 1, 4}))},
 });
 
 orders.save_txt("orders_out.txt");

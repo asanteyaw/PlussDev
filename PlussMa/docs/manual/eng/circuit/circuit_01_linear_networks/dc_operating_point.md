@@ -6,7 +6,7 @@
 
 With constant sources, a circuit settles to a steady state: every node has a fixed voltage and every branch a fixed current. `circuit::op` solves for it. In the steady state a capacitor carries no current (it is an open circuit) and an inductor has no voltage across it (it is a short circuit), so the circuit reduces to resistors and sources, and the solution is a single linear solve. This page works through circuits with known answers: a divider, a bridge, current sources, controlled sources and an op amp, and shows how to read and check the result.
 
-## The mental model
+## How it works
 
 `op(circuit)` returns a `Result` whose members are arrays with the same leading batch axes as the circuit:
 

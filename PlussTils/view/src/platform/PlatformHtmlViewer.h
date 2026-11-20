@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
-namespace pluss::view {
-class VirtualTableModel;
-}
+#include "pluss/tils/view/html_window.h"
 
 namespace pluss::view::detail {
 
@@ -45,6 +45,8 @@ bool show_inhouse_html_window(const std::string& title,
                               const std::string& svg_snapshot_name,
                               std::shared_ptr<const VirtualTableModel>
                                   virtual_table_model = {},
-                              bool table_viewport_scroll_only = false);
+                              bool table_viewport_scroll_only = false,
+                              std::vector<HtmlMenu> menus = {},
+                              std::function<std::string(std::string_view)> render_panel = {});
 
 } // namespace pluss::view::detail

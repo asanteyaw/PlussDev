@@ -8,7 +8,7 @@
 
 A session holds what a reader has chosen. A filter narrows the rows a view shows, and a parameter is a named value that a view or a control can read. Use the session when the choice should survive a save and should change the next render, not the board. This chapter covers every session operation and every parameter operation, in the order you would reach for them.
 
-## The mental model
+## How it works
 
 A session is a record of choices, and it is versioned. Every change that stores or removes a choice moves the version forward by exactly one. Reads never move it. A call the session refuses, such as an empty key, never moves it either. That makes the version a reliable signal: if it has not moved, nothing a render depends on has changed.
 

@@ -53,7 +53,7 @@ Series scalar_index_(std::int64_t index, Config cfg) {
 Series clamp_floor_(const Series& value, double floor, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const Series floor_s = pluss::series::full({}, floor, out_cfg);
-  return value.ge(floor_s).where(value, floor_s);
+  return pluss::series::where(value.ge(floor_s), value, floor_s);
 }
 
 void validate_weights_(const JointLikelihoodWeights& weights) {

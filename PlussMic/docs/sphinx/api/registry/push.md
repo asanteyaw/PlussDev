@@ -67,8 +67,8 @@ auto rg = pluss::scribble::Registry({
 
 try {
   auto out = rg.push("zzz", pluss::make_series(4));
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

@@ -1,5 +1,7 @@
 # `signal::ConvMode`
 
+How much of a convolution or correlation is kept.
+
 ## Signature
 
 ```cpp
@@ -10,45 +12,49 @@ signal::ConvMode signal::ConvMode::Valid;
 
 ## What It Does
 
-Controls which aligned samples are retained after linear convolution or correlation. It changes output length, not the underlying multiply-accumulate definition.
+A convolution of a length-`N` signal with a length-`K` kernel has `N + K - 1` overlaps. `Full` keeps all of them, `Same` keeps the `N` centred on the input, and `Valid` keeps the `N - K + 1` where the kernel lies entirely inside the signal.
 
-## Fields
+## Values
 
-| Value | Meaning |
-|---|---|
-| `Full` | Retains every partial and complete overlap; length is `N + M - 1`. |
-| `Same` | Returns an input-sized centered slice of the full result. |
-| `Valid` | Retains only complete overlap; length is `max(N - M + 1, 0)` under the documented input/kernel ordering. |
+| Value | Length | Meaning |
+|---|---|---|
+| `Full` | `N + K - 1` | Every overlap, including the start-up and shut-down transients. |
+| `Same` | `N` | The centre of the full result, aligned with the input. |
+| `Valid` | `N - K + 1` | Only the positions with complete overlap. |
 
 ## Returns
 
-Used as the `mode` argument to `conv` and `corr`.
+Argument of `conv` and `corr`.
 
 ## Errors
 
-The operation validates dimensionality and signal compatibility independently of this enum.
+The enum has no invalid values; the functions validate their own arguments. When the kernel is longer than the input, the two sequences trade roles and the lengths follow (the third example).
+
+## Interpretation and Use
+
+`Same` is the choice when the output is compared sample for sample with the input, `Valid` when edge effects must not enter the result, `Full` when the complete convolution is wanted, for example to build a cascade kernel.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+The length of each mode for two input lengths.
 
-@@example Eng/api/signal_filtering.cpp@@
+@@example Eng/api/signal_convmode_lengths.cpp@@
 
 ### Example 2
 
-Continue a recursive filter across blocks and apply forward-backward filtering.
+The three modes on one signal, showing that `Same` is the centre of `Full`.
 
-@@example Eng/api/signal_filter_state.cpp@@
+@@example Eng/api/signal_convmode_alignment.cpp@@
 
 ### Example 3
 
-Observe validation of signal dtype and recurrence coefficients.
+A kernel longer than the input.
 
-@@example Eng/api/signal_filter_errors.cpp@@
+@@example Eng/api/signal_convmode_errors.cpp@@
 
 ## See Also
 

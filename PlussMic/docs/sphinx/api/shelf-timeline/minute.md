@@ -1,0 +1,77 @@
+<!-- pluss-hand-authored -->
+
+# ShelfTimelineAccessor::minute
+
+[Back to ShelfTimelineAccessor API Reference](../../shelf_timeline_accessor_api_reference)
+
+## Signature
+
+```cpp
+Shelf ShelfTimelineAccessor::minute() const
+```
+
+## What It Does
+
+Replaces the bound shelf with its minute-of-hour (`0`-`59`), as a numeric
+`Series`.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Shelf`
+    A new `Series`-kind (`Int64`) shelf, same length as the bound shelf,
+    holding each row's minute-of-hour.
+
+## Examples
+
+Example 1. Extract the minute from every row.
+
+```cpp
+using namespace pluss::table;
+
+auto events = Shelf(pluss::make_timeline({
+    "2024-01-31T09:15:30Z",
+    "2024-02-29T23:45:00Z",
+    "2024-07-06T14:00:00Z",
+}));
+auto out = events.tl().minute();
+std::cout << out;
+```
+
+### Output
+
+```text
+0  15
+1  45
+2  0
+
+ptype: Series
+```
+
+## Notes
+
+- `.tl()` requires the bound shelf to already be `Timeline`-kind —
+  the accessor's constructor throws otherwise.
+- A `NaT` row (or one already null on the underlying shelf) displays as
+  `"NULL"`.
+- Reads the local minute relative to the shelf's current timezone.
+
+## See Also
+
+- [`ShelfTimelineAccessor::hour`](hour.md),
+  [`ShelfTimelineAccessor::second`](second.md): the neighboring clock-time
+  components.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="localize.html">
+    <span class="label">Previous</span>
+    <span class="title">localize</span>
+  </a>
+  <a class="next-link" href="month.html">
+    <span class="label">Next</span>
+    <span class="title">month</span>
+  </a>
+</div>

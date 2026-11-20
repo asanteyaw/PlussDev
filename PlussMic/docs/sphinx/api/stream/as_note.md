@@ -54,8 +54,8 @@ auto series = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}));
 
 try {
   auto out = series.as_note();
-} catch (const std::exception& e) {
-  std::cout << std::string_view(e.what()).substr(0, 24);
+} catch (const pluss::Error& e) {
+  std::cout << std::string_view(e.message()).substr(0, 24);
 }
 ```
 
@@ -82,9 +82,9 @@ Stream payload is not No
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="abs.html">
+  <a class="prev-link" href="as_duration.html">
     <span class="label">Previous</span>
-    <span class="title">abs</span>
+    <span class="title">as_duration</span>
   </a>
   <a class="next-link" href="as_series.html">
     <span class="label">Next</span>

@@ -96,12 +96,12 @@ int main() {
   namespace ai = pluss::ai;
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"id", Slate(pluss::make_series(std::vector<double>{101.0, 102.0}, {2}, cfg))},
-      {"income", Slate(pluss::make_series(std::vector<double>{50.0, 80.0}, {2}, cfg))},
+      {"id", Shelf(pluss::make_series(std::vector<double>{101.0, 102.0}, {2}, cfg))},
+      {"income", Shelf(pluss::make_series(std::vector<double>{50.0, 80.0}, {2}, cfg))},
   });
 
   const ai::Procedure proc = ai::procedure::make({
@@ -305,19 +305,19 @@ int main() {
   namespace ai = pluss::ai;
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}
       .with_dtype(pluss::ScalarType::Float64)
       .with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"id", Slate(pluss::make_series(
+      {"id", Shelf(pluss::make_series(
           std::vector<double>{101.0, 102.0, 103.0}, {3}, cfg))},
-      {"timestamp", Slate(pluss::make_series(
+      {"timestamp", Shelf(pluss::make_series(
           std::vector<double>{1.0, 2.0, 3.0}, {3}, cfg))},
-      {"income", Slate(pluss::make_series(
+      {"income", Shelf(pluss::make_series(
           std::vector<double>{50.0, 80.0, 35.0}, {3}, cfg))},
-      {"bad", Slate(pluss::make_series(
+      {"bad", Shelf(pluss::make_series(
           std::vector<double>{0.0, 0.0, 1.0}, {3}, cfg))},
   });
 

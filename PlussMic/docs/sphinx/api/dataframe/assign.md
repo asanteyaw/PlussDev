@@ -10,16 +10,16 @@
 ```cpp
 DataFrame DataFrame::assign(pluss::RangeView<DeriveSpec> specs)
 
-DataFrame DataFrame::assign(pluss::RangeView<std::pair<std::string, Slate>> assignments)
+DataFrame DataFrame::assign(pluss::RangeView<std::pair<std::string, Shelf>> assignments)
 
-DataFrame DataFrame::assign(std::string_view name, const Slate& value)
+DataFrame DataFrame::assign(std::string_view name, const Shelf& value)
 
-DataFrame DataFrame::assign(std::string_view name, const std::function<Slate(const DataFrame&)>& expr)
+DataFrame DataFrame::assign(std::string_view name, const std::function<Shelf(const DataFrame&)>& expr)
 ```
 
 Add or replace one or more features on a DataFrame and return the resulting frame.
 
-`DataFrame::assign(...)` is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. The two collection overloads accept several features at once — one as already-computed `Slate` values, the other as `DeriveSpec` expressions so PlussMic can compute the features inside the call. The two single-feature overloads are thin convenience shims over those same two paths, for the common case of assigning just one feature: `assign(name, value)` is exactly `assign({{std::string(name), value}})`, and `assign(name, expr)` is exactly `assign({DeriveSpec{.feature = std::string(name), .expr = expr}})`.
+`DataFrame::assign(...)` is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. The two collection overloads accept several features at once — one as already-computed `Shelf` values, the other as `DeriveSpec` expressions so PlussMic can compute the features inside the call. The two single-feature overloads are thin convenience shims over those same two paths, for the common case of assigning just one feature: `assign(name, value)` is exactly `assign({{std::string(name), value}})`, and `assign(name, expr)` is exactly `assign({DeriveSpec{.feature = std::string(name), .expr = expr}})`.
 
 The motivation is the same as any non-mutating feature-creation call: instead of
 mutating a frame in a sequence of separate statements
@@ -32,7 +32,7 @@ partially-derived frames out of named variables you would otherwise have to trac
 
 **assignments**
 
-Collection of `(feature_name, slate)` pairs.
+Collection of `(feature_name, shelf)` pairs.
 
 - Use this overload when each output feature is already computed.
 - If a feature name already exists, the existing feature is replaced.
@@ -45,7 +45,7 @@ Collection of `DeriveSpec` instructions.
 Each spec provides:
 
 - `feature`: the output feature name.
-- `expr`: a callback that receives the current frame and returns the derived `Slate`.
+- `expr`: a callback that receives the current frame and returns the derived `Shelf`.
 
 Use this overload when you want the frame to compute the derived features inside the `assign(...)` call itself.
 
@@ -53,13 +53,13 @@ Use this overload when you want the frame to compute the derived features inside
 
 The output feature name. Empty throws the same `"DataFrame::assign: feature name cannot be empty"` check as the collection overloads, since these are thin shims over them.
 
-**value** (single-feature, `Slate` overload)
+**value** (single-feature, `Shelf` overload)
 
-An already-computed `Slate` to assign under `name` — equivalent to a one-element `assignments` collection.
+An already-computed `Shelf` to assign under `name` — equivalent to a one-element `assignments` collection.
 
 **expr** (single-feature, callback overload)
 
-A callback receiving the current frame and returning the derived `Slate` — equivalent to a one-element `specs` collection with `feature = name`.
+A callback receiving the current frame and returning the derived `Shelf` — equivalent to a one-element `specs` collection with `feature = name`.
 
 ## Returns
 
@@ -70,13 +70,13 @@ A callback receiving the current frame and returning the derived `Slate` — equ
 
 ## See Also
 
-- <a href="transform.html"><code>DataFrame::transform</code></a>: compute one derived slate from a callback when you are working row-wise or feature-wise.
-- <a href="set.html"><code>DataFrame::set</code></a>: write one feature directly when you already have the final slate.
+- <a href="transform.html"><code>DataFrame::transform</code></a>: compute one derived shelf from a callback when you are working row-wise or feature-wise.
+- <a href="set.html"><code>DataFrame::set</code></a>: write one feature directly when you already have the final shelf.
 - <a href="put.html"><code>DataFrame::put</code></a>: update selected cells rather than constructing whole derived features.
 
 ## Notes
 
-The `assignments` overload is best when you already computed the target `Slate` values before the call.
+The `assignments` overload is best when you already computed the target `Shelf` values before the call.
 
 The `DeriveSpec` overload evaluates specs from left to right against the progressively updated frame. That means later specs in the same call can depend on features created by earlier specs.
 
@@ -86,7 +86,7 @@ The two single-feature overloads (`assign(name, value)` and `assign(name, expr)`
 
 ## Examples
 
-Example 1. Assign a feature from a slate you already computed.
+Example 1. Assign a feature from a shelf you already computed.
 
 ```cpp
 using namespace pluss::table;
@@ -102,7 +102,7 @@ auto total_grade = [](const DataFrame& df) {
 };
 
 auto out = grades.assign({
-    std::pair<std::string, pluss::table::Slate>{"total", total_grade(grades)},
+    std::pair<std::string, pluss::table::Shelf>{"total", total_grade(grades)},
 });
 std::cout << out;
 ```
@@ -164,7 +164,7 @@ s3   | Chen     7.5         21.5   29     false
 ```
 
 Example 3. The single-feature overloads assign exactly one feature at a time — one from an
-already-computed `Slate`, the other from a callback — without wrapping it in a collection
+already-computed `Shelf`, the other from a callback — without wrapping it in a collection
 literal.
 
 ```cpp
@@ -176,8 +176,8 @@ auto grades = DataFrame({
     {"final", pluss::make_series({28.0, 24.0, 21.5})},
 }, pluss::make_note({"s1", "s2", "s3"})).title("grades");
 
-auto total_slate = Slate(pluss::make_series({37.5, 32.0, 29.0}));
-auto out1 = grades.assign("total", total_slate);
+auto total_shelf = Shelf(pluss::make_series({37.5, 32.0, 29.0}));
+auto out1 = grades.assign("total", total_shelf);
 std::cout << out1;
 
 auto out2 = grades.assign("total", [](const DataFrame& df) {
@@ -241,9 +241,9 @@ s3   | Chen     7.5         21.5   58
 ```
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="any.html">
+  <a class="prev-link" href="arrange.html">
     <span class="label">Previous</span>
-    <span class="title">any</span>
+    <span class="title">arrange</span>
   </a>
   <a class="next-link" href="astype.html">
     <span class="label">Next</span>

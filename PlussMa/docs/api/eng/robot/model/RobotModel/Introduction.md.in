@@ -1,0 +1,36 @@
+# `robot::Robot` Introduction
+
+What `robot::make` returns: the validated tree with its constant transforms compiled, ready for any number of kinematic and dynamic calls on any batch of configurations.
+
+A `Robot` is immutable and cheap to copy; build it once and reuse it. Its compiled transforms carry reverse sensitivity to the values they were built from.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The accessors of a tree.
+
+@@example Eng/api/robot_robot_accessors.cpp@@
+
+### Example 2
+
+A planar arm and its parents.
+
+@@example Eng/api/robot_make_arm.cpp@@
+
+### Example 3
+
+A tree.
+
+@@example Eng/api/robot_make_tree.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="dtype.html">
+    <span class="label">Next</span>
+    <span class="title">dtype</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -60,7 +60,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -71,15 +71,15 @@ int main() {
   const pluss::Series region = pluss::make_series({0,0,1,1,2,2,3,3,0,2}, {10}, f64);
   const pluss::Series noise  = pluss::make_series({.1,.9,.2,.8,.3,.7,.4,.6,.5,.5}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,0,1}, {10}, f64);
-  const DataFrame x({{"region", Slate(region)}, {"noise", Slate(noise)}});
+  const DataFrame x({{"region", Shelf(region)}, {"noise", Shelf(noise)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::target_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"region", Slate(region)}, {"actual", Slate(y)},
-                          {"predicted", Slate(model.infer(x))}});
+  std::cout << DataFrame({{"region", Shelf(region)}, {"actual", Shelf(y)},
+                          {"predicted", Shelf(model.infer(x))}});
 
   return 0;
 }
@@ -122,7 +122,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -132,7 +132,7 @@ int main() {
   // smoothing -- both still fit this clean signal.
   const pluss::Series region = pluss::make_series({0,0,0,0,1,1,1,1,2,3}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,1,0}, {10}, f64);
-  const DataFrame x({{"region", Slate(region)}});
+  const DataFrame x({{"region", Shelf(region)}});
 
   for (double s : {1.0, 50.0}) {
     lymph::options::TargetEncoder o{};
@@ -170,7 +170,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -180,15 +180,15 @@ int main() {
   const pluss::Series city = pluss::make_series({0,1,2,3,4,5,6,7,0,3}, {10}, f64);
   const pluss::Series size = pluss::make_series({1.,2.,3.,4.,5.,6.,7.,8.,1.,4.}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,0,0}, {10}, f64);
-  const DataFrame x({{"city", Slate(city)}, {"size", Slate(size)}});
+  const DataFrame x({{"city", Shelf(city)}, {"size", Shelf(size)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::standard_scaler(), lymph::prep::route::names({"size"}))
        .append(lymph::prep::stage::target_encoder(), lymph::prep::route::names({"city"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"city", Slate(city)}, {"actual", Slate(y)},
-                          {"predicted", Slate(model.infer(x))}});
+  std::cout << DataFrame({{"city", Shelf(city)}, {"actual", Shelf(y)},
+                          {"predicted", Shelf(model.infer(x))}});
 
   return 0;
 }

@@ -6,7 +6,7 @@
 
 **Inverse dynamics** answers: what joint torques produce this motion? `robot::torques` computes them by the recursive Newton-Euler method. This page finds the torques of the planar arm for a given acceleration and checks them against the parts of the equations of motion, computes a whole sampled motion in one call, checks a robot with a sliding joint against its closed-form equations, and shows the effect of the gravity setting.
 
-## The mental model
+## How it works
 
 The equations of motion of a robot are `M(q) qdd + b(q, qd) = tau`: the inertia matrix `M` times the accelerations, plus the **bias** `b` (Coriolis and centrifugal forces, which depend on the rates, plus gravity), equals the applied torques `tau` (forces for prismatic joints). `torques(robot, q, qd, qdd)` returns `tau`. It walks the tree from the base to the tips computing every link's velocity and acceleration, then from the tips back to the base accumulating the force and moment each joint must carry, so the cost grows linearly with the number of links.
 

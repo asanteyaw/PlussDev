@@ -76,3 +76,14 @@ rename to same name: Locus::rename: source and target names must differ
 
 - [`with`](with.md): replacing a catalog's data under its existing name.
 - [`link`](link.md): the relationships a rename updates in place.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="relationship_audit.html">
+    <span class="label">Previous</span>
+    <span class="title">relationship_audit</span>
+  </a>
+  <a class="next-link" href="run.html">
+    <span class="label">Next</span>
+    <span class="title">run</span>
+  </a>
+</div>

@@ -6,7 +6,7 @@ An integral adds up a quantity over an interval. Pluss computes it two ways: fro
 
 Every program is complete and its output is the output of that program. Evaluation counts are shown because they are the same on every machine; no running times are claimed.
 
-## The mental model
+## How it works
 
 The module is `pluss::subsp::math::integ`. Its two ideas:
 

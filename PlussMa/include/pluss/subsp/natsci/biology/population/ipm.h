@@ -103,8 +103,8 @@ inline Series spreading_speed(const Series &ln_r0, const std::function<Series(co
   Series fc = f(c), fd = f(d);
   for (int i = 0; i < iterations; ++i) {
     const Series left = fc.lt(fd);
-    b = left.where(d, b);
-    a = left.where(a, c);
+    b = pluss::series::where(left, d, b);
+    a = pluss::series::where(left, a, c);
     c = b.sub(b.sub(a).mul(phi));
     d = a.add(b.sub(a).mul(phi));
     fc = f(c);

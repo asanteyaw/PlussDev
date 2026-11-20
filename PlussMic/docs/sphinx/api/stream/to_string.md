@@ -94,12 +94,12 @@ show length: 1056
   from this plain-text rendering.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_json.html">
+  <a class="prev-link" href="to_shelf.html">
     <span class="label">Previous</span>
-    <span class="title">to_json</span>
+    <span class="title">to_shelf</span>
   </a>
-  <a class="next-link" href="to_slate.html">
+  <a class="next-link" href="ts.html">
     <span class="label">Next</span>
-    <span class="title">to_slate</span>
+    <span class="title">ts</span>
   </a>
 </div>

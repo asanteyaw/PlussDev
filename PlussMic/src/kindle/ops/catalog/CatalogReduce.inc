@@ -58,9 +58,7 @@ JaggedColumn load_jagged_column(const Stream& stream) {
     const auto mask = pluss::kindle::detail::validity_mask(stream)->host<bool>();
     for (std::size_t j = 0; j < mask.size() && j < col.valid.size(); ++j) col.valid[j] = mask[j] ? 1 : 0;
   }
-  for (std::size_t j = 0; j < col.values.size(); ++j) {
-    if (std::isnan(col.values[j])) col.valid[j] = 0;
-  }
+  // Only the validity mask says a cell is missing; a NaN is a value and takes part in the reduction (it propagates).
   return col;
 }
 
@@ -276,7 +274,7 @@ Catalog reduce_jagged(const Catalog& catalog, std::string_view out_key, JaggedOp
 Catalog reduce_keywise(const Catalog& catalog,
                        std::string_view out_key,
                        const CatalogReduceOptions& options,
-                       const std::function<pluss::table::Slate(const pluss::table::DataFrame&,
+                       const std::function<pluss::table::Shelf(const pluss::table::DataFrame&,
                                                                 const CatalogReduceOptions&)>& reducer,
                        std::string_view where) {
   PLUSS_CHECK(catalog.defined(), std::string(where) + ": undefined handle");
@@ -287,7 +285,7 @@ Catalog reduce_keywise(const Catalog& catalog,
   const auto frame = catalog.tabelize(reduce_tabelize_policy(options));
   const auto reduced = reducer(frame, options);
   return Catalog(std::vector<std::pair<std::string, Stream>>{
-      {std::string(out_key), Stream::from_slate(reduced)},
+      {std::string(out_key), Stream::from_shelf(reduced)},
   });
 }
 
@@ -308,7 +306,7 @@ Catalog reduce_catalog(const Catalog& catalog,
           catalog,
           out_key,
           options,
-          std::function<pluss::table::Slate(const pluss::table::DataFrame&, const CatalogReduceOptions&)>(
+          std::function<pluss::table::Shelf(const pluss::table::DataFrame&, const CatalogReduceOptions&)>(
               std::forward<KeyFn>(key_fn)),
           where);
   }

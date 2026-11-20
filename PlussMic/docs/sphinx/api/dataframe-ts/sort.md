@@ -44,8 +44,8 @@ Example 1. Sort a frame whose case labels are an out-of-order `Timeline`.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Slate(pluss::make_series({30.0, 10.0, 20.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({30.0, 10.0, 20.0}))}},
+    Shelf(pluss::make_timeline({
         "2024-01-03T00:00:00Z",
         "2024-01-01T00:00:00Z",
         "2024-01-02T00:00:00Z",
@@ -119,8 +119,8 @@ axis position sorts.
 
 ```cpp
 auto with_nat = DataFrame(
-    {{"value", Slate(pluss::make_series({99.0, 20.0, 10.0}))}},
-    Slate(pluss::make_timeline({
+    {{"value", Shelf(pluss::make_series({99.0, 20.0, 10.0}))}},
+    Shelf(pluss::make_timeline({
         "",
         "2024-01-02T00:00:00Z",
         "2024-01-01T00:00:00Z",
@@ -137,39 +137,39 @@ std::cout << nat_first;
 ### Output (with_nat)
 
 ```text
-==================
-           | value
-------------------
-NULL       | 99   
-2024-01-02 | 20   
-2024-01-01 | 10   
-------------------
+==============================
+                       | value
+------------------------------
+NaT                    | 99   
+2024-01-02 00:00:00.0~ | 20   
+2024-01-01 00:00:00.0~ | 10   
+------------------------------
 [3 cs x 1 feat]
 ```
 
 ### Output (nulls_last = true, the default)
 
 ```text
-==================
-           | value
-------------------
-2024-01-01 | 10   
-2024-01-02 | 20   
-NULL       | 99   
-------------------
+==============================
+                       | value
+------------------------------
+NaT                    | 99   
+2024-01-01 00:00:00.0~ | 10   
+2024-01-02 00:00:00.0~ | 20   
+------------------------------
 [3 cs x 1 feat]
 ```
 
 ### Output (nulls_last = false)
 
 ```text
-==================
-           | value
-------------------
-NULL       | 99   
-2024-01-01 | 10   
-2024-01-02 | 20   
-------------------
+==============================
+                       | value
+------------------------------
+NaT                    | 99   
+2024-01-01 00:00:00.0~ | 10   
+2024-01-02 00:00:00.0~ | 20   
+------------------------------
 [3 cs x 1 feat]
 ```
 
@@ -186,12 +186,12 @@ index, with no explicit `TsOptions.axis`, to see it throw.
 using namespace pluss::table;
 
 auto untimed = DataFrame(
-    {{"value", Slate(pluss::make_series({30.0, 10.0, 20.0}))}});
+    {{"value", Shelf(pluss::make_series({30.0, 10.0, 20.0}))}});
 
 try {
   auto out = untimed.ts().sort();
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -199,7 +199,7 @@ try {
 ### Output
 
 ```text
-DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
+DataFrameTsAccessor::sort: cases must be Timeline. Use df.labels().set("date") first
 ```
 
 `untimed`'s case labels are the default integer index — no `Timeline`/

@@ -124,9 +124,9 @@ two differently-labeled streams.
 using namespace pluss::kindle::literals;
 
 auto x_stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0, 60.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"a", "b", "c", "d", "e", "f"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"a", "b", "c", "d", "e", "f"})));
 auto y_stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))
-    .with_label(pluss::table::Slate(pluss::make_note({"b", "c", "d", "e", "f"})));
+    .with_label(pluss::table::Shelf(pluss::make_note({"b", "c", "d", "e", "f"})));
 auto paired = pluss::kindle::Catalog({"x_metric"_k = x_stream, "y_metric"_k = y_stream});
 
 pluss::kindle::CatalogCorrHeatmapPlotOptions options;
@@ -154,8 +154,8 @@ auto weather = pluss::kindle::Catalog({
 
 try {
   auto bad = weather.plot().corr_heatmap({"temp_c"});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

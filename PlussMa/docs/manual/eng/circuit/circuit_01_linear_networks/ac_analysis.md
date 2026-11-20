@@ -6,7 +6,7 @@
 
 A circuit with capacitors and inductors responds differently to a slow signal and to a fast one: a filter passes one and blocks the other, a resonant circuit rings at a frequency of its own. `circuit::ac` computes the **small-signal sinusoidal response**: for a sinusoidal source of angular frequency `w`, the amplitude and phase of every node voltage and branch current, for every frequency in a list, in one call. This page works through a low-pass filter, a resonant circuit and an op-amp integrator against their formulas, and sweeps component values.
 
-## The mental model
+## How it works
 
 For a sinusoid `V cos(w t + phi)` every voltage and current in a linear circuit is a sinusoid of the same frequency, so each can be written as a **phasor**, a complex number whose magnitude is the amplitude and whose angle is the phase. In phasor form a capacitor behaves like a conductance `j w C` and an inductor like a resistance `j w L`, and the circuit equations are the same linear equations as at DC, with complex entries. `ac(circuit, omega)` solves them at each angular frequency in `omega` (radians per second, a real non-negative vector) and returns the same `Result` as `op`, with complex arrays and one more axis.
 

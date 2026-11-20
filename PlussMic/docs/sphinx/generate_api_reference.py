@@ -14,12 +14,12 @@ ROOT = pathlib.Path(__file__).resolve().parents[3]
 DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
-    'DataFrame', 'Slate', 'Catalog', 'Stream', 'Archive', 'Atlas',
+    'DataFrame', 'Shelf', 'Catalog', 'Stream', 'Archive', 'Atlas',
     'DataFrameCaseStudyAccessor', 'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
     'DataFrameFeatureAxisAccessor', 'DataFramePlotAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
     'DataFrameSortBuilder', 'ContingencyTable',
-    'SlatePlotAccessor',
+    'ShelfPlotAccessor',
     'AtlasLabelAccessor', 'AtlasTimelineAccessor', 'AtlasTsAccessor',
     'AtlasTsResampler', 'AtlasPlotAccessor',
     'CatalogPlotAccessor', 'CatalogPlot3DAccessor',
@@ -55,29 +55,29 @@ MANUAL_API_NAV = {
         'landing': 'dataframe_cast_accessor_api_reference.html',
         'index': DOCS / 'dataframe_cast_accessor_api_reference.md',
     },
-    'SlateLabelAccessor': {
-        'title': 'SlateLabelAccessor',
-        'slug': 'slate-label',
-        'landing': 'slate_label_accessor_api_reference.html',
-        'index': DOCS / 'slate_label_accessor_api_reference.md',
+    'ShelfLabelAccessor': {
+        'title': 'ShelfLabelAccessor',
+        'slug': 'shelf-label',
+        'landing': 'shelf_label_accessor_api_reference.html',
+        'index': DOCS / 'shelf_label_accessor_api_reference.md',
     },
-    'SlateNoteAccessor': {
-        'title': 'SlateNoteAccessor',
-        'slug': 'slate-note',
-        'landing': 'slate_note_accessor_api_reference.html',
-        'index': DOCS / 'slate_note_accessor_api_reference.md',
+    'ShelfNoteAccessor': {
+        'title': 'ShelfNoteAccessor',
+        'slug': 'shelf-note',
+        'landing': 'shelf_note_accessor_api_reference.html',
+        'index': DOCS / 'shelf_note_accessor_api_reference.md',
     },
-    'SlateTimelineAccessor': {
-        'title': 'SlateTimelineAccessor',
-        'slug': 'slate-timeline',
-        'landing': 'slate_timeline_accessor_api_reference.html',
-        'index': DOCS / 'slate_timeline_accessor_api_reference.md',
+    'ShelfTimelineAccessor': {
+        'title': 'ShelfTimelineAccessor',
+        'slug': 'shelf-timeline',
+        'landing': 'shelf_timeline_accessor_api_reference.html',
+        'index': DOCS / 'shelf_timeline_accessor_api_reference.md',
     },
     'TimeSeriesAccessor': {
         'title': 'TimeSeriesAccessor',
-        'slug': 'slate-ts',
-        'landing': 'slate_ts_accessor_api_reference.html',
-        'index': DOCS / 'slate_ts_accessor_api_reference.md',
+        'slug': 'shelf-ts',
+        'landing': 'shelf_ts_accessor_api_reference.html',
+        'index': DOCS / 'shelf_ts_accessor_api_reference.md',
     },
     'Nexus': {
         'title': 'Nexus',
@@ -285,58 +285,58 @@ CLASS_CONFIG = {
         'binder': 'contingency(...)',
         'nav_title': 'ContingencyTable',
     },
-    'Slate': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_api_reference.md',
-        'title': 'Slate API Reference',
-        'subtitle': 'Practical Slate API Reference',
-        'intro': 'This page documents the full public `Slate` surface with direct typed-column examples.',
+    'Shelf': {
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_api_reference.md',
+        'title': 'Shelf API Reference',
+        'subtitle': 'Practical Shelf API Reference',
+        'intro': 'This page documents the full public `Shelf` surface with direct typed-column examples.',
     },
-    'SlateValue': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_value_api_reference.md',
-        'title': 'SlateValue API Reference',
-        'subtitle': 'Practical SlateValue API Reference',
-        'intro': 'This page documents the public scalar-like `SlateValue` wrapper returned by slate and column-value accessors.',
+    'ShelfValue': {
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_value_api_reference.md',
+        'title': 'ShelfValue API Reference',
+        'subtitle': 'Practical ShelfValue API Reference',
+        'intro': 'This page documents the public scalar-like `ShelfValue` wrapper returned by shelf and column-value accessors.',
     },
-    'SlateLabelAccessor': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_label_accessor_api_reference.md',
-        'title': 'SlateLabelAccessor API Reference',
-        'subtitle': 'Practical SlateLabelAccessor API Reference',
-        'intro': 'This page documents the public case-label accessor returned by `Slate::label()`.',
+    'ShelfLabelAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_label_accessor_api_reference.md',
+        'title': 'ShelfLabelAccessor API Reference',
+        'subtitle': 'Practical ShelfLabelAccessor API Reference',
+        'intro': 'This page documents the public case-label accessor returned by `Shelf::label()`.',
         'binder': 'label()',
     },
-    'SlateNoteAccessor': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_note_accessor_api_reference.md',
-        'title': 'SlateNoteAccessor API Reference',
-        'subtitle': 'Practical SlateNoteAccessor API Reference',
-        'intro': 'This page documents the public string-payload accessor returned by `Slate::nt()`.',
+    'ShelfNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_note_accessor_api_reference.md',
+        'title': 'ShelfNoteAccessor API Reference',
+        'subtitle': 'Practical ShelfNoteAccessor API Reference',
+        'intro': 'This page documents the public string-payload accessor returned by `Shelf::nt()`.',
         'binder': 'nt()',
     },
-    'SlateTimelineAccessor': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_timeline_accessor_api_reference.md',
-        'title': 'SlateTimelineAccessor API Reference',
-        'subtitle': 'Practical SlateTimelineAccessor API Reference',
-        'intro': 'This page documents the public timestamp-payload accessor returned by `Slate::tl()`.',
+    'ShelfTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_timeline_accessor_api_reference.md',
+        'title': 'ShelfTimelineAccessor API Reference',
+        'subtitle': 'Practical ShelfTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-payload accessor returned by `Shelf::tl()`.',
         'binder': 'tl()',
     },
     'TimeSeriesAccessor': {
-        'header': ROOT / 'PlussMic/src/table/Slate.h',
-        'output': DOCS / 'slate_ts_accessor_api_reference.md',
+        'header': ROOT / 'PlussMic/src/table/Shelf.h',
+        'output': DOCS / 'shelf_ts_accessor_api_reference.md',
         'title': 'TimeSeriesAccessor API Reference',
         'subtitle': 'Practical TimeSeriesAccessor API Reference',
-        'intro': 'This page documents the public time-series accessor returned by `Slate::ts()`.',
+        'intro': 'This page documents the public time-series accessor returned by `Shelf::ts()`.',
         'binder': 'ts()',
     },
-    'SlatePlotAccessor': {
+    'ShelfPlotAccessor': {
         'header': ROOT / 'PlussMic/src/table/plot/DataFramePlot.h',
-        'output': DOCS / 'slate_plot_api_reference.md',
-        'title': 'SlatePlotAccessor API Reference',
-        'subtitle': 'Practical SlatePlotAccessor API Reference',
-        'intro': 'This page documents the public plotting accessor returned by `Slate::plot()`.',
+        'output': DOCS / 'shelf_plot_api_reference.md',
+        'title': 'ShelfPlotAccessor API Reference',
+        'subtitle': 'Practical ShelfPlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Shelf::plot()`.',
         'binder': 'plot()',
     },
     'Atlas': {
@@ -672,7 +672,7 @@ CLASS_CONFIG = {
 
 METHOD_PAGE_DIR = {
     'DataFrame': 'dataframe',
-    'Slate': 'slate',
+    'Shelf': 'shelf',
     'Catalog': 'catalog',
     'Stream': 'stream',
     'Archive': 'archive',
@@ -699,12 +699,12 @@ METHOD_PAGE_DIR = {
     'DataFrameGroupBuilder': 'dataframe-group',
     'DataFrameSortBuilder': 'dataframe-sort',
     'ContingencyTable': 'dataframe-contingency',
-    'TimeSeriesAccessor': 'slate-ts',
+    'TimeSeriesAccessor': 'shelf-ts',
     'DataFrameCastAccessor': 'dataframe-cast',
-    'SlateLabelAccessor': 'slate-label',
-    'SlateNoteAccessor': 'slate-note',
-    'SlateTimelineAccessor': 'slate-timeline',
-    'SlatePlotAccessor': 'slate-plot',
+    'ShelfLabelAccessor': 'shelf-label',
+    'ShelfNoteAccessor': 'shelf-note',
+    'ShelfTimelineAccessor': 'shelf-timeline',
+    'ShelfPlotAccessor': 'shelf-plot',
     'Slot': 'slot',
     'Registry': 'registry',
     'Axel': 'axel',
@@ -757,12 +757,12 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
         'DataFrameTsWindowAccessor',
         'DataFrameTsResampler',
     ],
-    'Slate': [
-        'SlateLabelAccessor',
-        'SlateNoteAccessor',
-        'SlateTimelineAccessor',
+    'Shelf': [
+        'ShelfLabelAccessor',
+        'ShelfNoteAccessor',
+        'ShelfTimelineAccessor',
         'TimeSeriesAccessor',
-        'SlatePlotAccessor',
+        'ShelfPlotAccessor',
     ],
     'Atlas': [
         'AtlasLabelAccessor',
@@ -1141,7 +1141,7 @@ def returns_doc(ret: str) -> str:
         'FrameMatch': 'Pair containing matched `left` and `right` frames with identical case and feature axes.',
         'pluss::loader::LoadResult': 'Multi-sheet Excel load scribble containing one frame per requested sheet.',
         'const std::vector<std::string>&': 'Borrowed list of names.',
-        'std::vector<Slate>': 'Materialized collection of slate objects.',
+        'std::vector<Shelf>': 'Materialized collection of shelf objects.',
         'std::vector<Stream>': 'Materialized collection of stream objects.',
         'std::vector<Slot>': 'Materialized collection of slot objects.',
         'const std::vector<DataFrame>&': 'Borrowed collection of frames.',
@@ -1155,13 +1155,13 @@ def returns_doc(ret: str) -> str:
 def method_content_path(class_name: str, method_name: str) -> pathlib.Path:
     namespace = {
         'DataFrame': 'table/DataFrame',
-        'Slate': 'table/Slate',
+        'Shelf': 'table/Shelf',
         'Atlas': 'table/Atlas',
         'ColumnRef': 'table/ColumnRef',
         'DataFramePlotAccessor': 'table/DataFramePlotAccessor',
         'DataFrameSqlAccessor': 'table/DataFrameSqlAccessor',
         'DataFrameSqlPrepared': 'table/DataFrameSqlPrepared',
-        'SlateValue': 'table/SlateValue',
+        'ShelfValue': 'table/ShelfValue',
         'Stream': 'kindle/Stream',
         'Catalog': 'kindle/Catalog',
         'Archive': 'kindle/Archive',
@@ -1413,9 +1413,9 @@ def rewrite_method_links(text: str,
                 target = same_class_target.group(1)
                 if target in known_methods.get(current_class, set()):
                     new_href = method_page_html_rel_from_method(current_class, current_class, target)
-            target_match = re.fullmatch(r'(?:\.\./)*(dataframe|slate)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)', href)
+            target_match = re.fullmatch(r'(?:\.\./)*(dataframe|shelf)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)', href)
             if target_match:
-                target_class = 'DataFrame' if target_match.group(1) == 'dataframe' else 'Slate'
+                target_class = 'DataFrame' if target_match.group(1) == 'dataframe' else 'Shelf'
                 target = target_match.group(2)
                 if target in known_methods.get(target_class, set()):
                     new_href = method_page_html_rel_from_method(current_class, target_class, target)
@@ -1426,12 +1426,12 @@ def rewrite_method_links(text: str,
     def replace_md_link(match: re.Match[str]) -> str:
         doc = match.group(1)
         target = match.group(2)
-        target_class = 'DataFrame' if doc == 'dataframe' else 'Slate'
+        target_class = 'DataFrame' if doc == 'dataframe' else 'Shelf'
         if target in known_methods.get(target_class, set()):
             return f'({method_page_rel_from_method(current_class, target_class, target)})'
         return match.group(0)
 
-    text = re.sub(r'\((?:\.\./)*(dataframe|slate)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)\)', replace_md_link, text)
+    text = re.sub(r'\((?:\.\./)*(dataframe|shelf)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)\)', replace_md_link, text)
     return text
 
 
@@ -1511,8 +1511,8 @@ def fallback_param_note(name: str, label_type: str) -> str:
         return 'Optional scalar dtype used when the cast target is a numeric `Series`.'
     if name == 'target':
         return 'Target payload family chosen by this cast overload.'
-    if name == 'slate':
-        return 'Slate payload supplied to this overload.'
+    if name == 'shelf':
+        return 'Shelf payload supplied to this overload.'
     if name == 'stream':
         return 'Stream payload supplied to this overload.'
     if name == 'frame':
@@ -1587,7 +1587,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'on_bad_lines': 'Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.',
         'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
         'new_label': 'Replacement case labels in the exact order you want the rows to follow.',
-        'cases': 'Case-label slate to attach to the current object.',
+        'cases': 'Case-label shelf to attach to the current object.',
         'rows': enum_note(
             'Selector describing which rows `case_study(...)` should return.',
             [
@@ -1597,7 +1597,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('`pluss::table::label(value)`', 'Every row whose case label matches `value`.'),
                 ('`pluss::table::labels({...})`', 'Several case labels in requested order. If one label appears multiple times, every matching row is returned.'),
                 ('`pluss::table::label_range(start, stop)`', 'An inclusive case-label window from the first `start` match through the last `stop` match.'),
-                ('`pluss::table::mask(bool_slate)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
+                ('`pluss::table::mask(bool_shelf)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
             ],
         ),
         'rows_selector': 'Alias for the row selector used by `case_study(...)`.',
@@ -1665,7 +1665,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'keys': 'Collection of slot or stream names to keep, drop, or rewrite together.',
         'names': 'Collection of feature, slot, or stream names supplied in positional order.',
         'features': 'Feature name(s) that select the target DataFrame columns for the operation.',
-        'other': 'Second frame, slate, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.',
+        'other': 'Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.',
         'n': 'Number of rows, entries, or depth items to keep in the preview.',
         'axis': 'Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.',
         'skipnull': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
@@ -1781,7 +1781,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('`pluss::table::label(value)`', 'Every row whose case label matches `value`.'),
                 ('`pluss::table::labels({...})`', 'Several case labels in requested order. If one label appears multiple times, every matching row is returned.'),
                 ('`pluss::table::label_range(start, stop)`', 'An inclusive case-label window from the first `start` match through the last `stop` match.'),
-                ('`pluss::table::mask(bool_slate)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
+                ('`pluss::table::mask(bool_shelf)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
             ]),
         ('DataFrame', 'case_study', 'features'):
             enum_note('Selector describing which feature columns `case_study(...)` should keep after resolving the row selection.', [
@@ -1794,7 +1794,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('`pluss::table::feature_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
             ]),
         ('DataFrame', 'caselbl', 'name'):
-            'Structured case-label name to extract from a multi-label case axis. The returned slate has one value per row in the current frame order.',
+            'Structured case-label name to extract from a multi-label case axis. The returned shelf has one value per row in the current frame order.',
         ('DataFrame', 'caselbl', 'position'):
             'Zero-based structured case-label position to extract from a multi-label case axis. Negative positions count backward from the end.',
         ('DataFrame', 'observe', 'row'):
@@ -1881,15 +1881,15 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'place', 'name'):
             'Feature name to insert or move.',
         ('DataFrame', 'place', 'feature'):
-            'Full slate payload to insert at the target position. Its length must match the frame case count.',
+            'Full shelf payload to insert at the target position. Its length must match the frame case count.',
         ('DataFrame', 'put', 'feature'):
             'Feature name to rewrite.',
         ('DataFrame', 'put_', 'feature'):
             'Feature name to rewrite in place.',
         ('DataFrame', 'put', 'value'):
-            'Replacement scalar, string, null, or slate written only where the mask is `true`.',
+            'Replacement scalar, string, null, or shelf written only where the mask is `true`.',
         ('DataFrame', 'put_', 'value'):
-            'Replacement scalar, string, null, or slate written in place only where the mask is `true`.',
+            'Replacement scalar, string, null, or shelf written in place only where the mask is `true`.',
         ('DataFrame', 'query', 'expression'):
             'Boolean filter expression written against feature names, such as `"sales > 95"` or `"city == \\"Accra\\""`. Rows where the expression evaluates true are kept.',
         ('DataFrame', 'rename', 'old_name'):
@@ -1960,7 +1960,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'shift', 'periods'):
             'Number of rows to shift selected feature values. Positive values move values downward and introduce missing entries at the top; negative values move upward.',
         ('DataFrame', 'transform', 'fn'):
-            'Slate-to-slate or frame-to-slate transform function, depending on the overload. The returned slate must match the frame case count.',
+            'Shelf-to-shelf or frame-to-shelf transform function, depending on the overload. The returned shelf must match the frame case count.',
         ('DataFrame', 'transform', 'feature'):
             'Target feature name to rewrite, or output feature name when you use the frame-aware derive overload.',
         ('DataFrame', 'truediv', 'other'):
@@ -2155,7 +2155,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Before', 'Move the selected features immediately before the anchor feature.'),
                 ('After', 'Move the selected features immediately after the anchor feature.'),
             ]),
-        'SlateWindowOp':
+        'ShelfWindowOp':
             enum_note('', [
                 ('RollingSum', 'Compute a rolling sum.'),
                 ('RollingMean', 'Compute a rolling mean.'),
@@ -2173,11 +2173,11 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'pluss::msharp::RangeView::Of<GroupSpec>':
             'Collection of `GroupSpec` items. Each item provides `output`, `feature`, and `op`.',
         'pluss::msharp::RangeView::Of<DeriveSpec>':
-            'Collection of `DeriveSpec` items. Each item provides the output feature name and a frame-aware expression that returns the derived slate.',
+            'Collection of `DeriveSpec` items. Each item provides the output feature name and a frame-aware expression that returns the derived shelf.',
         'pluss::msharp::RangeView::Of<CastSpec>':
             'Collection of `CastSpec` items. Each item selects a feature, the target payload family, and any target Series dtype details needed for the cast.',
         'pluss::msharp::RangeView::Of<TransformSpec>':
-            'Collection of `TransformSpec` items. Each item identifies one target feature and the slate-transform expression to apply to it.',
+            'Collection of `TransformSpec` items. Each item identifies one target feature and the shelf-transform expression to apply to it.',
         'pluss::msharp::RangeView::Of<ArrangeSpec>':
             'Collection of `ArrangeSpec` items. Each item provides `feature`, `ascending`, and `nulls_last`.',
         'pluss::RangeView<DataFrame>':
@@ -2188,8 +2188,8 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Collection of `WindowSpec` items. Each item provides `output`, `feature`, `op`, `window`, and `min_periods` for one derived window feature.',
         'pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>':
             'Collection of `(feature_name, dtype)` pairs used to cast several existing features to explicit scalar dtypes in one call.',
-        'pluss::msharp::RangeView::Of<std::pair<std::string, Slate>>':
-            'Collection of `(feature_name, slate)` pairs used to add or replace several features in one call.',
+        'pluss::msharp::RangeView::Of<std::pair<std::string, Shelf>>':
+            'Collection of `(feature_name, shelf)` pairs used to add or replace several features in one call.',
         'const CombineSpec&':
             'Structured combine policy object. It controls how the right-hand frame should be merged, appended, or used to update the left-hand frame.',
         'const NameRange&':
@@ -2289,7 +2289,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'height': 'Returns the row count of the current frame.',
             'iat': 'Returns one cell as text using positional row and positional feature coordinates.',
             'interp': 'Interpolates missing numeric values across selected features using the requested interpolation strategy.',
-            'with_cases': 'Replaces the current case axis with the supplied slate. The row values stay in the same order, but later case-aware operations now use the new labels.',
+            'with_cases': 'Replaces the current case axis with the supplied shelf. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'with_cases_': 'Replaces the current case axis in place. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'insert': 'Inserts a new feature at the requested position and shifts the later features to the right.',
             'join': 'Adds compatible features from another frame, aligning rows by the shared case axis.',
@@ -2366,7 +2366,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'title': 'Gets the current frame title or returns a titled copy, depending on the overload.',
             'title_': 'Overwrites the current frame title in place.',
             'top': 'Returns the rows with the largest values in the selected feature.',
-            'transform': 'Rewrites one feature, several features, or all features by applying a user function to each targeted slate.',
+            'transform': 'Rewrites one feature, several features, or all features by applying a user function to each targeted shelf.',
             'transpose': 'Swaps rows and features so former feature names become row labels.',
             'truediv': 'Applies elementwise true division to compatible numeric features.',
             'ts': 'Returns the time-series accessor bound to one or more selected features.',
@@ -2473,82 +2473,82 @@ def generic_note(class_name: str, method: Method) -> str:
             'set_slot': 'Adds or replaces one named slot and returns the updated registry.',
             'set_slots': 'Adds or replaces several named slots in one call and returns the updated registry.',
         },
-        'Slate': {
-            'abs': 'Returns a numeric slate whose values are the absolute values of the current numeric payload.',
-            'as_note': 'Interprets or converts the current payload as a note/text slate.',
-            'as_series': 'Interprets or converts the current payload as a numeric series slate.',
-            'as_timeindex': 'Interprets or converts the current payload as a time-index slate.',
-            'as_timeline': 'Interprets or converts the current payload as a timeline slate.',
-            'bfill': 'Backward-fills one slate by pulling the next valid value upward within the same payload.',
+        'Shelf': {
+            'abs': 'Returns a numeric shelf whose values are the absolute values of the current numeric payload.',
+            'as_note': 'Interprets or converts the current payload as a note/text shelf.',
+            'as_series': 'Interprets or converts the current payload as a numeric series shelf.',
+            'as_timeindex': 'Interprets or converts the current payload as a time-index shelf.',
+            'as_timeline': 'Interprets or converts the current payload as a timeline shelf.',
+            'bfill': 'Backward-fills one shelf by pulling the next valid value upward within the same payload.',
             'bounded': 'Computes variable-width window statistics where each entry chooses its own bounds through a callback.',
-            'bucketize': 'Places numeric values into interval bins and returns the assigned bin labels as a new slate.',
+            'bucketize': 'Places numeric values into interval bins and returns the assigned bin labels as a new shelf.',
             'btw': 'Builds a boolean mask telling you whether each row falls between lower and upper bounds.',
             'casefold': 'Applies Unicode-aware case folding to note-backed text values.',
             'clip': 'Clamps numeric values to the supplied lower and upper bounds.',
-            'corr': 'Computes the correlation between two numeric slates.',
-            'corr_with': 'Computes one correlation value between this numeric slate and another numeric slate.',
-            'covar': 'Computes the covariance between two numeric slates.',
-            'distinct': 'Returns the distinct observed values from the current slate in stable first-seen order.',
+            'corr': 'Computes the correlation between two numeric shelves.',
+            'corr_with': 'Computes one correlation value between this numeric shelf and another numeric shelf.',
+            'covar': 'Computes the covariance between two numeric shelves.',
+            'distinct': 'Returns the distinct observed values from the current shelf in stable first-seen order.',
             'dtype': 'Returns the scalar dtype name used by the current numeric payload.',
-            'dropnull': 'Removes entries marked missing from the slate.',
-            'duplicated': 'Builds a boolean mask marking duplicated entries in the slate.',
+            'dropnull': 'Removes entries marked missing from the shelf.',
+            'duplicated': 'Builds a boolean mask marking duplicated entries in the shelf.',
             'encode': 'Encodes note-backed text values into numeric codes or related compact representations.',
             'ends': 'Checks whether each note-backed text value ends with the requested suffix.',
-            'exp': 'Applies the elementwise exponential to a numeric slate.',
+            'exp': 'Applies the elementwise exponential to a numeric shelf.',
             'extract': 'Extracts text submatches or text-derived pieces from note-backed values.',
             'filter': 'Keeps only the entries where the supplied boolean mask is true.',
-            'flow': 'Computes a cumulative directional summary across the slate values.',
-            'fold': 'Reduces the slate through a folding-style aggregation route.',
-            'freq': 'Counts the most frequent observed values in the slate.',
+            'flow': 'Computes a cumulative directional summary across the shelf values.',
+            'fold': 'Reduces the shelf through a folding-style aggregation route.',
+            'freq': 'Counts the most frequent observed values in the shelf.',
             'fullmatch': 'Checks whether each note-backed text value fully matches the requested regular expression.',
-            'has_display_labels': 'Reports whether the slate currently carries explicit display labels.',
-            'has_display_name': 'Reports whether the slate currently carries an explicit display name.',
-            'head': 'Returns the first `n` entries of the slate.',
-            'indicate': 'Returns a boolean indicator slate showing which entries satisfy the requested predicate.',
-            'interp': 'Interpolates missing numeric values inside the slate.',
-            'kind': 'Returns which payload kind this slate currently stores, such as Series, Note, Timeline, or TimeIndex.',
-            'kurtosis': 'Computes sample kurtosis of a numeric slate.',
-            'length': 'Returns the element count of the current slate.',
-            'log': 'Applies the elementwise natural logarithm to a numeric slate.',
-            'max': 'Returns the maximum value of a numeric slate.',
+            'has_display_labels': 'Reports whether the shelf currently carries explicit display labels.',
+            'has_display_name': 'Reports whether the shelf currently carries an explicit display name.',
+            'head': 'Returns the first `n` entries of the shelf.',
+            'indicate': 'Returns a boolean indicator shelf showing which entries satisfy the requested predicate.',
+            'interp': 'Interpolates missing numeric values inside the shelf.',
+            'kind': 'Returns which payload kind this shelf currently stores, such as Series, Note, Timeline, or TimeIndex.',
+            'kurtosis': 'Computes sample kurtosis of a numeric shelf.',
+            'length': 'Returns the element count of the current shelf.',
+            'log': 'Applies the elementwise natural logarithm to a numeric shelf.',
+            'max': 'Returns the maximum value of a numeric shelf.',
             'matches': 'Checks whether each note-backed text value matches the requested regular expression.',
-            'matmul': 'Computes the dot-product-style matrix multiplication between two numeric slates.',
-            'mean': 'Returns the mean value of a numeric slate.',
-            'median': 'Returns the median of a numeric slate.',
-            'min': 'Returns the minimum value of a numeric slate.',
-            'mode': 'Returns the most frequently observed value in the slate.',
-            'ndistinct': 'Counts distinct observed values in the slate.',
+            'matmul': 'Computes the dot-product-style matrix multiplication between two numeric shelves.',
+            'mean': 'Returns the mean value of a numeric shelf.',
+            'median': 'Returns the median of a numeric shelf.',
+            'min': 'Returns the minimum value of a numeric shelf.',
+            'mode': 'Returns the most frequently observed value in the shelf.',
+            'ndistinct': 'Counts distinct observed values in the shelf.',
             'note': 'Returns the current payload as a note/text object.',
             'normalize': 'Normalizes note-backed text values into the requested Unicode normalization form.',
             'pad': 'Pads note-backed text values to a target width.',
             'partition': 'Splits note-backed text values around a separator or boundary rule.',
-            'percentiles': 'Computes requested percentile points for a numeric slate.',
+            'percentiles': 'Computes requested percentile points for a numeric shelf.',
             'put': 'Writes replacement values into positions selected by a boolean mask.',
-            'rank': 'Assigns numeric ranks to slate values while controlling ties and null handling.',
+            'rank': 'Assigns numeric ranks to shelf values while controlling ties and null handling.',
             'strip': 'Trims note-backed text values. Use `strip()` for whitespace or `strip(chars)` for an explicit trim set.',
             'lstrip': 'Trims only the left edge of note-backed text values. This is useful for prefixes such as leading `#` in IDs.',
             'rstrip': 'Trims only the right edge of note-backed text values. Use it when trailing markers should be removed without touching the left side.',
             'series': 'Returns the current payload as a numeric series object.',
-            'scan': 'Computes a cumulative statistic such as running sum, product, min, or max down the slate.',
-            'se': 'Returns the standard error summary for a numeric slate.',
-            'slice': 'Returns a contiguous slice `[start, stop)` of the slate.',
-            'skew': 'Returns sample skewness of a numeric slate.',
-            'arrange': 'Reorders slate entries by their values while keeping the payload type unchanged.',
+            'scan': 'Computes a cumulative statistic such as running sum, product, min, or max down the shelf.',
+            'se': 'Returns the standard error summary for a numeric shelf.',
+            'slice': 'Returns a contiguous slice `[start, stop)` of the shelf.',
+            'skew': 'Returns sample skewness of a numeric shelf.',
+            'arrange': 'Reorders shelf entries by their values while keeping the payload type unchanged.',
             'split': 'Splits note-backed text values into pieces using the requested delimiter or rule.',
-            'std': 'Returns the standard deviation of a numeric slate.',
+            'std': 'Returns the standard deviation of a numeric shelf.',
             'starts': 'Checks whether each note-backed text value starts with the requested prefix.',
-            'sum': 'Returns the sum of a numeric slate.',
-            'tail': 'Returns the last `n` entries of the slate.',
+            'sum': 'Returns the sum of a numeric shelf.',
+            'tail': 'Returns the last `n` entries of the shelf.',
             'take': 'Returns the entries at the requested integer positions.',
             'timeindex': 'Returns the current payload as a time-index object.',
             'timeline': 'Returns the current payload as a timeline object.',
             'titlecase': 'Converts note-backed text values into title case.',
             'upper': 'Converts note-backed text values to uppercase.',
-            'var': 'Returns the variance of a numeric slate.',
-            'weigh': 'Computes a weighted trailing window statistic over the slate using an explicit weight vector.',
-            'window': 'Computes a window-based transformation such as a rolling mean over the slate values.',
-            'with_display_labels': 'Attaches display labels to the slate without changing the underlying values.',
-            'with_display_name': 'Attaches a display name to the slate without changing the underlying values.',
+            'var': 'Returns the variance of a numeric shelf.',
+            'weigh': 'Computes a weighted trailing window statistic over the shelf using an explicit weight vector.',
+            'window': 'Computes a window-based transformation such as a rolling mean over the shelf values.',
+            'with_display_labels': 'Attaches display labels to the shelf without changing the underlying values.',
+            'with_display_name': 'Attaches a display name to the shelf without changing the underlying values.',
         },
         'Stream': {
             'abs': 'Returns a numeric stream whose values are the absolute values of the current numeric payload.',
@@ -2565,7 +2565,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'dtype': 'Returns the scalar dtype name used by the current numeric payload.',
             'exp': 'Applies the elementwise exponential to a numeric stream.',
             'filter': 'Keeps only the entries where the supplied boolean mask is true.',
-            'from_slate': 'Builds a Kindle stream from a table slate.',
+            'from_shelf': 'Builds a Kindle stream from a table shelf.',
             'has_cases': 'Reports whether the stream currently carries explicit case labels.',
             'has_meta': 'Reports whether a metadata key exists on the stream.',
             'head': 'Returns the first `n` entries of the stream.',
@@ -2587,7 +2587,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'with_meta_': 'Adds or updates one metadata key/value in place.',
         },
         'Atlas': {
-            'aggregate_over_frames': 'Reduces the full frame stack to one output by applying an aggregation function across the contained frames.',
+            'aggregate_depth': 'Reduces the full frame stack to one output by applying an aggregation function across the contained frames.',
             'align_depth': 'Reorders frames so their depth labels match the supplied label order.',
             'head': 'Returns the first `n` frames from the atlas depth axis.',
             'map_frames': 'Applies the same function to each frame and returns the transformed atlas.',
@@ -2598,7 +2598,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'tail': 'Returns the last `n` frames from the atlas depth axis.',
         },
         'Archive': {
-            'aggregate_over_catalogs': 'Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.',
+            'aggregate_depth': 'Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.',
             'align_depth': 'Reorders catalogs so their depth labels match the supplied label order.',
             'head': 'Returns the first `n` catalogs from the archive depth axis.',
             'map_catalogs': 'Applies the same function to each catalog and returns the transformed archive.',
@@ -2629,24 +2629,24 @@ def generic_note(class_name: str, method: Method) -> str:
             'type_counts': 'Counts how many slot entries belong to each stored pluss type.',
         },
         'ColumnRef': {
-            'head': 'Returns the first `n` values from the referenced column as a slate.',
+            'head': 'Returns the first `n` values from the referenced column as a shelf.',
             'mean': 'Computes the mean of the referenced numeric column.',
             'name': 'Returns the feature name associated with this column reference.',
-            'slate': 'Returns the referenced column as a `Slate` object.',
+            'shelf': 'Returns the referenced column as a `Shelf` object.',
             'value': 'Returns one scalar-like wrapper for the first referenced value, which is useful when you need typed single-cell access.',
-            'values': 'Materializes the full referenced column as a standalone `Slate` so you can reuse it outside the parent frame.',
+            'values': 'Materializes the full referenced column as a standalone `Shelf` so you can reuse it outside the parent frame.',
         },
-        'SlateValue': {
+        'ShelfValue': {
             'as_note': 'Converts the wrapped scalar-like value into a `pluss::Note`.',
             'as_series': 'Converts the wrapped scalar-like value into a `pluss::Series`.',
             'as_timeindex': 'Converts the wrapped scalar-like value into a `pluss::TimeIndex`.',
             'as_timeline': 'Converts the wrapped scalar-like value into a `pluss::Timeline`.',
-            'kind': 'Returns the underlying slate kind carried by this value wrapper.',
+            'kind': 'Returns the underlying shelf kind carried by this value wrapper.',
             'pluss::Note': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Note`.',
             'pluss::Series': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Series`.',
             'pluss::TimeIndex': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::TimeIndex`.',
             'pluss::Timeline': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Timeline`.',
-            'slate': 'Returns the wrapped single-value `Slate` object.',
+            'shelf': 'Returns the wrapped single-value `Shelf` object.',
         },
         'DataFramePlotAccessor': {
             'act': 'Builds an autocorrelation-style lag plot for one numeric feature.',
@@ -2724,11 +2724,11 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'This applies arithmetic across the compatible numeric payloads in the current object.'
     if name in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
         return 'This produces a comparison-style result you can inspect directly or reuse as a mask.'
-    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'profiles'}:
+    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group', 'describe', 'tally', 'aggregate_depth', 'type_counts', 'slot_sizes', 'profiles'}:
         return 'Use this when you want a summary view instead of carrying the full input forward unchanged.'
     if name in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
         return 'This changes the semantic or numeric type so later operations route through the correct implementation path.'
-    if name in {'kindelize', 'scribbelize', 'tabelize', 'to_slate'}:
+    if name in {'kindelize', 'scribbelize', 'tabelize', 'to_shelf'}:
         return 'This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.'
     if name in {'query', 'where', 'filter', 'select', 'drop', 'select_features', 'grep', 'keep'}:
         return 'Use this to reduce the current object to the rows or fields that matter for the next step.'
@@ -2759,7 +2759,7 @@ def generic_note(class_name: str, method: Method) -> str:
 
 STRUCTURED_TYPES = {
     'DataFrame',
-    'Slate',
+    'Shelf',
     'Atlas',
     'Stream',
     'Catalog',
@@ -2768,7 +2768,7 @@ STRUCTURED_TYPES = {
     'Registry',
     'Axel',
     'ColumnRef',
-    'SlateValue',
+    'ShelfValue',
 }
 
 
@@ -2779,8 +2779,8 @@ def source_var_for(class_name: str) -> str:
         'DataFramePlotAccessor': 'plot',
         'DataFrameSqlAccessor': 'sql',
         'DataFrameSqlPrepared': 'stmt',
-        'Slate': 'slate',
-        'SlateValue': 'value',
+        'Shelf': 'shelf',
+        'ShelfValue': 'value',
         'Atlas': 'atlas',
         'Stream': 'stream',
         'Catalog': 'ct',
@@ -2806,7 +2806,7 @@ def inspect_code_for_type(type_name: str, var_name: str) -> str:
     t = type_name.strip()
     if t == 'DataFrame':
         return f'{var_name}.head(3, true);'
-    if t in {'Slate', 'const Slate&'}:
+    if t in {'Shelf', 'const Shelf&'}:
         return f'{var_name}.show();'
     if t == 'Atlas':
         return f'{var_name}.show();'
@@ -2824,8 +2824,8 @@ def inspect_code_for_type(type_name: str, var_name: str) -> str:
         return f'{var_name}.show(std::cout);'
     if t == 'ColumnRef':
         return f'{var_name}.head(3).show();'
-    if t == 'SlateValue':
-        return f'{var_name}.slate().show();'
+    if t == 'ShelfValue':
+        return f'{var_name}.shelf().show();'
     if t.startswith('pluss::Series'):
         return f'std::cout << {var_name} << "\\n";'
     if t.startswith('pluss::Note'):
@@ -2839,7 +2839,7 @@ def inspect_code_for_type(type_name: str, var_name: str) -> str:
 
 INSPECTABLE_RETURN_PREFIXES = (
     'DataFrame',
-    'Slate',
+    'Shelf',
     'Atlas',
     'Stream',
     'Catalog',
@@ -2848,7 +2848,7 @@ INSPECTABLE_RETURN_PREFIXES = (
     'Registry',
     'Axel',
     'ColumnRef',
-    'SlateValue',
+    'ShelfValue',
     'pluss::Series',
     'pluss::Note',
     'pluss::Timeline',
@@ -2877,8 +2877,8 @@ def inject_before_after(class_name: str, method: Method, code: str) -> str:
     source_inspect = inspect_code_for_type(class_name if class_name in STRUCTURED_TYPES else ret, source_var)
     if class_name == 'ColumnRef':
         source_inspect = 'df.head(3, true);'
-    elif class_name == 'SlateValue':
-        source_inspect = 'slate.show();'
+    elif class_name == 'ShelfValue':
+        source_inspect = 'shelf.show();'
 
     out_inspect = ''
     if any(ret.startswith(prefix) for prefix in INSPECTABLE_RETURN_PREFIXES):
@@ -2907,7 +2907,7 @@ def example_caption(class_name: str, method: Method) -> str:
         if n == 'assign':
             if 'RangeView::Of<DeriveSpec>' in sig:
                 return 'Derive one or more columns inside the call from the current frame state.'
-            return 'Attach one or more already-computed slates by name.'
+            return 'Attach one or more already-computed shelves by name.'
         if n == 'astype':
             if 'feature_dtypes' in sig:
                 return 'Convert several selected features at once by supplying a feature-to-dtype map.'
@@ -2925,7 +2925,7 @@ def example_caption(class_name: str, method: Method) -> str:
                 return 'Read one cell by row position and feature name.'
             if 'std::int64_t row' in sig:
                 return 'Extract one row by case position.'
-            return 'Read the current case axis slate.'
+            return 'Read the current case axis shelf.'
         if n == 'combine':
             if 'const CombineSpec& spec' in sig:
                 return 'Combine two aligned frames with an explicit combine-policy object.'
@@ -3001,7 +3001,7 @@ def example_caption(class_name: str, method: Method) -> str:
             return 'Find the correlation across all numeric columns using the default correlation method.'
         if n == 'corr_with':
             if 'RangeView::Of<DataFrame> others' in sig:
-                return 'Compare the current frame against several other frames and return one correlation slate per comparison frame.'
+                return 'Compare the current frame against several other frames and return one correlation shelf per comparison frame.'
             return 'Compare the current frame against one other frame and return one correlation value per shared numeric feature.'
         if n == 'case_study':
             if 'std::string_view feature_name' in sig:
@@ -3039,7 +3039,7 @@ def example_caption(class_name: str, method: Method) -> str:
                 return f'Evaluate `{n}` across rows using a selected boolean feature set.'
             return f'Evaluate `{n}` down the selected boolean columns.'
         if n in {'filter', 'where'}:
-            if 'const Slate& bool_mask' in sig:
+            if 'const Shelf& bool_mask' in sig:
                 return 'Filter rows using a boolean mask built from an existing frame expression.'
             return 'Filter rows using an explicit boolean Series mask.'
         if n in {'set_features', 'set_features_'}:
@@ -3078,8 +3078,8 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'initializer_list<std::string_view>' in sig:
                 return 'Project a named feature subset from inline string-view feature names.'
             if 'std::string_view name' in sig:
-                return 'Extract one feature slate by name.'
-            return 'Materialize every feature slate in left-to-right order.'
+                return 'Extract one feature shelf by name.'
+            return 'Materialize every feature shelf in left-to-right order.'
         if n == 'select':
             return 'Project only the named columns into a new frame.'
         if n in {'fillnull', 'fillnull_'}:
@@ -3170,9 +3170,9 @@ def example_caption(class_name: str, method: Method) -> str:
                 return 'Render the frame to a caller-provided output stream.'
             return 'Render the frame using the default display route.'
         if n in {'put', 'put_'}:
-            mask_source = 'a boolean Series mask' if 'const pluss::Series& bool_mask' in sig else 'a boolean Slate mask'
-            if 'const Slate& value' in sig:
-                value_kind = 'another full Slate as the replacement values'
+            mask_source = 'a boolean Series mask' if 'const pluss::Series& bool_mask' in sig else 'a boolean Shelf mask'
+            if 'const Shelf& value' in sig:
+                value_kind = 'another full Shelf as the replacement values'
             elif 'pluss::null_t value' in sig:
                 value_kind = '`pluss::series::null` to mark the matched cells as missing'
             elif 'std::string_view value' in sig or 'const char* value' in sig:
@@ -3206,7 +3206,7 @@ def example_caption(class_name: str, method: Method) -> str:
                 return 'Sort rows using explicit per-column sort specifications.'
             return 'Sort rows using one shared ascending and null-order policy for every selected sort key.'
         if n == 'place':
-            if 'const Slate& feature' in sig:
+            if 'const Shelf& feature' in sig:
                 return 'Insert a new feature relative to an anchor feature without rebuilding the whole schema.'
             return 'Move one existing feature relative to an anchor feature.'
         if n == 'prod':
@@ -3234,13 +3234,13 @@ def example_caption(class_name: str, method: Method) -> str:
                 return 'Return a titled copy of the current frame.'
             return 'Read the current frame title string.'
         if n == 'transform':
-            if 'const std::function<Slate(const Slate&)>& fn' in sig and 'std::string_view feature' not in sig:
-                return 'Rewrite every feature with the same slate-level transform.'
+            if 'const std::function<Shelf(const Shelf&)>& fn' in sig and 'std::string_view feature' not in sig:
+                return 'Rewrite every feature with the same shelf-level transform.'
             if 'RangeView::Of<TransformSpec>' in sig:
                 return 'Rewrite one or more selected features with structured transform specs.'
-            if 'std::string_view feature, const std::function<Slate(const DataFrame&)>& fn' in sig:
+            if 'std::string_view feature, const std::function<Shelf(const DataFrame&)>& fn' in sig:
                 return 'Derive or replace one feature by computing it from the full frame.'
-            return 'Rewrite one named feature with a slate-level transform.'
+            return 'Rewrite one named feature with a shelf-level transform.'
         if n == 'unify':
             if 'std::string_view left_on' in sig:
                 return 'Join two frames on one key feature name.'
@@ -3284,17 +3284,17 @@ def example_caption(class_name: str, method: Method) -> str:
                 return f'{verbs[n]} each compatible numeric cell against another aligned frame.'
             return f'{verbs[n]} each compatible numeric cell against one broadcast scalar value.'
 
-    if class_name == 'Slate':
+    if class_name == 'Shelf':
         if n in {'all', 'any'}:
-            return f'Reduce the current slate with `{n}()` and inspect the scalar-like result.'
+            return f'Reduce the current shelf with `{n}()` and inspect the scalar-like result.'
         if n == 'chars':
             return 'Extract a character slice from each text entry using explicit start, stop, and step controls.'
         if n.startswith('clear_display_'):
-            return 'Remove display-only metadata from the slate while leaving the underlying values unchanged.'
+            return 'Remove display-only metadata from the shelf while leaving the underlying values unchanged.'
         if n.startswith('display_'):
-            return 'Inspect display-only metadata attached to the current slate.'
+            return 'Inspect display-only metadata attached to the current shelf.'
         if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
-            return f'Extract the `{n}` component from each temporal value in the current slate.'
+            return f'Extract the `{n}` component from each temporal value in the current shelf.'
 
     if class_name == 'DataFramePlotAccessor':
         if n == 'area':
@@ -3361,9 +3361,9 @@ def example_caption(class_name: str, method: Method) -> str:
 
     if 'std::ostream& os' in sig:
         return 'Write the output to a caller-provided stream.'
-    if 'RangeView::Of<Slate>' in sig or 'initializer_list<Slate>' in sig:
-        return 'Pass several slate values together in one call.'
-    if 'RangeView::Of<std::string_view>' in sig and 'RangeView::Of<Slate>' in sig:
+    if 'RangeView::Of<Shelf>' in sig or 'initializer_list<Shelf>' in sig:
+        return 'Pass several shelf values together in one call.'
+    if 'RangeView::Of<std::string_view>' in sig and 'RangeView::Of<Shelf>' in sig:
         return 'Provide several names together with their matching values.'
     if 'std::nullptr_t' in sig:
         return 'Request the overload that targets every available item rather than naming them individually.'
@@ -3417,14 +3417,14 @@ def example_caption(class_name: str, method: Method) -> str:
         return 'Mutate the current object in place, then inspect the updated state.'
     if n in {'apply', 'apply_', 'transform', 'map'}:
         return 'Apply a user function and inspect the transformed result.'
-    if class_name == 'Slate':
-        if method.return_type.strip() in {'Slate', 'Slate&'}:
+    if class_name == 'Shelf':
+        if method.return_type.strip() in {'Shelf', 'Shelf&'}:
             if method.params:
                 names = ', '.join(name for name, _ in method.params)
-                return f'Apply `{n}` to the current slate using explicit `{names}` arguments.'
-            return f'Apply `{n}` to the current slate values and inspect the result.'
-        if method.return_type.strip() == 'SlateValue':
-            return f'Compute `{n}` and inspect the scalar-like slate result.'
+                return f'Apply `{n}` to the current shelf using explicit `{names}` arguments.'
+            return f'Apply `{n}` to the current shelf values and inspect the result.'
+        if method.return_type.strip() == 'ShelfValue':
+            return f'Compute `{n}` and inspect the scalar-like shelf result.'
     if '(' in sig:
         inside = sig.split('(', 1)[1].rsplit(')', 1)[0].strip()
         if inside in {'self', ''}:
@@ -3740,7 +3740,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('    - `pluss::table::label(value)` selects every row whose current case label equals `value`.')
     lines.append('    - `pluss::table::labels({...})` selects several labels in the requested order. Duplicate labels expand to all matching rows.')
     lines.append('    - `pluss::table::label_range(start, stop)` selects an inclusive case-label window from the first `start` match through the last `stop` match.')
-    lines.append('    - `pluss::table::mask(bool_slate)` selects rows using a boolean slate with one value per case.')
+    lines.append('    - `pluss::table::mask(bool_shelf)` selects rows using a boolean shelf with one value per case.')
     lines.append('')
     lines.append('**features**')
     lines.append('    Optional feature selector applied after the row selection has been resolved.')
@@ -3933,38 +3933,38 @@ auto raw = DataFrame({
 }).title("raw");"""
 
 
-def slate_a_scores_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_a_scores_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto scores = Slate(pluss::make_series({-2.5, 0.0, 3.5}));"""
-
-
-def slate_a_flags_base() -> str:
-    return """using pluss::table::Slate;
-
-auto flags = Slate(pluss::make_series(std::vector<bool>{true, false, true}));"""
+auto scores = Shelf(pluss::make_series({-2.5, 0.0, 3.5}));"""
 
 
-def slate_a_names_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_a_flags_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto names = Slate(pluss::make_note({" Ada ", "BOLA", " chen "}));"""
+auto flags = Shelf(pluss::make_series(std::vector<bool>{true, false, true}));"""
 
 
-def slate_a_timeline_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_a_names_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto stamps = Slate(pluss::make_timeline({
+auto names = Shelf(pluss::make_note({" Ada ", "BOLA", " chen "}));"""
+
+
+def shelf_a_timeline_base() -> str:
+    return """using pluss::table::Shelf;
+
+auto stamps = Shelf(pluss::make_timeline({
     "2024-01-01T09:10:00Z",
     "2024-02-01T11:00:00Z",
     "2024-03-05T15:30:00Z",
 }));"""
 
 
-def slate_a_timeindex_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_a_timeindex_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto ticks = Slate(pluss::timeindex::make({
+auto ticks = Shelf(pluss::timeindex::make({
     "2024-01-01T00:10:00Z",
     "2024-01-01T00:20:00Z",
     "2024-01-01T01:10:00Z",
@@ -3972,11 +3972,11 @@ auto ticks = Slate(pluss::timeindex::make({
 }, true));"""
 
 
-def slate_a_ints_base() -> str:
+def shelf_a_ints_base() -> str:
     return """using pluss::ScalarType;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
-auto ints = Slate(pluss::make_series({1.0, 0.0, 1.0}));"""
+auto ints = Shelf(pluss::make_series({1.0, 0.0, 1.0}));"""
 
 
 def df_b_missing_base() -> str:
@@ -4014,10 +4014,10 @@ auto metrics = DataFrame({
 auto numeric = metrics.features({"sales", "cost"});"""
 
 
-def slate_b_missing_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_b_missing_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto missing = Slate(pluss::make_series({
+auto missing = Shelf(pluss::make_series({
     10.0,
     std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN(),
@@ -4026,28 +4026,28 @@ auto missing = Slate(pluss::make_series({
 }));"""
 
 
-def slate_b_scores_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_b_scores_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));"""
+auto scores = Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));"""
 
 
-def slate_b_dates_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_b_dates_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto dates = Slate(pluss::make_timeline({
+auto dates = Shelf(pluss::make_timeline({
     "2024-01-01T00:00:00Z",
     "2024-01-02T00:00:00Z",
     "2024-01-03T00:00:00Z",
 }));"""
 
 
-def slate_b_rowwise_base() -> str:
-    return """using pluss::table::Slate;
+def shelf_b_rowwise_base() -> str:
+    return """using pluss::table::Shelf;
 
-auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
-auto lower = Slate(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
-auto upper = Slate(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));"""
+auto scores = Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Shelf(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Shelf(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));"""
 
 
 def render_dataframe_a_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
@@ -4248,7 +4248,7 @@ summary | 8.333333333      1.040833
             overloads,
             'Reorders the current frame so its case axis follows the supplied case order. This is the row-alignment helper to use when you already know the target case ordering you want to conform to.',
             [
-                '`new_label` : `Slate`',
+                '`new_label` : `Shelf`',
                 '    Target case labels in the exact order you want the output rows to follow.',
             ],
             [
@@ -4293,8 +4293,8 @@ s3   | 79
                 '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
             ],
             [
-                '`Slate`',
-                '    A boolean-like slate holding the reduction result for the chosen axis.',
+                '`Shelf`',
+                '    A boolean-like shelf holding the reduction result for the chosen axis.',
             ],
             [
                 (
@@ -4338,8 +4338,8 @@ ptype: Series""",
                 '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
             ],
             [
-                '`Slate`',
-                '    A boolean-like slate holding the reduction result for the chosen axis.',
+                '`Shelf`',
+                '    A boolean-like shelf holding the reduction result for the chosen axis.',
             ],
             [
                 (
@@ -4372,13 +4372,13 @@ ptype: Series""",
             overloads,
             'Adds or replaces derived features without mutating the source frame. This is the frame-level “build one or more new columns” helper when the new values depend on the current DataFrame.',
             [
-                '`assignments` : `pluss::RangeView<std::pair<std::string, Slate>>`',
-                '    Use this form when you already computed the replacement slate outside the call. Each pair is `{feature_name, slate_value}`.',
+                '`assignments` : `pluss::RangeView<std::pair<std::string, Shelf>>`',
+                '    Use this form when you already computed the replacement shelf outside the call. Each pair is `{feature_name, shelf_value}`.',
                 '',
                 '`specs` : `pluss::RangeView<DeriveSpec>`',
                 '    Use this form when the frame should compute the new feature inside the call. Each `DeriveSpec` has:',
                 '    - `feature`: output feature name.',
-                '    - `expr`: callable with signature `Slate(const DataFrame&)`.',
+                '    - `expr`: callable with signature `Shelf(const DataFrame&)`.',
             ],
             [
                 '`DataFrame`',
@@ -4386,8 +4386,8 @@ ptype: Series""",
             ],
             [
                 (
-                    'Assign one already-computed slate.',
-                    df_a_grades_base() + '\n\nauto total_grade = [](const DataFrame& df) {\n    return df.features("assignment") + df.features("final");\n};\n\nauto out = grades.assign({\n    std::pair<std::string, Slate>{"total", total_grade(grades)},\n});',
+                    'Assign one already-computed shelf.',
+                    df_a_grades_base() + '\n\nauto total_grade = [](const DataFrame& df) {\n    return df.features("assignment") + df.features("final");\n};\n\nauto out = grades.assign({\n    std::pair<std::string, Shelf>{"total", total_grade(grades)},\n});',
                     """========================================
      | student  assignment  final  total
 ----------------------------------------
@@ -4411,7 +4411,7 @@ s3   | Chen     7.5         21.5   29     false
                 ),
             ],
             [
-                '- Every derived slate must match the frame case count.',
+                '- Every derived shelf must match the frame case count.',
                 '- Use the pair form when the new data already exists. Use `DeriveSpec` when you want the frame to compute it from its current state inside the call.',
             ],
         )
@@ -4471,8 +4471,8 @@ s3   | Chen     7.5         21.5   29     false
     return None
 
 
-def render_slate_a_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
-    if class_name != 'Slate':
+def render_shelf_a_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'Shelf':
         return None
 
     if name == 'abs':
@@ -4480,18 +4480,18 @@ def render_slate_a_page(name: str, overloads: list[Method], class_name: str) -> 
             class_name,
             name,
             overloads,
-            'Applies absolute value elementwise to a numeric Series-backed slate.',
+            'Applies absolute value elementwise to a numeric Series-backed shelf.',
             [
                 '`None`',
             ],
             [
-                '`Slate`',
-                '    A numeric slate with every value replaced by its absolute magnitude.',
+                '`Shelf`',
+                '    A numeric shelf with every value replaced by its absolute magnitude.',
             ],
             [
                 (
                     'Take the magnitude of each numeric value.',
-                    slate_a_scores_base() + '\n\nauto out = scores.abs();',
+                    shelf_a_scores_base() + '\n\nauto out = scores.abs();',
                     """0  2.5
 1  0
 2  3.5
@@ -4499,7 +4499,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `abs()` is elementwise and preserves the slate length.',
+                '- `abs()` is elementwise and preserves the shelf length.',
                 '- For frame-wide absolute values, use `DataFrame::transform(...)` or select the target feature block first.',
             ],
         )
@@ -4509,24 +4509,24 @@ ptype: Series""",
             class_name,
             name,
             overloads,
-            'Reduces one boolean slate with logical AND.',
+            'Reduces one boolean shelf with logical AND.',
             [
                 '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped during the reduction.',
             ],
             [
-                '`SlateValue`',
+                '`ShelfValue`',
                 '    One scalar-like result representing whether every participating value is true.',
             ],
             [
                 (
-                    'Reduce a boolean slate to one truth value.',
-                    slate_a_flags_base() + '\n\nauto out = flags.all().to_str();',
+                    'Reduce a boolean shelf to one truth value.',
+                    shelf_a_flags_base() + '\n\nauto out = flags.all().to_str();',
                     'false',
                 ),
             ],
             [
-                '- `all()` returns `SlateValue`, not a full slate.',
+                '- `all()` returns `ShelfValue`, not a full shelf.',
                 '- Calling `.to_str()`, `.to_int()`, or `.host()` is often the cleanest way to surface the scalar result in user code.',
             ],
         )
@@ -4536,24 +4536,24 @@ ptype: Series""",
             class_name,
             name,
             overloads,
-            'Reduces one boolean slate with logical OR.',
+            'Reduces one boolean shelf with logical OR.',
             [
                 '`skipnull` : `bool`, optional',
                 '    When `true`, missing boolean values are skipped during the reduction.',
             ],
             [
-                '`SlateValue`',
+                '`ShelfValue`',
                 '    One scalar-like result representing whether any participating value is true.',
             ],
             [
                 (
-                    'Reduce a boolean slate to one truth value.',
-                    slate_a_flags_base() + '\n\nauto out = flags.any().to_str();',
+                    'Reduce a boolean shelf to one truth value.',
+                    shelf_a_flags_base() + '\n\nauto out = flags.any().to_str();',
                     'true',
                 ),
             ],
             [
-                '- `any()` is the scalar truth test companion to `Slate::filter(...)`, `Slate::put(...)`, and `DataFrame::where(...)`.',
+                '- `any()` is the scalar truth test companion to `Shelf::filter(...)`, `Shelf::put(...)`, and `DataFrame::where(...)`.',
             ],
         )
 
@@ -4572,8 +4572,8 @@ ptype: Series""",
             ],
             [
                 (
-                    'Hop into the native Note surface, then wrap back into Slate for display.',
-                    slate_a_names_base() + '\n\nauto out = Slate(names.as_note().strip().lower());',
+                    'Hop into the native Note surface, then wrap back into Shelf for display.',
+                    shelf_a_names_base() + '\n\nauto out = Shelf(names.as_note().strip().lower());',
                     """0  ada
 1  bola
 2  chen
@@ -4581,8 +4581,8 @@ ptype: Note""",
                 ),
             ],
             [
-                '- `as_note()` itself does not create a new `Slate`; it returns the native payload.',
-                '- When the next API expects a `Slate` again, wrapping with `Slate(...)` is enough because `Slate` is constructible from Pluss types.',
+                '- `as_note()` itself does not create a new `Shelf`; it returns the native payload.',
+                '- When the next API expects a `Shelf` again, wrapping with `Shelf(...)` is enough because `Shelf` is constructible from Pluss types.',
             ],
         )
 
@@ -4601,8 +4601,8 @@ ptype: Note""",
             ],
             [
                 (
-                    'Use the native Series arithmetic surface, then wrap back into Slate for display.',
-                    slate_a_scores_base() + '\n\nauto out = Slate(scores.as_series() + 5.0);',
+                    'Use the native Series arithmetic surface, then wrap back into Shelf for display.',
+                    shelf_a_scores_base() + '\n\nauto out = Shelf(scores.as_series() + 5.0);',
                     """0  2.5
 1  5
 2  8.5
@@ -4610,7 +4610,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `as_series()` is the native escape hatch when the operation you want lives on Series rather than on Slate.',
+                '- `as_series()` is the native escape hatch when the operation you want lives on Series rather than on Shelf.',
             ],
         )
 
@@ -4629,8 +4629,8 @@ ptype: Series""",
             ],
             [
                 (
-                    'Use a native temporal extraction method, then wrap the result back into a Slate.',
-                    slate_a_timeline_base() + '\n\nauto out = Slate(stamps.as_timeline().year());',
+                    'Use a native temporal extraction method, then wrap the result back into a Shelf.',
+                    shelf_a_timeline_base() + '\n\nauto out = Shelf(stamps.as_timeline().year());',
                     """0  2024
 1  2024
 2  2024
@@ -4638,7 +4638,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `as_timeline()` is the native path for calendar fields, formatting, rounding, timezone work, and other temporal operations that live below Slate.',
+                '- `as_timeline()` is the native path for calendar fields, formatting, rounding, timezone work, and other temporal operations that live below Shelf.',
             ],
         )
 
@@ -4658,7 +4658,7 @@ ptype: Series""",
             [
                 (
                     'Call a native TimeIndex resampling method directly.',
-                    slate_a_timeindex_base() + '\n\nauto out = Slate(ticks.as_timeindex().resample_count("D", 1));',
+                    shelf_a_timeindex_base() + '\n\nauto out = Shelf(ticks.as_timeindex().resample_count("D", 1));',
                     """0  3
 1  1
 ptype: Series""",
@@ -4674,19 +4674,19 @@ ptype: Series""",
             class_name,
             name,
             overloads,
-            'Casts a Series-backed slate to a new numeric scalar dtype.',
+            'Casts a Series-backed shelf to a new numeric scalar dtype.',
             [
                 '`dtype` : `pluss::ScalarType`',
                 '    Target numeric scalar dtype.',
             ],
             [
-                '`Slate`',
-                '    A new slate carrying the converted Series payload.',
+                '`Shelf`',
+                '    A new shelf carrying the converted Series payload.',
             ],
             [
                 (
                     'Turn numeric indicator values into booleans.',
-                    slate_a_ints_base() + '\n\nauto out = ints.astype(ScalarType::Bool);',
+                    shelf_a_ints_base() + '\n\nauto out = ints.astype(ScalarType::Bool);',
                     """0  true
 1  false
 2  true
@@ -4694,7 +4694,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `astype(...)` is the direct Series dtype conversion path on Slate.',
+                '- `astype(...)` is the direct Series dtype conversion path on Shelf.',
                 '- For conversion between payload families, use `cast(...)` instead of `astype(...)`.',
             ],
         )
@@ -4949,8 +4949,8 @@ auto out = metrics.bucketize(pair_features, {0.0, 25.0, 50.0, 75.0}, {1, 2, 3});
     return None
 
 
-def render_slate_b_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
-    if class_name != 'Slate':
+def render_shelf_b_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'Shelf':
         return None
 
     if name == 'bfill':
@@ -4958,19 +4958,19 @@ def render_slate_b_page(name: str, overloads: list[Method], class_name: str) -> 
             class_name,
             name,
             overloads,
-            'Backward-fills one slate by pulling the next valid value upward within the same payload.',
+            'Backward-fills one shelf by pulling the next valid value upward within the same payload.',
             [
                 '`limit` : `std::int64_t`, optional',
                 '    Maximum number of consecutive missing entries to fill in each gap. Use `-1` for no limit.',
             ],
             [
-                '`Slate`',
-                '    A new slate with backward-filled values.',
+                '`Shelf`',
+                '    A new shelf with backward-filled values.',
             ],
             [
                 (
                     'Backward-fill the whole gap with no limit.',
-                    slate_b_missing_base() + '\n\nauto out = missing.bfill();',
+                    shelf_b_missing_base() + '\n\nauto out = missing.bfill();',
                     """0  10
 1  40
 2  40
@@ -4980,7 +4980,7 @@ ptype: Series""",
                 ),
                 (
                     'Limit the backward fill to one value per gap.',
-                    slate_b_missing_base() + '\n\nauto out = missing.bfill(1);',
+                    shelf_b_missing_base() + '\n\nauto out = missing.bfill(1);',
                     """0  10
 1  NA
 2  40
@@ -4990,7 +4990,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `bfill(limit)` works within one slate only.',
+                '- `bfill(limit)` works within one shelf only.',
                 '- A limited fill can leave part of a longer missing run untouched.',
             ],
         )
@@ -5025,13 +5025,13 @@ ptype: Series""",
                 '    - `closure`',
             ],
             [
-                '`Slate`',
-                '    A new slate with one reduced value per input row.',
+                '`Shelf`',
+                '    A new shelf with one reduced value per input row.',
             ],
             [
                 (
                     'Create an expanding mean by anchoring every window at row zero.',
-                    slate_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);',
+                    shelf_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);',
                     """0  10
 1  15
 2  20
@@ -5041,7 +5041,7 @@ ptype: Series""",
                 ),
                 (
                     'Create a trailing-two mean with a minimum-count requirement.',
-                    slate_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});',
+                    shelf_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});',
                     """0  NA
 1  15
 2  25
@@ -5051,7 +5051,7 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `bounded(...)` is the slate-level custom-window primitive.',
+                '- `bounded(...)` is the shelf-level custom-window primitive.',
                 '- The bounds function controls which rows participate in each output position.',
             ],
         )
@@ -5061,16 +5061,16 @@ ptype: Series""",
             class_name,
             name,
             overloads,
-            'Checks whether each value falls between lower and upper bounds. The supported overloads cover numeric scalar bounds, temporal string bounds, and row-wise slate bounds.',
+            'Checks whether each value falls between lower and upper bounds. The supported overloads cover numeric scalar bounds, temporal string bounds, and row-wise shelf bounds.',
             [
                 '`a`, `b` : `double`',
-                '    Lower and upper numeric bounds for Series-backed numeric slates.',
+                '    Lower and upper numeric bounds for Series-backed numeric shelves.',
                 '',
                 '`lo`, `hi` : `std::string_view`',
-                '    Lower and upper temporal bounds for Timeline/TimeIndex-backed slates.',
+                '    Lower and upper temporal bounds for Timeline/TimeIndex-backed shelves.',
                 '',
-                '`lo`, `hi` : `Slate`',
-                '    Row-wise lower and upper bounds. Both bound slates must match the source slate length.',
+                '`lo`, `hi` : `Shelf`',
+                '    Row-wise lower and upper bounds. Both bound shelves must match the source shelf length.',
                 '',
                 '`inclusive` : `bool`, optional',
                 '    Shortcut flag that applies the same closed/open choice to both sides.',
@@ -5079,13 +5079,13 @@ ptype: Series""",
                 '    Side-specific boundary control for asymmetric intervals.',
             ],
             [
-                '`Slate`',
-                '    A boolean-like slate indicating whether each value falls inside the requested interval.',
+                '`Shelf`',
+                '    A boolean-like shelf indicating whether each value falls inside the requested interval.',
             ],
             [
                 (
                     'Numeric bounds with one shared inclusivity flag.',
-                    slate_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, true);',
+                    shelf_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, true);',
                     """0  false
 1  true
 2  true
@@ -5095,7 +5095,7 @@ ptype: Series""",
                 ),
                 (
                     'Numeric bounds with separate left and right boundary rules.',
-                    slate_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, false, true);',
+                    shelf_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, false, true);',
                     """0  false
 1  false
 2  true
@@ -5105,7 +5105,7 @@ ptype: Series""",
                 ),
                 (
                     'Temporal string bounds with one shared inclusivity flag.',
-                    slate_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);',
+                    shelf_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);',
                     """0  true
 1  true
 2  false
@@ -5113,15 +5113,15 @@ ptype: Series""",
                 ),
                 (
                     'Temporal string bounds with asymmetric closure.',
-                    slate_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true);',
+                    shelf_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true);',
                     """0  false
 1  true
 2  true
 ptype: Series""",
                 ),
                 (
-                    'Row-wise slate bounds with one shared inclusivity flag.',
-                    slate_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, true);',
+                    'Row-wise shelf bounds with one shared inclusivity flag.',
+                    shelf_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, true);',
                     """0  true
 1  true
 2  false
@@ -5130,8 +5130,8 @@ ptype: Series""",
 ptype: Series""",
                 ),
                 (
-                    'Row-wise slate bounds with asymmetric closure.',
-                    slate_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, false, true);',
+                    'Row-wise shelf bounds with asymmetric closure.',
+                    shelf_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, false, true);',
                     """0  false
 1  false
 2  false
@@ -5143,7 +5143,7 @@ ptype: Series""",
             [
                 '- Use the numeric overloads for numeric Series payloads.',
                 '- Use the string-bound overloads for Timeline or TimeIndex payloads.',
-                '- Use the slate-bound overloads when each row needs its own interval.',
+                '- Use the shelf-bound overloads when each row needs its own interval.',
             ],
         )
 
@@ -5152,7 +5152,7 @@ ptype: Series""",
             class_name,
             name,
             overloads,
-            'Places numeric slate values into interval bins and returns the assigned labels.',
+            'Places numeric shelf values into interval bins and returns the assigned labels.',
             [
                 '`bins` : `pluss::RangeView<double>`',
                 '    Strictly increasing interval edges.',
@@ -5167,13 +5167,13 @@ ptype: Series""",
                 '    When `true`, the first interval includes its left edge.',
             ],
             [
-                '`Slate`',
-                '    A numeric slate holding one bucket label per input value.',
+                '`Shelf`',
+                '    A numeric shelf holding one bucket label per input value.',
             ],
             [
                 (
                     'Bucketize with automatically generated labels.',
-                    slate_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0});',
+                    shelf_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0});',
                     """0  0
 1  0
 2  1
@@ -5183,7 +5183,7 @@ ptype: Series""",
                 ),
                 (
                     'Bucketize with explicit labels.',
-                    slate_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0}, {10, 20, 30}, true, true);',
+                    shelf_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0}, {10, 20, 30}, true, true);',
                     """0  10
 1  10
 2  20
@@ -5193,28 +5193,28 @@ ptype: Series""",
                 ),
             ],
             [
-                '- `bucketize(...)` is the slate-level primitive behind DataFrame bucketization.',
+                '- `bucketize(...)` is the shelf-level primitive behind DataFrame bucketization.',
             ],
         )
 
     return None
 
-SLATE_SERIES_OUT = "[10.0, 20.0, 30.0]"
-SLATE_NOTE_OUT = '["Accra", "Tema", "Kumasi"]'
-SLATE_TIME_OUT = '["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]'
-SLATE_BFILL_OUT = "[10.0, 30.0, 30.0, null]"
-SLATE_BTW_NUMERIC_OUT = "[false, true, true, false]"
-SLATE_BTW_TIME_OUT = "[true, true, false]"
-SLATE_BTW_ROWWISE_OUT = "[true, true, false]"
-SLATE_BUCKETIZE_OUT = "[0, 0, 1, 2, null]"
-SLATE_COUNT_OUT = "[3]"
-SLATE_CONTAINS_OUT = "[true, false, false]"
-SLATE_COMPARE_SCALAR_OUT = "[false, true, true]"
-SLATE_CORR_OUT = "0.9819805"
-SLATE_DISTINCT_OUT = '["Accra", "Tema"]'
-SLATE_DISPLAY_LABELS_OUT = '["a", "b", "c"]'
-SLATE_DISPLAY_NAME_OUT = 'sales'
-SLATE_DESCRIBE_NUMERIC_OUT = """count  3
+SHELF_SERIES_OUT = "[10.0, 20.0, 30.0]"
+SHELF_NOTE_OUT = '["Accra", "Tema", "Kumasi"]'
+SHELF_TIME_OUT = '["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]'
+SHELF_BFILL_OUT = "[10.0, 30.0, 30.0, null]"
+SHELF_BTW_NUMERIC_OUT = "[false, true, true, false]"
+SHELF_BTW_TIME_OUT = "[true, true, false]"
+SHELF_BTW_ROWWISE_OUT = "[true, true, false]"
+SHELF_BUCKETIZE_OUT = "[0, 0, 1, 2, null]"
+SHELF_COUNT_OUT = "[3]"
+SHELF_CONTAINS_OUT = "[true, false, false]"
+SHELF_COMPARE_SCALAR_OUT = "[false, true, true]"
+SHELF_CORR_OUT = "0.9819805"
+SHELF_DISTINCT_OUT = '["Accra", "Tema"]'
+SHELF_DISPLAY_LABELS_OUT = '["a", "b", "c"]'
+SHELF_DISPLAY_NAME_OUT = 'sales'
+SHELF_DESCRIBE_NUMERIC_OUT = """count  3
 mean   20.0
 std    10.0
 min    10.0
@@ -5222,7 +5222,7 @@ min    10.0
 50%    20.0
 75%    25.0
 max    30.0"""
-SLATE_DESCRIBE_NOTE_OUT = """count   3
+SHELF_DESCRIBE_NOTE_OUT = """count   3
 unique  2
 top     Accra
 freq    2"""
@@ -5345,7 +5345,7 @@ Sheet2 -> [3 cs x 3 feat]"""
         if n == 'caselbls':
             return '["student", "term"]'
         if n == 'caselbl':
-            if 'const Slate& labels' in method.signature:
+            if 'const Shelf& labels' in method.signature:
                 return """df.labels().values():
 ["r0", "r1", "r2"]
 
@@ -5362,7 +5362,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi"""
         if n in {'columns', 'values', 'features'} and 'string_view' not in method.signature and 'initializer_list' not in method.signature:
-            return '[Slate(id), Slate(sales), Slate(city)]'
+            return '[Shelf(id), Shelf(sales), Shelf(city)]'
         if n in {'at', 'iat'} and ('feature_name' in method.signature or 'feature_idx' in method.signature):
             return 'Accra' if 'feature_name' in method.signature else '1'
         if n == 'case_study':
@@ -5375,7 +5375,7 @@ id  sales  city
             return """id  sales  city
 2   120.0  Tema"""
         if n in {'get', 'column', 'features'} and 'string_view' in method.signature:
-            return 'Slate([100.0, 120.0, 90.0])'
+            return 'Shelf([100.0, 120.0, 90.0])'
         if n == 'feature_ref':
             return 'ColumnRef(name="sales")'
         if n in {'has_feature', 'equals'}:
@@ -5408,7 +5408,7 @@ id  sales  city
 90.0     Kumasi    3"""
             return DF_RENAME_OUT
         if n == 'place':
-            if 'const Slate& feature' in method.signature:
+            if 'const Shelf& feature' in method.signature:
                 return """id  sales  profit  city
 1   100.0  40.0    Accra
 2   120.0  35.0    Tema
@@ -5849,7 +5849,7 @@ id  sales  city
 20.0
 30.0"""
         if n == 'transform':
-            if 'const std::function<Slate(const DataFrame&)>&' in method.signature:
+            if 'const std::function<Shelf(const DataFrame&)>&' in method.signature:
                 return """id  sales  city    sales_plus_10
 1   100.0  Accra   110.0
 2   120.0  Tema    130.0
@@ -5893,7 +5893,7 @@ id  sales  city
             return ATLAS_BASE_OUT
         return DF_BASE_OUT if ret.startswith('DataFrame') else ''
 
-    if class_name == 'Slate':
+    if class_name == 'Shelf':
         if n in {'defined', 'unique'}:
             return 'true'
         if n == 'size':
@@ -5905,30 +5905,30 @@ id  sales  city
         if n in {'value'}:
             return '10.0'
         if n in {'values', 'series', 'as_series'}:
-            return SLATE_SERIES_OUT
+            return SHELF_SERIES_OUT
         if n in {'note', 'as_note'}:
-            return SLATE_NOTE_OUT
+            return SHELF_NOTE_OUT
         if n in {'timeline', 'as_timeline', 'timeindex', 'as_timeindex'}:
-            return SLATE_TIME_OUT
+            return SHELF_TIME_OUT
         if n in {'isnull', 'notnull', 'isnan', 'isfinite'}:
             return '[true, false, true]'
         if n == 'distinct':
-            return SLATE_DISTINCT_OUT
+            return SHELF_DISTINCT_OUT
         if n == 'display_labels':
-            return SLATE_DISPLAY_LABELS_OUT
+            return SHELF_DISPLAY_LABELS_OUT
         if n == 'display_name':
-            return SLATE_DISPLAY_NAME_OUT
+            return SHELF_DISPLAY_NAME_OUT
         if n == 'describe':
-            return SLATE_DESCRIBE_NUMERIC_OUT
+            return SHELF_DESCRIBE_NUMERIC_OUT
         if n in {'btw', 'between'}:
             if 'double a, double b' in method.signature:
-                return SLATE_BTW_NUMERIC_OUT
+                return SHELF_BTW_NUMERIC_OUT
             if 'std::string_view lo, std::string_view hi' in method.signature:
-                return SLATE_BTW_TIME_OUT
-            if 'const Slate& lo, const Slate& hi' in method.signature:
-                return SLATE_BTW_ROWWISE_OUT
+                return SHELF_BTW_TIME_OUT
+            if 'const Shelf& lo, const Shelf& hi' in method.signature:
+                return SHELF_BTW_ROWWISE_OUT
         if n == 'bucketize':
-            return SLATE_BUCKETIZE_OUT
+            return SHELF_BUCKETIZE_OUT
         if n == 'strip':
             return '["Accra", "Tema", "Kumasi"]'
         if n == 'lstrip':
@@ -5936,15 +5936,15 @@ id  sales  city
         if n == 'rstrip':
             return '["#203930", "##7788", "4455"]' if 'std::string_view chars' in method.signature else '["Accra", "Tema", "Kumasi"]'
         if n == 'bfill':
-            return SLATE_BFILL_OUT
+            return SHELF_BFILL_OUT
         if n == 'dropnull':
             return '[10.0, 30.0]'
         if n in {'abs', 'clip', 'log', 'exp', 'fillnull', 'fillnull_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'lower', 'replace', 'window', 'cast', 'astype', 'clear_caselbl', 'clear_caselbl_'}:
-            return SLATE_SERIES_OUT if 'Note' not in method.signature and n not in {'lower', 'replace'} else SLATE_NOTE_OUT
+            return SHELF_SERIES_OUT if 'Note' not in method.signature and n not in {'lower', 'replace'} else SHELF_NOTE_OUT
         if n == 'count':
-            return SLATE_COUNT_OUT
+            return SHELF_COUNT_OUT
         if n == 'corr':
-            return SLATE_CORR_OUT
+            return SHELF_CORR_OUT
         if n in {'sum', 'mean', 'min', 'max', 'var', 'std'}:
             return '20.0'
         if n in {'to_note_weekday'}:
@@ -5953,43 +5953,43 @@ id  sales  city
             if n == 'numeric_binary':
                 return '[20.0, 30.0, 40.0]'
             if n == 'compare':
-                return SLATE_COMPARE_SCALAR_OUT if 'const Slate&' not in method.signature else '[false, true, false]'
+                return SHELF_COMPARE_SCALAR_OUT if 'const Shelf&' not in method.signature else '[false, true, false]'
         if n in {'to_string'}:
-            return SLATE_SERIES_OUT
+            return SHELF_SERIES_OUT
         if n == 'show':
-            return SLATE_SERIES_OUT
+            return SHELF_SERIES_OUT
         if n == 'has_caselbl':
             return 'true'
         if n == 'caselbl':
-            if 'const Slate& labels' in method.signature:
-                return """slate.label().values():
+            if 'const Shelf& labels' in method.signature:
+                return """shelf.label().values():
 ["row0", "row1", "row2"]
 
 out.label().values():
 ["A", "B", "C"]"""
             return '["row0", "row1", "row2"]'
-        if ret == 'Slate':
+        if ret == 'Shelf':
             if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'}:
-                return SLATE_NOTE_OUT
+                return SHELF_NOTE_OUT
             if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
                 return '[2024, 2024, 2024]' if n == 'year' else '[1, 2, 3]'
             if n in {'clear_display_labels', 'clear_display_name'}:
-                return SLATE_SERIES_OUT
-            return SLATE_SERIES_OUT
-        if ret == 'Slate&':
-            return SLATE_SERIES_OUT
-        if ret == 'SlateValue':
+                return SHELF_SERIES_OUT
+            return SHELF_SERIES_OUT
+        if ret == 'Shelf&':
+            return SHELF_SERIES_OUT
+        if ret == 'ShelfValue':
             return 'true' if n in {'all', 'any'} else '10.0'
         if ret == 'std::string':
             return 'sales'
         return ''
 
-    if class_name == 'SlateValue':
+    if class_name == 'ShelfValue':
         if n in {'defined'}:
             return 'true'
         if n in {'kind'}:
             return 'Series'
-        if n in {'slate'}:
+        if n in {'shelf'}:
             return '[10.0]'
         if n in {'as_series', 'as_note', 'as_timeline', 'as_timeindex'}:
             return '[10.0]' if 'series' in n else '["Accra"]' if 'note' in n else '["2024-01-01T09:10:00Z"]'
@@ -6002,8 +6002,8 @@ out.label().values():
     if class_name == 'ColumnRef':
         if n == 'name':
             return 'sales'
-        if n == 'slate' or n == 'values':
-            return SLATE_SERIES_OUT
+        if n == 'shelf' or n == 'values':
+            return SHELF_SERIES_OUT
         if n == 'mean':
             return '103.3'
         if n == 'head':
@@ -6090,7 +6090,7 @@ out.label().values():
             return '["train", "test"]'
         if n in {'frames'}:
             return '[frame0, frame1]'
-        if n in {'frame', 'iloc', 'loc', 'squeeze', 'head', 'tail', 'slice_frames', 'sort_depth', 'relabel_depth', 'align_depth', 'map_frames', 'aggregate_over_frames'}:
+        if n in {'frame', 'iloc', 'loc', 'squeeze', 'head', 'tail', 'slice_frames', 'sort_depth', 'relabel_depth', 'align_depth', 'map_frames', 'aggregate_depth'}:
             return ATLAS_BASE_OUT if not ret.startswith('DataFrame') else "sales\n10.0\n20.0"
         if n == 'dloc':
             return "sales\n30.0\n40.0"
@@ -6139,11 +6139,11 @@ out.label().values():
             return 'Timeline([...])'
         if n == 'as_timeindex':
             return 'TimeIndex([...])'
-        if n in {'to_slate'}:
-            return SLATE_SERIES_OUT
+        if n in {'to_shelf'}:
+            return SHELF_SERIES_OUT
         if n in {'to_string', 'to_json', 'show'}:
             return STREAM_SERIES_OUT
-        if n == 'from_slate':
+        if n == 'from_shelf':
             return STREAM_SERIES_OUT
         return ''
 
@@ -6205,7 +6205,7 @@ out.label().values():
             return ARCHIVE_BASE_OUT if ret.startswith('Archive') else CATALOG_BASE_OUT
         if n == 'dloc':
             return ARCHIVE_DLOC_OUT
-        if n in {'aggregate_over_catalogs'}:
+        if n in {'aggregate_depth'}:
             return CATALOG_BASE_OUT
         if n == 'tabelize':
             return ATLAS_BASE_OUT
@@ -6302,7 +6302,7 @@ out.label().values():
         return '3'
     if ret in {'double', 'float', 'Float'}:
         return '20.0'
-    if ret in {'SlateValue'}:
+    if ret in {'ShelfValue'}:
         if n in {'all', 'any', 'defined'}:
             return 'true'
         return '10.0'
@@ -6316,8 +6316,8 @@ out.label().values():
         return SLOT_BASE_OUT
     if ret in {'Stream&'}:
         return STREAM_SERIES_OUT
-    if ret in {'Slate&'}:
-        return SLATE_SERIES_OUT
+    if ret in {'Shelf&'}:
+        return SHELF_SERIES_OUT
     if ret in {'Axel&'}:
         return AXEL_BASE_OUT
     if ret in {'Atlas&'}:
@@ -6332,165 +6332,165 @@ out.label().values():
 
 def df_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"id\", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+    {\"id\", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
 });"""
 
 
 def df_time() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 15.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 15.0}))},
 });"""
 
 
 def df_time_naive() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-01 09:10:00\",\n        \"2024-01-01 09:40:00\",\n        \"2024-01-01 10:05:00\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 15.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 15.0}))},
 });"""
 
 
 def df_temporal_mixed() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"start\", pluss::table::Slate(pluss::make_timeline({
+    {\"start\", pluss::table::Shelf(pluss::make_timeline({
         \"2020-01-01T00:00:00Z\",\n        \"2020-01-02T08:00:00Z\",\n    }))},
-    {\"end\", pluss::table::Slate(pluss::timeindex::make({
+    {\"end\", pluss::table::Shelf(pluss::timeindex::make({
         \"2020-01-01T01:30:00Z\",\n        \"2020-01-02T09:00:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0}))},
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\"}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\"}))},
 });"""
 
 
 def df_two() -> str:
     return """auto left = pluss::table::DataFrame({
-    {\"id\", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"id\", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 auto right = pluss::table::DataFrame({
-    {\"id\", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {\"cost\", pluss::table::Slate(pluss::make_series({60.0, 80.0, 55.0}))},
+    {\"id\", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {\"cost\", pluss::table::Shelf(pluss::make_series({60.0, 80.0, 55.0}))},
 });"""
 
 
 def df_pair_aligned() -> str:
     return """auto left = pluss::table::DataFrame({
-    {\"id\", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"id\", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 auto right = pluss::table::DataFrame({
-    {\"id\", pluss::table::Slate(pluss::make_series({2, 2, 4}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({110.0, 110.0, 100.0}))},
+    {\"id\", pluss::table::Shelf(pluss::make_series({2, 2, 4}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({110.0, 110.0, 100.0}))},
 });"""
 
 
 def df_group() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
-    {\"product\", pluss::table::Slate(pluss::make_note({\"A\", \"B\", \"A\", \"B\"}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
+    {\"product\", pluss::table::Shelf(pluss::make_note({\"A\", \"B\", \"A\", \"B\"}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
 });"""
 
 
 def df_named_metrics() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"midterm_1\", pluss::table::Slate(pluss::make_series({70.0, 80.0, 90.0}))},
-    {\"midterm_2\", pluss::table::Slate(pluss::make_series({75.0, 85.0, 95.0}))},
-    {\"final_points\", pluss::table::Slate(pluss::make_series({88.0, 91.0, 94.0}))},
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+    {\"midterm_1\", pluss::table::Shelf(pluss::make_series({70.0, 80.0, 90.0}))},
+    {\"midterm_2\", pluss::table::Shelf(pluss::make_series({75.0, 85.0, 95.0}))},
+    {\"final_points\", pluss::table::Shelf(pluss::make_series({88.0, 91.0, 94.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
 });"""
 
 
 def df_small_numeric() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"a\", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {\"b\", pluss::table::Slate(pluss::make_series({2.0, 4.0, 5.0}))},
+    {\"a\", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"b\", pluss::table::Shelf(pluss::make_series({2.0, 4.0, 5.0}))},
 });"""
 
 
 def df_pow_pair() -> str:
     return """auto left = pluss::table::DataFrame({
-    {\"a\", pluss::table::Slate(pluss::make_series({2.0, 3.0, 4.0}))},
-    {\"b\", pluss::table::Slate(pluss::make_series({3.0, 2.0, 5.0}))},
+    {\"a\", pluss::table::Shelf(pluss::make_series({2.0, 3.0, 4.0}))},
+    {\"b\", pluss::table::Shelf(pluss::make_series({3.0, 2.0, 5.0}))},
 });
 auto right = pluss::table::DataFrame({
-    {\"a\", pluss::table::Slate(pluss::make_series({3.0, 2.0, 1.0}))},
-    {\"b\", pluss::table::Slate(pluss::make_series({2.0, 3.0, 2.0}))},
+    {\"a\", pluss::table::Shelf(pluss::make_series({3.0, 2.0, 1.0}))},
+    {\"b\", pluss::table::Shelf(pluss::make_series({2.0, 3.0, 2.0}))},
 });"""
 
 
 def df_replace_numeric() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"midterm_1\", pluss::table::Slate(pluss::make_series({0.0, 12.0, 0.0}))},
-    {\"midterm_2\", pluss::table::Slate(pluss::make_series({8.0, 0.0, 15.0}))},
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Tema\"}))},
+    {\"midterm_1\", pluss::table::Shelf(pluss::make_series({0.0, 12.0, 0.0}))},
+    {\"midterm_2\", pluss::table::Shelf(pluss::make_series({8.0, 0.0, 15.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\", \"Tema\"}))},
 });"""
 
 
 def df_unique_subset() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"campus\", pluss::table::Slate(pluss::make_note({\"North\", \"North\", \"West\"}))},
-    {\"student\", pluss::table::Slate(pluss::make_note({\"Ada\", \"Kojo\", \"Esi\"}))},
-    {\"score\", pluss::table::Slate(pluss::make_series({88.0, 91.0, 84.0}))},
+    {\"campus\", pluss::table::Shelf(pluss::make_note({\"North\", \"North\", \"West\"}))},
+    {\"student\", pluss::table::Shelf(pluss::make_note({\"Ada\", \"Kojo\", \"Esi\"}))},
+    {\"score\", pluss::table::Shelf(pluss::make_series({88.0, 91.0, 84.0}))},
 });"""
 
 
 def df_duplicate_rows() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"campus\", pluss::table::Slate(pluss::make_note({\"North\", \"North\", \"West\", \"North\"}))},
-    {\"student\", pluss::table::Slate(pluss::make_note({\"Ada\", \"Ada\", \"Esi\", \"Kojo\"}))},
-    {\"score\", pluss::table::Slate(pluss::make_series({88.0, 88.0, 84.0, 91.0}))},
+    {\"campus\", pluss::table::Shelf(pluss::make_note({\"North\", \"North\", \"West\", \"North\"}))},
+    {\"student\", pluss::table::Shelf(pluss::make_note({\"Ada\", \"Ada\", \"Esi\", \"Kojo\"}))},
+    {\"score\", pluss::table::Shelf(pluss::make_series({88.0, 88.0, 84.0, 91.0}))},
 });"""
 
 
 def df_small_bool() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"passed_math\", pluss::table::Slate(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
-    {\"passed_lab\", pluss::table::Slate(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
+    {\"passed_math\", pluss::table::Shelf(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {\"passed_lab\", pluss::table::Shelf(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
 });"""
 
 
 def df_small_matmul_pair() -> str:
     return """auto left = pluss::table::DataFrame({
-    {\"a\", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
-    {\"b\", pluss::table::Slate(pluss::make_series({3.0, 4.0}))},
+    {\"a\", pluss::table::Shelf(pluss::make_series({1.0, 2.0}))},
+    {\"b\", pluss::table::Shelf(pluss::make_series({3.0, 4.0}))},
 });
 auto right = pluss::table::DataFrame({
-    {\"c\", pluss::table::Slate(pluss::make_series({5.0, 6.0}))},
-    {\"d\", pluss::table::Slate(pluss::make_series({7.0, 8.0}))},
+    {\"c\", pluss::table::Shelf(pluss::make_series({5.0, 6.0}))},
+    {\"d\", pluss::table::Shelf(pluss::make_series({7.0, 8.0}))},
 });"""
 
 
 def df_case_levels_base() -> str:
     return """auto grades = pluss::table::DataFrame({
-    {\"student\", pluss::table::Slate(pluss::make_note({\"Ada\", \"Ada\", \"Kojo\", \"Kojo\"}))},
-    {\"term\", pluss::table::Slate(pluss::make_note({\"mid\", \"final\", \"mid\", \"final\"}))},
-    {\"score\", pluss::table::Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+    {\"student\", pluss::table::Shelf(pluss::make_note({\"Ada\", \"Ada\", \"Kojo\", \"Kojo\"}))},
+    {\"term\", pluss::table::Shelf(pluss::make_note({\"mid\", \"final\", \"mid\", \"final\"}))},
+    {\"score\", pluss::table::Shelf(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
 auto indexed = grades.labels().set({\"student\", \"term\"}, true, \"|\");"""
 
 
-def slate_series() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));'
+def shelf_series() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}));'
 
 
-def slate_note() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}));'
+def shelf_note() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}));'
 
 
-def slate_time() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"}));'
+def shelf_time() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"}));'
 
 
 def atlas_base() -> str:
     return """auto f0 = pluss::table::DataFrame({
-    {\"sales\", pluss::table::Slate(pluss::make_series({10.0, 20.0}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({10.0, 20.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {\"sales\", pluss::table::Slate(pluss::make_series({30.0, 40.0}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({30.0, 40.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});"""
 
@@ -6587,16 +6587,16 @@ def plot_accessor_base() -> str:
 # render_sim.py. They exist so the accessor's navigation surface (landing
 # page + per-method sidebar, wired via CLASS_CONFIG/PER_METHOD_CLASSES) has
 # *something* on every method page instead of a generator crash, exactly
-# the same bootstrap state DataFrame/Slate method pages were in before each
+# the same bootstrap state DataFrame/Shelf method pages were in before each
 # was replaced, batch by batch, with real hand-authored prose marked
 # `<!-- pluss-hand-authored -->`. Treat every page under api/dataframe-*/ as
 # an unverified stub until it carries that marker.
 
 def note_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"  Accra\", \"TEMA \", \"Kumasi\"}))},
-    {\"product\", pluss::table::Slate(pluss::make_note({\"Laptop\", \"desk\", \"Chair\"}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"  Accra\", \"TEMA \", \"Kumasi\"}))},
+    {\"product\", pluss::table::Shelf(pluss::make_note({\"Laptop\", \"desk\", \"Chair\"}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 auto notes = df.nt();"""
 
@@ -6607,44 +6607,44 @@ def case_study_accessor_base() -> str:
 
 def timeline_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 15.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 auto timelines = df.tl();"""
 
 
 def label_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
 }, pluss::make_note({\"r1\", \"r2\", \"r3\"}));
 auto labels = df.labels();"""
 
 
 def feataxis_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"sales_units\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
-    {\"sales_price\", pluss::table::Slate(pluss::make_series({1.5, 2.0, 1.8}))},
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+    {\"sales_units\", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
+    {\"sales_price\", pluss::table::Shelf(pluss::make_series({1.5, 2.0, 1.8}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
 });
 auto feataxis = df.feataxis();"""
 
 
 def plot3d_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"x\", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {\"y\", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
-    {\"z\", pluss::table::Slate(pluss::make_series({7.0, 8.0, 9.0}))},
+    {\"x\", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Shelf(pluss::make_series({4.0, 5.0, 6.0}))},
+    {\"z\", pluss::table::Shelf(pluss::make_series({7.0, 8.0, 9.0}))},
 });
 auto plot3d = df.plot3d();"""
 
 
 def ts_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 15.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 auto ts = df.ts();"""
 
@@ -6659,48 +6659,48 @@ def ts_resampler_accessor_base() -> str:
 
 def group_builder_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
-    {\"units\", pluss::table::Slate(pluss::make_series({2.0, 5.0, 1.0, 3.0}))},
-    {\"price\", pluss::table::Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
+    {\"units\", pluss::table::Shelf(pluss::make_series({2.0, 5.0, 1.0, 3.0}))},
+    {\"price\", pluss::table::Shelf(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
 });
 auto grouped = df.group();"""
 
 
 def sort_builder_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"Tema\", \"Accra\", \"Accra\", \"Tema\"}))},
-    {\"sales\", pluss::table::Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"Tema\", \"Accra\", \"Accra\", \"Tema\"}))},
+    {\"sales\", pluss::table::Shelf(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 auto sorter = df.sort();"""
 
 
 def contingency_accessor_base() -> str:
     return """auto df = pluss::table::DataFrame({
-    {\"city\", pluss::table::Slate(pluss::make_note({\"A\", \"A\", \"B\", \"B\", \"B\"}))},
-    {\"channel\", pluss::table::Slate(pluss::make_note({\"Cash\", \"Card\", \"Cash\", \"Cash\", \"Card\"}))},
-    {\"amount\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+    {\"city\", pluss::table::Shelf(pluss::make_note({\"A\", \"A\", \"B\", \"B\", \"B\"}))},
+    {\"channel\", pluss::table::Shelf(pluss::make_note({\"Cash\", \"Card\", \"Cash\", \"Cash\", \"Card\"}))},
+    {\"amount\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
 });
 auto contingency = df.contingency(\"city\", \"channel\");"""
 
 
-def slate_plot_accessor_base() -> str:
-    return """auto revenue = pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}));
+def shelf_plot_accessor_base() -> str:
+    return """auto revenue = pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}));
 auto plot = revenue.plot();"""
 
 
 def atlas_label_accessor_base() -> str:
-    return """auto q1 = pluss::table::DataFrame({\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0}))});
-auto q2 = pluss::table::DataFrame({\"sales\", pluss::table::Slate(pluss::make_series({110.0, 90.0}))});
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Slate(pluss::make_note({\"2024Q1\", \"2024Q2\"})));
+    return """auto q1 = pluss::table::DataFrame({\"sales\", pluss::table::Shelf(pluss::make_series({100.0, 120.0}))});
+auto q2 = pluss::table::DataFrame({\"sales\", pluss::table::Shelf(pluss::make_series({110.0, 90.0}))});
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Shelf(pluss::make_note({\"2024Q1\", \"2024Q2\"})));
 auto labels = atlas.label();"""
 
 
 def atlas_timeline_accessor_base() -> str:
     return """auto q1 = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({\"2024-01-01T09:10:00Z\", \"2024-01-01T09:40:00Z\"}))},
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({\"2024-01-01T09:10:00Z\", \"2024-01-01T09:40:00Z\"}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({\"2024-01-02T09:10:00Z\", \"2024-01-02T09:40:00Z\"}))},
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({\"2024-01-02T09:10:00Z\", \"2024-01-02T09:40:00Z\"}))},
 });
 auto atlas = pluss::table::Atlas({q1, q2});
 auto timelines = atlas.tl();"""
@@ -6708,14 +6708,14 @@ auto timelines = atlas.tl();"""
 
 def atlas_ts_accessor_base() -> str:
     return """auto q1 = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-01T09:10:00Z\",\n        \"2024-01-01T09:40:00Z\",\n        \"2024-01-01T10:05:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({10.0, 20.0, 15.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {\"ts\", pluss::table::Slate(pluss::make_timeline({
+    {\"ts\", pluss::table::Shelf(pluss::make_timeline({
         \"2024-01-02T09:10:00Z\",\n        \"2024-01-02T09:40:00Z\",\n        \"2024-01-02T10:05:00Z\",\n    }))},
-    {\"load\", pluss::table::Slate(pluss::make_series({12.0, 18.0, 14.0}))},
+    {\"load\", pluss::table::Shelf(pluss::make_series({12.0, 18.0, 14.0}))},
 });
 auto atlas = pluss::table::Atlas({q1, q2});
 auto ts = atlas.ts();"""
@@ -6727,12 +6727,12 @@ def atlas_ts_resampler_accessor_base() -> str:
 
 def atlas_plot_accessor_base() -> str:
     return """auto q1 = pluss::table::DataFrame({
-    {\"x\", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {\"y\", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
+    {\"x\", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Shelf(pluss::make_series({4.0, 5.0, 6.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {\"x\", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {\"y\", pluss::table::Slate(pluss::make_series({7.0, 8.0, 9.0}))},
+    {\"x\", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"y\", pluss::table::Shelf(pluss::make_series({7.0, 8.0, 9.0}))},
 });
 auto atlas = pluss::table::Atlas({q1, q2});
 auto plot = atlas.plot();"""
@@ -6967,7 +6967,7 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameGroupBuilder': group_builder_base,
     'DataFrameSortBuilder': sort_builder_base,
     'ContingencyTable': contingency_accessor_base,
-    'SlatePlotAccessor': slate_plot_accessor_base,
+    'ShelfPlotAccessor': shelf_plot_accessor_base,
     'AtlasLabelAccessor': atlas_label_accessor_base,
     'AtlasTimelineAccessor': atlas_timeline_accessor_base,
     'AtlasTsAccessor': atlas_ts_accessor_base,
@@ -7018,7 +7018,7 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'DataFrameGroupBuilder': 'grouped',
     'DataFrameSortBuilder': 'sorter',
     'ContingencyTable': 'ct',
-    'SlatePlotAccessor': 'plot',
+    'ShelfPlotAccessor': 'plot',
     'AtlasLabelAccessor': 'labels',
     'AtlasTimelineAccessor': 'timelines',
     'AtlasTsAccessor': 'ts',
@@ -7088,7 +7088,7 @@ def placeholder_arg_for_param(param_name: str, param_type: str) -> str:
         return 'pluss::table::DataFrame::WindowStatistic::Mean'
     if 'WindowClosure' in t:
         return 'pluss::table::DataFrame::WindowClosure::Right'
-    if 'Slate' in t and '&' in t:
+    if 'Shelf' in t and '&' in t:
         return 'df.features("load")'
     return '{}'
 
@@ -7104,20 +7104,20 @@ def accessor_stub_example(class_name: str, method: Method) -> str:
     return base + f'\n\nauto out = {var}.{method.name}({args});\nstd::cout << out;'
 
 
-def slate_value_base() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_series({10.0}));\nauto value = slate.value();'
+def shelf_value_base() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0}));\nauto value = shelf.value();'
 
 
-def slate_value_note_base() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_note({"Accra"}));\nauto value = slate.value();'
+def shelf_value_note_base() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_note({"Accra"}));\nauto value = shelf.value();'
 
 
-def slate_value_timeline_base() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::make_timeline({"2024-01-01T09:10:00Z"}));\nauto value = slate.value();'
+def shelf_value_timeline_base() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::make_timeline({"2024-01-01T09:10:00Z"}));\nauto value = shelf.value();'
 
 
-def slate_value_timeindex_base() -> str:
-    return 'auto slate = pluss::table::Slate(pluss::timeindex::make({"2024-01-01T09:10:00Z"}));\nauto value = slate.value();'
+def shelf_value_timeindex_base() -> str:
+    return 'auto shelf = pluss::table::Shelf(pluss::timeindex::make({"2024-01-01T09:10:00Z"}));\nauto value = shelf.value();'
 
 
 def call_line(obj: str, method: str, args: str, assign: bool = True) -> str:
@@ -7126,7 +7126,7 @@ def call_line(obj: str, method: str, args: str, assign: bool = True) -> str:
     return f'{obj}.{method}({args});' if args else f'{obj}.{method}();'
 
 
-def slate_fallback_args(method: Method) -> tuple[str, str]:
+def shelf_fallback_args(method: Method) -> tuple[str, str]:
     args: list[str] = []
     prelude: list[str] = []
     for name, typ in method.params:
@@ -7158,18 +7158,18 @@ def slate_fallback_args(method: Method) -> tuple[str, str]:
                 args.append('"demo"')
         elif 'pluss::ScalarType' in typ:
             args.append('pluss::ScalarType::Float64')
-        elif 'SlateCastTarget' in typ:
-            args.append('pluss::table::SlateCastTarget::Series')
-        elif 'SlateBinaryMathOp' in typ:
-            args.append('pluss::table::SlateBinaryMathOp::Add')
-        elif 'SlateBinaryCompareOp' in typ:
-            args.append('pluss::table::SlateBinaryCompareOp::Gt')
-        elif 'SlateCorrMethod' in typ:
-            args.append('pluss::table::SlateCorrMethod::Pearson')
-        elif 'SlateWindowOp' in typ:
-            args.append('pluss::table::SlateWindowOp::RollingMean')
-        elif 'const Slate&' in typ:
-            prelude.append('auto other = pluss::table::Slate(pluss::make_series({15.0, 10.0, 35.0}));')
+        elif 'ShelfCastTarget' in typ:
+            args.append('pluss::table::ShelfCastTarget::Series')
+        elif 'ShelfBinaryMathOp' in typ:
+            args.append('pluss::table::ShelfBinaryMathOp::Add')
+        elif 'ShelfBinaryCompareOp' in typ:
+            args.append('pluss::table::ShelfBinaryCompareOp::Gt')
+        elif 'ShelfCorrMethod' in typ:
+            args.append('pluss::table::ShelfCorrMethod::Pearson')
+        elif 'ShelfWindowOp' in typ:
+            args.append('pluss::table::ShelfWindowOp::RollingMean')
+        elif 'const Shelf&' in typ:
+            prelude.append('auto other = pluss::table::Shelf(pluss::make_series({15.0, 10.0, 35.0}));')
             args.append('other')
         elif 'std::vector<std::int64_t>' in typ or 'RangeView::Int' in typ or 'std::span<const std::int64_t>' in typ:
             prelude.append('std::vector<std::int64_t> picks{0, 2};')
@@ -7359,11 +7359,11 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'nrows','ncols','nfeatures','values','feature_names'}:
             return df_base() + f'\n\nauto out = df.{n}();'
         if n == 'caselbl':
-            if 'const Slate& labels' in sig:
-                return df_base() + '\n\nauto labels = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.caselbl(labels);'
+            if 'const Shelf& labels' in sig:
+                return df_base() + '\n\nauto labels = pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.caselbl(labels);'
             return df_base() + '\n\nauto out = df.labels().values();'
         if n == 'caselbl_':
-            return df_base() + '\n\nauto labels = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.caselbl_(labels);'
+            return df_base() + '\n\nauto labels = pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.caselbl_(labels);'
         if n == 'caselbls':
             return df_case_levels_base() + '\n\nauto out = indexed.labels().names();'
         if n == 'caselbl':
@@ -7387,29 +7387,29 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.select({"id", "sales"});'
         if n in {'series_features','note_features','timeline_features','with_cases','with_cases_','cast_series','cast_note','cast_timeline','cast_timeindex'}:
             if n == 'with_cases':
-                return df_base() + '\n\nauto cases = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.with_cases(cases);'
+                return df_base() + '\n\nauto cases = pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.with_cases(cases);'
             if n == 'with_cases_':
-                return df_base() + '\n\nauto cases = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.with_cases_(cases);'
+                return df_base() + '\n\nauto cases = pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.with_cases_(cases);'
             if n == 'cast_series':
-                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Slate(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast_series({"sales"}, pluss::codem::ScalarType::Float64);'
+                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Shelf(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast_series({"sales"}, pluss::codem::ScalarType::Float64);'
             if n == 'cast_timeline':
-                return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Slate(pluss::make_note({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\nauto out = df.cast_timeline({"ts"});'
+                return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Shelf(pluss::make_note({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\nauto out = df.cast_timeline({"ts"});'
             if n == 'timeline_features':
                 return df_temporal_mixed() + '\n\nauto out = df.feataxis().timeline();'
             return df_base() + f'\n\nauto out = df.{n}();' if n.endswith('_features') else df_base() + f'\n\nauto out = df.{n}({{"sales"}});'
         if n in {'astype','cast'}:
             if 'feature_dtypes' in sig:
-                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Slate(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.astype({{"sales", pluss::codem::ScalarType::Float64}});'
+                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Shelf(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.astype({{"sales", pluss::codem::ScalarType::Float64}});'
             if 'CastSpec' in sig:
-                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Slate(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast({{.feature = "sales", .target = pluss::table::SlateCastTarget::Series, .series_dtype = pluss::codem::ScalarType::Float64}});'
+                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Shelf(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast({{.feature = "sales", .target = pluss::table::ShelfCastTarget::Series, .series_dtype = pluss::codem::ScalarType::Float64}});'
             if n == 'astype':
-                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Slate(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.astype({"sales"}, pluss::codem::ScalarType::Float64);'
+                return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Shelf(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.astype({"sales"}, pluss::codem::ScalarType::Float64);'
         if n in {'insert','drop','reorder','add_prefix','add_suffix','rename','rename_','rename_features','relabel_features','set_axis','set_axis','place'}:
             if n == 'insert':
-                return df_base() + '\n\nauto out = df.insert(1, "profit", pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})));'
+                return df_base() + '\n\nauto out = df.insert(1, "profit", pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})));'
             if n == 'place':
-                if 'const Slate& feature' in sig:
-                    return df_base() + '\n\nauto out = df.place("profit", pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})), "sales", true);'
+                if 'const Shelf& feature' in sig:
+                    return df_base() + '\n\nauto out = df.place("profit", pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})), "sales", true);'
                 return df_base() + '\n\nauto out = df.place("city", "id", false);'
             if n == 'drop':
                 return df_base() + '\n\nauto out = df.drop({"city"});'
@@ -7534,27 +7534,27 @@ def example_for(class_name: str, method: Method) -> str:
                     return df_base() + '\n\nauto out = df.arrange({{.feature = "sales", .ascending = false}});'
                 return df_base() + '\n\nauto out = df.arrange({"sales"}, false, true);'
             if n == 'labels().sort':
-                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Slate(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.labels().sort(true, true);'
+                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Shelf(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.labels().sort(true, true);'
             if n == 'top':
                 return df_base() + '\n\nauto out = df.top("sales", 2);'
             if n == 'bottom':
                 return df_base() + '\n\nauto out = df.bottom("sales", 2);'
             if n == 'labels().repeated':
-                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.labels().repeated();'
+                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Shelf(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.labels().repeated();'
             if n == 'unique_cases':
                 return df_unique_subset() + '\n\nauto out = df.drop_duplicates({"campus"});'
             if n == 'labels().align':
-                return df_base() + '\n\ndf = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Slate(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.labels().align(new_label);'
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Shelf(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.labels().align(new_label);'
         if n == 'match':
             return (
                 'auto left = pluss::table::DataFrame(\n'
                 '    {{"x", pluss::make_series({1.0, 2.0})},\n'
                 '     {"y", pluss::make_series({10.0, 20.0})}},\n'
-                '    pluss::table::Slate(pluss::make_note({"A", "C"})));\n'
+                '    pluss::table::Shelf(pluss::make_note({"A", "C"})));\n'
                 'auto right = pluss::table::DataFrame(\n'
                 '    {{"y", pluss::make_series({100.0, 200.0})},\n'
                 '     {"z", pluss::make_series({7.0, 8.0})}},\n'
-                '    pluss::table::Slate(pluss::make_note({"B", "A"})));\n'
+                '    pluss::table::Shelf(pluss::make_note({"B", "A"})));\n'
                 'auto matched = left.match(right);'
             )
         if n == 'extend':
@@ -7562,11 +7562,11 @@ def example_for(class_name: str, method: Method) -> str:
                 'auto left = pluss::table::DataFrame(\n'
                 '    {{"x", pluss::make_series({1.0, 2.0})},\n'
                 '     {"y", pluss::make_series({3.0, 4.0})}},\n'
-                '    pluss::table::Slate(pluss::make_note({"A", "C"})));\n'
+                '    pluss::table::Shelf(pluss::make_note({"A", "C"})));\n'
                 'auto right = pluss::table::DataFrame(\n'
                 '    {{"y", pluss::make_series({5.0, 6.0})},\n'
                 '     {"z", pluss::make_series({7.0, 8.0})}},\n'
-                '    pluss::table::Slate(pluss::make_note({"B", "A"})));\n'
+                '    pluss::table::Shelf(pluss::make_note({"B", "A"})));\n'
                 'auto out = left.extend(right);'
             )
         if n == 'lengthen':
@@ -7582,7 +7582,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'conform' or n == 'reindex_like':
                 return df_two() + f'\n\nauto out = left.{n}(right);'
             if n == 'reindex_cases':
-                return df_base() + '\n\ndf = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto cases = pluss::table::Slate(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.reindex_cases(cases);'
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto cases = pluss::table::Shelf(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.reindex_cases(cases);'
             if n == 'stitch_on':
                 if 'initializer_list<std::string_view> left_features' in sig:
                     return df_two() + '\n\nauto out = left.stitch_on({"id"}, right, {"id"}, "_right");'
@@ -7637,22 +7637,22 @@ def example_for(class_name: str, method: Method) -> str:
                         '\n\nauto out = df.set(\n'
                         '    {"profit", "cost"},\n'
                         '    {\n'
-                        '        pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})),\n'
-                        '        pluss::table::Slate(pluss::make_series({60.0, 85.0, 60.0})),\n'
+                        '        pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})),\n'
+                        '        pluss::table::Shelf(pluss::make_series({60.0, 85.0, 60.0})),\n'
                         '    });'
                         if not n.endswith('_') else
                         '\n\ndf.set_(\n'
                         '    {"profit", "cost"},\n'
                         '    {\n'
-                        '        pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})),\n'
-                        '        pluss::table::Slate(pluss::make_series({60.0, 85.0, 60.0})),\n'
+                        '        pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})),\n'
+                        '        pluss::table::Shelf(pluss::make_series({60.0, 85.0, 60.0})),\n'
                         '    });'
                     )
-                return df_base() + (f'\n\nauto out = df.{n}("profit", pluss::table::Slate(pluss::make_series({{40.0, 35.0, 30.0}})));' if not n.endswith('_') else '\n\ndf.set_("profit", pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})));')
+                return df_base() + (f'\n\nauto out = df.{n}("profit", pluss::table::Shelf(pluss::make_series({{40.0, 35.0, 30.0}})));' if not n.endswith('_') else '\n\ndf.set_("profit", pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})));')
             if n == 'set':
                 if 'initializer_list' in sig:
-                    return df_base() + '\n\ndf.set({"profit", "cost"}) = {pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Slate(pluss::make_series({60.0, 85.0, 60.0}))};'
-                return df_base() + '\n\ndf.set("profit") = pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0}));'
+                    return df_base() + '\n\ndf.set({"profit", "cost"}) = {pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Shelf(pluss::make_series({60.0, 85.0, 60.0}))};'
+                return df_base() + '\n\ndf.set("profit") = pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0}));'
         if n == 'plot':
             if 'DataFramePlotOptions' in sig:
                 return (
@@ -7722,27 +7722,27 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_replace_numeric() + '\n\nauto out = df.replace("Tema", "Tamale", {"city"});'
             return df_replace_numeric() + '\n\nauto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});'
         if n in {'put', 'put_'}:
-            slate_mask = 'auto mask = df.features("id") == 2.0;'
+            shelf_mask = 'auto mask = df.features("id") == 2.0;'
             series_mask = 'auto mask = pluss::make_series({false, true, false}, pluss::codem::ScalarType::Bool);'
             if 'const pluss::Series& bool_mask' in sig and 'const char* value' in sig:
                 return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("city", mask, "Tamale");' if n == 'put' else 'df.put_("city", mask, "Tamale");')
-            if 'const pluss::Series& bool_mask' in sig and 'const Slate& value' in sig:
-                return df_base() + f'\n\n{series_mask}\nauto repl = pluss::table::Slate(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
+            if 'const pluss::Series& bool_mask' in sig and 'const Shelf& value' in sig:
+                return df_base() + f'\n\n{series_mask}\nauto repl = pluss::table::Shelf(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
             if 'const pluss::Series& bool_mask' in sig and 'pluss::null_t value' in sig:
                 return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, pluss::series::null);' if n == 'put' else 'df.put_("sales", mask, pluss::series::null);')
             if 'const pluss::Series& bool_mask' in sig and 'std::string_view value' in sig:
                 return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
             if 'const pluss::Series& bool_mask' in sig:
                 return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
-            if 'const Slate& bool_mask' in sig and 'const char* value' in sig:
-                return df_base() + f'\n\n{slate_mask}\n' + ('auto out = df.put("city", mask, "Tamale");' if n == 'put' else 'df.put_("city", mask, "Tamale");')
-            if 'const Slate& bool_mask' in sig and 'const Slate& value' in sig:
-                return df_base() + f'\n\n{slate_mask}\nauto repl = pluss::table::Slate(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
-            if 'const Slate& bool_mask' in sig and 'pluss::null_t value' in sig:
-                return df_base() + f'\n\n{slate_mask}\n' + ('auto out = df.put("sales", mask, pluss::series::null);' if n == 'put' else 'df.put_("sales", mask, pluss::series::null);')
-            if 'const Slate& bool_mask' in sig and 'std::string_view value' in sig:
-                return df_base() + f'\n\n{slate_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
-            return df_base() + f'\n\n{slate_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
+            if 'const Shelf& bool_mask' in sig and 'const char* value' in sig:
+                return df_base() + f'\n\n{shelf_mask}\n' + ('auto out = df.put("city", mask, "Tamale");' if n == 'put' else 'df.put_("city", mask, "Tamale");')
+            if 'const Shelf& bool_mask' in sig and 'const Shelf& value' in sig:
+                return df_base() + f'\n\n{shelf_mask}\nauto repl = pluss::table::Shelf(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
+            if 'const Shelf& bool_mask' in sig and 'pluss::null_t value' in sig:
+                return df_base() + f'\n\n{shelf_mask}\n' + ('auto out = df.put("sales", mask, pluss::series::null);' if n == 'put' else 'df.put_("sales", mask, pluss::series::null);')
+            if 'const Shelf& bool_mask' in sig and 'std::string_view value' in sig:
+                return df_base() + f'\n\n{shelf_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
+            return df_base() + f'\n\n{shelf_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
         if n in {'head','tail','sample','slice','take','where','filter','query','assign','transform'}:
             if n == 'head':
                 return df_base() + '\n\nauto out = df.head(2, false);'
@@ -7763,23 +7763,23 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'take':
                 return df_base() + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = df.take(picks);'
             if n == 'where' or n == 'filter':
-                if 'const Slate& bool_mask' in sig:
+                if 'const Shelf& bool_mask' in sig:
                     return df_base() + '\n\nauto mask = df.features("sales") >= 95.0;\nauto out = df.' + n + '(mask);'
                 return df_base() + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = df.' + n + '(mask);'
             if n == 'query':
                 return df_base() + '\n\nauto out = df.query("sales > 95");'
             if n == 'assign':
-                if 'pair<std::string, Slate>' in sig:
-                    return df_base() + '\n\nauto out = df.assign({{"profit", pluss::table::Slate(pluss::make_series({40.0, 35.0, 30.0}))}});'
-                return df_base() + '\n\nauto out = df.assign({{.feature = "profit", .expr = [](const pluss::table::DataFrame& frame) { return pluss::table::Slate(frame.features("sales").as_series().sub(60)); }}});'
+                if 'pair<std::string, Shelf>' in sig:
+                    return df_base() + '\n\nauto out = df.assign({{"profit", pluss::table::Shelf(pluss::make_series({40.0, 35.0, 30.0}))}});'
+                return df_base() + '\n\nauto out = df.assign({{.feature = "profit", .expr = [](const pluss::table::DataFrame& frame) { return pluss::table::Shelf(frame.features("sales").as_series().sub(60)); }}});'
             if n == 'transform':
-                if 'const std::function<Slate(const DataFrame&)>&' in sig:
-                    return df_base() + '\n\nauto out = df.transform("sales_plus_10", [](const pluss::table::DataFrame& frame) { return pluss::table::Slate(frame.features("sales").as_series().add(10.0)); });'
+                if 'const std::function<Shelf(const DataFrame&)>&' in sig:
+                    return df_base() + '\n\nauto out = df.transform("sales_plus_10", [](const pluss::table::DataFrame& frame) { return pluss::table::Shelf(frame.features("sales").as_series().add(10.0)); });'
                 if 'std::string_view feature' in sig:
-                    return df_base() + '\n\nauto out = df.transform("sales", [](const pluss::table::Slate& slate) { return slate.clip(0.0, 110.0); });'
+                    return df_base() + '\n\nauto out = df.transform("sales", [](const pluss::table::Shelf& shelf) { return shelf.clip(0.0, 110.0); });'
                 if 'TransformSpec' in sig:
-                    return df_base() + '\n\nauto out = df.transform({{.feature = "sales", .expr = [](const pluss::table::Slate& slate) { return slate.clip(0.0, 110.0); }}});'
-                return df_base() + '\n\nauto out = df.transform([](const pluss::table::Slate& slate) { return slate.kind() == pluss::table::SlateKind::Series ? slate.clip(0.0, 110.0) : slate; });'
+                    return df_base() + '\n\nauto out = df.transform({{.feature = "sales", .expr = [](const pluss::table::Shelf& shelf) { return shelf.clip(0.0, 110.0); }}});'
+                return df_base() + '\n\nauto out = df.transform([](const pluss::table::Shelf& shelf) { return shelf.kind() == pluss::table::ShelfKind::Series ? shelf.clip(0.0, 110.0) : shelf; });'
         if n == 'shift':
             if 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
                 return df_base() + '\n\nauto out = df.shift({"sales"}, 2);'
@@ -7823,12 +7823,12 @@ def example_for(class_name: str, method: Method) -> str:
                     df_small_numeric()
                     + '\n\n'
                     + 'auto other0 = pluss::table::DataFrame({\n'
-                    + '    {"a", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},\n'
-                    + '    {"b", pluss::table::Slate(pluss::make_series({2.0, 4.0, 5.0}))},\n'
+                    + '    {"a", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},\n'
+                    + '    {"b", pluss::table::Shelf(pluss::make_series({2.0, 4.0, 5.0}))},\n'
                     + '});\n'
                     + 'auto other1 = pluss::table::DataFrame({\n'
-                    + '    {"a", pluss::table::Slate(pluss::make_series({3.0, 2.0, 1.0}))},\n'
-                    + '    {"b", pluss::table::Slate(pluss::make_series({5.0, 4.0, 2.0}))},\n'
+                    + '    {"a", pluss::table::Shelf(pluss::make_series({3.0, 2.0, 1.0}))},\n'
+                    + '    {"b", pluss::table::Shelf(pluss::make_series({5.0, 4.0, 2.0}))},\n'
                     + '});\n'
                     + 'std::vector<pluss::table::DataFrame> others{other0, other1};\n'
                     + 'auto out = df.corr_with(others, pluss::table::DataFrame::CorrMethod::Pearson, 1);'
@@ -7837,8 +7837,8 @@ def example_for(class_name: str, method: Method) -> str:
                 df_small_numeric()
                 + '\n\n'
                 + 'auto other = pluss::table::DataFrame({\n'
-                + '    {"a", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},\n'
-                + '    {"b", pluss::table::Slate(pluss::make_series({2.0, 4.0, 5.0}))},\n'
+                + '    {"a", pluss::table::Shelf(pluss::make_series({1.0, 2.0, 3.0}))},\n'
+                + '    {"b", pluss::table::Shelf(pluss::make_series({2.0, 4.0, 5.0}))},\n'
                 + '});\n'
                 + 'auto out = df.corr_with(other, pluss::table::DataFrame::CorrMethod::Pearson, 1);'
             )
@@ -7860,7 +7860,7 @@ def example_for(class_name: str, method: Method) -> str:
             return df_small_numeric() + f'\n\nauto out = df.{n}(10);'
         if n in {'sum','mean','median','min','max','std','var','count','describe','transpose','tally','window','rolling','matrix','prod'}:
             if n == 'window' or n == 'rolling':
-                return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::SlateWindowOp::RollingMean, .window = 2, .min_periods = 1}}, false);'
+                return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ShelfWindowOp::RollingMean, .window = 2, .min_periods = 1}}, false);'
             if n == 'prod':
                 if 'axis' in sig:
                     return df_small_numeric() + '\n\nauto out = df.prod(1, true);'
@@ -7907,8 +7907,8 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'all', 'any'}:
             base = (
                 'auto df = pluss::table::DataFrame({\n'
-                '    {"passed_math", pluss::table::Slate(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},\n'
-                '    {"passed_lab", pluss::table::Slate(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},\n'
+                '    {"passed_math", pluss::table::Shelf(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},\n'
+                '    {"passed_lab", pluss::table::Shelf(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},\n'
                 '});\n\n'
             )
             if 'std::int64_t axis' in sig:
@@ -7917,7 +7917,7 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'isna','isnull','notna','notnull'}:
             if n in {'notna', 'notnull'}:
                 return (
-                    'auto sales = pluss::table::Slate(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
+                    'auto sales = pluss::table::Shelf(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"sales", sales},\n'
                     '});\n\n'
@@ -7928,13 +7928,13 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'fillnull' or n == 'fillnull_':
                 mut = n.endswith('_')
                 if 'std::string_view' in sig or 'const char*' in sig:
-                    code = 'auto df = pluss::table::DataFrame({{"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});'
+                    code = 'auto df = pluss::table::DataFrame({{"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});'
                     call = ('df.fillnull_("Unknown");' if mut else 'auto out = df.fillnull("Unknown");')
                     return code + '\n\n' + call
                 if 'Timeline' in sig:
-                    return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Slate(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
+                    return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Shelf(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
                 if 'TimeIndex' in sig:
-                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Slate(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
+                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Shelf(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
                 return df_base() + ('\n\ndf.fillnull_(0.0);' if mut else '\n\nauto out = df.fillnull(0.0, {"sales"});')
             if n == 'dropna_all':
                 return df_base() + '\n\nauto out = df.dropna_all({"sales"});'
@@ -7942,17 +7942,17 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nauto out = df.count_null_rows();'
             if n == 'bfill':
                 return (
-                    'auto score = pluss::table::Slate(pluss::make_series({71.0, std::numeric_limits<double>::quiet_NaN(), 88.0, std::numeric_limits<double>::quiet_NaN()}));\n'
+                    'auto score = pluss::table::Shelf(pluss::make_series({71.0, std::numeric_limits<double>::quiet_NaN(), 88.0, std::numeric_limits<double>::quiet_NaN()}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"score", score},\n'
-                    '    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},\n'
+                    '    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},\n'
                     '});\n'
                     '\n'
                     'auto out = df.bfill();'
                 )
             if n == 'dropnull':
                 return (
-                    'auto sales = pluss::table::Slate(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
+                    'auto sales = pluss::table::Shelf(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"id", pluss::make_series({1, 2, 3})},\n'
                     '    {"sales", sales},\n'
@@ -8029,12 +8029,12 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nstd::ostringstream os;\ndf.show(os);'
             return df_base() + '\n\ndf.show();'
         if n == 'unsqueeze':
-            return df_base() + ('\n\nauto out = df.unsqueeze();' if 'depth_labels' not in sig else '\n\nauto labels = pluss::table::Slate(pluss::make_note({"train"}));\nauto out = df.unsqueeze(labels);')
+            return df_base() + ('\n\nauto out = df.unsqueeze();' if 'depth_labels' not in sig else '\n\nauto labels = pluss::table::Shelf(pluss::make_note({"train"}));\nauto out = df.unsqueeze(labels);')
         return df_base() + f'\n\nauto out = df.{n}();'
 
     if class_name == 'ColumnRef':
         base = feature_ref_base()
-        if n in {'name', 'slate', 'mean', 'value', 'values'}:
+        if n in {'name', 'shelf', 'mean', 'value', 'values'}:
             return base + f'\n\nauto out = ref.{n}();'
         if n == 'head':
             return base + '\n\nauto out = ref.head(2);'
@@ -8470,181 +8470,181 @@ def example_for(class_name: str, method: Method) -> str:
                 return base + '\n\nauto out = stmt.execute({{"min_sales", 95.0}});'
             return (
                 'auto df = pluss::table::DataFrame({\n'
-                '    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},\n'
-                '    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},\n'
-                '    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},\n'
+                '    {"id", pluss::table::Shelf(pluss::make_series({1, 2, 3}))},\n'
+                '    {"sales", pluss::table::Shelf(pluss::make_series({100.0, 120.0, 90.0}))},\n'
+                '    {"city", pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},\n'
                 '});\n'
                 'auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > 95");\n\n'
                 'auto out = stmt.execute();'
             )
         return base + f'\n\nauto out = stmt.{n}();'
 
-    if class_name == 'Slate':
+    if class_name == 'Shelf':
         if n in {'defined','unique','size','kind','dtype','value','values','has_caselbl'}:
-            base = slate_series()
-            return base + f'\n\nauto out = slate.{n}();'
+            base = shelf_series()
+            return base + f'\n\nauto out = shelf.{n}();'
         if n == 'caselbl':
-            if 'const Slate& labels' in sig:
+            if 'const Shelf& labels' in sig:
                 return (
-                    'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}))'
-                    '.caselbl(pluss::table::Slate(pluss::make_note({"row0", "row1", "row2"})));\n'
-                    'auto labels = pluss::table::Slate(pluss::make_note({"A", "B", "C"}));\n\n'
-                    'auto out = slate.caselbl(labels);'
+                    'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}))'
+                    '.caselbl(pluss::table::Shelf(pluss::make_note({"row0", "row1", "row2"})));\n'
+                    'auto labels = pluss::table::Shelf(pluss::make_note({"A", "B", "C"}));\n\n'
+                    'auto out = shelf.caselbl(labels);'
                 )
             return (
-                'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}))'
-                '.caselbl(pluss::table::Slate(pluss::make_note({"row0", "row1", "row2"})));\n\n'
-                'auto out = slate.label().values();'
+                'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Shelf(pluss::make_note({"row0", "row1", "row2"})));\n\n'
+                'auto out = shelf.label().values();'
             )
         if n == 'caselbl_':
             return (
-                'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));\n'
-                'auto labels = pluss::table::Slate(pluss::make_note({"A", "B", "C"}));\n\n'
-                'slate.caselbl_(labels);'
+                'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}));\n'
+                'auto labels = pluss::table::Shelf(pluss::make_note({"A", "B", "C"}));\n\n'
+                'shelf.caselbl_(labels);'
             )
         if n in {'clear_caselbl', 'clear_caselbl_'}:
             base = (
-                'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}))'
-                '.caselbl(pluss::table::Slate(pluss::make_note({"row0", "row1", "row2"})));'
+                'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Shelf(pluss::make_note({"row0", "row1", "row2"})));'
             )
-            return base + ('\n\nauto out = slate.clear_caselbl();' if n == 'clear_caselbl' else '\n\nslate.clear_caselbl_();')
+            return base + ('\n\nauto out = shelf.clear_caselbl();' if n == 'clear_caselbl' else '\n\nshelf.clear_caselbl_();')
         if n == 'align':
             return (
-                'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}))'
-                '.caselbl(pluss::table::Slate(pluss::make_note({"s1", "s2", "s3"})));\n'
-                'auto target = pluss::table::Slate(pluss::make_note({"s3", "s1", "s2"}));\n\n'
-                'auto out = slate.align(target);'
+                'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Shelf(pluss::make_note({"s1", "s2", "s3"})));\n'
+                'auto target = pluss::table::Shelf(pluss::make_note({"s3", "s1", "s2"}));\n\n'
+                'auto out = shelf.align(target);'
             )
         if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropnull','ffill','bfill','sum','mean','min','max'}:
             if n == 'dropnull':
                 return (
-                    'auto slate = pluss::table::Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
-                    'auto out = slate.dropnull();'
+                    'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
+                    'auto out = shelf.dropnull();'
                 )
             if n == 'bfill':
                 return (
-                    'auto slate = pluss::table::Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));\n\n'
-                    'auto out = slate.bfill();'
+                    'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));\n\n'
+                    'auto out = shelf.bfill();'
                 )
-            return slate_series() + f'\n\nauto out = slate.{n}();'
+            return shelf_series() + f'\n\nauto out = shelf.{n}();'
         if n in {'var','std'}:
-            return slate_series() + f'\n\nauto out = slate.{n}(true);'
+            return shelf_series() + f'\n\nauto out = shelf.{n}(true);'
         if n in {'fillnull','fillnull_','clip'}:
             if 'std::string_view' in sig or 'const char*' in sig:
-                base = slate_note()
-                return base + ('\n\nslate.fillnull_("Unknown");' if n.endswith('_') else '\n\nauto out = slate.fillnull("Unknown");')
+                base = shelf_note()
+                return base + ('\n\nshelf.fillnull_("Unknown");' if n.endswith('_') else '\n\nauto out = shelf.fillnull("Unknown");')
             if 'Timeline' in sig:
-                base = slate_time()
-                return base + ('\n\nslate.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = slate.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
+                base = shelf_time()
+                return base + ('\n\nshelf.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = shelf.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
             if 'TimeIndex' in sig:
-                base = 'auto slate = pluss::table::Slate(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));'
-                return base + ('\n\nslate.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = slate.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
+                base = 'auto shelf = pluss::table::Shelf(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));'
+                return base + ('\n\nshelf.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = shelf.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
             if n == 'clip':
-                return slate_series() + '\n\nauto out = slate.clip(0.0, 25.0);'
-            return slate_series() + ('\n\nslate.fillnull_(0.0);' if n.endswith('_') else '\n\nauto out = slate.fillnull(0.0);')
+                return shelf_series() + '\n\nauto out = shelf.clip(0.0, 25.0);'
+            return shelf_series() + ('\n\nshelf.fillnull_(0.0);' if n.endswith('_') else '\n\nauto out = shelf.fillnull(0.0);')
         if n in {'series','note','timeline','timeindex','as_series','as_note','as_timeline','as_timeindex'}:
-            base = slate_series() if 'series' in n else slate_note() if 'note' in n else slate_time()
-            return base + f'\n\nauto out = slate.{n}();'
+            base = shelf_series() if 'series' in n else shelf_note() if 'note' in n else shelf_time()
+            return base + f'\n\nauto out = shelf.{n}();'
         if n in {'head','tail','slice','take','filter','window','cast','astype','bucketize','btw','between','corr','count'}:
-            if n == 'head': return slate_series() + '\n\nauto out = slate.head(2);'
-            if n == 'tail': return slate_series() + '\n\nauto out = slate.tail(2);'
-            if n == 'slice': return slate_series() + '\n\nauto out = slate.slice(0, 2);'
-            if n == 'take': return slate_series() + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = slate.take(picks);'
-            if n == 'filter': return slate_series() + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = slate.filter(mask);'
-            if n == 'window': return slate_series() + '\n\nauto out = slate.window(2, pluss::table::SlateWindowOp::RollingMean, 1);'
-            if n == 'cast': return 'auto slate = pluss::table::Slate(pluss::make_note({"1.0", "2.0", "3.0"}));\n\nauto out = slate.cast(pluss::table::SlateCastTarget::Series, pluss::codem::ScalarType::Float64);'
-            if n == 'astype': return slate_series() + '\n\nauto out = slate.astype(pluss::codem::ScalarType::Float64);'
-            if n == 'corr': return 'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));\nauto other = pluss::table::Slate(pluss::make_series({12.0, 18.0, 29.0}));\n\nauto out = slate.corr(other, pluss::table::SlateCorrMethod::Pearson);'
-            if n == 'count': return 'auto slate = pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}));\n\nauto out = slate.count(true);'
+            if n == 'head': return shelf_series() + '\n\nauto out = shelf.head(2);'
+            if n == 'tail': return shelf_series() + '\n\nauto out = shelf.tail(2);'
+            if n == 'slice': return shelf_series() + '\n\nauto out = shelf.slice(0, 2);'
+            if n == 'take': return shelf_series() + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = shelf.take(picks);'
+            if n == 'filter': return shelf_series() + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = shelf.filter(mask);'
+            if n == 'window': return shelf_series() + '\n\nauto out = shelf.window(2, pluss::table::ShelfWindowOp::RollingMean, 1);'
+            if n == 'cast': return 'auto shelf = pluss::table::Shelf(pluss::make_note({"1.0", "2.0", "3.0"}));\n\nauto out = shelf.cast(pluss::table::ShelfCastTarget::Series, pluss::codem::ScalarType::Float64);'
+            if n == 'astype': return shelf_series() + '\n\nauto out = shelf.astype(pluss::codem::ScalarType::Float64);'
+            if n == 'corr': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}));\nauto other = pluss::table::Shelf(pluss::make_series({12.0, 18.0, 29.0}));\n\nauto out = shelf.corr(other, pluss::table::ShelfCorrMethod::Pearson);'
+            if n == 'count': return 'auto shelf = pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}));\n\nauto out = shelf.count(true);'
             if n == 'bucketize':
                 return (
-                    'auto slate = pluss::table::Slate(pluss::make_series({12.0, 18.0, 27.0, 35.0, std::numeric_limits<double>::quiet_NaN()}));\n'
+                    'auto shelf = pluss::table::Shelf(pluss::make_series({12.0, 18.0, 27.0, 35.0, std::numeric_limits<double>::quiet_NaN()}));\n'
                     'std::vector<double> bins{0.0, 20.0, 30.0, 40.0};\n\n'
-                    'auto out = slate.bucketize(bins, {}, true, true);'
+                    'auto out = shelf.bucketize(bins, {}, true, true);'
                 )
             if n in {'btw', 'between'}:
                 if 'double a, double b' in sig:
                     return (
-                        'auto slate = pluss::table::Slate(pluss::make_series({45.0, 65.0, 82.0, 101.0}));\n\n'
-                        f'auto out = slate.{n}(50.0, 100.0, true);'
+                        'auto shelf = pluss::table::Shelf(pluss::make_series({45.0, 65.0, 82.0, 101.0}));\n\n'
+                        f'auto out = shelf.{n}(50.0, 100.0, true);'
                     )
                 if 'std::string_view lo, std::string_view hi' in sig:
                     return (
-                        'auto slate = pluss::table::Slate(pluss::make_timeline({\n'
+                        'auto shelf = pluss::table::Shelf(pluss::make_timeline({\n'
                         '    "2024-01-05T09:00:00Z",\n'
                         '    "2024-01-18T12:00:00Z",\n'
                         '    "2024-02-02T08:00:00Z",\n'
                         '}));\n\n'
-                        f'auto out = slate.{n}("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);'
+                        f'auto out = shelf.{n}("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);'
                     )
                 return (
-                    'auto slate = pluss::table::Slate(pluss::make_series({45.0, 65.0, 82.0}));\n'
-                    'auto lo = pluss::table::Slate(pluss::make_series({40.0, 60.0, 80.0}));\n'
-                    'auto hi = pluss::table::Slate(pluss::make_series({50.0, 70.0, 81.0}));\n\n'
-                    f'auto out = slate.{n}(lo, hi, true);'
+                    'auto shelf = pluss::table::Shelf(pluss::make_series({45.0, 65.0, 82.0}));\n'
+                    'auto lo = pluss::table::Shelf(pluss::make_series({40.0, 60.0, 80.0}));\n'
+                    'auto hi = pluss::table::Shelf(pluss::make_series({50.0, 70.0, 81.0}));\n\n'
+                    f'auto out = shelf.{n}(lo, hi, true);'
                 )
         if n in {'lower','replace','strip','lstrip','rstrip','distinct','describe','display_labels','display_name'}:
-            if n == 'lower': return slate_note() + '\n\nauto out = slate.lower();'
-            if n == 'replace': return slate_note() + '\n\nauto out = slate.replace("Tema", "Tamale");'
-            if n == 'distinct': return 'auto slate = pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Accra"}));\n\nauto out = slate.distinct(true);'
-            if n == 'describe': return slate_series() + '\n\nauto out = slate.describe(false);'
-            if n == 'display_labels': return 'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0})).with_display_labels(pluss::table::Slate(pluss::make_note({"a", "b", "c"})));\n\nauto out = slate.display_labels();'
-            if n == 'display_name': return 'auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0})).with_display_name("sales");\n\nauto out = slate.display_name();'
+            if n == 'lower': return shelf_note() + '\n\nauto out = shelf.lower();'
+            if n == 'replace': return shelf_note() + '\n\nauto out = shelf.replace("Tema", "Tamale");'
+            if n == 'distinct': return 'auto shelf = pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Accra"}));\n\nauto out = shelf.distinct(true);'
+            if n == 'describe': return shelf_series() + '\n\nauto out = shelf.describe(false);'
+            if n == 'display_labels': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})).with_display_labels(pluss::table::Shelf(pluss::make_note({"a", "b", "c"})));\n\nauto out = shelf.display_labels();'
+            if n == 'display_name': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})).with_display_name("sales");\n\nauto out = shelf.display_name();'
             if n == 'strip':
                 if 'std::string_view chars' in sig:
-                    return slate_note() + '\n\nauto out = slate.strip("# ");'
-                return slate_note() + '\n\nauto out = slate.strip();'
+                    return shelf_note() + '\n\nauto out = shelf.strip("# ");'
+                return shelf_note() + '\n\nauto out = shelf.strip();'
             if n == 'lstrip':
                 if 'std::string_view chars' in sig:
-                    return 'auto slate = pluss::table::Slate(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = slate.lstrip("#");'
-                return slate_note() + '\n\nauto out = slate.lstrip();'
+                    return 'auto shelf = pluss::table::Shelf(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = shelf.lstrip("#");'
+                return shelf_note() + '\n\nauto out = shelf.lstrip();'
             if n == 'rstrip':
                 if 'std::string_view chars' in sig:
-                    return 'auto slate = pluss::table::Slate(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = slate.rstrip("#");'
-                return slate_note() + '\n\nauto out = slate.rstrip();'
-            return slate_note() + '\n\nauto out = slate.lower();'
+                    return 'auto shelf = pluss::table::Shelf(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = shelf.rstrip("#");'
+                return shelf_note() + '\n\nauto out = shelf.rstrip();'
+            return shelf_note() + '\n\nauto out = shelf.lower();'
         if n in {'to_note_weekday'}:
-            return slate_time() + f'\n\nauto out = slate.{n}();'
+            return shelf_time() + f'\n\nauto out = shelf.{n}();'
         if n in {'numeric_binary','compare'}:
             if n == 'numeric_binary':
-                return slate_series() + '\n\nauto out = slate.numeric_binary(10.0, pluss::table::SlateBinaryMathOp::Add, false);'
-            if 'const Slate&' in sig:
-                return slate_series() + '\n\nauto other = pluss::table::Slate(pluss::make_series({15.0, 10.0, 35.0}));\nauto out = slate.compare(other, pluss::table::SlateBinaryCompareOp::Gt);'
-            return slate_series() + '\n\nauto out = slate.compare(15.0, pluss::table::SlateBinaryCompareOp::Gt);'
+                return shelf_series() + '\n\nauto out = shelf.numeric_binary(10.0, pluss::table::ShelfBinaryMathOp::Add, false);'
+            if 'const Shelf&' in sig:
+                return shelf_series() + '\n\nauto other = pluss::table::Shelf(pluss::make_series({15.0, 10.0, 35.0}));\nauto out = shelf.compare(other, pluss::table::ShelfBinaryCompareOp::Gt);'
+            return shelf_series() + '\n\nauto out = shelf.compare(15.0, pluss::table::ShelfBinaryCompareOp::Gt);'
         if n in {'to_string','show'}:
-            return slate_series() + ('\n\nauto out = slate.to_string();' if n == 'to_string' else '\n\nslate.show();')
-        base = slate_note() if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'} else slate_time() if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'} else slate_series()
-        prelude, args = slate_fallback_args(method)
-        return base + ('\n' + prelude if prelude else '') + f'\n\n{call_line("slate", n, args)}'
+            return shelf_series() + ('\n\nauto out = shelf.to_string();' if n == 'to_string' else '\n\nshelf.show();')
+        base = shelf_note() if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'} else shelf_time() if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'} else shelf_series()
+        prelude, args = shelf_fallback_args(method)
+        return base + ('\n' + prelude if prelude else '') + f'\n\n{call_line("shelf", n, args)}'
 
-    if class_name == 'SlateValue':
-        base = slate_value_base()
-        if n in {'defined', 'kind', 'slate', 'as_series', 'as_note', 'as_timeline', 'as_timeindex'}:
+    if class_name == 'ShelfValue':
+        base = shelf_value_base()
+        if n in {'defined', 'kind', 'shelf', 'as_series', 'as_note', 'as_timeline', 'as_timeindex'}:
             if 'note' in n:
-                base = slate_value_note_base()
+                base = shelf_value_note_base()
             elif 'timeline' in n:
-                base = slate_value_timeline_base()
+                base = shelf_value_timeline_base()
             elif 'timeindex' in n:
-                base = slate_value_timeindex_base()
+                base = shelf_value_timeindex_base()
             return base + f'\n\nauto out = value.{n}();'
         return base + f'\n\nauto out = value.{n}();'
 
     if class_name == 'Atlas':
         if n in {'defined','unique','empty','depth','nrows','ncols','column_names','axis0_labels','frames'}:
             return atlas_base() + f'\n\nauto out = atlas.{n}();'
-        if n in {'frame','iloc','loc','dloc','plot','squeeze','head','tail','slice_frames','sort_depth','relabel_depth','align_depth','map_frames','aggregate_over_frames','tabelize','kindelize','to_string','show'}:
+        if n in {'frame','iloc','loc','dloc','plot','squeeze','head','tail','slice_frames','sort_depth','relabel_depth','align_depth','map_frames','aggregate_depth','tabelize','kindelize','to_string','show'}:
             if n == 'frame' or n == 'iloc': return atlas_base() + f'\n\nauto out = atlas.{n}(0);'
             if n == 'dloc': return atlas_base() + '\n\nauto out = atlas.dloc(1);'
-            if n == 'loc': return atlas_base() + '\n\nauto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"train", "test"})));\nauto out = labeled.loc("test");'
+            if n == 'loc': return atlas_base() + '\n\nauto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Shelf(pluss::make_note({"train", "test"})));\nauto out = labeled.loc("test");'
             if n == 'plot': return atlas_base() + '\n\nauto fig = atlas.plot(0).line("sales");'
             if n == 'squeeze': return atlas_base() + '\n\nauto out = atlas.squeeze();'
             if n == 'head': return atlas_base() + '\n\nauto out = atlas.head(1);'
             if n == 'tail': return atlas_base() + '\n\nauto out = atlas.tail(1);'
             if n == 'slice_frames': return atlas_base() + '\n\nauto out = atlas.slice_frames(0, 1);'
-            if n == 'sort_depth': return atlas_base() + '\n\nauto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"test", "train"})));\nauto out = labeled.sort_depth(true, true);'
-            if n == 'relabel_depth' or n == 'align_depth': return atlas_base() + f'\n\nauto labels = pluss::table::Slate(pluss::make_note({{"baseline", "stress"}}));\nauto out = atlas.{n}(labels);'
+            if n == 'sort_depth': return atlas_base() + '\n\nauto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Shelf(pluss::make_note({"test", "train"})));\nauto out = labeled.sort_depth(true, true);'
+            if n == 'relabel_depth' or n == 'align_depth': return atlas_base() + f'\n\nauto labels = pluss::table::Shelf(pluss::make_note({{"baseline", "stress"}}));\nauto out = atlas.{n}(labels);'
             if n == 'map_frames': return atlas_base() + '\n\nauto out = atlas.map_frames([](const pluss::table::DataFrame& frame) { return frame.head(1, false); });'
-            if n == 'aggregate_over_frames': return atlas_base() + '\n\nauto out = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& frames) { return frames.front(); });'
+            if n == 'aggregate_depth': return atlas_base() + '\n\nauto out = atlas.aggregate_depth([](const std::vector<pluss::table::DataFrame>& frames) { return frames.front(); });'
             if n == 'tabelize': return 'using namespace pluss::kindle::literals;\nauto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});\nauto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});\nauto archive = pluss::kindle::Archive({c0, c1});\nauto out = archive.tabelize();'
             if n == 'kindelize': return atlas_base() + '\n\nauto out = atlas.kindelize();'
             if n == 'to_string': return atlas_base() + '\n\nauto out = atlas.to_string();'
@@ -8670,7 +8670,7 @@ def example_for(class_name: str, method: Method) -> str:
             return base + f'\n\nauto out = stream.{n}();'
         if n in {'var','std'}:
             return base + f'\n\nauto out = stream.{n}(true);'
-        if n in {'fillnull','clip','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_slate'}:
+        if n in {'fillnull','clip','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_shelf'}:
             if n == 'fillnull':
                 if 'std::string_view' in sig or 'const char*' in sig:
                     return stream_note() + '\n\nauto out = stream.fillnull("Unknown");'
@@ -8681,7 +8681,7 @@ def example_for(class_name: str, method: Method) -> str:
                 return base + '\n\nauto out = stream.fillnull(0.0);'
             if n == 'clip': return base + '\n\nauto out = stream.clip(0.0, 25.0);'
             if n == 'with_cases' or n == 'with_cases_':
-                snippet = 'auto cases = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\n' + base
+                snippet = 'auto cases = pluss::table::Shelf(pluss::make_note({"cs0", "cs1", "cs2"}));\n' + base
                 return snippet + ('\n\nauto out = stream.with_cases(cases);' if not n.endswith('_') else '\n\nstream.with_cases_(cases);')
             if n in {'with_meta','with_meta_'}:
                 return base + ('\n\nauto out = stream.with_meta("unit", "km");' if not n.endswith('_') else '\n\nstream.with_meta_("unit", "km");')
@@ -8693,10 +8693,10 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = stream.take(picks);'
             if n == 'filter': return base + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = stream.filter(mask);'
             if n == 'slice': return base + '\n\nauto out = stream.slice(0, 2);'
-            if n == 'cast': return 'auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));\n\nauto out = stream.cast(pluss::table::SlateCastTarget::Series, pluss::codem::ScalarType::Float64);'
+            if n == 'cast': return 'auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));\n\nauto out = stream.cast(pluss::table::ShelfCastTarget::Series, pluss::codem::ScalarType::Float64);'
             if n == 'astype': return base + '\n\nauto out = stream.astype(pluss::codem::ScalarType::Float64);'
-            if n == 'to_slate':
-                return base + ('\n\nauto out = stream.to_slate();' if 'start' not in sig else '\n\nauto out = stream.to_slate(0, 2);')
+            if n == 'to_shelf':
+                return base + ('\n\nauto out = stream.to_shelf();' if 'start' not in sig else '\n\nauto out = stream.to_shelf(0, 2);')
         if n in {'as_series','as_note','as_timeline','as_timeindex'}:
             if 'note' in n: return stream_note() + f'\n\nauto out = stream.{n}();'
             if 'timeline' in n: return stream_time() + f'\n\nauto out = stream.{n}();'
@@ -8704,8 +8704,8 @@ def example_for(class_name: str, method: Method) -> str:
             return base + f'\n\nauto out = stream.{n}();'
         if n == 'show':
             return base + '\n\nstream.show(std::cout);'
-        if n == 'from_slate':
-            return slate_series() + '\n\nauto out = pluss::kindle::Stream::from_slate(slate);'
+        if n == 'from_shelf':
+            return shelf_series() + '\n\nauto out = pluss::kindle::Stream::from_shelf(shelf);'
         return base + f'\n\nauto out = stream.{n}();'
 
     if class_name == 'Catalog':
@@ -8845,7 +8845,7 @@ def example_for(class_name: str, method: Method) -> str:
         base = archive_base()
         if n in {'defined','unique','depth','empty','depth_labels','catalogs','to_string'}:
             return base + f'\n\nauto out = archive.{n}();'
-        if n in {'catalog','iloc','loc','dloc','head','tail','slice_depth','sort_depth','relabel_depth','align_depth','map_catalogs','aggregate_over_catalogs','tabelize','show'}:
+        if n in {'catalog','iloc','loc','dloc','head','tail','slice_depth','sort_depth','relabel_depth','align_depth','map_catalogs','aggregate_depth','tabelize','show'}:
             if n == 'catalog' or n == 'iloc': return base + f'\n\nauto out = archive.{n}(0);'
             if n == 'dloc': return base + '\n\nauto out = archive.dloc(1);'
             if n == 'loc': return base + '\n\nauto out = archive.loc("test");'
@@ -8855,7 +8855,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'sort_depth': return base + '\n\nauto out = archive.sort_depth(true, true);'
             if n == 'relabel_depth' or n == 'align_depth': return base + f'\n\nauto labels = pluss::kindle::Stream(pluss::make_note({{"baseline", "stress"}}));\nauto out = archive.{n}(labels);'
             if n == 'map_catalogs': return base + '\n\nauto out = archive.map_catalogs([](const pluss::kindle::Catalog& catalog) { return catalog.head(1); });'
-            if n == 'aggregate_over_catalogs': return base + '\n\nauto out = archive.aggregate_over_catalogs([](const std::vector<pluss::kindle::Catalog>& catalogs) { return catalogs.front(); });'
+            if n == 'aggregate_depth': return base + '\n\nauto out = archive.aggregate_depth([](const std::vector<pluss::kindle::Catalog>& catalogs) { return catalogs.front(); });'
             if n == 'tabelize': return base + '\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::AlignPolicy::Inner;\nauto out = archive.tabelize(policy);'
             if n == 'show': return base + '\n\narchive.show(std::cout);'
         if n == 'kindelize':
@@ -9030,7 +9030,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '- `bfill()` runs backward fill feature-by-feature across the full frame.',
                 '- A null value is replaced by the next valid value below it in the same feature.',
                 '- Trailing null runs stay null because there is no later value to pull from.',
-                '- If you want to backward-fill only one feature, apply it at the `Slate` level and assign it back with `set(...)` or `set_features(...)`.',
+                '- If you want to backward-fill only one feature, apply it at the `Shelf` level and assign it back with `set(...)` or `set_features(...)`.',
                 '',
                 '#### Common Pattern',
                 '',
@@ -9093,8 +9093,8 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         if class_name == 'DataFrame' and n == 'lengthen':
             return bullets('Reshape Rules', [
                 '`lengthen(...)` tiles identifier features and stacks each value feature as one contiguous case block.',
-                'Value features must share a Slate kind; numeric value features must also share dtype and platform.',
-                'Payload concatenation and identifier tiling use Series/Slate bulk operations rather than cell-wise conversion.',
+                'Value features must share a Shelf kind; numeric value features must also share dtype and platform.',
+                'Payload concatenation and identifier tiling use Series/Shelf bulk operations rather than cell-wise conversion.',
                 'Missing-value masks are concatenated with the payload and preserved.',
             ])
         if class_name == 'DataFrame' and n in {'all', 'any'}:
@@ -9107,8 +9107,8 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         if class_name == 'DataFrame' and n == 'assign':
             return bullets('Practical Behavior', [
                 '`assign(...)` adds new derived features or replaces existing ones without mutating the source frame.',
-                'Each derived slate must match the frame case count.',
-                'Use the pair form when you already have the computed slate, and the spec form when the value should be computed from the current frame inside the call.',
+                'Each derived shelf must match the frame case count.',
+                'Use the pair form when you already have the computed shelf, and the spec form when the value should be computed from the current frame inside the call.',
             ])
         if class_name == 'DataFrame' and n == 'reshuffle':
             return bullets('Practical Behavior', [
@@ -9154,7 +9154,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`catalogue(feature)` returns explicit `codes`, `levels`, and `ordered` fields instead of hiding codes inside an ordinary numeric feature.',
                 'Missing source values keep an invalid mask and use the conventional payload code `-1`.',
                 'Levels preserve first-seen order by default; `sort_levels=true` assigns codes from sorted levels.',
-                '`encoding.decode()` reconstructs the typed Slate and its validity mask.',
+                '`encoding.decode()` reconstructs the typed Shelf and its validity mask.',
             ])
         if class_name == 'DataFrame' and n == 'observe':
             return bullets('Practical Behavior', [
@@ -9207,7 +9207,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`corr(...)` builds a correlation matrix across numeric features only.',
                 'If you do not pass a feature list, the method auto-selects numeric features from the frame.',
-                'Supported methods route through slate-level correlation kernels such as Pearson, Spearman, and Kendall Tau.',
+                'Supported methods route through shelf-level correlation kernels such as Pearson, Spearman, and Kendall Tau.',
             ])
         if class_name == 'DataFrame' and n == 'count':
             return bullets('Practical Behavior', [
@@ -9232,10 +9232,10 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'bucketize':
             return bullets('Practical Behavior', [
-                '`bucketize(...)` delegates to slate-level bucketization only for the selected numeric `Series` features.',
+                '`bucketize(...)` delegates to shelf-level bucketization only for the selected numeric `Series` features.',
                 'Non-selected features pass through unchanged, so this is safe to use on mixed-type frames.',
                 'The no-feature overload auto-selects every numeric `Series` feature in the frame.',
-                'Bucket labels are returned as Int64-backed `Slate` columns and out-of-range values remain null.',
+                'Bucket labels are returned as Int64-backed `Shelf` columns and out-of-range values remain null.',
             ])
         if class_name == 'DataFrame' and n == 'describe':
             return bullets('Practical Behavior', [
@@ -9309,8 +9309,8 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         if class_name == 'DataFrame' and n == 'prod':
             return bullets('Axis Rules', [
                 '`prod(render=false)` returns a compact summary view with one product per numeric feature.',
-                '`prod(axis=0)` returns a numeric slate with one product per numeric feature.',
-                '`prod(axis=1)` returns a numeric slate with one product per row across numeric features.',
+                '`prod(axis=0)` returns a numeric shelf with one product per numeric feature.',
+                '`prod(axis=1)` returns a numeric shelf with one product per row across numeric features.',
             ])
         if class_name == 'DataFrame' and n == 'query':
             return bullets('Practical Behavior', [
@@ -9351,9 +9351,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'transform':
             return bullets('Practical Behavior', [
-                '`transform(fn)` rewrites every feature with the same slate-level function.',
-                '`transform(feature, slate_fn)` rewrites one existing feature in place within the returned frame.',
-                '`transform(feature, frame_fn)` is the derive-style overload: it can create a new feature from the whole frame, as long as the returned slate matches the frame case count.',
+                '`transform(fn)` rewrites every feature with the same shelf-level function.',
+                '`transform(feature, shelf_fn)` rewrites one existing feature in place within the returned frame.',
+                '`transform(feature, frame_fn)` is the derive-style overload: it can create a new feature from the whole frame, as long as the returned shelf matches the frame case count.',
             ])
         if class_name == 'DataFrame' and n == 'select_like':
             return bullets('Practical Behavior', [
@@ -9396,7 +9396,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Extension Rules', [
                 '`extend(other)` appends cases vertically and matches features by name.',
                 'The default `Unite` feature rule preserves left feature order, appends right-only features, and null-fills one-sided payloads.',
-                'Matching numeric features must have the same dtype and platform; other matching features must have the same Slate kind.',
+                'Matching numeric features must have the same dtype and platform; other matching features must have the same Shelf kind.',
                 'Use `fresh_cases=true` for contiguous integer cases or `reject_repeated_cases=true` to require a unique preserved case axis.',
             ])
         if class_name == 'DataFrame' and n == 'unsqueeze':
@@ -9423,7 +9423,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`keep_input=false` returns only the engineered outputs, which is useful for model-matrix style pipelines.',
                 '`rolling(...)` is the alias that delegates to the same frame-level implementation.',
             ])
-        if class_name == 'Slate' and n == 'bfill':
+        if class_name == 'Shelf' and n == 'bfill':
             return [
                 '#### Practical Behavior',
                 '',
@@ -9433,14 +9433,14 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '- Use this when only one feature should be filled instead of the whole frame.',
                 '',
             ]
-        if class_name == 'Slate' and n in {'as_note', 'as_series', 'as_timeline', 'as_timeindex', 'astype', 'cast'}:
+        if class_name == 'Shelf' and n in {'as_note', 'as_series', 'as_timeline', 'as_timeindex', 'astype', 'cast'}:
             return bullets('Conversion Rules', [
-                'These methods convert or reinterpret the current payload into the requested slate type.',
+                'These methods convert or reinterpret the current payload into the requested shelf type.',
                 'Use `as_*()` when you want access to the underlying pluss-type surface directly.',
                 'Use `cast(...)` when you need explicit target selection with broader conversion control.',
                 '`astype(...)` is the numeric-series dtype conversion path.',
             ])
-        if class_name == 'Slate' and n == 'btw':
+        if class_name == 'Shelf' and n == 'btw':
             if 'double a, double b' in sig:
                 return [
                     '#### Boundary Rules',
@@ -9474,16 +9474,16 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     '```',
                     '',
                 ]
-            if 'const Slate& lo, const Slate& hi' in sig:
+            if 'const Shelf& lo, const Shelf& hi' in sig:
                 return [
                     '#### Boundary Rules',
                     '',
                     '- This overload is row-wise: each row is compared against its own lower and upper bound.',
-                    '- `lo` and `hi` must be defined and must match the size of the current slate.',
+                    '- `lo` and `hi` must be defined and must match the size of the current shelf.',
                     '- Use this when the allowable range changes per row instead of using one scalar interval for the whole column.',
                     '',
                 ]
-        if class_name == 'Slate' and n == 'bucketize':
+        if class_name == 'Shelf' and n == 'bucketize':
             return [
                 '#### Practical Behavior',
                 '',
@@ -9500,67 +9500,67 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '- `include_lowest=true` makes the first bucket include its left edge even when `right=true`.',
                 '',
             ]
-        if class_name == 'Slate' and n == 'clip':
+        if class_name == 'Shelf' and n == 'clip':
             return bullets('Practical Behavior', [
                 '`clip(min, max)` clamps numeric series values into the closed interval `[min, max]`.',
                 'The validity mask is preserved.',
             ])
-        if class_name == 'Slate' and n == 'compare':
+        if class_name == 'Shelf' and n == 'compare':
             return bullets('Comparison Rules', [
-                'Scalar/native comparisons broadcast the right-hand value across the whole slate.',
-                'Slate-vs-slate comparisons are row-wise and require compatible sizes.',
+                'Scalar/native comparisons broadcast the right-hand value across the whole shelf.',
+                'Shelf-vs-shelf comparisons are row-wise and require compatible sizes.',
                 'Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.',
             ])
-        if class_name == 'Slate' and n == 'corr':
+        if class_name == 'Shelf' and n == 'corr':
             return bullets('Practical Behavior', [
-                '`corr(other, method)` requires both slates to be numeric series of the same size.',
+                '`corr(other, method)` requires both shelves to be numeric series of the same size.',
                 'Invalid, null, or non-finite pairs are removed before the statistic is computed.',
                 'If too few valid paired values remain, the result is `NaN`.',
             ])
-        if class_name == 'Slate' and n == 'count':
+        if class_name == 'Shelf' and n == 'count':
             return bullets('Practical Behavior', [
-                'For numeric/text/temporal slates, `count(true)` returns the number of valid entries.',
+                'For numeric/text/temporal shelves, `count(true)` returns the number of valid entries.',
                 'For boolean series, the underlying series count kernel is used.',
                 '`count(false)` is only meaningful on boolean series payloads.',
             ])
-        if class_name == 'Slate' and n == 'day':
+        if class_name == 'Shelf' and n == 'day':
             return bullets('Practical Behavior', [
                 '`day()` is valid only for timeline/timeindex payloads.',
                 'The result preserves the validity mask while projecting the day component.',
             ])
-        if class_name == 'Slate' and n == 'caselbl':
+        if class_name == 'Shelf' and n == 'caselbl':
             return bullets('Practical Behavior', [
-                '`caselbl()` returns the current slate label axis exactly as stored.',
+                '`caselbl()` returns the current shelf label axis exactly as stored.',
                 'The setter overload returns a relabeled copy while preserving payload values and the validity mask.',
-                'Use this when you want to inspect or rewrite row labels on one slate directly.',
+                'Use this when you want to inspect or rewrite row labels on one shelf directly.',
             ])
-        if class_name == 'Slate' and n in {'clear_caselbl', 'clear_caselbl_'}:
+        if class_name == 'Shelf' and n in {'clear_caselbl', 'clear_caselbl_'}:
             return bullets('Practical Behavior', [
-                f'`{n}()` removes explicit case labels from the slate without rewriting the payload values.',
+                f'`{n}()` removes explicit case labels from the shelf without rewriting the payload values.',
                 'Use the underscore form when the label removal should happen in place.',
             ])
-        if class_name == 'Slate' and n == 'describe':
+        if class_name == 'Shelf' and n == 'describe':
             return bullets('Practical Behavior', [
                 'Numeric series are summarized through the table-style numeric describe path.',
                 'Note payloads produce count/unique/top/freq style summaries.',
                 'Other payload kinds are not supported by `describe()`.',
             ])
-        if class_name == 'Slate' and n in {'display_labels', 'display_name'}:
+        if class_name == 'Shelf' and n in {'display_labels', 'display_name'}:
             return bullets('Practical Behavior', [
-                'These accessors expose display metadata attached to the slate.',
+                'These accessors expose display metadata attached to the shelf.',
                 'They do not change the payload values or validity mask.',
             ])
-        if class_name == 'Slate' and n == 'distinct':
+        if class_name == 'Shelf' and n == 'distinct':
             return bullets('Practical Behavior', [
                 '`distinct(dropnull)` keeps the first occurrence of each distinct value in encounter order.',
                 'With `dropnull=false`, at most one null entry is retained.',
             ])
-        if class_name == 'Slate' and n == 'dropnull':
+        if class_name == 'Shelf' and n == 'dropnull':
             return bullets('Practical Behavior', [
-                '`dropnull()` removes invalid entries from the slate and compacts the result.',
+                '`dropnull()` removes invalid entries from the shelf and compacts the result.',
                 'Use this when null rows should disappear rather than be filled.',
             ])
-        if class_name == 'Slate' and n == 'dtype':
+        if class_name == 'Shelf' and n == 'dtype':
             return bullets('Practical Behavior', [
                 '`dtype()` reports the scalar dtype used by a numeric series payload.',
                 'Use it when debugging type-dependent behavior or conversion steps.',
@@ -9569,8 +9569,8 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return [
                 '#### Practical Behavior',
                 '',
-                '- `bfill()` applies slate-level backward fill while preserving the stream case labels.',
-                '- Use this when you want the fill behavior of `Slate::bfill()` but you are already operating in Kindle/Stream workflows.',
+                '- `bfill()` applies shelf-level backward fill while preserving the stream case labels.',
+                '- Use this when you want the fill behavior of `Shelf::bfill()` but you are already operating in Kindle/Stream workflows.',
                 '',
             ]
         if class_name == 'Stream' and n in {'as_note', 'as_series', 'as_timeline', 'as_timeindex', 'astype', 'cast'}:
@@ -9602,7 +9602,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         if class_name == 'Catalog' and n == 'astype':
             return bullets('Conversion Rules', [
                 '`keys({...}).astype(dtype)` is the catalog-level numeric-series conversion helper.',
-                'It delegates to stream/slate conversion on the selected keys only.',
+                'It delegates to stream/shelf conversion on the selected keys only.',
             ])
         if class_name == 'Catalog' and n == 'featurize':
             return bullets('Practical Behavior', [
@@ -9651,9 +9651,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`keywords(field, top_n)` tokenizes the text field, counts tokens, sorts by frequency descending then alphabetically, and returns a small keyword/count catalog.',
                 'Use it for quick corpus-level keyword previews rather than row-wise text features.',
             ])
-        if class_name == 'Atlas' and n == 'aggregate_over_frames':
+        if class_name == 'Atlas' and n == 'aggregate_depth':
             return bullets('Practical Behavior', [
-                '`aggregate_over_frames(...)` hands the full frame vector to your reducer and expects one output object back.',
+                '`aggregate_depth(...)` hands the full frame vector to your reducer and expects one output object back.',
                 'Use it when the aggregation depends on multiple frames together rather than frame-by-frame mapping.',
             ])
         if class_name == 'Atlas' and n == 'align_depth':
@@ -9666,9 +9666,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`dloc(i)` is the positional depth-access alias for `frame(i)`.',
                 'Use it when you want the depth-axis wording to be explicit.',
             ])
-        if class_name == 'Archive' and n == 'aggregate_over_catalogs':
+        if class_name == 'Archive' and n == 'aggregate_depth':
             return bullets('Practical Behavior', [
-                '`aggregate_over_catalogs(...)` hands the full catalog vector to your reducer and expects one output object back.',
+                '`aggregate_depth(...)` hands the full catalog vector to your reducer and expects one output object back.',
                 'Use it when the aggregation depends on multiple catalogs together rather than catalog-by-catalog mapping.',
             ])
         if class_name == 'Archive' and n == 'align_depth':
@@ -9918,20 +9918,20 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'The `(value_feature, group_feature)` overload renders one violin per group in the grouping feature.',
                 'Use this when you want full distribution shape rather than only quartiles or whiskers.',
             ])
-        if class_name == 'ColumnRef' and n == 'slate':
+        if class_name == 'ColumnRef' and n == 'shelf':
             return bullets('Practical Behavior', [
-                '`slate()` gives you the exact referenced column payload without copying it into a new frame.',
-                'Use this when you want to switch into `Slate` operations such as comparisons, casting, or text cleanup.',
+                '`shelf()` gives you the exact referenced column payload without copying it into a new frame.',
+                'Use this when you want to switch into `Shelf` operations such as comparisons, casting, or text cleanup.',
             ])
         if class_name == 'ColumnRef' and n == 'value':
             return bullets('Practical Behavior', [
-                '`value()` returns a `SlateValue` wrapper over the first element of the referenced column.',
-                'Use this when you need typed scalar extraction rather than a whole-column slate.',
+                '`value()` returns a `ShelfValue` wrapper over the first element of the referenced column.',
+                'Use this when you need typed scalar extraction rather than a whole-column shelf.',
             ])
         if class_name == 'ColumnRef' and n == 'values':
             return bullets('Practical Behavior', [
-                '`values()` materializes the referenced feature as a standalone `Slate`.',
-                'Use this when you want to pass the column into another API that expects a slate rather than a column reference.',
+                '`values()` materializes the referenced feature as a standalone `Shelf`.',
+                'Use this when you want to pass the column into another API that expects a shelf rather than a column reference.',
             ])
         if class_name == 'DataFrameSqlAccessor' and n == 'execute':
             return bullets('Practical Behavior', [
@@ -10020,11 +10020,11 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     continue
                 custom_page = render_dataframe_a_page(name, overloads, class_name)
                 if custom_page is None:
-                    custom_page = render_slate_a_page(name, overloads, class_name)
+                    custom_page = render_shelf_a_page(name, overloads, class_name)
                 if custom_page is None:
                     custom_page = render_dataframe_b_page(name, overloads, class_name)
                 if custom_page is None:
-                    custom_page = render_slate_b_page(name, overloads, class_name)
+                    custom_page = render_shelf_b_page(name, overloads, class_name)
                 if custom_page is not None:
                     lines.extend(custom_page)
                     lines.extend(render_method_prev_next(prev_name, next_name))

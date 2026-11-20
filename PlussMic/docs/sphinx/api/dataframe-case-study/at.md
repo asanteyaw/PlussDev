@@ -41,8 +41,8 @@ Example 1. Select the first case by a nonnegative position.
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units", Slate(pluss::make_series({10, 7, 12}))},
+    {"city", Shelf(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Shelf(pluss::make_series({10, 7, 12}))},
 });
 
 auto first = frame.case_study().at(0);
@@ -84,8 +84,8 @@ Example 3. An out-of-range position fails rather than clamping.
 ```cpp
 try {
   (void)frame.case_study().at(3);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

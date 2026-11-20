@@ -71,9 +71,9 @@ inline Result bisect(const Fn &f, Series lo, Series hi, const Options &opt = {})
     const Series mid = lo.add(hi).mul(0.5);
     const Series f_mid = f(mid);
     const Series same = f_mid.mul(f_lo).gt(0.0);
-    lo = same.where(mid, lo);
-    f_lo = same.where(f_mid, f_lo);
-    hi = same.where(hi, mid);
+    lo = pluss::series::where(same, mid, lo);
+    f_lo = pluss::series::where(same, f_mid, f_lo);
+    hi = pluss::series::where(same, hi, mid);
     out.iterations = i + 1;
     if ((opt.x_tolerance > 0.0 || opt.f_tolerance > 0.0) && (i + 1) % opt.check_every == 0) {
       if ((opt.x_tolerance > 0.0 && detail::all_below(hi.sub(lo), opt.x_tolerance)) ||
@@ -96,12 +96,12 @@ inline Result illinois(const Fn &f, Series a, Series b, const Options &opt = {})
   out.bracketed = fa.mul(fb).le(0.0).all().item<bool>();
   for (std::int64_t i = 0; i < opt.max_iterations; ++i) {
     const Series denom = fb.sub(fa);
-    const Series safe = denom.abs().lt(1e-300).where(denom.mul(0.0).add(1.0), denom);
+    const Series safe = pluss::series::where(denom.abs().lt(1e-300), denom.mul(0.0).add(1.0), denom);
     const Series c = a.mul(fb).sub(b.mul(fa)).div(safe);
     const Series fc = f(c);
     const Series crossed = fc.mul(fb).lt(0.0); // root between b and c: the old b becomes the other end
-    const Series a_new = crossed.where(b, a);
-    const Series fa_new = crossed.where(fb, fa.mul(0.5)); // Illinois halving otherwise
+    const Series a_new = pluss::series::where(crossed, b, a);
+    const Series fa_new = pluss::series::where(crossed, fb, fa.mul(0.5)); // Illinois halving otherwise
     a = a_new;
     fa = fa_new;
     b = c;
@@ -130,7 +130,7 @@ inline Result newton(const Fn &f, Series x, const Fn &df = {}, const Options &op
       const Series h = x.abs().clamp(1.0, 1e300).mul(opt.derivative_step);
       slope = f(x.add(h)).sub(f(x.sub(h))).div(h.mul(2.0));
     }
-    const Series safe = slope.abs().lt(1e-300).where(slope.mul(0.0).add(1.0), slope);
+    const Series safe = pluss::series::where(slope.abs().lt(1e-300), slope.mul(0.0).add(1.0), slope);
     const Series step = fx.div(safe);
     x = x.sub(step);
     out.iterations = i + 1;
@@ -170,8 +170,7 @@ inline Result householder(const DerivativeFn &evaluate, Series x,
     const Series denominator =
         d.first.mul(first2.sub(d.value.mul(d.second)))
             .add(d.third.mul(d.value.square()).mul(1.0 / 6.0));
-    const Series safe = denominator.abs().lt(1e-30).where(
-        pluss::series::ones_like(denominator), denominator);
+    const Series safe = pluss::series::where(denominator.abs().lt(1e-30), pluss::series::ones_like(denominator), denominator);
     const Series step = numerator.div(safe);
     x = x.sub(step);
     out.iterations = i + 1;
@@ -189,8 +188,7 @@ inline Result householder(const DerivativeFn &evaluate, Series x,
   // and gives dx/dp = -(dF/dp)/(dF/dx), independent of the initial guess.
   const Series root_value = x.detach();
   const Derivatives final = evaluate(root_value);
-  const Series safe_first = final.first.abs().lt(1e-30).where(
-      pluss::series::ones_like(final.first), final.first);
+  const Series safe_first = pluss::series::where(final.first.abs().lt(1e-30), pluss::series::ones_like(final.first), final.first);
   out.root = root_value.sub(final.value.div(safe_first.detach()));
   out.residual = evaluate(out.root).value;
   return out;
@@ -201,7 +199,7 @@ inline Result secant(const Fn &f, Series x0, Series x1, const Options &opt = {})
   Result out;
   for (std::int64_t i = 0; i < opt.max_iterations; ++i) {
     const Series denom = f1.sub(f0);
-    const Series safe = denom.abs().lt(1e-300).where(denom.mul(0.0).add(1.0), denom);
+    const Series safe = pluss::series::where(denom.abs().lt(1e-300), denom.mul(0.0).add(1.0), denom);
     const Series x2 = x1.sub(f1.mul(x1.sub(x0)).div(safe));
     x0 = x1; f0 = f1;
     x1 = x2; f1 = f(x2);

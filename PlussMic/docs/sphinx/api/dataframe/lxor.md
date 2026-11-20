@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame DataFrame::lxor(const DataFrame& other) const
-DataFrame DataFrame::lxor(const Slate& other) const
+DataFrame DataFrame::lxor(const Shelf& other) const
 ```
 
 ## What It Does
@@ -25,7 +25,7 @@ operands *disagree* — a useful "exactly one of these flags is set" check.
 **other**
 
 `const DataFrame&` (same feature names in order, same case count, matched
-positionally) or `const Slate&` (one boolean slate applied identically to every
+positionally) or `const Shelf&` (one boolean shelf applied identically to every
 feature). See [`land()`](land.md) for the full breakdown.
 
 ## Returns
@@ -72,31 +72,31 @@ Position `0` (`left`'s `a=true` against `right`'s `a=true`) agrees, so XOR repor
 `false`; position `1` (`left`'s `a=false` against `right`'s `a=true`) disagrees, so XOR
 reports `true` — and so on for `b`.
 
-Example 2. XOR a frame against a single shared `Slate`, applied identically to every
+Example 2. XOR a frame against a single shared `Shelf`, applied identically to every
 feature.
 
 ```cpp
-auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_slate = left.lxor(mask);
-std::cout << out_slate;
+auto mask = Shelf(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_shelf = left.lxor(mask);
+std::cout << out_shelf;
 ```
 
 ### Output
 
 ```text
-===================
+==================
      | a     b    
--------------------
+------------------
 p    | true  true 
 q    | true  false
 r    | true  false
--------------------
+------------------
 [3 cs x 2 feat]
 ```
 
 The same three-value `mask` is combined against **both** `a` and `b` at matching
 positions — there is no way to supply a different mask per feature in one call,
-unlike [`add()`](add.md)'s `Axis::Feature` `Slate` overload.
+unlike [`add()`](add.md)'s `Axis::Feature` `Shelf` overload.
 
 ## Notes
 

@@ -6,7 +6,7 @@
 
 A radio channel with echoes (multipath) smears each symbol into the next. **Orthogonal frequency-division multiplexing** sends many symbols at once on separate subcarriers, so each lasts long compared with the echoes, and puts a **cyclic prefix** in front of every block so that the echoes of one block land in its prefix instead of the next block. The result is that a multipath channel becomes one complex gain per subcarrier, which a single division undoes. `to_tones` and `from_tones` do the transforms.
 
-## The mental model
+## How it works
 
 `to_tones(symbols, fft_size, cyclic_prefix)` groups the symbols into blocks of `fft_size` subcarrier symbols, turns each block into `fft_size` time samples by the **unitary** inverse FFT (so the energy per sample equals the energy per subcarrier symbol), and copies the last `cyclic_prefix` samples in front. `from_tones` drops the prefix and takes the unitary FFT. If the channel's impulse response is no longer than the prefix plus one sample, the received subcarrier `k` is `H[k] X[k]`, where `H` is the FFT of the impulse response padded to `fft_size`.
 

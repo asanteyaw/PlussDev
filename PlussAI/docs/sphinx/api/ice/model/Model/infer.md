@@ -180,12 +180,12 @@ ice::Outline trained_model() {
 
 int main() {
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   ice::Outline model = trained_model();
   const DataFrame df({
-      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"a", Shelf(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Shelf(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
   });
 
   const auto predictions = model.infer(df);

@@ -86,8 +86,8 @@ auto transposed = x.transpose(0, 1);
 auto row = x.select(0, 1);
 ```
 
-See [Series Guide](series.md) for extensive shape, indexing, masking, gather,
-scatter, and reduction examples.
+The PlussQit guide, *Series by example*, works through shape, indexing, masking, gather,
+scatter and reduction tasks end to end.
 
 ## Reductions and statistics
 
@@ -220,9 +220,7 @@ df.series_features().describe();
 
 ## Related pages
 
-- [Series Guide](series.md)
 - [Series API Reference](series_api_reference.md)
-- [Series All Methods Usage](series_all_methods_usage.md)
 - [Regression User Guide](plussma_regression_user_guide.md)
 - [Finance User Guide](plussma_finance_user_guide.md)
 - [Hypothesis User Guide](plussma_hypothesis_user_guide.md)

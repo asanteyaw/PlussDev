@@ -1,6 +1,6 @@
 # `control::kalman`
 
-Runs a discrete linear Kalman filter.
+Runs a Kalman filter over a sequence of observations.
 
 ## Signature
 
@@ -27,77 +27,71 @@ control::KalmanResult control::kalman(
 
 ## What It Does
 
-The no-input overload supplies a zero input trajectory. The explicit-input overload includes known controls through both state and observation equations. Missing observations are handled through the shared information-mask machinery.
+For `x[k+1] = A x[k] + B u[k] + w[k]` and `y[k] = C x[k] + D u[k] + v[k]` with `w ~ N(0, Q)` and `v ~ N(0, R)`, it alternates a prediction from the model with an update from each observation and returns, at every sample, the filtered mean and covariance together with the prediction, the innovation, the gain and the log-likelihood. Samples whose observation is NaN, or whose innovation variance does not exceed `info_tol`, are skipped: the filter predicts through them and the covariance grows. An overload takes a known input `u`.
 
 ## Parameters
 
 `system`
-: A discrete state-space model. Filtering advances one model step per observation.
+: A `StateSpace`, usually discrete (the filter steps once per observation).
 
 `observations`
-: Observation trajectory with time on its penultimate structural axis.
+: `[time, outputs]`, one row per sample. A NaN entry marks a missing observation.
+
+`process_cov`, `noise_cov`
+: The covariances `Q` of the state disturbance and `R` of the measurement noise, symmetric and positive semidefinite.
+
+`initial_mean`, `initial_cov`
+: The mean and covariance of the state before the first observation.
 
 `input`
-: Optional known input trajectory aligned to the observations.
-
-`process_cov`
-: Process-noise covariance `Q`.
-
-`noise_cov`
-: Measurement-noise covariance `R`.
-
-`initial_mean`
-: Prior state mean before the first prediction/update.
-
-`initial_cov`
-: Prior state covariance.
+: Optional `[time, inputs]` known input (second overload).
 
 `options`
-: Information threshold and covariance jitter controls.
+: `KalmanOptions`: the information threshold and the covariance jitter.
 
 ## Returns
 
-A `KalmanResult` containing the complete forward trajectory and likelihood diagnostics.
+A `KalmanResult` with one entry per sample.
 
 ## Errors
 
-Throws when the model is continuous, dimensions do not align, covariance inputs are invalid, or numerical innovation solves fail.
+A covariance that is not positive semidefinite, observations of the wrong width, an initial covariance of the wrong size and invalid options throw `pluss::Error`.
 
 ## Interpretation and Use
 
-The no-input overload is for autonomous or already-detrended systems. Use the explicit-input overload whenever known controls affect state or output equations; omitting them biases innovations and likelihood. Filtering is discrete even when the physical source model began in continuous time.
+The first example writes the scalar recursion by hand (predict `p + q`, gain `p / (p + r)`, update) and finds no difference from the library in the mean or covariance. The gain falls from 0.91 to 0.27 as the filter learns, settling on the steady-state gain that `lqe` computes (the second example). A NaN sample is skipped and the covariance rises from 0.376 to 0.476 before shrinking again (the third). Giving the known input, the fourth example tracks a ramp with an error of 0.19 against 0.89 without it.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Run the no-input overload and inspect its likelihood.
+The library against a hand-written scalar recursion.
 
-@@example Eng/api/control_estimation.cpp@@
+@@example Eng/api/control_kalman_recursion.cpp@@
 
 ### Example 2
 
-Use the same forward model as the first stage of smoothing.
+The gain over time against the steady-state gain.
 
-@@example Eng/api/control_smooth.cpp@@
+@@example Eng/api/control_kalman_steady.cpp@@
 
 ### Example 3
 
-Reject a continuous model and invalid covariance data.
+A missing observation.
 
-@@example Eng/api/control_estimation_errors.cpp@@
+@@example Eng/api/control_kalman_missing.cpp@@
 
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lqe.html">
-    <span class="label">Previous</span>
-    <span class="title">lqe</span>
-  </a>
-  <a class="next-link" href="smooth.html">
-    <span class="label">Next</span>
-    <span class="title">smooth</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+A known input improves the estimate of a state it drives.
+
+@@example Eng/api/control_kalman_input.cpp@@
+
+### Example 5
+
+Every refused argument.
+
+@@example Eng/api/control_kalman_errors.cpp@@
+

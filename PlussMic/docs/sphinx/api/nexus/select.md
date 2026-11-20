@@ -87,23 +87,23 @@ auto print_keys = [](const Nexus& nx) {
 };
 
 auto customers = DataFrame({
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Shelf(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto orders = DataFrame({
-    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Shelf(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Shelf(pluss::make_series({1.0, 2.0}))},
 });
 
 auto payments = DataFrame({
-    {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
-    {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
+    {"payment_id", Shelf(pluss::make_series({9001.0, 9002.0}))},
+    {"order_id",   Shelf(pluss::make_series({101.0, 102.0}))},
 });
 
 auto refunds = DataFrame({
-    {"refund_id", Slate(pluss::make_series({77.0}))},
-    {"order_id",  Slate(pluss::make_series({102.0}))},
+    {"refund_id", Shelf(pluss::make_series({77.0}))},
+    {"order_id",  Shelf(pluss::make_series({102.0}))},
 });
 
 auto biz = Nexus({
@@ -204,22 +204,22 @@ duplicate request keys, and unknown keys all throw.
 ```cpp
 try {
   auto bad = biz.select({"", "orders"});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto dup = biz.select({"orders", "orders"});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
   auto missing = biz.select({"orders", "missing"});
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

@@ -4,7 +4,7 @@
 
 A gain from `lqr` is optimal for a cost you chose. This page closes the loop and watches it: the controlled plant is a state-space model with `A - B K` as its dynamics, and `lti::sim` runs it. You will see an unstable plant become stable, check that the cost the simulation accumulates equals `x0^T P x0`, see what the weight `R` does to the speed and the effort, and run a discrete loop.
 
-## The mental model
+## How it works
 
 With the law `u = -K x` the plant `x' = A x + B u` becomes `x' = (A - B K) x`, an autonomous system. Its model is `lti::state(A - B K, B, C, D)`, and the control signal is read out by adding the output `u = -K x`. So the closed loop is an ordinary state-space model, and every tool in the [linear systems](../../lti/lti_02_simulation/simulating_a_system.md) chapters applies to it.
 

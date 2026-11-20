@@ -63,3 +63,14 @@ doesn't exist), matching [`join`](join.md)'s own single-hop behavior.
 - [`plan`](plan.md): building the `JoinPlan` this executes.
 - [`run`](run.md): the saved-plan-by-name convenience this backs.
 - [`join`](join.md): the single-hop operation each step performs.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="link.html">
+    <span class="label">Previous</span>
+    <span class="title">link</span>
+  </a>
+  <a class="next-link" href="meta.html">
+    <span class="label">Next</span>
+    <span class="title">meta</span>
+  </a>
+</div>

@@ -8,11 +8,11 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-2.0, 2.0, 64, ScalarType::Float64);
   const Series y = x.sin().gt(0.0).to(ScalarType::Float64);
-  const DataFrame raw({{"x", Slate(x)}, {"sin_x", Slate(x.sin())}, {"y", Slate(y)}});
+  const DataFrame raw({{"x", Shelf(x)}, {"sin_x", Shelf(x.sin())}, {"y", Shelf(y)}});
   lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "sin_x"}).label("y");
 
   lymph::NeighborFamilyOptions knn{};

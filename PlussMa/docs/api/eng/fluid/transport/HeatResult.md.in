@@ -44,13 +44,11 @@ The following programs isolate this symbol's normal contract, a materially diffe
 A pipe cooling, with the energy fields.
 
 @@example Eng/api/fluid_heat_pipe.cpp@@
-
 ### Example 2
 
 Shapes and the flow-weighted mixture.
 
 @@example Eng/api/fluid_heat_mix.cpp@@
-
 ### Example 3
 
 A tank cooling.

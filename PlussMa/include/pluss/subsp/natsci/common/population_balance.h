@@ -115,21 +115,21 @@ inline Series growth_rhs(const Series &n, const Grid &g, const Series &growth_at
   const Series g0_edge = growth_at_edges.slice(-1, 0, 1, 1);
   // lower ghost cell: linear extrapolation through the inflow state B0 / G(0) at L = 0 (keeps the first cell second order); free outflow
   // above (zero-gradient ghost). With G(0) <= 0 there is no inflow and the ghost is zero-gradient.
-  const Series inflow_state = nucleation_flux.on(n.select(-1, 0)).unsqueeze(-1).div(g0_edge.gt(0.0).where(g0_edge, g0_edge.mul(0.0).add(1.0)));
-  const Series ghost_lo = g0_edge.gt(0.0).where(inflow_state.mul(2.0).sub(first), first);
+  const Series inflow_state = nucleation_flux.on(n.select(-1, 0)).unsqueeze(-1).div(pluss::series::where(g0_edge.gt(0.0), g0_edge, g0_edge.mul(0.0).add(1.0)));
+  const Series ghost_lo = pluss::series::where(g0_edge.gt(0.0), inflow_state.mul(2.0).sub(first), first);
   const Series ext = ghost_lo.unite(std::vector<Series>{n, last}, -1); // [..., B + 2]
   const Series left = ext.slice(-1, 0, b, 1), mid = ext.slice(-1, 1, b + 1, 1), right = ext.slice(-1, 2, b + 2, 1);
   const Series da = mid.sub(left), db = right.sub(mid);
   const Series prod = da.mul(db);
   // van Leer slope: 2 a b / (a + b) when a b > 0, else 0 (no division by zero where the mask is false)
   const Series denom = da.add(db);
-  const Series safe = prod.gt(0.0).where(denom, denom.mul(0.0).add(1.0));
-  const Series slope = prod.gt(0.0).where(prod.mul(2.0).div(safe), prod.mul(0.0)); // [..., B], slope of cell i
+  const Series safe = pluss::series::where(prod.gt(0.0), denom, denom.mul(0.0).add(1.0));
+  const Series slope = pluss::series::where(prod.gt(0.0), prod.mul(2.0).div(safe), prod.mul(0.0)); // [..., B], slope of cell i
   // face i + 1/2 (i = 0 .. B - 2) values from the left cell i and the right cell i + 1
   const Series face_left = mid.add(slope.mul(0.5)).slice(-1, 0, b - 1, 1);
   const Series face_right = mid.slice(-1, 1, b, 1).sub(slope.slice(-1, 1, b, 1).mul(0.5));
   const Series gi = growth_at_edges.slice(-1, 1, b, 1); // interior faces
-  const Series interior = gi.ge(0.0).where(gi.mul(face_left), gi.mul(face_right)); // [..., B - 1]
+  const Series interior = pluss::series::where(gi.ge(0.0), gi.mul(face_left), gi.mul(face_right)); // [..., B - 1]
   const Series g0 = growth_at_edges.slice(-1, 0, 1, 1), gb = growth_at_edges.slice(-1, b, b + 1, 1);
   const Series flux0 = nucleation_flux.on(n.select(-1, 0)).unsqueeze(-1).add(g0.mul(0.0)); // inflow B0 at L = 0
   const Series fluxb = gb.mul(last);                                                      // outflow

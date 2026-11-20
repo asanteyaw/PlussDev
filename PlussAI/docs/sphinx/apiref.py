@@ -385,7 +385,7 @@ EXAMPLE_PREAMBLE = [
     "  namespace lymph = pluss::ai::lymph;",
     "  using pluss::ScalarType;",
     "  using pluss::table::DataFrame;",
-    "  using pluss::table::Slate;",
+    "  using pluss::table::Shelf;",
     "",
     "  // TODO: construct realistic inputs, configure the object, run the call,",
     "  //       then print the result with std::cout.",

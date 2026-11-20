@@ -54,10 +54,10 @@ Example 1. Match one named level; every row sharing that level's value is kept.
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"region", Slate(pluss::make_note({"West", "West", "East"}))},
-    {"account", Slate(pluss::make_note({"101", "102", "201"}))},
-    {"sales", Slate(pluss::make_series({3, 5, 8}))},
-}).label().set({"region", "account"});
+    {"region", Shelf(pluss::make_note({"West", "West", "East"}))},
+    {"account", Shelf(pluss::make_note({"101", "102", "201"}))},
+    {"sales", Shelf(pluss::make_series({3, 5, 8}))},
+}).labels().set({"region", "account"});
 
 auto west = frame.case_study().pick(
     DataFrame::CasePick{.label = "region", .value = "West"});
@@ -70,8 +70,8 @@ std::cout << west;
 ================
          | sales
 ----------------
-West101 | 3    
-West102 | 5    
+West101 | 3    
+West102 | 5    
 ----------------
 [2 cs x 1 feat]
 ```
@@ -90,7 +90,7 @@ std::cout << exact;
 ================
          | sales
 ----------------
-East201 | 8    
+East201 | 8    
 ----------------
 [1 cs x 1 feat]
 ```
@@ -134,7 +134,7 @@ std::cout << west_102;
 ================
          | sales
 ----------------
-West102 | 5    
+West102 | 5    
 ----------------
 [1 cs x 1 feat]
 ```
@@ -172,8 +172,8 @@ try {
       .names = {"region", "account"},
       .values = {"West"},
   });
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
@@ -189,8 +189,8 @@ Example 7. A full key must cover every case level, in order.
 try {
   (void)frame.case_study().pick(
       DataFrame::CasePick{.key = {"West"}});
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 

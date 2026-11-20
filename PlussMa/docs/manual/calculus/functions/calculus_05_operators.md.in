@@ -4,7 +4,7 @@ The previous chapters applied operators the moment they made them. An `Operator`
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **An operator is a value with a contract.** `op(f)` applies it. `key()`, `version()` and `capabilities()` describe it.
 - **Applying builds a graph, once.** The operator runs when it meets a function; the result is an ordinary `Function` that is evaluated without calling the operator again.

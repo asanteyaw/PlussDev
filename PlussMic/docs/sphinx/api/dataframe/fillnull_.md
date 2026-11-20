@@ -68,9 +68,9 @@ numeric columns are affected, not just one.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"temp",     Slate(pluss::make_series({68.5, std::numeric_limits<double>::quiet_NaN(), 71.2}),
+    {"temp",     Shelf(pluss::make_series({68.5, std::numeric_limits<double>::quiet_NaN(), 71.2}),
                         pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {"humidity", Slate(pluss::make_series({30.0, 40.0, std::numeric_limits<double>::quiet_NaN()}),
+    {"humidity", Shelf(pluss::make_series({30.0, 40.0, std::numeric_limits<double>::quiet_NaN()}),
                         pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
 });
 std::cout << readings;
@@ -100,9 +100,9 @@ std::cout << readings;
 =====================
      | temp  humidity
 ---------------------
-0    | 68.5  30      
-1    | 0     40      
-2    | 71.2  0       
+0    | 0     0       
+1    | NaN   0       
+2    | 0     NaN     
 ---------------------
 [3 cs x 2 feat]
 ```
@@ -115,9 +115,9 @@ completely alone, since it isn't the kind this overload targets.
 
 ```cpp
 auto orders = DataFrame({
-    {"city",  Slate(pluss::make_note({"Accra", "", "Tema"}),
+    {"city",  Shelf(pluss::make_note({"Accra", "", "Tema"}),
                      pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {"score", Slate(pluss::make_series({88.5, std::numeric_limits<double>::quiet_NaN(), 79.5}),
+    {"score", Shelf(pluss::make_series({88.5, std::numeric_limits<double>::quiet_NaN(), 79.5}),
                      pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
 });
 std::cout << orders;
@@ -187,8 +187,8 @@ untouched, since `fillnull_(std::string_view)` never looks at `Series` columns a
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
-  <a class="next-link" href="filter.html">
+  <a class="next-link" href="fillposinf.html">
     <span class="label">Next</span>
-    <span class="title">filter</span>
+    <span class="title">fillposinf</span>
   </a>
 </div>

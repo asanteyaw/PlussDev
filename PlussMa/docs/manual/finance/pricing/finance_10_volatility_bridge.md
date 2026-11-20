@@ -6,7 +6,7 @@ Returns say what volatility has been and options say what it is expected to be. 
 
 Every program is complete and its output is the output of that program.
 
-## The mental model
+## How it works
 
 - **A GARCH variance remembers.** Today's variance depends on yesterday's return and yesterday's variance, so it can be inferred from the returns and forecast, and it reverts to a long-run level at the rate of the persistence.
 - **Asymmetry matters for equities.** GJR and EGARCH raise the variance more after a fall; the likelihood-ratio test tells whether the data need it.

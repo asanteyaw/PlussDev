@@ -8,11 +8,11 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const Series x = pluss::series::linspace(-3.0, 3.0, 84, ScalarType::Float64);
   const Series score = x.mul(1.8).add(x.sin());
-  const DataFrame raw({{"x", Slate(x)}, {"score", Slate(score)}, {"target", Slate(score.gt(0.4).to(ScalarType::Float64))}});
+  const DataFrame raw({{"x", Shelf(x)}, {"score", Shelf(score)}, {"target", Shelf(score.gt(0.4).to(ScalarType::Float64))}});
   lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "score"}).label("target");
 
   lymph::Workflow wf = lymph::workflow::make(

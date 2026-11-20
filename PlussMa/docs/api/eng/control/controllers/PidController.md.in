@@ -1,6 +1,6 @@
 # `control::Pid`
 
-An immutable validated parallel-form PID controller.
+A PID controller returned by `pid`.
 
 ## Signature
 
@@ -16,64 +16,45 @@ control::PidRule control::Pid::int_rule() const noexcept;
 control::PidRule control::Pid::diff_rule() const noexcept;
 ```
 
-## What It Does
+## Construction
 
-`Pid` stores proportional, integral, derivative, derivative-filter, timebase, and discretization data after `control::pid` has validated them. The object is immutable so it can be shared safely between repeated frequency-response analyses.
+Returned by `pid`.
 
 ## Methods
 
-`kp()`, `ki()`, `kd()`
-: Return the controller gains without copying.
-
-`filter()`
-: Returns the non-negative derivative-filter time constant.
-
-`sample_time()`
-: Returns zero for continuous time or the positive sampling interval for discrete time.
-
-`is_cont()`, `is_disc()`
-: Report the mutually exclusive timebase state.
-
-`int_rule()`, `diff_rule()`
-: Return the selected discrete substitutions.
-
-## Returns
-
-Accessors return const `Series` references, scalar metadata, or `PidRule` values.
-
-## Errors
-
-Accessors do not fail. Invalid gains, filter values, or sample times are rejected by `control::pid` before a `Pid` exists.
+| Method | What it does |
+|---|---|
+| [`kp`](PidController/kp.md) | The proportional gain `Kp`. |
+| [`ki`](PidController/ki.md) | The integral gain `Ki`. |
+| [`kd`](PidController/kd.md) | The derivative gain `Kd`. |
+| [`filter`](PidController/filter.md) | The derivative-filter time constant. |
+| [`sample_time`](PidController/sample_time.md) | The sample period in seconds; zero for a continuous controller. |
+| [`is_cont`](PidController/is_cont.md) | Whether the controller is continuous-time. |
+| [`is_disc`](PidController/is_disc.md) | Whether the controller is discrete-time. |
+| [`int_rule`](PidController/int_rule.md) | The rule used to form the integral of a discrete controller. |
+| [`diff_rule`](PidController/diff_rule.md) | The rule used to form the filtered derivative of a discrete controller. |
 
 ## Changelog
 
-- **0.1** — Initial immutable continuous/discrete parallel PID contract.
+- **0.1**: initial documented surface.
 
-## Interpretation and Use
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-`Pid` is immutable: construction validates the controller, and accessors expose its stored contract without recomputation. Use `is_cont()`/`is_disc()` before interpreting rules, and preserve the object for repeated frequency sweeps.
-
-## Practical Examples
-
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
-
-### Example 1
-
-Inspect and evaluate a continuous PID controller.
-
-@@example Eng/api/control_pid.cpp@@
-
-### Example 2
-
-Inspect timebase and rule accessors on a sampled controller.
-
-@@example Eng/api/control_pid_discrete.cpp@@
-
-### Example 3
-
-See invalid construction rejected before an object exists.
-
-@@example Eng/api/control_controller_errors.cpp@@
+PidController/Introduction
+PidController/kp
+PidController/ki
+PidController/kd
+PidController/filter
+PidController/sample_time
+PidController/is_cont
+PidController/is_disc
+PidController/int_rule
+PidController/diff_rule
+```
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
@@ -87,7 +68,3 @@ See invalid construction rejected before an object exists.
   </a>
 </div>
 <!-- apiref:nav:end -->
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->

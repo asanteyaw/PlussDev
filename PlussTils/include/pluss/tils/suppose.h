@@ -19,7 +19,7 @@ namespace pluss::codem { class Series; }
 namespace pluss::coden { class Note; }
 namespace pluss::codeh { class Timeline; class Duration; }
 namespace pluss::codev { class Queue; }
-namespace pluss::table { class Slate; class DataFrame; class Atlas; }
+namespace pluss::table { class Shelf; class DataFrame; class Atlas; }
 namespace pluss::kindle { class Stream; class Catalog; class Archive; }
 namespace pluss::scribble { class Slot; class Registry; class Axel; }
 namespace pluss::bundle { class Locus; class Nexus; }
@@ -34,7 +34,7 @@ template <> inline constexpr bool enable_suppose<coden::Note> = true;
 template <> inline constexpr bool enable_suppose<codeh::Timeline> = true;
 template <> inline constexpr bool enable_suppose<codeh::Duration> = true;
 template <> inline constexpr bool enable_suppose<codev::Queue> = true;
-template <> inline constexpr bool enable_suppose<table::Slate> = true;
+template <> inline constexpr bool enable_suppose<table::Shelf> = true;
 template <> inline constexpr bool enable_suppose<table::DataFrame> = true;
 template <> inline constexpr bool enable_suppose<table::Atlas> = true;
 template <> inline constexpr bool enable_suppose<kindle::Stream> = true;

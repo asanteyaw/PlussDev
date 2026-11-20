@@ -9,10 +9,10 @@
 
 ```cpp
 bool DataFrameLabelAccessor::has() const
-Slate DataFrameLabelAccessor::has(double value) const
-Slate DataFrameLabelAccessor::has(std::string_view value) const
-Slate DataFrameLabelAccessor::has(const char* value) const
-Slate DataFrameLabelAccessor::has(const Slate& values) const
+Shelf DataFrameLabelAccessor::has(double value) const
+Shelf DataFrameLabelAccessor::has(std::string_view value) const
+Shelf DataFrameLabelAccessor::has(const char* value) const
+Shelf DataFrameLabelAccessor::has(const Shelf& values) const
 ```
 
 ## What It Does
@@ -23,10 +23,10 @@ Two unrelated questions share this name:
   have **structured** (named, multi-level-capable) case labels at all — i.e.,
   were they built via a route like [`set(feature_name)`](set.md) rather than
   left as the default integer index or a raw axis from
-  [`set(const Slate&)`](set.md)?
+  [`set(const Shelf&)`](set.md)?
 - **`has(value)`** / **`has(values)`** answer an elementwise membership
   question: for each row, does its case label equal `value` (single-value
-  overloads), or match *any* of `values` (the `Slate` overload, an "is one
+  overloads), or match *any* of `values` (the `Shelf` overload, an "is one
   of" test)?
 
 ## Parameters
@@ -35,7 +35,7 @@ Two unrelated questions share this name:
 
 A single value to test each case label against, elementwise.
 
-**values** (`const Slate&`)
+**values** (`const Shelf&`)
 
 A collection of values; each row is `true` if its case label matches *any* of
 them.
@@ -45,8 +45,8 @@ them.
 `bool`
     (No-argument overload) Whether the frame's case labels are structured.
 
-`Slate`
-    (Value-taking overloads) A boolean slate, one entry per row, displayed
+`Shelf`
+    (Value-taking overloads) A boolean shelf, one entry per row, displayed
     against the case labels, `display_name` `"has"`.
 
 ## Examples
@@ -58,8 +58,8 @@ labels.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Shelf(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 std::cout << orders.labels().has();
 
@@ -70,8 +70,7 @@ std::cout << labeled.labels().has();
 ### Output
 
 ```text
-false
-true
+01
 ```
 
 `orders` still has the default integer case index — no structure yet.
@@ -84,7 +83,7 @@ Example 2. Elementwise membership against a single value, and against several.
 auto eq_east = labeled.labels().has("east");
 std::cout << eq_east;
 
-auto in_set = labeled.labels().has(Slate(pluss::make_note({"west", "north"})));
+auto in_set = labeled.labels().has(Shelf(pluss::make_note({"west", "north"})));
 std::cout << in_set;
 ```
 
@@ -115,8 +114,8 @@ using the `double` overload.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
-    Slate(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
+    {{"sales", Shelf(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
+    Shelf(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
 std::cout << readings;
 
 auto eq_ten = readings.labels().has(10.0);

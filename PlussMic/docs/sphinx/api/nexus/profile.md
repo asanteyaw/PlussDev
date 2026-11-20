@@ -59,21 +59,21 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto loan = DataFrame({
-    {"loan_id",    Slate(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"account_id", Slate(pluss::make_series({10.0, 20.0, 30.0}))},
-    {"amount",     Slate(pluss::make_series({100.0, 150.0, 120.0}))},
+    {"loan_id",    Shelf(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"account_id", Shelf(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"amount",     Shelf(pluss::make_series({100.0, 150.0, 120.0}))},
 });
 
 auto account = DataFrame({
-    {"account_id",  Slate(pluss::make_series({10.0, 20.0, 30.0}))},
-    {"district_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
-    {"segment",     Slate(pluss::make_note({"retail", "retail", "vip"}))},
+    {"account_id",  Shelf(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"district_id", Shelf(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"segment",     Shelf(pluss::make_note({"retail", "retail", "vip"}))},
 });
 
 auto trans = DataFrame({
-    {"trans_id",   Slate(pluss::make_series({1001.0, 1002.0, 1003.0}))},
-    {"account_id", Slate(pluss::make_series({10.0, 10.0, 20.0}))},
-    {"amount",     Slate(pluss::make_series({50.0, 20.0, 80.0}))},
+    {"trans_id",   Shelf(pluss::make_series({1001.0, 1002.0, 1003.0}))},
+    {"account_id", Shelf(pluss::make_series({10.0, 10.0, 20.0}))},
+    {"amount",     Shelf(pluss::make_series({50.0, 20.0, 80.0}))},
 });
 
 TableMeta loan_meta{};
@@ -161,9 +161,9 @@ immediately.
 ```cpp
 auto broken = nx.apply("account", [](const DataFrame&) {
   return DataFrame({
-      {"account_id",  Slate(pluss::make_series({10.0, 10.0, 30.0}))},
-      {"district_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
-      {"segment",     Slate(pluss::make_note({"retail", "retail", "vip"}))},
+      {"account_id",  Shelf(pluss::make_series({10.0, 10.0, 30.0}))},
+      {"district_id", Shelf(pluss::make_series({1.0, 1.0, 2.0}))},
+      {"segment",     Shelf(pluss::make_note({"retail", "retail", "vip"}))},
   });
 });
 

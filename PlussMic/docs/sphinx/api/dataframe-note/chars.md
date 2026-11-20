@@ -47,7 +47,7 @@ separately over each string.
     Stride between characters. `1` takes every character in order; `2`
     takes every other character; a negative step walks backwards. Must not
     be `0` — `chars(0, std::nullopt, 0)` throws
-    `"Slate::chars: step cannot be zero"`.
+    `"Shelf::chars: step cannot be zero"`.
 
 ## Returns
 
@@ -63,7 +63,7 @@ The examples below share one input frame:
 using namespace pluss::table;
 
 auto words = DataFrame({
-    {"text", Slate(pluss::make_note(
+    {"text", Shelf(pluss::make_note(
         {"hello world", "Accra", "ab", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -197,15 +197,15 @@ Example 5. `step = 0` throws — there's no sensible stride of zero.
 ```cpp
 try {
   auto bad = words.nt().chars(0, std::nullopt, 0);
-} catch (const std::exception& e) {
-  std::cout << e.what();
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
 }
 ```
 
 ### Output
 
 ```text
-Slate::chars: step cannot be zero
+Shelf::chars: step cannot be zero
 ```
 
 ## Notes

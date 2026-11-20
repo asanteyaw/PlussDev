@@ -6,7 +6,7 @@
 
 A resistor obeys a straight line; a diode does not. Its current grows exponentially with the voltage across it, so the equations of a circuit with a diode are **nonlinear** and cannot be solved in one linear step. `circuit::op` solves them by Newton iteration. This page describes a diode, finds the bias point of a diode behind a resistor, sweeps a source to draw the diode's characteristic, shows how the saturation current and the emission coefficient move it, and then shows the controls of the iteration.
 
-## The mental model
+## How it works
 
 A diode between an anode (`positive`) and a cathode (`negative`) carries the current `i = Is (exp(v / (n Vt)) - 1)` from anode to cathode, where `v` is the anode voltage minus the cathode voltage, `Is` is the **saturation current**, `n` is the **ideality** (emission coefficient) and `Vt` is the **thermal voltage**, `25.85 mV` at room temperature. Three facts follow.
 

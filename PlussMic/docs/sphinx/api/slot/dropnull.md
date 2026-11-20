@@ -45,6 +45,7 @@ size=2 vals=1,3
 
 ## Notes
 
+- `dropnull` removes missing cells only; a `NaN` or an infinity is a value and stays. Use [`dropnan`](dropnan.md), [`dropinf`](dropinf.md) or [`dropinvalid`](dropinvalid.md) for those. See [Missing, NaN and infinity](../../guide/missing_nan_and_inf.md).
 - Unlike [`fillnull()`](fillnull.md), `dropnull()` has no kind-matching
   requirement on the rest of the slot — it works on any slot regardless of
   what non-null values it holds.
@@ -58,12 +59,12 @@ size=2 vals=1,3
   keeping the slot's original length.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="distinct.html">
+  <a class="prev-link" href="dropneginf.html">
     <span class="label">Previous</span>
-    <span class="title">distinct</span>
+    <span class="title">dropneginf</span>
   </a>
-  <a class="next-link" href="empty.html">
+  <a class="next-link" href="dropposinf.html">
     <span class="label">Next</span>
-    <span class="title">empty</span>
+    <span class="title">dropposinf</span>
   </a>
 </div>

@@ -2,7 +2,7 @@
 
 # `control::SmoothResult`
 
-Forward-filter output augmented by backward-smoothed state estimates.
+The filtered and smoothed estimates produced by `smooth`.
 
 ## Signature
 
@@ -12,183 +12,198 @@ control::SmoothResult
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-
+Holds the full `KalmanResult` from the forward pass together with the smoothed mean and covariance and the backward gains.
 
 ## Fields
 
-### `filter`
-
-The complete `control::KalmanResult` from the forward pass.
-
-### `smoothed_mean`
-
-State means conditioned on the complete observation sequence.
-
-### `smoothed_cov`
-
-State covariances conditioned on the complete observation sequence.
-
-### `gain`
-
-Backward smoothing gains connecting adjacent time steps.
+| Field | Meaning | Shape |
+|---|---|---|
+| `filter` | The `KalmanResult` of the forward pass. | |
+| `smoothed_mean` | The state estimate using all observations. | `[time, states]` |
+| `smoothed_cov` | Its covariance. | `[time, states, states]` |
+| `gain` | The backward smoother gains. | `[time - 1, states, states]` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Returned by `smooth`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+Reading a field does not run again.
 
 ## Interpretation and Use
 
-The embedded `filter` preserves the causal estimate, while `smoothed_mean` and `smoothed_cov` use future observations. Never substitute smoothed states in an online controller: they are retrospective. They are appropriate for reconstruction, parameter analysis, and offline diagnostics.
+`filter` is exactly what `kalman` returns for the same arguments (the second example finds no difference in the mean or the likelihood). There is one fewer smoother gain than samples, because the last sample has nothing later to smooth with.
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare filtered and smoothed trajectories directly.
+The shape of every field.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace model = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::SmoothResult result = control::smooth(
-      model, pluss::make_series({0.2, 0.1, -0.3, 0.4}, {4, 1}),
-      pluss::make_series({0.04}, {1, 1}),
-      pluss::make_series({0.25}, {1, 1}), pluss::make_series({0.0}),
-      pluss::make_series({1.0}, {1, 1}), {.jitter = 0.0});
-
-  out.writeln("filtered mean =",
-              result.filter.filtered_mean.flatten().items<double>());
-  out.writeln("smoothed mean =", result.smoothed_mean.flatten().items<double>());
-  out.writeln("final covariance =",
-              result.smoothed_cov.select(-3, 3).flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::SmoothResult s = ctl::smooth(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  out.writeln("filter.filtered_mean", s.filter.filtered_mean.size(0), "x", s.filter.filtered_mean.size(1), " smoothed_mean", s.smoothed_mean.size(0), "x", s.smoothed_mean.size(1), " smoothed_cov", s.smoothed_cov.size(0), "x", s.smoothed_cov.size(1), "x", s.smoothed_cov.size(2), " gain", s.gain.size(0), "x", s.gain.size(1), "x", s.gain.size(2));
 }
 ```
 
 Output
 
 ```text
-filtered mean = [0.161240, 0.131147, -0.038921, 0.117636]
-smoothed mean = [0.099188, 0.086873, 0.072458, 0.117636]
-final covariance = [0.089172]
+filter.filtered_mean 8 x 1  smoothed_mean 8 x 1  smoothed_cov 8 x 1 x 1  gain 7 x 1 x 1
 ```
 ### Example 2
 
-Inspect the forward quantities retained inside a smooth result.
+The embedded filter against a direct `kalman` call.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace model = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.5}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      0.1);
-  const control::KalmanResult result = control::kalman(
-      model, pluss::make_series({2.0, 2.0, 2.0}, {3, 1}),
-      pluss::make_series({0.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}), pluss::make_series({1.0}, {1, 1}),
-      {.jitter = 0.0});
-
-  out.writeln("filtered mean =", result.filtered_mean.flatten().items<double>());
-  out.writeln("predicted observation =",
-              result.predicted_obs.flatten().items<double>());
-  out.writeln("log likelihood =", result.loglik.item<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::SmoothResult s = ctl::smooth(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  const ctl::KalmanResult f = ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  out.writeln("the embedded filter equals a direct kalman call: largest difference in filtered_mean", max_abs(s.filter.filtered_mean - f.filtered_mean), " in loglik", std::abs(s.filter.loglik.item<double>() - f.loglik.item<double>()));
 }
 ```
 
 Output
 
 ```text
-filtered mean = [1.000000, 1.333333, 1.500000]
-predicted observation = [0.000000, 1.000000, 1.333333]
-log likelihood = -4.949963
+the embedded filter equals a direct kalman call: largest difference in filtered_mean 0.0000  in loglik 0.0000
 ```
 ### Example 3
 
-Review model and covariance failures shared with filtering.
+The last sample and the smoother gains.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(control::kalman(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.1}, {1, 1}),
-        pluss::make_series({0.2}, {1, 1}), pluss::make_series({0.0}),
-        pluss::make_series({1.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous model rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::lqe(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("singular noise covariance rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::SmoothResult s = ctl::smooth(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  out.writeln("last smoothed mean", s.smoothed_mean.flatten().items<double>().back(), " last filtered mean", s.filter.filtered_mean.flatten().items<double>().back(), "(the smoother has no later data to use at the last sample)");
+  out.writeln("smoother gains =", s.gain.flatten().items<double>(), "(one fewer than the samples)");
 }
 ```
 
 Output
 
 ```text
-continuous model rejected = eng::control::kalman: the state-space model must be discrete
-singular noise covariance rejected = eng::control::lqe: noise_cov must be positive definite
+last smoothed mean 0.9035  last filtered mean 0.9035 (the smoother has no later data to use at the last sample)
+smoother gains = [0.9010, 0.8340, 0.7899, 0.7633, 0.7481, 0.7397, 0.7351] (one fewer than the samples)
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="KalmanResult.html">
-    <span class="label">Previous</span>
-    <span class="title">KalmanResult</span>
-  </a>
-  <a class="next-link" href="lqe.html">
-    <span class="label">Next</span>
-    <span class="title">lqe</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->

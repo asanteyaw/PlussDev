@@ -8,7 +8,7 @@
 
 Numbers move between the host program and a Series, and each move names a type. A count stored as an integer should stay an integer. A column of measurements may need to become whole numbers before it is saved. A single result may need to come out as a plain number. The `as_` family of scalar casts handles each of these moves, and this chapter covers each form with a complete program.
 
-## The mental model
+## How it works
 
 The `as_` functions come in four forms, and the argument decides which one you get. With a `Config`, the function returns that configuration with the element type set, so you can pass it to a factory. With a host value, it builds a one-element Series of that type. With a Series, it converts every element to the new type. And with a one-element Series alone, it returns the host value. The last form refuses a Series that does not hold exactly one element.
 

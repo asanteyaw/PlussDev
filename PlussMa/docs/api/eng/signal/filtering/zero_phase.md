@@ -2,6 +2,8 @@
 
 # `signal::zero_phase`
 
+Filters forward and backward so that the output has no delay.
+
 ## Signature
 
 ```cpp
@@ -19,162 +21,174 @@ pluss::Series signal::zero_phase(
 
 ## What It Does
 
-Filters forward and backward so phase delay cancels. This is an offline smoothing operation: because the backward pass depends on future samples, it is not suitable for causal real-time output.
+Runs the filter over the signal, reverses the result, runs it again and reverses back. The delay of the first pass is undone by the second, so features stay at the sample where they occurred. The signal is first extended at both ends by the pad mode so that the start-up transients fall outside the kept samples. There is a polynomial overload and a sections overload.
 
 ## Parameters
 
 `input`
-: Complete sample block to smooth.
+: A floating or complex `Series`.
 
-`numerator`, `denominator`
-: Direct-form coefficients for the first overload.
-
-`sections`
-: Second-order-section matrix for the second overload.
+`numerator`, `denominator` or `sections`
+: The filter as polynomials or as `[section, 6]` biquads.
 
 `options`
-: Axis, extension length, and endpoint padding policy.
+: A `PhaseOpts`: the axis, the extension length and the pad mode.
 
 ## Returns
 
-A `Series` with the same shape as `input`; effective magnitude response is applied twice while net phase is zero.
+A `Series` with the shape of `input`.
 
 ## Errors
 
-Rejects too-short inputs for the requested edge extension, invalid coefficients, malformed sections, axes, dtypes, or platforms.
+An input no longer than the extension, a negative edge other than `-1`, an invalid axis and malformed coefficients or sections throw `pluss::Error`.
+
+## Interpretation and Use
+
+A causal filter delays a pulse; `zero_phase` does not (the first example: the causal filter moves the peak by one sample, `zero_phase` keeps it). The price is non-causality: the output at a sample depends on later samples, so use it offline, not in a stream.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A pulse through a causal and a zero-phase filter: where does the peak land?
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series pulse = pluss::make_series({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  const auto peak_of = [](const pluss::Series &s) {
+    const auto v = s.items<double>();
+    return std::max_element(v.begin(), v.end()) - v.begin();
+  };
+  const pluss::Series causal = sig::filter(pulse, b, a).values;
+  const pluss::Series centred = sig::zero_phase(pulse, b, a, {.dim = 0, .edge = 2});
+  out.writeln("the pulse peaks at sample", peak_of(pulse));
+  out.writeln("the causal filter moves the peak to sample", peak_of(causal), "(it lags)");
+  out.writeln("zero_phase keeps the peak at sample", peak_of(centred));
+  out.writeln("zero-phase output =", centred.items<double>());
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+the pulse peaks at sample 7
+the causal filter moves the peak to sample 8 (it lags)
+zero_phase keeps the peak at sample 7
+zero-phase output = [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.6250, 2.5000, 3.7500, 2.5000, 0.6250, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+```
+### Example 2
+
+The sections overload agrees with the polynomial overload.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series sections = pluss::make_series({0.25, 0.5, 0.25, 1.0, 0.0, 0.0}).reshape({1, 6});
+  const pluss::Series pulse = pluss::make_series({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  const auto by_sections = sig::zero_phase(pulse, sections, {.dim = 0, .edge = 2}).items<double>();
+  const auto by_polynomial = sig::zero_phase(pulse, b, a, {.dim = 0, .edge = 2}).items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < by_sections.size(); ++i) worst = std::max(worst, std::abs(by_sections[i] - by_polynomial[i]));
+  out.writeln("sections overload against polynomial overload, largest difference =", worst);
+}
+```
+
+Output
+
+```text
+sections overload against polynomial overload, largest difference = 0.0000
+```
+### Example 3
+
+Every refused input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series b = pluss::make_series({0.25, 0.5, 0.25});
+  const pluss::Series a = pluss::make_series({1.0});
+  refused(out, "an input shorter than the edge extension", [&] { sig::zero_phase(pluss::make_series({1.0, 2.0, 3.0}), b, a, {.dim = 0, .edge = 5}); });
+  refused(out, "a negative edge other than -1", [&] { sig::zero_phase(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}), b, a, {.dim = 0, .edge = -2}); });
+  refused(out, "an axis out of range", [&] { sig::zero_phase(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}), b, a, {.dim = 4}); });
+}
+```
+
+Output
+
+```text
+an input shorter than the edge extension : eng::signal::zero_phase: sample axis must be longer than the edge extension
+a negative edge other than -1 : eng::signal::zero_phase: edge must be -1 or nonnegative
+an axis out of range : eng::signal::zero_phase: dim out of range
 ```
 ## See Also
 

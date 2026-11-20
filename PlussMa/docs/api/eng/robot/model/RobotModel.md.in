@@ -12,61 +12,47 @@ bool robot::Robot::has_mass() const noexcept;
 const std::vector<std::int64_t>& robot::Robot::parent() const noexcept;
 ```
 
-## What It Does
-
-What `robot::make` returns: the validated tree with its constant transforms compiled, ready for any number of kinematic and dynamic calls on any batch of configurations.
-
-## Methods
-
-`links()`
-: The number of links, which is also the number of joint values of a configuration.
-
-`dtype(), platform()`
-: The element type and device of the compiled data. Configurations are converted to this dtype.
-
-`has_mass()`
-: Whether mass properties were given. The dynamics functions need them; the kinematics functions do not.
-
-`parent()`
-: The parent index of every link, `-1` for the base.
-
-## Returns
+## Construction
 
 Accessors return counts, flags and the parent list.
 
-## Errors
+## Methods
 
-Accessors do not fail. Invalid descriptions are rejected by `make`.
+| Method | What it does |
+|---|---|
+| [`links`](RobotModel/links.md) | The number of links, which is also the number of joints. |
+| [`dtype`](RobotModel/dtype.md) | The floating dtype of the compiled data. |
+| [`platform`](RobotModel/platform.md) | The device the compiled data lives on. |
+| [`has_mass`](RobotModel/has_mass.md) | Whether mass properties were given. |
+| [`parent`](RobotModel/parent.md) | The parent index of every link; `-1` for the base. |
 
 ## Changelog
 
-- **0.1** — Initial public contract.
+- **0.1**: initial documented surface.
 
-## Interpretation and Use
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
 
-A `Robot` is immutable and cheap to copy; build it once and reuse it. Its compiled transforms carry reverse sensitivity to the values they were built from.
-
-## Practical Examples
-
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
-
-### Example 1
-
-The accessors of a tree.
-
-@@example Eng/api/robot_robot_accessors.cpp@@
-
-### Example 2
-
-A planar arm and its parents.
-
-@@example Eng/api/robot_make_arm.cpp@@
-
-### Example 3
-
-A tree.
-
-@@example Eng/api/robot_make_tree.cpp@@
+RobotModel/Introduction
+RobotModel/links
+RobotModel/dtype
+RobotModel/platform
+RobotModel/has_mass
+RobotModel/parent
+```
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Links.html">
+    <span class="label">Previous</span>
+    <span class="title">Links</span>
+  </a>
+  <a class="next-link" href="make.html">
+    <span class="label">Next</span>
+    <span class="title">make</span>
+  </a>
+</div>
 <!-- apiref:nav:end -->

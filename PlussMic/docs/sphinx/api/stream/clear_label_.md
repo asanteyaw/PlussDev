@@ -33,10 +33,10 @@ harmless no-op.
 Example 1. Mutate a labeled stream in place and confirm it's the same object.
 
 ```cpp
-using pluss::table::Slate;
+using pluss::table::Shelf;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .with_label(Slate(pluss::make_note({"a", "b", "c"})));
+                   .with_label(Shelf(pluss::make_note({"a", "b", "c"})));
 
 auto& ref = stream.clear_label_();
 std::cout << "same object: " << (&ref == &stream) << "\n";

@@ -1,0 +1,140 @@
+<!-- generated from d.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e1c7074543a2 -->
+
+# `lti::StateSpace::d`
+
+[Back to `lti::StateSpace`](../StateSpace.md)
+
+The feedthrough matrix `D` exactly as it was given to `state`.
+
+## Signature
+
+```cpp
+const pluss::Series& lti::StateSpace::d() const noexcept;
+```
+
+## What It Does
+
+Returns `D`, the feedthrough matrix, with the shape it was built with: `p x m`. The system stores the four matrices unchanged, so reading one never copies or rearranges data. Call it when you need the matrix itself, for a hand calculation, a plot or a comparison with another model; call [`states`](states.md), [`inputs`](inputs.md) or [`outputs`](outputs.md) when only a dimension matters. When the system was built with batch axes, those leading axes are present here too.
+
+## Returns
+
+A reference to the stored `D` as a `pluss::Series`. It stays valid for the life of the `StateSpace`.
+
+## Practical Examples
+
+### Example 1
+
+Read `D` of an oscillator and print its entries and its shape.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  out.writeln("D =", s.d().flatten().items<double>());
+  out.writeln("shape:", s.d().size(0), "x", s.d().size(1));
+}
+```
+
+Output
+
+```text
+D = [0.0000]
+shape: 1 x 1
+```
+
+### Example 2
+
+A strictly proper system has a zero feedthrough: the output does not react to the input at once.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = oscillator();
+  out.writeln("D =", s.d().flatten().items<double>());
+}
+```
+
+Output
+
+```text
+D = [0.0000]
+```
+
+### Example 3
+
+A direct path from input to output is a non-zero `D`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace lti = pluss::subsp::eng::lti;
+using namespace pluss::tils;
+
+static pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(std::move(v), {r, c}); }
+// A damped oscillator x'' + 0.4 x' + 4 x = u with the position as output.
+static lti::StateSpace oscillator(double sample_time = 0.0) {
+  return lti::state(mat({0.0, 1.0, -4.0, -0.4}, 2, 2), mat({0.0, 1.0}, 2, 1), mat({1.0, 0.0}, 1, 2), mat({0.0}, 1, 1), sample_time);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const lti::StateSpace s = lti::state(mat({-1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({0.5}, 1, 1));
+  out.writeln("D =", s.d().flatten().items<double>());
+}
+```
+
+Output
+
+```text
+D = [0.5000]
+```
+
+## See Also
+
+- [`states`](states.md): the number of states
+- [`inputs`](inputs.md): the number of inputs
+- [`outputs`](outputs.md): the number of outputs
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="c.html">
+    <span class="label">Previous</span>
+    <span class="title">c</span>
+  </a>
+  <a class="next-link" href="inputs.html">
+    <span class="label">Next</span>
+    <span class="title">inputs</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -227,7 +227,7 @@ public:
       switch (x.kind()) {
         case Kind::Series:
           // Force semantics: where(mask, x, y) => mask ? x : y.
-          return Queue(condition.as_series().where(x.as_series(), y.as_series()));
+          return Queue(pluss::series::where(condition.as_series(), x.as_series(), y.as_series()));
         case Kind::Timeline:
           return x.invoke("where", {condition.as_series(), y.as_timeline()});
         case Kind::Duration:

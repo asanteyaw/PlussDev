@@ -60,8 +60,8 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">cast</span>
   </a>
-  <a class="next-link" href="clear_join_cache.html">
+  <a class="next-link" href="clear_cache.html">
     <span class="label">Next</span>
-    <span class="title">clear_join_cache</span>
+    <span class="title">clear_cache</span>
   </a>
 </div>

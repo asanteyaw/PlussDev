@@ -78,3 +78,14 @@ different policy for whichever call actually needs that strictness.
 - [`nexus`](nexus.md): the aligned view this policy governs.
 - [`alignment_cache_stats`](alignment_cache_stats.md): how alignment results
   under a given policy are cached and reused.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="plan.html">
+    <span class="label">Previous</span>
+    <span class="title">plan</span>
+  </a>
+  <a class="next-link" href="profile.html">
+    <span class="label">Next</span>
+    <span class="title">profile</span>
+  </a>
+</div>

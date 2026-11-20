@@ -6,7 +6,7 @@
 
 Real inputs are rarely constant: a mains sinusoid, a clock pulse, a ramp, a measured waveform. `Drive` gives `tran` the value of each source at every instant of the run. This page drives an RC low-pass with a sinusoid and checks the result against the closed form and against the AC response, passes a pulse through it, turns a square wave into a triangle wave with an op-amp integrator, drives a circuit with a ramp of current, and sweeps the amplitude of a source in one call.
 
-## The mental model
+## How it works
 
 `Drive` has two members, `voltage` and `current`, one value per source per instant. `drive.voltage` has shape `[time, voltage sources]` and `drive.current` has shape `[time, current sources]`, where the time axis has the same length as the `time` vector and the sources are in the order they were given to `Net`. An undefined member holds the value stored in the circuit constant over the whole run, which is why a step needs no `Drive` at all.
 

@@ -42,8 +42,8 @@ Example 1. Compute the one-period log return of a numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().log_returns(1);
@@ -57,9 +57,9 @@ std::cout << out;
      | load         
 --------------------
 0    | NULL         
-1    | 0.6931471806 
+1    |  0.6931471806
 2    | -0.2876820725
-3    | 0.6931471806 
+3    |  0.6931471806
 --------------------
 [4 cs x 1 feat]
 ```
@@ -75,8 +75,8 @@ still returns a number, but `log_returns()` is `NULL`.
 
 ```cpp
 auto signed_readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3}))},
-    {"delta",     Slate(pluss::make_series({10.0, -5.0, 20.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3}))},
+    {"delta",     Shelf(pluss::make_series({10.0, -5.0, 20.0}))},
 });
 
 auto pct = signed_readings.features({"delta"}).ts().returns(1);
@@ -123,8 +123,8 @@ Example 3. Pass `periods = 0`, to see the call throw.
 ```cpp
 try {
   auto out = readings.features({"load"}).ts().log_returns(0);
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

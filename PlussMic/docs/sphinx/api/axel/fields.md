@@ -74,8 +74,8 @@ auto axel = pluss::scribble::Axel({
 try {
   std::vector<std::string_view> empty_keys;
   axel.fields(std::span<const std::string_view>(empty_keys));
-} catch (const std::exception& e) {
-  std::string msg(e.what());
+} catch (const pluss::Error& e) {
+  std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n'));
 }
 ```
@@ -116,8 +116,8 @@ Axel::fields: at least one field is required
     <span class="label">Previous</span>
     <span class="title">fieldaxis</span>
   </a>
-  <a class="next-link" href="fillnull.html">
+  <a class="next-link" href="fillinf.html">
     <span class="label">Next</span>
-    <span class="title">fillnull</span>
+    <span class="title">fillinf</span>
   </a>
 </div>

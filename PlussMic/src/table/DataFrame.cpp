@@ -1,5 +1,7 @@
 #include "table/DataFrame.h"
 
+#include "table/NonFinite.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -181,7 +183,7 @@ namespace detail {
 
 struct CaseAxisLevel {
   std::string name{};
-  Slate values{};
+  Shelf values{};
 };
 
 struct CaseAxis {
@@ -200,17 +202,17 @@ struct CaseAxis {
 class DataFrameImpl final : public pluss::msharp::RefCounted {
 public:
   DataFrameImpl(std::vector<std::string> names,
-                std::vector<Slate> columns,
-                std::optional<Slate> cases = std::nullopt,
+                std::vector<Shelf> columns,
+                std::optional<Shelf> cases = std::nullopt,
                 std::string title = {},
                 CaseAxis case_axis = {});
   void validate_and_reindex_();
 
   std::vector<std::string> names_;
-  std::vector<Slate> columns_;
+  std::vector<Shelf> columns_;
   std::unordered_map<std::string, std::size_t> name_to_idx_;
   std::int64_t nrows_{0};
-  Slate cases_{};
+  Shelf cases_{};
   CaseAxis case_axis_{};
   std::string title_{};
   mutable bool suppress_next_stream_{false};
@@ -276,7 +278,7 @@ bool is_none_token(std::string_view s) {
   return t.empty() || t == "none" || t == "null";
 }
 
-Slate infer_padded_slate_from_raw(const pluss::loader::CsvRawColumn& column,
+Shelf infer_padded_shelf_from_raw(const pluss::loader::CsvRawColumn& column,
                                     const pluss::loader::ReadCsvOptions& options,
                                     std::int64_t target_len) {
   if (column.note_values.has_value()) {
@@ -288,13 +290,13 @@ Slate infer_padded_slate_from_raw(const pluss::loader::CsvRawColumn& column,
     if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
       values.resize(static_cast<std::size_t>(target_len));
     }
-    return detail::infer_slate_from_raw_csv_column(column.name, column.source_index, values, options);
+    return detail::infer_shelf_from_raw_csv_column(column.name, column.source_index, values, options);
   }
   std::vector<std::string> values = column.values;
   if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
     values.resize(static_cast<std::size_t>(target_len));
   }
-  return detail::infer_slate_from_raw_csv_column(column.name, column.source_index, values, options);
+  return detail::infer_shelf_from_raw_csv_column(column.name, column.source_index, values, options);
 }
 
 DataFrame dataframe_from_raw_batch_padded(const pluss::loader::CsvRawBatch& raw,
@@ -310,15 +312,15 @@ DataFrame dataframe_from_raw_batch_padded(const pluss::loader::CsvRawBatch& raw,
     target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(*raw.cases)));
   }
 
-  std::vector<std::pair<std::string, Slate>> cols;
+  std::vector<std::pair<std::string, Shelf>> cols;
   cols.reserve(raw.features.size());
   for (const auto& col : raw.features) {
-    cols.emplace_back(col.name, infer_padded_slate_from_raw(col, options, target_len));
+    cols.emplace_back(col.name, infer_padded_shelf_from_raw(col, options, target_len));
   }
 
-  std::optional<Slate> cases = std::nullopt;
+  std::optional<Shelf> cases = std::nullopt;
   if (raw.cases.has_value()) {
-    cases = infer_padded_slate_from_raw(*raw.cases, options, target_len);
+    cases = infer_padded_shelf_from_raw(*raw.cases, options, target_len);
   }
 
   return DataFrame(std::move(cols), std::move(cases));
@@ -341,7 +343,7 @@ pluss::Series bool_series_from_keep(const std::vector<bool>& keep) {
   return out;
 }
 
-Slate default_cases(std::int64_t nrows) {
+Shelf default_cases(std::int64_t nrows) {
   PLUSS_CHECK(nrows >= 0, "DataFrame: nrows must be non-negative");
   std::vector<std::int64_t> idx(static_cast<std::size_t>(nrows));
   std::iota(idx.begin(), idx.end(), static_cast<std::int64_t>(0));
@@ -349,7 +351,7 @@ Slate default_cases(std::int64_t nrows) {
   if (!idx.empty()) {
     std::memcpy(s.raw_data(), idx.data(), idx.size() * sizeof(std::int64_t));
   }
-  return Slate(s);
+  return Shelf(s);
 }
 
 bool is_numeric_series_type(const pluss::Series& s) {
@@ -432,21 +434,21 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
       return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
       return std::isnan(pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]))
-          ? std::string("NULL")
+          ? std::string("NaN")
           : pluss::tils::OutputEngine::format("{:.6g}",
                         pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
     case pluss::codem::ScalarType::BFloat16:
       return std::isnan(pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]))
-          ? std::string("NULL")
+          ? std::string("NaN")
           : pluss::tils::OutputEngine::format("{:.6g}",
                         pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
     case pluss::codem::ScalarType::Float32:
       return std::isnan(reinterpret_cast<const float*>(base)[row])
-          ? std::string("NULL")
+          ? std::string("NaN")
           : pluss::tils::OutputEngine::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
     case pluss::codem::ScalarType::Float64:
       return std::isnan(reinterpret_cast<const double*>(base)[row])
-          ? std::string("NULL")
+          ? std::string("NaN")
           : pluss::tils::OutputEngine::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
@@ -461,7 +463,7 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string slate_scalar_string_at(const Slate& t, std::int64_t row) {
+std::string shelf_scalar_string_at(const Shelf& t, std::int64_t row) {
   if (detail::has_validity_mask(t)) {
     const auto valid = detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
@@ -470,46 +472,46 @@ std::string slate_scalar_string_at(const Slate& t, std::int64_t row) {
   }
 
   switch (t.kind()) {
-    case SlateKind::Series:
+    case ShelfKind::Series:
       return series_scalar_string_at(t.as_series(), row);
-    case SlateKind::Note:
+    case ShelfKind::Note:
       return std::string(t.as_note().at(row));
-    case SlateKind::Timeline:
+    case ShelfKind::Timeline:
       return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }
 }
 
-Slate make_f64_slate(const std::vector<double>& values) {
+Shelf make_f64_shelf(const std::vector<double>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }
-  return Slate(s);
+  return Shelf(s);
 }
 
-Slate make_f64_slate(const std::vector<double>& values, const std::vector<bool>& valid) {
-  PLUSS_CHECK(values.size() == valid.size(), "make_f64_slate: values/valid length mismatch");
+Shelf make_f64_shelf(const std::vector<double>& values, const std::vector<bool>& valid) {
+  PLUSS_CHECK(values.size() == valid.size(), "make_f64_shelf: values/valid length mismatch");
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }
-  return Slate(s, bool_series_from_keep(valid));
+  return Shelf(s, bool_series_from_keep(valid));
 }
 
-Slate make_note_slate(std::initializer_list<std::string_view> labels) {
+Shelf make_note_shelf(std::initializer_list<std::string_view> labels) {
   std::vector<std::string_view> views(labels.begin(), labels.end());
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(views.size())};
   auto note = pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size()));
-  return Slate(note);
+  return Shelf(note);
 }
 
-Slate make_note_slate(const std::vector<std::string>& labels) {
+Shelf make_note_shelf(const std::vector<std::string>& labels) {
   std::vector<std::string_view> views;
   views.reserve(labels.size());
   for (const auto& v : labels) {
@@ -519,26 +521,26 @@ Slate make_note_slate(const std::vector<std::string>& labels) {
   auto note = pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size()));
-  return Slate(note);
+  return Shelf(note);
 }
 
-Slate make_i64_slate(const std::vector<std::int64_t>& values) {
+Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
-  return Slate(s);
+  return Shelf(s);
 }
 
-Slate make_i64_slate(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
-  PLUSS_CHECK(values.size() == valid.size(), "make_i64_slate: values/valid length mismatch");
+Shelf make_i64_shelf(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
+  PLUSS_CHECK(values.size() == valid.size(), "make_i64_shelf: values/valid length mismatch");
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
-  return Slate(s, bool_series_from_keep(valid));
+  return Shelf(s, bool_series_from_keep(valid));
 }
 
 std::string summary_op_name(DataFrame::SummaryOp op) {
@@ -595,22 +597,22 @@ std::string group_op_name(DataFrame::GroupOp op) {
   }
 }
 
-std::string window_op_name(SlateWindowOp op) {
+std::string window_op_name(ShelfWindowOp op) {
   switch (op) {
-    case SlateWindowOp::RollingSum:
+    case ShelfWindowOp::RollingSum:
       return "rollsum";
-    case SlateWindowOp::RollingMean:
+    case ShelfWindowOp::RollingMean:
       return "rollmean";
-    case SlateWindowOp::RollingMin:
+    case ShelfWindowOp::RollingMin:
       return "rollmin";
-    case SlateWindowOp::RollingMax:
+    case ShelfWindowOp::RollingMax:
       return "rollmax";
     default:
       return "window";
   }
 }
 
-std::int64_t non_null_count(const Slate& t) {
+std::int64_t non_null_count(const Shelf& t) {
   if (!detail::has_validity_mask(t)) {
     return t.size();
   }
@@ -618,7 +620,7 @@ std::int64_t non_null_count(const Slate& t) {
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
-std::int64_t distinct_non_null_count(const Slate& t) {
+std::int64_t distinct_non_null_count(const Shelf& t) {
   std::unordered_set<std::string> seen;
   seen.reserve(static_cast<std::size_t>(t.size()));
   std::optional<std::vector<bool>> valid;
@@ -629,17 +631,17 @@ std::int64_t distinct_non_null_count(const Slate& t) {
     if (valid.has_value() && !(*valid)[static_cast<std::size_t>(i)]) {
       continue;
     }
-    seen.insert(slate_scalar_string_at(t, i));
+    seen.insert(shelf_scalar_string_at(t, i));
   }
   return static_cast<std::int64_t>(seen.size());
 }
 
-double numeric_reduce_value(const Slate& t, DataFrame::SummaryOp op) {
-  PLUSS_CHECK(t.kind() == SlateKind::Series, "DataFrame::summarize: numeric reductions require Series feature");
+double numeric_reduce_value(const Shelf& t, DataFrame::SummaryOp op) {
+  PLUSS_CHECK(t.kind() == ShelfKind::Series, "DataFrame::summarize: numeric reductions require Series feature");
   PLUSS_CHECK(is_numeric_series_type(t.as_series()),
               "DataFrame::summarize: numeric reductions require numeric Series feature");
 
-  // Delegate numeric reductions to Slate to keep 1D math semantics in Slate.
+  // Delegate numeric reductions to Shelf to keep 1D math semantics in Shelf.
   const auto clean = t.dropnull();
   if (clean.size() == 0) {
     if (op == DataFrame::SummaryOp::Sum) {
@@ -799,7 +801,7 @@ using QueryEvalFn = std::function<bool(std::int64_t)>;
 
 struct QueryRhs {
   bool is_feature{false};
-  Slate feature{};
+  Shelf feature{};
   QueryLiteral literal{};
 };
 
@@ -1047,7 +1049,7 @@ bool parse_bool_like(std::string_view text, bool& out) {
   return false;
 }
 
-bool row_valid_for_slate(const Slate& t, std::int64_t row) {
+bool row_valid_for_shelf(const Shelf& t, std::int64_t row) {
   if (!detail::has_validity_mask(t)) {
     return true;
   }
@@ -1094,17 +1096,17 @@ bool compare_strings(const std::string& lhs, const std::string& rhs, QueryCompar
 }
 
 bool evaluate_query_compare(
-    const Slate& t,
+    const Shelf& t,
     std::int64_t row,
     QueryCompareOp op,
     const QueryLiteral& rhs) {
-  if (!row_valid_for_slate(t, row)) {
+  if (!row_valid_for_shelf(t, row)) {
     return false;
   }
 
-  if (t.kind() == SlateKind::Series) {
+  if (t.kind() == ShelfKind::Series) {
     if (rhs.kind == QueryLiteral::Kind::String) {
-      return compare_strings(slate_scalar_string_at(t, row), rhs.text, op);
+      return compare_strings(shelf_scalar_string_at(t, row), rhs.text, op);
     }
 
     if (rhs.kind == QueryLiteral::Kind::Bool) {
@@ -1126,7 +1128,7 @@ bool evaluate_query_compare(
     return compare_numbers(lhs_num, rhs.number, op);
   }
 
-  const auto lhs = slate_scalar_string_at(t, row);
+  const auto lhs = shelf_scalar_string_at(t, row);
   if (rhs.kind == QueryLiteral::Kind::String) {
     return compare_strings(lhs, rhs.text, op);
   }
@@ -1146,16 +1148,16 @@ bool evaluate_query_compare(
 }
 
 bool evaluate_query_compare(
-    const Slate& lhs,
-    const Slate& rhs,
+    const Shelf& lhs,
+    const Shelf& rhs,
     std::int64_t row,
     QueryCompareOp op) {
-  if (!row_valid_for_slate(lhs, row) || !row_valid_for_slate(rhs, row)) {
+  if (!row_valid_for_shelf(lhs, row) || !row_valid_for_shelf(rhs, row)) {
     return false;
   }
 
-  const bool lhs_numeric = lhs.kind() == SlateKind::Series && is_numeric_series_type(lhs.as_series());
-  const bool rhs_numeric = rhs.kind() == SlateKind::Series && is_numeric_series_type(rhs.as_series());
+  const bool lhs_numeric = lhs.kind() == ShelfKind::Series && is_numeric_series_type(lhs.as_series());
+  const bool rhs_numeric = rhs.kind() == ShelfKind::Series && is_numeric_series_type(rhs.as_series());
   if (lhs_numeric && rhs_numeric) {
     double lv = 0.0;
     double rv = 0.0;
@@ -1164,10 +1166,10 @@ bool evaluate_query_compare(
     }
     return compare_numbers(lv, rv, op);
   }
-  return compare_strings(slate_scalar_string_at(lhs, row), slate_scalar_string_at(rhs, row), op);
+  return compare_strings(shelf_scalar_string_at(lhs, row), shelf_scalar_string_at(rhs, row), op);
 }
 
-bool evaluate_in_list(const Slate& t, std::int64_t row, const std::vector<QueryLiteral>& items) {
+bool evaluate_in_list(const Shelf& t, std::int64_t row, const std::vector<QueryLiteral>& items) {
   for (const auto& lit : items) {
     if (evaluate_query_compare(t, row, QueryCompareOp::Eq, lit)) {
       return true;
@@ -1176,8 +1178,8 @@ bool evaluate_in_list(const Slate& t, std::int64_t row, const std::vector<QueryL
   return false;
 }
 
-Slate apply_math_slate_scalar(const Slate& col, double other, BinaryMathOp op, bool reverse) {
-  if (col.kind() != SlateKind::Series || !is_numeric_series_type(col.as_series())) {
+Shelf apply_math_shelf_scalar(const Shelf& col, double other, BinaryMathOp op, bool reverse) {
+  if (col.kind() != ShelfKind::Series || !is_numeric_series_type(col.as_series())) {
     return col;
   }
   switch (op) {
@@ -1201,8 +1203,8 @@ Slate apply_math_slate_scalar(const Slate& col, double other, BinaryMathOp op, b
   PLUSS_FAIL("DataFrame::math: unsupported binary math op");
 }
 
-Slate apply_math_slate_pair(const Slate& lhs, const Slate& rhs, BinaryMathOp op) {
-  if (lhs.kind() != SlateKind::Series || !is_numeric_series_type(lhs.as_series())) {
+Shelf apply_math_shelf_pair(const Shelf& lhs, const Shelf& rhs, BinaryMathOp op) {
+  if (lhs.kind() != ShelfKind::Series || !is_numeric_series_type(lhs.as_series())) {
     return lhs;
   }
   switch (op) {
@@ -1226,7 +1228,7 @@ Slate apply_math_slate_pair(const Slate& lhs, const Slate& rhs, BinaryMathOp op)
   PLUSS_FAIL("DataFrame::math: unsupported binary math op");
 }
 
-Slate apply_cmp_slate_scalar(const Slate& col, double other, BinaryCmpOp op) {
+Shelf apply_cmp_shelf_scalar(const Shelf& col, double other, BinaryCmpOp op) {
   switch (op) {
     case BinaryCmpOp::Eq:
       return col.eq(other);
@@ -1244,7 +1246,7 @@ Slate apply_cmp_slate_scalar(const Slate& col, double other, BinaryCmpOp op) {
   PLUSS_FAIL("DataFrame::compare: unsupported binary compare op");
 }
 
-Slate apply_cmp_slate_pair(const Slate& lhs, const Slate& rhs, BinaryCmpOp op) {
+Shelf apply_cmp_shelf_pair(const Shelf& lhs, const Shelf& rhs, BinaryCmpOp op) {
   switch (op) {
     case BinaryCmpOp::Eq:
       return lhs.eq(rhs);
@@ -1391,8 +1393,8 @@ struct NumericBatchKey_ {
   }
 };
 
-std::optional<NumericBatchKey_> numeric_batch_key_(const Slate& value) {
-  if (value.kind() != SlateKind::Series || !is_numeric_series_type(value.as_series())) {
+std::optional<NumericBatchKey_> numeric_batch_key_(const Shelf& value) {
+  if (value.kind() != ShelfKind::Series || !is_numeric_series_type(value.as_series())) {
     return std::nullopt;
   }
   return NumericBatchKey_{value.as_series().scalar_type(), value.as_series().platform()};
@@ -1409,8 +1411,8 @@ struct NumericPairBatchKey_ {
   }
 };
 
-std::optional<NumericPairBatchKey_> numeric_pair_batch_key_(const Slate& lhs,
-                                                            const Slate& rhs) {
+std::optional<NumericPairBatchKey_> numeric_pair_batch_key_(const Shelf& lhs,
+                                                            const Shelf& rhs) {
   const auto lhs_key = numeric_batch_key_(lhs);
   const auto rhs_key = numeric_batch_key_(rhs);
   if (!lhs_key.has_value() || !rhs_key.has_value()) {
@@ -1426,7 +1428,7 @@ std::optional<NumericPairBatchKey_> numeric_pair_batch_key_(const Slate& lhs,
   };
 }
 
-pluss::Series slate_valid_on_platform_(const Slate& value,
+pluss::Series shelf_valid_on_platform_(const Shelf& value,
                                         pluss::codem::Platform platform) {
   auto valid = value.notnull().as_series();
   if (valid.platform() != platform) {
@@ -1435,8 +1437,8 @@ pluss::Series slate_valid_on_platform_(const Slate& value,
   return valid;
 }
 
-std::vector<Slate> dataframe_columns_(const DataFrame& frame) {
-  std::vector<Slate> columns;
+std::vector<Shelf> dataframe_columns_(const DataFrame& frame) {
+  std::vector<Shelf> columns;
   const auto& names = frame.features();
   columns.reserve(names.size());
   for (const auto& name : names) {
@@ -1445,12 +1447,12 @@ std::vector<Slate> dataframe_columns_(const DataFrame& frame) {
   return columns;
 }
 
-Slate null_slate_like_(const Slate& value, std::int64_t size, std::string_view where);
+Shelf null_shelf_like_(const Shelf& value, std::int64_t size, std::string_view where);
 
 DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMathOp op, bool reverse) {
   const auto cols = dataframe_columns_(frame);
   const auto& names = frame.features();
-  std::vector<Slate> out(cols.size());
+  std::vector<Shelf> out(cols.size());
 
   std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < cols.size(); ++i) {
@@ -1458,7 +1460,7 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
     if (key.has_value() && op != BinaryMathOp::Pow) {
       batches[*key].push_back(i);
     } else {
-      out[i] = apply_math_slate_scalar(cols[i], other, op, reverse);
+      out[i] = apply_math_shelf_scalar(cols[i], other, op, reverse);
     }
   }
 
@@ -1480,13 +1482,13 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
     const auto result_matrix =
         dataframe_apply_math_matrix_scalar_(value_matrix, other, op, reverse);
     for (std::size_t pos = 0; pos < indices.size(); ++pos) {
-      out[indices[pos]] = Slate(
+      out[indices[pos]] = Shelf(
           dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
           dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
     }
   }
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(cols.size());
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
@@ -1509,8 +1511,8 @@ AlignOptions row_mask_default_options_() {
   return options;
 }
 
-Slate fill_numeric_missing_for_alignment_(const Slate& value, const AlignOptions& options) {
-  if (!options.fill.has_value() || !value.defined() || value.kind() != SlateKind::Series) {
+Shelf fill_numeric_missing_for_alignment_(const Shelf& value, const AlignOptions& options) {
+  if (!options.fill.has_value() || !value.defined() || value.kind() != ShelfKind::Series) {
     return value;
   }
   return value.fillnull(*options.fill);
@@ -1522,7 +1524,7 @@ DataFrame fill_numeric_missing_for_alignment_(const DataFrame& frame, const Alig
   }
   const auto cols = dataframe_columns_(frame);
   const auto& names = frame.features();
-  std::vector<std::pair<std::string, Slate>> out;
+  std::vector<std::pair<std::string, Shelf>> out;
   out.reserve(cols.size());
   for (std::size_t i = 0; i < cols.size(); ++i) {
     out.emplace_back(names[i], fill_numeric_missing_for_alignment_(cols[i], options));
@@ -1544,7 +1546,7 @@ DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
   }
   const auto rhs_cols = dataframe_columns_(rhs);
   const auto& lhs_names = lhs.features();
-  std::vector<std::pair<std::string, Slate>> out;
+  std::vector<std::pair<std::string, Shelf>> out;
   out.reserve(rhs_cols.size());
   for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
     out.emplace_back(lhs_names[i], rhs_cols[i]);
@@ -1570,7 +1572,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       }
       const auto rhs_cols = dataframe_columns_(rhs);
       const auto& lhs_names = lhs.features();
-      std::vector<std::pair<std::string, Slate>> renamed;
+      std::vector<std::pair<std::string, Shelf>> renamed;
       renamed.reserve(rhs_cols.size());
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         renamed.emplace_back(lhs_names[i], rhs_cols[i]);
@@ -1592,7 +1594,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       }
       const auto rhs_cols = dataframe_columns_(rhs);
       const auto& rhs_names = rhs.features();
-      std::vector<std::pair<std::string, Slate>> relabeled;
+      std::vector<std::pair<std::string, Shelf>> relabeled;
       relabeled.reserve(rhs_cols.size());
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         relabeled.emplace_back(rhs_names[i], rhs_cols[i]);
@@ -1623,14 +1625,14 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
   const auto rhs_cols = dataframe_columns_(matched.right);
   const auto& names = matched.left.features();
 
-  std::vector<Slate> out(lhs_cols.size());
+  std::vector<Shelf> out(lhs_cols.size());
   std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     const auto key = numeric_pair_batch_key_(lhs_cols[i], rhs_cols[i]);
     if (key.has_value() && op != BinaryMathOp::Pow) {
       batches[*key].push_back(i);
     } else {
-      out[i] = apply_math_slate_pair(lhs_cols[i], rhs_cols[i], op);
+      out[i] = apply_math_shelf_pair(lhs_cols[i], rhs_cols[i], op);
     }
   }
 
@@ -1645,8 +1647,8 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
       lhs_values.push_back(lhs_cols[i].as_series());
       rhs_values.push_back(rhs_cols[i].as_series());
       valids.push_back(
-          slate_valid_on_platform_(lhs_cols[i], key.platform)
-              .logical_and(slate_valid_on_platform_(rhs_cols[i], key.platform)));
+          shelf_valid_on_platform_(lhs_cols[i], key.platform)
+              .logical_and(shelf_valid_on_platform_(rhs_cols[i], key.platform)));
     }
 
     const auto lhs_matrix = pack_series_columns(lhs_values, "DataFrame::numeric_pair_batch", true);
@@ -1654,13 +1656,13 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
     const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_pair_batch", true);
     const auto result_matrix = dataframe_apply_math_matrix_pair_(lhs_matrix, rhs_matrix, op);
     for (std::size_t pos = 0; pos < indices.size(); ++pos) {
-      out[indices[pos]] = Slate(
+      out[indices[pos]] = Shelf(
           dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
           dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
     }
   }
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(lhs_cols.size());
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
@@ -1668,23 +1670,23 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
   return DataFrame(std::move(columns), matched.left.labels().values()).title(lhs.title());
 }
 
-Slate align_slate_to_feature_axis_(
+Shelf align_shelf_to_feature_axis_(
     const DataFrame& frame,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where) {
-  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Slate is undefined");
-  PLUSS_CHECK(value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()),
-              std::string(where) + ": rhs Slate must be numeric Series-backed");
+  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Shelf is undefined");
+  PLUSS_CHECK(value.kind() == ShelfKind::Series && is_numeric_series_type(value.as_series()),
+              std::string(where) + ": rhs Shelf must be numeric Series-backed");
   const auto feature_names = frame.features();
   if (feature_names.empty()) {
-    return null_slate_like_(value, 0, where);
+    return null_shelf_like_(value, 0, where);
   }
 
   const auto labels = value.label().values();
   std::unordered_map<std::string, std::vector<std::int64_t>> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
-    positions[slate_scalar_string_at(labels, i)].push_back(i);
+    positions[shelf_scalar_string_at(labels, i)].push_back(i);
   }
 
   std::unordered_map<std::string, std::size_t> seen;
@@ -1718,22 +1720,22 @@ Slate align_slate_to_feature_axis_(
   return detail::with_validity_mask(out, validity);
 }
 
-Slate align_slate_to_case_axis_(
+Shelf align_shelf_to_case_axis_(
     const DataFrame& frame,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where) {
-  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Slate is undefined");
-  PLUSS_CHECK(value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()),
-              std::string(where) + ": rhs Slate must be numeric Series-backed");
+  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Shelf is undefined");
+  PLUSS_CHECK(value.kind() == ShelfKind::Series && is_numeric_series_type(value.as_series()),
+              std::string(where) + ": rhs Shelf must be numeric Series-backed");
   if (frame.ncases() == 0) {
-    return null_slate_like_(value, 0, where);
+    return null_shelf_like_(value, 0, where);
   }
 
   const auto labels = value.label().values();
   std::unordered_map<std::string, std::vector<std::int64_t>> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
-    positions[slate_scalar_string_at(labels, i)].push_back(i);
+    positions[shelf_scalar_string_at(labels, i)].push_back(i);
   }
 
   const auto target_cases = frame.labels().values();
@@ -1744,7 +1746,7 @@ Slate align_slate_to_case_axis_(
   rows.reserve(static_cast<std::size_t>(frame.ncases()));
   present.reserve(static_cast<std::size_t>(frame.ncases()));
   for (std::int64_t i = 0; i < frame.ncases(); ++i) {
-    const auto key = slate_scalar_string_at(target_cases, i);
+    const auto key = shelf_scalar_string_at(target_cases, i);
     const auto occurrence = seen[key]++;
     const auto found = positions.find(key);
     if (found != positions.end() && occurrence < found->second.size()) {
@@ -1769,27 +1771,27 @@ Slate align_slate_to_case_axis_(
   return detail::with_validity_mask(out, validity);
 }
 
-DataFrame dataframe_math_slate(const DataFrame& frame,
-                                const Slate& other,
+DataFrame dataframe_math_shelf(const DataFrame& frame,
+                                const Shelf& other,
                                 Axis axis,
                                 BinaryMathOp op,
                                 bool reverse,
                                 const AlignOptions& options) {
-  PLUSS_CHECK(other.defined(), "DataFrame::math(Slate): rhs Slate is undefined");
-  PLUSS_CHECK(other.kind() == SlateKind::Series && is_numeric_series_type(other.as_series()),
-              "DataFrame::math(Slate): rhs Slate must be numeric Series-backed");
+  PLUSS_CHECK(other.defined(), "DataFrame::math(Shelf): rhs Shelf is undefined");
+  PLUSS_CHECK(other.kind() == ShelfKind::Series && is_numeric_series_type(other.as_series()),
+              "DataFrame::math(Shelf): rhs Shelf must be numeric Series-backed");
   const auto cols = dataframe_columns_(frame);
   const auto& names = frame.features();
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(cols.size());
 
   if (axis == Axis::Case) {
-    Slate aligned;
+    Shelf aligned;
     switch (options.align) {
       case AlignBy::Pos:
         if (other.size() != frame.ncases()) {
           throw ::pluss::Error(pluss::tils::OutputEngine::format(
-              "DataFrame::math(Slate, Axis::Case): positional alignment requires rhs length to match "
+              "DataFrame::math(Shelf, Axis::Case): positional alignment requires rhs length to match "
               "DataFrame cases (rhs={}, cases={})",
               other.size(),
               frame.ncases()));
@@ -1797,27 +1799,27 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
         aligned = other;
         break;
       case AlignBy::Caselbl:
-        aligned = align_slate_to_case_axis_(frame, other, "DataFrame::math(Slate, Axis::Case)");
+        aligned = align_shelf_to_case_axis_(frame, other, "DataFrame::math(Shelf, Axis::Case)");
         break;
       case AlignBy::Feature:
-        PLUSS_FAIL("DataFrame::math(Slate, Axis::Case): AlignBy::Feature is not valid for case-axis Slate alignment");
+        PLUSS_FAIL("DataFrame::math(Shelf, Axis::Case): AlignBy::Feature is not valid for case-axis Shelf alignment");
       case AlignBy::Both:
-        PLUSS_FAIL("DataFrame::math(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+        PLUSS_FAIL("DataFrame::math(Shelf): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
     }
     aligned = fill_numeric_missing_for_alignment_(aligned, options);
     for (std::size_t i = 0; i < cols.size(); ++i) {
-      columns.emplace_back(names[i], reverse ? apply_math_slate_pair(aligned, cols[i], op)
-                                             : apply_math_slate_pair(cols[i], aligned, op));
+      columns.emplace_back(names[i], reverse ? apply_math_shelf_pair(aligned, cols[i], op)
+                                             : apply_math_shelf_pair(cols[i], aligned, op));
     }
     return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   }
 
-  Slate aligned;
+  Shelf aligned;
   switch (options.align) {
     case AlignBy::Pos:
       if (other.size() != frame.nfeatures()) {
         throw ::pluss::Error(pluss::tils::OutputEngine::format(
-            "DataFrame::math(Slate, Axis::Feature): positional alignment requires rhs length to match "
+            "DataFrame::math(Shelf, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
             frame.nfeatures()));
@@ -1825,12 +1827,12 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
       aligned = other;
       break;
     case AlignBy::Feature:
-      aligned = align_slate_to_feature_axis_(frame, other, "DataFrame::math(Slate, Axis::Feature)");
+      aligned = align_shelf_to_feature_axis_(frame, other, "DataFrame::math(Shelf, Axis::Feature)");
       break;
     case AlignBy::Caselbl:
-      PLUSS_FAIL("DataFrame::math(Slate, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Slate alignment");
+      PLUSS_FAIL("DataFrame::math(Shelf, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Shelf alignment");
     case AlignBy::Both:
-      PLUSS_FAIL("DataFrame::math(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+      PLUSS_FAIL("DataFrame::math(Shelf): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
   }
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
   const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
@@ -1838,28 +1840,28 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
     if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
           names[i],
-          null_slate_like_(cols[i], frame.ncases(), "DataFrame::math(Slate, Axis::Feature)"));
+          null_shelf_like_(cols[i], frame.ncases(), "DataFrame::math(Shelf, Axis::Feature)"));
       continue;
     }
     columns.emplace_back(
         names[i],
-        apply_math_slate_scalar(cols[i], values[i], op, reverse));
+        apply_math_shelf_scalar(cols[i], values[i], op, reverse));
   }
   return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
 }
 
-DataFrame dataframe_math_slate(const DataFrame& frame,
-                                const Slate& other,
+DataFrame dataframe_math_shelf(const DataFrame& frame,
+                                const Shelf& other,
                                 Axis axis,
                                 BinaryMathOp op,
                                 bool reverse) {
-  return dataframe_math_slate(frame, other, axis, op, reverse, AlignOptions{});
+  return dataframe_math_shelf(frame, other, axis, op, reverse, AlignOptions{});
 }
 
 DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp op) {
   const auto cols = dataframe_columns_(frame);
   const auto& names = frame.features();
-  std::vector<Slate> out(cols.size());
+  std::vector<Shelf> out(cols.size());
 
   std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < cols.size(); ++i) {
@@ -1867,7 +1869,7 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
     if (key.has_value()) {
       batches[*key].push_back(i);
     } else {
-      out[i] = apply_cmp_slate_scalar(cols[i], other, op);
+      out[i] = apply_cmp_shelf_scalar(cols[i], other, op);
     }
   }
 
@@ -1889,13 +1891,13 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
     const auto result_matrix =
         dataframe_apply_cmp_matrix_scalar_(value_matrix, other, op);
     for (std::size_t pos = 0; pos < indices.size(); ++pos) {
-      out[indices[pos]] = Slate(
+      out[indices[pos]] = Shelf(
           dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
           dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
     }
   }
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(cols.size());
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
@@ -1923,14 +1925,14 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
   const auto rhs_cols = dataframe_columns_(matched.right);
   const auto& names = matched.left.features();
 
-  std::vector<Slate> out(lhs_cols.size());
+  std::vector<Shelf> out(lhs_cols.size());
   std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     const auto key = numeric_pair_batch_key_(lhs_cols[i], rhs_cols[i]);
     if (key.has_value()) {
       batches[*key].push_back(i);
     } else {
-      out[i] = apply_cmp_slate_pair(lhs_cols[i], rhs_cols[i], op);
+      out[i] = apply_cmp_shelf_pair(lhs_cols[i], rhs_cols[i], op);
     }
   }
 
@@ -1945,8 +1947,8 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
       lhs_values.push_back(lhs_cols[i].as_series());
       rhs_values.push_back(rhs_cols[i].as_series());
       valids.push_back(
-          slate_valid_on_platform_(lhs_cols[i], key.platform)
-              .logical_and(slate_valid_on_platform_(rhs_cols[i], key.platform)));
+          shelf_valid_on_platform_(lhs_cols[i], key.platform)
+              .logical_and(shelf_valid_on_platform_(rhs_cols[i], key.platform)));
     }
 
     const auto lhs_matrix = pack_series_columns(lhs_values, "DataFrame::numeric_pair_batch", true);
@@ -1954,13 +1956,13 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
     const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_pair_batch", true);
     const auto result_matrix = dataframe_apply_cmp_matrix_pair_(lhs_matrix, rhs_matrix, op);
     for (std::size_t pos = 0; pos < indices.size(); ++pos) {
-      out[indices[pos]] = Slate(
+      out[indices[pos]] = Shelf(
           dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
           dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
     }
   }
 
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(lhs_cols.size());
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
@@ -1968,24 +1970,24 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
   return DataFrame(std::move(columns), matched.left.labels().values()).title(lhs.title());
 }
 
-DataFrame dataframe_cmp_slate(const DataFrame& frame,
-                               const Slate& other,
+DataFrame dataframe_cmp_shelf(const DataFrame& frame,
+                               const Shelf& other,
                                Axis axis,
                                BinaryCmpOp op,
                                const AlignOptions& options) {
-  PLUSS_CHECK(other.defined(), "DataFrame::compare(Slate): rhs Slate is undefined");
+  PLUSS_CHECK(other.defined(), "DataFrame::compare(Shelf): rhs Shelf is undefined");
   const auto cols = dataframe_columns_(frame);
   const auto& names = frame.features();
-  std::vector<std::pair<std::string, Slate>> columns;
+  std::vector<std::pair<std::string, Shelf>> columns;
   columns.reserve(cols.size());
 
   if (axis == Axis::Case) {
-    Slate aligned;
+    Shelf aligned;
     switch (options.align) {
       case AlignBy::Pos:
         if (other.size() != frame.ncases()) {
           throw ::pluss::Error(pluss::tils::OutputEngine::format(
-              "DataFrame::compare(Slate, Axis::Case): positional alignment requires rhs length to match "
+              "DataFrame::compare(Shelf, Axis::Case): positional alignment requires rhs length to match "
               "DataFrame cases (rhs={}, cases={})",
               other.size(),
               frame.ncases()));
@@ -1996,23 +1998,23 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
         aligned = other.align(frame.labels().values(), options);
         break;
       case AlignBy::Feature:
-        PLUSS_FAIL("DataFrame::compare(Slate, Axis::Case): AlignBy::Feature is not valid for case-axis Slate alignment");
+        PLUSS_FAIL("DataFrame::compare(Shelf, Axis::Case): AlignBy::Feature is not valid for case-axis Shelf alignment");
       case AlignBy::Both:
-        PLUSS_FAIL("DataFrame::compare(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+        PLUSS_FAIL("DataFrame::compare(Shelf): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
     }
     aligned = fill_numeric_missing_for_alignment_(aligned, options);
     for (std::size_t i = 0; i < cols.size(); ++i) {
-      columns.emplace_back(names[i], apply_cmp_slate_pair(cols[i], aligned, op));
+      columns.emplace_back(names[i], apply_cmp_shelf_pair(cols[i], aligned, op));
     }
     return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   }
 
-  Slate aligned;
+  Shelf aligned;
   switch (options.align) {
     case AlignBy::Pos:
       if (other.size() != frame.nfeatures()) {
         throw ::pluss::Error(pluss::tils::OutputEngine::format(
-            "DataFrame::compare(Slate, Axis::Feature): positional alignment requires rhs length to match "
+            "DataFrame::compare(Shelf, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
             frame.nfeatures()));
@@ -2020,12 +2022,12 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
       aligned = other;
       break;
     case AlignBy::Feature:
-      aligned = align_slate_to_feature_axis_(frame, other, "DataFrame::compare(Slate, Axis::Feature)");
+      aligned = align_shelf_to_feature_axis_(frame, other, "DataFrame::compare(Shelf, Axis::Feature)");
       break;
     case AlignBy::Caselbl:
-      PLUSS_FAIL("DataFrame::compare(Slate, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Slate alignment");
+      PLUSS_FAIL("DataFrame::compare(Shelf, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Shelf alignment");
     case AlignBy::Both:
-      PLUSS_FAIL("DataFrame::compare(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+      PLUSS_FAIL("DataFrame::compare(Shelf): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
   }
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
   const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
@@ -2033,19 +2035,19 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
     if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
           names[i],
-          null_slate_like_(cols[i], frame.ncases(), "DataFrame::compare(Slate, Axis::Feature)"));
+          null_shelf_like_(cols[i], frame.ncases(), "DataFrame::compare(Shelf, Axis::Feature)"));
       continue;
     }
-    columns.emplace_back(names[i], apply_cmp_slate_scalar(cols[i], values[i], op));
+    columns.emplace_back(names[i], apply_cmp_shelf_scalar(cols[i], values[i], op));
   }
   return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
 }
 
-DataFrame dataframe_cmp_slate(const DataFrame& frame,
-                               const Slate& other,
+DataFrame dataframe_cmp_shelf(const DataFrame& frame,
+                               const Shelf& other,
                                Axis axis,
                                BinaryCmpOp op) {
-  return dataframe_cmp_slate(frame, other, axis, op, AlignOptions{});
+  return dataframe_cmp_shelf(frame, other, axis, op, AlignOptions{});
 }
 
 std::vector<DataFrame::ArrangeSpec> normalize_arrange_specs_(
@@ -2069,7 +2071,7 @@ std::vector<DataFrame::ArrangeSpec> normalize_arrange_specs_(
 
 struct ArrangeState_ {
   std::vector<DataFrame::ArrangeSpec> specs{};
-  std::vector<Slate> keys{};
+  std::vector<Shelf> keys{};
 };
 
 ArrangeState_ prepare_arrange_state_(
@@ -2163,7 +2165,7 @@ std::vector<std::int64_t> arrange_order_on_indices_(
   for (auto it = specs.rbegin(); it != specs.rend(); ++it) {
     auto ordered_key = frame.features(it->feature).take(
         std::span<const std::int64_t>(indices.data(), indices.size()));
-    ordered_key = ordered_key.label().set(make_i64_slate(indices));
+    ordered_key = ordered_key.label().set(make_i64_shelf(indices));
     indices = ordered_key.arrange(it->ascending, it->nulls_last)
                   .label().values()
                   .as_series()
@@ -2250,7 +2252,7 @@ private:
     return advance();
   }
 
-  Slate resolve_feature(std::string_view ident) const {
+  Shelf resolve_feature(std::string_view ident) const {
     const auto low = lower_copy(owned_name(ident));
     if (low == "case" || low == "cases") {
       return frame_.labels().values();
@@ -2344,7 +2346,7 @@ private:
       const auto ident = expect(QueryTokenKind::Identifier, "DataFrame::query: expected feature name in isnull");
       auto target = resolve_feature(ident.text);
       expect(QueryTokenKind::RParen, "DataFrame::query: expected ')' after isnull(feature)");
-      return [target](std::int64_t row) { return !row_valid_for_slate(target, row); };
+      return [target](std::int64_t row) { return !row_valid_for_shelf(target, row); };
     }
 
     if (match(QueryTokenKind::NotNull)) {
@@ -2352,7 +2354,7 @@ private:
       const auto ident = expect(QueryTokenKind::Identifier, "DataFrame::query: expected feature name in notnull");
       auto target = resolve_feature(ident.text);
       expect(QueryTokenKind::RParen, "DataFrame::query: expected ')' after notnull(feature)");
-      return [target](std::int64_t row) { return row_valid_for_slate(target, row); };
+      return [target](std::int64_t row) { return row_valid_for_shelf(target, row); };
     }
 
     if (match(QueryTokenKind::Contains)) {
@@ -2366,10 +2368,10 @@ private:
       expect(QueryTokenKind::RParen, "DataFrame::query: expected ')' after contains(feature, literal)");
       const auto needle = literal.text;
       return [target, needle](std::int64_t row) {
-        if (!row_valid_for_slate(target, row)) {
+        if (!row_valid_for_shelf(target, row)) {
           return false;
         }
-        return slate_scalar_string_at(target, row).find(needle) != std::string::npos;
+        return shelf_scalar_string_at(target, row).find(needle) != std::string::npos;
       };
     }
 
@@ -2377,10 +2379,10 @@ private:
     auto target = resolve_feature(ident.text);
 
     if (match(QueryTokenKind::IsNull)) {
-      return [target](std::int64_t row) { return !row_valid_for_slate(target, row); };
+      return [target](std::int64_t row) { return !row_valid_for_shelf(target, row); };
     }
     if (match(QueryTokenKind::NotNull)) {
-      return [target](std::int64_t row) { return row_valid_for_slate(target, row); };
+      return [target](std::int64_t row) { return row_valid_for_shelf(target, row); };
     }
 
     bool negate = false;
@@ -2465,8 +2467,8 @@ double quantile_sorted(const std::vector<double>& sorted, double q) {
 } // namespace
 
 detail::DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
-                                     std::vector<Slate> columns,
-                                     std::optional<Slate> cases,
+                                     std::vector<Shelf> columns,
+                                     std::optional<Shelf> cases,
                                      std::string title,
                                      CaseAxis case_axis)
     : names_(std::move(names)),
@@ -2539,7 +2541,7 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::Dat
       src.names_, src.columns_, src.cases_, src.title_, src.case_axis_);
 }
 
-Slate clear_assignment_metadata_(const Slate& value) {
+Shelf clear_assignment_metadata_(const Shelf& value) {
   auto out = value;
   if (detail::has_display_labels(out)) {
     out = detail::clear_display_labels(out);
@@ -2550,24 +2552,24 @@ Slate clear_assignment_metadata_(const Slate& value) {
   return out;
 }
 
-Slate null_slate_like_(const Slate& value, std::int64_t size, std::string_view where) {
+Shelf null_shelf_like_(const Shelf& value, std::int64_t size, std::string_view where) {
   PLUSS_CHECK(size >= 0, std::string(where) + ": output size must be non-negative");
-  Slate out;
+  Shelf out;
   switch (value.kind()) {
-    case SlateKind::Series:
-      out = Slate(pluss::Series::zeros(
+    case ShelfKind::Series:
+      out = Shelf(pluss::Series::zeros(
           {size}, value.as_series().scalar_type(), value.as_series().platform()));
       break;
-    case SlateKind::Note:
-      out = Slate(pluss::make_note(
+    case ShelfKind::Note:
+      out = Shelf(pluss::make_note(
           std::vector<std::string>(static_cast<std::size_t>(size), std::string{})));
       break;
-    case SlateKind::Timeline:
-      out = Slate(pluss::make_timeline(
+    case ShelfKind::Timeline:
+      out = Shelf(pluss::make_timeline(
           std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
       break;
-    case SlateKind::Duration:
-      out = Slate(pluss::duration::nanos(
+    case ShelfKind::Duration:
+      out = Shelf(pluss::duration::nanos(
           std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
       break;
   }
@@ -2575,29 +2577,29 @@ Slate null_slate_like_(const Slate& value, std::int64_t size, std::string_view w
       out, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool)));
 }
 
-Slate broadcast_assignment_slate_(const Slate& value, std::int64_t size, std::string_view where) {
+Shelf broadcast_assignment_shelf_(const Shelf& value, std::int64_t size, std::string_view where) {
   PLUSS_CHECK(value.defined(), std::string(where) + ": input feature is undefined");
   PLUSS_CHECK(value.size() == 1, std::string(where) + ": scalar broadcast requires a single value");
   if (size == 0) {
-    return null_slate_like_(value, 0, where);
+    return null_shelf_like_(value, 0, where);
   }
   std::vector<std::int64_t> indices(static_cast<std::size_t>(size), 0);
   return clear_assignment_metadata_(value.take(indices));
 }
 
-Slate align_assignment_slate_(
+Shelf align_assignment_shelf_(
     const detail::DataFrameImpl& src,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where) {
   if (value.size() == 0) {
-    return null_slate_like_(value, src.nrows_, where);
+    return null_shelf_like_(value, src.nrows_, where);
   }
 
   const auto labels = value.label().values();
   std::unordered_map<std::string, std::int64_t> positions;
   positions.reserve(static_cast<std::size_t>(value.size()));
   for (std::int64_t i = 0; i < value.size(); ++i) {
-    const auto key = slate_scalar_string_at(labels, i);
+    const auto key = shelf_scalar_string_at(labels, i);
     PLUSS_CHECK(positions.emplace(key, i).second,
                 std::string(where) + ": duplicate rhs case label '" + key + "'");
   }
@@ -2607,7 +2609,7 @@ Slate align_assignment_slate_(
   std::vector<bool> matched;
   matched.reserve(static_cast<std::size_t>(src.nrows_));
   for (std::int64_t row = 0; row < src.nrows_; ++row) {
-    const auto it = positions.find(slate_scalar_string_at(src.cases_, row));
+    const auto it = positions.find(shelf_scalar_string_at(src.cases_, row));
     if (it == positions.end()) {
       take_indices.push_back(0);
       matched.push_back(false);
@@ -2630,13 +2632,13 @@ Slate align_assignment_slate_(
 
 bool assignment_cases_match_(
     const detail::DataFrameImpl& src,
-    const Slate& value) {
+    const Shelf& value) {
   if (!value.defined() || value.size() != src.nrows_) {
     return false;
   }
   const auto labels = value.label().values();
   for (std::int64_t row = 0; row < src.nrows_; ++row) {
-    if (slate_scalar_string_at(labels, row) != slate_scalar_string_at(src.cases_, row)) {
+    if (shelf_scalar_string_at(labels, row) != shelf_scalar_string_at(src.cases_, row)) {
       return false;
     }
   }
@@ -2658,13 +2660,13 @@ std::string align_use_name_(AlignUse_ use) {
   return "operation";
 }
 
-Slate prepare_slate_for_use_(
+Shelf prepare_shelf_for_use_(
     const detail::DataFrameImpl& src,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where,
     const AlignOptions& options,
     AlignUse_ use) {
-  PLUSS_CHECK(value.defined(), std::string(where) + ": input Slate is undefined");
+  PLUSS_CHECK(value.defined(), std::string(where) + ": input Shelf is undefined");
   if (src.columns_.empty()) {
     return clear_assignment_metadata_(value);
   }
@@ -2695,42 +2697,42 @@ Slate prepare_slate_for_use_(
   PLUSS_FAIL(std::string(where) + ": unsupported alignment mode");
 }
 
-Slate prepare_feature_assignment_(
+Shelf prepare_feature_assignment_(
     const detail::DataFrameImpl& src,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where,
     const AlignOptions& options) {
-  return prepare_slate_for_use_(src, value, where, options, AlignUse_::Assignment);
+  return prepare_shelf_for_use_(src, value, where, options, AlignUse_::Assignment);
 }
 
-Slate prepare_mask_slate_(
+Shelf prepare_mask_shelf_(
     const detail::DataFrameImpl& src,
-    const Slate& bool_mask,
+    const Shelf& bool_mask,
     std::string_view where,
     const AlignOptions& options) {
-  auto prepared = prepare_slate_for_use_(src, bool_mask, where, options, AlignUse_::Mask);
-  PLUSS_CHECK(prepared.kind() == SlateKind::Series, std::string(where) + ": mask must be a Series slate");
+  auto prepared = prepare_shelf_for_use_(src, bool_mask, where, options, AlignUse_::Mask);
+  PLUSS_CHECK(prepared.kind() == ShelfKind::Series, std::string(where) + ": mask must be a Series shelf");
   return prepared;
 }
 
-Slate prepare_feature_assignment_(
+Shelf prepare_feature_assignment_(
     const detail::DataFrameImpl& src,
-    const Slate& value,
+    const Shelf& value,
     std::string_view where) {
   return prepare_feature_assignment_(src, value, where, AlignOptions{});
 }
 
-Slate prepare_mask_slate_(
+Shelf prepare_mask_shelf_(
     const detail::DataFrameImpl& src,
-    const Slate& bool_mask,
+    const Shelf& bool_mask,
     std::string_view where) {
-  return prepare_mask_slate_(src, bool_mask, where, AlignOptions{});
+  return prepare_mask_shelf_(src, bool_mask, where, AlignOptions{});
 }
 
 void set_prepared_feature_(
     detail::DataFrameImpl& frame,
     std::string_view name,
-    const Slate& prepared) {
+    const Shelf& prepared) {
   PLUSS_CHECK(prepared.defined(), "DataFrame::set: prepared feature is undefined");
   const auto key = owned_name(name);
   const auto it = frame.name_to_idx_.find(key);

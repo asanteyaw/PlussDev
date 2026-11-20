@@ -11,9 +11,9 @@
 DataFrame DataFrame::mul(double other) const
 DataFrame DataFrame::mul(const DataFrame& other) const
 DataFrame DataFrame::mul(const DataFrame& other, const AlignOptions& options) const
-DataFrame DataFrame::mul(const Slate& other, Axis axis = Axis::Feature) const
-DataFrame DataFrame::mul(const Slate& other, Axis axis, const AlignOptions& options) const
-DataFrame DataFrame::mul(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
+DataFrame DataFrame::mul(const Shelf& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::mul(const Shelf& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::mul(const Shelf& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame DataFrame::mul(const Slate& other, const AlignOptions& options, Axis a
 The named-method form of elementwise multiplication. `mul()` shares the exact same
 overload shape and alignment rules as [`add()`](add.md) and the rest of the
 arithmetic family — see `add()`'s "What It Does" for the full explanation of the
-scalar/frame/Slate operand shapes and the `axis`/`options` parameters.
+scalar/frame/Shelf operand shapes and the `axis`/`options` parameters.
 
 A common use is rescaling a feature (unit conversion, currency conversion, applying a
 tax or discount rate) without hand-writing a loop over cells.
@@ -31,10 +31,10 @@ tax or discount rate) without hand-writing a loop over cells.
 **other**
 
 The right-hand operand, multiplied against the current frame: `double` (broadcast
-scalar), `const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Shelf&` (broadcast
 per `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Shelf overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.
@@ -78,11 +78,11 @@ c    | 2      60
 [3 cs x 2 feat]
 ```
 
-Example 2. Multiply by a `Slate` with one value per feature (`Axis::Feature`, the
+Example 2. Multiply by a `Shelf` with one value per feature (`Axis::Feature`, the
 default) — apply a different scale factor to each column.
 
 ```cpp
-auto per_feature_scale = Slate(pluss::make_series({10.0, 0.9})); // units x10, price x0.9
+auto per_feature_scale = Shelf(pluss::make_series({10.0, 0.9})); // units x10, price x0.9
 auto out = prices.mul(per_feature_scale);
 std::cout << out;
 ```

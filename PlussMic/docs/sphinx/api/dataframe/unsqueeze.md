@@ -9,7 +9,7 @@
 
 ```cpp
 Atlas DataFrame::unsqueeze() const
-Atlas DataFrame::unsqueeze(const Slate& depth_labels) const
+Atlas DataFrame::unsqueeze(const Shelf& depth_labels) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ one depth layer.
 
 ## Parameters
 
-**depth_labels** (`const Slate&`, one-argument overload only)
+**depth_labels** (`const Shelf&`, one-argument overload only)
 
 A single label naming the frame's one depth layer. Must be defined and have exactly
 `size() == 1`, or the call throws.
@@ -41,8 +41,8 @@ Example 1. Lift a frame into a one-layer atlas with no depth label.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Slate(pluss::make_series({1, 2, 3}))},
-    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"id",    Shelf(pluss::make_series({1, 2, 3}))},
+    {"sales", Shelf(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 
 auto atlas = orders.unsqueeze();
@@ -55,8 +55,8 @@ std::cout << atlas.axis0_labels().has_value() << "\n";
 
 ```text
 1
-true
-false
+1
+0
 ```
 
 `atlas` has exactly one depth layer, and that layer (`.frame(0)`) is `orders`
@@ -66,14 +66,14 @@ itself — `equals()` confirms it matches exactly. No `depth_labels` were given,
 Example 2. Attach a depth label to that one layer.
 
 ```cpp
-auto labeled_atlas = orders.unsqueeze(Slate(pluss::make_note({"train"})));
+auto labeled_atlas = orders.unsqueeze(Shelf(pluss::make_note({"train"})));
 std::cout << labeled_atlas.axis0_labels().has_value() << "\n";
 ```
 
 ### Output
 
 ```text
-true
+1
 ```
 
 `labeled_atlas` carries one depth label, `"train"`, alongside its single frame —
@@ -85,7 +85,7 @@ multi-depth atlas (say, one layer per dataset split) and each layer needs a name
 - `unsqueeze()` never copies or transforms the frame's data — the atlas's one layer
   is exactly this frame, unchanged.
 - The `depth_labels` overload requires exactly one label (`size() == 1`); passing a
-  `Slate` of any other length throws `"DataFrame::unsqueeze: depth labels must have
+  `Shelf` of any other length throws `"DataFrame::unsqueeze: depth labels must have
   size 1"`.
 - This is the natural entry point when an API expects an `Atlas` (for example,
   multi-frame plotting or archival) but the data in hand is currently a single

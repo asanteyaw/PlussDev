@@ -9,12 +9,12 @@
 
 ```cpp
 static DataFrame DataFrame::select(
-    pluss::msharp::RangeView::Of<Slate> conditions,
+    pluss::msharp::RangeView::Of<Shelf> conditions,
     pluss::msharp::RangeView::Of<DataFrame> choices,
     const DataFrame& default_value)
 
 static DataFrame DataFrame::select(
-    std::initializer_list<Slate> conditions,
+    std::initializer_list<Shelf> conditions,
     std::initializer_list<DataFrame> choices,
     const DataFrame& default_value)
 ```
@@ -49,10 +49,10 @@ first.
 
 ## Parameters
 
-**conditions** (`RangeView::Of<Slate>` or `std::initializer_list<Slate>`)
+**conditions** (`RangeView::Of<Shelf>` or `std::initializer_list<Shelf>`)
 
 An ordered, non-empty list of boolean masks, one per candidate in `choices`. Each
-`Slate` must be a `Series`-kind, `Bool`-scalar-type slate with one value per case —
+`Shelf` must be a `Series`-kind, `Bool`-scalar-type shelf with one value per case —
 the same requirement `land()`/`lor()`/`lxor()` place on their operands (see
 [`land()`](land.md)). `conditions` and `choices` must have the same length; each
 position pairs one condition with the candidate frame it "unlocks."
@@ -111,9 +111,9 @@ c5   | 30
 ```
 
 ```cpp
-auto tier_high = Slate(pluss::make_series(
+auto tier_high = Shelf(pluss::make_series(
     {false, true, false, true, false}, pluss::ScalarType::Bool));
-auto tier_mid = Slate(pluss::make_series(
+auto tier_mid = Shelf(pluss::make_series(
     {false, true, true, true, false}, pluss::ScalarType::Bool));
 
 auto premium = DataFrame({
@@ -160,8 +160,8 @@ Example 2. Overlapping conditions: when more than one condition is `true` for th
 case, the **first** one listed wins — reordering the arguments changes the result.
 
 ```cpp
-auto cond_a = Slate(pluss::make_series({true, true}, pluss::ScalarType::Bool));
-auto cond_b = Slate(pluss::make_series({true, false}, pluss::ScalarType::Bool));
+auto cond_a = Shelf(pluss::make_series({true, true}, pluss::ScalarType::Bool));
+auto cond_b = Shelf(pluss::make_series({true, false}, pluss::ScalarType::Bool));
 
 auto choice_a = DataFrame({
     {"tag", pluss::make_note({"A", "A"})},
@@ -218,14 +218,14 @@ does not treat a chosen cell's `NULL` as a reason to fall back to a lower-priori
 candidate or the default.
 
 ```cpp
-auto cond = Slate(pluss::make_series({true, false}, pluss::ScalarType::Bool));
+auto cond = Shelf(pluss::make_series({true, false}, pluss::ScalarType::Bool));
 
 // "c1"'s label is explicitly missing: an empty-string placeholder paired with an
 // invalid entry in the companion validity mask, the same idiom used whenever a Note
 // needs an explicit NULL cell (see count.md).
 auto label_valid = pluss::make_series({false, true}, pluss::ScalarType::Bool);
 auto choice = DataFrame({
-    {"label", Slate(pluss::make_note({"", "y"}), label_valid)},
+    {"label", Shelf(pluss::make_note({"", "y"}), label_valid)},
 }, pluss::make_note({"c1", "c2"}));
 
 auto fallback = DataFrame({
@@ -268,9 +268,9 @@ std::cout << rounded_billing;
      | rate  fee 
 -----------------
 c1   | 0.1   5   
-c2   | 0.1   0   
+c2   | 0     0   
 c3   | 0.1   2   
-c4   | 0.1   0   
+c4   | 0     0   
 c5   | 0.1   5   
 -----------------
 [5 cs x 2 feat]
@@ -282,11 +282,11 @@ c5   | 0.1   5
 
 ## Notes
 
-- Unlike the `Slate`-level `Slate::select()` this delegates to internally, the
+- Unlike the `Shelf`-level `Shelf::select()` this delegates to internally, the
   `DataFrame`-level `select()` does **not** support scalar-like (single-row)
   `choices` or `default_value` — every choice's `ncases()` must exactly match
   `default_value.ncases()`. Broadcasting a single-row candidate across every case is a
-  `Slate::select()`-only capability.
+  `Shelf::select()`-only capability.
 - Every `choices` entry is checked against `default_value` for feature names (in
   order), case count, case labels, and case-axis metadata, and throws if any of them
   disagree — quoting the exact checks: *"all choices must match default feature
@@ -296,11 +296,11 @@ c5   | 0.1   5
 - `conditions` and `choices` must have the same length, and at least one condition is
   required — an empty `conditions` list throws (*"at least one condition is
   required"*).
-- Each condition `Slate` must be a `Bool`-typed `Series` — the same constraint
+- Each condition `Shelf` must be a `Bool`-typed `Series` — the same constraint
   documented on [`land()`](land.md). A numeric 0/1 column is rejected, not treated as
   truthy.
 - The same condition list drives every feature identically — there is no per-feature
-  condition list the way [`add()`](add.md)'s `Slate` overload has an `axis` choice.
+  condition list the way [`add()`](add.md)'s `Shelf` overload has an `axis` choice.
 
 ```{caution} A generator/coverage gap, not just a documentation gap
 `select()` had no generated page at all prior to this entry — every other

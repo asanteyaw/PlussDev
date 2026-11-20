@@ -1,0 +1,69 @@
+# Three dimensions
+
+[Back to PlussPl by example](../guide.md)
+
+Three-dimensional plots show surfaces, point clouds, paths and densities. This page draws a volatility surface from an options market, the clouds, paths and density shells of three sensors, and a surface under different cameras, lights and themes.
+
+## How it works
+
+A 3D pane (`pane3`) takes the volumetric traces. A **surface** over a grid is a `sheet` (filled) or a `lattice` (wireframe), and `ridge3` draws it as stacked ridge lines; `spire3` draws vertical bars over a grid. **Points** are `cloud3` (optionally sized and coloured), **paths** are `path3`, and the level surfaces of a 3D field are `isoshell`. Several `flash::` aliases (`plot3D`, `scatter3D`, `plot_surface`, `plot_wireframe`, `contour3D`, `bar3d`, `hist3d`) draw the same things under familiar names. How the scene is seen is separate: the camera (`camera3d`, `camera_preset3d`), the lights (`lighting3d`) and the theme and scene presets.
+
+## The implied-volatility surface
+
+Four thousand option quotes. The program computes the days to expiry as the difference of two timelines, drops the quotes stamped after their own expiry, averages the implied volatility in a grid of moneyness by time to expiry, and draws the grid six ways; a second figure shows where the trading is.
+
+@@example vol_surface.cpp@@
+
+![The volatility surface as a sheet, a lattice, plot_wireframe, plot_surface, contour3D and ridge lines](assets/vol_surface.svg)
+
+![Trading volume by cell as a spire, as bar3d, and the 3D histogram of quotes](assets/vol_volume.svg)
+
+The output lists what the data cleaning did: `387` of `4000` quotes are stamped after their expiry and are dropped, leaving expiries from about a hundredth of a day to `179` days. The surface is `12 x 8` with volatility between `0.152` and `0.229`, and the volatility smile is visible as a depth of `0.021` between the edge and the centre of the shortest expiry. The six panes of the first figure are the same grid as a filled surface, a wireframe, contours on the surface and ridge lines; the second shows the volume as bars over the same grid and a 3D histogram of quotes by moneyness and volatility.
+
+## Three sensors in space
+
+Readings of three sensors as a cloud, a path through time and a density.
+
+@@example sensor_clouds.cpp@@
+
+![The point cloud, the cloud sized and coloured by two more sensors, scatter3D and a path](assets/sensor_clouds.svg)
+
+![Nested density shells of the cloud](assets/sensor_density.svg)
+
+![The first 300 readings as a 3D line](assets/sensor_plot3d.svg)
+
+There are `1024` readings; the ranges are about `-1.3` to `1.5` for sensor 1, `-1.2` to `1.8` for sensor 30 and `-0.4` to `1.0` for sensor 20. Counting the readings in an `8 x 8 x 8` grid gives a densest cell of `65` readings and `89` of `512` cells occupied: the data live on a thin, curved structure rather than filling the cube, which the density shells show as nested surfaces around it. The cloud can carry two more variables through the size and the colour of its points.
+
+## One surface, many viewpoints
+
+The same sinc surface under different cameras, lights, themes and presets.
+
+@@example camera_and_scenes.cpp@@
+
+![The same surface with the default camera, a top-down preset, custom angles in perspective, lamps, a slate theme and a presentation scene](assets/camera_and_scenes.svg)
+
+![scene3d and trace3d in one call each](assets/camera_scene_options.svg)
+
+The surface is `40 x 40` with heights from `-0.217` to `0.986`. The six panes change one thing each: the camera angles, a top-down view, a perspective projection with a wider angle, three lamps instead of the headlight, a slate theme, and a scene preset together with a trace preset that turns the sheet into a wireframe. `scene3d` and `trace3d` take the same choices as option structs when you want to set them in one call.
+
+## Decisions
+
+- **Sheet or lattice:** a sheet to read heights from colour; a lattice to see through the surface or to overlay several.
+- **Camera:** an isometric or oblique view to show the shape; a top-down view to read positions; perspective when the depth matters.
+- **Density in 3D:** nested shells for a point cloud; the counts must be gridded first.
+- **Presets before tuning:** start from a scene or theme preset and adjust only what you need.
+
+## Pitfalls
+
+The program below makes 2 mistakes on purpose and prints the message each one produces.
+
+@@example pitfalls_three_dimensions.cpp@@
+
+- **A 3D path with a z of a different length:** x, y and z must broadcast together.
+- **A 3D plot in a 2D pane:** Create the pane with `pane3` for anything three-dimensional.
+
+Each message names the function that refused the input, so the fix is to correct the data before the call: check lengths and shapes where the data is built, not where it is drawn.
+
+## Where next
+
+Reference pages: [`Pane::sheet`](../api/pane/sheet.md), [`Pane::lattice`](../api/pane/lattice.md), [`Pane::ridge3`](../api/pane/ridge3.md), [`Pane::spire3`](../api/pane/spire3.md), [`Pane::cloud3`](../api/pane/cloud3.md), [`Pane::path3`](../api/pane/path3.md), [`Pane::isoshell`](../api/pane/isoshell.md), [`flash::plot3D`](../api/flash/plot3D.md), [`flash::scatter3D`](../api/flash/scatter3D.md), [`flash::plot_surface`](../api/flash/plot_surface.md), [`flash::plot_wireframe`](../api/flash/plot_wireframe.md), [`flash::contour3D`](../api/flash/contour3D.md), [`flash::bar3d`](../api/flash/bar3d.md), [`flash::hist3d`](../api/flash/hist3d.md), [`flash::camera3d`](../api/flash/camera3d.md), [`flash::camera_preset3d`](../api/flash/camera_preset3d.md), [`flash::lighting3d`](../api/flash/lighting3d.md), [`flash::theme_preset3d`](../api/flash/theme_preset3d.md), [`flash::scene_preset3d`](../api/flash/scene_preset3d.md), [`flash::scene3d`](../api/flash/scene3d.md), [`flash::trace_preset3d`](../api/flash/trace_preset3d.md), [`flash::trace3d`](../api/flash/trace3d.md). Next: [Four dimensions and animation](four_dimensions_and_animation.md).

@@ -2,13 +2,13 @@
 //  output_engine_pluss_types_tour.cpp
 //
 //  pluss::tils::OutputEngine + PrintOptions, driven entirely by Pluss types --
-//  Series, Note, Timeline / TimeIndex / Duration, Slate, DataFrame -- plus the
+//  Series, Note, Timeline / TimeIndex / Duration, Shelf, DataFrame -- plus the
 //  scalars and vectors you pull out of them. Raw API calls, no helper functions.
 //
 //  Two things to understand up front:
 //
 //   1. Pluss's rich types render *themselves*. `Series` / `Note` / `Timeline`
-//      go through `operator<<`; `Slate` / `DataFrame` / `DataFrameView` go
+//      go through `operator<<`; `Shelf` / `DataFrame` / `DataFrameView` go
 //      through their ADL `output_render`. So for those, a per-call PrintOptions
 //      controls the ENVELOPE around the rendered block -- separator between
 //      several of them, `prefix` / `suffix`, `line_prefix` (indent a multi-line
@@ -19,7 +19,7 @@
 //      `humanize`, `bool_style`, container brackets, `quote_strings` -- bite on
 //      C++ scalars and containers. With Pluss data you reach them by extracting:
 //      `series.item<double>()`, `series.host<double>()`, `df.features()`,
-//      `df.shape()`, `timeline.to_epoch_nanos_vector()`, `slate.sum().to_dbl()`.
+//      `df.shape()`, `timeline.to_epoch_nanos_vector()`, `shelf.sum().to_dbl()`.
 //
 //  Build (from the CMake build dir):
 //    c++ -std=c++20 -O2 -I../PlussMic/src -I../PlussQit/include -I../PlussQit/src \
@@ -41,7 +41,7 @@ using pluss::Series;
 using pluss::Note;
 using pluss::Timeline;
 using pluss::table::DataFrame;
-using pluss::table::Slate;
+using pluss::table::Shelf;
 using Lvl = OutputLevel;
 
 int main() {
@@ -58,30 +58,30 @@ int main() {
                                          "2022-11-30T18:15:00Z"});
 
   DataFrame homes = DataFrame({
-      {"home_id",  Slate(pluss::make_note({"H-104", "H-887", "H-231"}))},
-      {"price",    Slate(pluss::make_series({412000.0, 268500.0, 559900.0}))},
-      {"sqft",     Slate(pluss::make_series(std::vector<std::int64_t>{1850, 1420, 2610}))},
-      {"built_on", Slate(built)},
-      {"sold",     Slate(pluss::make_series(std::vector<bool>{true, false, true}))},
+      {"home_id",  Shelf(pluss::make_note({"H-104", "H-887", "H-231"}))},
+      {"price",    Shelf(pluss::make_series({412000.0, 268500.0, 559900.0}))},
+      {"sqft",     Shelf(pluss::make_series(std::vector<std::int64_t>{1850, 1420, 2610}))},
+      {"built_on", Shelf(built)},
+      {"sold",     Shelf(pluss::make_series(std::vector<bool>{true, false, true}))},
   }).title("homes");
 
-  Slate price_col = homes.features("price");     // a Series-kind Slate
+  Shelf price_col = homes.features("price");     // a Series-kind Shelf
 
   // ══════════════════════════════════════════════════════════════════════════
   //  A. RENDERING PLUSS TYPES DIRECTLY  (each renders itself)
   // ══════════════════════════════════════════════════════════════════════════
   // Series / Note stream through operator<< -- Series prints a DEBUG repr;
-  // wrap it in a Slate for the aligned table view.
+  // wrap it in a Shelf for the aligned table view.
   out.writeln("A1 Series via operator<< (debug repr):", prices);
-  out.writeln("A2 same Series as a Slate (table view):", Slate(prices));
+  out.writeln("A2 same Series as a Shelf (table view):", Shelf(prices));
   out.writeln("A3 Note via operator<<       :", cities);
   // A bare *multi-element* Timeline has a scalar-only operator<< (it throws),
-  // so wrap it in a Slate -- which renders a temporal column properly.
+  // so wrap it in a Shelf -- which renders a temporal column properly.
   out.writeln("A4 Timeline (1 element)      :", pluss::make_timeline("2024-01-01T00:00:00Z"));
-  out.writeln("A5 Timeline column via Slate:", Slate(built));
-  out.writeln("A6 Slate via output_render  :", price_col);
-  // A reduction is a SlateValue -- a scalar box; extract with .to_dbl()/.to_int()/.to_str().
-  out.writeln("A7 SlateValue -> .to_dbl()  :", price_col.mean().to_dbl());
+  out.writeln("A5 Timeline column via Shelf:", Shelf(built));
+  out.writeln("A6 Shelf via output_render  :", price_col);
+  // A reduction is a ShelfValue -- a scalar box; extract with .to_dbl()/.to_int()/.to_str().
+  out.writeln("A7 ShelfValue -> .to_dbl()  :", price_col.mean().to_dbl());
   out.writeln("A8 DataFrame via output_render:");
   out.writeln(homes);
   out.writeln("A9 DataFrameView (head)      :");
@@ -89,7 +89,7 @@ int main() {
   out.writeln("A10 DataFrameView (observe/record card):");
   out.writeln(homes.observe(0));
   out.writeln("A11 explicit .to_string()    :", homes.features("home_id").to_string());
-  out.writeln("A12 two Slates, one call, with a separator:", Slate(prices), Slate(counts),
+  out.writeln("A12 two Shelves, one call, with a separator:", Shelf(prices), Shelf(counts),
               PrintOptions{}.with_sep("\n   ---\n"));
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -123,14 +123,14 @@ int main() {
   out.writeln(sink.str().substr(0, sink.str().find('\n')));
   sink.str({});
 
-  // B6 -- format path: a Slate inside {} (renders itself); scalars via .to_dbl()
+  // B6 -- format path: a Shelf inside {} (renders itself); scalars via .to_dbl()
   out.writelnf("B6 the price column is:\n{}\nand its mean is {}",
                price_col, price_col.mean().to_dbl());
 
   // B7 -- level-tagged frame
   out.log(Lvl::Info, "B7 loaded frame ->", homes.shape());   // shape() is a std::pair (see C)
 
-  // B8 -- top-level width/align on a rendered scalar (Slate reduction -> double)
+  // B8 -- top-level width/align on a rendered scalar (Shelf reduction -> double)
   out.writelnf("B8 right-aligned reduction: [{}]", price_col.max().to_dbl(),
                PrintOptions{.align = Align::Right, .width = 20, .grouping = ','});
 
@@ -146,7 +146,7 @@ int main() {
   out.writeln("C1 grand total price:", total.item<double>(),
               PrintOptions{}.fixed(2).grouped(','));
 
-  // C2 -- Slate reduction -> double, with sign + notation
+  // C2 -- Shelf reduction -> double, with sign + notation
   out.writeln("C2 mean price (scientific, +sign):", price_col.mean().to_dbl(),
               PrintOptions{.notation = Notation::Scientific, .precision = 3,
                            .sign = Sign::Always});
@@ -196,9 +196,9 @@ int main() {
   out.writeln("C11 sold flags:", homes.features("sold").as_series().host<bool>(),
               PrintOptions{.bool_style = BoolStyle::YesNo});
 
-  // C12 -- a genuine "value_counts" Slate rendered, then its labels extracted
-  Slate freq = cities.empty() ? Slate{} : Slate(cities).freq();
-  out.writeln("C12 city frequencies (Slate renders itself):");
+  // C12 -- a genuine "value_counts" Shelf rendered, then its labels extracted
+  Shelf freq = cities.empty() ? Shelf{} : Shelf(cities).freq();
+  out.writeln("C12 city frequencies (Shelf renders itself):");
   out.writeln(freq);
   out.writeln("C12b same counts as a C++ vector, indexed:",
               freq.as_series().host<std::int64_t>(),
@@ -214,8 +214,8 @@ int main() {
   //  D. A SMALL REPORT: render a summary frame, then a formatted numeric line
   // ══════════════════════════════════════════════════════════════════════════
   DataFrame summary = DataFrame({
-      {"metric", Slate(pluss::make_note({"count", "min", "max", "mean"}))},
-      {"price",  Slate(pluss::make_series({
+      {"metric", Shelf(pluss::make_note({"count", "min", "max", "mean"}))},
+      {"price",  Shelf(pluss::make_series({
                      static_cast<double>(homes.features("price").as_series().numel()),
                      homes.features("price").min().to_dbl(),
                      homes.features("price").max().to_dbl(),

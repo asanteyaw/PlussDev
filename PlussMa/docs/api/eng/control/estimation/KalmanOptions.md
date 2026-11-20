@@ -2,7 +2,7 @@
 
 # `control::KalmanOptions`
 
-Numerical controls shared by filtering and smoothing.
+The information threshold and covariance jitter of the Kalman filter.
 
 ## Signature
 
@@ -12,156 +12,198 @@ control::KalmanOptions
 
 ## What It Does
 
-This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
-
-`KalmanOptions` is a public alias of the shared linear-state filtering options; control filtering reuses that tested lower engine.
+Two numerical settings shared by `kalman` and `smooth`: an observation is used only when its innovation variance exceeds `info_tol`, and `jitter` is added to the predicted covariance at every step.
 
 ## Fields
 
-### `info_tol`
-
-Information threshold used when deciding whether an observation contributes. The default `0.0` keeps every finite informative observation.
-
-### `jitter`
-
-Non-negative diagonal covariance regularizer. The default is `1e-12`; increase it cautiously when innovation systems are nearly singular.
+| Field | Meaning | Default |
+|---|---|---|
+| `info_tol` | Smallest innovation variance for which an observation is used; zero uses every finite observation. | `0` |
+| `jitter` | Added to the diagonal of the predicted covariance at each step. | `1e-12` |
 
 ## Returns
 
-This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+Argument of `kalman` and `smooth`.
 
 ## Errors
 
-The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+A negative or non-finite `info_tol` or `jitter` throws `pluss::Error`.
 
 ## Interpretation and Use
 
-Leave `info_tol` at zero unless tiny information contributions must be ignored deliberately. `jitter` regularizes innovation covariance solves; increasing it trades a small covariance perturbation for numerical stability. It should not be used to conceal a structurally singular model.
+Raise `info_tol` to ignore uninformative observations: with 2 the filter in the second example skips every sample whose innovation variance has fallen below 2 and uses it again once the covariance has grown back above it. A positive `jitter` keeps the covariance from collapsing and so keeps the gain from vanishing: 0.05 raises the final gain from 0.27 to 0.35 (the third example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Disable jitter explicitly on a well-conditioned scalar filter.
+The defaults.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace model = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.5}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({2.0}, {1, 1}),
-      0.1);
-  const control::KalmanResult result = control::kalman(
-      model, pluss::make_series({2.0, 2.0, 2.0}, {3, 1}),
-      pluss::make_series({0.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({0.0}), pluss::make_series({1.0}, {1, 1}),
-      {.jitter = 0.0});
-
-  out.writeln("filtered mean =", result.filtered_mean.flatten().items<double>());
-  out.writeln("predicted observation =",
-              result.predicted_obs.flatten().items<double>());
-  out.writeln("log likelihood =", result.loglik.item<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ctl::KalmanOptions defaults;
+  out.writeln("default info_tol is 0:", defaults.info_tol == 0.0, " default jitter is 1e-12:", defaults.jitter == 1e-12);
+  const ctl::KalmanResult r = ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1));
+  out.writeln("with the defaults every sample is used:", r.data_used.all().item<bool>());
 }
 ```
 
 Output
 
 ```text
-filtered mean = [1.000000, 1.333333, 1.500000]
-predicted observation = [0.000000, 1.000000, 1.333333]
-log likelihood = -4.949963
+default info_tol is 0: true  default jitter is 1e-12: true
+with the defaults every sample is used: true
 ```
 ### Example 2
 
-Reuse the same options contract through the smoother.
+Which samples are used for three thresholds.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace model = lti::state(
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}),
-      1.0);
-  const control::SmoothResult result = control::smooth(
-      model, pluss::make_series({0.2, 0.1, -0.3, 0.4}, {4, 1}),
-      pluss::make_series({0.04}, {1, 1}),
-      pluss::make_series({0.25}, {1, 1}), pluss::make_series({0.0}),
-      pluss::make_series({1.0}, {1, 1}), {.jitter = 0.0});
-
-  out.writeln("filtered mean =",
-              result.filter.filtered_mean.flatten().items<double>());
-  out.writeln("smoothed mean =", result.smoothed_mean.flatten().items<double>());
-  out.writeln("final covariance =",
-              result.smoothed_cov.select(-3, 3).flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A sample is used only when its innovation variance exceeds info_tol.
+  for (const double tol : {0.0, 2.0, 50.0}) {
+    const ctl::KalmanResult r = ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1), {.info_tol = tol});
+    out.writeln("info_tol", tol, ": data_used", r.data_used.flatten().items<bool>());
+  }
 }
 ```
 
 Output
 
 ```text
-filtered mean = [0.161240, 0.131147, -0.038921, 0.117636]
-smoothed mean = [0.099188, 0.086873, 0.072458, 0.117636]
-final covariance = [0.089172]
+info_tol 0.0000 : data_used [true, true, true, true, true, true, true, true]
+info_tol 2.0000 : data_used [true, true, false, false, false, false, true, false]
+info_tol 50.0000 : data_used [false, false, false, false, false, false, false, false]
 ```
 ### Example 3
 
-See structural errors that option tuning must not mask.
+The effect of the jitter on the final covariance and gain.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
 
 int main() {
   OutputEngine out;
-  const lti::StateSpace continuous = lti::state(
-      pluss::make_series({-1.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  try {
-    static_cast<void>(control::kalman(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.1}, {1, 1}),
-        pluss::make_series({0.2}, {1, 1}), pluss::make_series({0.0}),
-        pluss::make_series({1.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("continuous model rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::lqe(
-        continuous, pluss::make_series({1.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("singular noise covariance rejected =",
-                message.substr(0, message.find('\n')));
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // The jitter is added to the predicted covariance at every step, so a large value keeps the filter more responsive.
+  for (const auto [label, jitter] : {std::pair<const char *, double>{"0", 0.0}, {"1e-12 (the default)", 1e-12}, {"0.05", 0.05}}) {
+    const ctl::KalmanResult r = ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1), {.jitter = jitter});
+    out.writeln("jitter", label, ": final filtered covariance", r.filtered_cov.flatten().items<double>().back(), " final gain", r.gain.flatten().items<double>().back());
   }
 }
 ```
@@ -169,18 +211,63 @@ int main() {
 Output
 
 ```text
-continuous model rejected = eng::control::kalman: the state-space model must be discrete
-singular noise covariance rejected = eng::control::lqe: noise_cov must be positive definite
+jitter 0 : final filtered covariance 0.2741  final gain 0.2741
+jitter 1e-12 (the default) : final filtered covariance 0.2741  final gain 0.2741
+jitter 0.05 : final filtered covariance 0.4093  final gain 0.3479
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="LqeResult.html">
-    <span class="label">Previous</span>
-    <span class="title">LqeResult</span>
-  </a>
-  <a class="next-link" href="KalmanResult.html">
-    <span class="label">Next</span>
-    <span class="title">KalmanResult</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused value.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+// A scalar random walk x[k+1] = x[k] + w, y[k] = x[k] + v, sampled every second.
+static lti::StateSpace walk() { return lti::state(mat({1.0}, 1, 1), mat({0.0}, 1, 1), mat({1.0}, 1, 1), mat({0.0}, 1, 1), 1.0); }
+// Eight observations of a constant 1 with a deterministic disturbance in place of noise.
+static std::vector<double> readings(int n = 8) {
+  std::vector<double> y;
+  for (int k = 0; k < n; ++k) y.push_back(1.0 + 0.3 * std::sin(7.0 * k));
+  return y;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "a negative info_tol", [&] { ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1), {.info_tol = -1.0}); });
+  refused(out, "a negative jitter", [&] { ctl::kalman(walk(), mat(readings(), 8, 1), mat({0.1}, 1, 1), mat({1.0}, 1, 1), pluss::make_series({0.0}), mat({10.0}, 1, 1), {.jitter = -1.0}); });
+}
+```
+
+Output
+
+```text
+a negative info_tol : math::state: info_tol must be finite and non-negative
+a negative jitter : math::state: jitter must be finite and non-negative
+```

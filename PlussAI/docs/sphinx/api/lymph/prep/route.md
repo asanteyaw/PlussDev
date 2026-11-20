@@ -44,13 +44,13 @@ The stage says what to do and the route says where to do it. This program attach
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Slate;
+  using pluss::table::Shelf;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame frame({
-      {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0, 60.0}, {6}, cfg))},
-      {"ratio", Slate(pluss::make_series(std::vector<double>{0.1, 0.4, 0.2, 0.5, 0.3, 0.6}, {6}, cfg))},
-      {"label", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0, 60.0}, {6}, cfg))},
+      {"ratio", Shelf(pluss::make_series(std::vector<double>{0.1, 0.4, 0.2, 0.5, 0.3, 0.6}, {6}, cfg))},
+      {"label", Shelf(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
   });
 
   lymph::models::Model model = lymph::models::logistic_regression();

@@ -1,5 +1,7 @@
 # `lti::Hold`
 
+How the input is interpolated between time points.
+
 ## Signature
 
 ```cpp
@@ -10,45 +12,49 @@ lti::Hold lti::Hold::Linear;
 
 ## What It Does
 
-Selects how continuous simulation interprets inputs between timestamps.
+Between two samples the input is either held constant (`Zero`), varies linearly (`Linear`) or is chosen for you (`Auto`). The choice does not change the integrator, only the assumption about what the input does between samples.
 
-## Fields
+## Values
 
-| Field | Meaning |
+| Value | Between samples |
 |---|---|
-| `Auto` | Chooses the surface default: zero-order behavior unless the system contract requires otherwise. |
-| `Zero` | Holds each input sample constant until the next timestamp. |
-| `Linear` | Interpolates linearly between neighboring samples. |
+| `Zero` | The input keeps the value of the earlier sample (zero-order hold). |
+| `Linear` | The input varies linearly to the next sample (first-order hold). |
+| `Auto` | Chosen by the library; for the continuous system in the examples it gave the linear result. |
 
 ## Returns
 
-Stored in `SimOptions::hold` and consumed by `lti::sim`.
+Field `hold` of `SimOptions`.
 
 ## Errors
 
-Discrete simulation rejects `Linear` because the recurrence already advances on fixed samples.
+Time vectors that do not increase are rejected whatever the hold.
+
+## Interpretation and Use
+
+Use `Zero` for a signal that really is piecewise constant, such as a digital-to-analog output, and `Linear` for a sampled smooth signal. The first example sends a ramp through a first-order system: the linear hold reproduces the exact response, the zero hold lags it by a visible error. The second shows a piecewise-constant input, where the zero hold is exact.
 
 ## Practical Examples
 
-These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Simulate a continuous first-order step response on an irregular time grid.
+A ramp input under each hold, against the exact response.
 
-@@example Eng/api/lti_sim.cpp@@
+@@example Eng/api/lti_hold_ramp.cpp@@
 
 ### Example 2
 
-Compare hold policies with an explicit initial state.
+A piecewise-constant input under `Zero` and `Linear`.
 
-@@example Eng/api/lti_sim_modes.cpp@@
+@@example Eng/api/lti_hold_step.cpp@@
 
 ### Example 3
 
-Exercise timestamp and input-shape validation.
+Time vectors that every hold refuses.
 
-@@example Eng/api/lti_sim_errors.cpp@@
+@@example Eng/api/lti_hold_errors.cpp@@
 
 ## See Also
 

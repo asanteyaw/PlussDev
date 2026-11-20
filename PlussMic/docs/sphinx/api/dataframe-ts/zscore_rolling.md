@@ -51,8 +51,8 @@ Example 1. A window-2 rolling z-score.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Shelf(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Shelf(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().zscore_rolling(2);
@@ -66,9 +66,9 @@ std::cout << out;
      | load         
 --------------------
 0    | NULL         
-1    | 0.7071067812 
+1    |  0.7071067812
 2    | -0.7071067812
-3    | 0.7071067812 
+3    |  0.7071067812
 --------------------
 [4 cs x 1 feat]
 ```

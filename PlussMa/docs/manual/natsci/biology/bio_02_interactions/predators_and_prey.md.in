@@ -1,0 +1,56 @@
+# Predators and prey
+
+[Back to Biology 2: Interacting Species](../bio_02_interactions.md)
+
+Prey grow when predators are few; predators grow when prey are plenty; each undoes the other and the two populations cycle. This page evaluates the classical predator-prey model, finds its equilibrium, and uses the quantity the model conserves to check a long integration.
+
+## How it works
+
+`predator_prey_rate(s, alpha, beta, gamma, delta)` takes the state `(prey, predators)` and returns `dprey = alpha prey - beta prey predators` and `dpredators = delta prey predators - gamma predators`: prey grow at `alpha` and are eaten at `beta` per predator, predators die at `gamma` and gain `delta` per prey eaten. `predator_prey_equilibrium` returns the point `(gamma/delta, alpha/beta)` where both rates are zero. `predator_prey_invariant` returns a function of the state that the exact solution never changes, so how far it drifts under a numerical integration measures the error of that integration.
+
+## Equilibrium and a conserved quantity
+
+The program prints the equilibrium and the rate there, then integrates from a state of `4` prey and `1` predator with `dynamics::simulate` and prints the state and the invariant at three times.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace inter = biology::population::interaction;
+namespace dynamics = biology::dynamics;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // prey grows at 1.0, is eaten at 0.5 per predator; predators die at 0.75 and gain 0.25 per prey eaten
+  const double alpha = 1.0, beta = 0.5, gamma = 0.75, delta = 0.25;
+  const auto start = vec({4.0, 1.0});
+  const auto equilibrium = inter::predator_prey_equilibrium(alpha, beta, gamma, delta, start.select(-1, 0));
+  out.writeln("equilibrium (prey, predators) = ", flat(equilibrium));
+  out.writeln("rate at the equilibrium       = ", flat(inter::predator_prey_rate(equilibrium, alpha, beta, gamma, delta)));
+
+  const auto rate = [&](const pluss::Series &s) { return inter::predator_prey_rate(s, alpha, beta, gamma, delta); };
+  out.writeln("invariant at t = 0            = ", flat(inter::predator_prey_invariant(start, alpha, beta, gamma, delta)));
+  for (double t : {5.0, 10.0, 20.0}) {
+    const auto s = dynamics::simulate(rate, start, 0.0, t, 4000);
+    out.writeln("t = ", t, ": state ", flat(s), ", invariant ", flat(inter::predator_prey_invariant(s, alpha, beta, gamma, delta)));
+  }
+}
+```
+
+The equilibrium is `3` prey and `2` predators and both rates vanish there. Away from it the populations cycle: starting from `(4, 1)` the prey have fallen to `1.2857` by time `5` and recovered to `3.5387` by time `10`. The invariant stays at `0.4603` in all four lines, so the integration follows the exact orbit to the printed digits.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="competition.html">
+    <span class="label">Next</span>
+    <span class="title">Competing species</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

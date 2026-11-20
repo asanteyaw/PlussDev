@@ -4,6 +4,6 @@
 #include "table/DataFrame.h"
 #include "table/DFDataset.h"
 #include "table/FlashDatasetInterop.h"
-#include "table/Slate.h"
+#include "table/Shelf.h"
 #include "table/display/Display.h"
 #include "table/plot/DataFramePlot.h"

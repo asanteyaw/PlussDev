@@ -14,7 +14,7 @@ LocusPull& LocusPull::min(std::string_view source, std::string_view alias = {})
 
 The lowest usable (non-null) related value of `source` for each root record.
 Requires a numeric stream; see [`sum`](sum.md) for the shared null-for-empty
-and `NaN`-exclusion rules. Omitting `alias` derives one from the source:
+and missing-value rules. Omitting `alias` derives one from the source:
 `"events.spend"` becomes `"events_spend_min"`.
 
 ## Parameters
@@ -74,4 +74,4 @@ text min: Stream::reduce_groups: this reduction needs a numeric Series stream
 ## See Also
 
 - [`max`](max.md): the matching upper extreme.
-- [`sum`](sum.md): the shared null-for-empty and `NaN`-exclusion rules.
+- [`sum`](sum.md): the shared null-for-empty and missing-value rules.

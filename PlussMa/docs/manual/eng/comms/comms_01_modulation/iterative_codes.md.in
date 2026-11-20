@@ -4,7 +4,7 @@
 
 Convolutional codes with a Viterbi decoder get a few decibels. Codes that are decoded **iteratively** get within one or two decibels of the Shannon limit at long block lengths. This page builds a low-density parity-check (LDPC) code and a turbo code, decodes them from log-likelihood ratios, and measures the gain over uncoded BPSK and the effect of the iterations.
 
-## The mental model
+## How it works
 
 **LDPC.** A code is the set of bit vectors that satisfy a sparse parity-check matrix `H` (every row a parity equation of a few bits). `gallager(length, column_weight, row_weight, seed)` builds a regular Gallager code and derives a systematic generator by elimination over GF(2); `encode` multiplies the information bits by it. `decode` runs **belief propagation** (normalised min-sum): every parity check tells each of its bits what the other bits imply, every bit adds up what it is told, and the loop stops as soon as every check holds. It returns a Bool per frame: `converged` means the output is a codeword.
 

@@ -4,7 +4,7 @@
 
 When voltages, reactive power or losses matter, the DC approximation is not enough, and you need the exact solution of the nonlinear network equations. `power::ac` solves them by Newton's method. This page solves a network and checks the answer against the defining equation, shows what a voltage-controlled bus does, controls the iteration and what it reports, and finds the loadability limit of a line beyond which no solution exists, against its closed form.
 
-## The mental model
+## How it works
 
 At every bus the complex power injected equals the power the bus sends into the network,
 

@@ -1,0 +1,53 @@
+# Turing instability
+
+[Back to Biology 12: Patterns](../bio_12_patterns.md)
+
+Two chemicals that react and diffuse can turn a uniform state into stripes or spots, if the inhibitor spreads much faster than the activator. This page decides, from the reaction rates and diffusion coefficients alone, whether a uniform state forms a pattern, and at what spatial scale.
+
+## How it works
+
+Near a uniform steady state a small ripple of wavenumber `k` grows or decays at a rate set by the Jacobian `J` of the reactions and the diffusion matrix `D`: it is the eigenvalue of `J - k^2 D` with the largest real part. A pattern forms when the state is stable without diffusion (trace of `J` negative, determinant positive) but a band of wavenumbers `k^2` has a positive growth rate. `turing_conditions(J, da, db)` checks all of that and returns the band edges `k2_lower` and `k2_upper`, and `growth_rate(J, da, db, k2)` returns the rate for any array of `k^2`. `Brusselator{a, b}.jacobian(like)` gives the Jacobian of the Brusselator reactions at their steady state, for lanes shaped like `like`.
+
+## Brusselator
+
+With `a = 1` the activator diffuses at `0.05` and the inhibitor at `1`. The program tests three values of the control parameter `b` and, where a pattern forms, prints the unstable band and the growth rates at five wavenumbers.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace biology = pluss::ma::natsci::biology;
+namespace turing = biology::spatial::turing;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // Brusselator with a = 1: an activator diffusing at 0.05 and an inhibitor at 1.0
+  const auto like = vec({0.0});
+  const auto da = vec({0.05}), db = vec({1.0});
+  for (double b : {1.2, 1.8, 3.0}) {
+    const turing::Brusselator model{.a = 1.0, .b = b};
+    const auto jacobian = model.jacobian(like);
+    const auto c = turing::turing_conditions(jacobian, da, db);
+    out.writeln("b = ", b, ": stable without diffusion = ", flat(c.stable_without_diffusion.to(pluss::ScalarType::Float64)),
+                ", pattern forms = ", flat(c.turing_unstable.to(pluss::ScalarType::Float64)));
+    if (flat(c.turing_unstable)[0] > 0.0) {
+      out.writeln("    unstable band in k^2: ", flat(c.k2_lower), " to ", flat(c.k2_upper), ", centre of the band k^2 = ", flat(c.k2_critical));
+      const auto k2 = vec({0.0, 0.5, 2.0, 4.0, 8.0});
+      out.writeln("    growth rate at k^2 = 0, 0.5, 2, 4, 8: ", flat(turing::growth_rate(jacobian, da, db, k2)));
+    }
+  }
+}
+```
+
+At `b = 1.2` the uniform state is stable and no pattern forms. At `b = 3.0` the state is already unstable without diffusion (an oscillation, not a stationary pattern), so the Turing test fails. At `b = 1.8` it is stable without diffusion but unstable to ripples with `k^2` between `1.4792` and `13.5208`: the growth rate is negative at `k^2 = 0` and `0.5` (`-0.1000` and `-0.3625`) and positive at `2`, `4` and `8` (`0.1238`, `0.2576`, `0.2044`), so stripes or spots of that scale will grow.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

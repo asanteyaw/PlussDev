@@ -2,7 +2,7 @@
 
 # `control::care`
 
-Solves a continuous algebraic Riccati equation.
+Solves the continuous-time algebraic Riccati equation of the linear-quadratic regulator.
 
 ## Signature
 
@@ -25,169 +25,255 @@ control::RiccatiResult control::care(
 
 ## What It Does
 
-`care` solves the continuous-time equation and synthesizes the stabilizing feedback law. Leading dimensions are batch axes and broadcast under normal `Series` rules.
+Finds the stabilising `P` of `A'P + PA - (P B + N) R^{-1} (B'P + N') + Q = 0` and returns it with the optimal feedback `K = R^{-1}(B'P + N')` and the closed-loop matrix `A - B K`. With the cross-weight `N` omitted the equation is the classic `A'P + PA - P B R^{-1} B' P + Q = 0`. The control `u = -K x` minimises the cost `integral(x'Qx + 2x'Nu + u'Ru) dt`.
 
 ## Parameters
 
-`a`
-: The continuous state matrix `A`, shaped `[..., states, states]`.
-
-`b`
-: The input matrix `B`, shaped `[..., states, inputs]`.
+`a`, `b`
+: The dynamics `[..., n, n]` and input matrix `[..., n, m]`.
 
 `q`
-: Hermitian positive-semidefinite state cost `Q`.
+: State weight `[..., n, n]`, symmetric and positive semidefinite.
 
 `r`
-: Hermitian positive-definite input cost `R`.
+: Input weight `[..., m, m]`, symmetric and positive definite.
 
 `cross`
-: Optional state-input cross cost `S`; the joint cost block must remain positive semidefinite.
+: Optional cross-weight `N`, `[..., n, m]`.
 
 `options`
-: Numerical matrix-equation tolerances and iteration controls.
+: `MatrixEqOptions` of the underlying solver.
 
 ## Returns
 
-A `control::RiccatiResult` containing `X`, `K`, and `A - B K`.
+A `RiccatiResult` with `value` (`P`), `gain` (`K`) and `closed_loop` (`A - B K`).
 
 ## Errors
 
-Throws when shapes are incompatible, costs violate their Hermitian definiteness contracts, or no stabilizing solution can be established.
+An `R` that is not positive definite, a cross-weight that makes the joint cost `[Q, N; N', R]` indefinite, matrices of inconsistent shape, and a pair with no stabilising solution (an unstable mode the input cannot reach, or one the weight `Q` does not see) throw `pluss::Error`. The last message names the conditions and appends the solver's own message.
 
 ## Interpretation and Use
 
-Use `care` when matrices are already available and the dynamics are continuous. The cross-weight overload is not a numerical hint: it changes the quadratic objective. Start without it unless the model genuinely contains state-input coupling, and always inspect `closed_loop` after synthesis.
+For `a = b = q = r = 1` the equation is `2p - p^2 + 1 = 0` and the stabilising root is `1 + sqrt(2)`, which the first example reproduces; the closed loop is `-sqrt(2)`. The second example checks the Riccati equation itself for a double integrator: its residual is at rounding level and `P` is symmetric. A cross-weight shifts the gain (the third example).
 
 ## Practical Examples
 
-The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Solve the cross-weight overload and inspect its stabilizing solution.
+A scalar problem against its closed form.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const control::RiccatiResult result = control::care(
-      pluss::make_series({-2.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({4.0}, {1, 1}),
-      pluss::make_series({2.0}, {1, 1}),
-      pluss::make_series({0.5}, {1, 1}));
-
-  out.writeln("cross-weight value =", result.value.flatten().items<double>());
-  out.writeln("cross-weight gain =", result.gain.flatten().items<double>());
-  out.writeln("closed-loop pole =", result.closed_loop.flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // a = 1, b = 1, q = 1, r = 1: the Riccati equation 2 p - p^2 + 1 = 0 has the stabilising root p = 1 + sqrt(2).
+  const ctl::RiccatiResult r = ctl::care(mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1), mat({1.0}, 1, 1));
+  out.writeln("P =", r.value.flatten().items<double>(), " exact 1 + sqrt(2) =", 1.0 + std::sqrt(2.0));
+  out.writeln("K = R^-1 B' P =", r.gain.flatten().items<double>(), " closed loop a - b k =", r.closed_loop.flatten().items<double>(), " exact -sqrt(2) =", -std::sqrt(2.0));
 }
 ```
 
 Output
 
 ```text
-cross-weight value = [0.791503]
-cross-weight gain = [0.645751]
-closed-loop pole = [-2.645751]
+P = [2.4142]  exact 1 + sqrt(2) = 2.4142
+K = R^-1 B' P = [2.4142]  closed loop a - b k = [-1.4142]  exact -sqrt(2) = -1.4142
 ```
 ### Example 2
 
-Use the equivalent state-space route for a standard continuous regulator.
+The residual of the Riccati equation for a double integrator.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::subsp::eng::control;
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
 namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6));
-
-  const lti::StateSpace plant = lti::state(
-      pluss::make_series({-2.0}, {1, 1}), pluss::make_series({1.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}), pluss::make_series({0.0}, {1, 1}));
-  const control::RiccatiResult result = control::lqr(
-      plant, pluss::make_series({4.0}, {1, 1}),
-      pluss::make_series({1.0}, {1, 1}));
-
-  out.writeln("value =", result.value.flatten().items<double>());
-  out.writeln("gain =", result.gain.flatten().items<double>());
-  out.writeln("closed loop =", result.closed_loop.flatten().items<double>());
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series q = pluss::series::eye(2, pluss::ScalarType::Float64);
+  const pluss::Series r = mat({1.0}, 1, 1);
+  const ctl::RiccatiResult sol = ctl::care(A2(), B2(), q, r);
+  const pluss::Series &p = sol.value;
+  const pluss::Series residual = A2().transpose(0, 1).matmul(p) + p.matmul(A2()) - p.matmul(B2()).matmul(B2().transpose(0, 1)).matmul(p) + q;
+  out.writeln("P =", p.flatten().items<double>());
+  out.writeln("largest entry of A'P + PA - P B R^-1 B' P + Q =", max_abs(residual));
+  out.writeln("P is symmetric: largest |P - P'| =", max_abs(p - p.transpose(0, 1)));
+  const auto k = sol.gain.flatten().items<double>();
+  out.writeln("K =", k, " closed-loop trace =", sol.closed_loop.flatten().items<double>()[0] + sol.closed_loop.flatten().items<double>()[3], "(negative: both eigenvalues in the left half-plane for this system)");
 }
 ```
 
 Output
 
 ```text
-value = [0.828427]
-gain = [0.828427]
-closed loop = [-2.828427]
+P = [1.7321, 1.0000, 1.0000, 1.7321]
+largest entry of A'P + PA - P B R^-1 B' P + Q = 0.0000
+P is symmetric: largest |P - P'| = 0.0000
+K = [1.0000, 1.7321]  closed-loop trace = -1.7321 (negative: both eigenvalues in the left half-plane for this system)
 ```
 ### Example 3
 
-See the exact failures for singular `R` and non-Hermitian `Q`.
+A cross-weight `N` and its effect on the gain.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <exception>
+#include <algorithm>
+#include <cmath>
+#include <complex>
 #include <string>
 
-namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
 using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
 
 int main() {
   OutputEngine out;
-  const pluss::Series scalar = pluss::make_series({1.0}, {1, 1});
-  try {
-    static_cast<void>(control::care(
-        pluss::make_series({-2.0}, {1, 1}), scalar,
-        pluss::make_series({4.0}, {1, 1}),
-        pluss::make_series({0.0}, {1, 1})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("singular R rejected =", message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(control::care(
-        pluss::make_series({{-1.0, 0.0}, {0.0, -2.0}}),
-        pluss::make_series({1.0, 0.0}, {2, 1}),
-        pluss::make_series({{1.0, 2.0}, {0.0, 1.0}}), scalar));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("non-Hermitian Q rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // A cross-weight N couples state and input in the cost x'Qx + 2 x'N u + u'Ru.
+  const pluss::Series q = pluss::series::eye(2, pluss::ScalarType::Float64);
+  const pluss::Series r = mat({1.0}, 1, 1);
+  const pluss::Series n = mat({0.2, 0.1}, 2, 1);
+  const ctl::RiccatiResult plain = ctl::care(A2(), B2(), q, r);
+  const ctl::RiccatiResult coupled = ctl::care(A2(), B2(), q, r, n);
+  out.writeln("gain without a cross term =", plain.gain.flatten().items<double>());
+  out.writeln("gain with the cross term  =", coupled.gain.flatten().items<double>());
+  const pluss::Series &p = coupled.value;
+  const pluss::Series residual = A2().transpose(0, 1).matmul(p) + p.matmul(A2()) - (p.matmul(B2()) + n).matmul(B2().transpose(0, 1).matmul(p) + n.transpose(0, 1)) + q;
+  out.writeln("largest entry of the cross-term Riccati residual =", max_abs(residual));
 }
 ```
 
 Output
 
 ```text
-singular R rejected = eng::control::care: R must be positive definite
-non-Hermitian Q rejected = eng::control::care: Q must be Hermitian
+gain without a cross term = [1.0000, 1.7321]
+gain with the cross term  = [1.0000, 1.6125]
+largest entry of the cross-term Riccati residual = 0.0000
 ```
-<!-- apiref:nav:start -->
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="RiccatiResult.html">
-    <span class="label">Previous</span>
-    <span class="title">RiccatiResult</span>
-  </a>
-  <a class="next-link" href="dare.html">
-    <span class="label">Next</span>
-    <span class="title">dare</span>
-  </a>
-</div>
-<!-- apiref:nav:end -->
+### Example 4
+
+Every refused problem.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+static pluss::Series mat(std::vector<double> values, std::int64_t rows, std::int64_t cols) { return pluss::make_series(std::move(values), {rows, cols}); }
+static double max_abs(const pluss::Series &s) { return s.abs().max().item<double>(); }
+
+// A double integrator x'' = u as the matrices of x' = A x + B u.
+static pluss::Series A2() { return mat({0.0, 1.0, 0.0, 0.0}, 2, 2); }
+static pluss::Series B2() { return mat({0.0, 1.0}, 2, 1); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series q = pluss::series::eye(2, pluss::ScalarType::Float64);
+  refused(out, "R that is not positive definite", [&] { ctl::care(A2(), B2(), q, mat({-1.0}, 1, 1)); });
+  refused(out, "a pair that cannot be stabilised", [&] { ctl::care(mat({1.0, 0.0, 0.0, 2.0}, 2, 2), mat({1.0, 0.0}, 2, 1), q, mat({1.0}, 1, 1)); });
+  refused(out, "B with the wrong number of rows", [&] { ctl::care(A2(), mat({1.0, 0.0, 0.0}, 3, 1), q, mat({1.0}, 1, 1)); });
+  refused(out, "a cross weight that makes the joint cost indefinite", [&] { ctl::care(A2(), B2(), q, mat({1.0}, 1, 1), mat({5.0, 5.0}, 2, 1)); });
+  refused(out, "Q of the wrong size", [&] { ctl::care(A2(), B2(), mat({1.0}, 1, 1), mat({1.0}, 1, 1)); });
+}
+```
+
+Output
+
+```text
+R that is not positive definite : eng::control::care: R must be positive definite
+a pair that cannot be stabilised : eng::control::care: no stabilising solution; (A, B) must be stabilisable (every unstable mode reachable from the input) and the states weighted by Q must be detectable. Solver message: subsp::math::linalg::lu_solve: singular matrix
+B with the wrong number of rows : eng::control::care: B rows must equal the state count
+a cross weight that makes the joint cost indefinite : eng::control::care: the joint [Q, cross; cross^H, R] cost must be positive semidefinite
+Q of the wrong size : eng::control::care: Q must have shape [..., states, states]
+```

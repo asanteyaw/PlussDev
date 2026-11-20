@@ -2,6 +2,8 @@
 
 # `signal::fir`
 
+Applies a finite impulse response filter causally.
+
 ## Signature
 
 ```cpp
@@ -13,159 +15,162 @@ pluss::Series signal::fir(
 
 ## What It Does
 
-Applies a causal finite-impulse-response filter with zero initial history. Unlike full convolution, the result is aligned to the input and has the same sample-axis length.
+Convolves with the taps and keeps the first `N` samples, the causal part: `y[n] = sum_{m <= n} h[m] x[n - m]`, with the signal taken as zero before its first sample. The output has the same length as the input.
 
 ## Parameters
 
 `input`
-: Floating or complex samples.
+: A floating or complex `Series`.
 
 `taps`
-: Feed-forward coefficients ordered from current sample to older samples.
+: A rank-one floating or complex `Series`, the impulse response.
 
 `dim`
-: Ordered sample axis.
+: The axis to filter along; default `-1`.
 
 ## Returns
 
-A same-length filtered `Series` on the promoted dtype and input platform.
+A `Series` with the shape of `input`.
 
 ## Errors
 
-Rejects invalid axes, non-floating/non-complex data, empty taps, and incompatible batch structure.
+An integer input, empty taps and an axis out of range throw `pluss::Error`.
+
+## Interpretation and Use
+
+The first `K - 1` outputs are the start-up transient of a `K`-tap filter. A causal filter delays features of the signal; use `zero_phase` when the delay is not acceptable.
 
 ## Practical Examples
 
-These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+The following programs isolate this symbol's normal contract, the property that distinguishes it, and its validation behavior. Every program and displayed output is generated from the same compiled source.
 
 ### Example 1
 
-Compare convolution, correlation, FIR filtering, and frequency response.
+A three-point moving average, with the start-up transient visible.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input = pluss::make_series({1.0, 2.0, 3.0});
-  const pluss::Series kernel = pluss::make_series({1.0, 1.0});
-  const pluss::Series omega = pluss::make_series({0.0, std::acos(-1.0)});
-
-  out.writeln("full convolution =", sig::conv(input, kernel).items<double>());
-  out.writeln("same convolution =",
-              sig::conv(input, kernel, -1, sig::ConvMode::Same)
-                  .items<double>());
-  out.writeln("correlation =", sig::corr(input, kernel).items<double>());
-  out.writeln("causal FIR =", sig::fir(input, kernel).items<double>());
-  out.writeln("frequency response =", sig::freqz(kernel, omega).items<std::complex<double>>());
-}
-```
-
-Output
-
-```text
-full convolution = [1.0000, 3.0000, 5.0000, 3.0000]
-same convolution = [1.0000, 3.0000, 5.0000]
-correlation = [1.0000, 3.0000, 5.0000, 3.0000]
-causal FIR = [1.0000, 3.0000, 5.0000]
-frequency response = [(2,0), (0,-1.22465e-16)]
-```
-### Example 2
-
-Continue a recursive filter across blocks and apply forward-backward filtering.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace sig = pluss::subsp::eng::signal;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4));
-
-  const pluss::Series input =
-      pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  const pluss::Series numerator = pluss::make_series({0.5, 0.5});
-  const pluss::Series denominator = pluss::make_series({1.0, -0.5});
-  const sig::FilterRun first =
-      sig::filter(input.slice(0, 0, 4), numerator, denominator);
-  const sig::FilterRun second = sig::filter(
-      input.slice(0, 4, 8), numerator, denominator, first.state);
-  const pluss::Series joined = first.values.unite({second.values}, 0);
-
-  out.writeln("first block =", first.values.items<double>());
-  out.writeln("carried state =", first.state.items<double>());
-  out.writeln("second block =", second.values.items<double>());
-  out.writeln("joined output =", joined.items<double>());
-
-  const pluss::Series smooth = sig::zero_phase(
-      input, numerator, denominator,
-      {.dim = 0, .edge = 3, .pad = sig::PadMode::Odd});
-  out.writeln("zero phase =", smooth.items<double>());
-}
-```
-
-Output
-
-```text
-first block = [0.5000, 1.7500, 3.3750, 5.1875]
-carried state = [4.5938]
-second block = [7.0938, 9.0469, 11.0234, 13.0117]
-joined output = [0.5000, 1.7500, 3.3750, 5.1875, 7.0938, 9.0469, 11.0234, 13.0117]
-zero phase = [4.3691, 8.1758, 12.0703, 16.0000, 19.9297, 23.8242, 27.6309, 31.2530]
-```
-### Example 3
-
-Observe validation of signal dtype and recurrence coefficients.
-
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-#include <exception>
 #include <string>
 
 namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
 int main() {
   OutputEngine out;
-  try {
-    static_cast<void>(sig::conv(pluss::make_series({1, 2, 3}),
-                                   pluss::make_series({1.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("integer input rejected =",
-                message.substr(0, message.find('\n')));
-  }
-  try {
-    static_cast<void>(sig::filter(
-        pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}),
-        pluss::make_series({0.0, 1.0})));
-  } catch (const std::exception &error) {
-    const std::string message = error.what();
-    out.writeln("zero denominator rejected =",
-                message.substr(0, message.find('\n')));
-  }
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({3.0, 6.0, 9.0, 12.0, 15.0});
+  const pluss::Series taps = pluss::make_series({1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0});
+  const pluss::Series y = sig::fir(x, taps);
+  out.writeln("input length", x.numel(), " output length", y.numel());
+  out.writeln("three-point moving average =", y.items<double>());
 }
 ```
 
 Output
 
 ```text
-integer input rejected = eng::signal::conv: input must have a floating or complex dtype
-zero denominator rejected = eng::signal::filter: denominator[0] must be nonzero
+input length 5  output length 5
+three-point moving average = [1.0000, 3.0000, 6.0000, 9.0000, 12.0000]
+```
+### Example 2
+
+`fir` against the causal part of the full convolution.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series x = pluss::make_series({1.0, -2.0, 3.0, -4.0, 5.0});
+  const pluss::Series taps = pluss::make_series({0.5, 0.3, 0.2});
+  const auto causal = sig::fir(x, taps).items<double>();
+  const auto full = sig::conv(x, taps).items<double>();
+  double worst = 0.0;
+  for (std::size_t i = 0; i < causal.size(); ++i) worst = std::max(worst, std::abs(causal[i] - full[i]));
+  out.writeln("fir against the first", causal.size(), "samples of the full convolution, largest difference =", worst);
+  out.writeln("the full convolution has", full.size(), "samples; fir keeps the causal part");
+}
+```
+
+Output
+
+```text
+fir against the first 5 samples of the full convolution, largest difference = 0.0000
+the full convolution has 7 samples; fir keeps the causal part
+```
+### Example 3
+
+Every refused input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <string>
+
+namespace sig = pluss::subsp::eng::signal;
+using namespace pluss::tils;
+
+template <class F> void refused(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, ": accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, ":", e.message());
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  refused(out, "an integer input", [] { sig::fir(pluss::make_series({1, 2, 3}), pluss::make_series({1.0, 1.0})); });
+  refused(out, "empty taps", [] { sig::fir(pluss::make_series({1.0, 2.0}), pluss::series::zeros({0}, pluss::ScalarType::Float64)); });
+  refused(out, "an axis out of range", [] { sig::fir(pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}), 4); });
+}
+```
+
+Output
+
+```text
+an integer input : eng::signal::fir: input must have a floating or complex dtype
+empty taps : eng::signal::conv: sample axes must be non-empty
+an axis out of range : eng::signal::fir: dim out of range
 ```
 ## See Also
 

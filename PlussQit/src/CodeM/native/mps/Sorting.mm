@@ -75,6 +75,7 @@ ScalarType selection_compute_dtype_(ScalarType st) noexcept {
     case ScalarType::Float16:
     case ScalarType::Float32:
     case ScalarType::Int32:
+    case ScalarType::Int64: // sorted as int64: a 32-bit lane would corrupt values outside the int32 range
       return st;
     case ScalarType::Complex64:
     case ScalarType::Complex128:

@@ -55,6 +55,47 @@ Output:
 despine no-op, svg unchanged: 1
 ```
 
+Example 2. Passing `false` does nothing either; the second argument is accepted and ignored.
+
+```cpp
+using namespace pluss::pl;
+
+auto fig = studio("flash_despine_explicit");
+auto &pane = fig.pane2("curve");
+pane.trend(x, y);
+const std::string before = fig.to_svg();
+flash::despine(pane, false);
+std::cout << "despine(pane, false), svg unchanged: " << (before == fig.to_svg()) << "\n";
+```
+
+Output:
+
+```text
+despine(pane, false), svg unchanged: 1
+```
+
+Example 3. The call returns the pane it was given, so it can sit in a chain of styling calls, and it leaves the figure's pane count alone.
+
+```cpp
+auto fig = studio("flash_despine_chain");
+fig.mosaic(1, 2);
+auto &left = fig.pane2("left");
+auto &right = fig.pane2("right");
+left.trend(x, y);
+right.trend(x, y);
+flash::despine(left);
+flash::despine(right);
+std::cout << "returns the pane it was given: " << (&flash::despine(left) == &left) << "\n";
+std::cout << "panes after despine: " << fig.pane_count() << "\n";
+```
+
+Output:
+
+```text
+returns the pane it was given: 1
+panes after despine: 2
+```
+
 ## Notes
 
 - `noexcept`.
