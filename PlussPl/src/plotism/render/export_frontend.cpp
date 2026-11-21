@@ -212,13 +212,9 @@ std::string native_window_title_(std::string_view fallback) {
 pluss::view::BackendPreference plot_backend_preference_() {
   const char* raw = std::getenv("PLUSSTILS_VIEW_PLOT_BACKEND");
   if (raw == nullptr) {
-#if defined(_WIN32) || defined(__linux__)
-    // Tables and plots use the same built-in window renderer by default on
-    // these platforms; an explicit preference can still select a native webview.
+    // Tables and plots use the same built-in window (PlussView) on every platform, so its Save
+    // and Colors menus are always there; an explicit preference can still select a native webview.
     return pluss::view::BackendPreference::Auto;
-#else
-    return pluss::view::BackendPreference::NativeWebView;
-#endif
   }
 
   std::string token(raw);
@@ -554,9 +550,9 @@ bool Studio::show(std::string_view title, std::int64_t width, std::int64_t heigh
         for (auto& pane : copy.panes_) {
           for (std::size_t index = 0; index < pane.traces_.size(); ++index) {
             auto& trace = pane.traces_[index];
-            if (!trace.stroke_explicit()) {
-              trace.stroke(accents[index % accents.size()]);
-            }
+            auto color = accents[index % accents.size()];
+            color.alpha = trace.stroke_color().alpha;  // keep the plot's own opacity
+            trace.stroke(color);
           }
         }
       }

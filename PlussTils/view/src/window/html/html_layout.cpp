@@ -2624,6 +2624,12 @@ void render_svg_children(Scene& scene, const HtmlNode& node, const SvgViewport& 
       continue;
     }
 
+    // Definitions (clip paths, masks, ...) describe other shapes; they are never painted themselves.
+    if (tag == "defs" || tag == "clippath" || tag == "mask" || tag == "symbol" || tag == "pattern" ||
+        tag == "lineargradient" || tag == "radialgradient" || tag == "style" || tag == "title") {
+      continue;
+    }
+
     if (tag == "rect") {
       const double x = svg_number_attr(child, "x").value_or(0.0);
       const double y = svg_number_attr(child, "y").value_or(0.0);
