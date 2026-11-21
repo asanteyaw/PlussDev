@@ -1034,7 +1034,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
       for (const auto& choice : choices) {
         payloads.push_back(choice.as_series());
       }
-      auto out = pluss::series::choose(
+      auto out = pluss::series::branch(
           pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
           pluss::msharp::RangeView::Of<pluss::Series>(payloads),
           default_value.as_series());
@@ -1045,7 +1045,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::series::choose(
+          pluss::series::branch(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
@@ -1065,7 +1065,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::series::choose(
+          pluss::series::branch(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))

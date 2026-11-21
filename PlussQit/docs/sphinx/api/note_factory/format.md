@@ -364,7 +364,7 @@ Binding names must be unique.
 ## See Also
 
 - [`pluss::note::make`](make.md): wrap a string you have already assembled.
-- [`pluss::note::choose`](choose.md): choose among prepared strings by
+- [`pluss::note::branch`](branch.md): choose among prepared strings by
   boolean conditions instead of rendering one.
 - [`pluss::note::from_lines`](from_lines.md) /
   [`pluss::note::from_words`](from_words.md): the inverse direction — take a

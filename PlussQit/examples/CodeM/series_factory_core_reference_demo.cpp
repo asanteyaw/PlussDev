@@ -694,13 +694,13 @@ int main() {
   }
 
   heading("select_single_branch");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       pluss::series::make({true, false, true, false}, pluss::ScalarType::Bool),
       pluss::series::make({10.0, 20.0, 30.0, 40.0}),
       -1.0) << "\n\n";
 
   heading("select_first_match_wins");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       {
           pluss::series::make({true, true, false, false}, pluss::ScalarType::Bool),
           pluss::series::make({true, false, true, false}, pluss::ScalarType::Bool),
@@ -712,7 +712,7 @@ int main() {
       0.0) << "\n\n";
 
   heading("select_series_default");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       {
           pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
           pluss::series::make({false, false, true, false}, pluss::ScalarType::Bool),
@@ -724,7 +724,7 @@ int main() {
       pluss::series::make({-1.0, -2.0, -3.0, -4.0})) << "\n\n";
 
   heading("select_scalar_choice_broadcast");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       {
           pluss::series::make({false, true, false, true}, pluss::ScalarType::Bool),
       },
@@ -734,7 +734,7 @@ int main() {
       pluss::series::make({1.0, 2.0, 3.0, 4.0})) << "\n\n";
 
   heading("select_bool_output");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       {
           pluss::series::make({true, false, false, true}, pluss::ScalarType::Bool),
           pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
@@ -746,14 +746,14 @@ int main() {
       true) << "\n\n";
 
   heading("select_single_series_overload");
-  std::cout << pluss::series::choose(
+  std::cout << pluss::series::branch(
       pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
       pluss::series::make(5.0),
       1.0) << "\n\n";
 
   heading("select_condition_choice_mismatch");
   try {
-    std::cout << pluss::series::choose(
+    std::cout << pluss::series::branch(
         {
             pluss::series::make({true, false}, pluss::ScalarType::Bool),
             pluss::series::make({false, true}, pluss::ScalarType::Bool),
@@ -770,7 +770,7 @@ int main() {
 
   heading("select_non_bool_condition");
   try {
-    std::cout << pluss::series::choose(
+    std::cout << pluss::series::branch(
         pluss::series::make({1.0, 0.0, 1.0}),
         pluss::series::make({10.0, 20.0, 30.0}),
         -1.0) << "\n";

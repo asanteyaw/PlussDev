@@ -280,18 +280,18 @@ void section_format() {
 void section_select() {
   const auto c_true_false_true = pluss::make_series({true, false, true});
 
-  show("choose/single-string-sugar",
-       pluss::note::choose(c_true_false_true, "YES", "no"));
+  show("branch/single-string-sugar",
+       pluss::note::branch(c_true_false_true, "YES", "no"));
 
-  show("choose/single-note-choice",
-       pluss::note::choose(c_true_false_true, pluss::note::make("HIT"),
+  show("branch/single-note-choice",
+       pluss::note::branch(c_true_false_true, pluss::note::make("HIT"),
                            pluss::note::make("miss")));
 
   {
     const auto early = pluss::make_series({true, true, false, false});
     const auto late = pluss::make_series({false, true, true, false});
-    show("choose/ordered-first-true-wins",
-         pluss::note::choose({early, late},
+    show("branch/ordered-first-true-wins",
+         pluss::note::branch({early, late},
                              {pluss::note::make("early"),
                               pluss::note::make("late")},
                              "none"));
@@ -299,17 +299,17 @@ void section_select() {
 
   {
     const auto mask = pluss::make_series({{true, false}, {false, true}});
-    show("choose/broadcast-scalar-choice",
-         pluss::note::choose(mask, pluss::note::make("X"),
+    show("branch/broadcast-scalar-choice",
+         pluss::note::branch(mask, pluss::note::make("X"),
                              pluss::note::make(".")));
   }
 
   show_rejection("choose/reject-non-bool", [] {
-    (void)pluss::note::choose(pluss::make_series({1, 0, 1}), "y", "n");
+    (void)pluss::note::branch(pluss::make_series({1, 0, 1}), "y", "n");
   });
   show_rejection("choose/reject-count-mismatch", [] {
     const auto a = pluss::make_series({true});
-    (void)pluss::note::choose({a, a}, {pluss::note::make("x")}, "z");
+    (void)pluss::note::branch({a, a}, {pluss::note::make("x")}, "z");
   });
 }
 

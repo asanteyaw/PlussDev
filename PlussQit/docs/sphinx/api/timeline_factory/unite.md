@@ -146,4 +146,4 @@ single-operand identity path is constant-time handle copying.
 ## See Also
 
 - [`from_epoch`](from_epoch.md): construct an explicitly shaped result from assembled ticks.
-- [`choose`](choose.md): choose values positionally instead of appending them.
+- [`choose`](branch.md): choose values positionally instead of appending them.

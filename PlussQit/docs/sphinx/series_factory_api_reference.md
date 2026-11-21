@@ -24,7 +24,7 @@ Use it for:
 
 - direct value construction with `make`
 - public rendering through `print`
-- ordered conditional construction through `choose`
+- ordered conditional construction through `branch`
 - shape-first allocation like `empty`, `zeros`, `ones`, `full`
 - range/grid builders like `arange`, `linspace`, `eye`
 - random and distribution factories like `rand`, `randn`, `randint`,
@@ -57,7 +57,7 @@ most users actually reach first and second, plus the free-function helpers that
 show up immediately after construction:
 
 - direct value construction: `make`
-- free-function helpers on built `Series`: `print`, `choose`
+- free-function helpers on built `Series`: `print`, `branch`
 - shape-first constants and layouts: `empty`, `zeros`, `ones`, `full`, `eye`
 - range/grid builders: `arange`, `linspace`
 - like-factories: `empty_like`, `zeros_like`, `ones_like`, `full_like`,
@@ -77,7 +77,7 @@ Those pages are split this way on purpose.
   separate mental model from ordinary shape-first construction.
 - The complex pages explain the pairwise "two real tensors in, one complex tensor
   out" surface, which behaves differently from the scalar-fill factories.
-- The helper pages (`print`, `choose`) live here because they are free
+- The helper pages (`print`, `branch`) live here because they are free
   functions on `pluss::series::*`, not `Series` methods.
 
 What is still out of scope for this handwritten batch is the unsupported sparse
@@ -114,7 +114,7 @@ api/series_factory/randint_like
 api/series_factory/randn
 api/series_factory/randn_like
 api/series_factory/randperm
-api/series_factory/choose
+api/series_factory/branch
 api/series_factory/undefined
 api/series_factory/zeros
 api/series_factory/zeros_like

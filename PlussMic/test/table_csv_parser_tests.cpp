@@ -3684,16 +3684,16 @@ void test_select_and_place_helpers() {
   const auto pick1 = pluss::make_series(std::vector<double>{20.0, 20.0, 20.0, 20.0});
   const auto pick2 = pluss::make_series(std::vector<double>{30.0, 30.0, 30.0, 30.0});
 
-  const auto selected = pluss::series::choose({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
+  const auto selected = pluss::series::branch({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
   expect(selected.host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "pluss::series::choose should choose branch values by the first matching boolean condition");
+         "pluss::series::branch should choose branch values by the first matching boolean condition");
 
   const auto shelf_selected = Shelf::select(
       {Shelf(cond0), Shelf(cond1), Shelf(cond2)},
       {Shelf(pick0), Shelf(pick1), Shelf(pick2)},
       -1.0);
   expect(shelf_selected.as_series().host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "Shelf::select should delegate multi-branch numeric selection to pluss::series::choose");
+         "Shelf::select should delegate multi-branch numeric selection to pluss::series::branch");
 
   expect_throw([&]() { (void)Shelf(pluss::make_note("A+")); },
                "Shelf should reject scalar Note payloads and preserve its strict 1D contract");

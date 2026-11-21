@@ -90,8 +90,8 @@ letters.
     <span class="label">Previous</span>
     <span class="title">rand_between</span>
   </a>
-  <a class="next-link" href="choose.html">
+  <a class="next-link" href="branch.html">
     <span class="label">Next</span>
-    <span class="title">choose</span>
+    <span class="title">branch</span>
   </a>
 </div>

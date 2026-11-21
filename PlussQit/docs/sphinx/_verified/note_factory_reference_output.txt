@@ -365,30 +365,30 @@ pluss::note::format: unmatched '{' in format template
 === format/reject-duplicate-binding ===
 pluss::note::format: duplicate binding 'x'
 
-=== choose/single-string-sugar ===
+=== branch/single-string-sugar ===
 Note(shape=[3], dim=1, numel=3, encoding=utf8)
 ["YES", "no", "YES"]
 
-=== choose/single-note-choice ===
+=== branch/single-note-choice ===
 Note(shape=[3], dim=1, numel=3, encoding=utf8)
 ["HIT", "miss", "HIT"]
 
-=== choose/ordered-first-true-wins ===
+=== branch/ordered-first-true-wins ===
 Note(shape=[4], dim=1, numel=4, encoding=utf8)
 ["early", "early", "late", "none"]
 
-=== choose/broadcast-scalar-choice ===
+=== branch/broadcast-scalar-choice ===
 Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 [
   ["X", "."], 
   [".", "X"]
 ]
 
-=== choose/reject-non-bool ===
-pluss::note::choose: conditions must use Bool dtype
+=== branch/reject-non-bool ===
+pluss::note::branch: conditions must use Bool dtype
 
-=== choose/reject-count-mismatch ===
-pluss::note::choose: condition/choice count mismatch
+=== branch/reject-count-mismatch ===
+pluss::note::branch: condition/choice count mismatch
 
 === print/default ===
 Note(shape=[3], dim=1, numel=3, encoding=utf8)

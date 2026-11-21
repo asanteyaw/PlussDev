@@ -70,7 +70,7 @@ int main() {
   show("rand_between", pluss::timeline::rand_between("2024-01-01", "2024-01-03", {5}, 7));
 
   const auto condition = pluss::series::make({true, false, false});
-  show("choose", pluss::timeline::choose(condition, "2024-12-25", "2024-01-01"));
+  show("branch", pluss::timeline::branch(condition, "2024-12-25", "2024-01-01"));
 
   const auto formatted_source = pluss::timeline::from_epoch({
       1'709'249'445'120'000'000LL, 1'719'813'600'000'000'001LL,
@@ -471,43 +471,43 @@ int main() {
   });
 
   const auto text_mask = pluss::make_series({true, false, false});
-  show_exact("select_text_shorthand", pluss::timeline::choose(
+  show_exact("select_text_shorthand", pluss::timeline::branch(
       text_mask, "2024-12-25", "2024-01-01"), "%F");
   const auto matrix_mask = pluss::make_series(
       {{true, false}, {false, true}});
-  show_exact("select_broadcast", pluss::timeline::choose(
+  show_exact("select_broadcast", pluss::timeline::branch(
       matrix_mask,
       pluss::timeline::date({"2024-01-10", "2024-01-20"}),
       pluss::timeline::date("2024-01-31")), "%F");
   const auto early = pluss::make_series({true, true, false, false});
   const auto late = pluss::make_series({false, true, true, false});
-  show_exact("select_first_true", pluss::timeline::choose(
+  show_exact("select_first_true", pluss::timeline::branch(
       {early, late},
       {pluss::timeline::date("2024-01-10"),
        pluss::timeline::date("2024-01-20")},
       pluss::timeline::date("2024-01-31")), "%F");
-  show_exact("select_nat_branch", pluss::timeline::choose(
+  show_exact("select_nat_branch", pluss::timeline::branch(
       pluss::make_series({true, false}),
       pluss::timeline::date("2024-02-29"),
       pluss::timeline::from_epoch(pluss::Timeline::kNaT)), "%F");
   show_rejection("select_count_mismatch", [&] {
-    (void)pluss::timeline::choose(
+    (void)pluss::timeline::branch(
         {early, late}, {pluss::timeline::date("2024-01-10")},
         pluss::timeline::date("2024-01-31"));
   });
   show_rejection("select_non_bool_condition", [] {
-    (void)pluss::timeline::choose(
+    (void)pluss::timeline::branch(
         pluss::make_series({1, 0}), pluss::timeline::date("2024-01-10"),
         pluss::timeline::date("2024-01-31"));
   });
   show_rejection("select_shape_mismatch", [] {
-    (void)pluss::timeline::choose(
+    (void)pluss::timeline::branch(
         pluss::make_series({true, false, true}),
         pluss::timeline::date({"2024-01-10", "2024-01-20"}),
         pluss::timeline::date("2024-01-31"));
   });
   show_rejection("select_timezone_mismatch", [] {
-    (void)pluss::timeline::choose(
+    (void)pluss::timeline::branch(
         pluss::make_series({true, false}),
         pluss::timeline::date("2024-01-10").tz_convert("America/Edmonton"),
         pluss::timeline::date("2024-01-31"));

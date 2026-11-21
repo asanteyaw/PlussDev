@@ -1495,11 +1495,11 @@ inline pluss::Note select_note_impl(std::string_view where,
 
 } // namespace detail
 
-inline pluss::Note choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+inline pluss::Note branch(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                           pluss::msharp::RangeView::Of<pluss::Note> choices,
                           const pluss::Note& default_value) {
   return pluss::detail::select_core::select_range(
-      "pluss::note::choose",
+      "pluss::note::branch",
       conditions,
       choices,
       default_value,
@@ -1511,11 +1511,11 @@ inline pluss::Note choose(pluss::msharp::RangeView::Of<pluss::Series> conditions
       });
 }
 
-inline pluss::Note choose(std::initializer_list<pluss::Series> conditions,
+inline pluss::Note branch(std::initializer_list<pluss::Series> conditions,
                           std::initializer_list<pluss::Note> choices,
                           const pluss::Note& default_value) {
   return pluss::detail::select_core::select_init(
-      "pluss::note::choose",
+      "pluss::note::branch",
       conditions,
       choices,
       default_value,
@@ -1527,11 +1527,11 @@ inline pluss::Note choose(std::initializer_list<pluss::Series> conditions,
       });
 }
 
-inline pluss::Note choose(const pluss::Series& condition,
+inline pluss::Note branch(const pluss::Series& condition,
                           const pluss::Note& choice,
                           const pluss::Note& default_value) {
   return pluss::detail::select_core::select_scalar(
-      "pluss::note::choose",
+      "pluss::note::branch",
       condition,
       choice,
       default_value,
@@ -1543,22 +1543,22 @@ inline pluss::Note choose(const pluss::Series& condition,
       });
 }
 
-inline pluss::Note choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+inline pluss::Note branch(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                           pluss::msharp::RangeView::Of<pluss::Note> choices,
                           std::string_view default_value) {
-  return choose(conditions, choices, make(default_value));
+  return branch(conditions, choices, make(default_value));
 }
 
-inline pluss::Note choose(std::initializer_list<pluss::Series> conditions,
+inline pluss::Note branch(std::initializer_list<pluss::Series> conditions,
                           std::initializer_list<pluss::Note> choices,
                           std::string_view default_value) {
-  return choose(conditions, choices, make(default_value));
+  return branch(conditions, choices, make(default_value));
 }
 
-inline pluss::Note choose(const pluss::Series& condition,
+inline pluss::Note branch(const pluss::Series& condition,
                           std::string_view choice,
                           std::string_view default_value) {
-  return choose(condition, make(choice), make(default_value));
+  return branch(condition, make(choice), make(default_value));
 }
 
 // pluss::note::print(n) -- human-readable rendering, mirroring

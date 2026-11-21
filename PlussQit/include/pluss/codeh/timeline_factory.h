@@ -411,11 +411,11 @@ inline pluss::Timeline select_timeline_scalar(std::string_view value) {
 
 } // namespace detail
 
-inline pluss::Timeline choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+inline pluss::Timeline branch(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                               pluss::msharp::RangeView::Of<pluss::Timeline> choices,
                               const pluss::Timeline& default_value) {
   return pluss::detail::select_core::fold_select(
-      "pluss::timeline::choose",
+      "pluss::timeline::branch",
       conditions,
       choices,
       default_value,
@@ -424,11 +424,11 @@ inline pluss::Timeline choose(pluss::msharp::RangeView::Of<pluss::Series> condit
       });
 }
 
-inline pluss::Timeline choose(std::initializer_list<pluss::Series> conditions,
+inline pluss::Timeline branch(std::initializer_list<pluss::Series> conditions,
                               std::initializer_list<pluss::Timeline> choices,
                               const pluss::Timeline& default_value) {
   return pluss::detail::select_core::select_init(
-      "pluss::timeline::choose",
+      "pluss::timeline::branch",
       conditions,
       choices,
       default_value,
@@ -436,15 +436,15 @@ inline pluss::Timeline choose(std::initializer_list<pluss::Series> conditions,
          pluss::msharp::RangeView::Of<pluss::Series> conds,
          pluss::msharp::RangeView::Of<pluss::Timeline> picks,
          const pluss::Timeline& fallback) {
-        return choose(conds, picks, fallback);
+        return branch(conds, picks, fallback);
       });
 }
 
-inline pluss::Timeline choose(const pluss::Series& condition,
+inline pluss::Timeline branch(const pluss::Series& condition,
                               const pluss::Timeline& choice,
                               const pluss::Timeline& default_value) {
   return pluss::detail::select_core::select_scalar(
-      "pluss::timeline::choose",
+      "pluss::timeline::branch",
       condition,
       choice,
       default_value,
@@ -452,26 +452,26 @@ inline pluss::Timeline choose(const pluss::Series& condition,
          pluss::msharp::RangeView::Of<pluss::Series> conds,
          pluss::msharp::RangeView::Of<pluss::Timeline> picks,
          const pluss::Timeline& fallback) {
-        return choose(conds, picks, fallback);
+        return branch(conds, picks, fallback);
       });
 }
 
-inline pluss::Timeline choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+inline pluss::Timeline branch(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                               pluss::msharp::RangeView::Of<pluss::Timeline> choices,
                               std::string_view default_value) {
-  return choose(conditions, choices, detail::select_timeline_scalar(default_value));
+  return branch(conditions, choices, detail::select_timeline_scalar(default_value));
 }
 
-inline pluss::Timeline choose(std::initializer_list<pluss::Series> conditions,
+inline pluss::Timeline branch(std::initializer_list<pluss::Series> conditions,
                               std::initializer_list<pluss::Timeline> choices,
                               std::string_view default_value) {
-  return choose(conditions, choices, detail::select_timeline_scalar(default_value));
+  return branch(conditions, choices, detail::select_timeline_scalar(default_value));
 }
 
-inline pluss::Timeline choose(const pluss::Series& condition,
+inline pluss::Timeline branch(const pluss::Series& condition,
                               std::string_view choice,
                               std::string_view default_value) {
-  return choose(
+  return branch(
       condition,
       detail::select_timeline_scalar(choice),
       detail::select_timeline_scalar(default_value));

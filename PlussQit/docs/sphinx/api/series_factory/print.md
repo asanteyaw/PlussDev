@@ -213,7 +213,7 @@ Use `pluss::series::print(...)` when you want the public rendering surface for
 ## See Also
 
 - [`pluss::series::make`](make.md): construct a `Series` to print.
-- [`pluss::series::choose`](choose.md): build a new `Series` by conditional
+- [`pluss::series::branch`](branch.md): build a new `Series` by conditional
   branch selection before printing it.
 
 <div class="pluss-inline-prev-next">
@@ -221,8 +221,8 @@ Use `pluss::series::print(...)` when you want the public rendering surface for
     <span class="label">Previous</span>
     <span class="title">make</span>
   </a>
-  <a class="next-link" href="choose.html">
+  <a class="next-link" href="branch.html">
     <span class="label">Next</span>
-    <span class="title">choose</span>
+    <span class="title">branch</span>
   </a>
 </div>

@@ -1,21 +1,21 @@
 <!-- pluss-hand-authored -->
-# pluss::timeline::choose
+# pluss::timeline::branch
 
 [Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signatures
 
 ```cpp
-Timeline pluss::timeline::choose(series_range conditions,
+Timeline pluss::timeline::branch(series_range conditions,
                                  timeline_range choices,
                                  const Timeline& default_value)
-Timeline pluss::timeline::choose(const Series& condition,
+Timeline pluss::timeline::branch(const Series& condition,
                                  const Timeline& choice,
                                  const Timeline& default_value)
-Timeline pluss::timeline::choose(series_range conditions,
+Timeline pluss::timeline::branch(series_range conditions,
                                  timeline_range choices,
                                  std::string_view default_value)
-Timeline pluss::timeline::choose(const Series& condition,
+Timeline pluss::timeline::branch(const Series& condition,
                                  std::string_view choice,
                                  std::string_view default_value)
 ```
@@ -25,7 +25,7 @@ forms are concise wrappers over a one-branch selection.
 
 ## Build An Ordered Temporal Choice
 
-`choose()` constructs one Timeline from boolean conditions and temporal
+`branch()` constructs one Timeline from boolean conditions and temporal
 choices. At each broadcast output position, conditions are considered from
 first to last. The choice paired with the first true condition supplies the
 instant. If every condition is false, `default_value` supplies it.
@@ -67,7 +67,7 @@ produces an absent output lane; an absent value does not alter condition order.
 
 ```cpp
 const auto holiday = pluss::make_series({true, false, false});
-const auto result = pluss::timeline::choose(
+const auto result = pluss::timeline::branch(
     holiday, "2024-12-25", "2024-01-01");
 
 std::cout << pluss::note::print(
@@ -93,7 +93,7 @@ const auto choices = pluss::timeline::date(
     {"2024-01-10", "2024-01-20"});
 const auto fallback = pluss::timeline::date("2024-01-31");
 
-const auto result = pluss::timeline::choose(mask, choices, fallback);
+const auto result = pluss::timeline::branch(mask, choices, fallback);
 std::cout << pluss::note::print(
     pluss::timeline::format(result, "%F")) << '\n';
 ```
@@ -117,7 +117,7 @@ scalar fallback supplies January 31.
 const auto early = pluss::make_series({true, true, false, false});
 const auto late  = pluss::make_series({false, true, true, false});
 
-const auto result = pluss::timeline::choose(
+const auto result = pluss::timeline::branch(
     {early, late},
     {pluss::timeline::date("2024-01-10"),
      pluss::timeline::date("2024-01-20")},
@@ -140,7 +140,7 @@ At position 1 both conditions are true, and the earlier branch supplies January
 ## Example 4: Select An Absent Instant Deliberately
 
 ```cpp
-const auto result = pluss::timeline::choose(
+const auto result = pluss::timeline::branch(
     pluss::make_series({true, false}),
     pluss::timeline::date("2024-02-29"),
     pluss::timeline::from_epoch(pluss::Timeline::kNaT));
@@ -158,7 +158,7 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
 
 ## Failure Modes And Cost
 
-`choose()` throws for an empty condition list, unequal condition and choice
+`branch()` throws for an empty condition list, unequal condition and choice
 counts, undefined or non-boolean conditions, undefined choices, incompatible
 broadcast shapes, timezone mismatch, or malformed text choices. Work is linear
 in the number of branches times the broadcast result size; every branch is

@@ -22,7 +22,7 @@ which to call a method.
 - Sample half-open nanosecond intervals with `random`, or inclusive intervals
   with `rand_between`.
 - Concatenate flattened inputs with `unite`, and choose by ordered conditions
-  with `choose`.
+  with `branch`.
 - Render a diagnostic representation with `print`, or shape-preserving text
   values with `format`.
 - Resolve fixed or relative scalar expressions with `moment`, `now`, and `today`.
@@ -58,7 +58,7 @@ api/timeline_factory/now
 api/timeline_factory/print
 api/timeline_factory/rand_between
 api/timeline_factory/random
-api/timeline_factory/choose
+api/timeline_factory/branch
 api/timeline_factory/time
 api/timeline_factory/today
 api/timeline_factory/unite
