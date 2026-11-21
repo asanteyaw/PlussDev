@@ -974,7 +974,7 @@ namespace pluss::series {
   // Construct a pluss::Series that views a CPU torch::Tensor (zero-copy; the
   // tensor is kept alive by the Series). The reverse direction is the method
   // Series::tensor() -- there is deliberately no free to_torch function.
-  inline Series from_torch(const ::torch::Tensor& t) { return codem::from_torch(t); }
+  inline Series from_torch(const at::Tensor& t) { return codem::from_torch(t); }
 #endif
 
   // --------------------------------------------------------------------------

@@ -35,7 +35,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Pluss CONFIG REQUIRED)
+find_package(Pluss REQUIRED)
 
 add_executable(pluss_consumer main.cpp)
 target_link_libraries(pluss_consumer PRIVATE Pluss::PlussII)
@@ -112,19 +112,45 @@ The archives are written to `build/`. The staged folder remains under `build/plu
 
 ## Use PlussII with Torch
 
-The downloadable archives and a plain source build contain no Torch. The bridge
-(`pluss::series::from_torch(...)` and `Series::tensor()`) is header-only and compiles in
-your own project, so no special PlussII build is needed. Add Torch to your project and
-include `<pluss/pluss.h>` as usual:
+Torch interop is optional. The PlussII ZIP does not include LibTorch, and a
+regular PlussII project does not need it. To call
+`pluss::series::from_torch(...)` or `Series::tensor()`, first install a separate
+LibTorch distribution for your operating system and architecture. Extract its
+ZIP alongside PlussII, then make both folders visible to CMake. The bridge is
+compiled from PlussII headers in your application; you do not need to rebuild
+the PlussII ZIP with Torch enabled.
+
+Add these lines to your application's `CMakeLists.txt`, after creating `my_app`:
 
 ```cmake
-find_package(Pluss CONFIG REQUIRED)
+find_package(Pluss REQUIRED)
 find_package(Torch REQUIRED)
 target_link_libraries(my_app PRIVATE Pluss::PlussII ${TORCH_LIBRARIES})
 ```
 
-If Torch is not in a default CMake search location, pass `-DCMAKE_PREFIX_PATH=/path/to/torch`
-when configuring your project. Define `PLUSS_DISABLE_TORCH_INTEROP` to switch the bridge off.
+With the v0.0.5 archive, include Torch before PlussII in source files that use
+the bridge:
+
+```cpp
+#include <torch/torch.h>
+#include <pluss/pluss.h>
+```
+
+Configure with paths to the two extracted folders (the ones containing `lib/`
+and `share/`, respectively):
+
+```bash
+cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH="/absolute/path/to/plussii-cpp-folder;/absolute/path/to/libtorch"
+cmake --build build --config Release
+```
+
+LibTorch's [C++ installation guide](https://docs.pytorch.org/cppdocs/installing.html)
+explains how to obtain its archive. If you installed PyTorch through Python,
+its `torch.utils.cmake_prefix_path` gives the Torch CMake prefix instead. If
+`find_package(Torch REQUIRED)` fails, check that the selected prefix contains
+`share/cmake/Torch/TorchConfig.cmake`; `Torch_DIR` may also point directly to
+that directory. Define `PLUSS_DISABLE_TORCH_INTEROP` to switch the bridge off.
 
 ## Package targets
 
@@ -165,11 +191,11 @@ Pass the extracted distribution folder through `CMAKE_PREFIX_PATH`:
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 ```
 
-### Torch symbols are missing
+### CMake cannot find Torch
 
-Build and consume a Torch-enabled distribution. If your application also uses
-`torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in the consumer
-project for clarity.
+Install LibTorch separately and add its extracted folder to `CMAKE_PREFIX_PATH`
+alongside the PlussII folder, as shown above. A PlussII archive alone cannot
+satisfy `find_package(Torch REQUIRED)`.
 
 ### Excel or Parquet APIs are unavailable
 

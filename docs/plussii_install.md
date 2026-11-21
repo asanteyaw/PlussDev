@@ -11,7 +11,7 @@ The source build flow is:
 1. build PlussII,
 2. stage or archive the distribution,
 3. point a downstream project at the extracted folder,
-4. use `find_package(Pluss CONFIG REQUIRED)`.
+4. use `find_package(Pluss REQUIRED)`.
 
 ## Build The Distribution From Source
 
@@ -53,15 +53,32 @@ cmake --workflow --preset cpp_env_build
 
 ## Use PlussII With Torch
 
-No special build is needed. The `pluss` <-> LibTorch bridge (`pluss::series::from_torch(...)` and
-`Series::tensor()`) is header-only and compiles inside your project whenever Torch's headers are on
-your include path. The distribution itself never contains or links Torch. In your consumer project:
+No special PlussII build is needed. The `pluss` <-> LibTorch bridge
+(`pluss::series::from_torch(...)` and `Series::tensor()`) is header-only and
+compiles inside your project when Torch's headers are on your include path.
+The regular PlussII distribution does not include Torch. Install a separate
+LibTorch archive first; without it, `find_package(Torch REQUIRED)` cannot work.
+In your consumer project:
 
 ```cmake
-find_package(Pluss CONFIG REQUIRED)
+find_package(Pluss REQUIRED)
 find_package(Torch REQUIRED)
 target_link_libraries(my_app PRIVATE Pluss::PlussII ${TORCH_LIBRARIES})
 ```
+
+In v0.0.5 consumer source files using the bridge, include `<torch/torch.h>`
+before `<pluss/pluss.h>`.
+
+Configure with both extracted folders, for example:
+
+```bash
+cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH="/absolute/path/to/plussii-cpp-folder;/absolute/path/to/libtorch"
+```
+
+The LibTorch folder should contain `share/cmake/Torch/TorchConfig.cmake`. Its
+[C++ installation guide](https://docs.pytorch.org/cppdocs/installing.html)
+provides download and extraction steps.
 
 Define `PLUSS_DISABLE_TORCH_INTEROP` before including `<pluss/pluss.h>` to switch the bridge off.
 Builds configured with `-DPLUSS_ENABLE_TORCH=ON` (used by the Torch parity tests and benchmarks)
