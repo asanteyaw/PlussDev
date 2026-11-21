@@ -1,5 +1,6 @@
 #include "table/plot/DataFramePlot.h"
 #include "table/plot/detail/Plot3DConfig.h"
+#include "table/FlashDatasetInterop.h"
 
 #include <algorithm>
 #include <array>
@@ -1087,30 +1088,13 @@ DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame, DataFramePlotOptio
     : frame_(std::move(frame)), options_(std::move(options)) {}
 
 DataFramePlotAccessor::DefaultColumns DataFramePlotAccessor::default_columns_(std::string_view method) const {
-  // Naming no columns plots every numeric column. The x-axis is the frame's single time column
-  // when it has exactly one, the accessor's default x feature when one is set, and otherwise the
-  // row labels.
+  // The shared rule lives with flash's table bridge (wide_plan_): two columns are x then y,
+  // otherwise every numeric column is drawn against the single time column or the row labels.
+  const auto plan = detail::wide_plan_(frame_, options_.default_x_feature,
+                                       "DataFrame::plot()." + std::string(method));
   DefaultColumns out;
-  std::vector<std::string> time_columns;
-  for (const auto& name : frame_.features()) {
-    const auto shelf = frame_.features(name);
-    if (shelf.kind() == ShelfKind::Series) {
-      out.y.push_back(name);
-    } else if (shelf.kind() == ShelfKind::Timeline) {
-      time_columns.push_back(name);
-    }
-  }
-  if (options_.default_x_feature.has_value()) {
-    const auto x = *options_.default_x_feature;
-    out.y.erase(std::remove(out.y.begin(), out.y.end(), x), out.y.end());
-    out.x = *options_.default_x_feature;
-  } else if (time_columns.size() == 1) {
-    out.x = time_columns.front();
-  }
-  PLUSS_CHECK(!out.y.empty(),
-              "DataFrame::plot()." + std::string(method) +
-                  ": the frame has no numeric columns to plot; name the columns, e.g. plot()." +
-                  std::string(method) + "(\"x_column\", \"y_column\")");
+  out.x = plan.x;
+  out.y = plan.ys;
   return out;
 }
 

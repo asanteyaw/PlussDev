@@ -437,6 +437,50 @@ namespace detail {
   }};
 }
 
+// The one rule for line-like plots (line, step, and the table accessor's line, step, area, bar)
+// when no columns are named. A frame of exactly two columns is x then y (a time column goes on x).
+// Any other frame draws every numeric column against its single time column when it has exactly
+// one, and against the row positions otherwise. `default_x` names a column that is x regardless.
+struct WidePlan {
+  std::optional<std::string> x{};
+  std::vector<std::string> ys{};
+};
+
+[[nodiscard]] inline WidePlan wide_plan_(const DataFrame& frame,
+                                         const std::optional<std::string>& default_x,
+                                         std::string_view where) {
+  const auto available = frame.features();
+  std::vector<std::string> numeric;
+  std::vector<std::string> times;
+  for (const auto& name : available) {
+    const auto kind = frame.features(name).kind();
+    if (kind == ShelfKind::Series) {
+      numeric.push_back(name);
+    } else if (kind == ShelfKind::Timeline) {
+      times.push_back(name);
+    }
+  }
+  WidePlan plan;
+  if (default_x.has_value()) {
+    plan.x = *default_x;
+    for (const auto& name : numeric) {
+      if (name != *default_x) plan.ys.push_back(name);
+    }
+  } else if (available.size() == 2 && numeric.size() == 2) {
+    plan.x = numeric[0];
+    plan.ys = {numeric[1]};
+  } else if (times.size() == 1) {
+    plan.x = times.front();
+    plan.ys = numeric;
+  } else {
+    plan.ys = numeric;
+  }
+  PLUSS_CHECK(!plan.ys.empty(),
+              std::string(where) + ": the frame has no numeric columns to plot; name the columns with x_feature and y_feature; DataFrame features = " +
+                  feature_list_(available));
+  return plan;
+}
+
 [[nodiscard]] inline std::pair<Series, Series> paired_continuous_series_(
     const Shelf& x,
     const Shelf& y,
@@ -894,6 +938,27 @@ inline Trace& lineplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
+  if (!columns.x_feature.has_value() && !columns.y_feature.has_value() && !columns.feature.has_value() &&
+      !columns.z_feature.has_value()) {
+    // No columns named: every numeric column is drawn (two columns are x then y).
+    const auto plan = ::pluss::table::detail::wide_plan_(frame, std::nullopt, "flash::lineplot(DataFrame)");
+    Trace* last = nullptr;
+    for (const auto& y_name : plan.ys) {
+      const auto y_shelf = frame.features(y_name);
+      if (plan.x.has_value()) {
+        const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
+            frame.features(*plan.x), y_shelf, "flash::lineplot(DataFrame)");
+        last = &lineplot(pane, x, y);
+      } else {
+        const auto y = ::pluss::table::detail::continuous_series_from_shelf_(y_shelf, "flash::lineplot(DataFrame)");
+        last = &lineplot(pane, ::pluss::table::detail::implicit_positions_(y.numel()), y);
+      }
+      last->label(y_name);
+    }
+    ::pluss::table::detail::set_bivariate_labels_(pane, plan.x.value_or("case"),
+                                                   plan.ys.size() == 1 ? plan.ys.front() : std::string("value"));
+    return *last;  // with several columns this is the last line drawn; the others are on the pane
+  }
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::lineplot(DataFrame)");
   const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
@@ -952,6 +1017,27 @@ inline Trace& stepplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
+  if (!columns.x_feature.has_value() && !columns.y_feature.has_value() && !columns.feature.has_value() &&
+      !columns.z_feature.has_value()) {
+    // No columns named: every numeric column is drawn (two columns are x then y).
+    const auto plan = ::pluss::table::detail::wide_plan_(frame, std::nullopt, "flash::stepplot(DataFrame)");
+    Trace* last = nullptr;
+    for (const auto& y_name : plan.ys) {
+      const auto y_shelf = frame.features(y_name);
+      if (plan.x.has_value()) {
+        const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
+            frame.features(*plan.x), y_shelf, "flash::stepplot(DataFrame)");
+        last = &stepplot(pane, x, y);
+      } else {
+        const auto y = ::pluss::table::detail::continuous_series_from_shelf_(y_shelf, "flash::stepplot(DataFrame)");
+        last = &stepplot(pane, ::pluss::table::detail::implicit_positions_(y.numel()), y);
+      }
+      last->label(y_name);
+    }
+    ::pluss::table::detail::set_bivariate_labels_(pane, plan.x.value_or("case"),
+                                                   plan.ys.size() == 1 ? plan.ys.front() : std::string("value"));
+    return *last;  // with several columns this is the last line drawn; the others are on the pane
+  }
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::stepplot(DataFrame)");
   const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(

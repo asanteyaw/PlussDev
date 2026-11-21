@@ -201,16 +201,24 @@ void test_lineplot_dataframe_auto_select_and_explicit_select() {
       {"margin", pluss::make_series(std::vector<double>{2.0, 3.0, 2.5})},
   });
 
+  // No columns named: every numeric column is drawn (the single time column is x).
+  pluss::pl::Studio wide_fig("lineplot_dataframe_wide");
+  auto& wide_pane = wide_fig.pane2("wide");
+  (void)pluss::pl::flash::lineplot(wide_pane, wider);
+  expect(wide_pane.trace_count() == 2, "flash::lineplot(DataFrame) should draw every numeric column when none are named");
+
   bool threw = false;
   try {
-    pluss::pl::Studio bad_fig("lineplot_dataframe_missing_columns");
+    pluss::pl::Studio bad_fig("lineplot_dataframe_no_numeric");
     auto& bad = bad_fig.pane2("bad");
-    (void)pluss::pl::flash::lineplot(bad, wider);
+    const auto text_only = pluss::table::DataFrame({
+        {"city", pluss::make_note(std::vector<std::string>{"a", "b"})},
+    });
+    (void)pluss::pl::flash::lineplot(bad, text_only);
   } catch (const std::exception& e) {
-    threw = std::string(e.what()).find("explicit x_feature/y_feature") != std::string::npos;
+    threw = std::string(e.what()).find("x_feature and y_feature") != std::string::npos;
   }
-  expect(threw,
-         "flash::lineplot(DataFrame) should require explicit x_feature/y_feature when the frame does not have exactly two features");
+  expect(threw, "flash::lineplot(DataFrame) should ask for columns when the frame has no numeric column");
 
   pluss::pl::Studio explicit_fig("lineplot_dataframe_explicit_columns");
   auto& explicit_pane = explicit_fig.pane2("explicit");
