@@ -8,6 +8,7 @@ This release refreshes the public C++ distribution, the documentation source, an
 - Improved workbook support: `save_excel` now accepts a complete workbook, with multiple named sheets written to one `.xlsx` file.
 - Refined catalog, archive, and Atlas depth operations and their examples. The public `aggregate_over_catalogs` and `aggregate_over_frames` names become `aggregate_depth`.
 - Refreshed the PlussView table themes. **Default** is the cobalt and coral palette; Ember, Nardo, Brooklands, Gulf, Obsidian, and Indigo remain selectable. Native is reserved for embedded rendering.
+- Added a header-only LibTorch bridge: `pluss::series::from_torch(tensor)` and `Series::tensor()` work with the standard download whenever Torch's headers are on your include path. No special PlussII build is needed, and the archives still contain no Torch.
 - Added automated Steady and Transient distribution channels. Steady is a versioned release; Transient is the latest validated development build.
 - Corrected cross-platform `nextafter` linkage so Linux and Windows consumer projects do not reference the macOS-only MPS kernel.
 - Restored DataFrame plotting navigation and named accessor references by the methods users call.

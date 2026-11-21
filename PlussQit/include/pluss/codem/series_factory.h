@@ -26,10 +26,7 @@
 
 
 
-#ifdef PLUSS_ENABLE_TORCH
-#include <torch/torch.h>
 #include <pluss/codem/torch_interop.h>
-#endif
 
 // `Series` (capital S) names the type; `pluss::series::` (lowercase) is its
 // dedicated factory namespace, kept separate from the type itself the same
@@ -973,7 +970,7 @@ namespace pluss::series {
   }
 
 // interop with other libraries (e.g., Torch)
-#ifdef PLUSS_ENABLE_TORCH
+#ifdef PLUSS_TORCH_INTEROP_AVAILABLE
   // Construct a pluss::Series that views a CPU torch::Tensor (zero-copy; the
   // tensor is kept alive by the Series). The reverse direction is the method
   // Series::tensor() -- there is deliberately no free to_torch function.

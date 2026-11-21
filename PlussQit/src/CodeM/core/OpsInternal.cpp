@@ -8237,12 +8237,6 @@ Series Series::to(Platform target, ScalarType dst) const {
   return to(target).to(dst);
 }
 
-#ifdef PLUSS_ENABLE_TORCH
-::torch::Tensor Series::tensor() const {
-  return pluss::codem::detail::to_torch(*this);
-}
-#endif
-
 Series Series::to(ScalarType dst) const {
   if (!defined()) PLUSS_FAIL("to: undefined");
   if (dst == scalar_type()) return *this;

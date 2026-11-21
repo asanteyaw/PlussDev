@@ -177,16 +177,17 @@ See:
 
 ## Torch interop
 
-When Pluss is built with `PLUSS_ENABLE_TORCH=ON`, the SDK exports Torch interop
-helpers through `<pluss/pluss.h>` / `<pluss/core.h>`:
+The SDK exports Torch interop helpers through `<pluss/pluss.h>` whenever Torch's
+headers are on your include path. The PlussII download needs no special build:
 
 ```cpp
 auto pluss_series = pluss::series::from_torch(tensor);
 auto torch_tensor = pluss_series.tensor();
 ```
 
-Use a Torch-enabled SDK and keep Torch visible to your downstream CMake project
-when your application also uses `torch::Tensor` directly.
+Add `find_package(Torch REQUIRED)` and link `${TORCH_LIBRARIES}` in your own CMake
+project. Both directions are zero-copy and CPU-only; move a tensor to the GPU on the
+Torch side with `.to(device)`.
 
 ## Serialization
 

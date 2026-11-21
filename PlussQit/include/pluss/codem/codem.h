@@ -13,10 +13,8 @@
 #include <string_view>
 #include <vector>
 
-// Optional: LibTorch interop (enable PLUSS_ENABLE_TORCH)
-#ifdef PLUSS_ENABLE_TORCH
+// Optional LibTorch interop: active whenever Torch's headers are visible (see torch_interop.h).
 #include <pluss/codem/torch_interop.h>
-#endif
 
 namespace pluss::codem {
 

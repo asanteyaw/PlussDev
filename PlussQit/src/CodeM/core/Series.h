@@ -40,10 +40,6 @@
 // pluss::codem namespace declarations).
 #include "CodeM/compat/Invoke.h"
 
-#ifdef PLUSS_ENABLE_TORCH
-#include <torch/torch.h>
-#endif
-
 namespace pluss {
 template <class T> class StackArray;
 }
@@ -2098,9 +2094,11 @@ public:
                         std::int64_t group_count) const;
   Series grouped_mode(const Series &group_ids, std::int64_t group_count) const;
 
-#ifdef PLUSS_ENABLE_TORCH
-  ::torch::Tensor tensor() const;
-#endif
+  // Zero-copy view of this Series as a torch::Tensor (CPU). The library itself never
+  // depends on Torch: the body is defined inline in <pluss/codem/torch_interop.h>, which
+  // <pluss/pluss.h> includes whenever Torch's headers are on your include path. A call
+  // made without them fails to compile ("used before its definition").
+  template <class Unused = void> auto tensor() const;
 
   void *raw_mutable_data() noexcept {
     return reinterpret_cast<void *>(raw_data());

@@ -51,32 +51,24 @@ From the root folder run:
 cmake --workflow --preset cpp_env_build
 ```
 
-## Build A Torch-Enabled Distribution
+## Use PlussII With Torch
 
-If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:
+No special build is needed. The `pluss` <-> LibTorch bridge (`pluss::series::from_torch(...)` and
+`Series::tensor()`) is header-only and compiles inside your project whenever Torch's headers are on
+your include path. The distribution itself never contains or links Torch. In your consumer project:
 
-
-```bash
-cmake -S . -B build-torch \
-  -DPLUSS_ENABLE_TORCH=ON \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \
-  -DPKG_CONFIG_EXECUTABLE="$CONDA_PREFIX/bin/pkg-config"
-
-cmake --build build-torch --target plussii_distribution_stage --parallel "$(sysctl -n hw.logicalcpu)"
+```cmake
+find_package(Pluss CONFIG REQUIRED)
+find_package(Torch REQUIRED)
+target_link_libraries(my_app PRIVATE Pluss::PlussII ${TORCH_LIBRARIES})
 ```
 
-
-
-Torch-enabled staged distribution path:
-
-```text
-build-torch/plussii-cpp/plussii-cpp-<version>-<os>-<arch>/
-```
+Define `PLUSS_DISABLE_TORCH_INTEROP` before including `<pluss/pluss.h>` to switch the bridge off.
+Builds configured with `-DPLUSS_ENABLE_TORCH=ON` (used by the Torch parity tests and benchmarks)
+still work and additionally link Torch into the library's own test targets.
 
 Notes:
 
-- Build Torch and non-Torch distributions in separate build directories (for example `build/` and `build-torch/`).
 - For strongest file:line call traces in downstream apps, build downstream in `RelWithDebInfo` too (or at least with symbols).
 - Ensure your env is activated first (so `CONDA_PREFIX` is exported). Example: `conda activate cpp_env`.
 - In multiline shell commands, ensure `\` is the last character on the line (no trailing spaces), otherwise zsh may execute `-D...` lines as separate commands.
@@ -91,7 +83,6 @@ Notes:
 - If Torch is installed in a non-default location, pass:
   - `-DTorch_DIR=/path/to/torch/share/cmake/Torch`
   - optionally `-DCMAKE_PREFIX_PATH="/extra/prefix;/another/prefix"`
-- In a Torch-enabled build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::PlussII`/`PlussQit::CodeM` get `pluss::series::from_torch(...)` and `Series::tensor()` from `<pluss/pluss.h>` / `<pluss/core.h>`.
 - `Pluss::PlussII` propagates traceback-friendly compile flags to consumers (`-fno-omit-frame-pointer` and minimal line tables in Release).
 - Unified core serialization is available via `pluss::io::save/load` and top-level aliases `pluss::save/load` for `Series/Note/Timeline/TimeIndex` and supported STL containers. See `docs/IO_SAVE_LOAD_GUIDE.md`.
 - If your app also uses `torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in your consumer CMake for clarity.

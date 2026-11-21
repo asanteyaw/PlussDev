@@ -1,13 +1,35 @@
 #pragma once
 
-// Optional interop with LibTorch.
-// Enable by configuring CMake with -DPLUSS_ENABLE_TORCH=ON.
-// This header is only safe to include when torch headers are available.
+// LibTorch bridge: pluss::series::from_torch(tensor) and Series::tensor().
+//
+// There is no special build. The bridge is header-only and is compiled inside YOUR project,
+// the same way PyTorch keeps its NumPy bridge out of its core: libpluss never mentions
+// Torch, and this header turns itself on when Torch's headers are visible.
+//
+//   * Active when <ATen/ATen.h> is on the include path (or PLUSS_ENABLE_TORCH is defined).
+//   * Define PLUSS_DISABLE_TORCH_INTEROP before including <pluss/pluss.h> to opt out.
+//   * Your project links Torch itself (find_package(Torch) and target_link_libraries); the
+//     PlussII archives do not contain or depend on it.
+//
+// Both directions are zero-copy and CPU-only: a Series and a tensor made from it share the
+// same memory, and whichever side is still alive keeps the memory alive. Move to the GPU on
+// the Torch side (tensor.to(device)), and back to the CPU before calling from_torch.
 
+#if !defined(PLUSS_DISABLE_TORCH_INTEROP) && \
+    (defined(PLUSS_ENABLE_TORCH) || (defined(__has_include) && __has_include(<ATen/ATen.h>)))
+#define PLUSS_TORCH_INTEROP_AVAILABLE 1
+#endif
+
+#ifdef PLUSS_TORCH_INTEROP_AVAILABLE
+
+#include <ATen/ATen.h>
 #ifdef PLUSS_ENABLE_TORCH
-
-#include <torch/torch.h>
+#include <torch/torch.h> // builds configured with PLUSS_ENABLE_TORCH keep the full torch:: API in scope
+#endif
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "pluss/codem/codem.h" // pluss::codem::Series, ScalarType
@@ -15,46 +37,46 @@
 
 namespace pluss::codem {
 
-// Map pluss::codem::ScalarType to torch::ScalarType (CPU only).
-inline torch::ScalarType to_torch_dtype(ScalarType st) {
+// Map pluss::codem::ScalarType to the ATen scalar type.
+inline c10::ScalarType to_torch_dtype(ScalarType st) {
   switch (st) {
-    case ScalarType::Bool: return torch::kBool;
-    case ScalarType::UInt8: return torch::kUInt8;
-    case ScalarType::UInt16: return torch::kUInt16;
-    case ScalarType::UInt32: return torch::kUInt32;
-    case ScalarType::UInt64: return torch::kUInt64;
-    case ScalarType::Int8: return torch::kInt8;
-    case ScalarType::Int16: return torch::kInt16;
-    case ScalarType::Int32: return torch::kInt32;
-    case ScalarType::Int64: return torch::kInt64;
-    case ScalarType::Float16: return torch::kFloat16;
-    case ScalarType::BFloat16: return torch::kBFloat16;
-    case ScalarType::Float32: return torch::kFloat32;
-    case ScalarType::Float64: return torch::kFloat64;
-    case ScalarType::Complex64: return torch::kComplexFloat;
-    case ScalarType::Complex128: return torch::kComplexDouble;
+    case ScalarType::Bool: return c10::ScalarType::Bool;
+    case ScalarType::UInt8: return c10::ScalarType::Byte;
+    case ScalarType::UInt16: return c10::ScalarType::UInt16;
+    case ScalarType::UInt32: return c10::ScalarType::UInt32;
+    case ScalarType::UInt64: return c10::ScalarType::UInt64;
+    case ScalarType::Int8: return c10::ScalarType::Char;
+    case ScalarType::Int16: return c10::ScalarType::Short;
+    case ScalarType::Int32: return c10::ScalarType::Int;
+    case ScalarType::Int64: return c10::ScalarType::Long;
+    case ScalarType::Float16: return c10::ScalarType::Half;
+    case ScalarType::BFloat16: return c10::ScalarType::BFloat16;
+    case ScalarType::Float32: return c10::ScalarType::Float;
+    case ScalarType::Float64: return c10::ScalarType::Double;
+    case ScalarType::Complex64: return c10::ScalarType::ComplexFloat;
+    case ScalarType::Complex128: return c10::ScalarType::ComplexDouble;
     default: break;
   }
   ::pluss::throw_error("to_torch_dtype: unsupported dtype");
 }
 
-inline ScalarType from_torch_dtype(torch::ScalarType st) {
+inline ScalarType from_torch_dtype(c10::ScalarType st) {
   switch (st) {
-    case torch::kBool: return ScalarType::Bool;
-    case torch::kUInt8: return ScalarType::UInt8;
-    case torch::kUInt16: return ScalarType::UInt16;
-    case torch::kUInt32: return ScalarType::UInt32;
-    case torch::kUInt64: return ScalarType::UInt64;
-    case torch::kInt8: return ScalarType::Int8;
-    case torch::kInt16: return ScalarType::Int16;
-    case torch::kInt32: return ScalarType::Int32;
-    case torch::kInt64: return ScalarType::Int64;
-    case torch::kFloat16: return ScalarType::Float16;
-    case torch::kBFloat16: return ScalarType::BFloat16;
-    case torch::kFloat32: return ScalarType::Float32;
-    case torch::kFloat64: return ScalarType::Float64;
-    case torch::kComplexFloat: return ScalarType::Complex64;
-    case torch::kComplexDouble: return ScalarType::Complex128;
+    case c10::ScalarType::Bool: return ScalarType::Bool;
+    case c10::ScalarType::Byte: return ScalarType::UInt8;
+    case c10::ScalarType::UInt16: return ScalarType::UInt16;
+    case c10::ScalarType::UInt32: return ScalarType::UInt32;
+    case c10::ScalarType::UInt64: return ScalarType::UInt64;
+    case c10::ScalarType::Char: return ScalarType::Int8;
+    case c10::ScalarType::Short: return ScalarType::Int16;
+    case c10::ScalarType::Int: return ScalarType::Int32;
+    case c10::ScalarType::Long: return ScalarType::Int64;
+    case c10::ScalarType::Half: return ScalarType::Float16;
+    case c10::ScalarType::BFloat16: return ScalarType::BFloat16;
+    case c10::ScalarType::Float: return ScalarType::Float32;
+    case c10::ScalarType::Double: return ScalarType::Float64;
+    case c10::ScalarType::ComplexFloat: return ScalarType::Complex64;
+    case c10::ScalarType::ComplexDouble: return ScalarType::Complex128;
     default: break;
   }
   ::pluss::throw_error("from_torch_dtype: unsupported dtype");
@@ -62,9 +84,18 @@ inline ScalarType from_torch_dtype(torch::ScalarType st) {
 
 // Create a pluss Series view over a CPU torch::Tensor (zero-copy).
 // Keeps the torch tensor alive via shared_ptr deleter capture.
-inline Series from_torch(const torch::Tensor& t) {
-  if (!t.defined()) ::pluss::throw_error("from_torch: undefined");
-  if (!t.device().is_cpu()) ::pluss::throw_error("from_torch: CPU only");
+//
+// Refused, with a message that says what to do: undefined tensors, non-CPU tensors
+// (call t.cpu() first), non-strided (sparse) layouts, tensors carrying an unresolved
+// conjugate or negative bit (call t.resolve_conj() / t.resolve_neg() first), and
+// overlapping or non-dense strides. A tensor that requires grad is shared as plain data;
+// its autograd history stays on the Torch side.
+inline Series from_torch(const at::Tensor& t) {
+  if (!t.defined()) ::pluss::throw_error("from_torch: undefined tensor");
+  if (!t.device().is_cpu()) ::pluss::throw_error("from_torch: CPU only; call t.cpu() first");
+  if (t.layout() != c10::Layout::Strided) ::pluss::throw_error("from_torch: only strided tensors are supported; call t.to_dense() first");
+  if (t.is_conj()) ::pluss::throw_error("from_torch: tensor has the conjugate bit set; call t.resolve_conj() first");
+  if (t.is_neg()) ::pluss::throw_error("from_torch: tensor has the negative bit set; call t.resolve_neg() first");
   if (!t.is_contiguous() && !t.is_non_overlapping_and_dense()) {
     // We can still represent strided views, but we require well-defined strides without overlap.
     ::pluss::throw_error("from_torch: tensor must be non-overlapping and dense (or contiguous)");
@@ -82,7 +113,7 @@ inline Series from_torch(const torch::Tensor& t) {
 
   const std::size_t nbytes = (std::size_t)t.nbytes();
   // Keep torch tensor alive:
-  auto holder = std::make_shared<torch::Tensor>(t);
+  auto holder = std::make_shared<at::Tensor>(t);
   std::shared_ptr<std::byte> ptr(reinterpret_cast<std::byte*>(t.data_ptr()), [holder](std::byte*) mutable {
     holder.reset();
   });
@@ -99,9 +130,9 @@ inline Series from_torch(const torch::Tensor& t) {
 // This is an INTERNAL helper. The public Series -> torch direction is the
 // method Series::tensor(), which forwards here; there is no public free
 // to_torch function.
-namespace detail { inline torch::Tensor to_torch(const Series& s) {
-  if (!s.defined()) ::pluss::throw_error("to_torch: undefined");
-  if (s.platform() != Platform::CPU) ::pluss::throw_error("to_torch: CPU only");
+namespace detail { inline at::Tensor to_torch(const Series& s) {
+  if (!s.defined()) ::pluss::throw_error("tensor: undefined Series");
+  if (s.platform() != Platform::CPU) ::pluss::throw_error("tensor: CPU only; call s.to(pluss::Platform::CPU) first");
   const auto dtype = to_torch_dtype(s.scalar_type());
 
   std::vector<int64_t> sizes(s.sizes().begin(), s.sizes().end());
@@ -118,15 +149,21 @@ namespace detail { inline torch::Tensor to_torch(const Series& s) {
   // the codebase divides it by itemsize to get elements) -- add it directly.
   base_ptr = static_cast<void*>(reinterpret_cast<std::byte*>(base_ptr) + (std::ptrdiff_t)s.storage_offset());
 
-  auto options = torch::TensorOptions().dtype(dtype).device(torch::kCPU);
+  auto options = at::TensorOptions().dtype(dtype).device(at::kCPU);
   auto deleter = [handle](void*) mutable { handle.reset(); };
 
-  auto t = torch::from_blob(base_ptr, sizes, strides, deleter, options);
+  auto t = at::from_blob(base_ptr, sizes, strides, deleter, options);
   return t;
 }
 
 } // namespace detail
 
+// Series::tensor(): declared (as a template, so that the library never needs Torch) in Series.h.
+template <class Unused>
+auto Series::tensor() const {
+  return detail::to_torch(*this);
+}
+
 } // namespace pluss::codem
 
-#endif // PLUSS_ENABLE_TORCH
+#endif // PLUSS_TORCH_INTEROP_AVAILABLE

@@ -110,29 +110,21 @@ cmake --build build --target plussii_distribution_archive --parallel 1
 
 The archives are written to `build/`. The staged folder remains under `build/plussii-cpp/`.
 
-## Build a Torch-enabled distribution
+## Use PlussII with Torch
 
-Use a separate build directory for Torch builds:
+The downloadable archives and a plain source build contain no Torch. The bridge
+(`pluss::series::from_torch(...)` and `Series::tensor()`) is header-only and compiles in
+your own project, so no special PlussII build is needed. Add Torch to your project and
+include `<pluss/pluss.h>` as usual:
 
-```bash
-cmake -S . -B build-torch \
-  -DPLUSS_ENABLE_TORCH=ON \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-cmake --build build-torch --target plussii_distribution_stage -j
+```cmake
+find_package(Pluss CONFIG REQUIRED)
+find_package(Torch REQUIRED)
+target_link_libraries(my_app PRIVATE Pluss::PlussII ${TORCH_LIBRARIES})
 ```
 
-If Torch is not in a default CMake search location, pass `Torch_DIR`:
-
-```bash
-cmake -S . -B build-torch \
-  -DPLUSS_ENABLE_TORCH=ON \
-  -DTorch_DIR=/path/to/torch/share/cmake/Torch
-```
-
-Keep Torch and non-Torch distributions in different build directories. The
-Torch-enabled distribution exports the compile definitions needed for
-`pluss::series::from_torch(...)` and `Series::tensor()`.
+If Torch is not in a default CMake search location, pass `-DCMAKE_PREFIX_PATH=/path/to/torch`
+when configuring your project. Define `PLUSS_DISABLE_TORCH_INTEROP` to switch the bridge off.
 
 ## Package targets
 

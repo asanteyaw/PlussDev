@@ -7,12 +7,16 @@
 ## Signature
 
 ```cpp
-torch::Tensor Series::tensor() const
+template <class Unused = void>
+auto Series::tensor() const   // returns torch::Tensor
 ```
 
-**Availability.** This method exists only when the library is built with
-`-DPLUSS_ENABLE_TORCH=ON`. In a build without LibTorch the method is not
-compiled and `<torch/torch.h>` is not required.
+**Availability.** The PlussII download does not contain or depend on LibTorch.
+The bridge is header-only and compiles inside your project: it is active whenever
+Torch's headers are on your include path (for example after
+`find_package(Torch REQUIRED)` and linking `${TORCH_LIBRARIES}`). Define
+`PLUSS_DISABLE_TORCH_INTEROP` before including `<pluss/pluss.h>` to turn it off.
+Calling `tensor()` in a project without Torch's headers does not compile.
 
 ## What It Does
 
@@ -117,7 +121,7 @@ training should not mutate data still owned conceptually by pluss.
 
 ## Examples
 
-> These examples require a `-DPLUSS_ENABLE_TORCH=ON` build.
+> These examples need Torch's headers on your include path.
 
 Example 1. Export a series as a tensor view.
 
@@ -217,8 +221,8 @@ to_torch: undefined
   for accelerator training; that transfer intentionally creates new storage.
 - Overlapping layouts (e.g. a stride-0 broadcast) are rejected; materialize
   with `.contiguous()` first.
-- The method is absent entirely in a non-torch build — guard call sites with
-  `#ifdef PLUSS_ENABLE_TORCH` if your code must compile both ways.
+- Without Torch's headers the call does not compile — guard call sites with
+  `#ifdef PLUSS_TORCH_INTEROP_AVAILABLE` if your code must compile both ways.
 
 ## Summary
 
@@ -226,7 +230,7 @@ to_torch: undefined
 
 - zero-copy `torch::Tensor` view sharing storage, dtype, shape, and strides
 - immediately usable as CPU training input, or transferable to an accelerator
-- requires a `-DPLUSS_ENABLE_TORCH=ON` build
+- needs only Torch's headers in your project, not a special PlussII build
 - the reverse of [`pluss::series::from_torch`](../series_factory/from_torch.md);
   there is no free `to_torch`
 - not an autodiff boundary — grad is managed separately on each side

@@ -10,9 +10,12 @@
 Series pluss::series::from_torch(const torch::Tensor& t)
 ```
 
-**Availability.** This factory exists only when the library is built with
-`-DPLUSS_ENABLE_TORCH=ON`. In a build without LibTorch it is not declared and
-`<torch/torch.h>` is not pulled in.
+**Availability.** The PlussII download does not contain or depend on LibTorch.
+The bridge is header-only and compiles inside your project: it is active whenever
+Torch's headers are on your include path (for example after
+`find_package(Torch REQUIRED)` and linking `${TORCH_LIBRARIES}`). Define
+`PLUSS_DISABLE_TORCH_INTEROP` before including `<pluss/pluss.h>` to turn it off.
+Without Torch's headers the function is not declared.
 
 ## What It Builds
 
@@ -42,7 +45,7 @@ The contract:
 
 ## Verified Examples
 
-> These examples require a `-DPLUSS_ENABLE_TORCH=ON` build.
+> These examples need Torch's headers on your include path.
 
 Example 1. Wrap a contiguous tensor.
 
