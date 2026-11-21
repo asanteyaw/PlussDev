@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameLabelAccessor::order(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrameLabelAccessor::order(pluss::RangeView<std::string_view> names) const
 DataFrame DataFrameLabelAccessor::order(std::initializer_list<std::string_view> names) const
 ```
 
@@ -26,7 +26,7 @@ reordering.
 
 ## Parameters
 
-**names** (`pluss::msharp::RangeView::Of<std::string_view>` /
+**names** (`pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`)
 
 Every current level name, in the new order you want them combined in.

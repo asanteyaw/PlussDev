@@ -10,7 +10,7 @@
 ```cpp
 DataFrame DataFrameNoteAccessor::extract(
     std::string_view pattern,
-    pluss::msharp::RangeView::Of<std::string_view> names = {}) const
+    pluss::RangeView<std::string_view> names = {}) const
 ```
 
 ## What It Does
@@ -57,7 +57,7 @@ Example 2.
     A regular expression pattern (ECMAScript syntax) containing at least
     one capture group `(...)`.
 
-**names** (`pluss::msharp::RangeView::Of<std::string_view>`, default `{}`)
+**names** (`pluss::RangeView<std::string_view>`, default `{}`)
     Column names for each capture group, in order. Leave empty for the
     default `group_0`, `group_1`, ... naming, or supply exactly one name
     per capture group.

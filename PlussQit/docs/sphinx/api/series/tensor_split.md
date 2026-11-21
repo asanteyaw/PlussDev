@@ -10,7 +10,7 @@
 std::vector<Series> Series::tensor_split(std::int64_t sections, std::int64_t dim = 0) const
     -> std::vector<Series>
 
-std::vector<Series> Series::tensor_split(pluss::RangeView::Int indices, std::int64_t dim = 0) const
+std::vector<Series> Series::tensor_split(pluss::RangeView<std::int64_t> indices, std::int64_t dim = 0) const
     -> std::vector<Series>
 ```
 
@@ -39,7 +39,7 @@ piece is a `slice()` **view** — zero-copy and differentiable.
 
 The exact number of pieces. Must be `> 0`.
 
-**indices** (`pluss::RangeView::Int`)
+**indices** (`pluss::RangeView<std::int64_t>`)
 
 Boundary positions along `dim` — a `std::vector<std::int64_t>` or a brace list.
 `n` indices produce `n + 1` pieces. Values are clamped into range and treated

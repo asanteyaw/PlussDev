@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features) const
+pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::RangeView<std::string_view> features) const
 
-pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::RangeView<std::string_view> features,
                                                   const HeatmapPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
@@ -53,7 +53,7 @@ combination with no matching rows at all) with `0` before rendering.
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, direct mode)
+**features** (`pluss::RangeView<std::string_view>`, direct mode)
     Numeric features to render as heatmap rows. At least one is required — an empty list
     throws `"DataFrame::plot().heatmap: at least one feature is required"` (this overload
     does **not** have the "infer every numeric feature" shorthand that
@@ -168,7 +168,7 @@ this accessor, `heatmap()`'s direct-mode overload has no "infer everything" shor
 
 ```cpp
 try {
-  auto bad = readings.plot().heatmap(pluss::msharp::RangeView::Of<std::string_view>{});
+  auto bad = readings.plot().heatmap({});
 } catch (const pluss::Error& e) {
   std::cout << e.message();
 }

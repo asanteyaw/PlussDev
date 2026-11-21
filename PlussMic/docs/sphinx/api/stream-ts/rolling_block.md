@@ -9,7 +9,7 @@
 
 ```cpp
 pluss::table::DataFrame StreamTimeSeriesAccessor::rolling_block(
-    pluss::msharp::RangeView::Int windows,
+    pluss::RangeView<std::int64_t> windows,
     const pluss::table::TsRollingBlockOptions& options = {}) const
 ```
 
@@ -36,7 +36,7 @@ for a fully worked example of this exact effect.
 
 ## Parameters
 
-**windows** (`pluss::msharp::RangeView::Int`)
+**windows** (`pluss::RangeView<std::int64_t>`)
     The window sizes to compute, in the order given. Must not be empty, or
     it throws.
 

@@ -15,10 +15,10 @@ pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature,
                                               std::optional<std::string_view> x_feature,
                                               const BarPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features,
                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features,
                                               std::optional<std::string_view> x_feature,
                                               const BarPlotOptions& options) const
 
@@ -125,7 +125,7 @@ Example 3. The same grouped call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"midterm", "final"};
-auto chart = exams.plot().bar(pluss::msharp::RangeView::Of<std::string_view>(y_names), "student");
+auto chart = exams.plot().bar(y_names, "student");
 chart.save_pdf("exams.pdf");
 ```
 

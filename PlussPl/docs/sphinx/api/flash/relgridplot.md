@@ -9,12 +9,12 @@
 ```cpp
 RelGridKind flash::relgrid_kind(std::string_view kind);
 
-Studio& flash::relgridplot(Studio& studio, pluss::msharp::RangeView::Series xs,
-                            pluss::msharp::RangeView::Series ys,
+Studio& flash::relgridplot(Studio& studio, pluss::RangeView<pluss::Series> xs,
+                            pluss::RangeView<pluss::Series> ys,
                             const RelGridPlotOptions& options = {})
 
-Studio& flash::relgridplot(Studio& studio, pluss::msharp::RangeView::Series xs,
-                            pluss::msharp::RangeView::Series ys, std::string_view kind)
+Studio& flash::relgridplot(Studio& studio, pluss::RangeView<pluss::Series> xs,
+                            pluss::RangeView<pluss::Series> ys, std::string_view kind)
 
 Studio& flash::relgridplot(Studio& studio, std::initializer_list<Series> xs,
                             std::initializer_list<Series> ys,
@@ -31,7 +31,7 @@ Each entry in `xs`/`ys` is one facet's complete x/y series; `relgridplot` lays o
 then draws [`flash::scatterplot`](scatterplot.md), [`flash::lineplot`](lineplot.md), or
 [`flash::regplot`](regplot.md) into each cell according to `options.kind`. Four overloads
 cover every combination of "an options value vs. a bare kind string" and
-"`RangeView::Series` vs. `std::initializer_list<Series>`" input.
+"`pluss::RangeView<pluss::Series>` vs. `std::initializer_list<Series>`" input.
 
 ```{important} Grid shape is auto-resolved, not required
 When both options.rows and options.cols are 0 (the default), the shape is computed
@@ -70,7 +70,7 @@ short-vector-is-fine rule applies independently to x_labels and y_labels.
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**xs**, **ys** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**xs**, **ys** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per facet — `xs[i]`/`ys[i]` are that facet's complete x/y series. Must be
     non-empty and equal in length, or `relgridplot` throws
     `pluss::Error("flash::relgridplot requires non-empty aligned x/y facet
@@ -100,7 +100,7 @@ std::vector<pluss::Series> xs{pluss::make_series(std::vector<double>{1.0, 2.0, 3
                                pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3})};
 std::vector<pluss::Series> ys{pluss::make_series(std::vector<double>{2.0, 3.0, 2.5}, {3}),
                                pluss::make_series(std::vector<double>{1.0, 1.5, 3.0}, {3})};
-flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys));
+flash::relgridplot(fig, xs, ys);
 fig.show();
 ```
 
@@ -116,7 +116,7 @@ std::vector<pluss::Series> xs{pluss::make_series(std::vector<double>{1.0, 2.0, 3
                                pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3})};
 std::vector<pluss::Series> ys{pluss::make_series(std::vector<double>{2.0, 3.0, 2.5}, {3}),
                                pluss::make_series(std::vector<double>{1.0, 1.5, 3.0}, {3})};
-flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), "line");
+flash::relgridplot(fig, xs, ys, "line");
 fig.show();
 ```
 
@@ -135,7 +135,7 @@ std::vector<pluss::Series> ys{pluss::make_series(std::vector<double>{1.0, 2.1, 2
 flash::RelGridPlotOptions opts;
 opts.kind = flash::RelGridKind::Reg;
 opts.titles = {"Rising", "Falling"};
-flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), opts);
+flash::relgridplot(fig, xs, ys, opts);
 fig.show();
 ```
 
@@ -174,7 +174,7 @@ std::vector<pluss::Series> ys{pluss::make_series(std::vector<double>{1.0, 2.0}, 
 flash::RelGridPlotOptions opts;
 opts.titles = {"Only One Title"};
 opts.cols = 3;
-flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), opts);
+flash::relgridplot(fig, xs, ys, opts);
 std::cout << "3 facets, 1 title -- pane[0] title: '" << fig.panes()[0].title_text()
           << "', pane[1] title: '" << fig.panes()[1].title_text() << "'\n";
 fig.show();
@@ -204,7 +204,7 @@ std::vector<pluss::Series> ys{pluss::make_series(std::vector<double>{1.0, 2.0}, 
 flash::RelGridPlotOptions opts;
 opts.rows = 2;
 opts.cols = 2;
-flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), opts);
+flash::relgridplot(fig, xs, ys, opts);
 std::cout << "3 facets in a 2x2=4 grid -- pane count: " << fig.pane_count()
           << ", pane[3] (unused cell) visible: " << fig.panes()[3].visible() << "\n";
 fig.show();
@@ -225,7 +225,7 @@ using namespace pluss::pl;
 
 auto fig = studio("flash_relgridplot_empty");
 try {
-  flash::relgridplot(fig, pluss::msharp::RangeView::Series{}, pluss::msharp::RangeView::Series{});
+  flash::relgridplot(fig, {}, {});
 } catch (const pluss::Error& e) {
   std::cout << "relgridplot(empty) threw: " << e.message() << "\n";
 }
@@ -251,7 +251,7 @@ flash::RelGridPlotOptions opts;
 opts.rows = 1;
 opts.cols = 2;
 try {
-  flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), opts);
+  flash::relgridplot(fig, xs, ys, opts);
 } catch (const pluss::Error& e) {
   std::cout << "relgridplot(rows*cols < facets) threw: " << e.message() << "\n";
 }

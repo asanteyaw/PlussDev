@@ -8,7 +8,7 @@
 
 ```cpp
 NexusPullAgg& NexusPullAgg::max(std::string_view feature, std::string_view alias = {})
-NexusPullAgg& NexusPullAgg::max(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::max(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 NexusPullAgg& NexusPullAgg::max(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

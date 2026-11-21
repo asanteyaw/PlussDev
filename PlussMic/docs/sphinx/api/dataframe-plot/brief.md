@@ -9,12 +9,12 @@
 
 ```cpp
 pluss::pl::Studio DataFramePlotAccessor::brief(
-    pluss::msharp::RangeView::Of<std::string_view> features = {},
+    pluss::RangeView<std::string_view> features = {},
     const BriefPlotOptions& options = {}) const
 
 pluss::pl::Studio& DataFramePlotAccessor::brief(
     pluss::pl::Studio& figure,
-    pluss::msharp::RangeView::Of<std::string_view> features = {},
+    pluss::RangeView<std::string_view> features = {},
     const BriefPlotOptions& options = {}) const
 ```
 
@@ -47,7 +47,7 @@ that page's important callout for the exact rule and throw text.
     An existing figure to append the table pane into. Must already exist (default-constructed
     or returned from an earlier plot call); this overload never creates a new `Studio`.
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features to summarize. Empty (the default) infers every numeric feature in the
     frame — see [`box()`](box.md)'s important callout for the exact rule.
 

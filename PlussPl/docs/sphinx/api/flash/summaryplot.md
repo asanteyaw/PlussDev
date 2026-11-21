@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-Studio& flash::summaryplot(Studio& studio, pluss::msharp::RangeView::Series columns,
-                            pluss::msharp::RangeView::Of<std::string_view> labels,
+Studio& flash::summaryplot(Studio& studio, pluss::RangeView<pluss::Series> columns,
+                            pluss::RangeView<std::string_view> labels,
                             const SummaryOptions& options = {})
 
 Studio& flash::summaryplot(Studio& studio, std::initializer_list<Series> columns,
@@ -25,7 +25,7 @@ the `flash::` equivalent of glancing at `DataFrame.head()`: it lays every featur
 that as a plain string, then puts the whole string in one pane's caption via
 `Pane::caption(...)`, with the grid, the legend, the axes and their labels all switched off so the caption text is the only visible content.
 
-Two overloads: a `RangeView::Series`/`RangeView::Of<std::string_view>` form, and an
+Two overloads: a `pluss::RangeView<pluss::Series>`/`pluss::RangeView<std::string_view>` form, and an
 `std::initializer_list` convenience form that forwards to it.
 
 ```{important} This is a text table, not a computed summary -- no mean/std/min/max anywhere
@@ -55,13 +55,13 @@ want statistics, compute them yourself and pass the results in as the "features.
 **studio** (`Studio&`)
     The figure to populate — a single new, titled [`Studio::pane2`](../studio/pane2.md).
 
-**columns** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per feature. Must be non-empty, or `summaryplot` throws
     `pluss::Error("flash::summaryplot requires at least one column")`, and every
     column must be the same length (`"flash::summaryplot requires equal-length
     columns"`).
 
-**labels** (`pluss::msharp::RangeView::Of<std::string_view>` or
+**labels** (`pluss::RangeView<std::string_view>` or
 `std::initializer_list<std::string_view>`)
     Per-feature names. May be empty (falls back to `"x1"`, `"x2"`, …), but if non-empty
     its length must exactly match `columns`' length, or `summaryplot` throws
@@ -88,7 +88,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.234, 2.345, 3.456, 4.567}, {4}),
     pluss::make_series(std::vector<double>{10.1, 20.2, 30.3, 40.4}, {4})};
 std::vector<std::string_view> labels{"alpha", "beta"};
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels));
+flash::summaryplot(fig, cols, labels);
 std::cout << fig.panes()[0].caption_text();
 fig.show();
 ```
@@ -140,7 +140,7 @@ auto fig = studio("flash_summaryplot_nolabels");
 std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.234, 2.345, 3.456, 4.567}, {4}),
     pluss::make_series(std::vector<double>{10.1, 20.2, 30.3, 40.4}, {4})};
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>{});
+flash::summaryplot(fig, cols, {});
 std::cout << fig.panes()[0].caption_text();
 ```
 
@@ -166,7 +166,7 @@ std::vector<pluss::Series> cols{
 std::vector<std::string_view> labels{"alpha", "beta"};
 flash::SummaryOptions opts;
 opts.transpose = true;
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << fig.panes()[0].caption_text();
 fig.show();
 ```
@@ -194,7 +194,7 @@ std::vector<pluss::Series> cols{
 std::vector<std::string_view> labels{"alpha", "beta"};
 flash::SummaryOptions opts;
 opts.max_cases = 2;
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << fig.panes()[0].caption_text();
 ```
 
@@ -217,7 +217,7 @@ std::vector<pluss::Series> cols{pluss::make_series(std::vector<double>{1.234, 2.
 std::vector<std::string_view> labels{"alpha"};
 flash::SummaryOptions opts;
 opts.precision = 1;
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << fig.panes()[0].caption_text();
 ```
 
@@ -245,7 +245,7 @@ std::vector<std::string_view> labels{"alpha", "beta"};
 flash::SummaryOptions opts;
 opts.include_header = false;
 opts.include_case_index = false;
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << fig.panes()[0].caption_text();
 ```
 
@@ -273,7 +273,7 @@ std::vector<std::string_view> labels{"alpha", "beta", "gamma"};
 flash::SummaryOptions opts;
 opts.features_per_table = 1;
 opts.tables_per_row = 3;
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << fig.panes()[0].caption_text();
 ```
 
@@ -297,7 +297,7 @@ std::vector<pluss::Series> cols{pluss::make_series(std::vector<double>{1.234, 2.
 std::vector<std::string_view> labels{"alpha"};
 flash::SummaryOptions opts;
 opts.title = "my stats";
-flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels), opts);
+flash::summaryplot(fig, cols, labels, opts);
 std::cout << "pane title: '" << fig.panes()[0].title_text() << "'\n";
 ```
 
@@ -314,7 +314,7 @@ using namespace pluss::pl;
 
 auto fig = studio("flash_summaryplot_empty");
 try {
-  flash::summaryplot(fig, pluss::msharp::RangeView::Series{}, pluss::msharp::RangeView::Of<std::string_view>{});
+  flash::summaryplot(fig, {}, {});
 } catch (const pluss::Error& e) {
   std::cout << "summaryplot(empty) threw: " << e.message() << "\n";
 }
@@ -337,7 +337,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{10.1, 20.2, 30.3, 40.4}, {4})};
 std::vector<std::string_view> labels{"alpha"};
 try {
-  flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels));
+  flash::summaryplot(fig, cols, labels);
 } catch (const pluss::Error& e) {
   std::cout << "summaryplot(labels mismatch) threw: " << e.message() << "\n";
 }

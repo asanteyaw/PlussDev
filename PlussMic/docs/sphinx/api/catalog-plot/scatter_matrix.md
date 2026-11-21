@@ -8,17 +8,17 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> keys = {}) const
 
 pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> keys,
                                                        pluss::table::ScatterMatrixTriangle triangle) const
 
 pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
                                                        pluss::table::ScatterMatrixTriangle triangle) const
 
-pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> keys,
                                                        const CatalogScatterMatrixPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
@@ -35,7 +35,7 @@ numeric-pair branch and [`corr_heatmap()`](corr_heatmap.md).
 
 ## Parameters
 
-**keys** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
+**keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
     Same resolution as [`line()`](line.md): an empty range selects every
     plottable key. At least **two** resolved keys are required —

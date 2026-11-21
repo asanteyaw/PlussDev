@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameGrouped::transform(pluss::msharp::RangeView::Of<DataFrame::GroupSpec> specs) const
+DataFrame DataFrameGrouped::transform(pluss::RangeView<DataFrame::GroupSpec> specs) const
 DataFrame DataFrameGrouped::transform(std::initializer_list<DataFrame::GroupSpec> specs) const
 ```
 
@@ -25,7 +25,7 @@ This is the grouped "decorate each row with a group statistic" surface. Common u
 
 ## Parameters
 
-**specs** (`RangeView<GroupSpec>` / `initializer_list<GroupSpec>`)
+**specs** (`pluss::RangeView<GroupSpec>` / `initializer_list<GroupSpec>`)
 
 One or more grouped reduction specs, using the same `GroupSpec` contract as
 [`agg()`](agg.md).

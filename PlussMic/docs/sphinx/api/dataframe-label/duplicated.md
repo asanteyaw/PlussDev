@@ -9,7 +9,7 @@
 
 ```cpp
 Shelf DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const
-Shelf DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const
+Shelf DataFrameLabelAccessor::duplicated(pluss::RangeView<std::string_view> names, bool keep_first = true, bool keep_last = false) const
 Shelf DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const
 ```
 

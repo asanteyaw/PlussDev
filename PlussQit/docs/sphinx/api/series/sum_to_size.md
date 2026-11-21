@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series Series::sum_to_size(pluss::msharp::RangeView::Int size) const
+Series Series::sum_to_size(pluss::RangeView<std::int64_t> size) const
 ```
 
 ## Reversing A Broadcast By Summation

@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::RangeView<std::string_view> features = {}) const
 
-pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::RangeView<std::string_view> features,
                                                        const CorrHeatmapPlotOptions& options) const
 ```
 
@@ -25,7 +25,7 @@ feature `j`. Follows the same numeric-feature rules as [`box()`](box.md) — an 
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features to correlate. Empty (the default) infers every numeric feature in the
     frame — see [`box()`](box.md)'s important callout for the exact rule and throw text.
 

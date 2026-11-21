@@ -34,8 +34,8 @@ Calling a function replays its recorded formula on the data you supply and retur
 | `f()` | the function has no variables (a constant, or a fully integrated function) |
 | `f(2.0)`, `f(2.0F)`, `f(2)`, `f(std::int64_t{2})` | the function has one variable and the value is a single native number |
 | `f(1.0 + 2.0i)`, `f(std::complex<float>{...})` | one variable, and the value is a complex number |
-| `f({a, b, ...})`, `f(RangeView<Series>)` | any number of variables, given by position in the order of [`variables()`](variables.md) |
-| `f({{"y", b}, {"x", a}})`, `f(RangeView<Binding>)` | any number of variables, given by name in any order |
+| `f({a, b, ...})`, `f(pluss::RangeView<Series>)` | any number of variables, given by position in the order of [`variables()`](variables.md) |
+| `f({{"y", b}, {"x", a}})`, `f(pluss::RangeView<Binding>)` | any number of variables, given by name in any order |
 
 The scalar forms are shorthand for one-variable functions: `f(2.0)` is `f({pluss::make_series(2.0)})`, and the argument keeps the numeric type you gave it. A function of several variables has no scalar shorthand; give a `Series` for each variable.
 
@@ -195,7 +195,7 @@ int main() {
   out.writeln("f({x, y}) =", f({x, y}).items<double>());
 
   std::vector<pluss::Series> args = {x, y};
-  out.writeln("RangeView =", f(pluss::RangeView<pluss::Series>(args)).items<double>());
+  out.writeln("RangeView =", f(args).items<double>());
 }
 ```
 
@@ -232,7 +232,7 @@ int main() {
   out.writeln("y first: ", f({{"y", y}, {"x", x}}).items<double>());
 
   std::vector<math::Binding> bindings = {{"x", x}, {"y", y}};
-  out.writeln("RangeView:", f(pluss::RangeView<math::Binding>(bindings)).items<double>());
+  out.writeln("RangeView:", f(bindings).items<double>());
 }
 ```
 

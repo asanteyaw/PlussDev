@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Studio& flash::radviz(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::radviz(Studio& studio, pluss::RangeView<pluss::Series> columns,
                        const RadvizOptions& options = {})
 
-Studio& flash::radviz(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::radviz(Studio& studio, pluss::RangeView<pluss::Series> columns,
                        const Note& group_labels, const RadvizOptions& options = {})
 
 Studio& flash::radviz(Studio& studio, const Dataset& data,
@@ -21,7 +21,7 @@ Studio& flash::radviz(Studio& studio, const Series& matrix,
                        const RadvizOptions& options = {})
 
 Studio& flash::radviz(Studio& studio, const Series& matrix,
-                       pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                       pluss::RangeView<std::string_view> feature_names,
                        Axis feature_axis, const RadvizOptions& options = {})
 
 Studio& flash::radviz(Studio& studio, const Series& matrix,
@@ -81,7 +81,7 @@ row with all-zero weights falls back to the coordinate origin (denominator clamp
     [`y_limits`](../pane/y_limits.md) (the anchors always sit on the unit circle, so this
     keeps them fully in view with a small margin).
 
-**columns** (`pluss::msharp::RangeView::Series`)
+**columns** (`pluss::RangeView<pluss::Series>`)
     One entry per feature. Must contain at least **three** features
     (`pluss::Error("flash::radviz requires at least three columns")`), and every
     column must be the same length.
@@ -116,7 +116,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
-flash::radviz(fig, pluss::msharp::RangeView::Series(cols));
+flash::radviz(fig, cols);
 fig.show();
 ```
 
@@ -134,7 +134,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 auto classes = pluss::note::make({"a", "a", "b", "b", "a", "b"});
-flash::radviz(fig, pluss::msharp::RangeView::Series(cols), classes);
+flash::radviz(fig, cols, classes);
 fig.show();
 ```
 
@@ -153,7 +153,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 flash::RadvizOptions opts;
 opts.show_anchors = false;
-flash::radviz(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::radviz(fig, cols, opts);
 fig.show();
 ```
 
@@ -207,7 +207,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6})};
 try {
-  flash::radviz(fig, pluss::msharp::RangeView::Series(cols));
+  flash::radviz(fig, cols);
 } catch (const pluss::Error& e) {
   std::cout << "radviz(2 cols) threw: " << e.message() << "\n";
 }

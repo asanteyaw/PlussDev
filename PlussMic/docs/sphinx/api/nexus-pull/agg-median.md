@@ -8,7 +8,7 @@
 
 ```cpp
 NexusPullAgg& NexusPullAgg::median(std::string_view feature, std::string_view alias = {})
-NexusPullAgg& NexusPullAgg::median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::median(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 NexusPullAgg& NexusPullAgg::median(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

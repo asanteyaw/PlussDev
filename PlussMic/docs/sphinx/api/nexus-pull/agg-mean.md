@@ -8,7 +8,7 @@
 
 ```cpp
 NexusPullAgg& NexusPullAgg::mean(std::string_view feature, std::string_view alias = {})
-NexusPullAgg& NexusPullAgg::mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::mean(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 NexusPullAgg& NexusPullAgg::mean(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

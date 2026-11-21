@@ -29,11 +29,11 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame DataFrame::group().by(keys: LabelGroup).agg(specs)`
 
-`DataFrame DataFrame::labels().rename(renames: RangeView<LabelRename>)`
+`DataFrame DataFrame::labels().rename(renames: pluss::RangeView<LabelRename>)`
 
-`DataFrame DataFrame::labels().order(names: RangeView<string_view>)`
+`DataFrame DataFrame::labels().order(names: pluss::RangeView<string_view>)`
 
-`DataFrame DataFrame::labels().drop(names: RangeView<string_view>)`
+`DataFrame DataFrame::labels().drop(names: pluss::RangeView<string_view>)`
 
 `DataFrame DataFrame::labels().reset(options: ResetLabelOptions)`
 

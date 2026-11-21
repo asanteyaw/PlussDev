@@ -163,7 +163,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(4));
   const auto along_diagonal = [](const math::Function &f, const pluss::Series &t) {
     std::vector<pluss::Series> args(static_cast<std::size_t>(f.arity()), t);
-    return f(pluss::RangeView<pluss::Series>(args));
+    return f(args);
   };
 
   const auto t = pluss::make_series({1.0, 2.0, 3.0});
@@ -182,7 +182,7 @@ x^2 along (t):           [1.0000, 4.0000, 9.0000]
 x + 10y + 100z on (t,t,t): [111.0000, 222.0000, 333.0000]
 ```
 
-`RangeView<Series>` wraps the vector without copying it. The same helper serves both functions because the argument count comes from `arity()`.
+`pluss::RangeView<Series>` wraps the vector without copying it. The same helper serves both functions because the argument count comes from `arity()`.
 
 ## See Also
 

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series Series::repeat(pluss::RangeView::Int reps) const
+Series Series::repeat(pluss::RangeView<std::int64_t> reps) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ in place (`AABB...`).
 
 ## Parameters
 
-**reps** (`pluss::RangeView::Int`)
+**reps** (`pluss::RangeView<std::int64_t>`)
 
 One repeat count per axis. Must have at least the current rank; extra leading
 entries add new tiled dimensions.

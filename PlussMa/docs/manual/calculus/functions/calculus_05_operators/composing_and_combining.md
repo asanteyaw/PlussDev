@@ -9,7 +9,7 @@ Operators form an algebra. They can be composed (one after another), added with 
 ```cpp
 operators::Operator operators::compose(const Operator &outer, const Operator &inner);
 operators::Operator operators::linear_combination(std::initializer_list<Term> terms);                  // Term = pair<double, Operator>
-operators::Operator operators::linear_combination(RangeView<Operator> operators, RangeView<double> coefficients);
+operators::Operator operators::linear_combination(pluss::RangeView<Operator> operators, pluss::RangeView<double> coefficients);
 operators::Operator operators::commutator(const Operator &left, const Operator &right);
 ```
 
@@ -112,7 +112,7 @@ int main() {
   // The parallel form with separate ranges.
   std::vector<operators::Operator> parts{d, operators::identity()};
   std::vector<double> weights{1.0, 3.0};
-  const operators::Operator mixed = operators::linear_combination(pluss::RangeView<operators::Operator>(parts), pluss::RangeView<double>(weights));
+  const operators::Operator mixed = operators::linear_combination(parts, weights);
   out.writeln("(d + 3) x^2 ", mixed(square)({x}).items<double>(), " = 2x + 3x^2:", x.mul(2.0).add(x.pow(2).mul(3.0)).items<double>());
 }
 ```

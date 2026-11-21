@@ -25,7 +25,7 @@ outcomes, both of which delegate rather than drawing anything themselves:
   single key's own `Stream::plot().auto_plot()` (`StreamPlotAccessor::auto_plot()`), passing
   the accessor's own `options_` through.
 - **Zero, or two-or-more, plottable keys** — delegates to
-  `line(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt,
+  `line(pluss::RangeView<std::string_view>{}, std::nullopt,
   pluss::table::LinePlotOptions{})` — i.e. exactly [`line()`](line.md)'s no-arguments,
   empty-selection form: every plottable key in the catalog, each its own trace, no shared
   `x_key` (so each key falls back to its own [self-axis](line.md)).

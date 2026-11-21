@@ -9,7 +9,7 @@
 
 ```cpp
 Shelf DataFrame::corr_with(const DataFrame& other, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
-DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
+DataFrame DataFrame::corr_with(pluss::RangeView<DataFrame> others, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
 ```
 
 ## What It Does
@@ -109,7 +109,7 @@ auto mirrored_run = DataFrame({
 });
 
 std::array<DataFrame, 2> peers{other_run, mirrored_run};
-auto out = this_run.corr_with(pluss::msharp::RangeView::Of<DataFrame>(peers));
+auto out = this_run.corr_with(peers);
 std::cout << out;
 ```
 
@@ -185,7 +185,7 @@ try {
 
 try {
   std::array<DataFrame, 0> empty_peers{};
-  auto out = this_run.corr_with(pluss::msharp::RangeView::Of<DataFrame>(empty_peers));
+  auto out = this_run.corr_with(empty_peers);
 } catch (const pluss::Error& e) {
   std::string msg(e.message());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

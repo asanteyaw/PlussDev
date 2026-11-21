@@ -1299,7 +1299,7 @@ public `pluss/ma.h` umbrella.
   so each destination rebuilds its cached views against its own string storage.
   A lifetime regression test destroys the original source before reading the
   copied and moved public adapter.
-- `RangeView<T>` is reused for operator and coefficient lists that are consumed
+- `pluss::RangeView<T>` is reused for operator and coefficient lists that are consumed
   immediately by an operator factory and are not retained as borrowed memory.
 - `intrusive_ptr` and `RefCounted` are reused for the two cheap public handles;
   no second reference-counting mechanism is introduced.
@@ -2492,15 +2492,15 @@ struct LebesgueOptions {                // plain data, no behaviour
   std::int64_t levels = 0;              // 0 = adaptive range slicing
   double tolerance = 0.0;               // 0 = dtype default
   std::int64_t max_levels = 1 << 14;
-  RangeView<double> null_points{};      // finite μ-null set: a.e. semantics
+  pluss::RangeView<double> null_points{};      // finite μ-null set: a.e. semantics
 };
 // one factory per measure kind, all returning operators::Operator
 [[nodiscard]] Operator lebesgue(std::string_view variable, double lower, double upper,
                                 LebesgueOptions options = {});                         // dμ = dx
 [[nodiscard]] Operator weighted(std::string_view variable, const math::Function& density,
                                 double lower, double upper, LebesgueOptions options = {}); // dμ = ρ dx
-[[nodiscard]] Operator atomic(std::string_view variable, RangeView<double> points,
-                              RangeView<double> weights);                               // Σ w_i δ_{x_i}
+[[nodiscard]] Operator atomic(std::string_view variable, pluss::RangeView<double> points,
+                              pluss::RangeView<double> weights);                               // Σ w_i δ_{x_i}
 [[nodiscard]] Operator stieltjes(std::string_view variable, const math::Function& cdf,
                                  double lower, double upper, LebesgueOptions options = {}); // dμ = dF, jumps included
 [[nodiscard]] Operator measure_of(std::string_view variable, double lower, double upper,

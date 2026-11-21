@@ -9,8 +9,8 @@
 
 ```cpp
 static Stream Stream::select(
-    pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
-    pluss::msharp::RangeView::Of<Stream> choices,
+    pluss::RangeView<pluss::table::Shelf> conditions,
+    pluss::RangeView<Stream> choices,
     const Stream& default_value)
 
 static Stream Stream::select(

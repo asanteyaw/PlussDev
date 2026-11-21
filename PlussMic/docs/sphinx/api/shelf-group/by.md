@@ -9,7 +9,7 @@
 ```cpp
 ShelfGrouped ShelfGroupBuilder::by(const Shelf& key) const
 ShelfGrouped ShelfGroupBuilder::by(std::initializer_list<Shelf> keys) const
-ShelfGrouped ShelfGroupBuilder::by(pluss::msharp::RangeView::Of<Shelf> keys) const
+ShelfGrouped ShelfGroupBuilder::by(pluss::RangeView<Shelf> keys) const
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ belong to the same group. With several keys, a group is a distinct combination o
 
 One key shelf as long as the value shelf.
 
-**keys** (`std::initializer_list<Shelf>` or `RangeView::Of<Shelf>`)
+**keys** (`std::initializer_list<Shelf>` or `pluss::RangeView<Shelf>`)
 
 Several key shelves, each as long as the value shelf.
 

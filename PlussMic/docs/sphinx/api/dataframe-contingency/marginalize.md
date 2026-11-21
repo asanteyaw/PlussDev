@@ -10,7 +10,7 @@
 ```cpp
 ContingencyTable ContingencyTable::marginalize(std::string_view dim) const
 ContingencyTable ContingencyTable::marginalize(std::initializer_list<std::string_view> dims) const
-ContingencyTable ContingencyTable::marginalize(pluss::msharp::RangeView::Of<std::string_view> dims) const
+ContingencyTable ContingencyTable::marginalize(pluss::RangeView<std::string_view> dims) const
 ```
 
 ## What It Does

@@ -10,11 +10,11 @@
 ```cpp
 CatalogPlotAccessor ArchivePlotAccessor::frames(std::int64_t frame_index = 0) const
 
-pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                               std::string_view y_key,
                                               std::optional<std::string_view> x_key = std::nullopt) const
 
-pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                               std::string_view y_key,
                                               std::optional<std::string_view> x_key,
                                               const pluss::table::AtlasFramesPlotOptions& options) const
@@ -63,7 +63,7 @@ same mismatched row counts would throw.
     Which catalog to bind, for the single-index overload. Negative indices wrap from the
     end.
 
-**frame_indices** (`pluss::msharp::RangeView::Int`)
+**frame_indices** (`pluss::RangeView<std::int64_t>`)
     Which catalogs to include, for the multi-index overloads. Out-of-range or negative
     indices resolve the same way [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md)
     documents; duplicates (after normalizing negatives) are deduplicated.
@@ -131,7 +131,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c");
+auto chart = archive.plot().frames({0, 2, 4}, "temp_c");
 chart.show();
 ```
 
@@ -158,7 +158,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c", "humidity");
+auto chart = archive.plot().frames({0, 2, 4}, "temp_c", "humidity");
 chart.show();
 ```
 
@@ -187,7 +187,7 @@ pluss::table::AtlasFramesPlotOptions options;
 options.mode = pluss::table::AtlasFrameSelectionMode::Facet;
 options.rows = 1;
 options.cols = 3;
-auto chart = archive.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c", std::nullopt, options);
+auto chart = archive.plot().frames({0, 2, 4}, "temp_c", std::nullopt, options);
 chart.show();
 ```
 
@@ -256,7 +256,7 @@ std::vector<pluss::kindle::Catalog> catalogs{pluss::kindle::Catalog({
 auto archive = pluss::kindle::Archive(catalogs);
 
 try {
-  auto bad = archive.plot().frames(pluss::msharp::RangeView::Int{0, 99}, "temp_c");
+  auto bad = archive.plot().frames({0, 99}, "temp_c");
 } catch (const pluss::Error& e) {
   std::cout << e.message();
 }
@@ -287,7 +287,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().frames(pluss::msharp::RangeView::Int{0, 0, 2, 2, 4}, "temp_c");
+auto chart = archive.plot().frames({0, 0, 2, 2, 4}, "temp_c");
 chart.show();
 ```
 

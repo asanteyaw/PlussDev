@@ -191,7 +191,7 @@ int main() {
 
   const double theta0 = 1.0;
   const auto point = std::vector<pluss::Series>{pluss::make_series(theta0, as_f64()), pluss::make_series(0.3, as_f64())};
-  const auto christoffel = gamma(pluss::RangeView<pluss::Series>(point)).reshape({8}).items<double>();
+  const auto christoffel = gamma(point).reshape({8}).items<double>();
   out.writeln("Gamma^theta_{phi phi}   ", christoffel[3], "   closed form ", -std::sin(theta0) * std::cos(theta0));
   out.writeln("Gamma^phi_{theta phi}   ", christoffel[5], "   closed form ", std::cos(theta0) / std::sin(theta0));
 

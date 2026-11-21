@@ -57,7 +57,7 @@ int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
   const std::vector<double> values = {1.0, 2.0, 4.0}, probabilities = {0.5, 0.25, 0.25};
-  const operators::Operator E = operators::measure::atomic("x", pluss::RangeView<double>(values), pluss::RangeView<double>(probabilities));
+  const operators::Operator E = operators::measure::atomic("x", values, probabilities);
   const math::Function id = math::function({"x"}, [](math::Function x) { return x; });
   const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
   out.writeln("E[X]   =", E(id)().item<double>());
@@ -95,11 +95,11 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(6));
   const std::vector<double> at_three = {3.0}, one = {1.0};
   const math::Function f = math::function({"x"}, [](math::Function x) { return x * x + 1.0; });
-  out.writeln("Dirac at 3:    ", operators::measure::atomic("x", pluss::RangeView<double>(at_three), pluss::RangeView<double>(one))(f)().item<double>(), "  (f(3) = 10)");
+  out.writeln("Dirac at 3:    ", operators::measure::atomic("x", at_three, one)(f)().item<double>(), "  (f(3) = 10)");
 
   const std::vector<double> nodes = {0.0, 0.5, 1.0}, weights = {1.0 / 6.0, 4.0 / 6.0, 1.0 / 6.0};
   const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
-  out.writeln("Simpson, x^2:  ", operators::measure::atomic("x", pluss::RangeView<double>(nodes), pluss::RangeView<double>(weights))(square)().item<double>(), "  (1/3)");
+  out.writeln("Simpson, x^2:  ", operators::measure::atomic("x", nodes, weights)(square)().item<double>(), "  (1/3)");
 }
 ```
 
@@ -131,7 +131,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(4));
   const std::vector<double> prices = {80.0, 95.0, 110.0, 130.0}, probabilities = {0.25, 0.25, 0.25, 0.25};
   const math::Function payoff = math::function({"s", "k"}, [](math::Function s, math::Function k) { return (s - k) * 0.5 + (s - k).abs() * 0.5; });
-  const math::Function value = operators::measure::atomic("s", pluss::RangeView<double>(prices), pluss::RangeView<double>(probabilities))(payoff);
+  const math::Function value = operators::measure::atomic("s", prices, probabilities)(payoff);
   out.writeln("variables left:", value.arity());
   out.writeln("E[max(S - K, 0)] for K = 90, 100, 120:", value({pluss::make_series({90.0, 100.0, 120.0})}).items<double>());
 }
@@ -170,8 +170,8 @@ int main() {
   };
 
   const std::vector<double> points = {1.0, 2.0, 4.0}, short_weights = {1.0}, none;
-  try { (void)operators::measure::atomic("x", pluss::RangeView<double>(points), pluss::RangeView<double>(short_weights)); } catch (const pluss::Error &e) { out.writeln("lengths differ:", first_line(e)); }
-  try { (void)operators::measure::atomic("x", pluss::RangeView<double>(none), pluss::RangeView<double>(none)); } catch (const pluss::Error &e) { out.writeln("empty:        ", first_line(e)); }
+  try { (void)operators::measure::atomic("x", points, short_weights); } catch (const pluss::Error &e) { out.writeln("lengths differ:", first_line(e)); }
+  try { (void)operators::measure::atomic("x", none, none); } catch (const pluss::Error &e) { out.writeln("empty:        ", first_line(e)); }
 }
 ```
 

@@ -8,7 +8,7 @@
 
 ```cpp
 DataFrame ShelfGrouped::agg(std::initializer_list<ShelfGroupSpec> specs) const
-DataFrame ShelfGrouped::agg(pluss::msharp::RangeView::Of<ShelfGroupSpec> specs) const
+DataFrame ShelfGrouped::agg(pluss::RangeView<ShelfGroupSpec> specs) const
 ```
 
 ## What It Does
@@ -27,7 +27,7 @@ The behavior of each aggregate on `NULL` values, small groups and ties is descri
 
 ## Parameters
 
-**specs** (`std::initializer_list<ShelfGroupSpec>` or `RangeView::Of<ShelfGroupSpec>`)
+**specs** (`std::initializer_list<ShelfGroupSpec>` or `pluss::RangeView<ShelfGroupSpec>`)
 
 The aggregates to compute, in output order.
 

@@ -10,7 +10,7 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, std::int64_t points = 128) const
 
-pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::RangeView<std::string_view> keys = {},
                                                 std::int64_t points = 128) const
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
@@ -18,7 +18,7 @@ pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, const DensityPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::RangeView<std::string_view> keys,
                                                 const DensityPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
@@ -33,7 +33,7 @@ overlaid on a shared `"value"`/`"density"` axis pair.
 
 ## Parameters
 
-**key** / **keys** (`std::string_view` / `RangeView<std::string_view>` /
+**key** / **keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `keys` defaults to `{}`)
     Same resolution as [`hist()`](hist.md): an empty `keys` selects every
     plottable key; an explicitly named unknown key throws

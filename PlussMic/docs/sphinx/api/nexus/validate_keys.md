@@ -10,7 +10,7 @@
 bool Nexus::validate_keys(std::string_view table) const
 
 bool Nexus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const
-bool Nexus::validate_keys(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const
+bool Nexus::validate_keys(std::string_view table, pluss::RangeView<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
 bool Nexus::validate_keys(std::string_view table, const NameRange& keys) const
 ```
@@ -43,8 +43,8 @@ overload only)
     The candidate key features to check for completeness and uniqueness. Each name must be
     non-empty, unique within the request, and must name a real feature on `table`.
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
-`RangeView::Of<std::string_view>` has implicit constructors from a brace
+:::{note} `pluss::RangeView` is never spelled out in these examples
+`pluss::RangeView<std::string_view>` has implicit constructors from a brace
 list, a `std::vector<std::string_view>`, and other contiguous containers, so
 passing any of those at a call site works without ever naming `RangeView`
 yourself. Example 3 below uses a brace literal (the dedicated

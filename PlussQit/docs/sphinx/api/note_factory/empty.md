@@ -46,7 +46,7 @@ These are different things:
 ```cpp
 std::array<std::int64_t, 2> sizes{2, 2};
 const pluss::Note n = pluss::note::empty(
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+    sizes);
 std::cout << pluss::note::print(n) << "\n";
 ```
 
@@ -67,7 +67,7 @@ Four addressable cells, all `""`, ready to be overwritten.
 ```cpp
 std::array<std::int64_t, 0> sizes{};
 const pluss::Note n = pluss::note::empty(
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+    sizes);
 std::cout << n << "\n";
 ```
 

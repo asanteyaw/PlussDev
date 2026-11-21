@@ -32,19 +32,19 @@ The complete data set for one language: its identity, abbreviations, titles, lem
 
 ### `abbreviations`
 
-`RangeView<std::string_view>`. The lowercase abbreviations, each with its trailing period, such as `dr.`. The sentencizer does not end a sentence at these.
+`pluss::RangeView<std::string_view>`. The lowercase abbreviations, each with its trailing period, such as `dr.`. The sentencizer does not end a sentence at these.
 
 ### `titles`
 
-`RangeView<std::string_view>`. The lowercase titles that precede a name, such as `mr.` and `sir`. The entity recognizer labels the name that follows.
+`pluss::RangeView<std::string_view>`. The lowercase titles that precede a name, such as `mr.` and `sir`. The entity recognizer labels the name that follows.
 
 ### `lemma_rules`
 
-`RangeView<LemmaRule>`. The exact surface-to-lemma pairs the lemmatizer consults.
+`pluss::RangeView<LemmaRule>`. The exact surface-to-lemma pairs the lemmatizer consults.
 
 ### `token_merges`
 
-`RangeView<TokenMergeRule>`. The adjacent-token pairs that the tokenizer joins when language exceptions are on.
+`pluss::RangeView<TokenMergeRule>`. The adjacent-token pairs that the tokenizer joins when language exceptions are on.
 
 ## Guidance
 

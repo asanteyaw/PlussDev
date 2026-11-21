@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::pl::Studio DataFramePlotAccessor::box(pluss::RangeView<std::string_view> features = {}) const
 
-pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio DataFramePlotAccessor::box(pluss::RangeView<std::string_view> features,
                                               const BoxPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const
@@ -46,7 +46,7 @@ data point to its feature's box, rather than appearing as a visible gap or `NULL
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
+**features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 default `{}`)
     Numeric features to summarize, each as its own box. Leave empty (the default) to use
     every numeric feature in the frame. At least one feature (explicit or inferred) is
@@ -107,7 +107,7 @@ Example 3. The same explicit subset via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"midterm", "final"};
-auto chart = scores.plot().box(pluss::msharp::RangeView::Of<std::string_view>(names));
+auto chart = scores.plot().box(names);
 chart.save_pdf("scores_box.pdf");
 ```
 

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-pluss::table::DataFrame StreamTimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const
+pluss::table::DataFrame StreamTimeSeriesAccessor::lag_block(pluss::RangeView<std::int64_t> lags) const
 ```
 
 ## What It Does
@@ -25,7 +25,7 @@ entirely — its result is a `pluss::table::DataFrame`, not a `Stream`.
 
 ## Parameters
 
-**lags** (`pluss::msharp::RangeView::Int`)
+**lags** (`pluss::RangeView<std::int64_t>`)
     The lag distances to compute, in the order given. Must not be empty, or
     it throws.
 

@@ -10,7 +10,7 @@
 DataFrame Nexus::duplicates(std::string_view table) const
 
 DataFrame Nexus::duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const
-DataFrame Nexus::duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const
+DataFrame Nexus::duplicates(std::string_view table, pluss::RangeView<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
 DataFrame Nexus::duplicates(std::string_view table, const NameRange& keys) const
 ```

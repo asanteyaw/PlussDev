@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series Series::broadcast_to(pluss::RangeView::Int shape) const
+Series Series::broadcast_to(pluss::RangeView<std::int64_t> shape) const
 ```
 
 ## What It Does
@@ -33,7 +33,7 @@ friends) do implicitly; `broadcast_to()` just lets you request it explicitly.
 
 ## Parameters
 
-**shape** (`pluss::RangeView::Int`)
+**shape** (`pluss::RangeView<std::int64_t>`)
 
 The target shape. Must be broadcast-compatible with the current shape, and have
 at least as many dimensions. A `-1` in an entry means "keep this axis's current

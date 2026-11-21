@@ -9,7 +9,7 @@
 
 ```cpp
 pluss::pl::Studio DataFramePlotAccessor::andrews_curves(
-    pluss::msharp::RangeView::Of<std::string_view> features = {},
+    pluss::RangeView<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
     const AndrewsCurvesPlotOptions& options = {}) const
 ```
@@ -30,7 +30,7 @@ covers what's specific to `andrews_curves()`.
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features combined into each row's curve. Empty infers every numeric feature —
     see [`box()`](box.md)'s important callout for the exact rule.
 

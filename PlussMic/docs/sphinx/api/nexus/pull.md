@@ -9,7 +9,7 @@
 ```cpp
 NexusPull Nexus::pull(std::string_view root) const
 DataFrame Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const
-DataFrame Nexus::pull(std::string_view root, pluss::msharp::RangeView::Of<std::string_view> fields) const
+DataFrame Nexus::pull(std::string_view root, pluss::RangeView<std::string_view> fields) const
 template <detail::StringViewNameRange NameRange>
 DataFrame Nexus::pull(std::string_view root, const NameRange& fields) const
 DataFrame Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const
@@ -119,18 +119,18 @@ builder are:
 
 ```cpp
 NexusPull& take(std::string_view source, std::string_view alias = {});
-NexusPull& take(pluss::msharp::RangeView::Of<std::string_view> sources);
+NexusPull& take(pluss::RangeView<std::string_view> sources);
 NexusPull& take(
     std::string_view table,
-    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& count(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& max(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& std(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
-NexusPullAgg& var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+    pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& count(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& sum(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& mean(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& median(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& min(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& max(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& std(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& var(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields);
 NexusPullAgg agg(std::string_view table);
 NexusPull& add(const PullSpec& spec);
 NexusPull& add(std::initializer_list<PullSpec> specs);
@@ -718,7 +718,7 @@ name
 name
 ```
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::select`](select.md)'s own note on this — the same
 three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies to every `fields`

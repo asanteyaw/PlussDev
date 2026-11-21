@@ -8,7 +8,7 @@
 
 ```cpp
 NexusTraverse NexusTraverse::drop(std::initializer_list<std::string_view> features) const
-NexusTraverse NexusTraverse::drop(pluss::msharp::RangeView::Of<std::string_view> features) const
+NexusTraverse NexusTraverse::drop(pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
 NexusTraverse NexusTraverse::drop(const NameRange& features) const
 ```
@@ -29,7 +29,7 @@ or any other range whose elements convert to `std::string_view`)
     [`.pick()`](pick.md): each name must be non-empty and unique within the request.
     Existence is checked when [`.collect()`](collect.md) runs.
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::select`](../nexus/select.md)'s own note on this — the same
 three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies here identically.

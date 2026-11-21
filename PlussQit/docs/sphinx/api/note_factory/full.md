@@ -58,7 +58,7 @@ is validated before any allocation.
 ```cpp
 std::array<std::int64_t, 2> sizes{2, 3};
 const pluss::Note n = pluss::note::full(
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes), "TODO");
+    sizes, "TODO");
 std::cout << pluss::note::print(n) << "\n";
 ```
 
@@ -79,7 +79,7 @@ Every cell holds the same string; the shape came entirely from `sizes`.
 ```cpp
 std::array<std::int64_t, 0> sizes{};
 const pluss::Note n = pluss::note::full(
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes), "x");
+    sizes, "x");
 std::cout << n << "\n";
 ```
 
@@ -98,7 +98,7 @@ just reached shape-first.
 ```cpp
 std::array<std::int64_t, 1> sizes{0};
 const pluss::Note n = pluss::note::full(
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes), "x");
+    sizes, "x");
 pluss::note::print(std::cout, n) << "\n";
 ```
 
@@ -117,7 +117,7 @@ column, distinct from a scalar holding `""`.
 ```cpp
 std::array<std::int64_t, 4> sizes{2, 2, 2, 2};
 try {
-  pluss::note::full(pluss::msharp::RangeView::Of<std::int64_t>(sizes), "x");
+  pluss::note::full(sizes, "x");
 } catch (const pluss::Error& e) {
   const std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -135,7 +135,7 @@ Note supports up to 3D
 ```cpp
 std::array<std::int64_t, 1> sizes{-1};
 try {
-  pluss::note::full(pluss::msharp::RangeView::Of<std::int64_t>(sizes), "x");
+  pluss::note::full(sizes, "x");
 } catch (const pluss::Error& e) {
   const std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

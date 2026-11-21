@@ -427,7 +427,7 @@ const Series ll = nfit.loglik(xn);
 const Series score = nfit.score(xn);
 const Series se = nfit.std_err(xn);
 const Series ci95 = nfit.confint(xn, 0.95);
-const auto ci95_view = nfit.confint_view(xn, 0.95); // MSharp::RangeView::Double
+const auto ci95_view = nfit.confint_view(xn, 0.95); // pluss::RangeView<double>
 // read ci95_view immediately (lightweight host view)
 ```
 

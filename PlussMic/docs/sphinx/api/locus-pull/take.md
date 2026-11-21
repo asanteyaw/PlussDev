@@ -8,19 +8,19 @@
 
 ```cpp
 // Root fields, unaliased
-LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources)
+LocusPull& LocusPull::take(pluss::RangeView<std::string_view> sources)
 LocusPull& LocusPull::take(std::initializer_list<std::string_view> sources)
 
 // A single root (or related) field, with an optional alias
 LocusPull& LocusPull::take(std::string_view source, std::string_view alias = {})
 
 // Root fields, renamed as a batch of (source, alias) pairs
-LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPull& LocusPull::take(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 LocusPull& LocusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 
 // Related-table fields, scoped under one table token
 LocusPull& LocusPull::take(std::string_view table,
-                           pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+                           pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 LocusPull& LocusPull::take(std::string_view table,
                            std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
@@ -46,7 +46,7 @@ list you're describing:
   pair.
 
 Every batch overload also accepts a named container (`std::vector`, and
-anything else `pluss::msharp::RangeView` converts from) in place of a brace
+anything else `pluss::RangeView` converts from) in place of a brace
 literal, not just a literal `{...}` -- the dedicated `initializer_list`
 overload alongside each `RangeView` one exists specifically so a brace
 literal still resolves to the right overload unambiguously (see Example 6

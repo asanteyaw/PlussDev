@@ -8,7 +8,7 @@
 
 ```cpp
 Series Series::layer_norm(
-    pluss::msharp::RangeView::Int normalized_shape,
+    pluss::RangeView<std::int64_t> normalized_shape,
     const Series& weight,
     const Series& bias,
     double eps = 1e-5) const

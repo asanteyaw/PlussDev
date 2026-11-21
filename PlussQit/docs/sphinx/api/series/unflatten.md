@@ -9,7 +9,7 @@
 ```cpp
 Series Series::unflatten(
     std::int64_t dim,
-    pluss::msharp::RangeView::Int sizes) const
+    pluss::RangeView<std::int64_t> sizes) const
 ```
 
 ## Expanding One Axis Into Several Axes

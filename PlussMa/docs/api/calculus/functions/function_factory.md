@@ -255,7 +255,7 @@ int main() {
   });
   std::vector<pluss::Series> args;
   for (int i = 1; i <= 4; ++i) args.push_back(pluss::make_series(static_cast<double>(i)));
-  out.writeln("arity:", sum_of_squares.arity(), "  value:", sum_of_squares(pluss::RangeView<pluss::Series>(args)).item<double>(), " (1 + 4 + 9 + 16 = 30)");
+  out.writeln("arity:", sum_of_squares.arity(), "  value:", sum_of_squares(args).item<double>(), " (1 + 4 + 9 + 16 = 30)");
 }
 ```
 

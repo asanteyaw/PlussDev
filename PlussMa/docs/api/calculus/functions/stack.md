@@ -121,7 +121,7 @@ int main() {
       terms.push_back(power);
       power = power * x;
     }
-    return math::stack(pluss::RangeView<math::Function>(terms));
+    return math::stack(terms);
   });
   out.writeln("shape", monomials.shape());
   out.writeln("monomials(2) =", monomials(2.0).items<double>());
@@ -164,7 +164,7 @@ int main() {
     const math::Function b = math::function({"x"}, [](math::Function x) { return x * 2.0; });
     (void)math::stack({a, b});
   });
-  report("no components:    ", [&] { std::vector<math::Function> none; (void)math::stack(pluss::RangeView<math::Function>(none)); });
+  report("no components:    ", [&] { std::vector<math::Function> none; (void)math::stack(none); });
 }
 ```
 

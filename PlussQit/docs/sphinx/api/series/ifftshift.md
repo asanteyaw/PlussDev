@@ -8,7 +8,7 @@
 
 ```cpp
 Series Series::ifftshift() const
-Series Series::ifftshift(pluss::msharp::RangeView::Int dims) const
+Series Series::ifftshift(pluss::RangeView<std::int64_t> dims) const
 ```
 
 ## Restore Index-Zero Frequency Layout

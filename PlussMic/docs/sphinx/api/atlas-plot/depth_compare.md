@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::RangeView<std::string_view> features = {}) const
 
-pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::RangeView<std::string_view> features,
                                                     const AtlasDepthComparePlotOptions& options) const
 ```
 
@@ -29,7 +29,7 @@ not compile.
 
 ## Parameters
 
-**features** (`pluss::msharp::RangeView::Of<std::string_view>`, defaults to `{}`)
+**features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     The numeric features to overlay. An empty range (the default) selects **every** numeric
     feature present in the first frame.
 
@@ -88,7 +88,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().depth_compare(pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "pressure"});
+auto chart = atlas.plot().depth_compare({"temp_c", "pressure"});
 chart.show();
 ```
 

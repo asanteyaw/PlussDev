@@ -8,7 +8,7 @@
 
 ```cpp
 std::vector<Series> Series::hsplit(std::int64_t sections) const
-std::vector<Series> Series::hsplit(pluss::RangeView::Int indices) const
+std::vector<Series> Series::hsplit(pluss::RangeView<std::int64_t> indices) const
 ```
 
 ## What It Does
@@ -33,7 +33,7 @@ The companions are [`vsplit()`](vsplit.md) (axis `0`, rows) and
 
 Number of equal pieces. The split axis length must be a multiple of it.
 
-**indices** (`pluss::RangeView::Int`)
+**indices** (`pluss::RangeView<std::int64_t>`)
 
 Column boundary positions; `n` of them produce `n + 1` pieces.
 

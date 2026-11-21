@@ -455,7 +455,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::map_elements(fn: function<ShelfValue(const ShelfValue&)>, features: RangeView<string_view> = {})
+DataFrame DataFrame::map_elements(fn: function<ShelfValue(const ShelfValue&)>, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -467,7 +467,7 @@ Delegates element mapping to every selected feature Shelf.
 `fn: function<ShelfValue(const ShelfValue&)>`
     Public value controlling `fn`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -1695,7 +1695,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame Shelf::regex_extract(pattern: string_view, names: RangeView<string_view> = {})
+DataFrame Shelf::regex_extract(pattern: string_view, names: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -1707,7 +1707,7 @@ Extracts every ECMAScript capture group into a named feature.
 `pattern: string_view`
     Public value controlling `pattern`. Invalid values fail through the Pluss error system.
 
-`names: RangeView<string_view> = {}`
+`names: pluss::RangeView<string_view> = {}`
     Public value controlling `names`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2426,7 +2426,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_upper(features: RangeView<string_view> = {})
+DataFrame DataFrame::text_upper(features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2435,7 +2435,7 @@ Delegates Unicode uppercase conversion to selected text Shelves.
 
 ### Inputs
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2514,7 +2514,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_casefold(features: RangeView<string_view> = {})
+DataFrame DataFrame::text_casefold(features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2523,7 +2523,7 @@ Delegates Unicode case folding to selected text Shelves.
 
 ### Inputs
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2602,7 +2602,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_title(features: RangeView<string_view> = {})
+DataFrame DataFrame::text_title(features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2611,7 +2611,7 @@ Delegates title casing to selected text Shelves.
 
 ### Inputs
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2690,7 +2690,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_lengths(features: RangeView<string_view> = {})
+DataFrame DataFrame::text_lengths(features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2699,7 +2699,7 @@ Replaces selected text features with Unicode character counts.
 
 ### Inputs
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2778,7 +2778,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_starts_with(prefix: string_view, features: RangeView<string_view> = {})
+DataFrame DataFrame::text_starts_with(prefix: string_view, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2790,7 +2790,7 @@ Delegates prefix testing to selected text Shelves.
 `prefix: string_view`
     Public value controlling `prefix`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2869,7 +2869,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_ends_with(suffix: string_view, features: RangeView<string_view> = {})
+DataFrame DataFrame::text_ends_with(suffix: string_view, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2881,7 +2881,7 @@ Delegates suffix testing to selected text Shelves.
 `suffix: string_view`
     Public value controlling `suffix`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -2960,7 +2960,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_matches(pattern: string_view, full: bool = false, features: RangeView<string_view> = {})
+DataFrame DataFrame::text_matches(pattern: string_view, full: bool = false, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2975,7 +2975,7 @@ Delegates prefix or full regular-expression matching to selected text Shelves.
 `full: bool = false`
     Public value controlling `full`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -3054,7 +3054,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_pad(width: int64, align: TextAlign = Left, fill: char = ' ', features: RangeView<string_view> = {})
+DataFrame DataFrame::text_pad(width: int64, align: TextAlign = Left, fill: char = ' ', features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3072,7 +3072,7 @@ Delegates text padding to selected text Shelves.
 `fill: char = ' '`
     Public value controlling `fill`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -3151,7 +3151,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_slice(start: int64, stop: optional<int64> = nullopt, step: int64 = 1, features: RangeView<string_view> = {})
+DataFrame DataFrame::text_slice(start: int64, stop: optional<int64> = nullopt, step: int64 = 1, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3169,7 +3169,7 @@ Delegates Unicode character slicing to selected text Shelves.
 `step: int64 = 1`
     Public value controlling `step`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -3248,7 +3248,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_normalize(form: UnicodeForm = NFC, features: RangeView<string_view> = {})
+DataFrame DataFrame::text_normalize(form: UnicodeForm = NFC, features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3260,7 +3260,7 @@ Delegates Unicode normalization to selected text Shelves.
 `form: UnicodeForm = NFC`
     Public value controlling `form`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -3339,7 +3339,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::text_encode(encoding: string_view = "base64", features: RangeView<string_view> = {})
+DataFrame DataFrame::text_encode(encoding: string_view = "base64", features: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3351,7 +3351,7 @@ Delegates text encoding to selected text Shelves.
 `encoding: string_view = "base64"`
     Public value controlling `encoding`. Invalid values fail through the Pluss error system.
 
-`features: RangeView<string_view> = {}`
+`features: pluss::RangeView<string_view> = {}`
     Public value controlling `features`. Invalid values fail through the Pluss error system.
 
 ### Output
@@ -3430,7 +3430,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame DataFrame::regex_groups(feature: string_view, pattern: string_view, names: RangeView<string_view> = {})
+DataFrame DataFrame::regex_groups(feature: string_view, pattern: string_view, names: pluss::RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3445,7 +3445,7 @@ Expands capture groups from one text feature while preserving cases.
 `pattern: string_view`
     Public value controlling `pattern`. Invalid values fail through the Pluss error system.
 
-`names: RangeView<string_view> = {}`
+`names: pluss::RangeView<string_view> = {}`
     Public value controlling `names`. Invalid values fail through the Pluss error system.
 
 ### Output

@@ -28,11 +28,11 @@ Studio& flash::jointplot(Studio& studio, const Series& matrix, std::string_view 
 // -- matrix + explicit feature_names + Axis, by feature name (3 name-container forms x 2 kind/options) --
 Studio& flash::jointplot(Studio& studio, const Series& matrix, std::string_view x_name,
                           std::string_view y_name,
-                          pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                          pluss::RangeView<std::string_view> feature_names,
                           Axis feature_axis, std::string_view kind = "scatter")
 Studio& flash::jointplot(Studio& studio, const Series& matrix, std::string_view x_name,
                           std::string_view y_name,
-                          pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                          pluss::RangeView<std::string_view> feature_names,
                           Axis feature_axis, const JointPlotOptions& options)
 Studio& flash::jointplot(Studio& studio, const Series& matrix, std::string_view x_name,
                           std::string_view y_name, const std::vector<std::string>& feature_names,

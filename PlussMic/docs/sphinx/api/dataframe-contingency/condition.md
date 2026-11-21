@@ -10,7 +10,7 @@
 ```cpp
 ContingencyTable ContingencyTable::condition(std::string_view dim) const
 ContingencyTable ContingencyTable::condition(std::initializer_list<std::string_view> dims) const
-ContingencyTable ContingencyTable::condition(pluss::msharp::RangeView::Of<std::string_view> dims) const
+ContingencyTable ContingencyTable::condition(pluss::RangeView<std::string_view> dims) const
 ```
 
 ## What It Does

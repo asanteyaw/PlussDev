@@ -96,7 +96,7 @@ int main() {
   // The RangeView overload takes the same list as a range:
   const math::Function twice = math::function({"t"}, [&](math::Function t) {
     const std::vector<math::Function> arguments = {t * t, t * t};
-    return outer.compose(pluss::RangeView<math::Function>(arguments));
+    return outer.compose(arguments);
   });
   out.writeln("outer(t^2, t^2) at 2 =", twice(2.0).item<double>(), "  (16 + 4 = 20)");
 }

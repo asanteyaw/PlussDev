@@ -18,7 +18,7 @@ DataFrame DataFrameLabelAccessor::set(
     bool drop_features = true,
     std::string_view separator = "\x1F") const
 DataFrame DataFrameLabelAccessor::set(
-    pluss::msharp::RangeView::Of<std::string_view> feature_names,
+    pluss::RangeView<std::string_view> feature_names,
     bool drop_features = true,
     std::string_view separator = "\x1F") const
 template <detail::StringViewNameRange NameRange>

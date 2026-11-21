@@ -8,7 +8,7 @@
 
 ```cpp
 Nexus Nexus::select(std::initializer_list<std::string_view> keys) const
-Nexus Nexus::select(pluss::msharp::RangeView::Of<std::string_view> keys) const
+Nexus Nexus::select(pluss::RangeView<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
 Nexus Nexus::select(const NameRange& keys) const
 ```
@@ -51,8 +51,8 @@ The table names to keep, in iteration order.
 
 An empty range is allowed and produces a defined but empty workspace.
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
-`RangeView::Of<std::string_view>` has implicit constructors from a brace
+:::{note} `pluss::RangeView` is never spelled out in these examples
+`pluss::RangeView<std::string_view>` has implicit constructors from a brace
 list, a `std::vector<std::string_view>`, and other contiguous containers, so
 passing any of those at a call site works without ever naming `RangeView`
 yourself. Example 1 below uses a brace literal (the dedicated

@@ -59,7 +59,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(5));
   const math::Function F = math::function({"w1", "w2", "w3", "w4"}, [](math::Function, math::Function, math::Function c, math::Function) { return c.exp(); });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
-  out.writeln("D exp(W_3) =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(pluss::RangeView<pluss::Series>(w)).items<double>(), "   exp(0.5) =", std::exp(0.5));
+  out.writeln("D exp(W_3) =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(w).items<double>(), "   exp(0.5) =", std::exp(0.5));
 }
 ```
 
@@ -86,7 +86,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(5));
   const math::Function F = math::function({"w1", "w2", "w3", "w4"}, [](math::Function, math::Function, math::Function, math::Function d) { return d * d; });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
-  out.writeln("D W_N^2 =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(pluss::RangeView<pluss::Series>(w)).items<double>(), "   2 W_N =", 1.8);
+  out.writeln("D W_N^2 =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(w).items<double>(), "   2 W_N =", 1.8);
 }
 ```
 
@@ -113,7 +113,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(5));
   const math::Function F = math::function({"w1", "w2", "w3", "w4"}, [](math::Function a, math::Function b, math::Function c, math::Function d) { return (a + b + c + d) * 0.25; });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
-  out.writeln("D (average) =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(pluss::RangeView<pluss::Series>(w)).items<double>(), "  (4, 3, 2, 1) / 4");
+  out.writeln("D (average) =", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(w).items<double>(), "  (4, 3, 2, 1) / 4");
 }
 ```
 

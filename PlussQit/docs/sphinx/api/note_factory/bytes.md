@@ -113,8 +113,8 @@ not mostly printable.
 std::vector<std::string> flat{"one", "two", "three", "four"};
 std::array<std::int64_t, 2> sizes{2, 2};
 const pluss::Note n = pluss::note::bytes(
-    pluss::msharp::RangeView::Of<std::string>(flat),
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+    flat,
+    sizes);
 pluss::note::print(std::cout, n) << "\n";  // print(os, n) returns the stream
 ```
 
@@ -134,7 +134,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=bytes)
 std::array<std::byte, 4> raw{std::byte{0x48}, std::byte{0x69},
                              std::byte{0x21}, std::byte{0x00}};
 const pluss::Note n = pluss::note::bytes(
-    pluss::msharp::RangeView::Of<std::byte>(raw));
+    raw);
 std::cout << n << "\n";
 ```
 

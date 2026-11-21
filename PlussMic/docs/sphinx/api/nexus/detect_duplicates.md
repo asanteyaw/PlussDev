@@ -10,7 +10,7 @@
 DataFrame Nexus::detect_duplicates(std::string_view table) const
 
 DataFrame Nexus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const
-DataFrame Nexus::detect_duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const
+DataFrame Nexus::detect_duplicates(std::string_view table, pluss::RangeView<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
 DataFrame Nexus::detect_duplicates(std::string_view table, const NameRange& keys) const
 ```
@@ -41,7 +41,7 @@ overload only)
     The candidate key features. Same validation as
     [`validate_keys()`](validate_keys.md)'s two-argument overload.
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::validate_keys`](validate_keys.md)'s own note on this — the
 same three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies here identically.

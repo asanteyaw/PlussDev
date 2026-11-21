@@ -8,7 +8,7 @@
 
 ```cpp
 LocusPullAgg& LocusPullAgg::ndistinct(std::string_view feature, std::string_view alias = {})
-LocusPullAgg& LocusPullAgg::ndistinct(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPullAgg& LocusPullAgg::ndistinct(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 LocusPullAgg& LocusPullAgg::ndistinct(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

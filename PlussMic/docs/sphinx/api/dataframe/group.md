@@ -276,7 +276,7 @@ Use this accessor when you need one of three grouped execution shapes:
 `by(...)` itself has three overload families:
 
 - [`by({"city", "product"})`](../dataframe-group/by.md): ordinary feature-key grouping
-- `by(RangeView<...>)`: the same thing from a dynamic key list
+- `by(pluss::RangeView<...>)`: the same thing from a dynamic key list
 - `by(LabelGroup{...})`: group by case-label levels instead of ordinary features
 
 ## See Also

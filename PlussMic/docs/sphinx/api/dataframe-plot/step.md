@@ -15,10 +15,10 @@ pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature,
                                                std::optional<std::string_view> x_feature,
                                                const StepPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature,
                                                const StepPlotOptions& options) const
 
@@ -47,7 +47,7 @@ only covers what's specific to `step()`.
 
 ## Parameters
 
-**y_feature** / **y_features** (`std::string_view` / `RangeView<std::string_view>` /
+**y_feature** / **y_features** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`)
     Same as [`line()`](line.md): one or more numeric features, each drawn as its own step
     trace. At least one is required — an empty list throws `"DataFrame::plot().step: at
@@ -115,7 +115,7 @@ Example 3. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"price", "limit"};
-auto chart = rates.plot().step(pluss::msharp::RangeView::Of<std::string_view>(y_names), "tier");
+auto chart = rates.plot().step(y_names, "tier");
 chart.save_pdf("tiers.pdf");
 ```
 

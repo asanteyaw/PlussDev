@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Studio& flash::parallelplot(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::parallelplot(Studio& studio, pluss::RangeView<pluss::Series> columns,
                              const ParallelCoordinatesOptions& options = {})
 
-Studio& flash::parallelplot(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::parallelplot(Studio& studio, pluss::RangeView<pluss::Series> columns,
                              const Note& group_labels,
                              const ParallelCoordinatesOptions& options = {})
 
@@ -22,7 +22,7 @@ Studio& flash::parallelplot(Studio& studio, const Series& matrix,
                              const ParallelCoordinatesOptions& options = {})
 
 Studio& flash::parallelplot(Studio& studio, const Series& matrix,
-                             pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                             pluss::RangeView<std::string_view> feature_names,
                              Axis feature_axis, const ParallelCoordinatesOptions& options = {})
 
 Studio& flash::parallelplot(Studio& studio, const Series& matrix,
@@ -78,7 +78,7 @@ raw values on its own axis instead, which renders differently from the default.
 **studio** (`Studio&`)
     The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md) pane.
 
-**columns** (`pluss::msharp::RangeView::Series`)
+**columns** (`pluss::RangeView<pluss::Series>`)
     One entry per feature. Must contain at least two features, or `parallelplot` throws
     `pluss::Error("flash::parallelplot requires at least two columns")`, and
     every column must be the same length (`"flash::parallelplot requires equal-length
@@ -117,7 +117,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
-flash::parallelplot(fig, pluss::msharp::RangeView::Series(cols));
+flash::parallelplot(fig, cols);
 fig.show();
 ```
 
@@ -134,7 +134,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 auto classes = pluss::note::make({"a", "a", "b", "b", "a", "b"});
-flash::parallelplot(fig, pluss::msharp::RangeView::Series(cols), classes);
+flash::parallelplot(fig, cols, classes);
 fig.show();
 ```
 
@@ -151,7 +151,7 @@ std::vector<pluss::Series> cols1{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 auto fig1 = studio("flash_parallelplot_norm_on");
-flash::parallelplot(fig1, pluss::msharp::RangeView::Series(cols1));
+flash::parallelplot(fig1, cols1);
 
 std::vector<pluss::Series> cols2{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
@@ -160,7 +160,7 @@ std::vector<pluss::Series> cols2{
 auto fig2 = studio("flash_parallelplot_norm_off");
 flash::ParallelCoordinatesOptions opts;
 opts.normalize = false;
-flash::parallelplot(fig2, pluss::msharp::RangeView::Series(cols2), opts);
+flash::parallelplot(fig2, cols2, opts);
 
 std::cout << "parallelplot normalize=true vs false differ: " << (fig1.to_svg() != fig2.to_svg()) << "\n";
 fig2.show();
@@ -218,7 +218,7 @@ using namespace pluss::pl;
 auto fig = studio("flash_parallelplot_too_few");
 std::vector<pluss::Series> cols{pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6})};
 try {
-  flash::parallelplot(fig, pluss::msharp::RangeView::Series(cols));
+  flash::parallelplot(fig, cols);
 } catch (const pluss::Error& e) {
   std::cout << "parallelplot(1 col) threw: " << e.message() << "\n";
 }
@@ -241,7 +241,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6})};
 auto bad_classes = pluss::note::make({"a", "b"});
 try {
-  flash::parallelplot(fig, pluss::msharp::RangeView::Series(cols), bad_classes);
+  flash::parallelplot(fig, cols, bad_classes);
 } catch (const pluss::Error& e) {
   std::cout << "parallelplot(group length mismatch) threw: " << e.message() << "\n";
 }

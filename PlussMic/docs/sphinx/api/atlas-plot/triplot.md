@@ -10,8 +10,8 @@
 ```cpp
 pluss::pl::Studio AtlasPlotAccessor::triplot() const
 pluss::pl::Studio AtlasPlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const
-pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features) const
-pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::RangeView<std::string_view> features) const
+pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::RangeView<std::string_view> features,
                                              const pluss::pl::flash::TriplotOptions& options) const
 ```
 
@@ -31,7 +31,7 @@ not compile.
 
 ## Parameters
 
-**features** (`pluss::msharp::RangeView::Of<std::string_view>`, defaults to `{}`)
+**features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     The numeric features to include, at least three. An empty range (the default, used by the
     no-argument and options-only overloads) selects every numeric feature in the first frame.
 
@@ -115,7 +115,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().triplot(pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "humidity", "pressure"});
+auto chart = atlas.plot().triplot({"temp_c", "humidity", "pressure"});
 chart.show();
 ```
 
@@ -141,7 +141,7 @@ auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4
 pluss::pl::flash::TriplotOptions options;
 options.max_features = 3;
 auto chart = atlas.plot().triplot(
-    pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "humidity", "pressure"}, options);
+    {"temp_c", "humidity", "pressure"}, options);
 chart.show();
 ```
 

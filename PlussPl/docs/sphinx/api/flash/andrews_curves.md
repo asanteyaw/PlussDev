@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Studio& flash::andrews_curves(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::andrews_curves(Studio& studio, pluss::RangeView<pluss::Series> columns,
                                const AndrewsCurvesOptions& options = {})
 
-Studio& flash::andrews_curves(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::andrews_curves(Studio& studio, pluss::RangeView<pluss::Series> columns,
                                const Note& group_labels,
                                const AndrewsCurvesOptions& options = {})
 
@@ -22,7 +22,7 @@ Studio& flash::andrews_curves(Studio& studio, const Series& matrix,
                                const AndrewsCurvesOptions& options = {})
 
 Studio& flash::andrews_curves(Studio& studio, const Series& matrix,
-                               pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                               pluss::RangeView<std::string_view> feature_names,
                                Axis feature_axis, const AndrewsCurvesOptions& options = {})
 
 Studio& flash::andrews_curves(Studio& studio, const Series& matrix,
@@ -77,7 +77,7 @@ normalizes to a flat 0.0 rather than dividing by zero.
 **studio** (`Studio&`)
     The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
 
-**columns** (`pluss::msharp::RangeView::Series`)
+**columns** (`pluss::RangeView<pluss::Series>`)
     One entry per feature. Must contain at least two features
     (`pluss::Error("flash::andrews_curves requires at least two columns")`), and
     every column must be the same length.
@@ -113,7 +113,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
-flash::andrews_curves(fig, pluss::msharp::RangeView::Series(cols));
+flash::andrews_curves(fig, cols);
 fig.show();
 ```
 
@@ -130,7 +130,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 auto classes = pluss::note::make({"a", "a", "b", "b", "a", "b"});
-flash::andrews_curves(fig, pluss::msharp::RangeView::Series(cols), classes);
+flash::andrews_curves(fig, cols, classes);
 fig.show();
 ```
 
@@ -146,7 +146,7 @@ std::vector<pluss::Series> cols1{
     pluss::make_series(std::vector<double>{6.0, 4.0, 5.0, 2.0, 3.0, 1.0}, {6}),
     pluss::make_series(std::vector<double>{2.0, 5.0, 1.0, 6.0, 3.0, 4.0}, {6})};
 auto fig1 = studio("flash_andrews_points_default");
-flash::andrews_curves(fig1, pluss::msharp::RangeView::Series(cols1));
+flash::andrews_curves(fig1, cols1);
 
 std::vector<pluss::Series> cols2{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}),
@@ -155,7 +155,7 @@ std::vector<pluss::Series> cols2{
 auto fig2 = studio("flash_andrews_points_low");
 flash::AndrewsCurvesOptions opts;
 opts.points = 64;
-flash::andrews_curves(fig2, pluss::msharp::RangeView::Series(cols2), opts);
+flash::andrews_curves(fig2, cols2, opts);
 
 std::cout << "andrews_curves points=64 vs default(220) differ: " << (fig1.to_svg() != fig2.to_svg()) << "\n";
 fig2.show();
@@ -213,7 +213,7 @@ using namespace pluss::pl;
 auto fig = studio("flash_andrews_too_few");
 std::vector<pluss::Series> cols{pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6})};
 try {
-  flash::andrews_curves(fig, pluss::msharp::RangeView::Series(cols));
+  flash::andrews_curves(fig, cols);
 } catch (const pluss::Error& e) {
   std::cout << "andrews_curves(1 col) threw: " << e.message() << "\n";
 }

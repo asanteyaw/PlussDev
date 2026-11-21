@@ -9,8 +9,8 @@
 
 ```cpp
 static Catalog Catalog::select(
-    pluss::msharp::RangeView::Of<pluss::table::Shelf> conditions,
-    pluss::msharp::RangeView::Of<Catalog> choices,
+    pluss::RangeView<pluss::table::Shelf> conditions,
+    pluss::RangeView<Catalog> choices,
     const Catalog& default_value)
 
 static Catalog Catalog::select(

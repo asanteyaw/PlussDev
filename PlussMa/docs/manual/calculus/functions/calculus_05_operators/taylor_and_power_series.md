@@ -17,7 +17,7 @@ A truncated Taylor expansion is an operator in its own right: it takes a `Functi
 
 ```cpp
 operators::Operator operators::expansion::taylor(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto);
-operators::Operator operators::expansion::taylor(StackArray<std::string_view> variables, RangeView<double> center, std::int64_t order, DiffOptions options = {});
+operators::Operator operators::expansion::taylor(StackArray<std::string_view> variables, pluss::RangeView<double> center, std::int64_t order, DiffOptions options = {});
 operators::Operator operators::expansion::taylor().coefficients(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto);
 operators::Operator operators::expansion::taylor().remainder(std::string_view variable, std::int64_t order, DiffOptions options = {});
 operators::Operator operators::expansion::power(std::string_view variable, double center);

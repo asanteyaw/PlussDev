@@ -11,7 +11,7 @@
 const std::vector<std::string>& DataFrame::features() const
 Shelf DataFrame::features(std::string_view name) const
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) const
-DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrame::features(pluss::RangeView<std::string_view> names) const
 DataFrame DataFrame::features(StackArray<std::string_view> names) const
 ```
 

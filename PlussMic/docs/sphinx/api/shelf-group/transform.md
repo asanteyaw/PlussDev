@@ -9,7 +9,7 @@
 ```cpp
 Shelf ShelfGrouped::transform(GroupOp op) const
 DataFrame ShelfGrouped::transform(std::initializer_list<ShelfGroupSpec> specs) const
-DataFrame ShelfGrouped::transform(pluss::msharp::RangeView::Of<ShelfGroupSpec> specs) const
+DataFrame ShelfGrouped::transform(pluss::RangeView<ShelfGroupSpec> specs) const
 ```
 
 ## What It Does

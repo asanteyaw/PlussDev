@@ -7,13 +7,13 @@
 ## Signatures
 
 ```cpp
-Studio& flash::catgridplot(Studio& studio, pluss::msharp::RangeView::Note groups,
-                            pluss::msharp::RangeView::Series values,
+Studio& flash::catgridplot(Studio& studio, pluss::RangeView<pluss::Note> groups,
+                            pluss::RangeView<pluss::Series> values,
                             const CatGridPlotOptions& options = {})
 
-Studio& flash::catgridplot(Studio& studio, pluss::msharp::RangeView::Note groups,
-                            pluss::msharp::RangeView::Series values,
-                            pluss::msharp::RangeView::Note hues,
+Studio& flash::catgridplot(Studio& studio, pluss::RangeView<pluss::Note> groups,
+                            pluss::RangeView<pluss::Series> values,
+                            pluss::RangeView<pluss::Note> hues,
                             const CatGridPlotOptions& options = {})
 
 Studio& flash::catgridplot(Studio& studio, std::initializer_list<Note> groups,
@@ -65,14 +65,14 @@ mechanics; they are not re-derived here.
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**groups** (`pluss::msharp::RangeView::Note` or `std::initializer_list<Note>`)
+**groups** (`pluss::RangeView<pluss::Note>` or `std::initializer_list<Note>`)
     One entry per facet — `groups[i]` is that facet's complete group-label series.
 
-**values** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**values** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per facet — `values[i]` is that facet's complete numeric series, aligned to
     `groups[i]`.
 
-**hues** (`pluss::msharp::RangeView::Note` or `std::initializer_list<Note>`, hue overloads
+**hues** (`pluss::RangeView<pluss::Note>` or `std::initializer_list<Note>`, hue overloads
 only)
     One entry per facet — `hues[i]` is that facet's per-point hue-grouping series.
 
@@ -99,7 +99,7 @@ std::vector<pluss::Series> values{pluss::make_series(std::vector<double>{1.0, 2.
                                    pluss::make_series(std::vector<double>{4.0, 3.0, 2.0, 1.0}, {4})};
 flash::CatGridPlotOptions opts;
 opts.cat.kind = flash::CatPlotKind::Box;
-flash::catgridplot(fig, pluss::msharp::RangeView::Note(groups), pluss::msharp::RangeView::Series(values), opts);
+flash::catgridplot(fig, groups, values, opts);
 fig.show();
 ```
 
@@ -117,8 +117,8 @@ auto h1 = pluss::note::make({"p", "q", "p", "q"});
 std::vector<pluss::Note> groups{g1};
 std::vector<pluss::Series> values{pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4})};
 std::vector<pluss::Note> hues{h1};
-flash::catgridplot(fig, pluss::msharp::RangeView::Note(groups), pluss::msharp::RangeView::Series(values),
-                    pluss::msharp::RangeView::Note(hues));
+flash::catgridplot(fig, groups, values,
+                    hues);
 fig.show();
 ```
 
@@ -149,7 +149,7 @@ auto g1 = pluss::note::make({"a", "a"});
 std::vector<pluss::Note> groups{g1};
 std::vector<pluss::Series> values{};
 try {
-  flash::catgridplot(fig, pluss::msharp::RangeView::Note(groups), pluss::msharp::RangeView::Series(values));
+  flash::catgridplot(fig, groups, values);
 } catch (const pluss::Error& e) {
   std::cout << "catgridplot(mismatched) threw: " << e.message() << "\n";
 }

@@ -31,7 +31,7 @@ Target usage shape:
 
 ```cpp
 auto plan = s.traverse.queue()
-  .on(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(specs))
+  .on(specs)
   .find_btw(0.0, 1.0, true)
   .find_not(s.isnan());
 
@@ -41,7 +41,7 @@ auto out = m.select_from(other);
 
 ### 3.2 RangeView policy
 
-1. Canonical API parameters for selector lists use `RangeView::Of<ExtractSpec>`.
+1. Canonical API parameters for selector lists use `pluss::RangeView<ExtractSpec>`.
 2. `initializer_list` shims are only allowed if needed to disambiguate with scalar overloads.
 3. No `std::vector`-only canonical overloads on queue DSL methods.
 

@@ -8,7 +8,7 @@
 
 ```cpp
 std::vector<Series> Series::vsplit(std::int64_t sections) const
-std::vector<Series> Series::vsplit(pluss::RangeView::Int indices) const
+std::vector<Series> Series::vsplit(pluss::RangeView<std::int64_t> indices) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ view.
 
 Number of equal row blocks; axis `0` length must be a multiple of it.
 
-**indices** (`pluss::RangeView::Int`)
+**indices** (`pluss::RangeView<std::int64_t>`)
 
 Row boundary positions; `n` of them give `n + 1` pieces.
 

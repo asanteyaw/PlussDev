@@ -12,9 +12,9 @@ pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, std::
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, const DensityPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t points = 128) const
+pluss::pl::Studio DataFramePlotAccessor::density(pluss::RangeView<std::string_view> features, std::int64_t points = 128) const
 
-pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, const DensityPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::density(pluss::RangeView<std::string_view> features, const DensityPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::string_view> features, std::int64_t points = 128) const
 
@@ -38,7 +38,7 @@ every overload requires at least one named feature.
 **feature** (`std::string_view`)
     A single numeric feature to draw as one density curve.
 
-**features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
+**features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
     Several numeric features, each drawn as its own curve on the shared pane.
 
 **points** (`std::int64_t`, default `128`)
@@ -109,7 +109,7 @@ Example 4. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"midterm", "final"};
-auto chart = exams.plot().density(pluss::msharp::RangeView::Of<std::string_view>(names));
+auto chart = exams.plot().density(names);
 ```
 
 ![Output of Example 4](img/density-4.svg)

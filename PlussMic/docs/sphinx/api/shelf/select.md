@@ -8,23 +8,23 @@
 ## Signatures
 
 ```cpp
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               const Shelf& default_value)
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               double default_value)
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               std::string_view default_value)
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               const char* default_value)
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               const pluss::Timeline& default_value)
-static Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
-                              pluss::msharp::RangeView::Of<Shelf> choices,
+static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
+                              pluss::RangeView<Shelf> choices,
                               pluss::null_t default_value)
 // ...and a matching std::initializer_list<Shelf> overload for `conditions`/`choices`
 // for every default_value type above, forwarding to the RangeView overload.
@@ -54,12 +54,12 @@ broadcasting to every selected row) or exactly that same length.
 
 ## Parameters
 
-**conditions** (`RangeView<Shelf>` or `std::initializer_list<Shelf>`)
+**conditions** (`pluss::RangeView<Shelf>` or `std::initializer_list<Shelf>`)
     Ordered boolean masks, evaluated in order — the first `true` condition at each row
     decides which `choices` entry that row takes. At least one condition is required, and
     all conditions must share the same length.
 
-**choices** (`RangeView<Shelf>` or `std::initializer_list<Shelf>`)
+**choices** (`pluss::RangeView<Shelf>` or `std::initializer_list<Shelf>`)
     Values corresponding positionally to `conditions` — `choices[k]` is used wherever
     `conditions[k]` is the first `true` condition at a row. Must have the same count as
     `conditions`, and every entry must share one payload kind (see the important callout).

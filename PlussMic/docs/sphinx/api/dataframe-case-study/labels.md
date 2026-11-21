@@ -238,7 +238,7 @@ it afterward.
 ```cpp
 std::vector<std::string_view> wanted{"D", "B"};
 auto from_range = frame.case_study().labels(
-    pluss::RangeView<std::string_view>(wanted));
+    wanted);
 std::cout << from_range;
 ```
 
@@ -281,7 +281,7 @@ Example 11. Integer label requests also have a borrowed-range form.
 ```cpp
 std::vector<std::int64_t> numeric_keys{200, 100};
 auto numeric_from_range = scaled.case_study().labels(
-    pluss::RangeView<std::int64_t>(numeric_keys));
+    numeric_keys);
 std::cout << numeric_from_range;
 ```
 
@@ -301,7 +301,7 @@ Example 12. An empty multi-key request is valid and returns a zero-case frame wi
 original feature schema.
 
 ```cpp
-auto empty = frame.case_study().labels(pluss::RangeView<std::string_view>{});
+auto empty = frame.case_study().labels({});
 std::cout << "shape=" << empty.ncases() << "x" << empty.nfeatures() << "\n";
 ```
 

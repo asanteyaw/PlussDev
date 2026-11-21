@@ -98,7 +98,7 @@ temporary initializer list.
 
 ```cpp
 std::vector<std::int64_t> rows{2, 0};
-auto selected = frame.case_study().take(pluss::RangeView<std::int64_t>(rows))
+auto selected = frame.case_study().take(rows)
                      .features({"units"});
 std::cout << selected;
 ```

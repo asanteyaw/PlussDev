@@ -9,7 +9,7 @@
 
 ```cpp
 pluss::pl::Studio DataFramePlotAccessor::parallel(
-    pluss::msharp::RangeView::Of<std::string_view> features = {},
+    pluss::RangeView<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
     const ParallelPlotOptions& options = {}) const
 ```
@@ -35,7 +35,7 @@ figure altogether.
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features to use as axes, in the given order. Empty (the default) infers every
     numeric feature in the frame — see [`box()`](box.md)'s important callout for the exact
     rule and throw text.

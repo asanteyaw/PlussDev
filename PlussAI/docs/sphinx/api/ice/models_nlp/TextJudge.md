@@ -42,7 +42,7 @@ models::TextJudge default_model;
 ## Changelog
 
 - **0.1** -- `TextJudge`: `learn`/`predict`/`assess` over `Doc`/
-  `RangeView<std::string_view>`/`vector<std::string>`/`Note`,
+  `pluss::RangeView<std::string_view>`/`vector<std::string>`/`Note`,
   `save`/`load`, `labels`, `ready`, `to`.
 
 <!-- apiref:toctree:start -->

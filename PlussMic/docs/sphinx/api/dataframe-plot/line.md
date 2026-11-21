@@ -15,10 +15,10 @@ pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature,
                                                std::optional<std::string_view> x_feature,
                                                const LinePlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature,
                                                const LinePlotOptions& options) const
 
@@ -80,7 +80,7 @@ See Examples 1, 2, and 3 below for each of these three paths in turn.
 **y_feature** (`std::string_view`)
     A single numeric feature to draw as one line trace.
 
-**y_features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
+**y_features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
     Several numeric features, each drawn as its own line trace on the same axes. A legend
     is shown automatically whenever more than one y-feature is requested (and suppressed
     for a single feature). At least one y-feature is required — an empty list throws
@@ -213,7 +213,7 @@ list — useful when the feature list is built at runtime rather than known at t
 
 ```cpp
 std::vector<std::string_view> y_names{"amount", "cost"};
-auto chart = sales.plot().line(pluss::msharp::RangeView::Of<std::string_view>(y_names), "month");
+auto chart = sales.plot().line(y_names, "month");
 chart.save_pdf("monthly_lines.pdf");
 ```
 

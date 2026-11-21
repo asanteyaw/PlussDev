@@ -67,7 +67,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(5));
   const math::Function cdf = math::function({"x"}, [](math::Function x) { return x * 0.5; });
   const std::vector<double> points = {1.0}, sizes = {0.5};
-  const operators::Operator mix = operators::measure::stieltjes("x", cdf, 0.0, 1.0, pluss::RangeView<double>(points), pluss::RangeView<double>(sizes));
+  const operators::Operator mix = operators::measure::stieltjes("x", cdf, 0.0, 1.0, points, sizes);
   const math::Function one = math::function({"x"}, [](math::Function x) { return x * 0.0 + 1.0; });
   const math::Function id = math::function({"x"}, [](math::Function x) { return x; });
   out.writeln("mass:", mix(one)().item<double>(), "  mean:", mix(id)().item<double>());
@@ -134,8 +134,8 @@ int main() {
   const math::Function zero = math::function({"x"}, [](math::Function x) { return x * 0.0; });
   const std::vector<double> points = {1.0, 3.0}, sizes = {0.3, 0.7};
   const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
-  out.writeln("stieltjes:", operators::measure::stieltjes("x", zero, 0.0, 4.0, pluss::RangeView<double>(points), pluss::RangeView<double>(sizes))(square)().item<double>());
-  out.writeln("atomic:   ", operators::measure::atomic("x", pluss::RangeView<double>(points), pluss::RangeView<double>(sizes))(square)().item<double>(), "  (0.3 + 6.3)");
+  out.writeln("stieltjes:", operators::measure::stieltjes("x", zero, 0.0, 4.0, points, sizes)(square)().item<double>());
+  out.writeln("atomic:   ", operators::measure::atomic("x", points, sizes)(square)().item<double>(), "  (0.3 + 6.3)");
 }
 ```
 

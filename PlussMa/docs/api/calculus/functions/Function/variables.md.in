@@ -23,7 +23,7 @@ The view refers to names stored inside the function. Read it while the function 
 
 ## Returns
 
-A `RangeView<std::string_view>` of the names, valid while the function is alive.
+A `pluss::RangeView<std::string_view>` of the names, valid while the function is alive.
 
 ## Errors
 
@@ -84,7 +84,7 @@ int main() {
   for (const std::string_view name : f.variables()) {
     bindings.emplace_back(name, pluss::make_series(table.at(std::string(name))));
   }
-  out.writeln("f(a = 1, b = 2) =", f(pluss::RangeView<math::Binding>(bindings)).item<double>());
+  out.writeln("f(a = 1, b = 2) =", f(bindings).item<double>());
 }
 ```
 

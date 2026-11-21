@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-Studio& flash::pairplot(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::pairplot(Studio& studio, pluss::RangeView<pluss::Series> columns,
                          const PairPlotOptions& options = {})
 
 Studio& flash::pairplot(Studio& studio, std::initializer_list<Series> columns,
@@ -21,7 +21,7 @@ Studio& flash::pairplot(Studio& studio, const Series& matrix,
                          const PairPlotOptions& options = {})
 
 Studio& flash::pairplot(Studio& studio, const Series& matrix,
-                         pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                         pluss::RangeView<std::string_view> feature_names,
                          Axis feature_axis, const PairPlotOptions& options = {})
 
 Studio& flash::pairplot(Studio& studio, const Series& matrix,
@@ -44,7 +44,7 @@ a bivariate view of two features against each other. Internally it lays out an `
 automatically by default), then, per cell: draws a histogram or KDE on the diagonal, and a
 scatter (optionally with a regression fit line) off the diagonal.
 
-Eight overloads cover every way to hand it a feature set: a `RangeView::Series` or
+Eight overloads cover every way to hand it a feature set: a `pluss::RangeView<pluss::Series>` or
 `std::initializer_list<Series>` of raw columns; a pre-built `Dataset` (see "`Dataset` and
 `make_dataset`" below, carrying its own feature names); a rank-2 `Series` matrix in five
 different feature-naming/axis-orientation shapes; or a bare matrix with no names at all
@@ -138,7 +138,7 @@ size the Studio already had.
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**columns** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per feature — `columns[i]` is that feature's complete value series. Must be
     non-empty, and every column must be the same length, or `pairplot` throws
     `pluss::Error("flash::pairplot requires at least one series")` (empty case)
@@ -160,7 +160,7 @@ size the Studio already had.
     `{ Axis feature_axis; std::vector<std::string> feature_names; }` — bundles the axis
     orientation and feature names into one value.
 
-**feature_names** (`RangeView::Of<std::string_view>`, `const std::vector<std::string>&`,
+**feature_names** (`pluss::RangeView<std::string_view>`, `const std::vector<std::string>&`,
 or `std::initializer_list<std::string_view>`, three matrix overloads)
     Per-feature names, forwarded into `options.labels` when `options.labels` is empty.
     A mismatched count falls back to auto-generated `"x_1"`, `"x_2"`, … labels (note the
@@ -213,14 +213,14 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}),
     pluss::make_series(std::vector<double>{8.0, 6.0, 7.0, 5.0, 4.0, 3.0, 2.0, 1.0}, {8}),
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols));
+flash::pairplot(fig, cols);
 fig.show();
 ```
 
 ![Output of Example 1](img/flash-pairplot-1-default.svg)
 
 Example 2. `std::initializer_list<Series>` overload — identical to the
-`RangeView::Series` form above given the same data.
+`pluss::RangeView<pluss::Series>` form above given the same data.
 
 ```cpp
 using namespace pluss::pl;
@@ -275,7 +275,7 @@ fig.show();
 
 ![Output of Example 4](img/flash-pairplot-4-matrix-frame-options.svg)
 
-Example 5. Matrix + `RangeView::Of<std::string_view>` feature names + explicit `Axis`
+Example 5. Matrix + `pluss::RangeView<std::string_view>` feature names + explicit `Axis`
 overload — same matrix, names supplied directly instead of through
 `MatrixFrameOptions`.
 
@@ -328,7 +328,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.triangle = flash::PairPlotTriangle::Lower;
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -346,7 +346,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.triangle = flash::PairPlotTriangle::Upper;
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -367,12 +367,12 @@ std::vector<pluss::Series> cols{
 auto fig1 = studio("flash_pairplot_corner");
 flash::PairPlotOptions corner_opts;
 corner_opts.corner = true;
-flash::pairplot(fig1, pluss::msharp::RangeView::Series(cols), corner_opts);
+flash::pairplot(fig1, cols, corner_opts);
 
 auto fig2 = studio("flash_pairplot_lower_cmp");
 flash::PairPlotOptions lower_opts;
 lower_opts.triangle = flash::PairPlotTriangle::Lower;
-flash::pairplot(fig2, pluss::msharp::RangeView::Series(cols), lower_opts);
+flash::pairplot(fig2, cols, lower_opts);
 
 std::cout << "corner=true == explicit triangle=Lower: " << (fig1.to_svg() == fig2.to_svg()) << "\n";
 ```
@@ -398,7 +398,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.kind = flash::PairPlotKind::Reg;
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -417,7 +417,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.diag_kind = flash::PairPlotDiagKind::Density;
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -436,7 +436,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.monochrome = false;
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -458,12 +458,12 @@ std::vector<pluss::Series> cols{
 
 auto fig1 = studio("flash_pairplot_dropna_off");
 flash::PairPlotOptions off_opts;
-flash::pairplot(fig1, pluss::msharp::RangeView::Series(cols), off_opts);
+flash::pairplot(fig1, cols, off_opts);
 
 auto fig2 = studio("flash_pairplot_dropna_on");
 flash::PairPlotOptions on_opts;
 on_opts.dropna = true;
-flash::pairplot(fig2, pluss::msharp::RangeView::Series(cols), on_opts);
+flash::pairplot(fig2, cols, on_opts);
 
 std::cout << "dropna=false vs dropna=true differ: " << (fig1.to_svg() != fig2.to_svg()) << "\n";
 ```
@@ -490,7 +490,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::PairPlotOptions opts;
 opts.labels = {"Height", "Weight", "Age"};
-flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::pairplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -503,7 +503,7 @@ using namespace pluss::pl;
 
 auto fig = studio("flash_pairplot_empty");
 try {
-  flash::pairplot(fig, pluss::msharp::RangeView::Series{});
+  flash::pairplot(fig, {});
 } catch (const pluss::Error& e) {
   std::cout << "pairplot(empty) threw: " << e.message() << "\n";
 }
@@ -527,7 +527,7 @@ std::vector<pluss::Series> cols{pluss::make_series(nan_col, {5}), pluss::make_se
 flash::PairPlotOptions opts;
 opts.dropna = true;
 try {
-  flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+  flash::pairplot(fig, cols, opts);
 } catch (const pluss::Error& e) {
   std::cout << "pairplot(all-nan, dropna) threw: " << e.message() << "\n";
 }
@@ -542,7 +542,7 @@ pairplot(all-nan, dropna) threw: flash::pairplot has no rows after filtering/sam
 ## Notes
 
 - Not `noexcept`.
-- Every overload ultimately funnels through the first (`RangeView::Series` +
+- Every overload ultimately funnels through the first (`pluss::RangeView<pluss::Series>` +
   `PairPlotOptions`) overload.
 - `dropna` computes its mask once across *all* features combined (`isfinite()` chained via
   `logical_and()`) — a single `NaN` anywhere in a row removes that row from every feature's

@@ -10,7 +10,7 @@
 ```cpp
 DataFrameSortBuilder DataFrameSortBuilder::within(std::string_view feature) const
 DataFrameSortBuilder DataFrameSortBuilder::within(std::initializer_list<std::string_view> features) const
-DataFrameSortBuilder DataFrameSortBuilder::within(pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrameSortBuilder DataFrameSortBuilder::within(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

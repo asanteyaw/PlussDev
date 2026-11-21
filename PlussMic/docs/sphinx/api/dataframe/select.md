@@ -9,8 +9,8 @@
 
 ```cpp
 static DataFrame DataFrame::select(
-    pluss::msharp::RangeView::Of<Shelf> conditions,
-    pluss::msharp::RangeView::Of<DataFrame> choices,
+    pluss::RangeView<Shelf> conditions,
+    pluss::RangeView<DataFrame> choices,
     const DataFrame& default_value)
 
 static DataFrame DataFrame::select(
@@ -49,7 +49,7 @@ first.
 
 ## Parameters
 
-**conditions** (`RangeView::Of<Shelf>` or `std::initializer_list<Shelf>`)
+**conditions** (`pluss::RangeView<Shelf>` or `std::initializer_list<Shelf>`)
 
 An ordered, non-empty list of boolean masks, one per candidate in `choices`. Each
 `Shelf` must be a `Series`-kind, `Bool`-scalar-type shelf with one value per case —
@@ -57,7 +57,7 @@ the same requirement `land()`/`lor()`/`lxor()` place on their operands (see
 [`land()`](land.md)). `conditions` and `choices` must have the same length; each
 position pairs one condition with the candidate frame it "unlocks."
 
-**choices** (`RangeView::Of<DataFrame>` or `std::initializer_list<DataFrame>`)
+**choices** (`pluss::RangeView<DataFrame>` or `std::initializer_list<DataFrame>`)
 
 One candidate frame per condition, evaluated in the same order as `conditions`. Every
 choice must **exactly** match `default_value`'s case count, feature count, feature

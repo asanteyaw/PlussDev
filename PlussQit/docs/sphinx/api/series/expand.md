@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series Series::expand(pluss::RangeView::Int shape) const
+Series Series::expand(pluss::RangeView<std::int64_t> shape) const
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ array.
 
 ## Parameters
 
-**shape** (`pluss::RangeView::Int`)
+**shape** (`pluss::RangeView<std::int64_t>`)
 
 The target shape. Entries may be `-1` to keep the corresponding current size.
 Must have at least the current rank.

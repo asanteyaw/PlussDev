@@ -9,10 +9,10 @@
 
 ```cpp
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(
-    pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+    pluss::RangeView<std::string_view> features = {}) const
 
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(
-    pluss::msharp::RangeView::Of<std::string_view> features,
+    pluss::RangeView<std::string_view> features,
     const AutoPlotOptions& options) const
 ```
 
@@ -66,7 +66,7 @@ Given the resolved feature names (`names`) and whether `features` was passed non
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features to consider. Empty (the default) infers every numeric feature in the
     frame — see [`box()`](box.md)'s important callout for the exact rule. Whether this
     argument was left empty or passed explicitly also affects routing directly (rule 2

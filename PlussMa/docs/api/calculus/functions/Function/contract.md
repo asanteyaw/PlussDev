@@ -128,7 +128,7 @@ int main() {
   const auto B = pluss::make_series({1.0, 0.0, 2.0, 1.0, 0.0, 3.0, 1.0, 1.0}).reshape({2, 4});
   const std::vector<std::int64_t> left = {1}, right = {0};
   const math::Function by_contract = math::function({"x"}, [&](math::Function x) {
-    return math::function(A).contract(math::function(B), pluss::RangeView<std::int64_t>(left), pluss::RangeView<std::int64_t>(right)) * x;
+    return math::function(A).contract(math::function(B), left, right) * x;
   });
   const math::Function by_matmul = math::function({"x"}, [&](math::Function x) { return math::function(A).matmul(math::function(B)) * x; });
   out.writeln("contract:", by_contract(1.0).reshape({12}).items<double>());

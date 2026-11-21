@@ -487,7 +487,7 @@ canonical method inventory and per-operation pages.
 - `Note unique() const`
 - `Note squeeze(::std::int64_t dim) const`
 - `Note unsqueeze(::std::int64_t dim) const`
-- `Note repeat(::pluss::msharp::RangeView::Int repeats) const`
+- `Note repeat(::pluss::RangeView<std::int64_t> repeats) const`
 
 ## Other (33)
 

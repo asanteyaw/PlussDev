@@ -10,7 +10,7 @@
 Trace& flash::pieplot(Pane& pane, Series values)
 
 Trace& flash::pieplot(Pane& pane, Series values,
-                       pluss::msharp::RangeView::Of<std::string_view> labels)
+                       pluss::RangeView<std::string_view> labels)
 
 Trace& flash::pieplot(Pane& pane, Series values,
                        std::initializer_list<std::string_view> labels)
@@ -45,7 +45,7 @@ with its (values, explode, labels) overload.
     The wedge magnitudes. Rendered proportionally to their share of the sum — they need
     not already sum to 1 or 100.
 
-**labels** (`RangeView::Of<std::string_view>` or `std::initializer_list<std::string_view>`,
+**labels** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 optional)
     One label per wedge, in `values` order. Omit for unlabeled wedges.
 
@@ -95,7 +95,7 @@ auto fig = studio("flash_pieplot_rangeview");
 auto& pane = fig.pane2();
 std::vector<double> values{30.0, 45.0, 25.0};
 std::vector<std::string_view> label_vec{"cats", "dogs", "birds"};
-pluss::msharp::RangeView::Of<std::string_view> labels(label_vec);
+pluss::RangeView<std::string_view> labels(label_vec);
 flash::pieplot(pane, values, labels);
 fig.show();
 ```

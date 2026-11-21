@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-Studio& flash::triplot(Studio& studio, pluss::msharp::RangeView::Series columns,
+Studio& flash::triplot(Studio& studio, pluss::RangeView<pluss::Series> columns,
                         const TriplotOptions& options = {})
 
 Studio& flash::triplot(Studio& studio, std::initializer_list<Series> columns,
@@ -21,7 +21,7 @@ Studio& flash::triplot(Studio& studio, const Series& matrix,
                         const TriplotOptions& options = {})
 
 Studio& flash::triplot(Studio& studio, const Series& matrix,
-                        pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                        pluss::RangeView<std::string_view> feature_names,
                         Axis feature_axis, const TriplotOptions& options = {})
 
 Studio& flash::triplot(Studio& studio, const Series& matrix,
@@ -45,7 +45,7 @@ exhaustively compares every *pair*, `triplot` exhaustively compares every combin
 to `max_panels`, auto-resolves a grid shape for them via the same
 [`flash::resolve_grid_shape`](FacetGrid.md) mechanics
 [`flash::relgridplot`](relgridplot.md) uses, then draws each triplet with one of six
-`TriplotKind` glyphs. The overload shape (eight overloads: `RangeView::Series`,
+`TriplotKind` glyphs. The overload shape (eight overloads: `pluss::RangeView<pluss::Series>`,
 initializer list, `Dataset` (see the [`flash::pairplot`](pairplot.md) page), and four
 matrix forms) exactly mirrors [`flash::pairplot`](pairplot.md)'s.
 
@@ -90,7 +90,7 @@ Of the six `TriplotKind` values, only Cloud and Path draw from three flat column
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**columns** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per feature. Must contain at least three features, or `triplot` throws
     (message: `"flash::triplot requires at least three numeric features"`), and every
     column must be the same length.
@@ -107,7 +107,7 @@ Of the six `TriplotKind` values, only Cloud and Path draw from three flat column
 **frame_options** (`const MatrixFrameOptions&`, one matrix overload only)
     `{ Axis feature_axis; std::vector<std::string> feature_names; }`.
 
-**feature_names** (`RangeView::Of<std::string_view>`, `const std::vector<std::string>&`,
+**feature_names** (`pluss::RangeView<std::string_view>`, `const std::vector<std::string>&`,
 or `std::initializer_list<std::string_view>`, three matrix overloads)
     Per-feature names for these overloads' outer parameter — **not** the same as
     `TriplotOptions::feature_names`, which restricts *which* features participate rather
@@ -137,14 +137,14 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}),
     pluss::make_series(std::vector<double>{8.0, 6.0, 7.0, 5.0, 4.0, 3.0, 2.0, 1.0}, {8}),
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols));
+flash::triplot(fig, cols);
 fig.show();
 ```
 
 ![Output of Example 1](img/flash-triplot-1-default-cloud.svg)
 
 Example 2. `std::initializer_list<Series>` overload — identical to the
-`RangeView::Series` form given the same data.
+`pluss::RangeView<pluss::Series>` form given the same data.
 
 ```cpp
 using namespace pluss::pl;
@@ -197,7 +197,7 @@ fig.show();
 
 ![Output of Example 4](img/flash-triplot-4-matrix-frame-options.svg)
 
-Example 5. Matrix + `RangeView::Of<std::string_view>` feature names + explicit `Axis`
+Example 5. Matrix + `pluss::RangeView<std::string_view>` feature names + explicit `Axis`
 overload.
 
 ```cpp
@@ -248,7 +248,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::TriplotOptions opts;
 opts.kind = flash::TriplotKind::Path;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -267,7 +267,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::TriplotOptions opts;
 opts.kind = flash::TriplotKind::Sheet;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -285,7 +285,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::TriplotOptions opts;
 opts.kind = flash::TriplotKind::Lattice;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -303,7 +303,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 8.0, 7.0}, {8})};
 flash::TriplotOptions opts;
 opts.kind = flash::TriplotKind::Spire;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -322,7 +322,7 @@ std::vector<pluss::Series> cols{
 flash::TriplotOptions opts;
 opts.kind = flash::TriplotKind::Ridge;
 opts.ridge_levels = 6;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -341,7 +341,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{5.0, 4.0, 6.0, 3.0, 7.0, 2.0, 8.0, 1.0}, {8})};
 flash::TriplotOptions opts;
 opts.labels = {"alpha", "beta", "gamma", "delta"};
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 std::cout << "4 features -> C(4,3)=4 triplet panels, pane count: " << fig.pane_count() << "\n";
 fig.show();
 ```
@@ -368,7 +368,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{5.0, 4.0, 6.0, 3.0, 7.0, 2.0, 8.0, 1.0}, {8})};
 flash::TriplotOptions opts;
 opts.max_panels = 2;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 std::cout << "4 features, max_panels=2 -> pane count: " << fig.pane_count() << "\n";
 fig.show();
 ```
@@ -396,7 +396,7 @@ std::vector<pluss::Series> cols{
 flash::TriplotOptions opts;
 opts.labels = {"alpha", "beta", "gamma", "delta"};
 opts.feature_indices = {0, 1, 3};
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -417,7 +417,7 @@ std::vector<pluss::Series> cols{
 flash::TriplotOptions opts;
 opts.labels = {"alpha", "beta", "gamma", "delta"};
 opts.feature_names = {"alpha", "gamma", "delta"};
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -437,7 +437,7 @@ std::vector<pluss::Series> cols{
 flash::TriplotOptions opts;
 opts.rows = 1;
 opts.cols = 4;
-flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+flash::triplot(fig, cols, opts);
 fig.show();
 ```
 
@@ -453,7 +453,7 @@ std::vector<pluss::Series> cols{
     pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}),
     pluss::make_series(std::vector<double>{8.0, 6.0, 7.0, 5.0, 4.0, 3.0, 2.0, 1.0}, {8})};
 try {
-  flash::triplot(fig, pluss::msharp::RangeView::Series(cols));
+  flash::triplot(fig, cols);
 } catch (const pluss::Error& e) {
   std::string msg(e.message());
   std::cout << "triplot(2 features) threw: " << msg.substr(0, msg.find('\n')) << "\n";
@@ -480,7 +480,7 @@ flash::TriplotOptions opts;
 opts.labels = {"alpha", "beta", "gamma"};
 opts.feature_names = {"alpha", "nonexistent"};
 try {
-  flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
+  flash::triplot(fig, cols, opts);
 } catch (const pluss::Error& e) {
   std::string msg(e.message());
   std::cout << "triplot(unknown feature name) threw: " << msg.substr(0, msg.find('\n')) << "\n";

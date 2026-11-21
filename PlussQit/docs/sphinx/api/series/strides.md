@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-pluss::msharp::RangeView::Int Series::strides() const
+pluss::RangeView<std::int64_t> Series::strides() const
 ```
 
 ## Read The Complete Storage Walk

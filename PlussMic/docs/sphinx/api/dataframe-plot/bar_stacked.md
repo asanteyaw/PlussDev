@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features,
                                                       std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features,
                                                       std::optional<std::string_view> x_feature,
                                                       const BarStackedPlotOptions& options) const
 
@@ -45,7 +45,7 @@ color per band — raise `alpha` toward `1.0` for a fully solid, unambiguous per
 
 ## Parameters
 
-**y_features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
+**y_features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
     Numeric features to stack, in accumulation order — the first forms the bottom segment,
     the last feature's cumulative top is the grand total. At least one is required — an
     empty list throws `"DataFrame::plot().bar_stacked: at least one y feature is required"`.
@@ -102,7 +102,7 @@ auto parts_df = DataFrame({
 
 std::vector<std::string_view> parts{"product", "support", "other"};
 auto chart = parts_df.plot().bar_stacked(
-    pluss::msharp::RangeView::Of<std::string_view>(parts), "city");
+    parts, "city");
 chart.show();
 ```
 

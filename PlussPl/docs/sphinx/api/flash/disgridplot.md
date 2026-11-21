@@ -9,10 +9,10 @@
 ```cpp
 DisGridKind flash::disgrid_kind(std::string_view kind);
 
-Studio& flash::disgridplot(Studio& studio, pluss::msharp::RangeView::Series values,
+Studio& flash::disgridplot(Studio& studio, pluss::RangeView<pluss::Series> values,
                             const DisGridPlotOptions& options = {})
 
-Studio& flash::disgridplot(Studio& studio, pluss::msharp::RangeView::Series values,
+Studio& flash::disgridplot(Studio& studio, pluss::RangeView<pluss::Series> values,
                             std::string_view kind)
 
 Studio& flash::disgridplot(Studio& studio, std::initializer_list<Series> values,
@@ -32,7 +32,7 @@ grid — the distribution sibling of [`flash::relgridplot`](relgridplot.md) and
 [`flash::ecdfplot`](ecdfplot.md), or [`flash::rugplot`](rugplot.md) according to
 `options.kind`. Unlike `catgridplot`, it shares `relgridplot`'s kind-string convenience
 overload — four overloads total, covering "an options value vs. a bare kind string" crossed
-with "`RangeView::Series` vs. `std::initializer_list<Series>`" input.
+with "`pluss::RangeView<pluss::Series>` vs. `std::initializer_list<Series>`" input.
 
 The grid-shape auto-resolution, the `titles`/`x_labels`/`y_labels` positional-and-
 short-vector-tolerant behavior, and the overflow-cell-hiding behavior are identical to
@@ -58,7 +58,7 @@ mechanics.
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**values** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
+**values** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
     One entry per facet — `values[i]` is that facet's complete sample series. Must be
     non-empty, or `disgridplot` throws
     `pluss::Error("flash::disgridplot requires at least one facet series")`.
@@ -87,7 +87,7 @@ auto fig = studio("flash_disgridplot_hist");
 std::vector<double> sample{1.2, 1.5, 1.8, 2.1, 2.3, 2.5, 2.6, 2.8, 3.0, 3.2, 3.5, 3.9, 4.1, 4.4, 4.8, 5.0};
 std::vector<pluss::Series> values{pluss::make_series(sample, {static_cast<std::int64_t>(sample.size())}),
                                    pluss::make_series(sample, {static_cast<std::int64_t>(sample.size())})};
-flash::disgridplot(fig, pluss::msharp::RangeView::Series(values));
+flash::disgridplot(fig, values);
 fig.show();
 ```
 
@@ -101,7 +101,7 @@ using namespace pluss::pl;
 auto fig = studio("flash_disgridplot_density");
 std::vector<double> sample{1.2, 1.5, 1.8, 2.1, 2.3, 2.5, 2.6, 2.8, 3.0, 3.2, 3.5, 3.9, 4.1, 4.4, 4.8, 5.0};
 std::vector<pluss::Series> values{pluss::make_series(sample, {static_cast<std::int64_t>(sample.size())})};
-flash::disgridplot(fig, pluss::msharp::RangeView::Series(values), "density");
+flash::disgridplot(fig, values, "density");
 fig.show();
 ```
 
@@ -115,7 +115,7 @@ using namespace pluss::pl;
 auto fig = studio("flash_disgridplot_ecdf");
 std::vector<double> sample{1.2, 1.5, 1.8, 2.1, 2.3, 2.5, 2.6, 2.8, 3.0, 3.2, 3.5, 3.9, 4.1, 4.4, 4.8, 5.0};
 std::vector<pluss::Series> values{pluss::make_series(sample, {static_cast<std::int64_t>(sample.size())})};
-flash::disgridplot(fig, pluss::msharp::RangeView::Series(values), "ecdf");
+flash::disgridplot(fig, values, "ecdf");
 fig.show();
 ```
 
@@ -133,7 +133,7 @@ std::vector<pluss::Series> values{pluss::make_series(sample, {static_cast<std::i
 flash::DisGridPlotOptions opts;
 opts.kind = flash::DisGridKind::Rug;
 opts.rug_height = 0.3;
-flash::disgridplot(fig, pluss::msharp::RangeView::Series(values), opts);
+flash::disgridplot(fig, values, opts);
 fig.show();
 ```
 
@@ -149,7 +149,7 @@ std::vector<double> sample{1.2, 1.5, 1.8, 2.1, 2.3, 2.5, 2.6, 2.8, 3.0, 3.2, 3.5
 std::vector<pluss::Series> values{pluss::make_series(sample, {static_cast<std::int64_t>(sample.size())})};
 flash::DisGridPlotOptions opts;
 opts.bins = 4;
-flash::disgridplot(fig, pluss::msharp::RangeView::Series(values), opts);
+flash::disgridplot(fig, values, opts);
 fig.show();
 ```
 

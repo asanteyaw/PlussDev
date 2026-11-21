@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Shelf DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
+Shelf DataFrameLabelAccessor::take(pluss::RangeView<std::int64_t> indices) const
 ```
 
 ## What It Does
@@ -19,7 +19,7 @@ as a bare `Shelf`, not the corresponding `DataFrame` rows.
 
 ## Parameters
 
-**indices** (`pluss::msharp::RangeView::Int`)
+**indices** (`pluss::RangeView<std::int64_t>`)
 
 Positions to select, in the order you want them back.
 

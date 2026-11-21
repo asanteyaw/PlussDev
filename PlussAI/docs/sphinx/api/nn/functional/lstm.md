@@ -296,7 +296,7 @@ int main() {
 
   std::vector<nn::rnn::NetWeight> params_vec(net->params().begin(), net->params().end());
   const auto [func_output, func_state] = nn::lstm(
-      input, pluss::RangeView<nn::rnn::NetWeight>(params_vec), cfg);
+      input, params_vec, cfg);
 
   std::cout << "params blocks: " << params_vec.size() << " (forward + backward direction)\n";
   std::cout << "identical: " << std::boolalpha << module_output.allclose(func_output) << "\n";

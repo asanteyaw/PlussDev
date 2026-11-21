@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> features = {}) const
 
-pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> features,
                                                          ScatterMatrixTriangle triangle) const
 
-pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::RangeView<std::string_view> features,
                                                          const ScatterMatrixPlotOptions& options) const
 ```
 
@@ -39,7 +39,7 @@ or non-numeric feature throws, matching the rest of the plotting accessor. If yo
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features to include in the matrix. Empty (the default) means "take the frame's
     numeric features automatically." Wide analytical tables therefore stay fully visible by
     default instead of being silently truncated.
@@ -96,7 +96,7 @@ Example 2. An explicit feature subset via `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"revenue", "cost"};
-auto chart = metrics.plot().scatter_matrix(pluss::msharp::RangeView::Of<std::string_view>(names));
+auto chart = metrics.plot().scatter_matrix(names);
 chart.show();
 ```
 

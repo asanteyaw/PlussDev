@@ -8,7 +8,7 @@
 
 ```cpp
 LocusPullAgg& LocusPullAgg::sum(std::string_view feature, std::string_view alias = {})
-LocusPullAgg& LocusPullAgg::sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPullAgg& LocusPullAgg::sum(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 LocusPullAgg& LocusPullAgg::sum(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

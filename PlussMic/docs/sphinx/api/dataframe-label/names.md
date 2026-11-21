@@ -9,7 +9,7 @@
 
 ```cpp
 std::vector<std::string> DataFrameLabelAccessor::names() const
-DataFrame DataFrameLabelAccessor::names(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrameLabelAccessor::names(pluss::RangeView<std::string_view> names) const
 DataFrame DataFrameLabelAccessor::names(std::initializer_list<std::string_view> names) const
 ```
 

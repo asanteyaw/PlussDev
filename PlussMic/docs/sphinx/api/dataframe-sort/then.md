@@ -10,8 +10,8 @@
 ```cpp
 DataFrameSortBuilder DataFrameSortBuilder::then(std::string_view feature) const
 DataFrameSortBuilder DataFrameSortBuilder::then(std::initializer_list<std::string_view> features) const
-DataFrameSortBuilder DataFrameSortBuilder::then(pluss::msharp::RangeView::Of<std::string_view> features) const
-DataFrameSortBuilder DataFrameSortBuilder::then(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const
+DataFrameSortBuilder DataFrameSortBuilder::then(pluss::RangeView<std::string_view> features) const
+DataFrameSortBuilder DataFrameSortBuilder::then(pluss::RangeView<DataFrame::ArrangeSpec> specs) const
 ```
 
 ## What It Does

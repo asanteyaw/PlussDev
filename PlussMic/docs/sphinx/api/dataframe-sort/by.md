@@ -10,8 +10,8 @@
 ```cpp
 DataFrameSortBuilder DataFrameSortBuilder::by(std::string_view feature) const
 DataFrameSortBuilder DataFrameSortBuilder::by(std::initializer_list<std::string_view> features) const
-DataFrameSortBuilder DataFrameSortBuilder::by(pluss::msharp::RangeView::Of<std::string_view> features) const
-DataFrameSortBuilder DataFrameSortBuilder::by(pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec> specs) const
+DataFrameSortBuilder DataFrameSortBuilder::by(pluss::RangeView<std::string_view> features) const
+DataFrameSortBuilder DataFrameSortBuilder::by(pluss::RangeView<DataFrame::ArrangeSpec> specs) const
 ```
 
 ## What It Does
@@ -46,11 +46,11 @@ happens when [`yield()`](yield.md)/[`order()`](order.md)/[`head()`](head.md)/
     A single feature name to sort by.
 
 **features** (`std::initializer_list<std::string_view>` or
-`pluss::msharp::RangeView::Of<std::string_view>`)
+`pluss::RangeView<std::string_view>`)
     Several feature names to sort by, in the order given; each inherits the
     builder's current direction/null-placement defaults.
 
-**specs** (`pluss::msharp::RangeView::Of<DataFrame::ArrangeSpec>`)
+**specs** (`pluss::RangeView<DataFrame::ArrangeSpec>`)
     Several `{feature, ascending, nulls_last}` specs, each carrying its own
     direction and null placement independent of the builder defaults.
 

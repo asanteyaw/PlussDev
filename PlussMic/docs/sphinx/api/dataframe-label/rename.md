@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameLabelAccessor::rename(pluss::msharp::RangeView::Of<DataFrame::LabelRename> renames) const
+DataFrame DataFrameLabelAccessor::rename(pluss::RangeView<DataFrame::LabelRename> renames) const
 DataFrame DataFrameLabelAccessor::rename(std::initializer_list<DataFrame::LabelRename> renames) const
 ```
 
@@ -23,7 +23,7 @@ only the level *names* returned by [`names()`](names.md) (and usable with
 
 ## Parameters
 
-**renames** (`pluss::msharp::RangeView::Of<DataFrame::LabelRename>` /
+**renames** (`pluss::RangeView<DataFrame::LabelRename>` /
 `std::initializer_list<DataFrame::LabelRename>`)
 
 One or more `{from, to}` pairs — each `from` must name an existing level, and

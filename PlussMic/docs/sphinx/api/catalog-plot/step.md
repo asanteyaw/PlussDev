@@ -11,7 +11,7 @@
 pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::RangeView<std::string_view> y_keys = {},
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
 pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
@@ -21,7 +21,7 @@ pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
                                              std::optional<std::string_view> x_key,
                                              const StepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::RangeView<std::string_view> y_keys,
                                              std::optional<std::string_view> x_key,
                                              const StepPlotOptions& options) const
 
@@ -41,7 +41,7 @@ explanation; only what's specific to `step()` is repeated here.
 
 ## Parameters
 
-**y_key** / **y_keys** (`std::string_view` / `RangeView<std::string_view>` /
+**y_key** / **y_keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `y_keys` defaults to `{}`)
     Same resolution as [`line()`](line.md): an empty `y_keys` selects every
     plottable key in the catalog; an explicitly named unknown key throws.

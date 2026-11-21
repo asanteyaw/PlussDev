@@ -8,7 +8,7 @@
 
 ```cpp
 NexusPullAgg& NexusPullAgg::var(std::string_view feature, std::string_view alias = {})
-NexusPullAgg& NexusPullAgg::var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::var(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 NexusPullAgg& NexusPullAgg::var(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

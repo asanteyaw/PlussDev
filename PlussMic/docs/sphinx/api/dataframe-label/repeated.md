@@ -9,7 +9,7 @@
 
 ```cpp
 Shelf DataFrameLabelAccessor::repeated() const
-Shelf DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const
+Shelf DataFrameLabelAccessor::repeated(pluss::RangeView<std::string_view> names) const
 Shelf DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const
 ```
 

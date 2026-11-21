@@ -5,7 +5,7 @@
 `TextJudge` is a text classifier built on `nlp` `Doc`s/`msharp`
 ranges -- the heaviest input-type polymorphism in the catalog.
 `learn`/`predict`/`assess` each have four overloads
-(`Doc`/`RangeView<std::string_view>`/`std::vector<std::string>`/
+(`Doc`/`pluss::RangeView<std::string_view>`/`std::vector<std::string>`/
 `pluss::Note`) accepting the same corpus in whichever shape is
 convenient, and all four always agree on the result for the same
 underlying texts (proved directly in each method page's own

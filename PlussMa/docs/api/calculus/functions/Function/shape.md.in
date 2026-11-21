@@ -23,7 +23,7 @@ The shape is computed when the function is built, not when it is evaluated, so r
 
 ## Returns
 
-A `RangeView<std::int64_t>` with one entry per output axis; empty for a scalar function.
+A `pluss::RangeView<std::int64_t>` with one entry per output axis; empty for a scalar function.
 
 ## Errors
 

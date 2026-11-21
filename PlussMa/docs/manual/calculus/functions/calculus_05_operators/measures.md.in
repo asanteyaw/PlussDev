@@ -12,10 +12,10 @@ There is no measure type. A measure is carried by the operator that integrates a
 | `measure::stieltjes(x, cdf, a, b, jump_points, jump_sizes)` | `dF`: the density of the continuous part plus explicit jumps |
 
 ```cpp
-operators::Operator operators::measure::lebesgue(std::string_view variable, double lower, double upper, RangeView<double> null_points = {});
-operators::Operator operators::measure::weighted(std::string_view variable, const math::Function &density, double lower, double upper, RangeView<double> null_points = {});
-operators::Operator operators::measure::atomic(std::string_view variable, RangeView<double> points, RangeView<double> weights);
-operators::Operator operators::measure::stieltjes(std::string_view variable, const math::Function &cdf, double lower, double upper, RangeView<double> jump_points = {}, RangeView<double> jump_sizes = {});
+operators::Operator operators::measure::lebesgue(std::string_view variable, double lower, double upper, pluss::RangeView<double> null_points = {});
+operators::Operator operators::measure::weighted(std::string_view variable, const math::Function &density, double lower, double upper, pluss::RangeView<double> null_points = {});
+operators::Operator operators::measure::atomic(std::string_view variable, pluss::RangeView<double> points, pluss::RangeView<double> weights);
+operators::Operator operators::measure::stieltjes(std::string_view variable, const math::Function &cdf, double lower, double upper, pluss::RangeView<double> jump_points = {}, pluss::RangeView<double> jump_sizes = {});
 ```
 
 Atomic measures are exact finite sums; the others are integrals evaluated by quadrature when you supply a value. They save and load except `weighted` and `stieltjes`, which hold a function.

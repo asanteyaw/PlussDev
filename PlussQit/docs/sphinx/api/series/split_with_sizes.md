@@ -8,7 +8,7 @@
 
 ```cpp
 std::vector<Series> Series::split_with_sizes(
-    pluss::msharp::RangeView::Int split_sizes,
+    pluss::RangeView<std::int64_t> split_sizes,
     std::int64_t dim = 0) const
 ```
 

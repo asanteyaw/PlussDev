@@ -29,7 +29,7 @@ virtual nn::optim::Optimizer::~Optimizer() = default;
 
 Both constructors are inherited unchanged by every concrete optimizer, each
 of which also adds its own third overload taking that algorithm's own
-`Options` (for example `SGD(RangeView<Series*> parameters, SGDOptions
+`Options` (for example `SGD(pluss::RangeView<Series*> parameters, SGDOptions
 options = {})`) -- see each algorithm's own page for that third form.
 
 ## Construction

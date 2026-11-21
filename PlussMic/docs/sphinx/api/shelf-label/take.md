@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Shelf ShelfLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
+Shelf ShelfLabelAccessor::take(pluss::RangeView<std::int64_t> indices) const
 ```
 
 ## What It Does
@@ -18,7 +18,7 @@ as a bare `Shelf`, not the bound shelf's own data at those positions.
 
 ## Parameters
 
-**indices** (`pluss::msharp::RangeView::Int`)
+**indices** (`pluss::RangeView<std::int64_t>`)
 
 Positions to select, in the order the results should come back.
 

@@ -17,9 +17,9 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
 
 DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const
 
-DataFrameView DataFrame::pivot_table(pluss::msharp::RangeView::Of<std::string_view> index_features,
-                                     pluss::msharp::RangeView::Of<std::string_view> column_features,
-                                     pluss::msharp::RangeView::Of<std::string_view> value_features,
+DataFrameView DataFrame::pivot_table(pluss::RangeView<std::string_view> index_features,
+                                     pluss::RangeView<std::string_view> column_features,
+                                     pluss::RangeView<std::string_view> value_features,
                                      GroupOp op = GroupOp::Mean,
                                      bool dropna = true,
                                      bool render = false,

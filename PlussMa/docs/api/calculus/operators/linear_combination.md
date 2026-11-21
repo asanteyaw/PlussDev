@@ -16,7 +16,7 @@ operators::Operator operators::linear_combination(pluss::RangeView<operators::Op
 
 `linear_combination` builds the operator `f ↦ Σ cᵢ Aᵢ(f)`. This is how differential operators with several terms are written: `D² + 2D + I`, a Laplacian plus a potential, a finite-difference stencil made of shifts. Every operator in the sum is applied to the same input and the results are added.
 
-There are three ways to give the terms, all equivalent. The brace list of `{coefficient, operator}` pairs reads best for a fixed expression. A `RangeView<Term>` takes the same pairs from a container built at run time (`Term` is `std::pair<double, Operator>`). The two-range form takes the operators and the coefficients as parallel lists; their lengths must match.
+There are three ways to give the terms, all equivalent. The brace list of `{coefficient, operator}` pairs reads best for a fixed expression. A `pluss::RangeView<Term>` takes the same pairs from a container built at run time (`Term` is `std::pair<double, Operator>`). The two-range form takes the operators and the coefficients as parallel lists; their lengths must match.
 
 The combination is linear if all its operators are, has an adjoint if all do, and is savable only if all are (a combination that includes a `multiply` is not). The terms must be applicable to the same function: they must all find the variables they name.
 
@@ -98,7 +98,7 @@ int main() {
   terms.push_back({1.0 / (h * h), operators::shift("x", h)});
   terms.push_back({-2.0 / (h * h), operators::identity()});
   terms.push_back({1.0 / (h * h), operators::shift("x", -h)});
-  const operators::Operator stencil = operators::linear_combination(pluss::RangeView<operators::Term>(terms));
+  const operators::Operator stencil = operators::linear_combination(terms);
   const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin(); });
   out.writeln("stencil sin at 1  =", stencil(f)(1.0).item<double>());
   out.writeln("exact -sin(1)     =", -std::sin(1.0));
@@ -131,7 +131,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(4));
   const std::vector<operators::Operator> ops = {operators::identity(), operators::differential("x"), operators::differential("x", 2)};
   const std::vector<double> coefficients = {1.0, 2.0, 3.0};
-  const operators::Operator L = operators::linear_combination(pluss::RangeView<operators::Operator>(ops), pluss::RangeView<double>(coefficients));
+  const operators::Operator L = operators::linear_combination(ops, coefficients);
   const math::Function f = math::function({"x"}, [](math::Function x) { return x * x; });
   out.writeln("(I + 2D + 3D^2) x^2 at 2 =", L(f)(2.0).item<double>());
 }
@@ -168,7 +168,7 @@ int main() {
 
   const std::vector<operators::Operator> ops = {operators::identity(), operators::differential("x")};
   const std::vector<double> one = {1.0};
-  try { (void)operators::linear_combination(pluss::RangeView<operators::Operator>(ops), pluss::RangeView<double>(one)); } catch (const pluss::Error &e) { out.writeln("count mismatch:", first_line(e)); }
+  try { (void)operators::linear_combination(ops, one); } catch (const pluss::Error &e) { out.writeln("count mismatch:", first_line(e)); }
   try { (void)operators::linear_combination(std::initializer_list<operators::Term>{}); } catch (const pluss::Error &e) { out.writeln("no terms:      ", first_line(e)); }
 }
 ```

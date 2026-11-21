@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameLabelAccessor::drop(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrameLabelAccessor::drop(pluss::RangeView<std::string_view> names) const
 DataFrame DataFrameLabelAccessor::drop(std::initializer_list<std::string_view> names) const
 DataFrame DataFrameLabelAccessor::drop(const DataFrame::LabelDropOptions& options) const
 ```

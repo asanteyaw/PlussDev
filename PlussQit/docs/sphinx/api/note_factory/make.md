@@ -238,8 +238,8 @@ A lone `char` is a one-character scalar cell.
 std::vector<std::string> flat{"p", "q", "r", "s", "t", "u"};
 std::array<std::int64_t, 2> sizes{2, 3};
 const pluss::Note n = pluss::note::make(
-    pluss::msharp::RangeView::Of<std::string>(flat),
-    pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+    flat,
+    sizes);
 pluss::note::print(std::cout, n) << "\n";
 ```
 
@@ -315,8 +315,8 @@ not pad short rows.
 std::vector<std::string> flat{"a", "b", "c"};
 std::array<std::int64_t, 1> sizes{5};
 try {
-  pluss::note::make(pluss::msharp::RangeView::Of<std::string>(flat),
-                    pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+  pluss::note::make(flat,
+                    sizes);
 } catch (const pluss::Error& e) {
   const std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

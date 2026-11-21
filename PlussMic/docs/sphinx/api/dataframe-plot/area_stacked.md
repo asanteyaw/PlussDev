@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features,
                                                        std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features,
                                                        std::optional<std::string_view> x_feature,
                                                        const AreaStackedPlotOptions& options) const
 
@@ -54,7 +54,7 @@ fill more fully occludes the ones beneath it.
 
 ## Parameters
 
-**y_features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
+**y_features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
     Numeric features to stack, in the order they're accumulated — the first feature forms
     the bottom band, the last feature's cumulative top is the total across all of them. At
     least one is required — an empty list throws `"DataFrame::plot().area_stacked: at least
@@ -119,7 +119,7 @@ auto breakdown3 = DataFrame({
 
 std::vector<std::string_view> parts{"product", "support", "other"};
 auto chart = breakdown3.plot().area_stacked(
-    pluss::msharp::RangeView::Of<std::string_view>(parts), "month");
+    parts, "month");
 chart.show();
 ```
 

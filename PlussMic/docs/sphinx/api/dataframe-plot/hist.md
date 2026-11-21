@@ -16,9 +16,9 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, const HistPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t bins = 20) const
+pluss::pl::Studio DataFramePlotAccessor::hist(pluss::RangeView<std::string_view> features, std::int64_t bins = 20) const
 
-pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, const HistPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::hist(pluss::RangeView<std::string_view> features, const HistPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features, std::int64_t bins = 20) const
 
@@ -71,7 +71,7 @@ Same `bins` ambiguity applies to `options.bins` as to the plain `bins` argument.
 **feature** (`std::string_view`)
     A single numeric feature to histogram, drawn on one pane.
 
-**features** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
+**features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
     Several numeric features. If this resolves to exactly one name (including via the
     empty-list "infer everything" rule, on a frame with only one numeric feature), it's
     routed through the single-feature path automatically. Otherwise each feature gets its
@@ -141,7 +141,7 @@ Example 5. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> names{"midterm", "final"};
-auto chart = exams.plot().hist(pluss::msharp::RangeView::Of<std::string_view>(names), 15);
+auto chart = exams.plot().hist(names, 15);
 ```
 
 ![Output of Example 5](img/hist-5.svg)

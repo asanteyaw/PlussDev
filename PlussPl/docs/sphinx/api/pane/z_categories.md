@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Pane& Pane::z_categories(RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0)
+Pane& Pane::z_categories(pluss::RangeView<std::string_view> labels, double first = 1.0, double step = 1.0)
 Pane& Pane::z_categories(std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0)
 ```
 
@@ -19,7 +19,7 @@ The defaults put the labels at 1, 2, 3, ..., which is where the bar and box trac
 
 ## Parameters
 
-**labels** (`RangeView::Of<std::string_view>` or braced list)
+**labels** (`pluss::RangeView<std::string_view>` or braced list)
     The category names, at least one.
 
 **first** (`double`, default 1)

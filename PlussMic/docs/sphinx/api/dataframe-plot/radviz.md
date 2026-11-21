@@ -9,7 +9,7 @@
 
 ```cpp
 pluss::pl::Studio DataFramePlotAccessor::radviz(
-    pluss::msharp::RangeView::Of<std::string_view> features = {},
+    pluss::RangeView<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
     const RadvizPlotOptions& options = {}) const
 ```
@@ -32,7 +32,7 @@ covers what's specific to `radviz()`.
 
 ## Parameters
 
-**features** (`RangeView<std::string_view>`, default `{}`)
+**features** (`pluss::RangeView<std::string_view>`, default `{}`)
     Numeric features that become anchor points, in the given order around the circle. Empty
     infers every numeric feature — see [`box()`](box.md)'s important callout for the exact
     rule.

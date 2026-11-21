@@ -8,7 +8,7 @@
 
 ```cpp
 Series Series::fftshift() const
-Series Series::fftshift(pluss::msharp::RangeView::Int dims) const
+Series Series::fftshift(pluss::RangeView<std::int64_t> dims) const
 ```
 
 ## Move Zero Frequency To The Centre

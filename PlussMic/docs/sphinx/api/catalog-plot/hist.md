@@ -10,7 +10,7 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, std::int64_t bins = 20) const
 
-pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::RangeView<std::string_view> keys = {},
                                              std::int64_t bins = 20) const
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
@@ -18,7 +18,7 @@ pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_vi
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, const HistPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::RangeView<std::string_view> keys,
                                              const HistPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
@@ -34,7 +34,7 @@ y-axis meaning ("count"), regardless of key count.
 
 ## Parameters
 
-**key** / **keys** (`std::string_view` / `RangeView<std::string_view>` /
+**key** / **keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `keys` defaults to `{}`)
     Same resolution as [`line()`](line.md): an empty `keys` selects every
     plottable (Series/Timeline/TimeIndex) key in the catalog; an explicitly named unknown
@@ -130,7 +130,7 @@ hist_options.bins = 8;
 hist_options.alpha = 0.7;
 hist_options.line_width = 1.5;
 
-auto chart = weather.plot().hist(pluss::msharp::RangeView::Of<std::string_view>(keys), hist_options);
+auto chart = weather.plot().hist(keys, hist_options);
 chart.show();
 ```
 

@@ -8,7 +8,7 @@
 
 ```cpp
 LocusPullAgg& LocusPullAgg::median(std::string_view feature, std::string_view alias = {})
-LocusPullAgg& LocusPullAgg::median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPullAgg& LocusPullAgg::median(pluss::RangeView<std::pair<std::string_view, std::string_view>> fields)
 LocusPullAgg& LocusPullAgg::median(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 

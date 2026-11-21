@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::RangeView<std::string_view> features = {}) const
 
-pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::RangeView<std::string_view> features,
                                                   const AtlasDepthFacetPlotOptions& options) const
 ```
 
@@ -29,7 +29,7 @@ not compile.
 
 ## Parameters
 
-**features** (`pluss::msharp::RangeView::Of<std::string_view>`, defaults to `{}`)
+**features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     The numeric features to facet, one pane each. An empty range (the default) selects **every**
     numeric feature present in the first frame.
 

@@ -32,7 +32,7 @@ supplies the actual grouping key(s) and produces a `ShelfGrouped`:
 |---|---|---|
 | `by` | Method | `ShelfGrouped by(const Shelf& key) const` |
 | `by` | Method | `ShelfGrouped by(std::initializer_list<Shelf> keys) const` |
-| `by` | Method | `ShelfGrouped by(pluss::msharp::RangeView::Of<Shelf> keys) const` |
+| `by` | Method | `ShelfGrouped by(pluss::RangeView<Shelf> keys) const` |
 
 ### `ShelfGrouped` members
 

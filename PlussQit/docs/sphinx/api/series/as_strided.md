@@ -10,7 +10,7 @@
 Series Series::as_strided(IntRange sizes, IntRange strides) const
 Series Series::as_strided(IntRange sizes, IntRange strides,
                           std::int64_t storage_offset) const
-Series& Series::as_strided_(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const
+Series& Series::as_strided_(pluss::RangeView<std::int64_t> sizes, pluss::RangeView<std::int64_t> strides) const
 ```
 
 `IntRange` is the public integer-range input accepted by the API, including an
@@ -77,8 +77,8 @@ auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6});
 const std::array<std::int64_t, 2> sizes{2, 3};
 const std::array<std::int64_t, 2> strides{3, 1};
 
-x.as_strided_(pluss::msharp::RangeView::Int(sizes.data(), sizes.size()),
-              pluss::msharp::RangeView::Int(strides.data(), strides.size()));
+x.as_strided_(pluss::RangeView<std::int64_t>(sizes.data(), sizes.size()),
+              pluss::RangeView<std::int64_t>(strides.data(), strides.size()));
 std::cout << x;
 ```
 

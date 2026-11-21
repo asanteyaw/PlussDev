@@ -41,8 +41,8 @@ reference back to the same builder (`NexusPull&` or `NexusPullAgg&`), so
 calls chain in place; there is no hidden copying the way `Nexus`'s own
 COW value methods work.
 
-:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
-Several `take`/reducer overloads accept a `pluss::msharp::RangeView::Of<T>` —
+:::{note} `pluss::RangeView` is never spelled out in these examples
+Several `take`/reducer overloads accept a `pluss::RangeView<T>` —
 a lightweight non-owning view type, not something user code is meant to name
 directly. It has implicit constructors from a brace list, a `std::vector<T>`,
 a `std::array<T, N>`, and a `std::span<const T>`, so passing any of those at
@@ -50,7 +50,7 @@ a call site works without ever writing `RangeView` yourself. Wherever an
 overload set also includes a same-shaped `std::initializer_list<T>` overload
 (added specifically to keep plain `{...}` brace calls unambiguous), these
 pages call that one "the brace-literal form" and show it with plain `{...}`;
-the `RangeView::Of<T>` overload is exercised by passing an existing **named**
+the `pluss::RangeView<T>` overload is exercised by passing an existing **named**
 container variable instead.
 :::
 

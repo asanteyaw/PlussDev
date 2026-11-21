@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrameGrouped::agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec> specs) const
+DataFrame DataFrameGrouped::agg(pluss::RangeView<DataFrame::GroupSpec> specs) const
 DataFrame DataFrameGrouped::agg(std::initializer_list<DataFrame::GroupSpec> specs) const
 ```
 
@@ -41,7 +41,7 @@ Typical reasons:
 
 ## Parameters
 
-**specs** (`RangeView<GroupSpec>` / `initializer_list<GroupSpec>`)
+**specs** (`pluss::RangeView<GroupSpec>` / `initializer_list<GroupSpec>`)
 
 One or more grouped aggregation specs.
 

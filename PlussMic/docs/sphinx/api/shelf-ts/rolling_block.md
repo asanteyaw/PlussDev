@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-DataFrame TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows, const TsRollingBlockOptions& options = {}) const
+DataFrame TimeSeriesAccessor::rolling_block(pluss::RangeView<std::int64_t> windows, const TsRollingBlockOptions& options = {}) const
 ```
 
 ## What It Does
@@ -29,7 +29,7 @@ example of this exact effect.
 
 ## Parameters
 
-**windows** (`pluss::msharp::RangeView::Int`)
+**windows** (`pluss::RangeView<std::int64_t>`)
     The window sizes to compute, in the order given. Must not be empty, or it
     throws.
 

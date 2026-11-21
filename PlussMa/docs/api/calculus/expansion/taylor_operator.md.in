@@ -169,7 +169,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(5));
   const math::Function h = math::function({"x", "y"}, [](math::Function x, math::Function y) { return (x * y).exp(); });
   const std::vector<double> centre = {0.0, 0.0};
-  const math::Function T = operators::expansion::taylor({"x", "y"}, pluss::RangeView<double>(centre), 4)(h);
+  const math::Function T = operators::expansion::taylor({"x", "y"}, centre, 4)(h);
   out.writeln("T(0.5, 0.4) =", T({pluss::make_series(0.5), pluss::make_series(0.4)}).item<double>(), "  exp(0.2) =", std::exp(0.2));
 }
 ```
@@ -266,7 +266,7 @@ int main() {
   const math::Function h = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
   const std::vector<double> one_centre = {0.0};
   try { (void)operators::expansion::taylor("x", 0.0, -1); } catch (const pluss::Error &e) { out.writeln("order -1:        ", first_line(e)); }
-  try { (void)operators::expansion::taylor({"x", "y"}, pluss::RangeView<double>(one_centre), 2)(h); } catch (const pluss::Error &e) { out.writeln("centres:         ", first_line(e)); }
+  try { (void)operators::expansion::taylor({"x", "y"}, one_centre, 2)(h); } catch (const pluss::Error &e) { out.writeln("centres:         ", first_line(e)); }
   try { (void)operators::expansion::taylor("z", 0.0, 2)(f); } catch (const pluss::Error &e) { out.writeln("unknown variable: ", first_line(e)); }
 }
 ```

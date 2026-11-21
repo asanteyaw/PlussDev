@@ -54,14 +54,14 @@ auto t4 = pluss::moment("eom"); // end of month
 ### Container Inputs (RangeView)
 
 `RangeView` container views are the primary plural-input path for helper/strict constructor APIs.
-Use `RangeView::Of<T>` for 1D/flat container arguments.
+Use `pluss::RangeView<T>` for 1D/flat container arguments.
 
 ```cpp
 #include <MSharp/RangeView.h>
 #include <pluss/pluss.h>
 
 std::vector<std::string_view> rows = {"a", "b", "c"};
-auto rv = pluss::msharp::RangeView::Of<std::string_view>(rows);
+auto rv = rows;
 
 auto note = pluss::content(rv);
 auto ts   = pluss::moment(rv);

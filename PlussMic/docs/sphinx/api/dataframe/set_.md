@@ -77,7 +77,7 @@ Example 2. Create a brand-new feature in place via the multi-name overload.
 ```cpp
 std::vector<std::string_view> names{"profit"};
 std::vector<Shelf> values{Shelf(pluss::make_series({40.0, 35.0, 30.0}))};
-orders.set_(pluss::RangeView<std::string_view>(names), pluss::RangeView<Shelf>(values));
+orders.set_(names, values);
 std::cout << orders;
 ```
 

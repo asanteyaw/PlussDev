@@ -15,10 +15,10 @@ pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature,
                                                std::optional<std::string_view> x_feature,
                                                const AreaPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features,
                                                std::optional<std::string_view> x_feature,
                                                const AreaPlotOptions& options) const
 
@@ -105,7 +105,7 @@ Example 3. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"amount", "cost"};
-auto chart = sales.plot().area(pluss::msharp::RangeView::Of<std::string_view>(y_names), "month");
+auto chart = sales.plot().area(y_names, "month");
 chart.save_pdf("sales_area.pdf");
 ```
 

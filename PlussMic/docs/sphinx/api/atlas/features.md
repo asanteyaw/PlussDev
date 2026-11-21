@@ -10,7 +10,7 @@
 ```cpp
 Atlas Atlas::features(std::string_view feature) const
 Atlas Atlas::features(std::initializer_list<std::string_view> features) const
-Atlas Atlas::features(pluss::msharp::RangeView::Of<std::string_view> features) const
+Atlas Atlas::features(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ preserved.
     A single feature name to select.
 
 **features** (`std::initializer_list<std::string_view>` or
-`pluss::msharp::RangeView::Of<std::string_view>`, multi-feature overloads)
+`pluss::RangeView<std::string_view>`, multi-feature overloads)
     Several feature names to select at once.
 
 ## Returns

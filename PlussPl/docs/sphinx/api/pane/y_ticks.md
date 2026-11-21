@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Pane& Pane::y_ticks(Series positions, RangeView::Of<std::string_view> labels)
+Pane& Pane::y_ticks(Series positions, pluss::RangeView<std::string_view> labels)
 Pane& Pane::y_ticks(Series positions, std::initializer_list<std::string_view> labels)
 Pane& Pane::clear_y_ticks() noexcept
 ```
@@ -23,7 +23,7 @@ There are three call forms: a braced list of labels, a range of string views, an
 **positions** (`Series` or numeric vector)
     Where the ticks go, in data units. A non-empty vector.
 
-**labels** (`RangeView::Of<std::string_view>` or braced list)
+**labels** (`pluss::RangeView<std::string_view>` or braced list)
     The text of each tick; as many as there are positions.
 
 ## Returns
@@ -83,7 +83,7 @@ pane.z_tick_labels(false);
 const std::vector<std::string_view> names = {"Q1", "Q2", "Q3", "Q4"};
 std::vector<double> positions;
 for (std::size_t i = 0; i < names.size(); ++i) positions.push_back(1.0 + static_cast<double>(i));
-pane.y_ticks(positions, pluss::msharp::RangeView::Of<std::string_view>(names));
+pane.y_ticks(positions, names);
 std::cout << texts(fig.to_svg()) << "\n";
 fig.save_svg("figure.svg");
 ```

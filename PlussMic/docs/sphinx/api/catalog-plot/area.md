@@ -11,7 +11,7 @@
 pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+pluss::pl::Studio CatalogPlotAccessor::area(pluss::RangeView<std::string_view> y_keys = {},
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
 pluss::pl::Studio CatalogPlotAccessor::area(std::initializer_list<std::string_view> y_keys,
@@ -21,7 +21,7 @@ pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
                                              std::optional<std::string_view> x_key,
                                              const AreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+pluss::pl::Studio CatalogPlotAccessor::area(pluss::RangeView<std::string_view> y_keys,
                                              std::optional<std::string_view> x_key,
                                              const AreaPlotOptions& options) const
 
@@ -40,7 +40,7 @@ the full explanation; only what's specific to `area()` is repeated here.
 
 ## Parameters
 
-**y_key** / **y_keys** (`std::string_view` / `RangeView<std::string_view>` /
+**y_key** / **y_keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `y_keys` defaults to `{}`)
     Same resolution as [`line()`](line.md).
 
@@ -98,7 +98,7 @@ auto weather = pluss::kindle::Catalog({
 });
 
 std::vector<std::string_view> y_names{"temp_c", "humidity"};
-auto chart = weather.plot().area(pluss::msharp::RangeView::Of<std::string_view>(y_names), "day");
+auto chart = weather.plot().area(y_names, "day");
 chart.show();
 ```
 

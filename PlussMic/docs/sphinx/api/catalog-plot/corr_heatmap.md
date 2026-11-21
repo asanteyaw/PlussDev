@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::RangeView<std::string_view> keys = {}) const
 
 pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::RangeView<std::string_view> keys,
                                                      const CatalogCorrHeatmapPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys,
@@ -37,7 +37,7 @@ cell's correlation is computed over the exact same subset of rows. See Example 3
 
 ## Parameters
 
-**keys** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
+**keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
     Same resolution as [`line()`](line.md): an empty range selects every
     plottable key. At least **two** resolved keys are required —

@@ -10,11 +10,11 @@
 ```cpp
 DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index = 0) const
 
-pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                             std::string_view y_feature,
                                             std::optional<std::string_view> x_feature = std::nullopt) const
 
-pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                             std::string_view y_feature,
                                             std::optional<std::string_view> x_feature,
                                             const AtlasFramesPlotOptions& options) const
@@ -46,7 +46,7 @@ Like every method on `AtlasPlotAccessor`, the multi-index overloads build and re
     The depth position to select. Negative values count from the end (`-1` is the last frame).
     Out of range throws.
 
-**frame_indices** (`pluss::msharp::RangeView::Int`, multi-index overloads)
+**frame_indices** (`pluss::RangeView<std::int64_t>`, multi-index overloads)
     One or more depth positions to overlay/facet. Negative values count from the end. Duplicates
     (after resolving negatives) are silently collapsed to one occurrence, in first-seen order.
     Must select at least one frame.
@@ -117,7 +117,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c");
+auto chart = atlas.plot().frames({0, 2, 4}, "temp_c");
 chart.show();
 ```
 
@@ -143,7 +143,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c", "humidity");
+auto chart = atlas.plot().frames({0, 2, 4}, "temp_c", "humidity");
 chart.show();
 ```
 
@@ -170,7 +170,7 @@ AtlasFramesPlotOptions options;
 options.mode = AtlasFrameSelectionMode::Facet;
 options.rows = 1;
 options.cols = 3;
-auto chart = atlas.plot().frames(pluss::msharp::RangeView::Int{0, 2, 4}, "temp_c", std::nullopt, options);
+auto chart = atlas.plot().frames({0, 2, 4}, "temp_c", std::nullopt, options);
 chart.show();
 ```
 
@@ -241,7 +241,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().frames(pluss::msharp::RangeView::Int{0, 0, 2, 2, 4}, "temp_c");
+auto chart = atlas.plot().frames({0, 0, 2, 2, 4}, "temp_c");
 chart.show();
 ```
 

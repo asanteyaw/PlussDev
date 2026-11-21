@@ -8,10 +8,10 @@ delegation path added for multi-feature DataFrame operations.
 `ShelfTimelineAccessor Shelf::tl()`  
 `DataFrameTimelineAccessor DataFrame::tl(feature: string_view)`  
 `DataFrameTimelineAccessor DataFrame::tl(features: initializer_list<string_view>)`  
-`DataFrameTimelineAccessor DataFrame::tl(features: RangeView<string_view> = {})`  
+`DataFrameTimelineAccessor DataFrame::tl(features: pluss::RangeView<string_view> = {})`  
 `AtlasTimelineAccessor Atlas::tl(feature: string_view)`  
 `AtlasTimelineAccessor Atlas::tl(features: initializer_list<string_view>)`  
-`AtlasTimelineAccessor Atlas::tl(features: RangeView<string_view> = {})`
+`AtlasTimelineAccessor Atlas::tl(features: pluss::RangeView<string_view> = {})`
 
 ## Notes
 

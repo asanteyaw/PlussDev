@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrameGrouped DataFrameGroupBuilder::by(std::initializer_list<std::string_view> keys) const
-DataFrameGrouped DataFrameGroupBuilder::by(pluss::msharp::RangeView::Of<std::string_view> keys) const
+DataFrameGrouped DataFrameGroupBuilder::by(pluss::RangeView<std::string_view> keys) const
 DataFrameGrouped DataFrameGroupBuilder::by(const DataFrame::LabelGroup& keys) const
 ```
 
@@ -36,7 +36,7 @@ in the same group only when every key in the tuple matches.
 
 ## Parameters
 
-**keys** (`initializer_list<string_view>` / `RangeView<...>`)
+**keys** (`initializer_list<string_view>` / `pluss::RangeView<...>`)
 
 One or more ordinary feature names already present on the frame.
 

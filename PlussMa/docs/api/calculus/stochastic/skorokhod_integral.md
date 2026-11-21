@@ -64,7 +64,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(6));
   const math::Function u = math::function({"w1", "w2", "w3", "w4"}, [](math::Function, math::Function, math::Function, math::Function d) { return math::stack({d, d, d, d}); });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
-  out.writeln("delta(u) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(u)(pluss::RangeView<pluss::Series>(w)).item<double>(), "   W_N^2 - N dt =", 0.9 * 0.9 - 4 * 0.25);
+  out.writeln("delta(u) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(u)(w).item<double>(), "   W_N^2 - N dt =", 0.9 * 0.9 - 4 * 0.25);
 }
 ```
 
@@ -97,7 +97,7 @@ int main() {
   const math::Function u = math::function({"w1", "w2", "w3", "w4"}, [](math::Function w1, math::Function w2, math::Function w3, math::Function) { return math::stack({w1 * 0.0, w1, w2, w3}); });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
   const double ito_sum = 0.0 * 0.3 + 0.3 * (-0.2 - 0.3) + (-0.2) * (0.5 + 0.2) + 0.5 * (0.9 - 0.5);
-  out.writeln("delta(u) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(u)(pluss::RangeView<pluss::Series>(w)).item<double>(), "   Ito sum =", ito_sum);
+  out.writeln("delta(u) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(u)(w).item<double>(), "   Ito sum =", ito_sum);
 }
 ```
 
@@ -129,7 +129,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(6));
   const math::Function c = math::function({"w1", "w2", "w3", "w4"}, [](math::Function w1, math::Function, math::Function, math::Function) { return math::stack({w1 * 0.0 + 1.0, w1 * 0.0 + 2.0, w1 * 0.0 + 3.0, w1 * 0.0 + 4.0}); });
   const std::vector<pluss::Series> w = {pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
-  out.writeln("delta(c) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(c)(pluss::RangeView<pluss::Series>(w)).item<double>(), "   sum c_i dW_i =", 1 * 0.3 + 2 * (-0.5) + 3 * 0.7 + 4 * 0.4);
+  out.writeln("delta(c) =", stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(c)(w).item<double>(), "   sum c_i dW_i =", 1 * 0.3 + 2 * (-0.5) + 3 * 0.7 + 4 * 0.4);
 }
 ```
 

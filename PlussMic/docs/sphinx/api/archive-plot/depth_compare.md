@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio ArchivePlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
+pluss::pl::Studio ArchivePlotAccessor::depth_compare(pluss::RangeView<std::string_view> keys = {}) const
 
 pluss::pl::Studio ArchivePlotAccessor::depth_compare(
-    pluss::msharp::RangeView::Of<std::string_view> keys,
+    pluss::RangeView<std::string_view> keys,
     const AtlasDepthComparePlotOptions& options) const
 ```
 
@@ -34,7 +34,7 @@ method has.
 
 ## Parameters
 
-**keys** (`RangeView<std::string_view>`, defaults to `{}`)
+**keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     The numeric keys to compare. An empty range selects every numeric key in the **first**
     catalog only — see the important callout above.
 
@@ -99,7 +99,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().depth_compare(pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "humidity"});
+auto chart = archive.plot().depth_compare({"temp_c", "humidity"});
 chart.show();
 ```
 
@@ -132,7 +132,7 @@ auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::mak
 pluss::table::AtlasDepthComparePlotOptions options;
 options.statistic = pluss::table::AtlasDepthStatistic::Max;
 options.max_features = 2;
-auto chart = archive.plot().depth_compare(pluss::msharp::RangeView::Of<std::string_view>{}, options);
+auto chart = archive.plot().depth_compare({}, options);
 chart.show();
 ```
 

@@ -26,7 +26,7 @@ value features instead of every remaining non-key value feature.
 ## Parameters
 
 **feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
-`RangeView<string_view>`, optional)
+`pluss::RangeView<string_view>`, optional)
 
 Select one or more non-key value features to max-reduce. Omit them to reduce every
 remaining non-key value feature on the current frame.

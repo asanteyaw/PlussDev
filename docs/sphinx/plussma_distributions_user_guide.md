@@ -287,7 +287,7 @@ Fit result methods (shared pattern):
 - `vcov(x) -> Series`
 - `std_err(x) -> Series`
 - `confint(x, level = 0.95) -> Series`
-- `confint_view(x, level = 0.95) -> MSharp::RangeView::Double` (flat host view of `confint`)
+- `confint_view(x, level = 0.95) -> pluss::RangeView<double>` (flat host view of `confint`)
 
 Fit result types:
 
@@ -338,7 +338,7 @@ const Series ll = nfit.loglik(x);
 const Series score = nfit.score(x);
 const Series info = nfit.fisher_inf(x);
 const Series ci = nfit.confint(x, 0.95);
-const auto ci_view = nfit.confint_view(x, 0.95); // MSharp::RangeView::Double
+const auto ci_view = nfit.confint_view(x, 0.95); // pluss::RangeView<double>
 ```
 
 ### Expected output

@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const
+DataFrame DataFrame::take(pluss::RangeView<std::int64_t> indices) const
 DataFrame DataFrame::take(const Shelf& indices) const
 ```
 
@@ -35,7 +35,7 @@ than a literal list. A non-numeric `Shelf` (e.g. `Note`-kind) throws.
 
 ## Parameters
 
-**indices** (`pluss::msharp::RangeView::Int`, first overload)
+**indices** (`pluss::RangeView<std::int64_t>`, first overload)
 
 The case positions to select, in the exact order the result should have. Negative
 values are interpreted relative to the end of the frame. The same position may appear

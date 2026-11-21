@@ -11,7 +11,7 @@
 pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+pluss::pl::Studio CatalogPlotAccessor::line(pluss::RangeView<std::string_view> y_keys = {},
                                              std::optional<std::string_view> x_key = std::nullopt) const
 
 pluss::pl::Studio CatalogPlotAccessor::line(std::initializer_list<std::string_view> y_keys,
@@ -21,7 +21,7 @@ pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
                                              std::optional<std::string_view> x_key,
                                              const LinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+pluss::pl::Studio CatalogPlotAccessor::line(pluss::RangeView<std::string_view> y_keys,
                                              std::optional<std::string_view> x_key,
                                              const LinePlotOptions& options) const
 
@@ -97,7 +97,7 @@ against each other on such a chart even though they share one pane — pass an e
 **y_key** (`std::string_view`)
     A single Series/Timeline/TimeIndex key to draw as one line trace.
 
-**y_keys** (`RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
+**y_keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
     Several keys, each drawn as its own line trace on the same axes. A legend is shown
     automatically whenever more than one y-key is requested (and suppressed for a single
@@ -317,7 +317,7 @@ auto weather = pluss::kindle::Catalog({
 });
 
 std::vector<std::string_view> y_names{"temp_c", "humidity"};
-auto chart = weather.plot().line(pluss::msharp::RangeView::Of<std::string_view>(y_names), "day");
+auto chart = weather.plot().line(y_names, "day");
 chart.show();
 ```
 

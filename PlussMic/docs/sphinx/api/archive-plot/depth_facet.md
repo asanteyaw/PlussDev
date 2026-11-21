@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio ArchivePlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
+pluss::pl::Studio ArchivePlotAccessor::depth_facet(pluss::RangeView<std::string_view> keys = {}) const
 
 pluss::pl::Studio ArchivePlotAccessor::depth_facet(
-    pluss::msharp::RangeView::Of<std::string_view> keys,
+    pluss::RangeView<std::string_view> keys,
     const AtlasDepthFacetPlotOptions& options) const
 ```
 
@@ -25,7 +25,7 @@ important callout.
 
 ## Parameters
 
-**keys** (`RangeView<std::string_view>`, defaults to `{}`)
+**keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     Same resolution as [`depth_compare()`](depth_compare.md): empty selects every
     numeric key in the first catalog.
 
@@ -96,7 +96,7 @@ auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::mak
 pluss::table::AtlasDepthFacetPlotOptions options;
 options.rows = 1;
 options.cols = 3;
-auto chart = archive.plot().depth_facet(pluss::msharp::RangeView::Of<std::string_view>{}, options);
+auto chart = archive.plot().depth_facet({}, options);
 chart.show();
 ```
 

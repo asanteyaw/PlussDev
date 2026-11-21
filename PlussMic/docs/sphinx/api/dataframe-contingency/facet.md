@@ -15,10 +15,10 @@ Atlas ContingencyTable::facet(std::initializer_list<std::string_view> row_dims,
 Atlas ContingencyTable::facet(std::initializer_list<std::string_view> row_dims,
                               std::initializer_list<std::string_view> column_dims,
                               const DataFrame::ContingencyOptions& options) const
-Atlas ContingencyTable::facet(pluss::msharp::RangeView::Of<std::string_view> row_dims,
-                              pluss::msharp::RangeView::Of<std::string_view> column_dims) const
-Atlas ContingencyTable::facet(pluss::msharp::RangeView::Of<std::string_view> row_dims,
-                              pluss::msharp::RangeView::Of<std::string_view> column_dims,
+Atlas ContingencyTable::facet(pluss::RangeView<std::string_view> row_dims,
+                              pluss::RangeView<std::string_view> column_dims) const
+Atlas ContingencyTable::facet(pluss::RangeView<std::string_view> row_dims,
+                              pluss::RangeView<std::string_view> column_dims,
                               const DataFrame::ContingencyOptions& options) const
 ```
 

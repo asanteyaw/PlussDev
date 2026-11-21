@@ -28,7 +28,7 @@ regardless of which shape is used (see Examples 2 and 3).
 
 ## Parameters
 
-`const std::vector<pluss::ai::nlp::Doc>& docs` / `RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
+`const std::vector<pluss::ai::nlp::Doc>& docs` / `pluss::RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
 : The texts to classify, in whichever of the four shapes is
   convenient.
 
@@ -46,7 +46,7 @@ being read.
 
 Three examples: the `vector<std::string>` overload returning one
 prediction per input, the `pluss::Note` overload matching it exactly
-on an identical probe set, and the `RangeView<std::string_view>`
+on an identical probe set, and the `pluss::RangeView<std::string_view>`
 overload matching it too.
 
 ### Example 1

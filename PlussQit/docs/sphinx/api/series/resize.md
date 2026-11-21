@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series& Series::resize_(pluss::msharp::RangeView::Int sizes) const
+Series& Series::resize_(pluss::RangeView<std::int64_t> sizes) const
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ Despite being declared `const` at the call site, `resize_()` genuinely mutates `
 
 ## Parameters
 
-**sizes** (`RangeView::Int`) — the new shape. Accepts a braced list or a `std::array`/`std::vector` of `std::int64_t`.
+**sizes** (`pluss::RangeView<std::int64_t>`) — the new shape. Accepts a braced list or a `std::array`/`std::vector` of `std::int64_t`.
 
 ## Returns
 
@@ -34,7 +34,7 @@ Example 1. The values after `resize_()` are unspecified — only the new shape i
 auto x = pluss::make_series({1.0, 2.0, 3.0});
 const std::array<std::int64_t, 1> sizes{5};
 
-x.resize_(pluss::msharp::RangeView::Int(sizes.data(), sizes.size()));
+x.resize_(pluss::RangeView<std::int64_t>(sizes.data(), sizes.size()));
 std::cout << "shape=[" << x.sizes()[0] << "] numel=" << x.numel();
 ```
 

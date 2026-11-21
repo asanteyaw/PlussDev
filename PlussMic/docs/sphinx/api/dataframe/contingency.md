@@ -21,13 +21,13 @@ ContingencyTable DataFrame::contingency(std::initializer_list<std::string_view> 
 ContingencyTable DataFrame::contingency(std::initializer_list<std::string_view> row_features,
                                         std::initializer_list<std::string_view> column_features,
                                         const ContingencyOptions& options) const
-ContingencyTable DataFrame::contingency(pluss::msharp::RangeView::Of<std::string_view> features) const
-ContingencyTable DataFrame::contingency(pluss::msharp::RangeView::Of<std::string_view> features,
+ContingencyTable DataFrame::contingency(pluss::RangeView<std::string_view> features) const
+ContingencyTable DataFrame::contingency(pluss::RangeView<std::string_view> features,
                                         const ContingencyOptions& options) const
-ContingencyTable DataFrame::contingency(pluss::msharp::RangeView::Of<std::string_view> row_features,
-                                        pluss::msharp::RangeView::Of<std::string_view> column_features) const
-ContingencyTable DataFrame::contingency(pluss::msharp::RangeView::Of<std::string_view> row_features,
-                                        pluss::msharp::RangeView::Of<std::string_view> column_features,
+ContingencyTable DataFrame::contingency(pluss::RangeView<std::string_view> row_features,
+                                        pluss::RangeView<std::string_view> column_features) const
+ContingencyTable DataFrame::contingency(pluss::RangeView<std::string_view> row_features,
+                                        pluss::RangeView<std::string_view> column_features,
                                         const ContingencyOptions& options) const
 ```
 

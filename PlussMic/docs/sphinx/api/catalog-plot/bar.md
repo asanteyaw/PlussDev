@@ -11,7 +11,7 @@
 pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
                                             std::optional<std::string_view> x_key = std::nullopt) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::RangeView<std::string_view> y_keys = {},
                                             std::optional<std::string_view> x_key = std::nullopt) const
 
 pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
@@ -21,7 +21,7 @@ pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
                                             std::optional<std::string_view> x_key,
                                             const BarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::RangeView<std::string_view> y_keys,
                                             std::optional<std::string_view> x_key,
                                             const BarPlotOptions& options) const
 
@@ -46,7 +46,7 @@ Example 2.
 
 ## Parameters
 
-**y_key** / **y_keys** (`std::string_view` / `RangeView<std::string_view>` /
+**y_key** / **y_keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `y_keys` defaults to `{}`)
     Same resolution as [`line()`](line.md).
 

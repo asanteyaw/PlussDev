@@ -38,10 +38,10 @@ learn at all (see Example 3).
 
 ## Parameters
 
-`const std::vector<pluss::ai::nlp::Doc>& docs` / `RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
+`const std::vector<pluss::ai::nlp::Doc>& docs` / `pluss::RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
 : The training corpus, in whichever of the four shapes is convenient.
 
-`RangeView<std::string_view> labels` / `const std::vector<std::string>& labels` / `const pluss::Note& labels`
+`pluss::RangeView<std::string_view> labels` / `const std::vector<std::string>& labels` / `const pluss::Note& labels`
 : One label per text, same length as `texts`/`docs`.
 
 `const TextJudgeTrainOptions& options`

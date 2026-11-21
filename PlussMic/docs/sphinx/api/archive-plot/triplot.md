@@ -10,8 +10,8 @@
 ```cpp
 pluss::pl::Studio ArchivePlotAccessor::triplot() const
 pluss::pl::Studio ArchivePlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const
-pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys) const
-pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys,
+pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::RangeView<std::string_view> keys) const
+pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::RangeView<std::string_view> keys,
                                                const pluss::pl::flash::TriplotOptions& options) const
 ```
 
@@ -33,7 +33,7 @@ etc. have.
 
 ## Parameters
 
-**keys** (`RangeView<std::string_view>`, defaults to `{}`)
+**keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
     The numeric keys to include, at least three. An empty range (the default) selects every
     numeric key in the first catalog — see the important callout above.
 
@@ -120,7 +120,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().triplot(pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "humidity", "pressure"});
+auto chart = archive.plot().triplot({"temp_c", "humidity", "pressure"});
 chart.show();
 ```
 
@@ -147,7 +147,7 @@ auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::mak
 pluss::pl::flash::TriplotOptions options;
 options.max_features = 3;
 auto chart = archive.plot().triplot(
-    pluss::msharp::RangeView::Of<std::string_view>{"temp_c", "humidity", "pressure"}, options);
+    {"temp_c", "humidity", "pressure"}, options);
 chart.show();
 ```
 
