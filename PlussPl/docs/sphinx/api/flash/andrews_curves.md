@@ -45,7 +45,7 @@ projection of that row's (optionally normalized) feature values — rows with si
 feature profiles trace visually similar curves, making cluster structure and outliers
 easier to spot than in a raw scatter of many features. Internally, this is a single
 matrix multiply: every row's feature vector is projected through a fixed `t`-by-`feature`
-Fourier basis matrix (`detail::andrews_basis`) to produce its curve's `y` values at each
+Fourier basis matrix to produce its curve's `y` values at each
 sampled `t`, then each curve is drawn as one [`Pane::trend`](../pane/trend.md) trace.
 
 Eight overloads mirror [`flash::parallelplot`](parallelplot.md)'s exactly: a plain
@@ -228,7 +228,7 @@ andrews_curves(1 col) threw: flash::andrews_curves requires at least two columns
 ## Notes
 
 - Not `noexcept`.
-- The Fourier basis is fixed by `t` and feature count alone (`detail::andrews_basis`) —
+- The Fourier basis is fixed by `t` and feature count alone —
   it doesn't depend on the data values themselves, only on how many features there are and
   how many `t` samples are requested.
 - Every curve is one continuous [`Pane::trend`](../pane/trend.md) trace, plotted `t` on

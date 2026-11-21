@@ -12,3 +12,9 @@ that sit underneath the public surface.
 
 api/plussai_root
 ```
+
+## Conventions
+
+- `pluss::RangeView<T>` in a signature means a read-only view of a sequence of `T`. It is the name this reference uses for
+  such a parameter, not a type you can spell in your own code. To pass a sequence, write a braced list
+  (`features({"a", "b"})`) or pass an existing `std::vector`.

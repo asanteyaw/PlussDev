@@ -10,7 +10,7 @@
 ```cpp
 DataFrame DataFrame::drop(pluss::RangeView<std::string_view> names) const
 
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::drop(const NameRange& names) const
 ```
 

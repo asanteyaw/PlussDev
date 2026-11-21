@@ -488,7 +488,7 @@ int main() {
 Output
 
 ```text
-nlp::detail::train_token_classifier: expected at least two distinct labels.
+nlp token classifier training: expected at least two distinct labels.
 ```
 
 ## See Also

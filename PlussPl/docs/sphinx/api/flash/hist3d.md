@@ -198,8 +198,8 @@ fig.show();
 
 - Not `noexcept`.
 - Unlike every other function in this session's 3D families, `hist3d` performs no
-  `require_rank_at_most` validation of its own — its inputs go straight to
-  `detail::hist2d_grid`, which has its own, differently-worded checks.
+  `require_rank_at_most` validation of its own — its inputs go straight to the
+  grid builder, which has its own, differently-worded checks.
 - See the important callout above: `as_wireframe` silently wins over `as_surface` when
   both are set, rather than throwing or picking a documented priority the reader would
   need to guess at from field-declaration order alone.

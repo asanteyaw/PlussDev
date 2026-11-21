@@ -12,8 +12,8 @@ DataFrame DataFrame::fillnan(double value) const
 
 DataFrame DataFrame::fillnan(double value, pluss::RangeView<std::string_view> features) const
 
-template <detail::StringViewNameRange NameRange>
-template <detail::StringViewNameRange NameRange> DataFrame DataFrame::fillnan(double value, const NameRange& features) const
+template <class NameRange>
+template <class NameRange> DataFrame DataFrame::fillnan(double value, const NameRange& features) const
 ```
 
 ## What It Does

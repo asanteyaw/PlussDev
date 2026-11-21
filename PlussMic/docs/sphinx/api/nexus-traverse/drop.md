@@ -9,7 +9,7 @@
 ```cpp
 NexusTraverse NexusTraverse::drop(std::initializer_list<std::string_view> features) const
 NexusTraverse NexusTraverse::drop(pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 NexusTraverse NexusTraverse::drop(const NameRange& features) const
 ```
 

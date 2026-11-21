@@ -118,6 +118,12 @@ api/series_factory/select
 api/series_factory/undefined
 api/series_factory/zeros
 api/series_factory/zeros_like
+api/series_factory/where
+api/series_factory/unite
+api/series_factory/pile
+api/series_factory/logspace
+api/series_factory/nan
+api/series_factory/inf
 ```
 
 <div class="pluss-inline-prev-next">

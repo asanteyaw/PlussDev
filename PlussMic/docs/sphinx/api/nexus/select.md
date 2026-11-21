@@ -9,7 +9,7 @@
 ```cpp
 Nexus Nexus::select(std::initializer_list<std::string_view> keys) const
 Nexus Nexus::select(pluss::RangeView<std::string_view> keys) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 Nexus Nexus::select(const NameRange& keys) const
 ```
 

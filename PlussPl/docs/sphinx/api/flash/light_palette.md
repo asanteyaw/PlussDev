@@ -99,7 +99,7 @@ flash::light_palette: n must be at least 2
 
 - Not `noexcept`.
 - Never touches a `Pane`/`Studio`/`Trace` — a pure value-producing function.
-- The interpolation is a plain per-channel linear mix (`detail::mix`), not a
+- The interpolation is a plain per-channel linear mix not a
   perceptually-uniform colorspace blend — intermediate stops are RGB-linear
   interpolations between white and `color`.
 

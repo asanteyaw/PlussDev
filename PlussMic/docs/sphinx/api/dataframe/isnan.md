@@ -10,8 +10,8 @@
 ```cpp
 DataFrame DataFrame::isnan(pluss::RangeView<std::string_view> features = {}) const
 
-template <detail::StringViewNameRange NameRange>
-template <detail::StringViewNameRange NameRange> DataFrame DataFrame::isnan(const NameRange& features) const
+template <class NameRange>
+template <class NameRange> DataFrame DataFrame::isnan(const NameRange& features) const
 ```
 
 ## What It Does

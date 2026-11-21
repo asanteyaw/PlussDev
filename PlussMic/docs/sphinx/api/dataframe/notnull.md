@@ -10,7 +10,7 @@
 ```cpp
 DataFrame DataFrame::notnull(pluss::RangeView<std::string_view> features = {}) const
 
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::notnull(const NameRange& features) const
 ```
 

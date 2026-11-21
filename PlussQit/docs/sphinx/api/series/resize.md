@@ -34,7 +34,7 @@ Example 1. The values after `resize_()` are unspecified — only the new shape i
 auto x = pluss::make_series({1.0, 2.0, 3.0});
 const std::array<std::int64_t, 1> sizes{5};
 
-x.resize_(pluss::RangeView<std::int64_t>(sizes.data(), sizes.size()));
+x.resize_(sizes);
 std::cout << "shape=[" << x.sizes()[0] << "] numel=" << x.numel();
 ```
 

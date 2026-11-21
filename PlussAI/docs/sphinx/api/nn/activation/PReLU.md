@@ -13,7 +13,7 @@ frameworks' behavior worth knowing about -- see Example 2/3.
 
 ```cpp
 explicit nn::PReLU::PReLU(nn::PReLUOptions options);
-explicit nn::PReLU::PReLU(std::int64_t num_parameters = 1, double init = 0.25, pluss::Config cfg = ::pluss::detail::nn::default_cfg_());
+explicit nn::PReLU::PReLU(std::int64_t num_parameters = 1, double init = 0.25, pluss::Config cfg = {});
 
 void nn::PReLU::reset_parameters();
 ```

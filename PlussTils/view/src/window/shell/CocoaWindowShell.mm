@@ -624,6 +624,52 @@ class CocoaWindowShell final : public IWindowShell {
                        [host_.window isKeyWindow] ? 1 : 0);
         });
       }
+      // Test hook: PLUSSTILS_VIEW_NSEVENTS="<ms>:<move|click|dbl>:<x>,<y>;..." posts real AppKit mouse events
+      // (x, y in points from the top-left of the page) so the whole Cocoa input path can be exercised without a
+      // person at the mouse.
+      if (const char* spec = std::getenv("PLUSSTILS_VIEW_NSEVENTS")) {
+        NSString* all = [NSString stringWithUTF8String:spec];
+        for (NSString* item in [all componentsSeparatedByString:@";"]) {
+          NSArray<NSString*>* parts = [item componentsSeparatedByString:@":"];
+          if ([parts count] != 3) continue;
+          const double delay_ms = [parts[0] doubleValue];
+          NSString* kind = parts[1];
+          NSArray<NSString*>* xy = [parts[2] componentsSeparatedByString:@","];
+          if ([xy count] != 2) continue;
+          const double px = [xy[0] doubleValue];
+          const double py = [xy[1] doubleValue];
+          __weak PlussTilsViewCocoaShellHost* weak_host_for_events = host_;
+          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, static_cast<int64_t>(delay_ms * NSEC_PER_MSEC)),
+                         dispatch_get_main_queue(), ^{
+            PlussTilsViewCocoaShellHost* strong_host = weak_host_for_events;
+            if (strong_host == nil || strong_host.image_view == nil || strong_host.window == nil) return;
+            const NSRect bounds = [strong_host.image_view bounds];
+            const NSPoint in_view = NSMakePoint(px, bounds.size.height - py);
+            const NSPoint in_window = [strong_host.image_view convertPoint:in_view toView:nil];
+            const NSInteger number = [strong_host.window windowNumber];
+            auto post = [&](NSEventType type, NSInteger clicks) {
+              NSEvent* e = [NSEvent mouseEventWithType:type
+                                              location:in_window
+                                         modifierFlags:0
+                                             timestamp:[[NSProcessInfo processInfo] systemUptime]
+                                          windowNumber:number
+                                               context:nil
+                                           eventNumber:0
+                                            clickCount:clicks
+                                              pressure:(type == NSEventTypeLeftMouseUp || type == NSEventTypeMouseMoved) ? 0.0f : 1.0f];
+              [NSApp postEvent:e atStart:NO];
+            };
+            if ([kind isEqualToString:@"move"]) {
+              post(NSEventTypeMouseMoved, 0);
+            } else if ([kind isEqualToString:@"click"]) {
+              post(NSEventTypeLeftMouseDown, 1); post(NSEventTypeLeftMouseUp, 1);
+            } else if ([kind isEqualToString:@"dbl"]) {
+              post(NSEventTypeLeftMouseDown, 1); post(NSEventTypeLeftMouseUp, 1);
+              post(NSEventTypeLeftMouseDown, 2); post(NSEventTypeLeftMouseUp, 2);
+            }
+          });
+        }
+      }
       open_ = true;
       start_display_link_();
       last_size_ = SizeI{static_cast<int>(width), static_cast<int>(height)};

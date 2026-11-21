@@ -11,7 +11,7 @@ DataFrame Nexus::detect_duplicates(std::string_view table) const
 
 DataFrame Nexus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const
 DataFrame Nexus::detect_duplicates(std::string_view table, pluss::RangeView<std::string_view> keys) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame Nexus::detect_duplicates(std::string_view table, const NameRange& keys) const
 ```
 

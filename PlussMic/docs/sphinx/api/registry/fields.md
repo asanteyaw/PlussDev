@@ -12,7 +12,7 @@ const std::vector<std::string>& Registry::fields() const
 Slot Registry::fields(std::string_view key) const
 Registry Registry::fields(std::span<const std::string_view> keys) const
 Registry Registry::fields(std::initializer_list<std::string_view> keys) const
-template <pluss::detail::StringViewNameRange NameRange>
+template <class NameRange>
 Registry Registry::fields(const NameRange& keys) const
 ```
 

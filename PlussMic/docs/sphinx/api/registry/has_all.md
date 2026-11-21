@@ -10,7 +10,7 @@
 ```cpp
 bool Registry::has_all(std::span<const std::string_view> keys) const
 bool Registry::has_all(std::initializer_list<std::string_view> keys) const
-template <pluss::detail::StringViewNameRange NameRange>
+template <class NameRange>
 bool Registry::has_all(const NameRange& keys) const
 ```
 

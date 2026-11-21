@@ -47,17 +47,17 @@ void train_token_classifier(TokenClassifierState& state,
   state = TokenClassifierState{};
   if (docs.empty() || docs.size() != token_labels.size()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nlp::detail::train_token_classifier: docs and token_labels must be the same non-empty size.");
+        "nlp token classifier training: docs and token_labels must be the same non-empty size.");
   }
   if (options.width <= 0 || options.num_layers <= 0 || options.num_heads <= 0 ||
       options.feedforward_width <= 0 || options.epochs <= 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nlp::detail::train_token_classifier: width, num_layers, num_heads, feedforward_width "
+        "nlp token classifier training: width, num_layers, num_heads, feedforward_width "
         "and epochs must all be positive.");
   }
   if (options.width % options.num_heads != 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nlp::detail::train_token_classifier: width must be a multiple of num_heads.");
+        "nlp token classifier training: width must be a multiple of num_heads.");
   }
 
   std::vector<std::string> labels{};
@@ -73,7 +73,7 @@ void train_token_classifier(TokenClassifierState& state,
   }
   if (labels.size() < 2) {
     ::pluss::ai::nodeb::detail::fail(
-        "nlp::detail::train_token_classifier: expected at least two distinct labels.");
+        "nlp token classifier training: expected at least two distinct labels.");
   }
 
   runtime::SequenceOptions seq_options{};
@@ -87,15 +87,15 @@ void train_token_classifier(TokenClassifierState& state,
   runtime::Indexer indexer(seq_options);
   const auto indexer_status = indexer.learn(docs);
   if (!indexer_status.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: " + indexer_status.message);
+    ::pluss::ai::nodeb::detail::fail("nlp token classifier training: " + indexer_status.message);
   }
   const auto batch_or = indexer.batch(docs);
   if (!batch_or.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: " + batch_or.status().message);
+    ::pluss::ai::nodeb::detail::fail("nlp token classifier training: " + batch_or.status().message);
   }
   const auto& batch = batch_or.value();
   if (batch.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: documents produced no tokens.");
+    ::pluss::ai::nodeb::detail::fail("nlp token classifier training: documents produced no tokens.");
   }
 
   const auto vocab_size = static_cast<std::int64_t>(indexer.vocabulary().size());
@@ -190,7 +190,7 @@ void train_token_classifier(TokenClassifierState& state,
     }
   } catch (const std::exception& e) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nlp::detail::train_token_classifier: training became numerically unstable: ") + e.what());
+        std::string("nlp token classifier training: training became numerically unstable: ") + e.what());
   }
 
   encoder->model()->eval();

@@ -18,8 +18,7 @@ bool flash::animate3(Series x, Series y, Series z, const Animation3Options& opti
 
 Builds and displays an interactive, browser-rendered 3D scatter/path animation: `x`,
 `y`, `z` are first jointly rescaled to fit within `[-1, 1]` on every axis (centered on
-their combined bounding box, uniformly scaled by the largest axis span — see
-`detail::normalize_xyz`), then handed to a self-contained HTML page with an embedded
+their combined bounding box, uniformly scaled by the largest axis span), then handed to a self-contained HTML page with an embedded
 `<canvas>` animation loop that continuously rotates the point set (sweeping one of `xy`,
 `xz`, or `yz` around a fixed base rotation), optionally revealing points progressively
 over time and optionally connecting them into a path, with play/pause and a speed
@@ -220,7 +219,7 @@ animate3(width too small) threw: flash::animate3: window size too small
 
 - Not `noexcept`.
 - See the important callout above for the boundary of what this page actually verified.
-- `x`/`y`/`z` are rescaled (`detail::normalize_xyz`) before rendering — the original,
+- `x`/`y`/`z` are rescaled before rendering — the original,
   un-normalized coordinate values never reach the browser page directly.
 - [`flash::animate4`](animate4.md) is the 4D analogue, sharing the same
   window-launching approach and the same unverified-window-launch caveat.

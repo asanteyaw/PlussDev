@@ -56,8 +56,8 @@ auto ticks = DataFrame({{"ts", Shelf(valid_tl)}})
 ticks[2] = pluss::codeh::Timeline::kNaT;
 std::vector<std::int64_t> sizes{(std::int64_t)ticks.size()};
 auto tl_with_nat = pluss::timeline::from_epoch(
-    pluss::RangeView<std::int64_t>(ticks.data(), ticks.size()),
-    pluss::RangeView<std::int64_t>(sizes.data(), sizes.size()));
+    ticks,
+    sizes);
 
 auto q1 = DataFrame({{"ts", Shelf(tl_with_nat)}});
 auto q2 = DataFrame({{"ts", Shelf(pluss::make_timeline({

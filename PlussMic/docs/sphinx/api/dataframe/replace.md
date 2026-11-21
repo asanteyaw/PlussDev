@@ -38,7 +38,7 @@ DataFrame DataFrame::replace(pluss::null_t from, const pluss::Duration& to, plus
 
 Every overload above except the two `const char*` overloads also has a template sibling
 that swaps `pluss::RangeView<std::string_view> features` for `const NameRange& features`
-(`template <detail::StringViewNameRange NameRange>`), accepting any container of
+(`template <class NameRange>`), accepting any container of
 `std::string_view`-convertible names — a `std::vector<std::string>`, a
 `std::set<std::string>`, and so on — directly, not just a braced list or an explicit
 `RangeView`. These sibling overloads are omitted from the list above to keep it

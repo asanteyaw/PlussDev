@@ -4,7 +4,7 @@
 
 `Module` is the base every layer, container, and composed network in `nn`
 derives from — directly (`FusionImpl`, `Conv1dImpl`, `ScheduleImpl`, ...) or
-indirectly, through `detail::RNNBase<Options>` for the recurrent layers. You
+indirectly, through a shared base for the recurrent layers. You
 rarely name `Module` in your own code: every concrete layer type
 (`Fusion`, `Conv1d`, `RNN`, `Schedule`, ...) is a small `ModuleHolder`-wrapped
 value type that forwards this page's whole method set through `operator->`

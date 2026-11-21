@@ -337,8 +337,8 @@ assert(out9b.as_duration().host() ==
        std::vector<std::int64_t>({1'000'000'000LL, -11, -2'000'000'000LL}));
 
 auto nulled = out9b.replace(pluss::duration::nanos(-11), pluss::series::null);
-assert(pluss::table::detail::validity_mask(nulled)->host<bool>() ==
-       std::vector<bool>({true, false, true}));
+assert(nulled.isnull().as_series().host<bool>() ==
+       std::vector<bool>({false, true, false}));
 ```
 
 The first call substitutes the cell equal to `9ns` for `-11ns`, same as the numeric

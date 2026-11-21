@@ -7,6 +7,13 @@
 PlussQit's method surface is documented across a set of focused design and reference
 notes. This page is the curated entry point into them.
 
+
+## Conventions
+
+- `pluss::RangeView<T>` in a signature means a read-only view of a sequence of `T`. It is the name this reference uses for
+  such a parameter, not a type you can spell in your own code. To pass a sequence, write a braced list
+  (`pluss::series::full({2, 3}, 1.0)`) or pass an existing `std::vector`.
+
 ## Method surface
 
 - [Series API Reference](sphinx/series_api_reference.md): the per-method reference

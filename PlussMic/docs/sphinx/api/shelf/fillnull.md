@@ -116,7 +116,7 @@ auto gaps = Shelf(pluss::duration::nanos({1'000'000'000LL, pluss::Duration::kNaT
 auto out4 = gaps.fillnull(pluss::duration::nanos(9));
 assert(out4.as_duration().host() ==
        std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
-assert(!pluss::table::detail::has_validity_mask(out4));
+assert(!out4.isnull().any().as_series().items<bool>().front());
 ```
 
 The middle lane was `NaT` (not mask-flagged), yet it was still replaced, and the

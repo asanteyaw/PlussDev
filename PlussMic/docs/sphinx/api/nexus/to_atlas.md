@@ -9,7 +9,7 @@
 ```cpp
 Atlas Nexus::to_atlas(std::initializer_list<std::string_view> keys, std::optional<Shelf> labels = std::nullopt) const
 Atlas Nexus::to_atlas(pluss::RangeView<std::string_view> keys, std::optional<Shelf> labels = std::nullopt) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 Atlas Nexus::to_atlas(const NameRange& keys, std::optional<Shelf> labels = std::nullopt) const
 ```
 

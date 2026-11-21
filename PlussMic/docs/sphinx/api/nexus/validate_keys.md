@@ -11,7 +11,7 @@ bool Nexus::validate_keys(std::string_view table) const
 
 bool Nexus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const
 bool Nexus::validate_keys(std::string_view table, pluss::RangeView<std::string_view> keys) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 bool Nexus::validate_keys(std::string_view table, const NameRange& keys) const
 ```
 

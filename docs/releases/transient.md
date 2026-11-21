@@ -1,20 +1,14 @@
-# PlussII 0.0.5 — Transient
+# PlussII 0.0.6a — Transient
 
-This release refreshes the public C++ distribution, the documentation source, and the interactive table viewer. All downloadable archives are built and validated on their matching operating system before publication.
+The latest validated development build. It carries fixes and features that are not yet in a Steady release, so expect it to change from one update to the next. The next Steady release, 0.0.6, will collect what proves stable here.
 
-## Highlights
+## Changes since 0.0.5
 
-- Expanded the DataFrame and Atlas documentation, including corrected C++ signature order and updated API and guide examples.
-- Improved workbook support: `save_excel` now accepts a complete workbook, with multiple named sheets written to one `.xlsx` file.
-- Refined catalog, archive, and Atlas depth operations and their examples. The public `aggregate_over_catalogs` and `aggregate_over_frames` names become `aggregate_depth`.
-- Refreshed the PlussView table themes. **Default** is the cobalt and coral palette; Ember, Nardo, Brooklands, Gulf, Obsidian, and Indigo remain selectable. Native is reserved for embedded rendering.
-- Added a header-only LibTorch bridge: `pluss::series::from_torch(tensor)` and `Series::tensor()` work with the standard download whenever Torch's headers are on your include path. No special PlussII build is needed, and the archives still contain no Torch.
-- Added automated Steady and Transient distribution channels. Steady is a versioned release; Transient is the latest validated development build.
-- Corrected cross-platform `nextafter` linkage so Linux and Windows consumer projects do not reference the macOS-only MPS kernel.
-- Restored DataFrame plotting navigation and named accessor references by the methods users call.
+- The LibTorch bridge (`pluss::series::from_torch` and `Series::tensor()`) now compiles with any include order. `<pluss/pluss.h>` no longer has to come after `<torch/torch.h>`.
+- Apple Silicon is published twice: a CPU-only archive (`Darwin-arm64`) and one with the Apple GPU (MPS) backend (`Darwin-arm64-mps`). Intel Mac, Linux and Windows archives are CPU-only.
+- Training errors from the tagger and entity-recognition stages no longer name an internal function.
+- The PlussView test hook `PLUSSTILS_VIEW_NSEVENTS` posts real mouse events so the hover, drag and double-click paths can be tested without a person at the mouse.
 
 ## Compatibility
 
-The C++ distribution requires CMake 3.28 or newer and a C++20 compiler. Select the ZIP for your operating system and architecture. The Windows archive targets Visual Studio 2022 with ClangCL and the Release configuration; the Linux archives are built on Ubuntu 24.04. See the download page for dependency and consumer-project commands.
-
-The `aggregate_depth` rename is a source compatibility change for callers of the former depth aggregation methods. Update those call sites when moving from 0.0.4.
+Unchanged from 0.0.5. The distribution requires CMake 3.28 or newer and a C++20 compiler. See the download page for the archive for your system.

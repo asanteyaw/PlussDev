@@ -77,8 +77,8 @@ auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6});
 const std::array<std::int64_t, 2> sizes{2, 3};
 const std::array<std::int64_t, 2> strides{3, 1};
 
-x.as_strided_(pluss::RangeView<std::int64_t>(sizes.data(), sizes.size()),
-              pluss::RangeView<std::int64_t>(strides.data(), strides.size()));
+x.as_strided_(sizes,
+              strides);
 std::cout << x;
 ```
 

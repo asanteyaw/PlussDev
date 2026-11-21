@@ -10,8 +10,8 @@
 ```cpp
 DataFrame DataFrame::dropinf(pluss::RangeView<std::string_view> features = {}, bool all = false) const
 
-template <detail::StringViewNameRange NameRange>
-template <detail::StringViewNameRange NameRange> DataFrame DataFrame::dropinf(const NameRange& features, bool all = false) const
+template <class NameRange>
+template <class NameRange> DataFrame DataFrame::dropinf(const NameRange& features, bool all = false) const
 ```
 
 ## What It Does

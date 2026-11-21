@@ -9,7 +9,7 @@
 ```cpp
 Nexus Nexus::drop(std::initializer_list<std::string_view> keys) const
 Nexus Nexus::drop(pluss::RangeView<std::string_view> keys) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 Nexus Nexus::drop(const NameRange& keys) const
 ```
 

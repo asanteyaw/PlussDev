@@ -29,9 +29,7 @@ spikes.
 
 **x**, **y** (series-convertible)
     The predictor/response pair to regress and then autocorrelate the residuals of. Only
-    finite `(x, y)` pairs participate (non-finite pairs are dropped via an internal
-    `detail::finite_xy` filter, the same mechanism [`flash::regplot`](regplot.md) itself
-    uses). At least three finite pairs must remain, or `resid_acfplot` throws
+    finite `(x, y)` pairs participate (non-finite pairs are dropped, as [`flash::regplot`](regplot.md) itself does). At least three finite pairs must remain, or `resid_acfplot` throws
     `pluss::Error("flash::resid_acfplot requires at least three finite x/y
     pairs")`.
 

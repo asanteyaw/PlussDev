@@ -10,7 +10,7 @@
 ```cpp
 Axel Axel::drop(std::span<const std::string_view> fields) const
 Axel Axel::drop(std::initializer_list<std::string_view> fields) const
-template <pluss::detail::StringViewNameRange NameRange>
+template <class NameRange>
 Axel Axel::drop(const NameRange& fields) const
 ```
 

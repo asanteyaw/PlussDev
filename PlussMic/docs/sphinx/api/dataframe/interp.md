@@ -10,7 +10,7 @@
 ```cpp
 DataFrame DataFrame::interp(pluss::RangeView<std::string_view> features = {}, std::int64_t limit = -1) const
 
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::interp(const NameRange& features, std::int64_t limit = -1) const
 
 DataFrame DataFrame::interp(const FillOptions& options) const

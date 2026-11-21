@@ -12,7 +12,7 @@ Registry Registry::drop(std::string_view key) const
 Registry Registry::drop(std::span<const std::string_view> keys) const
 Registry Registry::drop(std::initializer_list<std::string_view> keys) const
 Registry Registry::drop(const std::vector<std::string>& keys) const
-template <pluss::detail::StringViewNameRange NameRange>
+template <class NameRange>
 Registry Registry::drop(const NameRange& keys) const
 ```
 

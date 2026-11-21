@@ -10,26 +10,26 @@
 ```cpp
 DataFrame DataFrame::fillnull(double value) const
 DataFrame DataFrame::fillnull(double value, pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::fillnull(double value, const NameRange& features) const
 
 DataFrame DataFrame::fillnull(std::string_view value) const
 DataFrame DataFrame::fillnull(std::string_view value, pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::fillnull(std::string_view value, const NameRange& features) const
 DataFrame DataFrame::fillnull(const char* value) const
 DataFrame DataFrame::fillnull(const char* value, pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::fillnull(const char* value, const NameRange& features) const
 
 DataFrame DataFrame::fillnull(const pluss::Timeline& value) const
 DataFrame DataFrame::fillnull(const pluss::Timeline& value, pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::fillnull(const pluss::Timeline& value, const NameRange& features) const
 
 DataFrame DataFrame::fillnull(const pluss::Duration& value) const
 DataFrame DataFrame::fillnull(const pluss::Duration& value, pluss::RangeView<std::string_view> features) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::fillnull(const pluss::Duration& value, const NameRange& features) const
 
 DataFrame DataFrame::fillnull(pluss::RangeView<FillSpec> specs) const

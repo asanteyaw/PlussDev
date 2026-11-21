@@ -10,7 +10,7 @@
 NexusPull Nexus::pull(std::string_view root) const
 DataFrame Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const
 DataFrame Nexus::pull(std::string_view root, pluss::RangeView<std::string_view> fields) const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame Nexus::pull(std::string_view root, const NameRange& fields) const
 DataFrame Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const
 DataFrame Nexus::pull(std::string_view root, const std::vector<PullSpec>& fields) const

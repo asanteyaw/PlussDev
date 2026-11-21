@@ -436,7 +436,7 @@ Output
 
 ```text
 nlp::NerStage: entity-pattern labels must not be empty.
-nlp::detail::train_token_classifier: expected at least two distinct labels.
+nlp token classifier training: expected at least two distinct labels.
 ```
 
 ## See Also

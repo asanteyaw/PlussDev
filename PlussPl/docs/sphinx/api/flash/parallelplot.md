@@ -82,7 +82,7 @@ raw values on its own axis instead, which renders differently from the default.
     One entry per feature. Must contain at least two features, or `parallelplot` throws
     `pluss::Error("flash::parallelplot requires at least two columns")`, and
     every column must be the same length (`"flash::parallelplot requires equal-length
-    columns"` on mismatch, via the shared `detail::require_equal_lengths` check).
+    columns"` on mismatch).
 
 **group_labels** (`const Note&`, group-labels overload only)
     One label per row, used to color and legend each row's line by group instead of a

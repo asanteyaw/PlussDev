@@ -14,7 +14,7 @@ DataFrame DataFrame::arrange(pluss::RangeView<std::string_view> features,
                              bool ascending = true,
                              bool nulls_last = true) const
 
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrame::arrange(const NameRange& features,
                              bool ascending = true,
                              bool nulls_last = true) const

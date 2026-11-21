@@ -21,7 +21,7 @@ DataFrame DataFrameLabelAccessor::set(
     pluss::RangeView<std::string_view> feature_names,
     bool drop_features = true,
     std::string_view separator = "\x1F") const
-template <detail::StringViewNameRange NameRange>
+template <class NameRange>
 DataFrame DataFrameLabelAccessor::set(
     const NameRange& feature_names,
     bool drop_features = true,

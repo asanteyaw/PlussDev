@@ -10,7 +10,7 @@
 ```cpp
 Axel Axel::fields(std::span<const std::string_view> keys) const
 Axel Axel::fields(std::initializer_list<std::string_view> keys) const
-template <pluss::detail::StringViewNameRange NameRange>
+template <class NameRange>
 Axel Axel::fields(const NameRange& keys) const
 ```
 

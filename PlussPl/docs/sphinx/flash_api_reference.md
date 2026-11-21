@@ -45,16 +45,6 @@ export helpers (`move_legend`, `legend`, `legend_frame`, `tight_layout`, `despin
 dataset family (`get_dataset_names`, `load_dataset`, `Dataset`, `Dataset::from_table`,
 `Dataset::frame`, `Dataset::nrows`, `Dataset::ncols`, `Dataset::size`) families.
 
-Every function in `pluss::pl::flash` is now documented and verified. A number of
-lower-level helpers that previously lived directly at `flash::` scope (`catplot_kind`,
-`ordered_levels`, `relgrid_kind`, `disgrid_kind`, `resolve_grid_shape`,
-`dataset_numeric_columns`, `triplot_feature_indices`, `triplot_triplets`,
-`triplot_bin_surface`, `deg_to_rad`, `rotate_plane`, `rotate4`, `inside_slice`,
-`project4`, `project4_batch`, `apply_horizontal_grid_policy`, `flash_context_values`,
-`flash_palette_kind`, `flash_palette_colors`, `flash_palette_ramp`) have been moved
-into `flash::detail::`, where their internal-implementation nature is unambiguous —
-they were never part of this reference's public surface.
-
 ```{toctree}
 :hidden:
 :maxdepth: 1

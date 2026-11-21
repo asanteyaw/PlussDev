@@ -108,7 +108,7 @@ size the Studio already had.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `max_points` | `std::int64_t`, default `2500` | Row-count cap. When a feature has more rows than this, every column is deterministically downsampled to an evenly-strided subset of at most `max_points` rows (same mechanism as [`flash::relgridplot`](relgridplot.md)'s siblings share via `detail::downsample_columns`). |
+| `max_points` | `std::int64_t`, default `2500` | Row-count cap. When a feature has more rows than this, every column is deterministically downsampled to an evenly-strided subset of at most `max_points` rows. |
 | `diag_bins` | `std::int64_t`, default `14` | Bin count forwarded to `Pane::bucket` when `diag_kind == Histogram`. At least `1`; fewer throws `pluss::Error`. |
 | `diag_density_points` | `std::int64_t`, default `128` | KDE evaluation-point count when `diag_kind == Density`. At least `2`; fewer throws `pluss::Error`. |
 

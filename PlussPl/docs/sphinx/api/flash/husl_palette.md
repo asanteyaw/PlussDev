@@ -20,7 +20,7 @@ A simplified wrapper: `return hls_palette(n, 0.74,
 ```{important} Not an actual HUSL colorspace implementation
 Despite the name (evoking the HUSL perceptually-uniform color space), this
 function is a plain HLS hue sweep with different fixed parameters -- the same
-detail::hsl_to_rgb conversion hls_palette itself uses, not a distinct HUSL algorithm.
+conversion hls_palette itself uses, not a distinct HUSL algorithm.
 The name is a naming convenience, not a claim of colorspace equivalence.
 ```
 
