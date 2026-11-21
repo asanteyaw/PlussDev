@@ -118,7 +118,7 @@ pluss::Series catalog_shelf_to_plot_numeric_series(const pluss::table::Shelf& t)
   }
 
   auto values = numeric_shelf.as_series().to(pluss::codem::ScalarType::Float64);
-  if (pluss::table::detail::has_validity_mask(numeric_shelf)) {
+  if (pluss::table::detail::has_mask(numeric_shelf)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),

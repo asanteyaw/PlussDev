@@ -258,7 +258,7 @@ std::string shelf_value_at(const Shelf& t, std::int64_t row) {
 std::int64_t non_null_count(const Shelf& t) {
   if (t.kind() == ShelfKind::Duration) {
     const auto values = t.as_duration().host();
-    const auto valid = detail::has_validity_mask(t)
+    const auto valid = detail::has_mask(t)
                            ? detail::validity_mask(t)->host<bool>()
                            : std::vector<bool>(values.size(), true);
     std::int64_t count = 0;
@@ -267,7 +267,7 @@ std::int64_t non_null_count(const Shelf& t) {
     }
     return count;
   }
-  if (!detail::has_validity_mask(t)) {
+  if (!detail::has_mask(t)) {
     return t.size();
   }
   const auto valid = detail::validity_mask(t)->host<bool>();
@@ -287,7 +287,7 @@ std::uint64_t estimate_bytes(const Shelf& t) {
       bytes += static_cast<std::uint64_t>(n.at(i).size());
     }
   }
-  if (detail::has_validity_mask(t)) {
+  if (detail::has_mask(t)) {
     bytes += static_cast<std::uint64_t>(t.size());
   }
   return bytes;
@@ -764,7 +764,7 @@ std::string render_shelf_series_like_(const Shelf& shelf,
 
   const auto values = display_shelf(shelf);
   std::optional<Shelf> labels = std::nullopt;
-  if (detail::has_display_labels(shelf)) {
+  if (detail::has_labels(shelf)) {
     labels = display_shelf(detail::display_labels(shelf));
   }
 
@@ -2220,7 +2220,7 @@ class DataFrameVirtualTableModel final
       numeric_.push_back(is_numeric_shelf(column));
       bool searchable = true;
       if (column.kind() == ShelfKind::Series &&
-          !detail::has_validity_mask(column)) {
+          !detail::has_mask(column)) {
         const void* payload = column.as_series().raw_data();
         searchable = shared_numeric_payloads.insert(payload).second;
       }
@@ -3057,7 +3057,7 @@ DisplayTheme default_theme() {
   return g_default_theme.load(std::memory_order_relaxed);
 }
 
-void set_default_theme(DisplayTheme theme) {
+void default_theme(DisplayTheme theme) {
   g_default_theme.store(theme == DisplayTheme::Auto ? DisplayTheme::Default : theme, std::memory_order_relaxed);
 }
 
@@ -3079,11 +3079,11 @@ bool parse_theme(const std::string& name, DisplayTheme& out) {
   return false;
 }
 
-void set_default_backend(DisplayBackend backend) {
+void default_backend(DisplayBackend backend) {
   g_default_backend.store(backend, std::memory_order_relaxed);
 }
 
-bool gui_backend_available() {
+bool gui_available() {
   return runtime_gui_env_available_();
 }
 
@@ -3232,7 +3232,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   return out;
 }
 
-std::string render_info_html(const DataFrame& frame, const DisplayOptions& options) {
+std::string info_html(const DataFrame& frame, const DisplayOptions& options) {
   return render_html_info_doc_(frame, options);
 }
 
@@ -3386,7 +3386,7 @@ void show_info(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    const auto html = render_info_html(frame, render_opts);
+    const auto html = info_html(frame, render_opts);
     if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
       return;
     }

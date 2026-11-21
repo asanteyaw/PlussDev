@@ -1482,7 +1482,7 @@ void test_align_reindex_equivalent() {
   expect(both.features("C").as_series().host<double>() ==
              std::vector<double>({0.0, 0.0}),
          "align(fill) should create filled numeric features for missing feature labels");
-  expect(!pluss::table::detail::has_validity_mask(both.features("C")) ||
+  expect(!pluss::table::detail::has_mask(both.features("C")) ||
              pluss::table::detail::validity_mask(both.features("C"))->host<bool>() ==
                  std::vector<bool>({true, true}),
          "align(fill) missing numeric features should be valid filled values");

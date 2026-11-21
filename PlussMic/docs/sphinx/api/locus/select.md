@@ -71,8 +71,8 @@ unknown select: Locus::select: unknown catalog 'nope'
     <span class="label">Previous</span>
     <span class="title">schema</span>
   </a>
-  <a class="next-link" href="set_table_meta.html">
+  <a class="next-link" href="state.html">
     <span class="label">Next</span>
-    <span class="title">set_table_meta</span>
+    <span class="title">state</span>
   </a>
 </div>

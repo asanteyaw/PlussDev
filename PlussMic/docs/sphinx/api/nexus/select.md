@@ -255,8 +255,8 @@ Nexus::select: unknown key 'missing'
     <span class="label">Previous</span>
     <span class="title">schema</span>
   </a>
-  <a class="next-link" href="set_table_meta.html">
+  <a class="next-link" href="show.html">
     <span class="label">Next</span>
-    <span class="title">set_table_meta</span>
+    <span class="title">show</span>
   </a>
 </div>

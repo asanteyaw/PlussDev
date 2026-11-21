@@ -2509,7 +2509,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'fold': 'Reduces the shelf through a folding-style aggregation route.',
             'freq': 'Counts the most frequent observed values in the shelf.',
             'fullmatch': 'Checks whether each note-backed text value fully matches the requested regular expression.',
-            'has_display_labels': 'Reports whether the shelf currently carries explicit display labels.',
+            'has_labels': 'Reports whether the shelf currently carries explicit display labels.',
             'has_display_name': 'Reports whether the shelf currently carries an explicit display name.',
             'head': 'Returns the first `n` entries of the shelf.',
             'indicate': 'Returns a boolean indicator shelf showing which entries satisfy the requested predicate.',
@@ -2555,7 +2555,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'var': 'Returns the variance of a numeric shelf.',
             'weigh': 'Computes a weighted trailing window statistic over the shelf using an explicit weight vector.',
             'window': 'Computes a window-based transformation such as a rolling mean over the shelf values.',
-            'with_display_labels': 'Attaches display labels to the shelf without changing the underlying values.',
+            'with_labels': 'Attaches display labels to the shelf without changing the underlying values.',
             'with_display_name': 'Attaches a display name to the shelf without changing the underlying values.',
         },
         'Stream': {
@@ -5981,7 +5981,7 @@ out.label().values():
                 return SHELF_NOTE_OUT
             if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
                 return '[2024, 2024, 2024]' if n == 'year' else '[1, 2, 3]'
-            if n in {'clear_display_labels', 'clear_display_name'}:
+            if n in {'clear_labels', 'clear_display_name'}:
                 return SHELF_SERIES_OUT
             return SHELF_SERIES_OUT
         if ret == 'Shelf&':
@@ -8596,7 +8596,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'replace': return shelf_note() + '\n\nauto out = shelf.replace("Tema", "Tamale");'
             if n == 'distinct': return 'auto shelf = pluss::table::Shelf(pluss::make_note({"Accra", "Tema", "Accra"}));\n\nauto out = shelf.distinct(true);'
             if n == 'describe': return shelf_series() + '\n\nauto out = shelf.describe(false);'
-            if n == 'display_labels': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})).with_display_labels(pluss::table::Shelf(pluss::make_note({"a", "b", "c"})));\n\nauto out = shelf.display_labels();'
+            if n == 'display_labels': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})).with_labels(pluss::table::Shelf(pluss::make_note({"a", "b", "c"})));\n\nauto out = shelf.display_labels();'
             if n == 'display_name': return 'auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0})).with_display_name("sales");\n\nauto out = shelf.display_name();'
             if n == 'strip':
                 if 'std::string_view chars' in sig:

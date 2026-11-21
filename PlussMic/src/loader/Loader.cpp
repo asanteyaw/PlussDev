@@ -179,7 +179,7 @@ std::optional<std::string> parse_string_value(const ConfigValue& value) {
 }
 
 std::optional<std::vector<std::string>> parse_string_list_value(const ConfigValue& value) {
-  if (auto v = value.as_string_list(); v.has_value()) return v;
+  if (auto v = value.as_list(); v.has_value()) return v;
   if (auto s = value.as_string(); s.has_value()) {
     std::vector<std::string> out;
     const std::string text(*s);
@@ -369,7 +369,7 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
       options.all_sheets = true;
     } else if (auto idx = parse_int_value(*v); idx.has_value()) {
       options.sheet_index = *idx;
-    } else if (auto names = v->as_string_list(); names.has_value() && !names->empty()) {
+    } else if (auto names = v->as_list(); names.has_value() && !names->empty()) {
       options.sheet_names = std::move(*names);
       options.all_sheets = false;
       options.sheet_name.reset();
@@ -1038,7 +1038,7 @@ const JsonValue* object_find(const JsonValue& object, std::string_view key) {
 
 std::optional<std::vector<std::size_t>> parse_size_t_list_value(const ConfigValue& value) {
   std::vector<std::string> tokens;
-  if (auto list = value.as_string_list(); list.has_value()) {
+  if (auto list = value.as_list(); list.has_value()) {
     tokens = std::move(*list);
   } else if (auto s = value.as_string(); s.has_value()) {
     std::string text(*s);
@@ -1710,7 +1710,7 @@ std::vector<std::string> raw_strings_from_arrow_array(const std::shared_ptr<arro
 
 std::vector<bool> shelf_validity(const pluss::table::Shelf& shelf) {
   const auto n = static_cast<std::size_t>(shelf.size());
-  if (!pluss::table::detail::has_validity_mask(shelf)) {
+  if (!pluss::table::detail::has_mask(shelf)) {
     return std::vector<bool>(n, true);
   }
   auto valid = pluss::table::detail::validity_mask(shelf)->host<bool>();
@@ -2259,15 +2259,15 @@ pluss::table::DataFrame& LoadResult::sheets(std::string_view name) {
   PLUSS_FAIL("LoadResult::sheets: sheet '" + std::string(name) + "' not found");
 }
 
-const pluss::table::DataFrame& LoadResult::sheet_by_index(std::size_t index) const {
+const pluss::table::DataFrame& LoadResult::sheet(std::size_t index) const {
   const auto& wb = workbook();
-  PLUSS_CHECK(index < wb.size(), "LoadResult::sheet_by_index: index out of range");
+  PLUSS_CHECK(index < wb.size(), "LoadResult::sheet: index out of range");
   return wb[index].second;
 }
 
-pluss::table::DataFrame& LoadResult::sheet_by_index(std::size_t index) {
+pluss::table::DataFrame& LoadResult::sheet(std::size_t index) {
   auto& wb = workbook();
-  PLUSS_CHECK(index < wb.size(), "LoadResult::sheet_by_index: index out of range");
+  PLUSS_CHECK(index < wb.size(), "LoadResult::sheet: index out of range");
   return wb[index].second;
 }
 
@@ -2896,7 +2896,7 @@ void save_json(const pluss::table::DataFrame& frame,
   std::vector<std::optional<std::vector<bool>>> valid_masks(columns.size());
   std::vector<std::optional<pluss::Note>> note_cache(columns.size());
   for (std::size_t j = 0; j < columns.size(); ++j) {
-    if (pluss::table::detail::has_validity_mask(columns[j])) {
+    if (pluss::table::detail::has_mask(columns[j])) {
       valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->host<bool>();
     }
     if (columns[j].kind() != pluss::table::ShelfKind::Series) {

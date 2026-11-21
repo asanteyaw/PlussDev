@@ -1105,7 +1105,7 @@ ShelfValue Shelf::matmul(const Shelf& other) const {
   if (aligned.aligned) {
     return aligned.left.matmul(aligned.right);
   }
-  PLUSS_CHECK(!has_validity_mask() && !other.has_validity_mask(),
+  PLUSS_CHECK(!has_mask() && !other.has_mask(),
               "Shelf::matmul: null values are not supported");
   return ShelfValue(Shelf(as_series().matmul(other.as_series()).reshape({1})));
 }
@@ -1170,11 +1170,11 @@ Shelf exponential_mean_shelf_(
   const auto count = valid.to(dtype).cumsum(0);
   if (!adjusted) {
     PLUSS_CHECK(
-        !detail::has_validity_mask(source),
+        !detail::has_mask(source),
         "Shelf::decay(adjusted=false): nullable input requires "
         "adjusted=true");
     auto result = ts_result_shelf_(pluss::subsp::stats::ts::ema(values, alpha));
-    return detail::with_validity_mask(result,
+    return detail::with_mask(result,
         count.ge(static_cast<double>(min_count)));
   }
   if (alpha == 1.0) {
@@ -1247,7 +1247,7 @@ Shelf exponential_variance_shelf_(
     }
   } else {
     PLUSS_CHECK(
-        !detail::has_validity_mask(source),
+        !detail::has_mask(source),
         "Shelf::decay(adjusted=false): nullable input "
         "requires adjusted=true");
     second = pluss::subsp::stats::ts::ema(
@@ -1569,7 +1569,7 @@ Shelf Shelf::map(
     values.push_back(
         value.has_value()
             ? std::move(*value)
-            : prototype->with_validity_mask(null_mask));
+            : prototype->with_mask(null_mask));
   }
   const auto kind = values.front().kind();
   std::vector<bool> validity;
@@ -1834,14 +1834,14 @@ DataFrame Shelf::framerize(std::string_view name) const {
                            ? (named() ? this->name() : std::string("x"))
                            : std::string(name);
 
-  const bool indexed = detail::has_display_labels(*this);
+  const bool indexed = detail::has_labels(*this);
   std::optional<Shelf> cases =
       indexed ? std::optional<Shelf>(detail::display_labels(*this)) : std::nullopt;
 
   // The column carries values and validity only; its own name and index are
   // dropped -- the name is replaced by `column`, the index becomes the frame's
   // cases.
-  Shelf body = indexed ? detail::clear_display_labels(*this) : *this;
+  Shelf body = indexed ? detail::clear_labels(*this) : *this;
   if (body.named()) {
     body = body.unname();
   }
@@ -2235,7 +2235,7 @@ const pluss::Timeline& tl_payload_(const Shelf& base, std::string_view where) {
 
 pluss::Series tl_validity_(const Shelf& base, std::string_view where) {
   auto valid = tl_payload_(base, where).isvalid();
-  if (detail::has_validity_mask(base)) {
+  if (detail::has_mask(base)) {
     valid = valid.logical_and(*detail::validity_mask(base));
   }
   return valid;
@@ -2243,8 +2243,8 @@ pluss::Series tl_validity_(const Shelf& base, std::string_view where) {
 
 Shelf tl_series_(const Shelf& base, const pluss::Series& values, std::string_view where) {
   auto out = Shelf(values.reshape({base.size()}), tl_validity_(base, where));
-  if (detail::has_display_labels(base)) {
-    out = detail::with_display_labels(out, detail::display_labels(base));
+  if (detail::has_labels(base)) {
+    out = detail::with_labels(out, detail::display_labels(base));
   }
   if (base.named()) {
     out = out.name(base.name());
@@ -2296,8 +2296,8 @@ Shelf tl_span_series_(
     std::string_view where) {
   auto valid = tl_validity_(base, where).logical_and(tl_validity_(other, where));
   auto out = Shelf(values.reshape({values.numel()}), valid.reshape({values.numel()}));
-  if (values.numel() == base.size() && detail::has_display_labels(base)) {
-    out = detail::with_display_labels(out, detail::display_labels(base));
+  if (values.numel() == base.size() && detail::has_labels(base)) {
+    out = detail::with_labels(out, detail::display_labels(base));
   }
   if (base.named()) {
     out = out.name(base.name());
@@ -2312,8 +2312,8 @@ Shelf tl_note_(const Shelf& base, const pluss::Note& values, std::string_view wh
     owned.push_back(std::string(values.at(i)));
   }
   auto out = Shelf(make_utf8_note(owned), tl_validity_(base, where));
-  if (detail::has_display_labels(base)) {
-    out = detail::with_display_labels(out, detail::display_labels(base));
+  if (detail::has_labels(base)) {
+    out = detail::with_labels(out, detail::display_labels(base));
   }
   if (base.named()) {
     out = out.name(base.name());
@@ -2323,8 +2323,8 @@ Shelf tl_note_(const Shelf& base, const pluss::Note& values, std::string_view wh
 
 Shelf tl_temporal_(const Shelf& base, const pluss::Timeline& values) {
   auto out = Shelf(values, detail::validity_mask(base));
-  if (detail::has_display_labels(base)) {
-    out = detail::with_display_labels(out, detail::display_labels(base));
+  if (detail::has_labels(base)) {
+    out = detail::with_labels(out, detail::display_labels(base));
   }
   if (base.named()) {
     out = out.name(base.name());
@@ -2333,8 +2333,8 @@ Shelf tl_temporal_(const Shelf& base, const pluss::Timeline& values) {
 }
 
 Shelf tl_with_meta_(const Shelf& base, Shelf out) {
-  if (detail::has_display_labels(base)) {
-    out = detail::with_display_labels(out, detail::display_labels(base));
+  if (detail::has_labels(base)) {
+    out = detail::with_labels(out, detail::display_labels(base));
   }
   if (base.named()) {
     out = out.name(base.name());

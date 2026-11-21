@@ -111,9 +111,9 @@ counts from the end rather than meaning "invalid."
   the same way `has`/`catalog` do.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="audit_report.html">
+  <a class="prev-link" href="cache_stats.html">
     <span class="label">Previous</span>
-    <span class="title">audit_report</span>
+    <span class="title">cache_stats</span>
   </a>
   <a class="next-link" href="construction.html">
     <span class="label">Next</span>

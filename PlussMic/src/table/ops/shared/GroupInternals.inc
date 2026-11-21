@@ -44,7 +44,7 @@ Shelf group_f64_shelf_(const std::vector<double>& values,
   if (valid.empty()) {
     return Shelf(out);
   }
-  return detail::with_validity_mask(Shelf(out), group_bool_mask_(valid));
+  return detail::with_mask(Shelf(out), group_bool_mask_(valid));
 }
 
 Shelf group_note_shelf_(const std::vector<std::string>& values,
@@ -59,7 +59,7 @@ Shelf group_note_shelf_(const std::vector<std::string>& values,
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size())));
   if (!valid.empty()) {
-    out = detail::with_validity_mask(out, group_bool_mask_(valid));
+    out = detail::with_mask(out, group_bool_mask_(valid));
   }
   return out;
 }
@@ -512,7 +512,7 @@ GroupFactorization_ factor_group_keys_(std::span<const Shelf> keys,
   for (const auto& key : keys) {
     PLUSS_CHECK(key.defined(), std::string(where) + ": key shelf is undefined");
     PLUSS_CHECK(key.size() == nrows, std::string(where) + ": key length mismatch");
-    if (!options.dropnull || !detail::has_validity_mask(key)) {
+    if (!options.dropnull || !detail::has_mask(key)) {
       continue;
     }
     const auto valid = detail::validity_mask(key)->host<bool>();
@@ -674,7 +674,7 @@ Shelf group_empty_transform_shelf_(const Shelf& value,
   switch (op) {
     case GroupOp::Count:
     case GroupOp::Ndistinct:
-      return detail::with_validity_mask(
+      return detail::with_mask(
           group_i64_shelf_(std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)),
           group_bool_mask_(std::vector<bool>(static_cast<std::size_t>(size), false)));
     case GroupOp::Mode:
@@ -706,7 +706,7 @@ Shelf group_broadcast_shelf_(const Shelf& grouped, const GroupState_& state) {
     return grouped.take(std::span<const std::int64_t>{});
   }
   if (state.ngroups == 0) {
-    return detail::with_validity_mask(
+    return detail::with_mask(
         grouped.take(std::span<const std::int64_t>{}),
         group_bool_mask_(std::vector<bool>(state.group_ids.size(), false)));
   }
@@ -727,7 +727,7 @@ Shelf group_broadcast_shelf_(const Shelf& grouped, const GroupState_& state) {
             "group: broadcast validity size mismatch (mask={}, out={})",
             validity.numel(),
             out.size()));
-    out = detail::with_validity_mask(out, validity);
+    out = detail::with_mask(out, validity);
   }
   return out;
 }
@@ -751,7 +751,7 @@ pluss::Series group_keep_mask_(const Shelf& keep,
   }
 
   auto keep_values = keep.as_series().host<bool>();
-  if (detail::has_validity_mask(keep)) {
+  if (detail::has_mask(keep)) {
     const auto keep_valid = detail::validity_mask(keep)->host<bool>();
     std::transform(
         keep_values.begin(),
@@ -812,7 +812,7 @@ Shelf group_count_shelf_(const GroupState_& state,
   }
 
   pluss::Series ids = pluss::series::undefined();
-  if (value.has_value() && detail::has_validity_mask(*value)) {
+  if (value.has_value() && detail::has_mask(*value)) {
     auto active = state.included_mask_cpu.platform() == platform
         ? state.included_mask_cpu
         : state.included_mask_cpu.to(platform);
@@ -917,7 +917,7 @@ Shelf group_note_mode_shelf_(const Shelf& value, const GroupState_& state) {
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size())));
   if (std::any_of(valid.begin(), valid.end(), [](bool value) { return !value; })) {
-    note = detail::with_validity_mask(note, group_bool_mask_(valid));
+    note = detail::with_mask(note, group_bool_mask_(valid));
   }
   return reorder_group_shelf_(note, state);
 }
@@ -1037,7 +1037,7 @@ Shelf group_numeric_shelf_(const Shelf& value,
   pluss::Series ids = pluss::series::undefined();
   pluss::Series values = pluss::series::undefined();
   auto numeric = value.as_series().to(pluss::codem::ScalarType::Float64);
-  if (detail::has_validity_mask(value)) {
+  if (detail::has_mask(value)) {
     auto active = state.included_mask_cpu.platform() == platform
         ? state.included_mask_cpu
         : state.included_mask_cpu.to(platform);
@@ -1139,7 +1139,7 @@ Shelf group_temporal_shelf_(const Shelf& value,
 
   pluss::Series ids = pluss::series::undefined();
   pluss::Series ticks = pluss::series::undefined();
-  if (detail::has_validity_mask(value)) {
+  if (detail::has_mask(value)) {
     auto active = state.included_mask_cpu.platform() == platform
         ? state.included_mask_cpu
         : state.included_mask_cpu.to(platform);
@@ -1200,7 +1200,7 @@ Shelf group_temporal_shelf_(const Shelf& value,
   Shelf out = Shelf(group_rebuild_timeline_like_(value.as_timeline(), tick_values));
 
   if (std::any_of(valid.begin(), valid.end(), [](bool flag) { return !flag; })) {
-    out = detail::with_validity_mask(out, group_bool_mask_(valid, group_shelf_platform_(out)));
+    out = detail::with_mask(out, group_bool_mask_(valid, group_shelf_platform_(out)));
   }
   return out;
 }

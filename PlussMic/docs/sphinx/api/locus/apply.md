@@ -81,10 +81,6 @@ undefined result: Locus::apply: callback returned an undefined Catalog
   transform function.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="alignment_cache_stats.html">
-    <span class="label">Previous</span>
-    <span class="title">alignment_cache_stats</span>
-  </a>
   <a class="next-link" href="apply_all.html">
     <span class="label">Next</span>
     <span class="title">apply_all</span>

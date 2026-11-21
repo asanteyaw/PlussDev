@@ -41,7 +41,7 @@ the type and its factory surface are kept apart because "I need a `Note`" and
 - **Split existing text** — `from_lines` and `from_words` turn one string
   into a 1-D `Note`.
 - **Assemble and choose** — `format` fills a `{placeholder}` template;
-  `select` builds a `Note` by ordered `Series` conditions.
+  `choose` builds a `Note` by ordered `Series` conditions.
 - **Restore packed storage** — `unpack` validates and reconstructs the stable
   binary envelope emitted by `Note::pack()`.
 - **Render** — `print` produces a diagnostic representation (`std::cout << n`
@@ -93,7 +93,7 @@ Every `pluss::note::*` factory has a page: the core constructors (`make`,
 `bytes`), the shape-first family (`full`, `empty`, `rep`, and the four
 `*_like` factories), the generative builders (`arange`, `perm`, `rand`,
 `rand_between`), the text-splitting factories (`from_lines`, `from_words`),
-assembly and rendering (`format`, `select`, `print`), and validated binary
+assembly and rendering (`format`, `choose`, `print`), and validated binary
 reconstruction (`unpack`).
 
 ```{toctree}
@@ -117,7 +117,7 @@ api/note_factory/print
 api/note_factory/rand
 api/note_factory/rand_between
 api/note_factory/rep
-api/note_factory/select
+api/note_factory/choose
 api/note_factory/unpack
 ```
 

@@ -38,18 +38,18 @@ struct DataFramePlotOptions;
 namespace detail {
 class ShelfImpl;
 struct GroupStateCache;
-bool has_validity_mask(const Shelf& shelf);
+bool has_mask(const Shelf& shelf);
 const std::optional<pluss::Series>& validity_mask(const Shelf& shelf);
-Shelf with_validity_mask(const Shelf& shelf, const pluss::Series& validity_mask);
-Shelf& with_validity_mask_(Shelf& shelf, const pluss::Series& validity_mask);
-Shelf clear_validity_mask(const Shelf& shelf);
-Shelf& clear_validity_mask_(Shelf& shelf);
-bool has_display_labels(const Shelf& shelf);
+Shelf with_mask(const Shelf& shelf, const pluss::Series& validity_mask);
+Shelf& with_mask_(Shelf& shelf, const pluss::Series& validity_mask);
+Shelf clear_mask(const Shelf& shelf);
+Shelf& clear_mask_(Shelf& shelf);
+bool has_labels(const Shelf& shelf);
 Shelf display_labels(const Shelf& shelf);
-Shelf with_display_labels(const Shelf& shelf, const Shelf& labels);
-Shelf& with_display_labels_(Shelf& shelf, const Shelf& labels);
-Shelf clear_display_labels(const Shelf& shelf);
-Shelf& clear_display_labels_(Shelf& shelf);
+Shelf with_labels(const Shelf& shelf, const Shelf& labels);
+Shelf& with_labels_(Shelf& shelf, const Shelf& labels);
+Shelf clear_labels(const Shelf& shelf);
+Shelf& clear_labels_(Shelf& shelf);
 LabelKind label_kind(const Shelf& shelf);
 Shelf with_label_kind(const Shelf& shelf, LabelKind kind);
 Shelf& with_label_kind_(Shelf& shelf, LabelKind kind);
@@ -821,18 +821,18 @@ private:
   friend class ShelfValue;
   friend class ShelfView;
   friend class TimeSeriesAccessor;
-  friend bool detail::has_validity_mask(const Shelf& shelf);
+  friend bool detail::has_mask(const Shelf& shelf);
   friend const std::optional<pluss::Series>& detail::validity_mask(const Shelf& shelf);
-  friend Shelf detail::with_validity_mask(const Shelf& shelf, const pluss::Series& validity_mask);
-  friend Shelf& detail::with_validity_mask_(Shelf& shelf, const pluss::Series& validity_mask);
-  friend Shelf detail::clear_validity_mask(const Shelf& shelf);
-  friend Shelf& detail::clear_validity_mask_(Shelf& shelf);
-  friend bool detail::has_display_labels(const Shelf& shelf);
+  friend Shelf detail::with_mask(const Shelf& shelf, const pluss::Series& validity_mask);
+  friend Shelf& detail::with_mask_(Shelf& shelf, const pluss::Series& validity_mask);
+  friend Shelf detail::clear_mask(const Shelf& shelf);
+  friend Shelf& detail::clear_mask_(Shelf& shelf);
+  friend bool detail::has_labels(const Shelf& shelf);
   friend Shelf detail::display_labels(const Shelf& shelf);
-  friend Shelf detail::with_display_labels(const Shelf& shelf, const Shelf& labels);
-  friend Shelf& detail::with_display_labels_(Shelf& shelf, const Shelf& labels);
-  friend Shelf detail::clear_display_labels(const Shelf& shelf);
-  friend Shelf& detail::clear_display_labels_(Shelf& shelf);
+  friend Shelf detail::with_labels(const Shelf& shelf, const Shelf& labels);
+  friend Shelf& detail::with_labels_(Shelf& shelf, const Shelf& labels);
+  friend Shelf detail::clear_labels(const Shelf& shelf);
+  friend Shelf& detail::clear_labels_(Shelf& shelf);
   friend LabelKind detail::label_kind(const Shelf& shelf);
   friend Shelf detail::with_label_kind(const Shelf& shelf, LabelKind kind);
   friend Shelf& detail::with_label_kind_(Shelf& shelf, LabelKind kind);
@@ -854,18 +854,18 @@ private:
                std::optional<pluss::codem::ScalarType> series_dtype) const;
 
   bool unique() const noexcept;
-  bool has_validity_mask() const;
+  bool has_mask() const;
   const std::optional<pluss::Series>& validity_mask() const;
-  Shelf with_validity_mask(const pluss::Series& validity_mask) const;
-  Shelf& with_validity_mask_(const pluss::Series& validity_mask);
-  Shelf clear_validity_mask() const;
-  Shelf& clear_validity_mask_();
-  bool has_display_labels() const;
+  Shelf with_mask(const pluss::Series& validity_mask) const;
+  Shelf& with_mask_(const pluss::Series& validity_mask);
+  Shelf clear_mask() const;
+  Shelf& clear_mask_();
+  bool has_labels() const;
   Shelf display_labels() const;
-  Shelf with_display_labels(const Shelf& labels) const;
-  Shelf& with_display_labels_(const Shelf& labels);
-  Shelf clear_display_labels() const;
-  Shelf& clear_display_labels_();
+  Shelf with_labels(const Shelf& labels) const;
+  Shelf& with_labels_(const Shelf& labels);
+  Shelf clear_labels() const;
+  Shelf& clear_labels_();
   bool has_caselbl() const;
   Shelf caselbl() const;
   Shelf caselbl(const Shelf& labels) const;
@@ -916,52 +916,52 @@ private:
 };
 
 namespace detail {
-inline bool has_validity_mask(const Shelf& shelf) {
-  return shelf.has_validity_mask();
+inline bool has_mask(const Shelf& shelf) {
+  return shelf.has_mask();
 }
 
 inline const std::optional<pluss::Series>& validity_mask(const Shelf& shelf) {
   return shelf.validity_mask();
 }
 
-inline Shelf with_validity_mask(const Shelf& shelf, const pluss::Series& validity_mask) {
-  return shelf.with_validity_mask(validity_mask);
+inline Shelf with_mask(const Shelf& shelf, const pluss::Series& validity_mask) {
+  return shelf.with_mask(validity_mask);
 }
 
-inline Shelf& with_validity_mask_(Shelf& shelf, const pluss::Series& validity_mask) {
-  return shelf.with_validity_mask_(validity_mask);
+inline Shelf& with_mask_(Shelf& shelf, const pluss::Series& validity_mask) {
+  return shelf.with_mask_(validity_mask);
 }
 
-inline Shelf clear_validity_mask(const Shelf& shelf) {
-  return shelf.clear_validity_mask();
+inline Shelf clear_mask(const Shelf& shelf) {
+  return shelf.clear_mask();
 }
 
-inline Shelf& clear_validity_mask_(Shelf& shelf) {
-  return shelf.clear_validity_mask_();
+inline Shelf& clear_mask_(Shelf& shelf) {
+  return shelf.clear_mask_();
 }
 
-inline bool has_display_labels(const Shelf& shelf) {
-  return shelf.has_display_labels();
+inline bool has_labels(const Shelf& shelf) {
+  return shelf.has_labels();
 }
 
 inline Shelf display_labels(const Shelf& shelf) {
   return shelf.display_labels();
 }
 
-inline Shelf with_display_labels(const Shelf& shelf, const Shelf& labels) {
-  return shelf.with_display_labels(labels);
+inline Shelf with_labels(const Shelf& shelf, const Shelf& labels) {
+  return shelf.with_labels(labels);
 }
 
-inline Shelf& with_display_labels_(Shelf& shelf, const Shelf& labels) {
-  return shelf.with_display_labels_(labels);
+inline Shelf& with_labels_(Shelf& shelf, const Shelf& labels) {
+  return shelf.with_labels_(labels);
 }
 
-inline Shelf clear_display_labels(const Shelf& shelf) {
-  return shelf.clear_display_labels();
+inline Shelf clear_labels(const Shelf& shelf) {
+  return shelf.clear_labels();
 }
 
-inline Shelf& clear_display_labels_(Shelf& shelf) {
-  return shelf.clear_display_labels_();
+inline Shelf& clear_labels_(Shelf& shelf) {
+  return shelf.clear_labels_();
 }
 
 inline bool valid_at(const Shelf& shelf, std::int64_t row) {

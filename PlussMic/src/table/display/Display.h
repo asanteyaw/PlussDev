@@ -78,12 +78,12 @@ struct DisplayOptions {
 
 TerminalInfo detect_terminal();
 DisplayBackend default_backend();
-void set_default_backend(DisplayBackend backend);
+void default_backend(DisplayBackend backend);
 DisplayTheme default_theme();
-void set_default_theme(DisplayTheme theme);
+void default_theme(DisplayTheme theme);
 const char* theme_name(DisplayTheme theme);
 bool parse_theme(const std::string& name, DisplayTheme& out);  // case-insensitive
-bool gui_backend_available();
+bool gui_available();
 
 std::string render(const Shelf& shelf, const DisplayOptions& options = {});
 std::string render(const DataFrame& frame, const DisplayOptions& options = {});
@@ -92,7 +92,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options = 
 std::string render_html(const Shelf& shelf, const DisplayOptions& options = {});
 std::string render_html(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render_html(const Atlas& atlas, const DisplayOptions& options = {});
-std::string render_info_html(const DataFrame& frame, const DisplayOptions& options = {});
+std::string info_html(const DataFrame& frame, const DisplayOptions& options = {});
 
 void print(std::ostream& os, const Shelf& shelf, const DisplayOptions& options = {});
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});

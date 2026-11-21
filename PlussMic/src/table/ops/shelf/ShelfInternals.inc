@@ -151,7 +151,7 @@ bool is_numeric_series_type(const pluss::Series& s) {
 }
 
 pluss::Series shelf_non_missing_mask(const Shelf& t) {
-  auto valid = detail::has_validity_mask(t)
+  auto valid = detail::has_mask(t)
                    ? *detail::validity_mask(t)
                    : pluss::Series::ones(
                          {t.size()}, pluss::codem::ScalarType::Bool,
@@ -189,7 +189,7 @@ Shelf shelf_nonfinite_mask(const Shelf& t, nonfinite::Kind kind, bool negate) {
     flags = pluss::Series::zeros({t.size()}, pluss::codem::ScalarType::Bool);
   } else {
     std::optional<pluss::Series> present;
-    if (detail::has_validity_mask(t)) {
+    if (detail::has_mask(t)) {
       present = *detail::validity_mask(t);
     }
     flags = nonfinite::flags(t.as_series(), kind, present);
@@ -198,7 +198,7 @@ Shelf shelf_nonfinite_mask(const Shelf& t, nonfinite::Kind kind, bool negate) {
     flags = flags.logical_not();
   }
   Shelf out(flags);
-  return detail::has_display_labels(t) ? detail::with_display_labels(out, detail::display_labels(t)) : out;
+  return detail::has_labels(t) ? detail::with_labels(out, detail::display_labels(t)) : out;
 }
 
 // The Shelf without its NaN (or +-inf) cells; null cells stay.
@@ -207,7 +207,7 @@ Shelf shelf_drop_nonfinite(const Shelf& t, nonfinite::Kind kind) {
     return t;
   }
   std::optional<pluss::Series> present;
-  if (detail::has_validity_mask(t)) {
+  if (detail::has_mask(t)) {
     present = *detail::validity_mask(t);
   }
   const auto flagged = nonfinite::flags(t.as_series(), kind, present).host<bool>();
@@ -230,13 +230,13 @@ Shelf shelf_fill_nonfinite(const Shelf& t, nonfinite::Kind kind, double value) {
     return t;
   }
   std::optional<pluss::Series> present;
-  if (detail::has_validity_mask(t)) {
+  if (detail::has_mask(t)) {
     present = *detail::validity_mask(t);
   }
   const auto flagged = nonfinite::flags(t.as_series(), kind, present);
   const auto filled = nonfinite::fill(t.as_series(), flagged, value);
   Shelf out = present.has_value() ? Shelf(filled, *present) : Shelf(filled);
-  return detail::has_display_labels(t) ? detail::with_display_labels(out, detail::display_labels(t)) : out;
+  return detail::has_labels(t) ? detail::with_labels(out, detail::display_labels(t)) : out;
 }
 
 double pearson_corr_from_vectors_(const std::vector<double>& x, const std::vector<double>& y) {
@@ -635,13 +635,13 @@ pluss::Series apply_compare_series_scalar(
 }
 
 std::optional<pluss::Series> combine_validity_masks(const Shelf& lhs, const Shelf& rhs) {
-  if (detail::has_validity_mask(lhs) && detail::has_validity_mask(rhs)) {
+  if (detail::has_mask(lhs) && detail::has_mask(rhs)) {
     return detail::validity_mask(lhs)->logical_and(*detail::validity_mask(rhs));
   }
-  if (detail::has_validity_mask(lhs)) {
+  if (detail::has_mask(lhs)) {
     return detail::validity_mask(lhs);
   }
-  if (detail::has_validity_mask(rhs)) {
+  if (detail::has_mask(rhs)) {
     return detail::validity_mask(rhs);
   }
   return std::nullopt;
@@ -981,7 +981,7 @@ std::optional<pluss::Series> merge_masks(
 Shelf forward_fill_shelf(const Shelf& t, std::int64_t limit = -1) {
   PLUSS_CHECK(limit == -1 || limit >= 0, "Shelf::ffill: limit must be -1 or >= 0");
   const auto non_missing = shelf_non_missing_mask(t);
-  if (!detail::has_validity_mask(t) && non_missing.all().item<bool>()) {
+  if (!detail::has_mask(t) && non_missing.all().item<bool>()) {
     return t;
   }
   if (limit == 0) {
@@ -1067,7 +1067,7 @@ Shelf forward_fill_shelf(const Shelf& t, std::int64_t limit = -1) {
 Shelf backward_fill_shelf(const Shelf& t, std::int64_t limit = -1) {
   PLUSS_CHECK(limit == -1 || limit >= 0, "Shelf::bfill: limit must be -1 or >= 0");
   const auto non_missing = shelf_non_missing_mask(t);
-  if (!detail::has_validity_mask(t) && non_missing.all().item<bool>()) {
+  if (!detail::has_mask(t) && non_missing.all().item<bool>()) {
     return t;
   }
   if (limit == 0) {

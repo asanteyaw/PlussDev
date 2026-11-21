@@ -121,8 +121,8 @@ Shelf invoke_underlying(Fn&& fn, std::string_view where, std::string_view what) 
 }
 
 Shelf carry_case_labels_(const Shelf& value, const Shelf& reference) {
-  return detail::has_display_labels(reference)
-             ? detail::with_display_labels(value, detail::display_labels(reference))
+  return detail::has_labels(reference)
+             ? detail::with_labels(value, detail::display_labels(reference))
              : value;
 }
 

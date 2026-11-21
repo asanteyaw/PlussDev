@@ -293,21 +293,21 @@ Registry Registry::transform_fields(std::span<const std::string_view> fields_sel
   return out;
 }
 
-bool Registry::is_stream_compatible() const {
+bool Registry::streamable() const {
   if (!defined()) return false;
   for (std::size_t i = 0; i < impl_ref_().slots_.size(); ++i) {
-    if (!impl_ref_().slots_[i].is_stream_compatible()) {
+    if (!impl_ref_().slots_[i].streamable()) {
       return false;
     }
   }
   return true;
 }
 
-void Registry::ensure_stream_compatible(std::string_view where) const {
+void Registry::ensure_streamable(std::string_view where) const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
   const std::string where_name = where.empty() ? std::string("Registry") : std::string(where);
   for (std::size_t i = 0; i < impl_ref_().slots_.size(); ++i) {
-    impl_ref_().slots_[i].ensure_stream_compatible(
+    impl_ref_().slots_[i].ensure_streamable(
         pluss::tils::OutputEngine::format("{}: slot '{}'", where_name, impl_ref_().keys_[i]));
   }
 }

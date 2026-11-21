@@ -190,7 +190,7 @@ pluss::Series shelf_to_plot_numeric_series(const Shelf& t) {
   }
 
   auto values = numeric_shelf.as_series().to(pluss::codem::ScalarType::Float64);
-  if (detail::has_validity_mask(numeric_shelf)) {
+  if (detail::has_mask(numeric_shelf)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
@@ -508,7 +508,7 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
             shelf.kind() == ShelfKind::Series,
             std::string(where) + ": feature '" + name + "' is not a numeric Series");
         auto values = shelf.as_series().to(pluss::codem::ScalarType::Float64).reshape({shelf.as_series().numel()});
-        if (detail::has_validity_mask(shelf)) {
+        if (detail::has_mask(shelf)) {
           const auto nan_fill = pluss::Series::full(
               {values.numel()},
               std::numeric_limits<double>::quiet_NaN(),

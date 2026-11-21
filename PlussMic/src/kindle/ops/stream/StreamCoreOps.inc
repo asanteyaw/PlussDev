@@ -23,7 +23,7 @@ pluss::table::Shelf Stream::tabelize() const {
 pluss::scribble::Slot Stream::scribbelize() const {
   PLUSS_CHECK(defined(), "Stream::scribbelize: stream undefined");
   const auto n = size();
-  const auto has_validity = pluss::kindle::detail::has_validity_mask(*this);
+  const auto has_validity = pluss::kindle::detail::has_mask(*this);
   const auto valid = has_validity
                          ? pluss::kindle::detail::validity_mask(*this)->host<bool>()
                          : std::vector<bool>{};
@@ -414,7 +414,7 @@ std::string Stream::to_json() const {
   if (size() > 0) oss << "  ";
   oss << "]";
 
-  if (detail::has_validity_mask(*this)) {
+  if (detail::has_mask(*this)) {
     const auto valid = detail::validity_mask(*this)->host<bool>();
     oss << ",\n";
     oss << "  \"validity\": [";
@@ -478,7 +478,7 @@ std::uint64_t Stream::fingerprint() const {
   mix(static_cast<std::uint64_t>(kind()));
   mix(static_cast<std::uint64_t>(n));
   std::vector<bool> present(static_cast<std::size_t>(n), true);
-  if (pluss::kindle::detail::has_validity_mask(*this)) present = pluss::kindle::detail::validity_mask(*this)->host<bool>();
+  if (pluss::kindle::detail::has_mask(*this)) present = pluss::kindle::detail::validity_mask(*this)->host<bool>();
   for (std::int64_t i = 0; i < n; ++i) mix(present[static_cast<std::size_t>(i)] ? 1u : 0u);
   const auto mix_double = [&](double v) {
     if (v == 0.0) v = 0.0;  // fold -0 into +0
@@ -547,7 +547,7 @@ std::uint64_t Stream::stamp() const {
     default:
       break;  // Note and Duration payloads are never edited in place
   }
-  if (detail::has_validity_mask(*this)) {
+  if (detail::has_mask(*this)) {
     h = mix(h, static_cast<std::uint64_t>(detail::validity_mask(*this)->storage_version()));
   }
   return h;

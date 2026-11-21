@@ -676,7 +676,7 @@ Shelf pivot_fill_duration_column_(
 Shelf pivot_apply_fill_(const Shelf& source,
                          const std::optional<ShelfValue::HostAny>& fill_value,
                          bool integral_fill) {
-  if (!fill_value.has_value() || !detail::has_validity_mask(source)) {
+  if (!fill_value.has_value() || !detail::has_mask(source)) {
     return source;
   }
   switch (source.kind()) {

@@ -419,7 +419,7 @@ auto biz = Nexus({
 
 TableMeta customers_meta;
 customers_meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", customers_meta);
+auto tagged = biz.meta("customers", customers_meta);
 
 Relationship rel;
 rel.name = "orders_to_customers";
@@ -543,11 +543,11 @@ auto biz2 = Nexus({
 
 TableMeta customers2_meta;
 customers2_meta.primary_key = {"customer_id"};
-auto tagged2 = biz2.set_table_meta("customers", customers2_meta);
+auto tagged2 = biz2.meta("customers", customers2_meta);
 
 TableMeta orders2_meta;
 orders2_meta.time_field = "ordered_at";
-auto tagged3 = tagged2.set_table_meta("orders", orders2_meta);
+auto tagged3 = tagged2.meta("orders", orders2_meta);
 
 auto linked2 = tagged3.add_relationship(rel);
 
@@ -595,8 +595,8 @@ auto biz3 = Nexus({
 TableMeta customers3_meta;
 customers3_meta.primary_key = {"customer_id"};
 customers3_meta.time_field = "signup_at";
-auto step1 = biz3.set_table_meta("customers", customers3_meta);
-auto step2 = step1.set_table_meta("orders", orders2_meta);
+auto step1 = biz3.meta("customers", customers3_meta);
+auto step2 = step1.meta("orders", orders2_meta);
 auto linked3 = step2.add_relationship(rel);
 
 auto root_anchored = linked3.pull("customers", {"name", "orders.amount.sum_7d_root"});

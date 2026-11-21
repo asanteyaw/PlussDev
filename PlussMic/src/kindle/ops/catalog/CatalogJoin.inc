@@ -21,7 +21,7 @@ void check_join_policy(const RaggedPolicy& p, std::string_view where) {
 std::int64_t shift_of(const RaggedLayout& layout, const std::string& key) { return layout.shift_of(key); }
 
 std::vector<bool> join_validity_of(const Stream& stream) {
-  if (!detail::has_validity_mask(stream)) return {};
+  if (!detail::has_mask(stream)) return {};
   return detail::validity_mask(stream)->host<bool>();
 }
 

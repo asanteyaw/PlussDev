@@ -21,7 +21,7 @@ yourself.
 ```{important} Requires declared metadata with at least one key set
 Unlike [`validate_keys()`](validate_keys.md)'s two-argument overload, `grain_audit()` has
 no explicit-key-list form — it only audits what's already declared via
-[`set_table_meta()`](table_meta.md). A table with no declared `TableMeta` at all, or with
+[`meta()`](meta.md). A table with no declared `TableMeta` at all, or with
 metadata whose `primary_key` is empty and `candidate_keys` is also empty, throws.
 ```
 
@@ -67,7 +67,7 @@ auto biz = Nexus({{"customers", customers}});
 
 TableMeta meta;
 meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", meta);
+auto tagged = biz.meta("customers", meta);
 
 auto audit = tagged.grain_audit("customers");
 std::cout << audit.features({"table", "key_name", "key_signature", "rows", "duplicate_rows", "valid"});

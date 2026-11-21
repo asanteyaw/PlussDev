@@ -210,10 +210,8 @@ public:
   Locus fillneginf(double value) const;
 
   // Table metadata (grain, keys, time field, provenance...), shared with Nexus.
-  bool has_table_meta(std::string_view name) const;
+  bool has_meta(std::string_view name) const;
   std::optional<locus::TableMeta> table_meta(std::string_view name) const;
-  Locus set_table_meta(std::string_view name, const locus::TableMeta& meta) const;
-  Locus& set_table_meta_(std::string_view name, const locus::TableMeta& meta);
   std::optional<locus::TableMeta> meta(std::string_view name) const;
   Locus meta(std::string_view name, const locus::TableMeta& value) const;
   Locus& meta_(std::string_view name, const locus::TableMeta& value);
@@ -326,7 +324,7 @@ public:
   // calls: a second nexus() on the same Locus is answered from that Locus's own
   // cached Nexus and records nothing. Hits appear when a derived Locus (with_,
   // link_, ...) rebuilds and finds catalogs it shares with the original.
-  std::pair<std::int64_t, std::int64_t> alignment_cache_stats() const;
+  std::pair<std::int64_t, std::int64_t> cache_stats() const;
 
   // Persistence is ragged-native: each catalog is stored stream by stream
   // (Catalog::save_streams), so extents, nulls, kinds and labels round-trip

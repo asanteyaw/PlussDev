@@ -71,7 +71,7 @@ auto biz = Nexus({{"customers", customers}});
 
 TableMeta meta;
 meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", meta);
+auto tagged = biz.meta("customers", meta);
 
 auto dups = tagged.detect_duplicates("customers");
 

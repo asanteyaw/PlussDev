@@ -67,7 +67,7 @@ pluss::Series reshape_validity(
   std::vector<pluss::Series> masks;
   masks.reserve(blocks.size());
   for (const auto& block : blocks) {
-    auto mask = detail::has_validity_mask(block)
+    auto mask = detail::has_mask(block)
         ? *detail::validity_mask(block)
         : pluss::Series::ones(
               {block.size()},
@@ -89,7 +89,7 @@ Shelf concatenate_reshape_shelves(const std::vector<Shelf>& blocks) {
   const bool any_missing = std::any_of(
       blocks.begin(),
       blocks.end(),
-      [](const Shelf& block) { return detail::has_validity_mask(block); });
+      [](const Shelf& block) { return detail::has_mask(block); });
   for (const auto& block : blocks) {
     PLUSS_CHECK(
         block.kind() == kind,
@@ -145,7 +145,7 @@ Shelf concatenate_reshape_shelves(const std::vector<Shelf>& blocks) {
     }
   }
   return any_missing
-      ? detail::with_validity_mask(output, reshape_validity(blocks, platform))
+      ? detail::with_mask(output, reshape_validity(blocks, platform))
       : output;
 }
 
@@ -212,7 +212,7 @@ Shelf null_singleton_like(const Shelf& reference) {
   } else if (reference.kind() == ShelfKind::Timeline) {
     platform = reference.as_timeline().epoch_nanos().platform();
   }
-  return detail::with_validity_mask(out, pluss::Series::zeros(
+  return detail::with_mask(out, pluss::Series::zeros(
       {1}, pluss::codem::ScalarType::Bool, platform));
 }
 

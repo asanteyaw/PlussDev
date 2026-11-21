@@ -17,7 +17,7 @@ int main() {
   l.primary_key = {"line_id"};
   p.primary_key = {"sku"};
   auto workspace = Nexus({{"orders", orders}, {"lines", lines}, {"products", products}})
-                       .set_table_meta("orders", o).set_table_meta("lines", l).set_table_meta("products", p)
+                       .meta("orders", o).meta("lines", l).meta("products", p)
                        .add_relationship({.name = "order_lines", .left_table = "orders", .right_table = "lines", .keys = {{"order_id", "order_id"}}, .cardinality = RelationshipCardinality::OneToMany})
                        .add_relationship({.name = "line_product", .left_table = "lines", .right_table = "products", .keys = {{"sku", "sku"}}, .cardinality = RelationshipCardinality::ManyToOne});
 

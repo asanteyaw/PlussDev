@@ -273,18 +273,10 @@ std::optional<TableMeta> Nexus::meta(std::string_view key) const {
   return table_meta(key);
 }
 
-Nexus Nexus::meta(std::string_view key, const TableMeta& value) const {
-  return set_table_meta(key, value);
-}
-
 Nexus Nexus::meta(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) const {
   auto out = *this;
   out.meta_(values);
   return out;
-}
-
-Nexus& Nexus::meta_(std::string_view key, const TableMeta& value) {
-  return set_table_meta_(key, value);
 }
 
 Nexus& Nexus::meta_(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) {

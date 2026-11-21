@@ -76,7 +76,7 @@ different policy for whichever call actually needs that strictness.
 ## See Also
 
 - [`nexus`](nexus.md): the aligned view this policy governs.
-- [`alignment_cache_stats`](alignment_cache_stats.md): how alignment results
+- [`cache_stats`](cache_stats.md): how alignment results
   under a given policy are cached and reused.
 
 <div class="pluss-inline-prev-next">

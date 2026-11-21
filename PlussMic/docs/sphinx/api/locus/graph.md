@@ -51,8 +51,8 @@ graph ncases=2
     <span class="label">Previous</span>
     <span class="title">grain_audit</span>
   </a>
-  <a class="next-link" href="has_store.html">
+  <a class="next-link" href="has_meta.html">
     <span class="label">Next</span>
-    <span class="title">has_store</span>
+    <span class="title">has_meta</span>
   </a>
 </div>

@@ -26,7 +26,7 @@ std::string Shelf::to_string(const display::DisplayOptions& options) const {
 
 std::string Shelf::info_string() const {
   std::int64_t non_null = size();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     const auto valid = validity_mask()->host<bool>();
     non_null = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
   }

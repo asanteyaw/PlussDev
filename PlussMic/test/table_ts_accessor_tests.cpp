@@ -371,7 +371,7 @@ void test_dataframe_cast_pair_payload_targets() {
          "cast(pair target): Note -> Series should change payload kind");
   expect(casted.features("event_text").kind() == ShelfKind::Timeline,
          "cast(pair target): Note -> Timeline should change payload kind");
-  expect(pluss::table::detail::has_validity_mask(casted.features("amount_text")),
+  expect(pluss::table::detail::has_mask(casted.features("amount_text")),
          "cast(pair target): unparsable Note numeric value should set a validity mask");
   expect(!pluss::table::detail::validity_mask(casted.features("amount_text"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast(pair target): unparsable Note numeric value should become null");

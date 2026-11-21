@@ -167,7 +167,7 @@ void test_stream_methods() {
          "metric stream shape should be (size, 1)");
   expect(metric.ptype() == "Series", "metric stream ptype mismatch");
   expect(metric.has_label(), "metric should carry cases after kindelize");
-  expect(pluss::kindle::detail::has_validity_mask(metric), "metric should carry validity mask");
+  expect(pluss::kindle::detail::has_mask(metric), "metric should carry validity mask");
 
   metric = metric.with_meta("source", "test");
   expect(metric.meta("source").value_or("") == "test", "meta write/read mismatch");
@@ -175,7 +175,7 @@ void test_stream_methods() {
   expect(!metric.meta("source").has_value(), "meta should be removed");
 
   const auto filled = metric.fillnull(0.0);
-  expect(!pluss::kindle::detail::has_validity_mask(filled), "fillnull should clear validity mask");
+  expect(!pluss::kindle::detail::has_mask(filled), "fillnull should clear validity mask");
   expect(filled.as_series().host<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Stream::fillnull(double) should preserve valid values and replace only null rows");
   const auto dropped = metric.dropnull();
@@ -662,7 +662,7 @@ std::vector<double> stream_values(const Stream& s) {
 
 // valid[i] == false where the reduction has no value at position i.
 std::vector<bool> stream_valid(const Stream& s) {
-  if (!pluss::kindle::detail::has_validity_mask(s)) return std::vector<bool>(stream_values(s).size(), true);
+  if (!pluss::kindle::detail::has_mask(s)) return std::vector<bool>(stream_values(s).size(), true);
   return pluss::kindle::detail::validity_mask(s)->host<bool>();
 }
 
@@ -681,7 +681,7 @@ Stream dstream(const std::vector<double>& v) {
 Stream with_nulls_stream(const std::vector<double>& v, const std::vector<bool>& valid) {
   std::vector<double> mask;
   for (const bool b : valid) mask.push_back(b ? 1.0 : 0.0);
-  return pluss::kindle::detail::with_validity_mask(
+  return pluss::kindle::detail::with_mask(
       dstream(v), pluss::make_series(mask, {static_cast<std::int64_t>(mask.size())}).to(pluss::codem::ScalarType::Bool));
 }
 
@@ -1437,10 +1437,10 @@ void test_catalog_sort_group_missing() {
   const auto note_filled = mixed_missing.keys({"note_col"}).fillnull("missing");
   expect(std::string(note_filled.keys("note_col").as_note().at(1)) == "missing",
          "Catalog::fillnull(string, keys) should replace null Note values");
-  expect(!pluss::kindle::detail::has_validity_mask(note_filled.keys("note_col")),
+  expect(!pluss::kindle::detail::has_mask(note_filled.keys("note_col")),
          "Catalog::fillnull(string, keys) should clear Note mask when fully resolved");
   const auto note_untouched_by_double = mixed_missing.keys({"note_col"}).fillnull(0.0);
-  expect(pluss::kindle::detail::has_validity_mask(note_untouched_by_double.keys("note_col")),
+  expect(pluss::kindle::detail::has_mask(note_untouched_by_double.keys("note_col")),
          "Catalog::fillnull(double, keys) should skip Note streams instead of throwing");
   expect(std::string(note_untouched_by_double.keys("note_col").as_note().at(0)) == "a",
          "Catalog::fillnull(double, keys) should leave Note payload untouched");
@@ -1451,10 +1451,10 @@ void test_catalog_sort_group_missing() {
   const auto ts_fill_tick = ts_fill.ticks()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
-  expect(!pluss::kindle::detail::has_validity_mask(ts_filled.keys("ts_col")),
+  expect(!pluss::kindle::detail::has_mask(ts_filled.keys("ts_col")),
          "Catalog::fillnull(Timeline, keys) should clear Timeline mask when fully resolved");
   const auto ts_untouched_by_string = mixed_missing.keys({"ts_col"}).fillnull("missing");
-  expect(pluss::kindle::detail::has_validity_mask(ts_untouched_by_string.keys("ts_col")),
+  expect(pluss::kindle::detail::has_mask(ts_untouched_by_string.keys("ts_col")),
          "Catalog::fillnull(string, keys) should skip Timeline streams instead of throwing");
 
   const auto ti_fill = pluss::make_timeline("2024-02-01T00:00:00Z");
@@ -1463,7 +1463,7 @@ void test_catalog_sort_group_missing() {
   const auto ti_fill_tick = ti_fill.ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
-  expect(!pluss::kindle::detail::has_validity_mask(ti_filled.keys("ti_col")),
+  expect(!pluss::kindle::detail::has_mask(ti_filled.keys("ti_col")),
          "Catalog::fillnull(Timeline, keys) should clear Timeline mask when fully resolved");
   const auto ti_filled_by_timeline = mixed_missing.keys({"ti_col"}).fillnull(ts_fill);
   const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeline().ticks();
@@ -2087,7 +2087,7 @@ void test_catalog_fused_reductions() {
       std::vector<bool> m(v.size());
       for (std::size_t i = 0; i < v.size(); ++i) { v[i] = val(rng); m[i] = !nullp(rng); }
       auto st = Stream(pluss::make_series(v, {static_cast<std::int64_t>(v.size())}));
-      if (!v.empty()) st = pluss::kindle::detail::with_validity_mask(st, mask_of(m));
+      if (!v.empty()) st = pluss::kindle::detail::with_mask(st, mask_of(m));
       streams.emplace_back("s" + std::to_string(c), st);
       raw.push_back(v);
       ok.push_back(m);

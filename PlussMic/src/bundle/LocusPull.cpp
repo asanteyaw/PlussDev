@@ -77,7 +77,7 @@ TimeColumn load_time(const Catalog& catalog, const std::string& feature, std::st
               pluss::tils::OutputEngine::format("{}: time field '{}' on table '{}' must be a Timeline stream", where, feature, table));
   TimeColumn out;
   out.ns = stream.as_timeline().epoch_nanos().host<std::int64_t>();
-  out.valid = pluss::kindle::detail::has_validity_mask(stream)
+  out.valid = pluss::kindle::detail::has_mask(stream)
                   ? pluss::kindle::detail::validity_mask(stream)->host<bool>()
                   : std::vector<bool>(out.ns.size(), true);
   return out;
@@ -388,14 +388,14 @@ Catalog LocusPull::collect() const {
     if (std::find(root_ok.begin(), root_ok.end(), std::uint8_t{0}) != root_ok.end()) {
       // A root-anchored window needs a root time; without one the value is unknown.
       std::vector<double> mask(static_cast<std::size_t>(n), 1.0);
-      if (pluss::kindle::detail::has_validity_mask(reduced)) {
+      if (pluss::kindle::detail::has_mask(reduced)) {
         const auto existing = pluss::kindle::detail::validity_mask(reduced)->host<bool>();
         for (std::size_t i = 0; i < mask.size(); ++i) mask[i] = existing[i] ? 1.0 : 0.0;
       }
       for (std::size_t i = 0; i < mask.size(); ++i) {
         if (!root_ok[i]) mask[i] = 0.0;
       }
-      reduced = pluss::kindle::detail::with_validity_mask(
+      reduced = pluss::kindle::detail::with_mask(
           reduced, pluss::make_series(mask, {n}).to(pluss::codem::ScalarType::Bool));
     }
     out.emplace_back(alias, std::move(reduced));

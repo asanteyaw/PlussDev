@@ -136,8 +136,8 @@ private:
   friend class Registry;
   friend class SlotCastAccessor;
   explicit Slot(pluss::msharp::intrusive_ptr<detail::SlotImpl> impl);
-  bool is_stream_compatible() const;
-  void ensure_stream_compatible(std::string_view where = "Slot") const;
+  bool streamable() const;
+  void ensure_streamable(std::string_view where = "Slot") const;
   Slot cast(pluss::table::ShelfCastTarget target,
             const pluss::table::ShelfCastOptions& options) const;
   const detail::SlotImpl& impl_ref_() const;

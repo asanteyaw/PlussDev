@@ -110,7 +110,7 @@ std::string kind_name(StreamKind kind) {
 }
 
 std::string shelf_value_at(const pluss::table::Shelf& shelf, std::int64_t row, std::int64_t max_width) {
-  if (pluss::table::detail::has_validity_mask(shelf)) {
+  if (pluss::table::detail::has_mask(shelf)) {
     const auto valid = pluss::table::detail::validity_mask(shelf)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NULL";  // a missing cell, spelled the same way every PlussMic type spells it
@@ -196,7 +196,7 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
   oss << fit_line(
       pluss::tils::OutputEngine::format("label={}  mask={}  meta={}",
                   stream.has_label() ? "yes" : "no",
-                  detail::has_validity_mask(stream) ? "yes" : "no",
+                  detail::has_mask(stream) ? "yes" : "no",
                   stream.meta().size()),
       width)
       << "\n";

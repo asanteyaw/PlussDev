@@ -272,7 +272,7 @@ namespace detail {
 }
 
 [[nodiscard]] inline Shelf observed_shelf_(const Shelf& values) {
-  return ::pluss::table::detail::has_validity_mask(values) ? values.dropnull() : values;
+  return ::pluss::table::detail::has_mask(values) ? values.dropnull() : values;
 }
 
 [[nodiscard]] inline Series continuous_series_from_shelf_(

@@ -143,7 +143,7 @@ namespace {
   }
 
   Series out = materialized.as_series().to(ScalarType::Float64).reshape({expected_size});
-  if (pluss::table::detail::has_validity_mask(materialized) &&
+  if (pluss::table::detail::has_mask(materialized) &&
       pluss::table::detail::validity_mask(materialized).has_value()) {
     const Series valid = pluss::table::detail::validity_mask(materialized).value()
                              .to(out.platform(), ScalarType::Float64)

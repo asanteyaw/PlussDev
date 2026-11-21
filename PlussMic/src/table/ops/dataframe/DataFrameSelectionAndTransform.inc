@@ -136,7 +136,7 @@ pluss::Series bool_series_from_shelf_mask_(
   PLUSS_CHECK(bool_mask.kind() == ShelfKind::Series, std::string(where) + ": mask must be a Series shelf");
   auto mask = bool_mask.as_series();
   validate_bool_mask(mask, expected_size, where);
-  if (detail::has_validity_mask(bool_mask)) {
+  if (detail::has_mask(bool_mask)) {
     auto valid = *detail::validity_mask(bool_mask);
     if (valid.platform() != mask.platform()) {
       valid = valid.to(mask.platform());
@@ -156,7 +156,7 @@ DataFrameView DataFrame::head(std::int64_t n, bool render) const {
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     cols.emplace_back(src.names_[i], src.columns_[i].head(clipped, /*render=*/false));
   }
-  auto out = DataFrame(std::move(cols), detail::clear_display_labels(src.cases_.head(clipped, /*render=*/false)))
+  auto out = DataFrame(std::move(cols), detail::clear_labels(src.cases_.head(clipped, /*render=*/false)))
                  .title(title());
   return DataFrameView(std::move(out), render, "head", title());
 }
@@ -169,7 +169,7 @@ DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     cols.emplace_back(src.names_[i], src.columns_[i].tail(clipped, /*render=*/false));
   }
-  auto out = DataFrame(std::move(cols), detail::clear_display_labels(src.cases_.tail(clipped, /*render=*/false)))
+  auto out = DataFrame(std::move(cols), detail::clear_labels(src.cases_.tail(clipped, /*render=*/false)))
                  .title(title());
   return DataFrameView(std::move(out), render, "tail", title());
 }

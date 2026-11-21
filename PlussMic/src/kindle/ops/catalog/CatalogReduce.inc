@@ -54,7 +54,7 @@ JaggedColumn load_jagged_column(const Stream& stream) {
   col.values = ColumnView<double>(stream.as_series(), pluss::codem::ScalarType::Float64);
   col.size = static_cast<std::int64_t>(col.values.size());
   col.valid.assign(col.values.size(), 1);
-  if (pluss::kindle::detail::has_validity_mask(stream)) {
+  if (pluss::kindle::detail::has_mask(stream)) {
     const auto mask = pluss::kindle::detail::validity_mask(stream)->host<bool>();
     for (std::size_t j = 0; j < mask.size() && j < col.valid.size(); ++j) col.valid[j] = mask[j] ? 1 : 0;
   }
@@ -249,7 +249,7 @@ std::vector<Stream> jagged_reduce_many(const Catalog& catalog, const std::vector
     }
     Stream result(pluss::make_series(out, {width}));
     if (any_invalid) {
-      result = pluss::kindle::detail::with_validity_mask(
+      result = pluss::kindle::detail::with_mask(
           result, pluss::make_series(valid_out, {width}).to(pluss::codem::ScalarType::Bool));
     }
     results.push_back(std::move(result));

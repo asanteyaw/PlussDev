@@ -133,8 +133,8 @@ DataFrame DataFrameGrouped::keyed_frame_(std::vector<std::string>& key_names) co
       temp = pluss::tils::OutputEngine::format("__pluss_case_level_{}_{}", level_name, suffix++);
     }
     auto level_values = keyed.caselbl(level_name);
-    if (detail::has_display_labels(level_values)) {
-      level_values = detail::clear_display_labels(level_values);
+    if (detail::has_labels(level_values)) {
+      level_values = detail::clear_labels(level_values);
     }
     if (level_values.named()) {
       level_values = level_values.unname();

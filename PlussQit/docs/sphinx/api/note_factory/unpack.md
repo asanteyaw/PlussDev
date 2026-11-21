@@ -290,6 +290,6 @@ truncated: rejected
 - [`Note::host`](../note/host.md): copy a Note into ordinary typed C++ containers.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="select.html"><span class="label">Previous</span><span class="title">select</span></a>
+  <a class="prev-link" href="choose.html"><span class="label">Previous</span><span class="title">choose</span></a>
   <a class="next-link" href="../../note_factory_api_reference.html"><span class="label">Next</span><span class="title">Note Factory</span></a>
 </div>

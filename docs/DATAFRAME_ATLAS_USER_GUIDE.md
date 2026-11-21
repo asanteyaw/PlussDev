@@ -79,7 +79,7 @@ Load multiple sheets:
 auto loaded = DataFrame::load_excel("../../data/report.xlsx", nullptr, true); // workbook mode
 auto names = loaded.sheet_names();
 auto prices = loaded.sheets("Prices");
-auto first = loaded.sheet_by_index(0);
+auto first = loaded.sheet(0);
 ```
 
 Notes:

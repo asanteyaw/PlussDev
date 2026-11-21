@@ -18,8 +18,8 @@ int main() {
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
   auto workspace = Locus({{"customers", customers}, {"orders", orders}})
-                       .set_table_meta("customers", cm)
-                       .set_table_meta("orders", om)
+                       .meta("customers", cm)
+                       .meta("orders", om)
                        .link({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany, .right_optional = true});
 
   // 1. One record per customer, with a count and totals reduced from the orders catalog.

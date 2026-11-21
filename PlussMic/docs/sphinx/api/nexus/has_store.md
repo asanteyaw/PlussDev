@@ -85,8 +85,8 @@ false true
     <span class="label">Previous</span>
     <span class="title">has_relationship</span>
   </a>
-  <a class="next-link" href="has_table_meta.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">has_table_meta</span>
+    <span class="title">head</span>
   </a>
 </div>

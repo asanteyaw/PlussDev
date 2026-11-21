@@ -657,7 +657,7 @@ int main() {
     auto biz4 = Nexus({{"customers", customers4}, {"orders", orders4}});
     TableMeta customers_meta4;
     customers_meta4.primary_key = {"customer_id"};
-    auto tagged4 = biz4.set_table_meta("customers", customers_meta4);
+    auto tagged4 = biz4.meta("customers", customers_meta4);
     Relationship rel4;
     rel4.name = "orders_to_customers";
     rel4.left_table = "orders";

@@ -59,8 +59,8 @@ audit_report ncases=5
     <span class="label">Previous</span>
     <span class="title">audit</span>
   </a>
-  <a class="next-link" href="catalogs.html">
+  <a class="next-link" href="cache_stats.html">
     <span class="label">Next</span>
-    <span class="title">catalogs</span>
+    <span class="title">cache_stats</span>
   </a>
 </div>

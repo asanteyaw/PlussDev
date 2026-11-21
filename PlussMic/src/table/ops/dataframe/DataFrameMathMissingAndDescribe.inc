@@ -1467,7 +1467,7 @@ Shelf DataFrame::csmin(Axis axis, bool skipnull) const {
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
                  : make_note_shelf(matrix.names).take(indices);
-  out = out.with_validity_mask(
+  out = out.with_mask(
       reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
@@ -1485,7 +1485,7 @@ Shelf DataFrame::csmax(Axis axis, bool skipnull) const {
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
                  : make_note_shelf(matrix.names).take(indices);
-  out = out.with_validity_mask(
+  out = out.with_mask(
       reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
@@ -1817,7 +1817,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
       bool any_null = false;
       for (const auto idx : members) {
         values.push_back(src.columns_[idx].as_series());
-        any_null = any_null || detail::has_validity_mask(src.columns_[idx]);
+        any_null = any_null || detail::has_mask(src.columns_[idx]);
       }
       if (any_null) {
         for (const auto idx : members) {
@@ -1890,7 +1890,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
         for (std::size_t pos = 0; pos < batch.columns.size(); ++pos) {
           const auto idx = batch.columns[pos];
           const auto column = dataframe_column_from_matrix_(filled, static_cast<std::int64_t>(pos));
-          out_cols[idx] = detail::has_validity_mask(src.columns_[idx])
+          out_cols[idx] = detail::has_mask(src.columns_[idx])
                               ? Shelf(column, *detail::validity_mask(src.columns_[idx]))
                               : Shelf(column);
         }
@@ -2366,7 +2366,7 @@ DataFrame DataFrame::fillnull(std::string_view value, pluss::msharp::RangeView::
   bool changed = false;
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
-    if (col.kind() == ShelfKind::Note && col.has_validity_mask()) {
+    if (col.kind() == ShelfKind::Note && col.has_mask()) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2413,7 +2413,7 @@ DataFrame DataFrame::fillnull(
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
     const auto kind = col.kind();
-    if (kind == ShelfKind::Timeline && col.has_validity_mask()) {
+    if (kind == ShelfKind::Timeline && col.has_mask()) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2498,7 +2498,7 @@ DataFrame DataFrame::fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) cons
 DataFrame& DataFrame::fillnull_(double value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
-    if (c.kind() == ShelfKind::Series && c.has_validity_mask()) {
+    if (c.kind() == ShelfKind::Series && c.has_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2508,7 +2508,7 @@ DataFrame& DataFrame::fillnull_(double value) {
 DataFrame& DataFrame::fillnull_(std::string_view value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
-    if (c.kind() == ShelfKind::Note && c.has_validity_mask()) {
+    if (c.kind() == ShelfKind::Note && c.has_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2519,7 +2519,7 @@ DataFrame& DataFrame::fillnull_(const pluss::Timeline& value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     const auto kind = c.kind();
-    if (kind == ShelfKind::Timeline && c.has_validity_mask()) {
+    if (kind == ShelfKind::Timeline && c.has_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2736,7 +2736,7 @@ DataFrame DataFrame::mask(const Shelf& bool_mask,
   const auto aligned_mask = prepare_mask_shelf_(impl_ref_(), bool_mask, "DataFrame::mask", options);
   PLUSS_CHECK(aligned_mask.kind() == ShelfKind::Series, "DataFrame::mask: mask must be a Series shelf");
   auto mask = aligned_mask.as_series();
-  if (detail::has_validity_mask(aligned_mask)) {
+  if (detail::has_mask(aligned_mask)) {
     auto valid = *detail::validity_mask(aligned_mask);
     if (valid.platform() != mask.platform()) {
       valid = valid.to(mask.platform());
@@ -2783,7 +2783,7 @@ DataFrameView DataFrame::describe(bool render) const {
     }
 
     Shelf observed = col;
-    if (col.has_validity_mask()) {
+    if (col.has_mask()) {
       observed = col.filter(*col.validity_mask());
     }
     const auto observed_series = observed.as_series().to(pluss::codem::ScalarType::Float64);
@@ -2869,8 +2869,8 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     const auto& col = src.columns_[it->second];
     key_infos.push_back({
         name,
-        col.has_validity_mask() ? col.clear_validity_mask() : col,
-        col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->host<bool>()) : std::nullopt,
+        col.has_mask() ? col.clear_mask() : col,
+        col.has_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->host<bool>()) : std::nullopt,
     });
     keys.push_back(name);
   }

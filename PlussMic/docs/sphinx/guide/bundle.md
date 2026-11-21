@@ -33,8 +33,8 @@ int main() {
   customer_meta.primary_key = {"customer_id"};
   order_meta.primary_key = {"order_id"};
   auto workspace = Nexus({{"customers", customers}, {"orders", orders}})
-                       .set_table_meta("customers", customer_meta)
-                       .set_table_meta("orders", order_meta)
+                       .meta("customers", customer_meta)
+                       .meta("orders", order_meta)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = pluss::relational::RelationshipCardinality::OneToMany});
   std::cout << workspace.summary().to_string() << "\n";
 
@@ -95,8 +95,8 @@ int main() {
   customer_meta.primary_key = {"customer_id"};
   order_meta.primary_key = {"order_id"};
   auto workspace = Nexus({{"customers", customers}, {"orders", orders}})
-                       .set_table_meta("customers", customer_meta)
-                       .set_table_meta("orders", order_meta)
+                       .meta("customers", customer_meta)
+                       .meta("orders", order_meta)
                        .add_relationship({.name = "customer_orders", .left_table = "orders", .right_table = "customers", .keys = {{"customer_id", "customer_id"}}});
 
   // 1. The command-center view: one row per table and per relationship, with what is wrong.
@@ -166,7 +166,7 @@ int main() {
   l.primary_key = {"line_id"};
   p.primary_key = {"sku"};
   auto workspace = Nexus({{"orders", orders}, {"lines", lines}, {"products", products}})
-                       .set_table_meta("orders", o).set_table_meta("lines", l).set_table_meta("products", p)
+                       .meta("orders", o).meta("lines", l).meta("products", p)
                        .add_relationship({.name = "order_lines", .left_table = "orders", .right_table = "lines", .keys = {{"order_id", "order_id"}}, .cardinality = RelationshipCardinality::OneToMany})
                        .add_relationship({.name = "line_product", .left_table = "lines", .right_table = "products", .keys = {{"sku", "sku"}}, .cardinality = RelationshipCardinality::ManyToOne});
 
@@ -234,7 +234,7 @@ int main() {
   pluss::relational::TableMeta cm, om;
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
-  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).set_table_meta("customers", cm).set_table_meta("orders", om)
+  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).meta("customers", cm).meta("orders", om)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany});
 
   // 1. Revenue per country: tables are addressed by name and joined in the statement.
@@ -308,7 +308,7 @@ int main() {
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
   cm.source = "crm export 2026-11-13";
-  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).set_table_meta("customers", cm).set_table_meta("orders", om)
+  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).meta("customers", cm).meta("orders", om)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany});
   std::cout << "before: " << workspace.ntables() << " tables, " << workspace.nrelationships() << " relationship(s)\n";
 
@@ -372,8 +372,8 @@ int main() {
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
   auto workspace = Locus({{"customers", customers}, {"orders", orders}})
-                       .set_table_meta("customers", cm)
-                       .set_table_meta("orders", om)
+                       .meta("customers", cm)
+                       .meta("orders", om)
                        .link({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany, .right_optional = true});
 
   // 1. One record per customer, with a count and totals reduced from the orders catalog.
@@ -430,8 +430,8 @@ int main() {
   sm.primary_key = {"shipment"};
   pm.primary_key = {"port"};
   auto workspace = Locus({{"shipments", shipments}, {"ports", ports}})
-                       .set_table_meta("shipments", sm)
-                       .set_table_meta("ports", pm)
+                       .meta("shipments", sm)
+                       .meta("ports", pm)
                        .link({.name = "shipment_port", .left_table = "shipments", .right_table = "ports", .keys = {{"port", "port"}}, .cardinality = RelationshipCardinality::ManyToOne});
 
   // 1. Join shipments to their port's country. Shipment 5 goes to port Z, which is not in the ports table.
@@ -480,4 +480,4 @@ Shipments are joined to their ports. Shipment 5 goes to port Z, which is not in 
 
 ## Where next
 
-Reference pages: [`pull`](../api/nexus/pull.md), [`audit`](../api/nexus/audit.md), [`validate_keys`](../api/nexus/validate_keys.md), [`detect_orphans`](../api/nexus/detect_orphans.md), [`detect_duplicates`](../api/nexus/detect_duplicates.md), [`from`](../api/nexus/from.md), [`query`](../api/nexus/query.md), [`save`](../api/nexus/save.md), [`read`](../api/nexus/read.md), [`set_table_meta`](../api/nexus/set_table_meta.md), [`add_relationship`](../api/nexus/add_relationship.md), [`pull`](../api/locus/pull.md), [`audit_report`](../api/locus/audit_report.md), [`join`](../api/locus/join.md), [`link`](../api/locus/link.md), [`relationship_audit`](../api/locus/relationship_audit.md). Back to [PlussMic by example](../guide.md).
+Reference pages: [`pull`](../api/nexus/pull.md), [`audit`](../api/nexus/audit.md), [`validate_keys`](../api/nexus/validate_keys.md), [`detect_orphans`](../api/nexus/detect_orphans.md), [`detect_duplicates`](../api/nexus/detect_duplicates.md), [`from`](../api/nexus/from.md), [`query`](../api/nexus/query.md), [`save`](../api/nexus/save.md), [`read`](../api/nexus/read.md), [`meta`](../api/nexus/meta.md), [`add_relationship`](../api/nexus/add_relationship.md), [`pull`](../api/locus/pull.md), [`audit_report`](../api/locus/audit_report.md), [`join`](../api/locus/join.md), [`link`](../api/locus/link.md), [`relationship_audit`](../api/locus/relationship_audit.md). Back to [PlussMic by example](../guide.md).

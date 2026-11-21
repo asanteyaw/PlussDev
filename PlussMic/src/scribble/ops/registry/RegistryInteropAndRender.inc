@@ -1,5 +1,5 @@
 pluss::kindle::Catalog Registry::kindelize() const {
-  ensure_stream_compatible("Registry::kindelize");
+  ensure_streamable("Registry::kindelize");
   std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
@@ -62,7 +62,7 @@ void Registry::save_json(std::string_view filepath) const {
 }
 
 void Registry::save_json(std::string_view filepath, const pluss::loader::Config& config) const {
-  if (is_stream_compatible()) {
+  if (streamable()) {
     registry_to_io_frame(*this).save_json(filepath, config);
     return;
   }

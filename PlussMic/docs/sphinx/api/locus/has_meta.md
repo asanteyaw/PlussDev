@@ -1,23 +1,23 @@
 <!-- pluss-hand-authored -->
 
-# Locus::has_table_meta, Locus::table_meta
+# Locus::has_meta, Locus::table_meta
 
 [Back to Locus API Reference](../../locus_api_reference)
 
 ## Signature
 
 ```cpp
-bool Locus::has_table_meta(std::string_view name) const
+bool Locus::has_meta(std::string_view name) const
 std::optional<TableMeta> Locus::table_meta(std::string_view name) const
 ```
 
 ## What It Does
 
-`has_table_meta` reports whether a catalog has a declared `TableMeta` entry
+`has_meta` reports whether a catalog has a declared `TableMeta` entry
 (grain, primary key, time field, provenance -- the shared vocabulary
 [`Nexus`](../../nexus_api_reference.md) uses too). `table_meta` reads it
 back, as `std::nullopt` when none is declared -- both are read-only probes;
-see [`meta`](meta.md)/[`set_table_meta`](set_table_meta.md) for declaring
+see [`meta`](meta.md) for declaring
 it.
 
 ## Parameters
@@ -28,7 +28,7 @@ it.
 
 ## Returns
 
-`has_table_meta` returns `bool`. `table_meta` returns
+`has_meta` returns `bool`. `table_meta` returns
 `std::optional<TableMeta>`.
 
 ## Examples
@@ -41,15 +41,15 @@ meta.grain = "one row per customer";
 meta.primary_key = {"id"};
 const auto linked = make_linked_shop();
 const auto described = linked.meta("customers", meta);
-std::cout << "described has_table_meta=" << described.has_table_meta("customers")
-          << " original has_table_meta=" << linked.has_table_meta("customers") << "\n";
+std::cout << "described has_meta=" << described.has_meta("customers")
+          << " original has_meta=" << linked.has_meta("customers") << "\n";
 std::cout << "table_meta primary_key[0]=" << described.table_meta("customers")->primary_key[0] << "\n";
 ```
 
 ### Output
 
 ```text
-described has_table_meta=true original has_table_meta=false
+described has_meta=true original has_meta=false
 table_meta primary_key[0]=id
 ```
 
@@ -59,15 +59,14 @@ gains the metadata -- only `described` does.
 ## See Also
 
 - [`meta`](meta.md): the getter/setter pair this page's probes complement.
-- [`set_table_meta`](set_table_meta.md): the explicitly-named setter.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has_store.html">
+  <a class="prev-link" href="graph.html">
     <span class="label">Previous</span>
-    <span class="title">has_store</span>
+    <span class="title">graph</span>
   </a>
-  <a class="next-link" href="head.html">
+  <a class="next-link" href="has_store.html">
     <span class="label">Next</span>
-    <span class="title">head</span>
+    <span class="title">has_store</span>
   </a>
 </div>

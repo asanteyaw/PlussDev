@@ -86,7 +86,7 @@ int main() {
    std::cout << "\nAll sheet names in workbook:\n" << sheet_names << "\n";
 
    // read a sheet by index
-   // auto first_sheet = loaded.sheet_by_index(0);
+   // auto first_sheet = loaded.sheet(0);
    // first_sheet.head();
 
    // save a dataframe to Excel (positional, non-dictionary)

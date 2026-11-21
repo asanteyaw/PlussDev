@@ -12,7 +12,7 @@ Shelf broadcast_shelf_to_cases_(const Shelf& source,
 
 std::vector<std::string> shelf_case_label_strings_(const Shelf& shelf) {
   PLUSS_CHECK(shelf.defined(), "Shelf alignment: Shelf is undefined");
-  const auto labels = detail::has_display_labels(shelf)
+  const auto labels = detail::has_labels(shelf)
                           ? detail::display_labels(shelf)
                           : default_shelf_cases_(shelf.size());
   std::vector<std::string> out;
@@ -101,7 +101,7 @@ Shelf with_alignment_labels_(Shelf out, const Shelf& labels, LabelKind kind = La
     return detail::with_label_kind(out, LabelKind::Default);
   }
   const auto resolved_kind = kind == LabelKind::Default ? LabelKind::Custom : kind;
-  return detail::with_label_kind(detail::with_display_labels(out, labels), resolved_kind);
+  return detail::with_label_kind(detail::with_labels(out, labels), resolved_kind);
 }
 
 void set_series_value_from_double_(pluss::Series& dst, std::int64_t idx, double value) {
@@ -160,13 +160,13 @@ Shelf fill_missing_for_alignment_(const Shelf& source,
   }
   PLUSS_CHECK(source.kind() == ShelfKind::Series && is_numeric_series_type(source.as_series()),
               std::string(where) + ": numeric fill requires a numeric Series-backed Shelf");
-  if (!detail::has_validity_mask(source)) {
+  if (!detail::has_mask(source)) {
     return source;
   }
 
   auto valid = detail::validity_mask(source)->host<bool>();
   if (std::all_of(valid.begin(), valid.end(), [](bool v) { return v; })) {
-    return detail::clear_validity_mask(source);
+    return detail::clear_mask(source);
   }
 
   auto values = source.as_series().clone();
@@ -177,8 +177,8 @@ Shelf fill_missing_for_alignment_(const Shelf& source,
     }
   }
   auto out = Shelf(values);
-  if (detail::has_display_labels(source)) {
-    out = detail::with_display_labels(out, detail::display_labels(source));
+  if (detail::has_labels(source)) {
+    out = detail::with_labels(out, detail::display_labels(source));
   }
   out = detail::with_label_kind(out, detail::label_kind(source));
   return out;
@@ -209,7 +209,7 @@ Shelf null_shelf_like_for_alignment_(const Shelf& like,
       break;
   }
   return with_alignment_labels_(
-      detail::with_validity_mask(
+      detail::with_mask(
           out,
           pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool,
                                shelf_payload_platform_(out))),
@@ -242,7 +242,7 @@ Shelf remap_shelf_for_alignment_(const Shelf& source,
   if (!all_present) {
     validity = present_mask;
   }
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     auto source_validity = *detail::validity_mask(out);
     if (source_validity.platform() != present_mask.platform()) {
       source_validity = source_validity.to(present_mask.platform());
@@ -250,7 +250,7 @@ Shelf remap_shelf_for_alignment_(const Shelf& source,
     validity = validity.has_value() ? validity->logical_and(source_validity) : source_validity;
   }
   if (validity.has_value()) {
-    out = detail::with_validity_mask(out, *validity);
+    out = detail::with_mask(out, *validity);
   }
   return with_alignment_labels_(out, labels, detail::label_kind(labels));
 }
@@ -258,8 +258,8 @@ Shelf remap_shelf_for_alignment_(const Shelf& source,
 ShelfPairAlignment_ align_shelf_pair_for_cases_(const Shelf& left,
                                                   const Shelf& right,
                                                   std::string_view where) {
-  const bool left_labeled = detail::has_display_labels(left);
-  const bool right_labeled = detail::has_display_labels(right);
+  const bool left_labeled = detail::has_labels(left);
+  const bool right_labeled = detail::has_labels(right);
 
   if (!left_labeled && !right_labeled) {
     if (left.size() == right.size()) {
@@ -270,10 +270,10 @@ ShelfPairAlignment_ align_shelf_pair_for_cases_(const Shelf& left,
   if (left_labeled != right_labeled) {
     const auto labels = left_labeled ? detail::display_labels(left) : detail::display_labels(right);
     if (!left_labeled && left.size() == right.size()) {
-      return {detail::with_display_labels(left, labels), right, true};
+      return {detail::with_labels(left, labels), right, true};
     }
     if (!right_labeled && right.size() == left.size()) {
-      return {left, detail::with_display_labels(right, labels), true};
+      return {left, detail::with_labels(right, labels), true};
     }
   }
 
@@ -354,8 +354,8 @@ Shelf align_shelf_to_cases_(const Shelf& source,
     return source;
   }
 
-  const bool source_labeled = detail::has_display_labels(source);
-  const bool target_labeled = detail::has_display_labels(target);
+  const bool source_labeled = detail::has_labels(source);
+  const bool target_labeled = detail::has_labels(target);
   if (!source_labeled && !target_labeled) {
     if (source.size() == target.size()) {
       return source;
@@ -508,15 +508,15 @@ Shelf broadcast_shelf_to_cases_(const Shelf& source,
               std::string(where) + ": broadcast source must have one value");
   std::vector<std::int64_t> rows(static_cast<std::size_t>(target.size()), 0);
   auto out = source.take(std::span<const std::int64_t>(rows.data(), rows.size()));
-  if (detail::has_display_labels(target)) {
-    out = detail::with_display_labels(out, detail::display_labels(target));
+  if (detail::has_labels(target)) {
+    out = detail::with_labels(out, detail::display_labels(target));
   }
   return out;
 }
 
 Shelf carry_case_labels_for_alignment_(const Shelf& value, const Shelf& reference) {
-  return detail::has_display_labels(reference)
-             ? detail::with_display_labels(value, detail::display_labels(reference))
+  return detail::has_labels(reference)
+             ? detail::with_labels(value, detail::display_labels(reference))
              : value;
 }
 

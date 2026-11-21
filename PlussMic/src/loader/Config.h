@@ -47,7 +47,7 @@ public:
   [[nodiscard]] bool is_int() const { return std::holds_alternative<std::int64_t>(value_); }
   [[nodiscard]] bool is_double() const { return std::holds_alternative<double>(value_); }
   [[nodiscard]] bool is_string() const { return std::holds_alternative<std::string>(value_); }
-  [[nodiscard]] bool is_string_list() const { return std::holds_alternative<std::vector<std::string>>(value_); }
+  [[nodiscard]] bool is_list() const { return std::holds_alternative<std::vector<std::string>>(value_); }
 
   [[nodiscard]] const Variant& raw() const { return value_; }
 
@@ -71,7 +71,7 @@ public:
     return std::nullopt;
   }
 
-  [[nodiscard]] std::optional<std::vector<std::string>> as_string_list() const {
+  [[nodiscard]] std::optional<std::vector<std::string>> as_list() const {
     if (const auto* v = std::get_if<std::vector<std::string>>(&value_)) return *v;
     return std::nullopt;
   }

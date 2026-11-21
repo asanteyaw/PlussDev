@@ -86,7 +86,7 @@ chain of positional parameters.
     A tagged scribble: `.is_frame()`/`.is_workbook()` report which case applies,
     `.dataframe()` unwraps a single-frame result, `.workbook()` returns the full
     `std::vector<std::pair<std::string, DataFrame>>` for a multi-sheet result, and
-    `.sheets("Name")` / `.sheet_by_index(i)` reach one sheet directly without
+    `.sheets("Name")` / `.sheet(i)` reach one sheet directly without
     unwrapping the whole vector yourself.
 
 ## Examples

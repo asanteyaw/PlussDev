@@ -578,7 +578,7 @@ schema truth.
 
 ```cpp
 auto named = shelf.name("balance");
-auto labeled = named.with_display_labels(labels);
+auto labeled = named.with_labels(labels);
 
 named.show();
 std::cout << named.to_string() << '\n';

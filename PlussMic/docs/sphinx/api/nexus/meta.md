@@ -18,30 +18,50 @@ Nexus& Nexus::meta_(std::initializer_list<std::pair<std::string_view, TableMeta>
 
 ## What It Does
 
-A trio of exact aliases: the one-argument `meta(key)` calls
-[`table_meta(key)`](table_meta.md) internally, `meta(key, value)` calls
-[`set_table_meta(key, value)`](set_table_meta.md), and `meta_(key, value)` calls
-[`set_table_meta_(key, value)`](set_table_meta.md). All three behave identically to their
-canonical counterparts — same throws, same non-mutating/mutating split, same return types.
-`meta` exists purely as a shorter, more conversational spelling for the same three calls.
-The bulk setter overload mirrors [`inject()`](inject.md): if you already know several
+`meta(key)` reads a table's declared [`TableMeta`](table_meta.md) back (the same read as
+[`table_meta(key)`](table_meta.md)), and `meta(key, value)` attaches or replaces it:
+grain, primary and candidate keys, a time field, a case-label policy, and free-text
+source/provenance/note fields. Follows this class's usual immutable/mutable pairing: the
+plain `meta(key, value)` returns a new `Nexus` with the change applied, leaving the source
+untouched; `meta_(key, value)` mutates the current handle in place and returns a reference
+to it. The bulk setter overload mirrors [`inject()`](inject.md): if you already know several
 table metadata records at once, pass them as one brace list, `std::map`, or
 `std::unordered_map` instead of chaining `.meta(...).meta(...).meta(...)`.
 
+There is no partial-update form: each call replaces the table's entire `TableMeta` with
+the value you pass. If a table already has metadata and you only want to change one field,
+read it back with `meta(key)` first, modify the copy, and pass the whole thing back.
+
 ## Parameters
 
-See [`table_meta()`](table_meta.md) and [`set_table_meta()`](set_table_meta.md) for the
-full parameter documentation — identical here.
+**key** (`std::string_view`)
+    The table to read or describe. For the setters it must already exist in the workspace;
+    an unknown key throws `"Nexus::meta: unknown table '<key>'"`. The getter returns
+    `std::nullopt` instead.
+
+**value** (`const TableMeta&`)
+    The metadata to attach, replacing anything previously declared for `key`. Accepted
+    as-is: see [`table_meta()`](table_meta.md)'s note that `TableMeta` itself is never
+    validated at attachment time.
+
+**values** (brace list of `{key, TableMeta}` pairs)
+    The bulk form: one entry per table, each applied in order with the same checks as the
+    one-table setter.
 
 ## Returns
 
-Identical to [`table_meta()`](table_meta.md) (getter overload) and
-[`set_table_meta()`](set_table_meta.md) (the two setter overloads).
+For `meta(key)`: `std::optional<TableMeta>`
+    The declared metadata, or `std::nullopt` when none is declared.
+
+For `meta(key, value)` and `meta(values)`: `Nexus`
+    A new workspace with the metadata attached; the source `Nexus` is unchanged.
+
+For `meta_(...)`: `Nexus&`
+    A reference to the same, now-mutated workspace.
 
 ## Examples
 
-Example 1. `meta(key, value)` and `meta(key)` behave exactly like their canonical
-counterparts.
+Example 1. Declare metadata with `meta(key, value)` and read it back with `meta(key)`.
 
 ```cpp
 using namespace pluss::table;
@@ -116,19 +136,70 @@ customer_id
 ordered_at
 ```
 
+Example 3. The mutating form changes the current handle in place, and setting metadata on
+an unknown table throws.
+
+```cpp
+auto mutable_biz = biz;
+mutable_biz.meta_("customers", info);
+
+std::cout << std::boolalpha << biz.has_meta("customers") << " " << mutable_biz.has_meta("customers") << "\n";
+try {
+  auto bad = biz.meta("missing", info);
+} catch (const pluss::Error& e) {
+  std::cout << e.message();
+}
+```
+
+### Output
+
+```text
+false true
+Nexus::meta: unknown table 'missing'
+```
+
+`mutable_biz` was a separate copy of `biz` before the mutating call; `biz` itself is still
+untouched.
+
+Example 4. Each call replaces the whole `TableMeta`, not just the fields you set; reading
+it back first is the way to do a partial update.
+
+```cpp
+TableMeta grain_only;
+grain_only.grain = "one row per customer";
+auto step1 = biz.meta("customers", grain_only);
+
+auto updated = *step1.meta("customers");
+updated.source = "crm_export";
+auto step2 = step1.meta("customers", updated);
+
+std::cout << std::boolalpha << step1.meta("customers")->source.has_value() << " "
+          << step2.meta("customers")->source.has_value();
+```
+
+### Output
+
+```text
+false true
+```
+
+`step1`'s `TableMeta` never had `source` set, so it's still absent there; `step2` carries
+the merged copy built by reading `step1`'s metadata first.
+
 ## Notes
 
-- Purely a naming alternative — see [`table_meta()`](table_meta.md) and
-  [`set_table_meta()`](set_table_meta.md) for the full documentation, including throw
-  conditions and the read-modify-write pattern for partial updates.
-- The bulk setter is still validated one table at a time. An unknown key throws the same
-  `"Nexus::set_table_meta: unknown table '<name>'"` error you would get from the
-  one-table form.
+- No partial-update form exists: every call replaces the table's entire `TableMeta`. See
+  Example 4 for the read-modify-write pattern.
+- An unknown `key` throws from the setters (and from each entry of the bulk form, one table
+  at a time); `TableMeta` field values themselves are never validated at attachment time.
+- [`table_meta(key)`](table_meta.md) is an exact alias for the getter overload.
 
 ## See Also
 
-- [`Nexus::table_meta`](table_meta.md): the canonical getter this aliases.
-- [`Nexus::set_table_meta`](set_table_meta.md): the canonical setter pair this aliases.
+- [`Nexus::table_meta`](table_meta.md): the explicitly-named getter, including the full
+  `TableMeta` field list.
+- [`Nexus::has_meta`](has_meta.md): check presence without unwrapping an `std::optional`.
+- [`Nexus::grain_audit`](grain_audit.md): the primary consumer of a declared `primary_key`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="materialize.html">

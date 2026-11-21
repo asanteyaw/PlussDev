@@ -398,6 +398,7 @@ window.PLUSS_API_NAV = {
     "methods": [
       "arange",
       "bernoulli",
+      "choose",
       "complex",
       "empty",
       "empty_like",
@@ -423,7 +424,6 @@ window.PLUSS_API_NAV = {
       "randn",
       "randn_like",
       "randperm",
-      "select",
       "undefined",
       "zeros",
       "zeros_like"
@@ -929,9 +929,9 @@ window.PLUSS_API_NAV = {
     "slug": "note_factory",
     "landing": "note_factory_api_reference.html",
     "methods": [
-      "arange", "bytes", "empty", "empty_bytes_like", "empty_like", "format",
+      "arange", "bytes", "choose", "empty", "empty_bytes_like", "empty_like", "format",
       "from_lines", "from_words", "full", "full_bytes_like", "full_like",
-      "make", "perm", "print", "rand", "rand_between", "rep", "select",
+      "make", "perm", "print", "rand", "rand_between", "rep",
       "unpack"
     ]
   },
@@ -948,9 +948,9 @@ window.PLUSS_API_NAV = {
     "slug": "timeline_factory",
     "landing": "timeline_factory_api_reference.html",
     "methods": [
-      "arange", "date", "date_range", "epoch", "format", "from_epoch",
+      "arange", "choose", "date", "date_range", "epoch", "format", "from_epoch",
       "full", "full_like", "make", "make_timeline", "moment", "now", "print",
-      "rand_between", "random", "select", "time", "today", "unite"
+      "rand_between", "random", "time", "today", "unite"
     ]
   },
   "Timeline": {

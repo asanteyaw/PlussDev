@@ -83,9 +83,9 @@ std::cout << (oss.str() == biz.to_string());
   printing it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="set_table_meta.html">
+  <a class="prev-link" href="select.html">
     <span class="label">Previous</span>
-    <span class="title">set_table_meta</span>
+    <span class="title">select</span>
   </a>
   <a class="next-link" href="size.html">
     <span class="label">Next</span>

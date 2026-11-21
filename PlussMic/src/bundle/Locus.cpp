@@ -651,7 +651,7 @@ Nexus build_nexus(const detail::LocusImpl& src, const TabelizePolicy& policy) {
   for (std::size_t i = 0; i < src.keys_.size(); ++i) tables.emplace_back(src.keys_[i], std::move(frames[i]));
   Nexus out(std::move(tables));
   for (const auto& rel : src.relationships_) out.add_relationship_(rel);
-  for (const auto& [name, meta] : src.table_meta_) out.set_table_meta_(name, meta);
+  for (const auto& [name, meta] : src.table_meta_) out.meta_(name, meta);
   for (const auto& [name, plan] : src.plans_) out.store_(name, plan);
   return out;
 }
@@ -660,7 +660,7 @@ Catalog kindled(const DataFrame& frame) { return frame.kindelize(); }
 
 }  // namespace
 
-std::pair<std::int64_t, std::int64_t> Locus::alignment_cache_stats() const {
+std::pair<std::int64_t, std::int64_t> Locus::cache_stats() const {
   auto& cache = *impl_ref_().frame_cache_;
   std::lock_guard<std::mutex> lock(cache.mutex);
   return {cache.hits, cache.misses};
@@ -700,7 +700,7 @@ Locus Locus::from_nexus(const Nexus& nexus) {
   Locus out(std::move(catalogs));
   for (const auto& rel : nexus.relationships()) out.link_(rel);
   for (const auto& key : nexus.keys()) {
-    if (const auto meta = nexus.table_meta(key); meta.has_value()) out.set_table_meta_(key, *meta);
+    if (const auto meta = nexus.table_meta(key); meta.has_value()) out.meta_(key, *meta);
   }
   for (const auto& name : nexus.stores()) out.store_(name, *nexus.store(name));
   return out;
@@ -929,7 +929,7 @@ Locus Locus::flow(const std::function<Locus(const Locus&)>& fn) const {
 
 // -- table metadata ---------------------------------------------------------
 
-bool Locus::has_table_meta(std::string_view name) const {
+bool Locus::has_meta(std::string_view name) const {
   return impl_ref_().table_meta_.count(std::string(name)) != 0;
 }
 
@@ -940,23 +940,21 @@ std::optional<locus::TableMeta> Locus::table_meta(std::string_view name) const {
   return it->second;
 }
 
-Locus& Locus::set_table_meta_(std::string_view name, const locus::TableMeta& meta) {
+Locus& Locus::meta_(std::string_view name, const locus::TableMeta& value) {
   auto& impl = impl_mut_();
   PLUSS_CHECK(impl.name_to_pos_.count(std::string(name)) != 0,
-              "Locus::set_table_meta: unknown catalog '" + std::string(name) + "'");
-  impl.table_meta_[std::string(name)] = meta;
+              "Locus::meta: unknown catalog '" + std::string(name) + "'");
+  impl.table_meta_[std::string(name)] = value;
   return *this;
 }
 
-Locus Locus::set_table_meta(std::string_view name, const locus::TableMeta& meta) const {
+Locus Locus::meta(std::string_view name, const locus::TableMeta& value) const {
   auto out = clone_();
-  out.set_table_meta_(name, meta);
+  out.meta_(name, value);
   return out;
 }
 
 std::optional<locus::TableMeta> Locus::meta(std::string_view name) const { return table_meta(name); }
-Locus Locus::meta(std::string_view name, const locus::TableMeta& value) const { return set_table_meta(name, value); }
-Locus& Locus::meta_(std::string_view name, const locus::TableMeta& value) { return set_table_meta_(name, value); }
 
 // -- relationships (aliases) -------------------------------------------------
 
@@ -1182,7 +1180,7 @@ Locus Locus::read(std::string_view directory, const locus::StoreOptions& options
         name, Catalog::load_streams((root / tables_dir / safe_catalog_dir(name, static_cast<std::size_t>(i))).string()));
   }
   Locus out(std::move(catalogs));
-  for (const auto& [table, meta] : bundle::store::parse_meta_frame(schema)) out.set_table_meta_(table, meta);
+  for (const auto& [table, meta] : bundle::store::parse_meta_frame(schema)) out.meta_(table, meta);
   for (const auto& rel : bundle::store::parse_graph_frame(
            snap::load_snapshot_csv((root / snap::note_cell(manifest, "graph", 0)).string()))) {
     out.link_(rel);

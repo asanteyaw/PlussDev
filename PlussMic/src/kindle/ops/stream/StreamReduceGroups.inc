@@ -17,7 +17,7 @@ Stream Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64
   const std::int64_t n = size();
   const auto groups = static_cast<std::int64_t>(offsets.size()) - 1;
   const std::vector<bool> validity =
-      detail::has_validity_mask(*this) ? detail::validity_mask(*this)->host<bool>() : std::vector<bool>{};
+      detail::has_mask(*this) ? detail::validity_mask(*this)->host<bool>() : std::vector<bool>{};
 
   std::vector<double> numbers;
   std::vector<std::int64_t> times;
@@ -138,7 +138,7 @@ Stream Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64
   Stream out(pluss::make_series(value, {groups}));
   if (std::find(ok.begin(), ok.end(), std::uint8_t{0}) != ok.end()) {
     std::vector<double> mask(ok.begin(), ok.end());
-    out = detail::with_validity_mask(out, pluss::make_series(mask, {groups}).to(pluss::codem::ScalarType::Bool));
+    out = detail::with_mask(out, pluss::make_series(mask, {groups}).to(pluss::codem::ScalarType::Bool));
   }
   return out;
 }

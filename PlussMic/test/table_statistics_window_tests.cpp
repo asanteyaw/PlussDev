@@ -428,7 +428,7 @@ void test_statistics() {
   expect(filled_by_case.as_series().host<double>() ==
              std::vector<double>({20.0, 10.0, 0.0}),
          "Shelf::align(Caselbl, fill) should fill missing values");
-  expect(!pluss::table::detail::has_validity_mask(filled_by_case),
+  expect(!pluss::table::detail::has_mask(filled_by_case),
          "Shelf::align(Caselbl, fill) should clear validity mask after filling");
 
   const auto feature_shelf = Shelf(pluss::make_series(std::vector<double>{1.5, 2.5}))

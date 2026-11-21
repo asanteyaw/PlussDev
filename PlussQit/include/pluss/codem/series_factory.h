@@ -994,11 +994,11 @@ namespace pluss::series {
     return pluss::codem::print(os, s, opt);
   }
 
-  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+  inline pluss::Series choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                               pluss::msharp::RangeView::Of<pluss::Series> choices,
                               const pluss::Series& default_value) {
     return pluss::detail::select_core::fold_select(
-        "pluss::series::select",
+        "pluss::series::choose",
         conditions,
         choices,
         default_value,
@@ -1011,11 +1011,11 @@ namespace pluss::series {
         });
   }
 
-  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+  inline pluss::Series choose(std::initializer_list<pluss::Series> conditions,
                               std::initializer_list<pluss::Series> choices,
                               const pluss::Series& default_value) {
     return pluss::detail::select_core::select_init(
-        "pluss::series::select",
+        "pluss::series::choose",
         conditions,
         choices,
         default_value,
@@ -1023,15 +1023,15 @@ namespace pluss::series {
            pluss::msharp::RangeView::Of<pluss::Series> conds,
            pluss::msharp::RangeView::Of<pluss::Series> picks,
            const pluss::Series& fallback) {
-          return select(conds, picks, fallback);
+          return choose(conds, picks, fallback);
         });
   }
 
-  inline pluss::Series select(const pluss::Series& conditions,
+  inline pluss::Series choose(const pluss::Series& conditions,
                               const pluss::Series& choices,
                               const pluss::Series& default_value) {
     return pluss::detail::select_core::select_scalar(
-        "pluss::series::select",
+        "pluss::series::choose",
         conditions,
         choices,
         default_value,
@@ -1039,26 +1039,26 @@ namespace pluss::series {
            pluss::msharp::RangeView::Of<pluss::Series> conds,
            pluss::msharp::RangeView::Of<pluss::Series> picks,
            const pluss::Series& fallback) {
-          return select(conds, picks, fallback);
+          return choose(conds, picks, fallback);
         });
   }
 
   template <pluss::codem::SeriesScalar T>
-  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+  inline pluss::Series choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                               pluss::msharp::RangeView::Of<pluss::Series> choices,
                               T default_value) {
-    PLUSS_CHECK(!choices.empty(), "pluss::series::select: at least one choice is required");
-    return select(
+    PLUSS_CHECK(!choices.empty(), "pluss::series::choose: at least one choice is required");
+    return choose(
         conditions,
         choices,
         pluss::codem::make_scalar_like(choices[0], static_cast<double>(default_value)));
   }
 
-  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+  inline pluss::Series choose(pluss::msharp::RangeView::Of<pluss::Series> conditions,
                               pluss::msharp::RangeView::Of<pluss::Series> choices,
                               bool default_value) {
-    PLUSS_CHECK(!choices.empty(), "pluss::series::select: at least one choice is required");
-    return select(
+    PLUSS_CHECK(!choices.empty(), "pluss::series::choose: at least one choice is required");
+    return choose(
         conditions,
         choices,
         pluss::Series::full(
@@ -1069,29 +1069,29 @@ namespace pluss::series {
   }
 
   template <pluss::codem::SeriesScalar T>
-  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+  inline pluss::Series choose(std::initializer_list<pluss::Series> conditions,
                               std::initializer_list<pluss::Series> choices,
                               T default_value) {
-    return select(
+    return choose(
         pluss::msharp::RangeView::Of<pluss::Series>(conditions),
         pluss::msharp::RangeView::Of<pluss::Series>(choices),
         default_value);
   }
 
   template <pluss::codem::SeriesScalar T>
-  inline pluss::Series select(pluss::Series conditions,
+  inline pluss::Series choose(pluss::Series conditions,
                               pluss::Series choices,
                               T default_value) {
-    return select(
+    return choose(
         pluss::msharp::RangeView::Of<pluss::Series>({conditions}),
         pluss::msharp::RangeView::Of<pluss::Series>({choices}),
         default_value);
   }
 
-  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+  inline pluss::Series choose(std::initializer_list<pluss::Series> conditions,
                               std::initializer_list<pluss::Series> choices,
                               bool default_value) {
-    return select(
+    return choose(
         pluss::msharp::RangeView::Of<pluss::Series>(conditions),
         pluss::msharp::RangeView::Of<pluss::Series>(choices),
         default_value);

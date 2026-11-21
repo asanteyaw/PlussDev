@@ -16,7 +16,7 @@ int main() {
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
   cm.source = "crm export 2026-11-13";
-  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).set_table_meta("customers", cm).set_table_meta("orders", om)
+  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).meta("customers", cm).meta("orders", om)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany});
   std::cout << "before: " << workspace.ntables() << " tables, " << workspace.nrelationships() << " relationship(s)\n";
 

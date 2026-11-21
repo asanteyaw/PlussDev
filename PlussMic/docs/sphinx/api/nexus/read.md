@@ -58,7 +58,7 @@ auto biz = Nexus({
 TableMeta customers_meta;
 customers_meta.grain = "one row per customer";
 customers_meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", customers_meta);
+auto tagged = biz.meta("customers", customers_meta);
 
 Relationship rel;
 rel.name = "orders_to_customers";
@@ -75,7 +75,7 @@ linked.save("/tmp/nexus_biz_store", options);
 auto loaded = Nexus::read("/tmp/nexus_biz_store", options);
 
 std::cout << loaded.ntables() << " " << loaded.nrelationships() << "\n";
-std::cout << std::boolalpha << loaded.has_table_meta("customers") << " "
+std::cout << std::boolalpha << loaded.has_meta("customers") << " "
           << *loaded.table_meta("customers")->grain;
 ```
 

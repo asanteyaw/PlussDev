@@ -163,7 +163,7 @@ pluss::Series shelf_to_numeric_series(const Shelf& t, std::string_view where, st
   }
 
   auto values = numeric_shelf.as_series().to(pluss::codem::ScalarType::Float64);
-  if (detail::has_validity_mask(numeric_shelf)) {
+  if (detail::has_mask(numeric_shelf)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),

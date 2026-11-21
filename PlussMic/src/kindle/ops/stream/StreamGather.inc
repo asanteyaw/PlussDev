@@ -23,7 +23,7 @@ Stream Stream::gather(const std::vector<std::int64_t>& source, std::int64_t shif
     // Nothing to take from: an all-null float stream of the right length.
     std::vector<double> zeros(static_cast<std::size_t>(out_len), 0.0);
     std::vector<double> none(static_cast<std::size_t>(out_len), 0.0);
-    return detail::with_validity_mask(
+    return detail::with_mask(
         Stream(pluss::make_series(zeros, {out_len})),
         pluss::make_series(none, {out_len}).to(pluss::codem::ScalarType::Bool));
   }
@@ -45,13 +45,13 @@ Stream Stream::gather(const std::vector<std::int64_t>& source, std::int64_t shif
   if (all_present) return out;
 
   // Combine with whatever nullness the taken values already carry.
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     const auto existing = detail::validity_mask(out)->host<bool>();
     for (std::size_t p = 0; p < present.size(); ++p) {
       if (!existing[p]) present[p] = 0.0;
     }
   }
-  return detail::with_validity_mask(
+  return detail::with_mask(
       out, pluss::make_series(present, {out_len}).to(pluss::codem::ScalarType::Bool));
 }
 

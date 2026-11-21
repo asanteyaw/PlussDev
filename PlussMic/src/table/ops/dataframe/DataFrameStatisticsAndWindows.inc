@@ -134,7 +134,7 @@ Shelf pad_modes_(const Shelf& source, std::int64_t size) {
     if (output_valid.platform() != platform) {
       output_valid = output_valid.to(platform);
     }
-    return detail::with_validity_mask(output, output_valid);
+    return detail::with_mask(output, output_valid);
   }
   std::vector<std::string> padded;
   padded.reserve(static_cast<std::size_t>(size));

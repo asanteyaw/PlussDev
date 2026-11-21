@@ -616,7 +616,7 @@ std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
 }
 
 bool row_is_valid(const Shelf& shelf, std::int64_t row) {
-  if (detail::has_validity_mask(shelf) &&
+  if (detail::has_mask(shelf) &&
       !detail::validity_mask(shelf)->host<bool>()[static_cast<std::size_t>(row)]) {
     return false;
   }

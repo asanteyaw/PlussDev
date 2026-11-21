@@ -18,8 +18,8 @@ int main() {
   customer_meta.primary_key = {"customer_id"};
   order_meta.primary_key = {"order_id"};
   auto workspace = Nexus({{"customers", customers}, {"orders", orders}})
-                       .set_table_meta("customers", customer_meta)
-                       .set_table_meta("orders", order_meta)
+                       .meta("customers", customer_meta)
+                       .meta("orders", order_meta)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = pluss::relational::RelationshipCardinality::OneToMany});
   std::cout << workspace.summary().to_string() << "\n";
 

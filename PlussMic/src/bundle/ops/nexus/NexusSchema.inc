@@ -1,4 +1,4 @@
-bool Nexus::has_table_meta(std::string_view key) const {
+bool Nexus::has_meta(std::string_view key) const {
   const auto& src = impl_ref_();
   return src.table_meta_.find(std::string(key)) != src.table_meta_.end();
 }
@@ -12,16 +12,16 @@ std::optional<TableMeta> Nexus::table_meta(std::string_view key) const {
   return it->second;
 }
 
-Nexus Nexus::set_table_meta(std::string_view key, const TableMeta& meta) const {
+Nexus Nexus::meta(std::string_view key, const TableMeta& value) const {
   auto out = *this;
-  out.set_table_meta_(key, meta);
+  out.meta_(key, value);
   return out;
 }
 
-Nexus& Nexus::set_table_meta_(std::string_view key, const TableMeta& meta) {
+Nexus& Nexus::meta_(std::string_view key, const TableMeta& value) {
   auto& dst = mut_impl_();
-  require_known_table(dst, key, "Nexus::set_table_meta");
-  dst.table_meta_[std::string(key)] = meta;
+  require_known_table(dst, key, "Nexus::meta");
+  dst.table_meta_[std::string(key)] = value;
   invalidate_nexus_runtime(dst);
   return *this;
 }

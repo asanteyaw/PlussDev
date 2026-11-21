@@ -61,7 +61,7 @@ changed data changes fingerprint: true
 
 ## See Also
 
-- [`alignment_cache_stats`](alignment_cache_stats.md): a different kind of
+- [`cache_stats`](cache_stats.md): a different kind of
   fingerprint (per-catalog, for cache keys) used internally for alignment
   reuse.
 

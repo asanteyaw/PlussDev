@@ -32,8 +32,7 @@ name/`DataFrame` pairs); there is no dedicated constructor page, the same as
 
 The sidebar lists methods alphabetically. You can also use the search box to jump
 directly to a method name. Several names are exact aliases of a canonical method
-(`names`↔`keys`, `links`↔`relationships`/`add_relationship`, `meta`↔`table_meta`/
-`set_table_meta`, `duplicates`↔`detect_duplicates`, `check`↔`validate_relationship`,
+(`names`↔`keys`, `links`↔`relationships`/`add_relationship`, `meta`↔`table_meta`, `duplicates`↔`detect_duplicates`, `check`↔`validate_relationship`,
 `orphans`↔`detect_orphans`, `audit`↔`relationship_audit`) — each alias has its own short
 page pointing back to the canonical one.
 
@@ -100,9 +99,9 @@ api/nexus/get
 api/nexus/grain_audit
 api/nexus/graph
 api/nexus/has
+api/nexus/has_meta
 api/nexus/has_relationship
 api/nexus/has_store
-api/nexus/has_table_meta
 api/nexus/head
 api/nexus/inject
 api/nexus/invalid
@@ -141,7 +140,6 @@ api/nexus/save
 api/nexus/scan
 api/nexus/schema
 api/nexus/select
-api/nexus/set_table_meta
 api/nexus/show
 api/nexus/size
 api/nexus/store

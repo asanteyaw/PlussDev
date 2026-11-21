@@ -143,7 +143,7 @@ TEST_CASE("timeline final factories enforce sampling selection and joining contr
 
   const auto early = pluss::make_series({true, true, false, false});
   const auto late = pluss::make_series({false, true, true, false});
-  const auto selected = pluss::timeline::select(
+  const auto selected = pluss::timeline::choose(
       {early, late},
       {pluss::timeline::date("2024-01-10"),
        pluss::timeline::date("2024-01-20")},
@@ -151,7 +151,7 @@ TEST_CASE("timeline final factories enforce sampling selection and joining contr
   REQUIRE(selected.strftime("%F").vector() == std::vector<std::string_view>({
       "2024-01-10", "2024-01-10", "2024-01-20", "2024-01-31"}));
 
-  const auto broadcast_selected = pluss::timeline::select(
+  const auto broadcast_selected = pluss::timeline::choose(
       pluss::make_series({{true, false}, {false, true}}),
       pluss::timeline::date({"2024-01-10", "2024-01-20"}),
       pluss::timeline::date("2024-01-31"));
@@ -159,7 +159,7 @@ TEST_CASE("timeline final factories enforce sampling selection and joining contr
   REQUIRE(broadcast_selected.strftime("%F").vector() ==
           std::vector<std::string_view>({
               "2024-01-10", "2024-01-31", "2024-01-31", "2024-01-20"}));
-  REQUIRE_THROWS(pluss::timeline::select(
+  REQUIRE_THROWS(pluss::timeline::choose(
       pluss::make_series({true, false}),
       pluss::timeline::date("2024-01-10").tz_convert("America/Edmonton"),
       pluss::timeline::date("2024-01-31")));

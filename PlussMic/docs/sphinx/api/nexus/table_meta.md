@@ -43,11 +43,11 @@ one point once it's set to anything other than `Unknown`. `source`/`provenance`/
 free-text bookkeeping fields with no behavioral effect anywhere in `Nexus`.
 
 ```{note} TableMeta itself never validates anything
-Attaching a `TableMeta` (via `set_table_meta()`/`meta()`) does not check that
+Attaching a `TableMeta` (via `meta()`) does not check that
 `primary_key` names a real feature, that `grain` is non-empty, or anything else about
 the declared values — `TableMeta` is inert data. Validation happens later, when something
 else reads it: [`grain_audit()`](grain_audit.md) throws if a feature named in
-`primary_key` doesn't exist on the table, but `set_table_meta()` itself accepts any
+`primary_key` doesn't exist on the table, but `meta()` itself accepts any
 `TableMeta` you hand it.
 ```
 
@@ -62,7 +62,7 @@ Unlike most other lookups on `Nexus` (`frame()`, `apply()`, and friends, which t
 `"unknown key '<key>'"`), `table_meta()` treats "table doesn't exist" and "table exists
 but has no metadata" identically — both return `std::nullopt`. If you need to distinguish
 the two, check [`has()`](has.md) (table existence) separately from
-[`has_table_meta()`](has_table_meta.md) (metadata presence).
+[`has_meta()`](has_meta.md) (metadata presence).
 ```
 
 ## Returns
@@ -103,7 +103,7 @@ meta.grain = "one row per customer";
 meta.primary_key = {"customer_id"};
 meta.source = "crm_export";
 
-auto tagged = biz.set_table_meta("customers", meta);
+auto tagged = biz.meta("customers", meta);
 auto fetched = tagged.table_meta("customers");
 
 std::cout << std::boolalpha << fetched.has_value() << "\n";
@@ -138,15 +138,15 @@ false
 
 - Returns `std::nullopt` both for "table has no metadata" and "table doesn't exist" — see
   the important callout above.
-- `TableMeta` itself is inert; nothing in `set_table_meta()`/`table_meta()` validates its
+- `TableMeta` itself is inert; nothing in `meta()`/`table_meta()` validates its
   contents — see the note above.
-- [`meta(key)`](meta.md) is an exact alias for this same getter.
+- [`meta(key)`](meta.md) is an exact alias for this same getter, and is also the setter's name.
 
 ## See Also
 
-- [`Nexus::has_table_meta`](has_table_meta.md): check presence without unwrapping the
+- [`Nexus::has_meta`](has_meta.md): check presence without unwrapping the
   `std::optional`.
-- [`Nexus::set_table_meta`](set_table_meta.md): attach or replace a table's metadata.
+- [`Nexus::meta`](meta.md): attach or replace a table's metadata.
 - [`Nexus::grain_audit`](grain_audit.md): the primary consumer of a declared
   `primary_key`/`candidate_keys`.
 - [`Nexus::pull`](pull.md): windowed aggregates consume a declared `time_field`.

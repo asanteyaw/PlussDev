@@ -122,7 +122,7 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
 }
 
 bool shelf_value_is_missing_for_io(const pluss::table::Shelf& t, std::int64_t row) {
-  if (pluss::table::detail::has_validity_mask(t)) {
+  if (pluss::table::detail::has_mask(t)) {
     const auto valid = pluss::table::detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;

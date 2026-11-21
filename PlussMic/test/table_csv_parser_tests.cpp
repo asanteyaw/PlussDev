@@ -140,7 +140,7 @@ void test_comma_fixture_load_and_cases() {
          "comma fixture: Updated Time should parse as Timeline");
 
   const auto agency_project = df.features("Agency Project ID");
-  expect(pluss::table::detail::has_validity_mask(agency_project), "comma fixture: Agency Project ID should carry null mask");
+  expect(pluss::table::detail::has_mask(agency_project), "comma fixture: Agency Project ID should carry null mask");
 
   const auto idx = df.labels().values().as_series().host<std::int64_t>();
   expect(!idx.empty(), "comma fixture: cases unexpectedly empty");
@@ -484,7 +484,7 @@ void test_bad_line_policy_and_locale_numeric_parsing() {
   expect(flag.scalar_type() == pluss::codem::ScalarType::Bool, "flag should infer Bool dtype");
 
   const auto amount = df.features("amount");
-  expect(pluss::table::detail::has_validity_mask(amount), "amount should have null mask due missing value");
+  expect(pluss::table::detail::has_mask(amount), "amount should have null mask due missing value");
   const auto amount_values = amount.as_series().host<double>();
   const auto amount_valid = pluss::table::detail::validity_mask(amount)->host<bool>();
 
@@ -495,7 +495,7 @@ void test_bad_line_policy_and_locale_numeric_parsing() {
   expect(std::fabs(amount_values[3] - 3500.75) < 1e-9, "amount row3 parse mismatch");
 
   const auto when = df.features("when");
-  expect(pluss::table::detail::has_validity_mask(when), "when should carry null mask for empty datetime");
+  expect(pluss::table::detail::has_mask(when), "when should carry null mask for empty datetime");
 
   const auto text = df.features("text").as_note();
   expect(text.at(0) == "hello;world", "quoted delimiter should stay inside text field");
@@ -611,7 +611,7 @@ void test_html_display_renderers_and_backend_config() {
   expect(inhouse_html == html,
          "native WebKit and the in-house renderer should receive identical table HTML");
 
-  const auto info_html = pluss::table::display::render_info_html(df, opts);
+  const auto info_html = pluss::table::display::info_html(df, opts);
   expect(info_html.find("Feature inventory") != std::string::npos, "info html should include feature inventory");
   expect(info_html.find("Null Case Rows") != std::string::npos, "info html should include summary cards");
   expect(info_html.find("pluss::table::DataFrame") != std::string::npos, "info html should include class name");
@@ -760,7 +760,7 @@ void test_dataframe_cast_accessor_surface() {
   expect(temporal.features("opened_at").kind() == ShelfKind::Timeline
              && temporal.features("closed_at").kind() == ShelfKind::Timeline,
          "cast accessor timeline() should cast every bound feature to Timeline");
-  expect(pluss::table::detail::has_validity_mask(temporal.features("opened_at"))
+  expect(pluss::table::detail::has_mask(temporal.features("opened_at"))
              && !pluss::table::detail::validity_mask(temporal.features("opened_at"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast accessor timeline() should honor invalid=Null on unparseable text");
 
@@ -769,7 +769,7 @@ void test_dataframe_cast_accessor_surface() {
   const auto amounts = raw.features({"amount_text"}).cast(series_options).series();
   expect(amounts.nfeatures() == 1 && amounts.features("amount_text").kind() == ShelfKind::Series,
          "features(...).cast(options).series() should cast the selected Note feature to Series");
-  expect(pluss::table::detail::has_validity_mask(amounts.features("amount_text"))
+  expect(pluss::table::detail::has_mask(amounts.features("amount_text"))
              && !pluss::table::detail::validity_mask(amounts.features("amount_text"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast accessor series() should preserve parse-failure nulls from Note -> Series conversion");
 
@@ -1112,7 +1112,7 @@ void test_json_loader_entrypoints() {
   expect(df.features("id").kind() == ShelfKind::Series, "json loader: id should infer Series");
   expect(df.features("city").kind() == ShelfKind::Note, "json loader: city should infer Note");
   expect(df.features("when").kind() == ShelfKind::Timeline, "json loader: when should infer Timeline");
-  expect(pluss::table::detail::has_validity_mask(df.features("score")), "json loader: score should carry validity mask");
+  expect(pluss::table::detail::has_mask(df.features("score")), "json loader: score should carry validity mask");
 
   const auto two_rows = DataFrame::load("json", json_path.string(), {{"ncases", 2}});
   expect(two_rows.ncases() == 2, "DataFrame::load(json, nrows) should honor nrows");
@@ -2065,7 +2065,7 @@ void test_versatile_dataframe_families() {
              && std::string(unified_left.features("OrgDefinedId").as_note().at(1)) == "20"
              && std::string(unified_left.features("OrgDefinedId").as_note().at(2)) == "30",
          "unify(left) should preserve left row order");
-  expect(pluss::table::detail::has_validity_mask(unified_left.features("Final Points Grade")),
+  expect(pluss::table::detail::has_mask(unified_left.features("Final Points Grade")),
          "unify(left) should mark unmatched right payload rows as invalid");
   expect(pluss::table::detail::validity_mask(unified_left.features("Final Points Grade"))->host<bool>()
              == std::vector<bool>({false, true, true}),
@@ -2493,7 +2493,7 @@ void test_versatile_dataframe_families() {
          "Shelf comparison operators should produce Shelf outputs");
 
   const auto age_shifted = age_shelf.shift(1);
-  expect(pluss::table::detail::has_validity_mask(age_shifted), "Shelf::shift should null-pad shifted edge");
+  expect(pluss::table::detail::has_mask(age_shifted), "Shelf::shift should null-pad shifted edge");
   const auto age_shifted_valid = pluss::table::detail::validity_mask(age_shifted)->host<bool>();
   expect(!age_shifted_valid.front(),
          "Shelf::shift(periods=1) should set first row null");
@@ -2645,7 +2645,7 @@ void test_versatile_dataframe_families() {
   const auto shifted_age = df.features({"age"}).shift(1);
   expect(shifted_age.ncases() == df.ncases() && shifted_age.nfeatures() == 1,
          "features(...).shift(periods) should preserve case count and selected feature count");
-  expect(pluss::table::detail::has_validity_mask(shifted_age.features("age")),
+  expect(pluss::table::detail::has_mask(shifted_age.features("age")),
          "shift should introduce null validity at shifted edge");
   const auto shifted_age_valid = pluss::table::detail::validity_mask(shifted_age.features("age"))->host<bool>();
   const auto shifted_age_values = shifted_age.features("age").as_series().host<std::int64_t>();
@@ -2654,7 +2654,7 @@ void test_versatile_dataframe_families() {
          "shift(periods=1) should move values down and mark first row null");
 
   const auto shifted_job_lead = df.features({"job"}).shift(-1);
-  expect(pluss::table::detail::has_validity_mask(shifted_job_lead.features("job")),
+  expect(pluss::table::detail::has_mask(shifted_job_lead.features("job")),
          "shift with negative periods should null-pad tail rows");
   const auto shifted_job_valid = pluss::table::detail::validity_mask(shifted_job_lead.features("job"))->host<bool>();
   expect(!shifted_job_valid.back(),
@@ -3072,7 +3072,7 @@ void test_versatile_dataframe_families() {
   expect(miss_filled.features("score").as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({10, 0, 30, 0}),
          "fillnull(value, features) should preserve selected numeric non-null values");
-  expect(!pluss::table::detail::has_validity_mask(miss_filled.features("score")),
+  expect(!pluss::table::detail::has_mask(miss_filled.features("score")),
          "fillnull(value, features) should clear numeric validity mask when all nulls are filled");
   expect(std::string(miss_filled.features("label").as_note().at(1)) == std::string(miss.features("label").as_note().at(1)),
          "missing(fill) on selected features should not mutate unselected features");
@@ -3080,7 +3080,7 @@ void test_versatile_dataframe_families() {
   const auto miss_note_filled = miss.fillnull("missing", {"label"});
   expect(std::string(miss_note_filled.features("label").as_note().at(1)) == "missing",
          "fillnull(string, features) should replace null Note values");
-  expect(!pluss::table::detail::has_validity_mask(miss_note_filled.features("label")),
+  expect(!pluss::table::detail::has_mask(miss_note_filled.features("label")),
          "fillnull(string, features) should clear Note validity mask when all nulls are filled");
 
   auto validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
@@ -3117,9 +3117,9 @@ void test_versatile_dataframe_families() {
   const auto ts_fill_tick = ts_fill.ticks()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "fillnull(Timeline, features) should replace null Timeline values");
-  expect(!pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ts")),
+  expect(!pluss::table::detail::has_mask(mixed_ts_filled.features("ts")),
          "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
-  expect(pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ti")),
+  expect(pluss::table::detail::has_mask(mixed_ts_filled.features("ti")),
          "fillnull(Timeline, features) should not mutate unselected Timeline features");
 
   const auto ti_fill = pluss::make_timeline("2024-02-01T00:00:00Z");
@@ -3128,7 +3128,7 @@ void test_versatile_dataframe_families() {
   const auto ti_fill_tick = ti_fill.ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "fillnull(Timeline, features) should replace null Timeline values");
-  expect(!pluss::table::detail::has_validity_mask(mixed_ti_filled.features("ti")),
+  expect(!pluss::table::detail::has_mask(mixed_ti_filled.features("ti")),
          "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
 
   const auto miss_ffill = miss.ffill();
@@ -3140,7 +3140,7 @@ void test_versatile_dataframe_families() {
   const auto miss_bfill = miss.bfill();
   expect(miss_bfill.features("score").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(1)) == 30,
          "bfill should propagate next numeric value");
-  expect(pluss::table::detail::has_validity_mask(miss_bfill.features("score")),
+  expect(pluss::table::detail::has_mask(miss_bfill.features("score")),
          "bfill should preserve trailing null when no backward source exists");
   expect(!pluss::table::detail::validity_mask(miss_bfill.features("score"))->host<bool>().array().data.at(static_cast<std::size_t>(3)),
          "bfill should keep trailing nulls unresolved");
@@ -3198,7 +3198,7 @@ void test_versatile_dataframe_families() {
   expect(pluss::table::detail::validity_mask(masked_score.features("score"))->host<bool>()
              == std::vector<bool>({true, false, true, false}),
          "mask(mask, features) should set selected cells to null while preserving unmasked values");
-  expect(!pluss::table::detail::has_validity_mask(masked_score.features("id")),
+  expect(!pluss::table::detail::has_mask(masked_score.features("id")),
          "mask(mask, features) should not mutate unselected features");
 
   const auto miss_drop_any = miss.dropnull();
@@ -3272,7 +3272,7 @@ void test_versatile_dataframe_families() {
           .series();
   expect(note_cast.features(note_feature).kind() == ShelfKind::Series,
          "cast(spec): Note -> Series should convert payload kind");
-  expect(pluss::table::detail::has_validity_mask(note_cast.features(note_feature)),
+  expect(pluss::table::detail::has_mask(note_cast.features(note_feature)),
          "cast(spec): Note -> Series should set validity mask when parse fails");
   expect(!pluss::table::detail::validity_mask(note_cast.features(note_feature))->host<bool>().array().data.at(static_cast<std::size_t>(2)),
          "cast(spec): unparsable Note value should become null");
@@ -3300,7 +3300,7 @@ void test_versatile_dataframe_families() {
          "window output should be Series-backed");
   expect(rolling_mean.features("age_roll_mean").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "window numeric outputs should be float64");
-  expect(pluss::table::detail::has_validity_mask(rolling_mean.features("age_roll_mean")),
+  expect(pluss::table::detail::has_mask(rolling_mean.features("age_roll_mean")),
          "window with min_periods > 1 should produce a validity mask");
   expect(!pluss::table::detail::validity_mask(rolling_mean.features("age_roll_mean"))->host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "window first row should be null when min_periods is not met");
@@ -3334,7 +3334,7 @@ void test_versatile_dataframe_families() {
   }},
                                        false);
   const auto score_roll_max_vals = score_roll_max.features("score_rollmax").as_series().host<double>();
-  expect(!pluss::table::detail::has_validity_mask(score_roll_max.features("score_rollmax")),
+  expect(!pluss::table::detail::has_mask(score_roll_max.features("score_rollmax")),
          "rolling max(min_periods=1) should clear mask when every output row is valid");
   expect(std::fabs(score_roll_max_vals[1] - 10.0) < 1e-9,
          "rolling max should ignore null in two-row window");
@@ -3443,7 +3443,7 @@ void test_shelf_bucketize_correctness() {
          "Shelf::bucketize should return Series-backed Shelf");
   expect(bucketed.as_series().scalar_type() == pluss::codem::ScalarType::Int64,
          "Shelf::bucketize should return Int64 labels");
-  expect(pluss::table::detail::has_validity_mask(bucketed),
+  expect(pluss::table::detail::has_mask(bucketed),
          "Shelf::bucketize should null out values outside configured bins");
 
   const auto null_count = bucketed.isnull().count().as_series().host<std::int64_t>().front();
@@ -3526,12 +3526,12 @@ void test_replace_exact_and_null_overloads() {
          "Shelf::put(mask, double) should assign into masked numeric rows");
 
   const auto numeric_nulled = numeric.replace(0.0, pluss::series::null);
-  expect(pluss::table::detail::has_validity_mask(numeric_nulled), "Shelf::replace(double, null) should create a validity mask");
+  expect(pluss::table::detail::has_mask(numeric_nulled), "Shelf::replace(double, null) should create a validity mask");
   expect(pluss::table::detail::validity_mask(numeric_nulled)->host<bool>() == std::vector<bool>({true, false, true, true}),
          "Shelf::replace(double, null) should null-mark exact numeric matches");
 
   const auto numeric_refilled = numeric_nulled.replace(pluss::series::null, 9.0);
-  expect(!pluss::table::detail::has_validity_mask(numeric_refilled), "Shelf::replace(null, double) should resolve null mask when fully filled");
+  expect(!pluss::table::detail::has_mask(numeric_refilled), "Shelf::replace(null, double) should resolve null mask when fully filled");
   expect(numeric_refilled.as_series().host<double>() == std::vector<double>({2.0, 9.0, 2.0, 4.0}),
          "Shelf::replace(null, double) should fill numeric null rows");
 
@@ -3566,7 +3566,7 @@ void test_replace_exact_and_null_overloads() {
       ts_valid);
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto timeline_refilled = timeline_shelf.replace(pluss::series::null, ts_fill);
-  expect(!pluss::table::detail::has_validity_mask(timeline_refilled),
+  expect(!pluss::table::detail::has_mask(timeline_refilled),
          "Shelf::replace(null, Timeline) should resolve timeline null rows");
   expect(timeline_refilled.as_timeline().ticks()[1] == ts_fill.ticks()[0],
          "Shelf::replace(null, Timeline) should fill timeline null rows");
@@ -3624,11 +3624,11 @@ void test_replace_exact_and_null_overloads() {
          "DataFrame::replace(Note, Note) should delegate exact Note replacement");
 
   const auto name_nulled = gradebook.replace(pluss::make_note("Kojo"), pluss::series::null, {"Name"});
-  expect(pluss::table::detail::has_validity_mask(name_nulled.features("Name"))
+  expect(pluss::table::detail::has_mask(name_nulled.features("Name"))
              && !pluss::table::detail::validity_mask(name_nulled.features("Name"))->host<bool>().array().data.at(static_cast<std::size_t>(2)),
          "DataFrame::replace(Note, null) should delegate Note nullification");
   const auto name_refilled = name_nulled.replace(pluss::series::null, pluss::make_note("Ama"), {"Name"});
-  expect(!pluss::table::detail::has_validity_mask(name_refilled.features("Name"))
+  expect(!pluss::table::detail::has_mask(name_refilled.features("Name"))
              && std::string(name_refilled.features("Name").as_note().at(2)) == "Ama",
          "DataFrame::replace(null, Note) should delegate Note filling");
   expect(name_refilled.title() == "gradebook",
@@ -3684,16 +3684,16 @@ void test_select_and_place_helpers() {
   const auto pick1 = pluss::make_series(std::vector<double>{20.0, 20.0, 20.0, 20.0});
   const auto pick2 = pluss::make_series(std::vector<double>{30.0, 30.0, 30.0, 30.0});
 
-  const auto selected = pluss::series::select({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
+  const auto selected = pluss::series::choose({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
   expect(selected.host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "pluss::series::select should choose branch values by the first matching boolean condition");
+         "pluss::series::choose should choose branch values by the first matching boolean condition");
 
   const auto shelf_selected = Shelf::select(
       {Shelf(cond0), Shelf(cond1), Shelf(cond2)},
       {Shelf(pick0), Shelf(pick1), Shelf(pick2)},
       -1.0);
   expect(shelf_selected.as_series().host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "Shelf::select should delegate multi-branch numeric selection to pluss::series::select");
+         "Shelf::select should delegate multi-branch numeric selection to pluss::series::choose");
 
   expect_throw([&]() { (void)Shelf(pluss::make_note("A+")); },
                "Shelf should reject scalar Note payloads and preserve its strict 1D contract");
@@ -3713,7 +3713,7 @@ void test_select_and_place_helpers() {
       {Shelf(cond0), Shelf(cond1), Shelf(cond2)},
       {Shelf(pick0), Shelf(pick1), Shelf(pick2)},
       pluss::series::null);
-  expect(pluss::table::detail::has_validity_mask(shelf_selected_null),
+  expect(pluss::table::detail::has_mask(shelf_selected_null),
          "Shelf::select(null) should mark unmatched rows as null");
   const auto shelf_selected_null_valid = pluss::table::detail::validity_mask(shelf_selected_null)->host<bool>();
   expect(shelf_selected_null_valid == std::vector<bool>({true, true, true, false}),
@@ -4213,9 +4213,9 @@ void test_nexus_metadata_and_relationship_graph() {
   loan_meta.provenance = "loader";
   loan_meta.note = "core lending table";
 
-  const auto with_meta = base.set_table_meta("loan", loan_meta);
-  expect(!base.has_table_meta("loan"), "Nexus non-mutating metadata set should not mutate source");
-  expect(with_meta.has_table_meta("loan"), "Nexus should retain stored metadata by table key");
+  const auto with_meta = base.meta("loan", loan_meta);
+  expect(!base.has_meta("loan"), "Nexus non-mutating metadata set should not mutate source");
+  expect(with_meta.has_meta("loan"), "Nexus should retain stored metadata by table key");
   expect(with_meta.table_meta("loan")->primary_key == std::vector<std::string>({"loan_id"}),
          "Nexus::table_meta should expose stored primary key metadata");
 
@@ -4252,7 +4252,7 @@ void test_nexus_metadata_and_relationship_graph() {
          "Nexus::rename should preserve unrelated table metadata");
 
   const auto relabeled_meta = renamed.rename("loan", "credit");
-  expect(relabeled_meta.has_table_meta("credit") && !relabeled_meta.has_table_meta("loan"),
+  expect(relabeled_meta.has_meta("credit") && !relabeled_meta.has_meta("loan"),
          "Nexus::rename should move metadata to the renamed table key");
   expect(relabeled_meta.relationship("loan_account")->left_table == "credit",
          "Nexus::rename should rewrite left_table relationship references");
@@ -4261,7 +4261,7 @@ void test_nexus_metadata_and_relationship_graph() {
   expect(subset.nrelationships() == 1 && subset.has_relationship("loan_account") &&
              !subset.has_relationship("account_disp"),
          "Nexus::select should retain only relationships whose endpoints survive");
-  expect(subset.has_table_meta("loan") && !subset.has_table_meta("disp"),
+  expect(subset.has_meta("loan") && !subset.has_meta("disp"),
          "Nexus::select should carry metadata only for retained tables");
 
   const auto dropped = graph.drop({"disp"});
@@ -4314,9 +4314,9 @@ void test_nexus_validation_and_audit_layer() {
                         {"account", account},
                         {"disp", disp},
                     })
-                      .set_table_meta("loan", loan_meta)
-                      .set_table_meta("account", account_meta)
-                      .set_table_meta("disp", disp_meta)
+                      .meta("loan", loan_meta)
+                      .meta("account", account_meta)
+                      .meta("disp", disp_meta)
                       .add_relationship(loan_account);
 
   expect(nx.validate_keys("loan"), "Nexus::validate_keys should accept a clean declared primary key");

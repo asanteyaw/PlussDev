@@ -199,7 +199,7 @@ Stream Stream::exp() const {
   return unary_stream_same_label(*this, [](const pluss::table::Shelf& t) { return t.exp(); });
 }
 
-bool Stream::has_validity_mask() const {
+bool Stream::has_mask() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return impl_ref_().validity_mask_.has_value();
 }
@@ -209,14 +209,14 @@ const std::optional<pluss::Series>& Stream::validity_mask() const {
   return impl_ref_().validity_mask_;
 }
 
-Stream Stream::with_validity_mask(const pluss::Series& mask) const {
+Stream Stream::with_mask(const pluss::Series& mask) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = *this;
-  out.with_validity_mask_(mask);
+  out.with_mask_(mask);
   return out;
 }
 
-Stream& Stream::with_validity_mask_(const pluss::Series& mask) {
+Stream& Stream::with_mask_(const pluss::Series& mask) {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto& w = mut_impl_();
   validate_mask_size(mask, w.size_);
@@ -225,14 +225,14 @@ Stream& Stream::with_validity_mask_(const pluss::Series& mask) {
   return *this;
 }
 
-Stream Stream::clear_validity_mask() const {
+Stream Stream::clear_mask() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = *this;
-  out.clear_validity_mask_();
+  out.clear_mask_();
   return out;
 }
 
-Stream& Stream::clear_validity_mask_() {
+Stream& Stream::clear_mask_() {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto& w = mut_impl_();
   w.validity_mask_.reset();

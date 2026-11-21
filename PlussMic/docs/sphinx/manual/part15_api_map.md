@@ -44,7 +44,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Compare | `compare`, `between` |
 | Cast | `cast`, `astype` |
 | Payload | `as_series`, `as_note`, `as_timeline`, `as_timeindex` |
-| Display | `show`, `with_display_labels`, `name`, `named`, `unname` |
+| Display | `show`, `with_labels`, `name`, `named`, `unname` |
 
 See [Shelf API Reference](../shelf_api_reference.md).
 

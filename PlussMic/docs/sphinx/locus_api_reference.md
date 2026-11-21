@@ -58,9 +58,8 @@ and `LocusTraverse`, `LocusQuery`, and `LocusQueryPrepared` have theirs
 - [`apply`](api/locus/apply.md) -- `apply`, `apply_`
 - [`apply_all`](api/locus/apply_all.md) -- `apply_all`
 - [`flow`](api/locus/flow.md) -- `flow`
-- [`has_table_meta`](api/locus/has_table_meta.md) -- `has_table_meta`, `table_meta`
+- [`has_meta`](api/locus/has_meta.md) -- `has_meta`, `table_meta`
 - [`meta`](api/locus/meta.md) -- `meta` (getter and setter), `meta_`
-- [`set_table_meta`](api/locus/set_table_meta.md) -- `set_table_meta`, `set_table_meta_`
 - [`link`](api/locus/link.md) -- `link` (both overloads), `add_relationship`,
   `add_relationships`, `unlink`, `has_relationship`, `relationship`, `relationships`,
   `links`, `neighbors`, `path`
@@ -69,7 +68,7 @@ and `LocusTraverse`, `LocusQuery`, and `LocusQueryPrepared` have theirs
 - [`policy`](api/locus/policy.md) -- `default_policy`, `policy`, `with_policy`,
   `with_policy_`
 - [`nexus`](api/locus/nexus.md) -- `nexus`
-- [`alignment_cache_stats`](api/locus/alignment_cache_stats.md) -- `alignment_cache_stats`
+- [`cache_stats`](api/locus/cache_stats.md) -- `cache_stats`
 - [`join`](api/locus/join.md) -- `join` (both overloads), `join_detailed`
 - [`audit_report`](api/locus/audit_report.md) -- `audit_report`
 - [`grain_audit`](api/locus/grain_audit.md) -- `grain_audit`
@@ -99,11 +98,11 @@ and `LocusTraverse`, `LocusQuery`, and `LocusQueryPrepared` have theirs
 :hidden:
 :maxdepth: 1
 
-api/locus/alignment_cache_stats
 api/locus/apply
 api/locus/apply_all
 api/locus/audit
 api/locus/audit_report
+api/locus/cache_stats
 api/locus/catalogs
 api/locus/construction
 api/locus/deduce
@@ -125,8 +124,8 @@ api/locus/flow
 api/locus/from
 api/locus/grain_audit
 api/locus/graph
+api/locus/has_meta
 api/locus/has_store
-api/locus/has_table_meta
 api/locus/head
 api/locus/inject
 api/locus/invalid
@@ -155,7 +154,6 @@ api/locus/run
 api/locus/scan
 api/locus/schema
 api/locus/select
-api/locus/set_table_meta
 api/locus/state
 api/locus/store
 api/locus/stream

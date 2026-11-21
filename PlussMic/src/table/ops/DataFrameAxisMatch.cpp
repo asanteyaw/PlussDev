@@ -69,7 +69,7 @@ pluss::Series bool_series_on(const std::vector<bool>& values,
 }
 
 std::vector<bool> shelf_validity(const Shelf& shelf) {
-  if (detail::has_validity_mask(shelf)) {
+  if (detail::has_mask(shelf)) {
     return detail::validity_mask(shelf)->host<bool>();
   }
   return std::vector<bool>(static_cast<std::size_t>(shelf.size()), true);
@@ -295,13 +295,13 @@ std::optional<pluss::Series> joined_validity(
     const Shelf& left,
   const Shelf& right,
   const pluss::codem::Platform platform) {
-  if (!detail::has_validity_mask(left) && !detail::has_validity_mask(right)) {
+  if (!detail::has_mask(left) && !detail::has_mask(right)) {
     return std::nullopt;
   }
-  auto left_mask = detail::has_validity_mask(left)
+  auto left_mask = detail::has_mask(left)
       ? *detail::validity_mask(left)
       : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
-  auto right_mask = detail::has_validity_mask(right)
+  auto right_mask = detail::has_mask(right)
       ? *detail::validity_mask(right)
       : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
   if (left_mask.platform() != platform) {
@@ -558,7 +558,7 @@ Shelf null_shelf_like(const Shelf& reference, const std::int64_t size) {
         break;
     }
   }
-  return detail::with_validity_mask(values, bool_series_on(
+  return detail::with_mask(values, bool_series_on(
       std::vector<bool>(static_cast<std::size_t>(size), false),
       shelf_platform(values)));
 }
@@ -594,14 +594,14 @@ Shelf remap_shelf(const Shelf& source, const RowMap& rows) {
 
   const auto platform = shelf_platform(out);
   auto mask = bool_series_on(present, platform);
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     auto prior = *detail::validity_mask(out);
     if (prior.platform() != platform) {
       prior = prior.to(platform);
     }
     mask = prior.logical_and(mask);
   }
-  return detail::with_validity_mask(out, mask);
+  return detail::with_mask(out, mask);
 }
 
 DataFrame remap_frame(

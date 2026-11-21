@@ -63,7 +63,7 @@ auto biz = Nexus({
 TableMeta customers_meta;
 customers_meta.grain = "one row per customer";
 customers_meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", customers_meta);
+auto tagged = biz.meta("customers", customers_meta);
 
 auto s = tagged.schema();
 std::cout << s.features({"table", "rows", "cols", "grain", "pkey"});

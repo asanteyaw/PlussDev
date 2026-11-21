@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Nexus::has_table_meta
+# Nexus::has_meta
 
 [Back to Nexus API Reference](../../nexus_api_reference)
 
 ## Signature
 
 ```cpp
-bool Nexus::has_table_meta(std::string_view key) const
+bool Nexus::has_meta(std::string_view key) const
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ relying on declared metadata: several auditing methods
 require metadata to already be declared and throw otherwise.
 
 ```{note} Checks presence, not readiness
-`has_table_meta()` only reports whether a `TableMeta` value has been attached at all —
+`has_meta()` only reports whether a `TableMeta` value has been attached at all —
 even a `TableMeta{}` with every field left at its default counts as "has metadata". It
 does not check whether the declared metadata is actually useful (for example, whether a
 primary key was ever set). If you need "does this table have a usable primary key
@@ -37,8 +37,7 @@ result yourself.
 ## Returns
 
 `bool`
-    `true` if the table has `TableMeta` declared (via [`set_table_meta()`](set_table_meta.md) or
-    [`meta()`](meta.md)), `false` if it doesn't — including for a key that doesn't exist in
+    `true` if the table has `TableMeta` declared (via [`meta()`](meta.md)), `false` if it doesn't — including for a key that doesn't exist in
     the workspace at all.
 
 ## Examples
@@ -56,7 +55,7 @@ auto customers = DataFrame({
 
 auto biz = Nexus({{"customers", customers}});
 
-std::cout << std::boolalpha << biz.has_table_meta("customers");
+std::cout << std::boolalpha << biz.has_meta("customers");
 ```
 
 ### Output
@@ -65,7 +64,7 @@ std::cout << std::boolalpha << biz.has_table_meta("customers");
 false
 ```
 
-Example 2. After declaring metadata, `has_table_meta()` reports `true` on the returned
+Example 2. After declaring metadata, `has_meta()` reports `true` on the returned
 workspace — but the original, un-tagged workspace is unaffected.
 
 ```cpp
@@ -73,9 +72,9 @@ TableMeta meta;
 meta.grain = "one row per customer";
 meta.primary_key = {"customer_id"};
 
-auto tagged = biz.set_table_meta("customers", meta);
+auto tagged = biz.meta("customers", meta);
 
-std::cout << std::boolalpha << biz.has_table_meta("customers") << " " << tagged.has_table_meta("customers");
+std::cout << std::boolalpha << biz.has_meta("customers") << " " << tagged.has_meta("customers");
 ```
 
 ### Output
@@ -87,7 +86,7 @@ false true
 Example 3. An unknown key returns `false` rather than throwing.
 
 ```cpp
-std::cout << std::boolalpha << biz.has_table_meta("missing");
+std::cout << std::boolalpha << biz.has_meta("missing");
 ```
 
 ### Output
@@ -105,17 +104,17 @@ false
 ## See Also
 
 - [`Nexus::table_meta`](table_meta.md): read the declared metadata itself.
-- [`Nexus::set_table_meta`](set_table_meta.md): attach metadata to a table.
+- [`Nexus::meta`](meta.md): attach metadata to a table.
 - [`Nexus::grain_audit`](grain_audit.md): one of several methods that requires declared
   metadata and throws when it's missing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has_store.html">
+  <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
-    <span class="title">has_store</span>
+    <span class="title">has</span>
   </a>
-  <a class="next-link" href="head.html">
+  <a class="next-link" href="has_relationship.html">
     <span class="label">Next</span>
-    <span class="title">head</span>
+    <span class="title">has_relationship</span>
   </a>
 </div>

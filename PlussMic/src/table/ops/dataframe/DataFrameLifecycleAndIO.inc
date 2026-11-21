@@ -70,7 +70,7 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
   PLUSS_CHECK(frame.nfeatures() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   const auto& names = frame.features();
   PLUSS_CHECK(names.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
-  return (*this = detail::with_display_labels(frame.features(names.front()), frame.labels().values()));
+  return (*this = detail::with_labels(frame.features(names.front()), frame.labels().values()));
 }
 
 DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names, AlignOptions options)
@@ -135,7 +135,7 @@ DataFrame::LetSlots& DataFrame::LetSlots::operator=(const DataFrame& frame) {
   const auto& names = frame.features();
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(detail::with_display_labels(frame.features(name), frame.labels().values()));
+    cols.push_back(detail::with_labels(frame.features(name), frame.labels().values()));
   }
   assign_from_shelves(std::span<const Shelf>(cols.data(), cols.size()));
   return *this;

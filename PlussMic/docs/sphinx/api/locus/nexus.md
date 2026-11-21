@@ -23,7 +23,7 @@ tabelized into a rectangular table under the given (or this `Locus`'s own)
 carried over unchanged. The result is cached: calling `nexus()` again on the
 *same* `Locus` with the *same* policy returns the cached `Nexus` directly,
 without re-aligning anything -- see
-[`alignment_cache_stats`](alignment_cache_stats.md) for the lower-level,
+[`cache_stats`](cache_stats.md) for the lower-level,
 per-catalog cache this sits on top of.
 
 ## Parameters
@@ -56,7 +56,7 @@ nexus ntables=3 nexus relationships=2
 ## See Also
 
 - [`policy`](policy.md): the alignment `nexus()` uses by default.
-- [`alignment_cache_stats`](alignment_cache_stats.md): what `nexus()`
+- [`cache_stats`](cache_stats.md): what `nexus()`
   reuses, and when.
 - [`query`](query.md): SQL over the same aligned view.
 

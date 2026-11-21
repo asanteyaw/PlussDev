@@ -229,8 +229,8 @@ private:
   std::int64_t nslots() const;
   const std::vector<std::string>& keys() const;
   const std::vector<std::string>& field_names() const;
-  bool is_stream_compatible() const;
-  void ensure_stream_compatible(std::string_view where = "Registry") const;
+  bool streamable() const;
+  void ensure_streamable(std::string_view where = "Registry") const;
   bool has_slot(std::string_view key) const;
   Slot slot(std::string_view key) const;
   std::optional<Slot> get_slot(std::string_view key) const;

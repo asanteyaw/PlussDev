@@ -169,10 +169,8 @@ public:
   pluss::table::DataFrame scan() const;
   pluss::table::DataFrame deduce(double min_confidence = 0.5) const;
 
-  bool has_table_meta(std::string_view key) const;
+  bool has_meta(std::string_view key) const;
   std::optional<nexus::TableMeta> table_meta(std::string_view key) const;
-  Nexus set_table_meta(std::string_view key, const nexus::TableMeta& meta) const;
-  Nexus& set_table_meta_(std::string_view key, const nexus::TableMeta& meta);
   std::optional<nexus::TableMeta> meta(std::string_view key) const;
   Nexus meta(std::string_view key, const nexus::TableMeta& value) const;
   Nexus meta(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) const;

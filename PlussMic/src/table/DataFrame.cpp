@@ -464,7 +464,7 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
 }
 
 std::string shelf_scalar_string_at(const Shelf& t, std::int64_t row) {
-  if (detail::has_validity_mask(t)) {
+  if (detail::has_mask(t)) {
     const auto valid = detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NULL";
@@ -613,7 +613,7 @@ std::string window_op_name(ShelfWindowOp op) {
 }
 
 std::int64_t non_null_count(const Shelf& t) {
-  if (!detail::has_validity_mask(t)) {
+  if (!detail::has_mask(t)) {
     return t.size();
   }
   const auto valid = detail::validity_mask(t)->host<bool>();
@@ -624,7 +624,7 @@ std::int64_t distinct_non_null_count(const Shelf& t) {
   std::unordered_set<std::string> seen;
   seen.reserve(static_cast<std::size_t>(t.size()));
   std::optional<std::vector<bool>> valid;
-  if (detail::has_validity_mask(t)) {
+  if (detail::has_mask(t)) {
     valid = detail::validity_mask(t)->host<bool>();
   }
   for (std::int64_t i = 0; i < t.size(); ++i) {
@@ -1050,7 +1050,7 @@ bool parse_bool_like(std::string_view text, bool& out) {
 }
 
 bool row_valid_for_shelf(const Shelf& t, std::int64_t row) {
-  if (!detail::has_validity_mask(t)) {
+  if (!detail::has_mask(t)) {
     return true;
   }
   const auto valid = detail::validity_mask(t)->host<bool>();
@@ -1710,14 +1710,14 @@ Shelf align_shelf_to_feature_axis_(
 
   auto out = value.take(std::span<const std::int64_t>(rows.data(), rows.size()));
   auto validity = bool_series_from_keep(present);
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     auto prior = *detail::validity_mask(out);
     if (prior.platform() != validity.platform()) {
       prior = prior.to(validity.platform());
     }
     validity = validity.logical_and(prior);
   }
-  return detail::with_validity_mask(out, validity);
+  return detail::with_mask(out, validity);
 }
 
 Shelf align_shelf_to_case_axis_(
@@ -1761,14 +1761,14 @@ Shelf align_shelf_to_case_axis_(
 
   auto out = value.take(std::span<const std::int64_t>(rows.data(), rows.size()));
   auto validity = bool_series_from_keep(present);
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     auto prior = *detail::validity_mask(out);
     if (prior.platform() != validity.platform()) {
       prior = prior.to(validity.platform());
     }
     validity = validity.logical_and(prior);
   }
-  return detail::with_validity_mask(out, validity);
+  return detail::with_mask(out, validity);
 }
 
 DataFrame dataframe_math_shelf(const DataFrame& frame,
@@ -2543,8 +2543,8 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::Dat
 
 Shelf clear_assignment_metadata_(const Shelf& value) {
   auto out = value;
-  if (detail::has_display_labels(out)) {
-    out = detail::clear_display_labels(out);
+  if (detail::has_labels(out)) {
+    out = detail::clear_labels(out);
   }
   if (out.named()) {
     out = out.unname();
@@ -2573,7 +2573,7 @@ Shelf null_shelf_like_(const Shelf& value, std::int64_t size, std::string_view w
           std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
       break;
   }
-  return clear_assignment_metadata_(detail::with_validity_mask(
+  return clear_assignment_metadata_(detail::with_mask(
       out, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool)));
 }
 
@@ -2621,13 +2621,13 @@ Shelf align_assignment_shelf_(
 
   auto out = value.take(take_indices);
   auto validity = bool_series_from_keep(matched);
-  if (detail::has_validity_mask(out)) {
+  if (detail::has_mask(out)) {
     if (validity.platform() != detail::validity_mask(out)->platform()) {
       validity = validity.to(detail::validity_mask(out)->platform());
     }
     validity = validity.logical_and(*detail::validity_mask(out));
   }
-  return clear_assignment_metadata_(detail::with_validity_mask(out, validity));
+  return clear_assignment_metadata_(detail::with_mask(out, validity));
 }
 
 bool assignment_cases_match_(

@@ -85,9 +85,9 @@ true false
   uniqueness rule this method lets you check ahead of time.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has.html">
+  <a class="prev-link" href="has_meta.html">
     <span class="label">Previous</span>
-    <span class="title">has</span>
+    <span class="title">has_meta</span>
   </a>
   <a class="next-link" href="has_store.html">
     <span class="label">Next</span>

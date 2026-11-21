@@ -199,7 +199,7 @@ void test_duration_shelf_foundation() {
   expect(filled.as_duration().host() ==
              std::vector<std::int64_t>{1'000'000'000LL, 9, -2'000'000'000LL},
          "Duration fillnull must replace intrinsic NaT without changing observed lanes");
-  expect(!pluss::table::detail::has_validity_mask(filled),
+  expect(!pluss::table::detail::has_mask(filled),
          "Duration fillnull must clear absence after every absent lane is replaced");
 
   const auto replaced = filled.replace(

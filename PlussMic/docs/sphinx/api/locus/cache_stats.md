@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Locus::alignment_cache_stats
+# Locus::cache_stats
 
 [Back to Locus API Reference](../../locus_api_reference)
 
 ## Signature
 
 ```cpp
-std::pair<std::int64_t, std::int64_t> Locus::alignment_cache_stats() const
+std::pair<std::int64_t, std::int64_t> Locus::cache_stats() const
 ```
 
 ## What It Does
@@ -47,13 +47,13 @@ is ever consulted.
 
 ```cpp
 auto base = make_linked_shop();
-const auto before = base.alignment_cache_stats();
+const auto before = base.cache_stats();
 std::cout << "before any nexus(): hits=" << before.first << " misses=" << before.second << "\n";
 (void)base.nexus();
-const auto after_first = base.alignment_cache_stats();
+const auto after_first = base.cache_stats();
 std::cout << "after 1st nexus(): hits=" << after_first.first << " misses=" << after_first.second << "\n";
 (void)base.nexus();
-const auto after_second = base.alignment_cache_stats();
+const auto after_second = base.cache_stats();
 std::cout << "after 2nd nexus() on the SAME Locus: hits=" << after_second.first
           << " misses=" << after_second.second << "\n";
 ```
@@ -78,7 +78,7 @@ with the identical data it already held.
 auto derived = base;
 derived.with_("items", base.catalog("items"));
 (void)derived.nexus();
-const auto after_derived = derived.alignment_cache_stats();
+const auto after_derived = derived.cache_stats();
 std::cout << "after a derived Locus's nexus(): hits=" << after_derived.first
           << " misses=" << after_derived.second << "\n";
 ```
@@ -103,8 +103,12 @@ not on which `Locus` or which call produced it.
   data.
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="apply.html">
+  <a class="prev-link" href="audit_report.html">
+    <span class="label">Previous</span>
+    <span class="title">audit_report</span>
+  </a>
+  <a class="next-link" href="catalogs.html">
     <span class="label">Next</span>
-    <span class="title">apply</span>
+    <span class="title">catalogs</span>
   </a>
 </div>

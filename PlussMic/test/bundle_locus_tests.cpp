@@ -257,12 +257,12 @@ Locus make_linked_shop() {
 }
 
 bool has_validity(const Catalog& c, std::string_view key) {
-  return pluss::kindle::detail::has_validity_mask(*c.get(key));
+  return pluss::kindle::detail::has_mask(*c.get(key));
 }
 
 std::vector<bool> valid_of(const Catalog& c, std::string_view key) {
   const auto s = *c.get(key);
-  if (!pluss::kindle::detail::has_validity_mask(s)) return std::vector<bool>(static_cast<std::size_t>(s.size()), true);
+  if (!pluss::kindle::detail::has_mask(s)) return std::vector<bool>(static_cast<std::size_t>(s.size()), true);
   return pluss::kindle::detail::validity_mask(s)->host<bool>();
 }
 
@@ -271,7 +271,7 @@ std::int64_t records_of(const Catalog& c, std::string_view key) { return c.get(k
 Stream with_nulls(Stream s, const std::vector<bool>& valid) {
   std::vector<double> mask;
   for (const bool v : valid) mask.push_back(v ? 1.0 : 0.0);
-  return pluss::kindle::detail::with_validity_mask(
+  return pluss::kindle::detail::with_mask(
       s, pluss::make_series(mask, {static_cast<std::int64_t>(mask.size())}).to(pluss::codem::ScalarType::Bool));
 }
 
@@ -886,10 +886,10 @@ void test_workspace_ops_and_meta() {
   meta.grain = "one row per customer";
   meta.primary_key = {"id"};
   const auto described = shop.meta("customers", meta);
-  expect(described.has_table_meta("customers") && !shop.has_table_meta("customers"), "meta returns a new Locus");
+  expect(described.has_meta("customers") && !shop.has_meta("customers"), "meta returns a new Locus");
   expect(described.table_meta("customers")->primary_key == std::vector<std::string>({"id"}), "meta round-trips");
-  expect(described.rename("customers", "people").has_table_meta("people"), "metadata follows a rename");
-  expect(!described.drop({"customers"}).has_table_meta("customers"), "metadata is dropped with its catalog");
+  expect(described.rename("customers", "people").has_meta("people"), "metadata follows a rename");
+  expect(!described.drop({"customers"}).has_meta("customers"), "metadata is dropped with its catalog");
   expect_throw([&] { (void)shop.meta("ghost", meta); }, "metadata on an unknown catalog should throw");
   expect(described.nexus().table_meta("customers").has_value(), "metadata reaches the aligned Nexus");
 }
@@ -1045,7 +1045,7 @@ void test_persistence() {
   const auto back = Locus::read(dir.string(), options);
   expect(back.keys() == shop.keys(), "the saved catalogs come back by name");
   expect(back.nrelationships() == 2, "links survive the round trip");
-  expect(back.has_table_meta("customers"), "table metadata survives the round trip");
+  expect(back.has_meta("customers"), "table metadata survives the round trip");
   expect(back.has_store("by_customer"), "saved plans survive the round trip");
   expect(values_of(back.run("by_customer"), "amount") == std::vector<double>({5.0, 7.0, 11.0}),
          "a restored saved plan still runs");
@@ -1095,39 +1095,39 @@ void test_persistence() {
 
 void test_alignment_cache() {
   auto shop = make_linked_shop();
-  const auto s0 = shop.alignment_cache_stats();
+  const auto s0 = shop.cache_stats();
   (void)shop.nexus();
-  const auto s1 = shop.alignment_cache_stats();
+  const auto s1 = shop.cache_stats();
   expect(s1.second - s0.second == shop.ntables(), "the first nexus() aligns every catalog once");
 
   // Changing only the links reuses every aligned table.
   auto relinked = shop;
   relinked.unlink_("items->orders");
   (void)relinked.nexus();
-  const auto s2 = shop.alignment_cache_stats();
+  const auto s2 = shop.cache_stats();
   expect(s2.second == s1.second && s2.first - s1.first == shop.ntables(),
          "a link change re-aligns nothing");
 
   // Replacing one catalog aligns only that one.
   auto edited = shop.with("extra", shop.catalog("items"));
   (void)edited.nexus();
-  const auto s3 = shop.alignment_cache_stats();
+  const auto s3 = shop.cache_stats();
   expect(s3.second - s2.second == 0 && s3.first > s2.first,
          "an added catalog sharing a handle with an existing one is served from the cache");
   auto changed = shop.with("items", Catalog(Streams{{"x", nums({1.0, 2.0, 3.0})}}));
   (void)changed.nexus();
-  const auto s4 = shop.alignment_cache_stats();
+  const auto s4 = shop.cache_stats();
   expect(s4.second - s3.second == 1, "a replaced catalog is re-aligned exactly once");
   const auto same_content = shop.with("items", shop.catalog("items").map([](const pluss::kindle::Stream& st) { return st; }));
   (void)same_content.nexus();
-  expect(shop.alignment_cache_stats().second == s4.second, "a catalog with identical contents is served from the cache");
+  expect(shop.cache_stats().second == s4.second, "a catalog with identical contents is served from the cache");
 
   // A different policy is a different cache line.
   auto inner = shop.with_policy(pluss::kindle::TabelizePolicy{});
   pluss::kindle::TabelizePolicy p;
   p.align = pluss::kindle::Align::Inner;
   (void)shop.with_policy(p).nexus();
-  const auto s5 = shop.alignment_cache_stats();
+  const auto s5 = shop.cache_stats();
   expect(s5.second - s4.second == shop.ntables(), "a new policy aligns each catalog under that policy");
   (void)inner;
 
@@ -1227,7 +1227,7 @@ void test_hardening_edges() {
           for (int i = 0; i < 20; ++i) {
             if (shared.join("orders", "customers").get("amt")->size() != 3) ++errors;
             if (shared.nexus().ntables() != 2) ++errors;
-            (void)shared.alignment_cache_stats();
+            (void)shared.cache_stats();
             (void)shared.with("extra", shared.catalog("orders")).nexus();
             if (shared.pull("orders").take("customers.name").collect().nkeys() < 1) ++errors;
           }

@@ -81,8 +81,8 @@ true false
     <span class="label">Previous</span>
     <span class="title">graph</span>
   </a>
-  <a class="next-link" href="has_relationship.html">
+  <a class="next-link" href="has_meta.html">
     <span class="label">Next</span>
-    <span class="title">has_relationship</span>
+    <span class="title">has_meta</span>
   </a>
 </div>

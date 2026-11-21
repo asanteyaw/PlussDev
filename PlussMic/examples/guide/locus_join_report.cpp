@@ -16,8 +16,8 @@ int main() {
   sm.primary_key = {"shipment"};
   pm.primary_key = {"port"};
   auto workspace = Locus({{"shipments", shipments}, {"ports", ports}})
-                       .set_table_meta("shipments", sm)
-                       .set_table_meta("ports", pm)
+                       .meta("shipments", sm)
+                       .meta("ports", pm)
                        .link({.name = "shipment_port", .left_table = "shipments", .right_table = "ports", .keys = {{"port", "port"}}, .cardinality = RelationshipCardinality::ManyToOne});
 
   // 1. Join shipments to their port's country. Shipment 5 goes to port Z, which is not in the ports table.

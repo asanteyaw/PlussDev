@@ -145,10 +145,10 @@ data=[1, 100, 3]
 
 ## Notes
 
-- To choose between several branches in order, use [`pluss::series::select`](select.md).
+- To choose between several branches in order, use [`pluss::series::choose`](choose.md).
 - The method form is [`Series::where`](../series/where.md).
 
 ## See Also
 
 - [`Series::where`](../series/where.md): the method form.
-- [`pluss::series::select`](select.md): several ordered branches.
+- [`pluss::series::choose`](choose.md): several ordered branches.

@@ -49,8 +49,8 @@ public:
   const pluss::table::DataFrame& sheets(std::string_view name) const;
   pluss::table::DataFrame& sheets(std::string_view name);
 
-  const pluss::table::DataFrame& sheet_by_index(std::size_t index) const;
-  pluss::table::DataFrame& sheet_by_index(std::size_t index);
+  const pluss::table::DataFrame& sheet(std::size_t index) const;
+  pluss::table::DataFrame& sheet(std::size_t index);
 
   SheetNames sheet_names() const;
 

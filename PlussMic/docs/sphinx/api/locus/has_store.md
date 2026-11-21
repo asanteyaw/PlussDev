@@ -71,12 +71,12 @@ plan.
 - [`run`](run.md): executing a saved plan by name.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="graph.html">
+  <a class="prev-link" href="has_meta.html">
     <span class="label">Previous</span>
-    <span class="title">graph</span>
+    <span class="title">has_meta</span>
   </a>
-  <a class="next-link" href="has_table_meta.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">has_table_meta</span>
+    <span class="title">head</span>
   </a>
 </div>

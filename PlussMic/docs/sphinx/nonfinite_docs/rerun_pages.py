@@ -70,8 +70,8 @@ auto nx = [] {
   to_customer.keys = {{"customer_id", "customer_id"}};
   to_customer.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
   return pluss::bundle::Nexus({{"customers", customers}, {"regions", regions}, {"events", events}})
-      .set_table_meta("customers", customers_meta)
-      .set_table_meta("events", events_meta)
+      .meta("customers", customers_meta)
+      .meta("events", events_meta)
       .add_relationship(to_region)
       .add_relationship(to_customer);
 }();

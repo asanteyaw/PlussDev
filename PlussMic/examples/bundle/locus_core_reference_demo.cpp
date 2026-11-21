@@ -148,17 +148,15 @@ int main() {
   meta.grain = "one row per customer";
   meta.primary_key = {"id"};
   const auto described = linked.meta("customers", meta);
-  std::cout << "described has_table_meta=" << described.has_table_meta("customers")
-            << " original has_table_meta=" << linked.has_table_meta("customers") << "\n";
+  std::cout << "described has_meta=" << described.has_meta("customers")
+            << " original has_meta=" << linked.has_meta("customers") << "\n";
   std::cout << "table_meta primary_key[0]=" << described.table_meta("customers")->primary_key[0] << "\n";
-  std::cout << "renamed still has meta=" << described.rename("customers", "people").has_table_meta("people") << "\n";
-  std::cout << "dropped loses meta=" << described.drop({"customers"}).has_table_meta("customers") << "\n";
+  std::cout << "renamed still has meta=" << described.rename("customers", "people").has_meta("people") << "\n";
+  std::cout << "dropped loses meta=" << described.drop({"customers"}).has_meta("customers") << "\n";
   print_error("meta on unknown table", [&] { (void)linked.meta("ghost", meta); });
   auto meta_inplace = linked;
   meta_inplace.meta_("customers", meta);
-  std::cout << "meta_ changed in place=" << meta_inplace.has_table_meta("customers") << "\n";
-  std::cout << "set_table_meta == meta: "
-            << described.set_table_meta("customers", meta).has_table_meta("customers") << "\n";
+  std::cout << "meta_ changed in place=" << meta_inplace.has_meta("customers") << "\n";
 
   // ===================== policy and alignment =====================
   heading("policy and alignment");
@@ -172,15 +170,15 @@ int main() {
   const auto nx = linked.nexus();
   std::cout << "nexus ntables=" << nx.ntables() << " nexus relationships=" << nx.relationships().size() << "\n";
 
-  heading("alignment_cache_stats");
+  heading("cache_stats");
   auto base = make_linked_shop();
-  const auto before = base.alignment_cache_stats();
+  const auto before = base.cache_stats();
   std::cout << "before any nexus(): hits=" << before.first << " misses=" << before.second << "\n";
   (void)base.nexus();
-  const auto after_first = base.alignment_cache_stats();
+  const auto after_first = base.cache_stats();
   std::cout << "after 1st nexus(): hits=" << after_first.first << " misses=" << after_first.second << "\n";
   (void)base.nexus();
-  const auto after_second = base.alignment_cache_stats();
+  const auto after_second = base.cache_stats();
   std::cout << "after 2nd nexus() on the SAME Locus: hits=" << after_second.first
             << " misses=" << after_second.second << "\n";
   // A derived Locus that shares catalogs with base (with_ touches only one of
@@ -189,7 +187,7 @@ int main() {
   auto derived = base;
   derived.with_("items", base.catalog("items"));
   (void)derived.nexus();
-  const auto after_derived = derived.alignment_cache_stats();
+  const auto after_derived = derived.cache_stats();
   std::cout << "after a derived Locus's nexus(): hits=" << after_derived.first
             << " misses=" << after_derived.second << "\n";
 

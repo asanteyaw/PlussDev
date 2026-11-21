@@ -13,7 +13,7 @@ int main() {
   pluss::relational::TableMeta cm, om;
   cm.primary_key = {"customer_id"};
   om.primary_key = {"order_id"};
-  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).set_table_meta("customers", cm).set_table_meta("orders", om)
+  auto workspace = Nexus({{"customers", customers}, {"orders", orders}}).meta("customers", cm).meta("orders", om)
                        .add_relationship({.name = "customer_orders", .left_table = "customers", .right_table = "orders", .keys = {{"customer_id", "customer_id"}}, .cardinality = RelationshipCardinality::OneToMany});
 
   // 1. Revenue per country: tables are addressed by name and joined in the statement.

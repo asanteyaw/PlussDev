@@ -14,9 +14,8 @@ Locus& Locus::meta_(std::string_view name, const TableMeta& value)
 
 ## What It Does
 
-`meta(name)` (one argument) is an alias for [`table_meta`](has_table_meta.md)
--- the getter. `meta(name, value)` (two arguments) is an alias for
-[`set_table_meta`](set_table_meta.md) -- the setter, which declares or
+`meta(name)` (one argument) is the getter, the same read as [`table_meta`](has_meta.md).
+`meta(name, value)` (two arguments) is the setter, which declares or
 replaces `name`'s metadata and returns a new `Locus`. `meta_` is the
 in-place form of the setter.
 
@@ -60,8 +59,8 @@ meta.grain = "one row per customer";
 meta.primary_key = {"id"};
 const auto linked = make_linked_shop();
 const auto described = linked.meta("customers", meta);
-std::cout << "renamed still has meta=" << described.rename("customers", "people").has_table_meta("people") << "\n";
-std::cout << "dropped loses meta=" << described.drop({"customers"}).has_table_meta("customers") << "\n";
+std::cout << "renamed still has meta=" << described.rename("customers", "people").has_meta("people") << "\n";
+std::cout << "dropped loses meta=" << described.drop({"customers"}).has_meta("customers") << "\n";
 ```
 
 ### Output
@@ -78,22 +77,20 @@ mutates in place.
 print_error("meta on unknown table", [&] { (void)linked.meta("ghost", meta); });
 auto meta_inplace = linked;
 meta_inplace.meta_("customers", meta);
-std::cout << "meta_ changed in place=" << meta_inplace.has_table_meta("customers") << "\n";
+std::cout << "meta_ changed in place=" << meta_inplace.has_meta("customers") << "\n";
 ```
 
 ### Output
 
 ```text
-meta on unknown table: Locus::set_table_meta: unknown catalog 'ghost'
+meta on unknown table: Locus::meta: unknown catalog 'ghost'
 meta_ changed in place=true
 ```
 
 ## See Also
 
-- [`has_table_meta`](has_table_meta.md), [`table_meta`](has_table_meta.md):
-  the same getter under its explicit name.
-- [`set_table_meta`](set_table_meta.md): the same setter under its explicit
-  name.
+- [`has_meta`](has_meta.md), [`table_meta`](has_meta.md):
+  presence probe and the explicitly-named getter.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="materialize.html">

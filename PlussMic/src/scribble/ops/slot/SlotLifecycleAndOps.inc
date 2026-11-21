@@ -152,7 +152,7 @@ std::unordered_map<std::string, std::int64_t> Slot::type_counts() const {
 
 Slot Slot::isnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().isnull().scribbelize();
   }
   std::vector<Value> out;
@@ -165,7 +165,7 @@ Slot Slot::isnull() const {
 
 Slot Slot::notnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().notnull().scribbelize();
   }
   std::vector<Value> out;
@@ -178,7 +178,7 @@ Slot Slot::notnull() const {
 
 Slot Slot::invalid() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().invalid().scribbelize();
   }
   std::vector<Value> out;
@@ -191,7 +191,7 @@ Slot Slot::invalid() const {
 
 Slot Slot::isnan() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().isnan().scribbelize();
   }
   std::vector<Value> out;
@@ -204,7 +204,7 @@ Slot Slot::isnan() const {
 
 Slot Slot::notnan() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().notnan().scribbelize();
   }
   std::vector<Value> out;
@@ -217,7 +217,7 @@ Slot Slot::notnan() const {
 
 Slot Slot::isinf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().isinf().scribbelize();
   }
   std::vector<Value> out;
@@ -230,7 +230,7 @@ Slot Slot::isinf() const {
 
 Slot Slot::isposinf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().isposinf().scribbelize();
   }
   std::vector<Value> out;
@@ -243,7 +243,7 @@ Slot Slot::isposinf() const {
 
 Slot Slot::isneginf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().isneginf().scribbelize();
   }
   std::vector<Value> out;
@@ -256,7 +256,7 @@ Slot Slot::isneginf() const {
 
 Slot Slot::notinf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().notinf().scribbelize();
   }
   std::vector<Value> out;
@@ -269,7 +269,7 @@ Slot Slot::notinf() const {
 
 Slot Slot::dropnan() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropnan().scribbelize();
   }
   std::vector<Value> out;
@@ -282,7 +282,7 @@ Slot Slot::dropnan() const {
 
 Slot Slot::dropinvalid() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropinvalid().scribbelize();
   }
   std::vector<Value> out;
@@ -299,7 +299,7 @@ Slot Slot::fillinvalid(double value) const {
 
 Slot Slot::dropinf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropinf().scribbelize();
   }
   std::vector<Value> out;
@@ -312,7 +312,7 @@ Slot Slot::dropinf() const {
 
 Slot Slot::dropposinf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropposinf().scribbelize();
   }
   std::vector<Value> out;
@@ -325,7 +325,7 @@ Slot Slot::dropposinf() const {
 
 Slot Slot::dropneginf() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropneginf().scribbelize();
   }
   std::vector<Value> out;
@@ -338,7 +338,7 @@ Slot Slot::dropneginf() const {
 
 Slot Slot::fillnan(double value) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().fillnan(value).scribbelize();
   }
   std::vector<Value> out;
@@ -351,7 +351,7 @@ Slot Slot::fillnan(double value) const {
 
 Slot Slot::fillinf(double value) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().fillinf(value).scribbelize();
   }
   std::vector<Value> out;
@@ -364,7 +364,7 @@ Slot Slot::fillinf(double value) const {
 
 Slot Slot::fillposinf(double value) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().fillposinf(value).scribbelize();
   }
   std::vector<Value> out;
@@ -377,7 +377,7 @@ Slot Slot::fillposinf(double value) const {
 
 Slot Slot::fillneginf(double value) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().fillneginf(value).scribbelize();
   }
   std::vector<Value> out;
@@ -423,7 +423,7 @@ Slot Slot::fillnull(const pluss::Duration& value) const {
 
 Slot Slot::dropnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().dropnull().scribbelize();
   }
   std::vector<Value> out;
@@ -466,7 +466,7 @@ SlotTimelineAccessor Slot::tl() const {
 Slot Slot::cast(pluss::table::ShelfCastTarget target,
                 const pluss::table::ShelfCastOptions& options) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (is_stream_compatible()) {
+  if (streamable()) {
     return kindelize().cast(target, options).scribbelize();
   }
   if (target == pluss::table::ShelfCastTarget::Note) {
@@ -590,12 +590,12 @@ Slot Slot::max() const {
   return kindelize().max().scribbelize();
 }
 
-bool Slot::is_stream_compatible() const {
+bool Slot::streamable() const {
   if (!defined()) return false;
   return slot_profile(impl_ref_()).stream_compatible;
 }
 
-void Slot::ensure_stream_compatible(std::string_view where) const {
+void Slot::ensure_streamable(std::string_view where) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   const auto& profile = slot_profile(impl_ref_());
   PLUSS_CHECK(profile.stream_compatible,

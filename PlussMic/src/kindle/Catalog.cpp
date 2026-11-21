@@ -205,7 +205,7 @@ std::int64_t resolve_anchor_idx(const std::vector<std::string>& keys,
 
 std::vector<bool> validity_or_all_true(const Stream& stream) {
   std::vector<bool> valid(static_cast<std::size_t>(stream.size()), true);
-  if (!detail::has_validity_mask(stream)) return valid;
+  if (!detail::has_mask(stream)) return valid;
   return detail::validity_mask(stream)->host<bool>();
 }
 

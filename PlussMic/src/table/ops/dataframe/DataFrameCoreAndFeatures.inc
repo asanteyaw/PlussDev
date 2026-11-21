@@ -1335,7 +1335,7 @@ Shelf DataFrame::features(std::string_view name) {
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'", feature_name, pluss::exception::map_keys(src.name_to_idx_));
-  return detail::with_display_labels(src.columns_[it->second], src.cases_)
+  return detail::with_labels(src.columns_[it->second], src.cases_)
       .name(std::move(feature_name));
 }
 
@@ -1344,7 +1344,7 @@ Shelf DataFrame::features(std::string_view name) const {
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'", feature_name, pluss::exception::map_keys(src.name_to_idx_));
-  return detail::with_display_labels(src.columns_[it->second], src.cases_)
+  return detail::with_labels(src.columns_[it->second], src.cases_)
       .name(std::move(feature_name));
 }
 
@@ -2583,7 +2583,7 @@ DataFrame DataFrame::set_caselbl(const SetLabelOptions& options) const {
 
   Shelf case_values;
   if (names.size() == 1) {
-    case_values = detail::clear_display_labels(axis.levels.front().values).unname();
+    case_values = detail::clear_labels(axis.levels.front().values).unname();
   } else {
     std::vector<std::string> labels;
     labels.reserve(static_cast<std::size_t>(ncases()));
@@ -2647,8 +2647,8 @@ DataFrame DataFrame::reset_caselbl(const ResetLabelOptions& options) const {
       }
       PLUSS_CHECK(!out.get(name).has_value(), "DataFrame::reset_caselbl: feature already exists '" + name + "'");
       auto level_values = src.case_axis_.levels[i].values;
-      if (detail::has_display_labels(level_values)) {
-        level_values = detail::clear_display_labels(level_values);
+      if (detail::has_labels(level_values)) {
+        level_values = detail::clear_labels(level_values);
       }
       if (level_values.named()) {
         level_values = level_values.unname();
@@ -2814,7 +2814,7 @@ Shelf remap_align_feature_(const Shelf& source,
   }
 
   const bool all_present = std::all_of(present.begin(), present.end(), [](bool ok) { return ok; });
-  if (!all_present || detail::has_validity_mask(out)) {
+  if (!all_present || detail::has_mask(out)) {
     std::vector<bool> valid;
     valid.reserve(present.size());
     for (std::int64_t row = 0; row < static_cast<std::int64_t>(present.size()); ++row) {
@@ -2829,7 +2829,7 @@ Shelf remap_align_feature_(const Shelf& source,
     if (out.kind() == ShelfKind::Series && validity.platform() != out.as_series().platform()) {
       validity = validity.to(out.as_series().platform());
     }
-    out = detail::with_validity_mask(out, validity);
+    out = detail::with_mask(out, validity);
   }
   return out;
 }
@@ -2850,7 +2850,7 @@ DataFrame DataFrame::align(const AlignSpec& spec) const {
       out.emplace_back(name, null_align_feature_(target_caselbl.size(), spec.fill, "DataFrame::align"));
       continue;
     }
-    auto column = detail::with_display_labels(src.columns_[it->second], src.cases_);
+    auto column = detail::with_labels(src.columns_[it->second], src.cases_);
     out.emplace_back(name, remap_align_feature_(column, target_caselbl, spec.fill, "DataFrame::align"));
   }
 
@@ -2993,7 +2993,7 @@ std::vector<std::string> numeric_unify_key_parts(
 
 std::vector<std::string> unify_key_parts(const Shelf& values) {
   const auto count = static_cast<std::size_t>(values.size());
-  auto valid = detail::has_validity_mask(values)
+  auto valid = detail::has_mask(values)
       ? detail::validity_mask(values)->host<bool>()
       : std::vector<bool>(count, true);
 
@@ -3206,7 +3206,7 @@ Shelf take_rows_for_unify(const Shelf& source, const std::vector<std::int64_t>& 
   safe_rows.reserve(rows.size());
   std::vector<bool> out_valid(rows.size(), true);
   std::optional<std::vector<bool>> src_valid = std::nullopt;
-  if (detail::has_validity_mask(source)) {
+  if (detail::has_mask(source)) {
     src_valid = detail::validity_mask(source)->host<bool>();
   }
 
@@ -3228,7 +3228,7 @@ Shelf take_rows_for_unify(const Shelf& source, const std::vector<std::int64_t>& 
 
   auto out = source.take(safe_rows);
   if (all_valid) {
-    return detail::has_validity_mask(out) ? detail::clear_validity_mask(out) : out;
+    return detail::has_mask(out) ? detail::clear_mask(out) : out;
   }
   pluss::codem::Platform platform = pluss::codem::Platform::CPU;
   if (out.kind() == ShelfKind::Series) {
@@ -3236,7 +3236,7 @@ Shelf take_rows_for_unify(const Shelf& source, const std::vector<std::int64_t>& 
   } else if (out.kind() == ShelfKind::Timeline) {
     platform = out.as_timeline().epoch_nanos().platform();
   }
-  return detail::with_validity_mask(out, bool_mask_from_values(out_valid, platform));
+  return detail::with_mask(out, bool_mask_from_values(out_valid, platform));
 }
 
 Shelf take_unified_key_rows(
@@ -3244,8 +3244,8 @@ Shelf take_unified_key_rows(
     const Shelf& right,
     const std::vector<std::int64_t>& left_rows,
     const std::vector<std::int64_t>& right_rows) {
-  auto output = detail::clear_display_labels(take_rows_for_unify(left, left_rows));
-  const auto fallback = detail::clear_display_labels(take_rows_for_unify(right, right_rows));
+  auto output = detail::clear_labels(take_rows_for_unify(left, left_rows));
+  const auto fallback = detail::clear_labels(take_rows_for_unify(right, right_rows));
   std::vector<bool> use_right(left_rows.size(), false);
   std::transform(
       left_rows.begin(),
@@ -3286,7 +3286,7 @@ CategoryEncoding DataFrame::factor(
   }
 
   const auto source_parts = unify_key_parts(source);
-  const auto valid = source.has_validity_mask()
+  const auto valid = source.has_mask()
       ? source.validity_mask()->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(source.size()), true);
   std::vector<std::int64_t> codes(static_cast<std::size_t>(source.size()), -1);
@@ -3321,12 +3321,12 @@ CategoryEncoding DataFrame::factor(
     code_values = code_values.to(platform);
   }
   Shelf code_shelf(code_values);
-  if (source.has_validity_mask()) {
+  if (source.has_mask()) {
     auto mask = *source.validity_mask();
     if (mask.platform() != platform) {
       mask = mask.to(platform);
     }
-    code_shelf = code_shelf.with_validity_mask(mask);
+    code_shelf = code_shelf.with_mask(mask);
   }
   return CategoryEncoding{
       std::move(code_shelf),
@@ -3363,7 +3363,7 @@ DataFrame DataFrame::encode(
   const auto level_parts = unify_key_parts(levels);
   const auto source_parts = unify_key_parts(source);
   const auto n = source.size();
-  const auto valid = source.has_validity_mask()
+  const auto valid = source.has_mask()
       ? source.validity_mask()->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(n), true);
   const bool any_invalid = std::any_of(valid.begin(), valid.end(), [](bool v) { return !v; });
@@ -3385,7 +3385,7 @@ DataFrame DataFrame::encode(
     }
     Shelf indicator_shelf(bool_series_from_keep(flags));
     if (any_invalid) {
-      indicator_shelf = indicator_shelf.with_validity_mask(bool_series_from_keep(valid));
+      indicator_shelf = indicator_shelf.with_mask(bool_series_from_keep(valid));
     }
     indicator_columns.emplace_back(prefix + level_key, std::move(indicator_shelf));
   }
@@ -3457,7 +3457,7 @@ Shelf CategoryEncoding::decode() const {
         break;
     }
   }
-  if (detail::has_validity_mask(codes)) {
+  if (detail::has_mask(codes)) {
     auto mask = *detail::validity_mask(codes);
     const auto platform =
         output.kind() == ShelfKind::Series
@@ -3468,7 +3468,7 @@ Shelf CategoryEncoding::decode() const {
     if (mask.platform() != platform) {
       mask = mask.to(platform);
     }
-    output = detail::with_validity_mask(output, mask);
+    output = detail::with_mask(output, mask);
   }
   return output;
 }

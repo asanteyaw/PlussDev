@@ -144,7 +144,7 @@ pluss::scribble::Slot Shelf::scribbelize() const {
 }
 bool Shelf::is_valid(std::int64_t row) const {
   const auto idx = normalize_index(row, size());
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return true;
   }
   const auto& mask = *validity_mask();
@@ -156,13 +156,13 @@ bool Shelf::is_valid(std::int64_t row) const {
   return mask.host<bool>().array().data.at(static_cast<std::size_t>(idx));
 }
 
-bool Shelf::has_validity_mask() const { return impl_ref_().validity_mask_.has_value(); }
+bool Shelf::has_mask() const { return impl_ref_().validity_mask_.has_value(); }
 
 const std::optional<pluss::Series>& Shelf::validity_mask() const {
   return impl_ref_().validity_mask_;
 }
 
-bool Shelf::has_display_labels() const {
+bool Shelf::has_labels() const {
   return impl_ref_().display_labels_.has_value();
 }
 
@@ -172,9 +172,9 @@ Shelf Shelf::display_labels() const {
   return *src.display_labels_;
 }
 
-Shelf Shelf::with_display_labels(const Shelf& labels) const {
-  PLUSS_CHECK(labels.defined(), "Shelf::with_display_labels: labels are undefined");
-  PLUSS_CHECK(labels.size() == size(), "Shelf::with_display_labels: labels length mismatch");
+Shelf Shelf::with_labels(const Shelf& labels) const {
+  PLUSS_CHECK(labels.defined(), "Shelf::with_labels: labels are undefined");
+  PLUSS_CHECK(labels.size() == size(), "Shelf::with_labels: labels length mismatch");
   auto clean_labels = labels.label().reset();
 
   const auto& src = impl_ref_();
@@ -185,9 +185,9 @@ Shelf Shelf::with_display_labels(const Shelf& labels) const {
                            LabelKind::Custom));
 }
 
-Shelf& Shelf::with_display_labels_(const Shelf& labels) {
-  PLUSS_CHECK(labels.defined(), "Shelf::with_display_labels_: labels are undefined");
-  PLUSS_CHECK(labels.size() == size(), "Shelf::with_display_labels_: labels length mismatch");
+Shelf& Shelf::with_labels_(const Shelf& labels) {
+  PLUSS_CHECK(labels.defined(), "Shelf::with_labels_: labels are undefined");
+  PLUSS_CHECK(labels.size() == size(), "Shelf::with_labels_: labels length mismatch");
 
   auto& w = mut_impl_();
   w.display_labels_ = labels.label().reset();
@@ -195,53 +195,53 @@ Shelf& Shelf::with_display_labels_(const Shelf& labels) {
   return *this;
 }
 
-Shelf Shelf::clear_display_labels() const {
+Shelf Shelf::clear_labels() const {
   const auto& src = impl_ref_();
   return Shelf(build_impl(src.payload_, src.validity_mask_, std::nullopt, src.display_name_));
 }
 
-Shelf& Shelf::clear_display_labels_() {
+Shelf& Shelf::clear_labels_() {
   mut_impl_().display_labels_.reset();
   mut_impl_().label_kind_ = LabelKind::Default;
   return *this;
 }
 
 bool Shelf::has_caselbl() const {
-  return has_display_labels();
+  return has_labels();
 }
 
 Shelf Shelf::caselbl() const {
-  if (has_display_labels()) {
+  if (has_labels()) {
     return display_labels();
   }
   return default_shelf_cases_(size());
 }
 
 Shelf Shelf::caselbl(const Shelf& labels) const {
-  return with_display_labels(labels);
+  return with_labels(labels);
 }
 
 Shelf& Shelf::caselbl_(const Shelf& labels) {
-  return with_display_labels_(labels);
+  return with_labels_(labels);
 }
 
 Shelf Shelf::rangelbl() const {
-  auto out = with_display_labels(default_shelf_cases_(size()));
+  auto out = with_labels(default_shelf_cases_(size()));
   return detail::with_label_kind(out, LabelKind::Case);
 }
 
 Shelf& Shelf::rangelbl_() {
-  with_display_labels_(default_shelf_cases_(size()));
+  with_labels_(default_shelf_cases_(size()));
   detail::with_label_kind_(*this, LabelKind::Case);
   return *this;
 }
 
 Shelf Shelf::clear_caselbl() const {
-  return clear_display_labels();
+  return clear_labels();
 }
 
 Shelf& Shelf::clear_caselbl_() {
-  return clear_display_labels_();
+  return clear_labels_();
 }
 
 ShelfLabelAccessor Shelf::label() const {
@@ -704,7 +704,7 @@ Shelf Shelf::unname() const {
                            src.label_kind_));
 }
 
-Shelf Shelf::with_validity_mask(const pluss::Series& validity_mask) const {
+Shelf Shelf::with_mask(const pluss::Series& validity_mask) const {
   const auto& src = impl_ref_();
   return Shelf(build_impl(src.payload_,
                            validity_mask,
@@ -713,14 +713,14 @@ Shelf Shelf::with_validity_mask(const pluss::Series& validity_mask) const {
                            src.label_kind_));
 }
 
-Shelf& Shelf::with_validity_mask_(const pluss::Series& validity_mask) {
+Shelf& Shelf::with_mask_(const pluss::Series& validity_mask) {
   auto& w = mut_impl_();
   validate_validity_mask(validity_mask, w.size_);
   w.validity_mask_ = validity_mask;
   return *this;
 }
 
-Shelf Shelf::clear_validity_mask() const {
+Shelf Shelf::clear_mask() const {
   const auto& src = impl_ref_();
   return Shelf(build_impl(src.payload_,
                            std::nullopt,
@@ -729,7 +729,7 @@ Shelf Shelf::clear_validity_mask() const {
                            src.label_kind_));
 }
 
-Shelf& Shelf::clear_validity_mask_() {
+Shelf& Shelf::clear_mask_() {
   auto& w = mut_impl_();
   w.validity_mask_.reset();
   return *this;
@@ -737,15 +737,15 @@ Shelf& Shelf::clear_validity_mask_() {
 
 Shelf Shelf::isnull() const {
   auto out = Shelf(shelf_non_missing_mask(*this).logical_not());
-  return detail::has_display_labels(*this)
-             ? detail::with_display_labels(out, detail::display_labels(*this))
+  return detail::has_labels(*this)
+             ? detail::with_labels(out, detail::display_labels(*this))
              : out;
 }
 
 Shelf Shelf::notnull() const {
   auto out = Shelf(shelf_non_missing_mask(*this));
-  return detail::has_display_labels(*this)
-             ? detail::with_display_labels(out, detail::display_labels(*this))
+  return detail::has_labels(*this)
+             ? detail::with_labels(out, detail::display_labels(*this))
              : out;
 }
 
@@ -793,7 +793,7 @@ Shelf Shelf::fillneginf(double value) const { return shelf_fill_nonfinite(*this,
 Shelf Shelf::isfinite() const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::isfinite is only valid for Series payload");
   auto finite = as_series().isfinite();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     finite = finite.logical_and(notnull().as_series());
   }
   return Shelf(finite);
@@ -808,15 +808,15 @@ Shelf Shelf::invalid() const {
   } else {
     out = isnull();
   }
-  return detail::has_display_labels(*this)
-             ? detail::with_display_labels(out, detail::display_labels(*this))
+  return detail::has_labels(*this)
+             ? detail::with_labels(out, detail::display_labels(*this))
              : out;
 }
 
 Shelf Shelf::fillnull(double value) const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::fillnull(double) is only valid for Series payload");
   const auto missing = notnull().as_series().logical_not();
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return *this;
   }
   auto base = as_series();
@@ -831,7 +831,7 @@ Shelf Shelf::fillnull(double value) const {
 
 Shelf Shelf::fillnull(std::string_view value) const {
   PLUSS_CHECK(kind() == ShelfKind::Note, "Shelf::fillnull(string) is only valid for Note payload");
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return *this;
   }
   const auto valid = validity_mask()->host<bool>();
@@ -853,7 +853,7 @@ Shelf Shelf::fillnull(const pluss::Timeline& value) const {
               "Shelf::fillnull(Timeline) is only valid for Timeline payload");
   PLUSS_CHECK(value.defined(), "Shelf::fillnull(Timeline): replacement value is undefined");
   PLUSS_CHECK(value.numel() == 1, "Shelf::fillnull(Timeline): replacement value must be scalar (numel == 1)");
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return *this;
   }
 
@@ -870,7 +870,7 @@ Shelf Shelf::fillnull(const pluss::Duration& value) const {
               "Shelf::fillnull(Duration): replacement cannot be NaT");
   const auto replacement = pluss::duration::nanos(replacement_nanos);
   auto filled = as_duration().fill_nat(replacement);
-  if (has_validity_mask()) {
+  if (has_mask()) {
     filled = filled.where(*validity_mask(), replacement);
   }
   return Shelf(std::move(filled), std::nullopt);
@@ -994,7 +994,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
   }
 
   auto validity_series = [](const Shelf& t) -> pluss::Series {
-    if (t.has_validity_mask()) {
+    if (t.has_mask()) {
       return t.notnull().as_series();
     }
     return pluss::Series::ones({1}, pluss::codem::ScalarType::Bool);
@@ -1034,7 +1034,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
       for (const auto& choice : choices) {
         payloads.push_back(choice.as_series());
       }
-      auto out = pluss::series::select(
+      auto out = pluss::series::choose(
           pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
           pluss::msharp::RangeView::Of<pluss::Series>(payloads),
           default_value.as_series());
@@ -1045,7 +1045,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::series::select(
+          pluss::series::choose(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
@@ -1065,7 +1065,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::series::select(
+          pluss::series::choose(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
@@ -1161,14 +1161,14 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
     return select(
         conditions,
         choices,
-        empty.with_validity_mask(
+        empty.with_mask(
             pluss::Series::zeros(
                 {empty.size()}, pluss::codem::ScalarType::Bool)));
   }
   return select(
       conditions,
       choices,
-      seed.with_validity_mask(pluss::Series::zeros({seed.size()}, pluss::codem::ScalarType::Bool)));
+      seed.with_mask(pluss::Series::zeros({seed.size()}, pluss::codem::ScalarType::Bool)));
 }
 
 Shelf Shelf::abs() const {
@@ -1217,7 +1217,7 @@ Shelf Shelf::exp() const {
 
 Shelf& Shelf::fillnull_(double value) {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::fillnull_(double) is only valid for Series payload");
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return *this;
   }
   auto& w = mut_impl_();
@@ -1277,13 +1277,13 @@ namespace {
 std::optional<pluss::Series> append_validity_mask_(const Shelf& left,
                                                    const Shelf& right,
                                                    pluss::codem::Platform platform) {
-  if (!detail::has_validity_mask(left) && !detail::has_validity_mask(right)) {
+  if (!detail::has_mask(left) && !detail::has_mask(right)) {
     return std::nullopt;
   }
-  auto left_mask = detail::has_validity_mask(left)
+  auto left_mask = detail::has_mask(left)
       ? *detail::validity_mask(left)
       : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
-  auto right_mask = detail::has_validity_mask(right)
+  auto right_mask = detail::has_mask(right)
       ? *detail::validity_mask(right)
       : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
   if (left_mask.platform() != platform) {
@@ -1422,7 +1422,7 @@ Shelf Shelf::shift(std::int64_t periods) const {
 
   std::vector<bool> out_valid(static_cast<std::size_t>(n), false);
   std::optional<std::vector<bool>> src_valid = std::nullopt;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     src_valid = validity_mask()->host<bool>();
   }
 
@@ -1436,13 +1436,13 @@ Shelf Shelf::shift(std::int64_t periods) const {
 
   auto shifted = take(indices);
   if (std::all_of(out_valid.begin(), out_valid.end(), [](bool v) { return v; })) {
-    return shifted.clear_validity_mask();
+    return shifted.clear_mask();
   }
 
   auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   std::copy(out_valid.begin(), out_valid.end(), p);
-  return shifted.with_validity_mask(mask);
+  return shifted.with_mask(mask);
 }
 
 Shelf Shelf::slice(std::int64_t start, std::int64_t stop) const {
@@ -1533,7 +1533,7 @@ Shelf Shelf::filter(const Shelf& bool_mask) const {
 }
 
 Shelf Shelf::dropnull() const {
-  if (!has_validity_mask()) {
+  if (!has_mask()) {
     return *this;
   }
   const auto valid = validity_mask()->host<bool>();
@@ -1545,8 +1545,8 @@ Shelf Shelf::dropnull() const {
     }
   }
   auto out = take(indices);
-  if (out.has_validity_mask()) {
-    return out.clear_validity_mask();
+  if (out.has_mask()) {
+    return out.clear_mask();
   }
   return out;
 }
@@ -1559,7 +1559,7 @@ Shelf Shelf::arrange(bool ascending, bool nulls_last) const {
   if (kind() == ShelfKind::Series && is_numeric_series_type(as_series())) {
     const auto values = as_series();
 
-    if (!has_validity_mask()) {
+    if (!has_mask()) {
       const auto order = values.argsort(/*dim=*/0, /*descending=*/!ascending, /*stable=*/true)
                              .host<std::int64_t>();
       return take(order);
@@ -1605,7 +1605,7 @@ Shelf Shelf::arrange(bool ascending, bool nulls_last) const {
   if (kind() == ShelfKind::Timeline) {
     const auto ticks = as_timeline().ticks();
     std::optional<std::vector<bool>> valid = std::nullopt;
-    if (has_validity_mask()) {
+    if (has_mask()) {
       valid = validity_mask()->host<bool>();
     }
 
@@ -1647,7 +1647,7 @@ Shelf Shelf::arrange(bool ascending, bool nulls_last) const {
     }
 
     std::optional<std::vector<bool>> valid = std::nullopt;
-    if (has_validity_mask()) {
+    if (has_mask()) {
       valid = validity_mask()->host<bool>();
     }
 
@@ -1820,7 +1820,7 @@ Shelf Shelf::bucketize(pluss::msharp::RangeView::Double bins,
   auto assigned = pluss::Series::zeros({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
 
   pluss::Series base_valid = pluss::series::undefined();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     base_valid = notnull().as_series();
     if (base_valid.platform() != platform) {
       base_valid = base_valid.to(platform);
@@ -1862,7 +1862,7 @@ Shelf Shelf::distinct(bool dropnull) const {
   bool null_emitted = false;
 
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -1903,7 +1903,7 @@ Shelf Shelf::freq(ShelfFreqOptions options) const {
   index_by_key.reserve(rows.capacity());
 
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -1984,7 +1984,7 @@ Shelf Shelf::duplicated(bool keep_first, bool keep_last) const {
               "Shelf::duplicated: keep_first and keep_last cannot both be true");
   std::vector<bool> duplicated_mask(static_cast<std::size_t>(size()), false);
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -2012,7 +2012,7 @@ Shelf Shelf::duplicated(bool keep_first, bool keep_last) const {
 Shelf Shelf::repeated() const {
   std::vector<bool> repeated_mask(static_cast<std::size_t>(size()), false);
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -2085,7 +2085,7 @@ ShelfView Shelf::describe(bool render) const {
 ShelfValue Shelf::sum() const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::sum is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Shelf::sum on an empty (all-null) selection");
@@ -2095,7 +2095,7 @@ ShelfValue Shelf::sum() const {
 ShelfValue Shelf::prod() const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::prod is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Shelf::prod on an empty (all-null) selection");
@@ -2105,7 +2105,7 @@ ShelfValue Shelf::prod() const {
 ShelfValue Shelf::count(bool count_true) const {
   if (kind() == ShelfKind::Series) {
     auto s = as_series();
-    if (has_validity_mask()) {
+    if (has_mask()) {
       s = s.masked_select(notnull().as_series());
     }
     return ShelfValue(Shelf(s.count(count_true).reshape({1})));
@@ -2113,7 +2113,7 @@ ShelfValue Shelf::count(bool count_true) const {
 
   PLUSS_CHECK(count_true, "Shelf::count(false) is only valid for Bool Series payload");
   std::int64_t total = size();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     const auto valid = notnull().as_series().host<bool>();
     total = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
   }
@@ -2128,7 +2128,7 @@ ShelfValue Shelf::any(bool skipnull) const {
   PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
               "Shelf::any is only valid for Bool Series payload");
 
-  if (has_validity_mask()) {
+  if (has_mask()) {
     PLUSS_CHECK(skipnull,
                 "Shelf::any(skipnull=false) is not supported for nullable Bool Series payload");
     const auto valid = notnull().as_series();
@@ -2145,7 +2145,7 @@ ShelfValue Shelf::all(bool skipnull) const {
   PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
               "Shelf::all is only valid for Bool Series payload");
 
-  if (has_validity_mask()) {
+  if (has_mask()) {
     PLUSS_CHECK(skipnull,
                 "Shelf::all(skipnull=false) is not supported for nullable Bool Series payload");
     const auto valid = notnull().as_series();
@@ -2159,7 +2159,7 @@ ShelfValue Shelf::all(bool skipnull) const {
 ShelfValue Shelf::mean() const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::mean is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
@@ -2175,7 +2175,7 @@ ShelfValue Shelf::mean() const {
 ShelfValue Shelf::median() const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::median is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
@@ -2190,7 +2190,7 @@ ShelfValue Shelf::median() const {
 }
 
 ShelfValue Shelf::min() const {
-  auto observed = has_validity_mask() ? dropnull() : *this;
+  auto observed = has_mask() ? dropnull() : *this;
   PLUSS_CHECK(observed.size() > 0, "Shelf::min on an empty (all-null) selection");
   switch (observed.kind()) {
     case ShelfKind::Series:
@@ -2214,7 +2214,7 @@ ShelfValue Shelf::min() const {
 }
 
 ShelfValue Shelf::max() const {
-  auto observed = has_validity_mask() ? dropnull() : *this;
+  auto observed = has_mask() ? dropnull() : *this;
   PLUSS_CHECK(observed.size() > 0, "Shelf::max on an empty (all-null) selection");
   switch (observed.kind()) {
     case ShelfKind::Series:
@@ -2272,7 +2272,7 @@ ShelfValue Shelf::csmax() const {
 ShelfValue Shelf::var(bool unbiased) const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::var is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
@@ -2288,7 +2288,7 @@ ShelfValue Shelf::var(bool unbiased) const {
 ShelfValue Shelf::std(bool unbiased) const {
   PLUSS_CHECK(kind() == ShelfKind::Series, "Shelf::std is only valid for Series payload");
   auto s = as_series();
-  if (has_validity_mask()) {
+  if (has_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
@@ -2315,10 +2315,10 @@ double Shelf::corr(const Shelf& other, ShelfCorrMethod method) const {
   auto rhs = other.as_series().to(pluss::codem::ScalarType::Float64);
 
   auto valid = lhs.isfinite().logical_and(rhs.isfinite());
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = valid.logical_and(notnull().as_series());
   }
-  if (other.has_validity_mask()) {
+  if (other.has_mask()) {
     valid = valid.logical_and(other.notnull().as_series());
   }
 
@@ -2418,7 +2418,7 @@ Shelf Shelf::rstrip(std::string_view chars) const {
 namespace {
 
 std::optional<pluss::Series> nullify_matches_mask(const Shelf& t, const pluss::Series& matches, bool& changed) {
-  auto valid = detail::has_validity_mask(t) ? detail::validity_mask(t)->host<bool>()
+  auto valid = detail::has_mask(t) ? detail::validity_mask(t)->host<bool>()
                                            : std::vector<bool>(static_cast<std::size_t>(t.size()), true);
   const auto hit = matches.host<bool>();
 
@@ -2505,7 +2505,7 @@ Shelf Shelf::replace(const pluss::Note& from, const pluss::Note& to) const {
 
   const auto from_text = std::string(from.at(0));
   const auto to_text = std::string(to.at(0));
-  const auto valid = has_validity_mask() ? validity_mask()->host<bool>()
+  const auto valid = has_mask() ? validity_mask()->host<bool>()
                                          : std::vector<bool>(static_cast<std::size_t>(size()), true);
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
@@ -2530,7 +2530,7 @@ Shelf Shelf::replace(const pluss::Note& from, pluss::null_t to) const {
   PLUSS_CHECK(from.numel() == 1, "Shelf::replace(Note, null): from Note must be scalar");
 
   const auto from_text = std::string(from.at(0));
-  auto valid = has_validity_mask() ? validity_mask()->host<bool>()
+  auto valid = has_mask() ? validity_mask()->host<bool>()
                                    : std::vector<bool>(static_cast<std::size_t>(size()), true);
   bool changed = false;
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -2642,8 +2642,8 @@ Shelf Shelf::has(std::string_view value) const {
 Shelf Shelf::has(const Shelf& values) const {
   PLUSS_CHECK(values.defined(), "Shelf::has: values Shelf is undefined");
   auto out = Shelf(pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool));
-  if (detail::has_display_labels(*this)) {
-    out = detail::with_display_labels(out, detail::display_labels(*this));
+  if (detail::has_labels(*this)) {
+    out = detail::with_labels(out, detail::display_labels(*this));
   }
   // The numeric fast path routes through has(double) -> eq(double), which only
   // accepts a Series-backed receiver. Take it only when *this* is numeric too;
@@ -2725,7 +2725,7 @@ Shelf Shelf::compare(double other, ShelfBinaryCompareOp op) const {
   auto* p = reinterpret_cast<bool*>(out.raw_data());
 
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -2787,7 +2787,7 @@ Shelf Shelf::compare(std::string_view other, ShelfBinaryCompareOp op) const {
   auto* p = reinterpret_cast<bool*>(out.raw_data());
 
   std::optional<std::vector<bool>> valid;
-  if (has_validity_mask()) {
+  if (has_mask()) {
     valid = validity_mask()->host<bool>();
   }
 
@@ -3036,7 +3036,7 @@ Shelf Shelf::window(std::int64_t window_size, ShelfWindowOp op, std::int64_t min
   std::vector<bool> out_valid(static_cast<std::size_t>(n), false);
 
   std::vector<bool> in_valid(static_cast<std::size_t>(n), true);
-  if (has_validity_mask()) {
+  if (has_mask()) {
     in_valid = validity_mask()->host<bool>();
   }
 
@@ -3287,7 +3287,7 @@ Shelf cast_note_to_timeline_(
     std::string_view where) {
   const auto n = source.size();
   std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
-  std::vector<bool> valid = pluss::table::detail::has_validity_mask(source)
+  std::vector<bool> valid = pluss::table::detail::has_mask(source)
       ? pluss::table::detail::validity_mask(source)->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(n), true);
   const auto& notes = source.as_note();
@@ -3483,7 +3483,7 @@ Shelf Shelf::cast_(
         const auto platform = raw_f64.platform();
 
         pluss::Series active_mask =
-            has_validity_mask()
+            has_mask()
                 ? validity_mask()->to(platform)
                 : pluss::Series::ones({size()}, pluss::codem::ScalarType::Bool).to(platform);
 
@@ -3564,7 +3564,7 @@ Shelf Shelf::cast_(
       PLUSS_CHECK(kind() == ShelfKind::Note,
                   "Shelf::cast(Duration): source must be an Int64 Series or decimal-nanosecond Note");
       std::vector<std::int64_t> nanos(static_cast<std::size_t>(size()), 0);
-      auto valid = has_validity_mask()
+      auto valid = has_mask()
                        ? validity_mask()->host<bool>()
                        : std::vector<bool>(static_cast<std::size_t>(size()), true);
       for (std::int64_t i = 0; i < size(); ++i) {
@@ -3766,7 +3766,7 @@ Shelf ts_align_right_to_left_(const Shelf& left,
     if (valid.platform() != platform) {
       valid = valid.to(platform);
     }
-    if (detail::has_validity_mask(out)) {
+    if (detail::has_mask(out)) {
       auto prior = *detail::validity_mask(out);
       if (prior.platform() != platform) {
         prior = prior.to(platform);
@@ -4018,7 +4018,7 @@ const pluss::Series& TimeSeriesAccessor::series_payload_(const char* op) const {
 // exactly the same missing positions the source Shelf does.
 pluss::Series TimeSeriesAccessor::masked_series_payload_(const char* op) const {
   const auto& raw = series_payload_(op);
-  if (!detail::has_validity_mask(base_)) {
+  if (!detail::has_mask(base_)) {
     return raw;
   }
   const auto real_dtype = raw.dtype().is_floating()
