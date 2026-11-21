@@ -3293,21 +3293,26 @@ int render_table(Scene& scene,
         if (column >= 0 && static_cast<std::size_t>(column) < plan.widths.size()) {
           int target = width;
           if (width <= 0) {
-            // Double-click on a border: fit the column to its widest value (first 2,000 rows).
+            // Double-click on a border: fit the header and every displayed value.
             const auto source = plan.source_indices.size() > static_cast<std::size_t>(column)
                                     ? plan.source_indices[static_cast<std::size_t>(column)]
                                     : static_cast<std::size_t>(column);
             int widest = 0;
-            const std::size_t scan = std::min<std::size_t>(rows.size(), 2000);
-            for (std::size_t r = 0; r < scan; ++r) {
+            bool has_header = false;
+            for (std::size_t r = 0; r < rows.size(); ++r) {
               if (source >= rows[r].cells.size()) continue;
               const auto& cell = rows[r].cells[source];
+              has_header = has_header || cell.is_header;
               widest = std::max(widest, painted_text_width(cell.text, style.font_size,
                                                            cell.is_header ? 700 : style.font_weight,
                                                            style.font_family) +
                                             (cell.is_header ? kSortGutterPx : 0));
             }
-            target = std::clamp(widest + 2 * (std::max(2, style.padding) + style.border) + 12, kMinColumnPx, 640);
+            // The header reserves separate sort controls and cell padding during painting.
+            // Leave enough room for those controls so an auto-fitted name stays on one line.
+            target = std::clamp(widest + 2 * (std::max(2, style.padding) + style.border) +
+                                    (has_header ? 40 : 12),
+                                kMinColumnPx, 4000);
           }
           plan.widths[static_cast<std::size_t>(column)] = std::max(kMinColumnPx, target);
         }

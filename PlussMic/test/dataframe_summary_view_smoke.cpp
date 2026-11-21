@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -40,13 +41,19 @@ int main() {
     require(html, "class=\"tab-panel active\" data-tab-group=\"main\"");
     require(html, "id=\"plussmic-summary\"");
     require(html, ">mean<");
-    require(html, ">missing<");
-    require(html, ">unique<");
+    require(html, ">count<");
+    require(html, ">max<");
     require(html, ">ptype<", false);         // always Series for numeric columns, so not shown
     require(html, ">top<", false);          // the Summary is numeric-only: no top-value column
     require(html, "id=\"plussmic-missing\"");
-    require(html, ">missing %<");
-    require(html, ">present<", false);       // Missing is just count and percent
+    require(html, ">null<");
+    require(html, ">null %<");
+    require(html, ">NaN<");
+    require(html, ">NaN %<");
+    require(html, ">infinity<");
+    require(html, ">infinity %<");
+    require(html, ">Validity<");
+    require(html, ">present<", false);
     require(html, ">longest gap<", false);
     require(html, "first gap at", false);
     require(html, "id=\"tab-duplicates\"", false);  // no Duplicates view
@@ -73,6 +80,21 @@ int main() {
     require(text_html, "id=\"tab-summary\"", false);
     require(text_html, "id=\"tab-correlation\"", false);
     require(text_html, "id=\"tab-missing\"");
+
+    const DataFrame validity({{"reading", Shelf(pluss::make_series(std::vector<double>{
+                                              1.0, std::numeric_limits<double>::quiet_NaN(),
+                                              std::numeric_limits<double>::infinity(), 4.0}),
+                                          pluss::make_series(std::vector<bool>{true, true, true, false}))}});
+    const auto validity_html = pluss::table::display::render_html(validity);
+    const auto validity_start = validity_html.find("id=\"plussmic-missing\"");
+    const auto validity_end = validity_html.find("</table>", validity_start);
+    if (validity_start == std::string::npos || validity_end == std::string::npos) {
+      throw std::runtime_error("Validity view is missing");
+    }
+    const auto validity_view = validity_html.substr(validity_start, validity_end - validity_start);
+    require(validity_view,
+            ">reading</td><td class=\"num\">1</td><td class=\"num\">25</td><td class=\"num\">1</td>"
+            "<td class=\"num\">25</td><td class=\"num\">1</td><td class=\"num\">25</td>");
 
     // Number format rewrites the data table's cells only.
     const DataFrame wide({{"big", Shelf(pluss::make_series(std::vector<double>{1234567.891, 2.5}))}});

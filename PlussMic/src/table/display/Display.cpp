@@ -1850,6 +1850,7 @@ struct HtmlBodyStyle {
   bool blank_nulls{false};                // render null cells empty instead of "NULL"
   bool heatmap{false};                    // tint numeric cells by value in [-1, 1] (correlations)
   bool format_numbers{false};             // apply DisplayOptions::number_format to numeric cells
+  bool format_numeric_text{false};        // transpose() stores summary measurements as text
   bool virtual_rows{false};               // long frame in a browser view: rows are drawn by script, a window at a time
   // Columns that hold counts (shown as whole numbers): decimals and scientific notation
   // leave them alone, thousands separators still apply.
@@ -1991,12 +1992,14 @@ std::string render_html_table_body_(const DataFrame& frame,
   std::vector<std::uint8_t> number_kind(cols.size(), 0);
   if (style.format_numbers && options.number_format != NumberFormat::Default) {
     for (std::size_t c = 0; c < cols.size(); ++c) {
-      if (!is_numeric_shelf(cols[c])) {
+      if (!is_numeric_shelf(cols[c]) && !style.format_numeric_text) {
         continue;
       }
-      const auto dt = cols[c].as_series().dtype();
-      if (!dt.is_floating() && !dt.is_integral()) {
-        continue;  // bool
+      if (is_numeric_shelf(cols[c])) {
+        const auto dt = cols[c].as_series().dtype();
+        if (!dt.is_floating() && !dt.is_integral()) {
+          continue;  // bool
+        }
       }
       const bool is_count = std::find(style.count_columns.begin(), style.count_columns.end(), names[c]) !=
                             style.count_columns.end();
@@ -2345,17 +2348,21 @@ Shelf masked_f64_(const std::vector<double>& values, const std::vector<std::uint
   return Shelf(pluss::make_series(values), mask);
 }
 
-// Per-case "is missing" flags for one column.
-std::vector<bool> missing_flags_(const Shelf& col, const std::int64_t n) {
+std::vector<bool> shelf_flags_(const Shelf& flags_shelf, const std::int64_t n) {
   std::vector<bool> out(static_cast<std::size_t>(n), false);
   try {
-    const auto flags = col.isnull().as_series().to(pluss::codem::ScalarType::Bool).host<bool>();
+    const auto flags = flags_shelf.as_series().to(pluss::codem::ScalarType::Bool).host<bool>();
     for (std::size_t i = 0; i < flags.size() && i < out.size(); ++i) {
       out[i] = flags[i];
     }
   } catch (const std::exception&) {
   }
   return out;
+}
+
+// Per-case "is missing" flags for one column.
+std::vector<bool> missing_flags_(const Shelf& col, const std::int64_t n) {
+  return shelf_flags_(col.isnull(), n);
 }
 
 HtmlBodyStyle profile_style_(std::string_view corner, std::vector<std::string> count_columns = {}) {
@@ -2390,75 +2397,14 @@ struct ViewResult {
   bool pairs{false};       // correlation: the strongest pairs instead of the full matrix
 };
 
-// One row per numeric column: count / missing / unique, mean, std and the five-number
-// summary. Non-numeric columns are not summarised.
+// Match the public numerical summary exactly; the other profiling view owns
+// null and nonfinite diagnostics.
 std::optional<ViewResult> compute_summary_(const DataFrame& frame) {
-  const auto cols = dataframe_columns_(frame);
-  const auto all_names = frame.features();
-  const double nan = std::numeric_limits<double>::quiet_NaN();
-  std::vector<std::string> names;
-  std::vector<std::int64_t> count, missing, nan_count, inf_count, unique;
-  std::array<std::vector<double>, 7> stat;  // mean std min 25% 50% 75% max
-  std::vector<std::uint8_t> has_stat;
-  const auto n = frame.ncases();
-  for (std::size_t c = 0; c < cols.size(); ++c) {
-    const auto& col = cols[c];
-    if (!is_stat_numeric_(col)) {
-      continue;
-    }
-    names.push_back(all_names[c]);
-    const auto valid = col.count().to_int();
-    count.push_back(valid);
-    missing.push_back(n - valid);
-    const auto count_true = [](const Shelf& flags) {
-      std::int64_t total = 0;
-      try {
-        for (const bool f : flags.as_series().to(pluss::codem::ScalarType::Bool).host<bool>()) total += f ? 1 : 0;
-      } catch (const std::exception&) {
-      }
-      return total;
-    };
-    nan_count.push_back(count_true(col.isnan()));
-    inf_count.push_back(count_true(col.isinf()));
-    unique.push_back(col.ndistinct().to_int());
-
-    std::array<double, 7> v{nan, nan, nan, nan, nan, nan, nan};
-    bool ok = false;
-    if (valid > 0) {
-      try {
-        const auto q = col.percentiles({0.25, 0.5, 0.75}).as_series().to(pluss::codem::ScalarType::Float64).host<double>();
-        v[0] = col.mean().to_dbl();
-        v[1] = valid > 1 ? col.std().to_dbl() : nan;
-        v[2] = col.min().to_dbl();
-        v[3] = q.size() > 0 ? q[0] : nan;
-        v[4] = q.size() > 1 ? q[1] : nan;
-        v[5] = q.size() > 2 ? q[2] : nan;
-        v[6] = col.max().to_dbl();
-        ok = true;
-      } catch (const std::exception&) {
-      }
-    }
-    for (std::size_t k = 0; k < 7; ++k) {
-      stat[k].push_back(v[k]);
-    }
-    has_stat.push_back(ok ? 1 : 0);
-  }
-  if (names.empty()) {
+  try {
+    return ViewResult{DataFrame(frame.describe(false).transpose(false)), 0, false};
+  } catch (const std::exception&) {
     return std::nullopt;
   }
-
-  std::vector<std::pair<std::string, Shelf>> out;
-  out.emplace_back("count", Shelf(pluss::make_series(count)));
-  out.emplace_back("missing", Shelf(pluss::make_series(missing)));
-  out.emplace_back("nan", Shelf(pluss::make_series(nan_count)));
-  out.emplace_back("inf", Shelf(pluss::make_series(inf_count)));
-  out.emplace_back("unique", Shelf(pluss::make_series(unique)));
-  const char* stat_names[] = {"mean", "std", "min", "25%", "50%", "75%", "max"};
-  for (std::size_t k = 0; k < 7; ++k) {
-    out.emplace_back(stat_names[k], masked_f64_(stat[k], has_stat));
-  }
-  const DataFrame summary(std::move(out), Shelf(pluss::make_note(names)));
-  return ViewResult{summary, 0, false};
 }
 
 // Pearson correlation between numeric columns. Up to kMatrixColumns numeric columns it is the
@@ -2530,9 +2476,8 @@ std::optional<ViewResult> compute_correlation_(const DataFrame& frame) {
   }
 }
 
-// How incomplete each column is: how many values are missing and what share of the column
-// that is (to judge whether it is worth keeping). The last row counts cases with a gap in
-// any column.
+// Separate absent cells from nonfinite numeric values. The last row counts
+// cases where any column has each condition.
 std::optional<ViewResult> compute_missing_(const DataFrame& frame) {
   const auto cols = dataframe_columns_(frame);
   const auto names = frame.features();
@@ -2541,31 +2486,40 @@ std::optional<ViewResult> compute_missing_(const DataFrame& frame) {
     return std::nullopt;
   }
   std::vector<std::string> row_names;
-  std::vector<std::int64_t> missing_count;
-  std::vector<double> percent;
-  std::vector<bool> any_missing(static_cast<std::size_t>(n), false);
-
-  const auto add_row = [&](const std::string& name, const std::int64_t gaps) {
-    row_names.push_back(name);
-    missing_count.push_back(gaps);
-    percent.push_back(100.0 * static_cast<double>(gaps) / static_cast<double>(n));
-  };
+  std::array<std::vector<std::int64_t>, 3> counts;
+  std::array<std::vector<double>, 3> percents;
+  std::array<std::vector<bool>, 3> any_flags;
+  for (auto& flags : any_flags) flags.resize(static_cast<std::size_t>(n), false);
   for (std::size_t c = 0; c < cols.size(); ++c) {
-    const auto flags = missing_flags_(cols[c], n);
-    std::int64_t gaps = 0;
-    for (std::int64_t i = 0; i < n; ++i) {
-      if (flags[static_cast<std::size_t>(i)]) {
-        ++gaps;
-        any_missing[static_cast<std::size_t>(i)] = true;
+    row_names.push_back(names[c]);
+    std::array<std::vector<bool>, 3> flags{missing_flags_(cols[c], n), {}, {}};
+    try { flags[1] = shelf_flags_(cols[c].isnan(), n); } catch (const std::exception&) {}
+    try { flags[2] = shelf_flags_(cols[c].isinf(), n); } catch (const std::exception&) {}
+    for (std::size_t kind = 0; kind < flags.size(); ++kind) {
+      std::int64_t count = 0;
+      for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+        if (i < flags[kind].size() && flags[kind][i]) {
+          ++count;
+          any_flags[kind][i] = true;
+        }
       }
+      counts[kind].push_back(count);
+      percents[kind].push_back(100.0 * static_cast<double>(count) / static_cast<double>(n));
     }
-    add_row(names[c], gaps);
   }
-  add_row("(any column)", std::count(any_missing.begin(), any_missing.end(), true));
+  row_names.push_back("(any column)");
+  for (std::size_t kind = 0; kind < counts.size(); ++kind) {
+    const auto count = std::count(any_flags[kind].begin(), any_flags[kind].end(), true);
+    counts[kind].push_back(count);
+    percents[kind].push_back(100.0 * static_cast<double>(count) / static_cast<double>(n));
+  }
 
   std::vector<std::pair<std::string, Shelf>> out;
-  out.emplace_back("missing", Shelf(pluss::make_series(missing_count)));
-  out.emplace_back("missing %", Shelf(pluss::make_series(percent)));
+  const std::array<std::string, 3> labels{"null", "NaN", "infinity"};
+  for (std::size_t kind = 0; kind < labels.size(); ++kind) {
+    out.emplace_back(labels[kind], Shelf(pluss::make_series(counts[kind])));
+    out.emplace_back(labels[kind] + " %", Shelf(pluss::make_series(percents[kind])));
+  }
   const DataFrame table(std::move(out), Shelf(pluss::make_note(row_names)));
   return ViewResult{table, 0, false};
 }
@@ -2651,8 +2605,9 @@ std::optional<ViewResult> compute_outliers_(const DataFrame& frame) {
 }
 
 std::string render_summary_(const ViewResult& result, const DisplayOptions& options) {
-  return render_html_table_body_(auto_round_(result.table, 4, options), options, "plussmic-summary",
-                                 profile_style_("feature", {"count", "missing", "nan", "inf", "unique"}));
+  auto style = profile_style_("feature", {"count"});
+  style.format_numeric_text = true;
+  return render_html_table_body_(result.table, options, "plussmic-summary", style);
 }
 
 std::string render_correlation_(const ViewResult& result, const DisplayOptions& options) {
@@ -2670,7 +2625,7 @@ std::string render_correlation_(const ViewResult& result, const DisplayOptions& 
 
 std::string render_missing_(const ViewResult& result, const DisplayOptions& options) {
   return render_html_table_body_(auto_round_(result.table, 1, options), options, "plussmic-missing",
-                                 profile_style_("feature", {"missing"}));
+                                 profile_style_("feature", {"null", "NaN", "infinity"}));
 }
 
 std::string render_outliers_(const ViewResult& result, const DisplayOptions& options) {
@@ -2692,19 +2647,22 @@ class StatsViews {
   // Views that can apply to this frame. A view listed here may still turn out to be undefined
   // (render() then returns an empty string).
   std::vector<Info> available() const {
+    const auto columns = dataframe_columns_(frame_);
     std::size_t numeric = 0;
-    for (const auto& col : dataframe_columns_(frame_)) {
+    for (const auto& col : columns) {
       numeric += is_stat_numeric_(col) ? 1 : 0;
     }
     std::vector<Info> out;
-    if (numeric >= 1) {
+    const bool has_describable_column =
+        std::any_of(columns.begin(), columns.end(), [](const Shelf& col) { return is_numeric_shelf(col); });
+    if (has_describable_column) {
       out.push_back({"summary", "Summary"});
     }
     if (numeric >= 2) {
       out.push_back({"correlation", "Correlation"});
     }
     if (frame_.ncases() > 0 && frame_.nfeatures() > 0) {
-      out.push_back({"missing", "Missing"});
+      out.push_back({"missing", "Validity"});
     }
     if (numeric >= 1) {
       out.push_back({"outliers", "Outliers"});
