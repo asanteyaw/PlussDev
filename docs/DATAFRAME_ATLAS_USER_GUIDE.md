@@ -904,7 +904,7 @@ auto df = pluss::table::DataFrame::load_csv("data.csv");
 // PlussMic wrappers (pandas-like)
 auto f1 = df.plot().line("price");
 auto f2 = df.plot().scatter("x", "y");
-auto f3 = df.plot().bar("count", "label");
+auto f3 = df.plot().bar("label", "count");
 auto f4 = df.plot().hist("price", 20);
 
 f1.show();

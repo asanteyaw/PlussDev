@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 72c5be14d456 -->
+<!-- pluss-signature-hash: bac193139567 -->
 
 # DataFramePlotAccessor::bar
 
@@ -8,26 +8,27 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature,
-                                              std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::bar() const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature,
-                                              std::optional<std::string_view> x_feature,
-                                              const BarPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::bar(const BarPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features,
-                                              std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features,
-                                              std::optional<std::string_view> x_feature,
-                                              const BarPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
-                                              std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, std::string_view y_feature, const BarPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
-                                              std::optional<std::string_view> x_feature,
-                                              const BarPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const BarPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const BarPlotOptions& options) const
 ```
 
 ## What It Does
@@ -48,7 +49,7 @@ mechanics.
     grouped bars sharing each axis position. At least one is required — an empty list
     throws `"DataFrame::plot().bar: at least one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     Same three-step resolution as [`line()`](line.md) — falls back to the frame's row
     labels (titled `"case"`) if omitted with no default set.
 
@@ -94,7 +95,7 @@ auto sales = DataFrame({
     {"amount", Shelf(pluss::make_series({320.0, 180.0, 240.0}))},
 });
 
-auto chart = sales.plot().bar("amount", "city");
+auto chart = sales.plot().bar("city", "amount");
 chart.show();
 ```
 
@@ -111,7 +112,7 @@ auto exams = DataFrame({
     {"final",   Shelf(pluss::make_series({75.0, 79.0, 95.0}))},
 });
 
-auto chart = exams.plot().bar({"midterm", "final"}, "student");
+auto chart = exams.plot().bar("student", {"midterm", "final"});
 chart.show();
 ```
 
@@ -125,7 +126,7 @@ Example 3. The same grouped call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"midterm", "final"};
-auto chart = exams.plot().bar(y_names, "student");
+auto chart = exams.plot().bar("student", y_names);
 chart.save_pdf("exams.pdf");
 ```
 
@@ -146,7 +147,7 @@ Example 5. `horizontal = true` — bars extend sideways, category axis runs vert
 BarPlotOptions horizontal_options;
 horizontal_options.horizontal = true;
 
-auto chart = sales.plot().bar("amount", "city", horizontal_options);
+auto chart = sales.plot().bar("city", "amount", horizontal_options);
 chart.show();
 ```
 
@@ -165,7 +166,7 @@ BarPlotOptions ci_options;
 ci_options.ci_enabled = true;
 ci_options.ci_level = 0.90;
 
-auto chart = repeated.plot().bar("amount", "city", ci_options);
+auto chart = repeated.plot().bar("city", "amount", ci_options);
 chart.show();
 ```
 

@@ -984,10 +984,20 @@ bool show_inhouse_html_window(const std::string& title,
   std::unordered_map<std::string, std::string> input_values;
   double widget_scale = 1.0;
   const bool has_table = contains_tag(document.root, "table");
+  std::string live_svg = svg_payload;  // follows a re-render (e.g. a colour choice) so Save writes what is shown
   std::vector<window::ShellSaveFormat> save_formats{
-      {"PNG image", "png"},
-      {"PDF document", "pdf"},
+      {"PNG", "png"},
+      {"PDF", "pdf"},
   };
+  if (!live_svg.empty()) {
+    save_formats.push_back(window::ShellSaveFormat{"SVG", "svg"});
+    // The window's single Save menu replaces the in-page save buttons.
+    for (const char* id : {"download-svg", "save-png"}) {
+      if (auto* node = find_node_by_id_mut(document.root, id)) {
+        set_class(*node, "hidden", true);
+      }
+    }
+  }
   if (has_table || virtual_table_model != nullptr) {
     save_formats.push_back(window::ShellSaveFormat{"CSV data", "csv"});
     save_formats.push_back(window::ShellSaveFormat{"Tab-delimited text", "txt"});
@@ -1191,6 +1201,9 @@ bool show_inhouse_html_window(const std::string& title,
     if (extension == "pdf") {
       return shell->save_canvas_pdf(presented_canvas, path);
     }
+    if (extension == "svg") {
+      return !live_svg.empty() && write_text_file(path, live_svg);
+    }
     const auto export_tables =
         virtual_table_model != nullptr && virtual_table_visible(document.root)
             ? ExportTables{export_table_from_virtual_model(
@@ -1209,14 +1222,14 @@ bool show_inhouse_html_window(const std::string& title,
     return false;
   };
   const auto save_svg = [&]() {
-    if (svg_payload.empty()) {
+    if (live_svg.empty()) {
       return false;
     }
     const std::string suggested =
         svg_snapshot_name.empty() ? std::string("pluss-plot.svg")
                                   : std::filesystem::path(svg_snapshot_name).filename().string();
     const std::string path = shell->choose_save_path(suggested, "svg");
-    return !path.empty() && write_text_file(path, svg_payload);
+    return !path.empty() && write_text_file(path, live_svg);
   };
 
   window::ShellCursor last_cursor = window::ShellCursor::Arrow;
@@ -1376,10 +1389,24 @@ bool show_inhouse_html_window(const std::string& title,
                                          [&](const HtmlMenu& m) { return m.id == menu_id; });
           const std::string rerendered = menu->render(std::string_view(event.note).substr(colon + 1));
           if (!rerendered.empty()) {
+            if (!live_svg.empty()) {
+              const auto svg_begin = rerendered.find("<svg");
+              const auto svg_end = rerendered.rfind("</svg>");
+              if (svg_begin != std::string::npos && svg_end != std::string::npos && svg_end > svg_begin) {
+                live_svg = rerendered.substr(svg_begin, svg_end + 6 - svg_begin);
+              }
+            }
             document = window::parse_html_document(
                 rerendered, document.title.empty() ? std::string("PlussTilsView") : document.title);
             layout_cache.clear();
             hide_view_picker(document.root);
+            if (!live_svg.empty()) {
+              for (const char* id : {"download-svg", "save-png"}) {
+                if (auto* node = find_node_by_id_mut(document.root, id)) {
+                  set_class(*node, "hidden", true);
+                }
+              }
+            }
             if (!last_view_button.empty()) {
               (void)select_view(last_view_button);
             }

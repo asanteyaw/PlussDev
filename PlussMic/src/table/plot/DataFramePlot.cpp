@@ -886,6 +886,28 @@ Studio make_xy_figure(const DataFrame& frame,
     ++feature_index;
   }
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  if (y_features.size() == 1) {
+    // A time column on the y axis shows dates, not raw tick counts.
+    const auto y_shelf = frame.features(*y_features.begin());
+    if (y_shelf.kind() == ShelfKind::Timeline) {
+      const auto y_vals = shelf_to_plot_numeric_values(y_shelf);
+      const auto y_labels = shelf_to_plot_labels(y_shelf, options);
+      std::vector<std::size_t> order(y_vals.size());
+      std::iota(order.begin(), order.end(), std::size_t{0});
+      std::sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) { return y_vals[a] < y_vals[b]; });
+      const std::size_t wanted = std::min<std::size_t>(order.size(), 6);
+      std::vector<double> tick_values;
+      std::vector<std::string> tick_labels;
+      for (std::size_t i = 0; i < wanted; ++i) {
+        const auto row = order[wanted == 1 ? 0 : i * (order.size() - 1) / (wanted - 1)];
+        if (!tick_values.empty() && tick_values.back() == y_vals[row]) continue;
+        tick_values.push_back(y_vals[row]);
+        tick_labels.push_back(simplify_midnight_datetime_label(y_labels[row]));
+      }
+      const auto views = label_views(tick_labels);
+      pane.y_ticks(tick_values, pluss::msharp::RangeView::Of<std::string_view>(views));
+    }
+  }
   if (y_limit_method.has_value()) {
     pane.y_limit_method(*y_limit_method);
   }
@@ -1064,6 +1086,36 @@ AggregatedBarSeries aggregate_for_bar_ci(const ResolvedPlotAxis& axis,
 DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options)
     : frame_(std::move(frame)), options_(std::move(options)) {}
 
+std::pair<std::string, std::string> DataFramePlotAccessor::default_columns_(std::string_view method) const {
+  // One policy for every call that names no columns: exactly two numeric columns are x then y; a
+  // frame of exactly two columns where one is time or text puts that one on x. Anything else is
+  // ambiguous, so the caller is asked to name the columns.
+  const auto features = frame_.features();
+  std::vector<std::string> numeric;
+  std::vector<std::string> labeled;
+  for (const auto& name : features) {
+    const auto shelf = frame_.features(name);
+    if (shelf.kind() == ShelfKind::Series) {
+      numeric.push_back(name);
+    } else if (shelf_prefers_labeled_axis(shelf)) {
+      labeled.push_back(name);
+    }
+  }
+  if (numeric.size() == 2) {
+    return {numeric[0], numeric[1]};
+  }
+  if (features.size() == 2 && numeric.size() == 1 && labeled.size() == 1) {
+    return {labeled[0], numeric[0]};
+  }
+  std::string found;
+  for (const auto& name : features) {
+    found += (found.empty() ? "'" : ", '") + name + "'";
+  }
+  PLUSS_FAIL("DataFrame::plot()." + std::string(method) + ": cannot choose the columns automatically (the frame has " +
+             std::to_string(features.size()) + " columns: " + found + ", " + std::to_string(numeric.size()) +
+             " numeric); name them, e.g. plot()." + std::string(method) + "(\"x_column\", \"y_column\")");
+}
+
 std::optional<std::string_view> DataFramePlotAccessor::resolve_x_feature(
     std::optional<std::string_view> x_feature) const {
   if (x_feature.has_value()) {
@@ -1106,19 +1158,19 @@ void DataFramePlotAccessor::apply_figure_options(pluss::pl::Studio& figure) cons
   }
 }
 
-pluss::pl::Studio DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return line(y_feature, x_feature, LinePlotOptions{});
+  return line_y(y_feature, x_feature, LinePlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return line(y_features, x_feature, LinePlotOptions{});
+  return line_y(y_features, x_feature, LinePlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const LinePlotOptions& options) const {
@@ -1130,7 +1182,7 @@ pluss::pl::Studio DataFramePlotAccessor::line(
   return value.plot(options_).line(options);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const LinePlotOptions& options) const {
@@ -1153,22 +1205,22 @@ pluss::pl::Studio DataFramePlotAccessor::line(
 pluss::pl::Studio DataFramePlotAccessor::impl_line(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return line(y_features, x_feature, LinePlotOptions{});
+  return line_y(y_features, x_feature, LinePlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return step(y_feature, x_feature, StepPlotOptions{});
+  return step_y(y_feature, x_feature, StepPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return step(y_features, x_feature, StepPlotOptions{});
+  return step_y(y_features, x_feature, StepPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const StepPlotOptions& options) const {
@@ -1180,7 +1232,7 @@ pluss::pl::Studio DataFramePlotAccessor::step(
   return value.plot(options_).step(options);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const StepPlotOptions& options) const {
@@ -1202,22 +1254,22 @@ pluss::pl::Studio DataFramePlotAccessor::step(
 pluss::pl::Studio DataFramePlotAccessor::impl_step(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return step(y_features, x_feature, StepPlotOptions{});
+  return step_y(y_features, x_feature, StepPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return area(y_feature, x_feature, AreaPlotOptions{});
+  return area_y(y_feature, x_feature, AreaPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return area(y_features, x_feature, AreaPlotOptions{});
+  return area_y(y_features, x_feature, AreaPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const AreaPlotOptions& options) const {
@@ -1229,7 +1281,7 @@ pluss::pl::Studio DataFramePlotAccessor::area(
   return value.plot(options_).area(options);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const AreaPlotOptions& options) const {
@@ -1251,16 +1303,16 @@ pluss::pl::Studio DataFramePlotAccessor::area(
 pluss::pl::Studio DataFramePlotAccessor::impl_area(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return area(y_features, x_feature, AreaPlotOptions{});
+  return area_y(y_features, x_feature, AreaPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(
+pluss::pl::Studio DataFramePlotAccessor::area_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return area_stacked(y_features, x_feature, AreaStackedPlotOptions{});
+  return area_stacked_y(y_features, x_feature, AreaStackedPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(
+pluss::pl::Studio DataFramePlotAccessor::area_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const AreaStackedPlotOptions& options) const {
@@ -1292,7 +1344,7 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
 pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return area_stacked(y_features, x_feature, AreaStackedPlotOptions{});
+  return area_stacked_y(y_features, x_feature, AreaStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
@@ -1348,13 +1400,13 @@ pluss::pl::Studio DataFramePlotAccessor::impl_scatter(std::string_view x_feature
   return scatter(x_feature, y_feature, hue_feature, ScatterPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return bar(y_feature, x_feature, BarPlotOptions{});
+  return bar_y(y_feature, x_feature, BarPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar_y(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature,
     const BarPlotOptions& options) const {
@@ -1366,13 +1418,13 @@ pluss::pl::Studio DataFramePlotAccessor::bar(
   return value.plot(options_).bar(options);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return bar(y_features, x_feature, BarPlotOptions{});
+  return bar_y(y_features, x_feature, BarPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const BarPlotOptions& options) const {
@@ -1462,13 +1514,13 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   return fig;
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return bar_stacked(y_features, x_feature, BarStackedPlotOptions{});
+  return bar_stacked_y(y_features, x_feature, BarStackedPlotOptions{});
 }
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const BarStackedPlotOptions& options) const {
@@ -1500,7 +1552,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
 pluss::pl::Studio DataFramePlotAccessor::impl_bar_stacked(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return bar_stacked(y_features, x_feature, BarStackedPlotOptions{});
+  return bar_stacked_y(y_features, x_feature, BarStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features) const {

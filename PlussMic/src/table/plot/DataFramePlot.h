@@ -353,77 +353,141 @@ class DataFramePlotAccessor {
 public:
   explicit DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options = {});
 
-  pluss::pl::Studio line(std::string_view y_feature,
+  // x first, then y: line(x, y) or line(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio line() const { const auto xy = default_columns_("line"); return line_y(std::string_view(xy.second), std::string_view(xy.first), LinePlotOptions{}); }
+  pluss::pl::Studio line(const LinePlotOptions& options) const { const auto xy = default_columns_("line"); return line_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio line(std::string_view y_feature) const { return line_y(y_feature, std::nullopt); }
+  pluss::pl::Studio line(std::string_view x_feature, std::string_view y_feature) const { return line_y(y_feature, x_feature); }
+  pluss::pl::Studio line(std::string_view x_feature, std::string_view y_feature, const LinePlotOptions& options) const { return line_y(y_feature, x_feature, options); }
+  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return line_y(y_features, std::nullopt); }
+  pluss::pl::Studio line(std::initializer_list<std::string_view> y_features) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio line(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return line_y(y_features, x_feature); }
+  pluss::pl::Studio line(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio line(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const LinePlotOptions& options) const { return line_y(y_features, x_feature, options); }
+  pluss::pl::Studio line(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+  // x first, then y: step(x, y) or step(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio step() const { const auto xy = default_columns_("step"); return step_y(std::string_view(xy.second), std::string_view(xy.first), StepPlotOptions{}); }
+  pluss::pl::Studio step(const StepPlotOptions& options) const { const auto xy = default_columns_("step"); return step_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio step(std::string_view y_feature) const { return step_y(y_feature, std::nullopt); }
+  pluss::pl::Studio step(std::string_view x_feature, std::string_view y_feature) const { return step_y(y_feature, x_feature); }
+  pluss::pl::Studio step(std::string_view x_feature, std::string_view y_feature, const StepPlotOptions& options) const { return step_y(y_feature, x_feature, options); }
+  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return step_y(y_features, std::nullopt); }
+  pluss::pl::Studio step(std::initializer_list<std::string_view> y_features) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio step(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return step_y(y_features, x_feature); }
+  pluss::pl::Studio step(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio step(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const StepPlotOptions& options) const { return step_y(y_features, x_feature, options); }
+  pluss::pl::Studio step(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+  // x first, then y: area(x, y) or area(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio area() const { const auto xy = default_columns_("area"); return area_y(std::string_view(xy.second), std::string_view(xy.first), AreaPlotOptions{}); }
+  pluss::pl::Studio area(const AreaPlotOptions& options) const { const auto xy = default_columns_("area"); return area_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio area(std::string_view y_feature) const { return area_y(y_feature, std::nullopt); }
+  pluss::pl::Studio area(std::string_view x_feature, std::string_view y_feature) const { return area_y(y_feature, x_feature); }
+  pluss::pl::Studio area(std::string_view x_feature, std::string_view y_feature, const AreaPlotOptions& options) const { return area_y(y_feature, x_feature, options); }
+  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return area_y(y_features, std::nullopt); }
+  pluss::pl::Studio area(std::initializer_list<std::string_view> y_features) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio area(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return area_y(y_features, x_feature); }
+  pluss::pl::Studio area(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio area(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const AreaPlotOptions& options) const { return area_y(y_features, x_feature, options); }
+  pluss::pl::Studio area(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+  // x first, then y: bar(x, y) or bar(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio bar() const { const auto xy = default_columns_("bar"); return bar_y(std::string_view(xy.second), std::string_view(xy.first), BarPlotOptions{}); }
+  pluss::pl::Studio bar(const BarPlotOptions& options) const { const auto xy = default_columns_("bar"); return bar_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio bar(std::string_view y_feature) const { return bar_y(y_feature, std::nullopt); }
+  pluss::pl::Studio bar(std::string_view x_feature, std::string_view y_feature) const { return bar_y(y_feature, x_feature); }
+  pluss::pl::Studio bar(std::string_view x_feature, std::string_view y_feature, const BarPlotOptions& options) const { return bar_y(y_feature, x_feature, options); }
+  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return bar_y(y_features, std::nullopt); }
+  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_features) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio bar(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return bar_y(y_features, x_feature); }
+  pluss::pl::Studio bar(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio bar(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const BarPlotOptions& options) const { return bar_y(y_features, x_feature, options); }
+  pluss::pl::Studio bar(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+  // x first, then y: area_stacked(x, y) or area_stacked(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return area_stacked_y(y_features, std::nullopt); }
+  pluss::pl::Studio area_stacked(std::initializer_list<std::string_view> y_features) const { return area_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio area_stacked(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return area_stacked_y(y_features, x_feature); }
+  pluss::pl::Studio area_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return area_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio area_stacked(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const AreaStackedPlotOptions& options) const { return area_stacked_y(y_features, x_feature, options); }
+  pluss::pl::Studio area_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const AreaStackedPlotOptions& options) const { return area_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+  // x first, then y: bar_stacked(x, y) or bar_stacked(x, {y1, y2}); a single argument is y against the case labels.
+  pluss::pl::Studio bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features) const { return bar_stacked_y(y_features, std::nullopt); }
+  pluss::pl::Studio bar_stacked(std::initializer_list<std::string_view> y_features) const { return bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), std::nullopt); }
+  pluss::pl::Studio bar_stacked(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features) const { return bar_stacked_y(y_features, x_feature); }
+  pluss::pl::Studio bar_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const { return bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature); }
+  pluss::pl::Studio bar_stacked(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const BarStackedPlotOptions& options) const { return bar_stacked_y(y_features, x_feature, options); }
+  pluss::pl::Studio bar_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const BarStackedPlotOptions& options) const { return bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
+private:
+  pluss::pl::Studio line_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio line_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio line(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio line_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const {
-    return line(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio line(std::string_view y_feature,
+  pluss::pl::Studio line_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature,
                          const LinePlotOptions& options) const;
-  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio line_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const LinePlotOptions& options) const;
-  pluss::pl::Studio line(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio line_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const LinePlotOptions& options) const {
-    return line(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
-  pluss::pl::Studio step(std::string_view y_feature,
+  pluss::pl::Studio step_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio step_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio step(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio step_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const {
-    return step(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio step(std::string_view y_feature,
+  pluss::pl::Studio step_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature,
                          const StepPlotOptions& options) const;
-  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio step_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const StepPlotOptions& options) const;
-  pluss::pl::Studio step(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio step_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const StepPlotOptions& options) const {
-    return step(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
-  pluss::pl::Studio area(std::string_view y_feature,
+  pluss::pl::Studio area_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio area_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio area(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio area_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature = std::nullopt) const {
-    return area(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio area(std::string_view y_feature,
+  pluss::pl::Studio area_y(std::string_view y_feature,
                          std::optional<std::string_view> x_feature,
                          const AreaPlotOptions& options) const;
-  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio area_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const AreaPlotOptions& options) const;
-  pluss::pl::Studio area(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio area_y(std::initializer_list<std::string_view> y_features,
                          std::optional<std::string_view> x_feature,
                          const AreaPlotOptions& options) const {
-    return area(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
-  pluss::pl::Studio area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio area_stacked_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                                  std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio area_stacked(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio area_stacked_y(std::initializer_list<std::string_view> y_features,
                                  std::optional<std::string_view> x_feature = std::nullopt) const {
-    return area_stacked(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return area_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio area_stacked_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                                  std::optional<std::string_view> x_feature,
                                  const AreaStackedPlotOptions& options) const;
-  pluss::pl::Studio area_stacked(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio area_stacked_y(std::initializer_list<std::string_view> y_features,
                                  std::optional<std::string_view> x_feature,
                                  const AreaStackedPlotOptions& options) const {
-    return area_stacked(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return area_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
+public:
   pluss::pl::Studio scatter(std::string_view x_feature,
                             std::string_view y_feature,
                             std::optional<std::string_view> hue_feature = std::nullopt) const;
@@ -431,39 +495,41 @@ public:
                             std::string_view y_feature,
                             std::optional<std::string_view> hue_feature,
                             const ScatterPlotOptions& options) const;
-  pluss::pl::Studio bar(std::string_view y_feature,
+private:
+  pluss::pl::Studio bar_y(std::string_view y_feature,
                         std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio bar(std::string_view y_feature,
+  pluss::pl::Studio bar_y(std::string_view y_feature,
                         std::optional<std::string_view> x_feature,
                         const BarPlotOptions& options) const;
-  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio bar_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                         std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio bar_y(std::initializer_list<std::string_view> y_features,
                         std::optional<std::string_view> x_feature = std::nullopt) const {
-    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio bar_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                         std::optional<std::string_view> x_feature,
                         const BarPlotOptions& options) const;
-  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio bar_y(std::initializer_list<std::string_view> y_features,
                         std::optional<std::string_view> x_feature,
                         const BarPlotOptions& options) const {
-    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
-  pluss::pl::Studio bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                                 std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio bar_stacked(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio bar_stacked_y(std::initializer_list<std::string_view> y_features,
                                 std::optional<std::string_view> x_feature = std::nullopt) const {
-    return bar_stacked(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
+    return bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature);
   }
-  pluss::pl::Studio bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+  pluss::pl::Studio bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view> y_features,
                                 std::optional<std::string_view> x_feature,
                                 const BarStackedPlotOptions& options) const;
-  pluss::pl::Studio bar_stacked(std::initializer_list<std::string_view> y_features,
+  pluss::pl::Studio bar_stacked_y(std::initializer_list<std::string_view> y_features,
                                 std::optional<std::string_view> x_feature,
                                 const BarStackedPlotOptions& options) const {
-    return bar_stacked(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
+    return bar_stacked_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options);
   }
+public:
   pluss::pl::Studio box(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   pluss::pl::Studio box(std::initializer_list<std::string_view> features) const {
     return box(pluss::msharp::RangeView::Of<std::string_view>(features));
@@ -639,6 +705,7 @@ private:
   [[nodiscard]] std::optional<std::string_view> resolve_hue_feature(std::optional<std::string_view> hue_feature) const;
   [[nodiscard]] std::int64_t resolve_bins(std::int64_t bins) const noexcept;
   void apply_figure_options(pluss::pl::Studio& figure) const;
+  [[nodiscard]] std::pair<std::string, std::string> default_columns_(std::string_view method) const;
 
   DataFrame frame_{};
   DataFramePlotOptions options_{};

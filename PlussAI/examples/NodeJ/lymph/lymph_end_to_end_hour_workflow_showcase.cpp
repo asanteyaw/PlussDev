@@ -173,15 +173,15 @@ int main(int argc, char** argv) {
     weekday_mean.save_csv((out_dir / "eda_weekday_mean_total_count.csv").string());
 
     hour_mean.plot()
-        .line("mean_total_count", "hour")
+        .line("hour", "mean_total_count")
         .headline("Average rentals by hour")
         .save_pdf((out_dir / "eda_hour_mean_line.pdf").string());
     month_mean.plot()
-        .line("mean_total_count", "month")
+        .line("month", "mean_total_count")
         .headline("Average rentals by month")
         .save_pdf((out_dir / "eda_month_mean_line.pdf").string());
     weather_mean.plot()
-        .bar("mean_total_count", "weather_condition")
+        .bar("weather_condition", "mean_total_count")
         .headline("Average rentals by weather condition")
         .save_pdf((out_dir / "eda_weather_mean_bar.pdf").string());
 

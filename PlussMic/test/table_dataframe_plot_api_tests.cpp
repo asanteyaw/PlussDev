@@ -135,7 +135,7 @@ void test_object_plot_apis() {
   const auto fig_hist_all = df.plot().hist(7);
   expect(fig_hist_all.pane_count() == 3, "plot().hist(bins) should default to all numeric features");
 
-  const auto fig_line = df.plot().line({"y", "z"}, "x");
+  const auto fig_line = df.plot().line("x", {"y", "z"});
   expect(fig_line.panes().front().trace_count() == 2, "plot().line should emit one trace per y feature");
   expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
          "plot().line should emit trend traces");
@@ -332,7 +332,7 @@ void test_plot_options_defaults() {
   pluss::table::BarPlotOptions bar_options;
   bar_options.ci_enabled = true;
   bar_options.ci_level = 0.95;
-  const auto fig_bar_ci = df.plot(options).bar("y", "grp", bar_options);
+  const auto fig_bar_ci = df.plot(options).bar("grp", "y", bar_options);
   expect(fig_bar_ci.panes().front().trace_count() == 2, "plot(options).bar with CI should emit bar + whisker");
   const auto& traces = fig_bar_ci.panes().front().traces();
   const bool has_whisk = std::any_of(traces.begin(), traces.end(), [](const auto& trace) {
@@ -342,7 +342,7 @@ void test_plot_options_defaults() {
 
   pluss::table::BarPlotOptions horizontal_bar_options;
   horizontal_bar_options.horizontal = true;
-  const auto fig_bar_horizontal = df.plot(options).bar("y", "grp", horizontal_bar_options);
+  const auto fig_bar_horizontal = df.plot(options).bar("grp", "y", horizontal_bar_options);
   expect(fig_bar_horizontal.panes().front().trace_count() == 1,
          "plot(options).bar(horizontal) should emit one columns trace without CI");
   expect(fig_bar_horizontal.panes().front().traces().front().kind() == TraceKind::Columns,
@@ -428,9 +428,38 @@ void test_corr_methods_and_plot3d() {
          "plot3d().wireframe should emit lattice trace");
 }
 
+void test_default_columns_and_date_axis() {
+  const auto two = DataFrame({
+      {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+      {"b", Shelf(pluss::make_series(std::vector<double>{4.0, 5.0, 7.0}))},
+  });
+  const auto fig_default = two.plot().line();
+  expect(fig_default.panes().front().trace_count() == 1, "plot().line() on two numeric columns should draw one trace");
+  expect(two.plot().line("a", "b").to_svg() == fig_default.to_svg(), "line(x, y) should equal the default for two numeric columns");
+  expect(two.plot().line("b", "a").to_svg() != fig_default.to_svg(), "line(x, y) should put the first name on x");
+
+  const auto dated = DataFrame({
+      {"date", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z", "2024-03-01T00:00:00Z"}))},
+      {"amount", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+  });
+  expect(dated.plot().line().to_svg().find("2024-02-01") != std::string::npos, "two-column time/numeric frame should plot date on x");
+  expect(dated.plot().line("amount", "date").to_svg().find("2024-02-01") != std::string::npos,
+         "a time column on the y axis should show dates");
+
+  const auto wide = DataFrame({
+      {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"b", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"c", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+  });
+  bool threw = false;
+  try { (void)wide.plot().line(); } catch (const pluss::Error&) { threw = true; }
+  expect(threw, "plot().line() on three numeric columns should throw and ask for columns");
+}
+
 } // namespace
 
 int main() {
+  test_default_columns_and_date_axis();
   test_shelf_plot_apis();
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();

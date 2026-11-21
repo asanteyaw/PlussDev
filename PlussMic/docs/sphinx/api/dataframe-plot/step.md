@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b1a13c92931c -->
+<!-- pluss-signature-hash: 717e4d9879a1 -->
 
 # DataFramePlotAccessor::step
 
@@ -8,26 +8,27 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::step() const
 
-pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature,
-                                               const StepPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::step(const StepPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const StepPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, std::string_view y_feature, const StepPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const StepPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const StepPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const StepPlotOptions& options) const
 ```
 
 ## What It Does
@@ -53,7 +54,7 @@ only covers what's specific to `step()`.
     trace. At least one is required — an empty list throws `"DataFrame::plot().step: at
     least one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`StepPlotOptions`)
@@ -89,7 +90,7 @@ auto rates = DataFrame({
     {"limit",  Shelf(pluss::make_series({5.0, 25.0, 100.0, 500.0}))},
 });
 
-auto chart = rates.plot().step("price", "tier");
+auto chart = rates.plot().step("tier", "price");
 chart.show();
 ```
 
@@ -102,7 +103,7 @@ than implying a continuous interpolation between tiers.
 Example 2. Multiple y-features via `initializer_list`, sharing one x-axis.
 
 ```cpp
-auto chart = rates.plot().step({"price", "limit"}, "tier");
+auto chart = rates.plot().step("tier", {"price", "limit"});
 chart.show();
 ```
 
@@ -115,7 +116,7 @@ Example 3. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"price", "limit"};
-auto chart = rates.plot().step(y_names, "tier");
+auto chart = rates.plot().step("tier", y_names);
 chart.save_pdf("tiers.pdf");
 ```
 
@@ -142,7 +143,7 @@ StepPlotOptions step_options;
 step_options.alpha = 0.8;
 step_options.line_width = 2.0;
 
-auto chart = rates.plot().step("price", "tier", step_options);
+auto chart = rates.plot().step("tier", "price", step_options);
 chart.show();
 ```
 
@@ -151,7 +152,7 @@ chart.show();
 Example 6. Multiple y-features with an explicit options object.
 
 ```cpp
-auto chart = rates.plot().step({"price", "limit"}, "tier", step_options);
+auto chart = rates.plot().step("tier", {"price", "limit"}, step_options);
 ```
 
 ![Output of Example 6](img/step-6.svg)

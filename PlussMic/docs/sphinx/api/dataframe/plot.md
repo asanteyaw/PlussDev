@@ -56,7 +56,7 @@ auto sales = DataFrame({
     {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
 });
 
-auto chart = sales.plot().line("amount", "month");
+auto chart = sales.plot().line("month", "amount");
 chart.save_png("monthly_sales.png");
 ```
 

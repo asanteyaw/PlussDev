@@ -343,7 +343,7 @@ class CocoaWindowShell final : public IWindowShell {
         [host_.save_button setAutoresizingMask:NSViewMinXMargin];
         [host_.save_button setBezelStyle:NSBezelStyleRounded];
         [host_.save_button setFont:[NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold]];
-        [host_.save_button addItemWithTitle:@"Save As"];
+        [host_.save_button addItemWithTitle:@"Save"];
         [host_.toolbar addSubview:host_.save_button];
         for (const auto& format : config.save_formats) {
           NSString* label = [[NSString alloc] initWithBytes:format.label.data()

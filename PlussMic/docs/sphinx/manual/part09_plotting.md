@@ -108,7 +108,7 @@ a timeline, or a case label depending on the loader options and schema. A line
 plot will behave differently in each case:
 
 ```cpp
-auto by_date = df.plot().line("close", "date");
+auto by_date = df.plot().line("date", "close");
 ```
 
 If `date` is a `Timeline`, the x-axis uses positional coordinates with rendered
@@ -132,7 +132,7 @@ auto report = raw
     .dropnull({"timestamp", "close"})
     .fillnull(0.0, {"volume"});
 
-auto fig = report.plot().line({"close", "volume"}, "timestamp");
+auto fig = report.plot().line("timestamp", {"close", "volume"});
 ```
 
 Do not let plotting be the first time you think about null semantics. For a
@@ -199,7 +199,7 @@ Because every plotting method returns a `Studio`, you can inspect the figure
 without opening a GUI:
 
 ```cpp
-auto fig = df.plot().line({"close", "open"}, "date");
+auto fig = df.plot().line("date", {"close", "open"});
 
 std::cout << "panes=" << fig.pane_count() << '\n';
 if (!fig.panes().empty()) {
@@ -259,7 +259,7 @@ void plotting_example() {
   plot_options.height = 420.0;
   plot_options.use_tight_layout = true;
 
-  auto line = df.plot(plot_options).line({"y", "z"}, "x");
+  auto line = df.plot(plot_options).line("x", {"y", "z"});
   auto scatter = df.plot(plot_options).scatter("x", "y");
   auto hist = df.plot().hist({"x", "y"}, 6);
   auto corr = df.plot().corr_heatmap({"x", "y", "z"});
@@ -411,13 +411,13 @@ that order. Common examples include prices over dates, cumulative quantities
 over event number, or metrics over training step.
 
 ```cpp
-auto fig = df.plot().line("close", "date");
+auto fig = df.plot().line("date", "close");
 ```
 
 For multiple y features, pass an initializer list:
 
 ```cpp
-auto fig = df.plot().line({"open", "high", "low", "close"}, "date");
+auto fig = df.plot().line("date", {"open", "high", "low", "close"});
 ```
 
 Each y feature becomes one `Trend` trace. If there is more than one y feature,
@@ -432,7 +432,7 @@ line_options.alpha = 0.85;
 line_options.line_width = 2.0;
 line_options.y_limit_method = pluss::pl::LimitMethod::Padded;
 
-auto fig = df.plot().line({"actual", "forecast"}, "date", line_options);
+auto fig = df.plot().line("date", {"actual", "forecast"}, line_options);
 ```
 
 | Option | Default | Meaning |
@@ -451,13 +451,13 @@ balances, inventory levels, regime labels encoded numerically, or state-machine
 outputs.
 
 ```cpp
-auto fig = df.plot().step("inventory", "date");
+auto fig = df.plot().step("date", "inventory");
 ```
 
 Multiple y features are supported:
 
 ```cpp
-auto fig = df.plot().step({"warehouse_a", "warehouse_b"}, "date");
+auto fig = df.plot().step("date", {"warehouse_a", "warehouse_b"});
 ```
 
 `StepPlotOptions` contains:
@@ -476,13 +476,13 @@ Use an area plot when the magnitude under the curve matters. Examples include
 volume, exposure, cumulative usage, or demand.
 
 ```cpp
-auto fig = df.plot().area("volume", "date");
+auto fig = df.plot().area("date", "volume");
 ```
 
 For several independent filled curves:
 
 ```cpp
-auto fig = df.plot().area({"organic", "paid"}, "date");
+auto fig = df.plot().area("date", {"organic", "paid"});
 ```
 
 `AreaPlotOptions` contains:
@@ -497,7 +497,7 @@ auto fig = df.plot().area({"organic", "paid"}, "date");
 Use a stacked area plot when the y features are components of a total:
 
 ```cpp
-auto fig = df.plot().area_stacked({"desktop", "mobile", "tablet"}, "date");
+auto fig = df.plot().area_stacked("date", {"desktop", "mobile", "tablet"});
 ```
 
 All y features should be non-negative unless you have a very specific reason to
@@ -555,13 +555,13 @@ Use a bar plot when one axis is categorical or discrete and the other is a
 numeric value.
 
 ```cpp
-auto fig = df.plot().bar("revenue", "region");
+auto fig = df.plot().bar("region", "revenue");
 ```
 
 For grouped bars, pass several y features:
 
 ```cpp
-auto fig = df.plot().bar({"revenue", "cost"}, "region");
+auto fig = df.plot().bar("region", {"revenue", "cost"});
 ```
 
 `BarPlotOptions` contains:
@@ -581,7 +581,7 @@ pluss::table::BarPlotOptions options;
 options.ci_enabled = true;
 options.ci_level = 0.95;
 
-auto fig = df.plot().bar("latency_ms", "endpoint", options);
+auto fig = df.plot().bar("endpoint", "latency_ms", options);
 ```
 
 For horizontal bars:
@@ -590,7 +590,7 @@ For horizontal bars:
 pluss::table::BarPlotOptions options;
 options.horizontal = true;
 
-auto fig = df.plot().bar("revenue", "region", options);
+auto fig = df.plot().bar("region", "revenue", options);
 ```
 
 Horizontal bars are often easier to read when labels are long.
@@ -600,7 +600,7 @@ Horizontal bars are often easier to read when labels are long.
 Use a stacked bar plot when each y feature is part of the same total:
 
 ```cpp
-auto fig = df.plot().bar_stacked({"new", "returning", "reactivated"}, "month");
+auto fig = df.plot().bar_stacked("month", {"new", "returning", "reactivated"});
 ```
 
 `BarStackedPlotOptions` contains:
@@ -1049,7 +1049,7 @@ zero traces. That is normal.
 You can also add a brief summary to an existing figure:
 
 ```cpp
-auto fig = df.plot().line("revenue", "date");
+auto fig = df.plot().line("date", "revenue");
 df.plot().brief(fig, {"revenue"});
 ```
 
@@ -1205,7 +1205,7 @@ dimension is meaningful:
 Shelf scenarios = pluss::make_note({"base", "stress", "upside"});
 pluss::table::Atlas atlas({base, stressed, optimistic}, scenarios);
 
-auto fig = atlas.plot().line("revenue", "date");
+auto fig = atlas.plot().line("date", "revenue");
 ```
 
 Good atlas plotting cases include:
@@ -1226,7 +1226,7 @@ depth axis.
 The returned `Studio` can be saved directly:
 
 ```cpp
-auto fig = df.plot().line("close", "date");
+auto fig = df.plot().line("date", "close");
 
 fig.save_svg("close.svg");
 fig.save_pdf("close.pdf");
@@ -1250,7 +1250,7 @@ For reliable report builds, write plots into a generated output directory:
 const std::filesystem::path out_dir = "build/report-plots";
 std::filesystem::create_directories(out_dir);
 
-df.plot().line("close", "date").save_svg((out_dir / "close.svg").string());
+df.plot().line("date", "close").save_svg((out_dir / "close.svg").string());
 df.plot().corr_heatmap({"open", "high", "low", "close"})
     .save_svg((out_dir / "ohlc-corr.svg").string());
 ```
@@ -1328,7 +1328,7 @@ encode the category intentionally before plotting numeric distributions.
 This compiles but may lie:
 
 ```cpp
-auto fig = df.plot().line("close", "date");
+auto fig = df.plot().line("date", "close");
 ```
 
 If `df` is not sorted by `date`, the line connects points in row order. Sort
@@ -1336,7 +1336,7 @@ first:
 
 ```cpp
 auto sorted = df.arrange({DataFrame::ArrangeSpec{"date", true, true}});
-auto fig = sorted.plot().line("close", "date");
+auto fig = sorted.plot().line("date", "close");
 ```
 
 ### Too many labels
@@ -1349,7 +1349,7 @@ pluss::table::DataFramePlotOptions options;
 options.max_labeled_ticks = 8;
 options.x_tick_rotation_deg = 45.0;
 
-auto fig = df.plot(options).bar("revenue", "customer");
+auto fig = df.plot(options).bar("customer", "revenue");
 ```
 
 ### Too many points
@@ -1369,7 +1369,7 @@ auto grouped = df.group()
     .by({"region"})
     .agg({{"revenue_sum", "revenue", DataFrame::GroupOp::Sum}});
 
-auto fig = grouped.plot().bar("revenue_sum", "region");
+auto fig = grouped.plot().bar("region", "revenue_sum");
 ```
 
 ## When to use PlussPl directly

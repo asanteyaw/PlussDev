@@ -18,6 +18,7 @@
 - (NSWindow*)window;
 - (void)present;
 - (void)savePNG:(id)sender;
+- (void)saveAs:(NSMenuItem*)sender;
 - (void)selectView:(id)sender;
 
 @end
@@ -60,12 +61,21 @@
   [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
   [contentView addSubview:toolbar];
 
-  NSButton* saveButton = [NSButton buttonWithTitle:@"Save PNG" target:self action:@selector(savePNG:)];
+  // One "Save" pull-down (the chevron marks it as a menu) offering PNG, PDF and, for a plot, SVG.
+  NSPopUpButton* saveButton = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:YES];
   [saveButton setBezelStyle:NSBezelStyleRounded];
   [saveButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [saveButton addItemWithTitle:@"Save"];
+  for (NSArray<NSString*>* format in @[ @[ @"PNG", @"png" ], @[ @"PDF", @"pdf" ], @[ @"SVG", @"svg" ] ]) {
+    [saveButton addItemWithTitle:format[0]];
+    NSMenuItem* item = [[saveButton menu] itemAtIndex:[saveButton numberOfItems] - 1];
+    [item setTarget:self];
+    [item setAction:@selector(saveAs:)];
+    [item setRepresentedObject:format[1]];
+  }
   [toolbar addSubview:saveButton];
 
-  // "View" pull-down beside Save PNG, filled from the page's own view tabs once it has loaded
+  // "View" pull-down beside Save, filled from the page's own view tabs once it has loaded
   // (and hidden when the page has none). It replaces the in-page picker, which sat above the table.
   viewButton_ = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:YES];
   [viewButton_ setBezelStyle:NSBezelStyleRounded];
@@ -169,6 +179,42 @@
   } else {
     [NSApp stopModal];
   }
+}
+
+- (void)saveAs:(NSMenuItem*)sender {
+  NSString* extension = [sender representedObject];
+  if ([extension isEqualToString:@"png"]) {
+    [self savePNG:sender];
+    return;
+  }
+  NSSavePanel* panel = [NSSavePanel savePanel];
+  [panel setCanCreateDirectories:YES];
+  NSString* base = (snapshotName_ == nil || [snapshotName_ length] == 0) ? @"view" : [snapshotName_ stringByDeletingPathExtension];
+  [panel setNameFieldStringValue:[base stringByAppendingPathExtension:extension]];
+  if (@available(macOS 11.0, *)) {
+    [panel setAllowedContentTypes:@[[extension isEqualToString:@"pdf"] ? UTTypePDF : UTTypeSVG]];
+  }
+  if ([panel runModal] != NSModalResponseOK || [panel URL] == nil) {
+    return;
+  }
+  NSURL* outputURL = [panel URL];
+  if ([extension isEqualToString:@"pdf"]) {
+    if (@available(macOS 11.0, *)) {
+      [webView_ createPDFWithConfiguration:[[WKPDFConfiguration alloc] init]
+                         completionHandler:^(NSData* data, NSError* error) {
+        if (error == nil && data != nil) {
+          [data writeToURL:outputURL atomically:YES];
+        }
+      }];
+    }
+    return;
+  }
+  [webView_ evaluateJavaScript:@"(document.querySelector('svg')||{}).outerHTML||''"
+             completionHandler:^(id result, NSError* error) {
+    if (error == nil && [result isKindOfClass:[NSString class]] && [(NSString*)result length] > 0) {
+      [(NSString*)result writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    }
+  }];
 }
 
 - (void)savePNG:(id)sender {

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: bb7ecd32dd38 -->
+<!-- pluss-signature-hash: e81d7bf44b16 -->
 
 # DataFramePlotAccessor::line
 
@@ -8,26 +8,27 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::line() const
 
-pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature,
-                                               const LinePlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::line(const LinePlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const LinePlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::string_view y_feature, const LinePlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const LinePlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const LinePlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const LinePlotOptions& options) const
 ```
 
 ## What It Does
@@ -60,7 +61,7 @@ is no text form of a chart to display.
 
 Every 2D chart method that takes an `x_feature` argument resolves it the same way:
 
-1. **Pass it explicitly** — `plot.line("sales", "month")` always wins, regardless of any
+1. **Pass it explicitly** — `plot.line("month", "sales")` always wins, regardless of any
    accessor-level default.
 2. **Set a shared default on the accessor** — `df.plot(options)` where
    `options.default_x_feature = "month"` lets every subsequent chart method omit
@@ -75,6 +76,21 @@ Every 2D chart method that takes an `x_feature` argument resolves it the same wa
 
 See Examples 1, 2, and 3 below for each of these three paths in turn.
 
+### Choosing the columns when none are named
+
+`line()` with no arguments (or with only a `LinePlotOptions`) chooses the columns itself, using
+one rule that every 2D chart method on this accessor shares:
+
+1. A frame with **exactly two numeric columns** draws the first as x and the second as y.
+2. A frame of **exactly two columns where one is time or text** and the other numeric puts the
+   time or text column on the x-axis and the numeric column on y.
+3. Anything else is ambiguous, so the call throws a `pluss::Error` that lists the columns it
+   found and asks you to name them.
+
+Naming columns always overrides the rule: the first name is x and the second is y, as in
+`line("week", "visits")`. A single name, `line("visits")`, draws that column against the row
+labels. A time column on the y-axis shows dates as its tick labels, not raw numbers.
+
 ## Parameters
 
 **y_feature** (`std::string_view`)
@@ -86,7 +102,7 @@ See Examples 1, 2, and 3 below for each of these three paths in turn.
     for a single feature). At least one y-feature is required — an empty list throws
     `"DataFrame::plot().line: at least one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     The feature to use as the shared x-axis. See "Choosing the x-axis" above.
 
 **options** (`LinePlotOptions`)
@@ -134,11 +150,11 @@ auto sales = DataFrame({
     {"cost",   Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
-auto chart = sales.plot().line("amount", "month");
+auto chart = sales.plot().line("month", "amount");
 chart.show();
 ```
 
-`sales.plot()` enters the accessor with no shared options; `.line("amount", "month")` draws
+`sales.plot()` enters the accessor with no shared options; `.line("month", "amount")` draws
 `amount` on the y-axis against the text feature `month` on the x-axis (rendered as four
 evenly spaced categorical positions labeled `"Jan"`..`"Apr"`), producing a single unlabeled
 (no-legend, since there's only one y-feature) line trace. `chart.show()` is what actually
@@ -156,7 +172,7 @@ options.default_x_feature = "month";
 auto plot = sales.plot(options);
 auto chart1 = plot.line("amount");         // x defaults to "month"
 auto chart2 = plot.line("cost");           // also defaults to "month"
-auto chart3 = plot.line("amount", "cost"); // explicit x_feature="cost" overrides the default
+auto chart3 = plot.line("cost", "amount"); // explicit x_feature="cost" overrides the default
 ```
 
 `chart1` and `chart2` both use `"month"` as their x-axis without repeating it. `chart3`
@@ -197,7 +213,7 @@ the string `"case"`).
 Example 4. Multiple y-features overlaid on one pane, drawn from a brace-init list.
 
 ```cpp
-auto chart = sales.plot().line({"amount", "cost"}, "month");
+auto chart = sales.plot().line("month", {"amount", "cost"});
 chart.show();
 ```
 
@@ -213,7 +229,7 @@ list — useful when the feature list is built at runtime rather than known at t
 
 ```cpp
 std::vector<std::string_view> y_names{"amount", "cost"};
-auto chart = sales.plot().line(y_names, "month");
+auto chart = sales.plot().line("month", y_names);
 chart.save_pdf("monthly_lines.pdf");
 ```
 
@@ -230,7 +246,7 @@ line_options.alpha = 0.85;
 line_options.line_width = 2.5;
 line_options.y_limit_method = pluss::pl::LimitMethod::Tight;
 
-auto chart = sales.plot().line("amount", "month", line_options);
+auto chart = sales.plot().line("month", "amount", line_options);
 chart.show();
 ```
 
@@ -244,10 +260,76 @@ Example 7. Multiple y-features with an explicit options object — the three-arg
 overload works the same way for the list-based forms as it does for the single-feature form.
 
 ```cpp
-auto chart = sales.plot().line({"amount", "cost"}, "month", line_options);
+auto chart = sales.plot().line("month", {"amount", "cost"}, line_options);
 ```
 
 ![Output of Example 7](img/line-7.svg)
+
+Example 8. No columns named: two numeric columns are x then y.
+
+```cpp
+using namespace pluss::table;
+
+auto trend = DataFrame({
+    {"week",   Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
+    {"visits", Shelf(pluss::make_series({120.0, 135.0, 128.0, 160.0, 171.0}))},
+});
+
+auto chart = trend.plot().line();
+chart.show();
+```
+
+`week` is the first numeric column, so it becomes the x-axis; `visits` is drawn on y.
+
+![Output of Example 8](img/line-8.svg)
+
+Example 9. A time column and a numeric column: the time column goes on x.
+
+```cpp
+using namespace pluss::table;
+
+auto daily = DataFrame({
+    {"date",   Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z",
+                                           "2024-03-01T00:00:00Z", "2024-04-01T00:00:00Z"}))},
+    {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto chart = daily.plot().line();
+chart.show();
+```
+
+![Output of Example 9](img/line-9.svg)
+
+Example 10. Naming the columns puts a time column on the y-axis, labelled with dates.
+
+```cpp
+auto chart = daily.plot().line("amount", "date");
+chart.show();
+```
+
+`amount` is x and `date` is y; the y ticks read as dates.
+
+![Output of Example 10](img/line-10.svg)
+
+Example 11. Three numeric columns and no names: the call asks for the columns.
+
+```cpp
+auto wide = DataFrame({
+    {"a", Shelf(pluss::make_series({1.0, 2.0}))},
+    {"b", Shelf(pluss::make_series({3.0, 4.0}))},
+    {"c", Shelf(pluss::make_series({5.0, 6.0}))},
+});
+
+try {
+  auto chart = wide.plot().line();
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+```
+
+```text
+DataFrame::plot().line: cannot choose the columns automatically (the frame has 3 columns: 'a', 'b', 'c', 3 numeric); name them, e.g. plot().line("x_column", "y_column")
+```
 
 ## Notes
 

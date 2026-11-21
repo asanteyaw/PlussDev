@@ -362,7 +362,7 @@ void example_15_plotting(const std::filesystem::path& dir) {
   plot_options.height = 420.0;
   plot_options.use_tight_layout = true;
 
-  auto line = df.plot(plot_options).line({"y", "z"}, "x");
+  auto line = df.plot(plot_options).line("x", {"y", "z"});
   auto scatter = df.plot(plot_options).scatter("x", "y");
   auto hist = df.plot().hist({"x", "y"}, 6);
   auto corr = df.plot().corr_heatmap({"x", "y", "z"});

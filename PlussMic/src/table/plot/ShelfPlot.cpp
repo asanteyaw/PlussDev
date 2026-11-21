@@ -122,14 +122,14 @@ pluss::pl::Studio ShelfPlotAccessor::line(const Shelf& x) const {
 pluss::pl::Studio ShelfPlotAccessor::line(const LinePlotOptions& options) const {
   std::string value_name;
   auto frame = single_value_frame_(base_, value_name);
-  return frame.plot(options_).line({std::string_view(value_name)}, std::nullopt, options);
+  return frame.plot(options_).line_y({std::string_view(value_name)}, std::nullopt, options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::line(const Shelf& x, const LinePlotOptions& options) const {
   std::string x_name;
   std::string value_name;
   auto frame = pair_value_frame_(x, base_, x_name, value_name);
-  return frame.plot(options_).line({std::string_view(value_name)}, std::string_view(x_name), options);
+  return frame.plot(options_).line_y({std::string_view(value_name)}, std::string_view(x_name), options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::step() const {
@@ -143,14 +143,14 @@ pluss::pl::Studio ShelfPlotAccessor::step(const Shelf& x) const {
 pluss::pl::Studio ShelfPlotAccessor::step(const StepPlotOptions& options) const {
   std::string value_name;
   auto frame = single_value_frame_(base_, value_name);
-  return frame.plot(options_).step({std::string_view(value_name)}, std::nullopt, options);
+  return frame.plot(options_).step_y({std::string_view(value_name)}, std::nullopt, options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::step(const Shelf& x, const StepPlotOptions& options) const {
   std::string x_name;
   std::string value_name;
   auto frame = pair_value_frame_(x, base_, x_name, value_name);
-  return frame.plot(options_).step({std::string_view(value_name)}, std::string_view(x_name), options);
+  return frame.plot(options_).step_y({std::string_view(value_name)}, std::string_view(x_name), options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::area() const {
@@ -164,14 +164,14 @@ pluss::pl::Studio ShelfPlotAccessor::area(const Shelf& x) const {
 pluss::pl::Studio ShelfPlotAccessor::area(const AreaPlotOptions& options) const {
   std::string value_name;
   auto frame = single_value_frame_(base_, value_name);
-  return frame.plot(options_).area({std::string_view(value_name)}, std::nullopt, options);
+  return frame.plot(options_).area_y({std::string_view(value_name)}, std::nullopt, options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::area(const Shelf& x, const AreaPlotOptions& options) const {
   std::string x_name;
   std::string value_name;
   auto frame = pair_value_frame_(x, base_, x_name, value_name);
-  return frame.plot(options_).area({std::string_view(value_name)}, std::string_view(x_name), options);
+  return frame.plot(options_).area_y({std::string_view(value_name)}, std::string_view(x_name), options);
 }
 
 pluss::pl::Studio ShelfPlotAccessor::scatter(const Shelf& x) const {

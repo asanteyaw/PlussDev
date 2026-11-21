@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: fc1314bac9eb -->
+<!-- pluss-signature-hash: a5321f7207e1 -->
 
 # DataFramePlotAccessor::bar_stacked
 
@@ -8,19 +8,17 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features,
-                                                      std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features,
-                                                      std::optional<std::string_view> x_feature,
-                                                      const BarStackedPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
-                                                      std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
-                                                      std::optional<std::string_view> x_feature,
-                                                      const BarStackedPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const BarStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const BarStackedPlotOptions& options) const
 ```
 
 ## What It Does
@@ -50,7 +48,7 @@ color per band — raise `alpha` toward `1.0` for a fully solid, unambiguous per
     the last feature's cumulative top is the grand total. At least one is required — an
     empty list throws `"DataFrame::plot().bar_stacked: at least one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`BarStackedPlotOptions`)
@@ -81,7 +79,7 @@ auto breakdown = DataFrame({
     {"returns_cost", Shelf(pluss::make_series({15.0, 8.0, 20.0}))},
 });
 
-auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city");
+auto chart = breakdown.plot().bar_stacked("city", {"sales", "returns_cost"});
 chart.show();
 ```
 
@@ -101,8 +99,7 @@ auto parts_df = DataFrame({
 });
 
 std::vector<std::string_view> parts{"product", "support", "other"};
-auto chart = parts_df.plot().bar_stacked(
-    parts, "city");
+auto chart = parts_df.plot().bar_stacked("city", parts);
 chart.show();
 ```
 
@@ -124,7 +121,7 @@ BarStackedPlotOptions stacked_options;
 stacked_options.alpha = 1.0;
 stacked_options.line_width = 1.2;
 
-auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city", stacked_options);
+auto chart = breakdown.plot().bar_stacked("city", {"sales", "returns_cost"}, stacked_options);
 chart.show();
 ```
 
@@ -133,7 +130,7 @@ chart.show();
 Example 5. The `initializer_list` overload with an explicit options object.
 
 ```cpp
-auto chart = breakdown.plot().bar_stacked({"sales", "returns_cost"}, "city", stacked_options);
+auto chart = breakdown.plot().bar_stacked("city", {"sales", "returns_cost"}, stacked_options);
 ```
 
 ![Output of Example 5](img/bar_stacked-5.svg)

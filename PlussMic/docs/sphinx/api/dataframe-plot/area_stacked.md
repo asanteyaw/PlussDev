@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 31360c6c26fe -->
+<!-- pluss-signature-hash: d1667aa6dee9 -->
 
 # DataFramePlotAccessor::area_stacked
 
@@ -8,19 +8,17 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features,
-                                                       std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features,
-                                                       std::optional<std::string_view> x_feature,
-                                                       const AreaStackedPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
-                                                       std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
 
-pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
-                                                       std::optional<std::string_view> x_feature,
-                                                       const AreaStackedPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const AreaStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const AreaStackedPlotOptions& options) const
 ```
 
 ## What It Does
@@ -60,7 +58,7 @@ fill more fully occludes the ones beneath it.
     least one is required — an empty list throws `"DataFrame::plot().area_stacked: at least
     one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaStackedPlotOptions`)
@@ -97,7 +95,7 @@ auto breakdown = DataFrame({
     {"returns_cost", Shelf(pluss::make_series({8.0, 5.0, 12.0, 6.0}))},
 });
 
-auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month");
+auto chart = breakdown.plot().area_stacked("month", {"sales", "returns_cost"});
 chart.show();
 ```
 
@@ -118,8 +116,7 @@ auto breakdown3 = DataFrame({
 });
 
 std::vector<std::string_view> parts{"product", "support", "other"};
-auto chart = breakdown3.plot().area_stacked(
-    parts, "month");
+auto chart = breakdown3.plot().area_stacked("month", parts);
 chart.show();
 ```
 
@@ -145,7 +142,7 @@ AreaStackedPlotOptions stacked_options;
 stacked_options.alpha = 0.95;
 stacked_options.line_width = 1.5;
 
-auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month", stacked_options);
+auto chart = breakdown.plot().area_stacked("month", {"sales", "returns_cost"}, stacked_options);
 chart.show();
 ```
 
@@ -154,7 +151,7 @@ chart.show();
 Example 5. The `initializer_list` overload with an explicit options object.
 
 ```cpp
-auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month", stacked_options);
+auto chart = breakdown.plot().area_stacked("month", {"sales", "returns_cost"}, stacked_options);
 ```
 
 ![Output of Example 5](img/area_stacked-5.svg)

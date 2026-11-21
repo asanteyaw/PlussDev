@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ba20fb9e79d1 -->
+<!-- pluss-signature-hash: c77e5341eab1 -->
 
 # DataFramePlotAccessor::area
 
@@ -8,26 +8,27 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::area() const
 
-pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature,
-                                               std::optional<std::string_view> x_feature,
-                                               const AreaPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::area(const AreaPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const AreaPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, std::string_view y_feature) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature = std::nullopt) const
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, std::string_view y_feature, const AreaPlotOptions& options) const
 
-pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
-                                               std::optional<std::string_view> x_feature,
-                                               const AreaPlotOptions& options) const
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, pluss::RangeView<std::string_view> y_features, const AreaPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const AreaPlotOptions& options) const
 ```
 
 ## What It Does
@@ -48,7 +49,7 @@ covers what's specific to `area()`.
     area trace, overlapping rather than stacked. At least one is required — an empty list
     throws `"DataFrame::plot().area: at least one y feature is required"`.
 
-**x_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+**x_feature** (`std::string_view`)
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaPlotOptions`)
@@ -84,7 +85,7 @@ auto sales = DataFrame({
     {"cost",   Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
-auto chart = sales.plot().area("amount", "month");
+auto chart = sales.plot().area("month", "amount");
 chart.show();
 ```
 
@@ -95,7 +96,7 @@ overlap, the default `alpha = 0.88` keeps both visible rather than one fully occ
 other.
 
 ```cpp
-auto chart = sales.plot().area({"amount", "cost"}, "month");
+auto chart = sales.plot().area("month", {"amount", "cost"});
 chart.show();
 ```
 
@@ -105,7 +106,7 @@ Example 3. The same multi-feature call via a reusable `RangeView`.
 
 ```cpp
 std::vector<std::string_view> y_names{"amount", "cost"};
-auto chart = sales.plot().area(y_names, "month");
+auto chart = sales.plot().area("month", y_names);
 chart.save_pdf("sales_area.pdf");
 ```
 
@@ -128,7 +129,7 @@ AreaPlotOptions area_options;
 area_options.alpha = 1.0;
 area_options.line_width = 2.0;
 
-auto chart = sales.plot().area("amount", "month", area_options);
+auto chart = sales.plot().area("month", "amount", area_options);
 chart.show();
 ```
 
@@ -137,7 +138,7 @@ chart.show();
 Example 6. Multiple y-features with an explicit options object.
 
 ```cpp
-auto chart = sales.plot().area({"amount", "cost"}, "month", area_options);
+auto chart = sales.plot().area("month", {"amount", "cost"}, area_options);
 ```
 
 ![Output of Example 6](img/area-6.svg)

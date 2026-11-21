@@ -7,11 +7,13 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 
 #include "CodeM/core/Errors.h"
+#include "pluss/pl/flash/flash.h"
 #include "pluss/tils/view/html_window.h"
 
 namespace pluss::pl {
@@ -92,6 +94,15 @@ void ensure_extension_match_(const std::filesystem::path& path, std::string_view
     PLUSS_FAIL(std::string(where) + "(): filename extension '" + actual +
                                 "' does not match expected '" + expected + "'");
   }
+}
+
+// The in-window viewer has its own Save menu, so the page's own save button is hidden there.
+std::string without_page_save_button(std::string html) {
+  const std::string key = "id=\"download-svg\"";
+  if (const auto at = html.find(key); at != std::string::npos) {
+    html.insert(at + key.size(), " hidden style=\"display:none\"");
+  }
+  return html;
 }
 
 std::string svg_embed_html(std::string_view svg_payload, std::string_view title, std::int64_t width, std::int64_t height) {
@@ -354,8 +365,10 @@ bool show_html_window_(const std::string& html,
                        const std::string& svg_payload,
                        std::string_view title,
                        std::int64_t width,
-                       std::int64_t height) {
+                       std::int64_t height,
+                       std::vector<pluss::view::HtmlMenu> menus = {}) {
   pluss::view::HtmlWindowOptions options{};
+  options.menus = std::move(menus);
   options.title = native_window_title_(title);
   options.snapshot_name = "plot-view.png";
   options.svg_payload = svg_payload;
@@ -518,7 +531,40 @@ bool Studio::show(std::string_view title, std::int64_t width, std::int64_t heigh
     return true;
   }
   const auto html = svg_embed_html(svg_payload, window_title, width, height);
-  if (launch && show_html_window_(html, svg_payload, window_title, width, height)) {
+  // The window's Colors menu re-renders the figure with a different set of line / bar colours.
+  std::vector<pluss::view::HtmlMenu> menus;
+  if (launch) {
+    struct ColorChoice { const char* id; const char* label; };
+    static constexpr ColorChoice choices[] = {
+        {"default", "Default"}, {"deep", "Deep"}, {"muted", "Muted"}, {"pastel", "Pastel"},
+        {"bright", "Bright"}, {"dark", "Dark"}, {"colorblind", "Colorblind"}, {"ocean", "Ocean"}};
+    pluss::view::HtmlMenu menu;
+    menu.id = "colors";
+    menu.title = "Colors";
+    for (const auto& choice : choices) {
+      menu.options.push_back(pluss::view::HtmlMenuOption{choice.id, choice.label});
+    }
+    auto original = std::make_shared<const Studio>(*this);
+    menu.render = [original, window_title, width, height](std::string_view id) {
+      Studio copy = *original;
+      if (id != "default") {
+        std::vector<Rgba> accents = id == "ocean" ? Theme::ocean().accents()
+                                                   : flash::flash_palette(std::string(id)).stops();
+        if (accents.empty()) return std::string{};
+        for (auto& pane : copy.panes_) {
+          for (std::size_t index = 0; index < pane.traces_.size(); ++index) {
+            auto& trace = pane.traces_[index];
+            if (!trace.stroke_explicit()) {
+              trace.stroke(accents[index % accents.size()]);
+            }
+          }
+        }
+      }
+      return without_page_save_button(svg_embed_html(copy.to_svg(), window_title, width, height));
+    };
+    menus.push_back(std::move(menu));
+  }
+  if (launch && show_html_window_(without_page_save_button(html), svg_payload, window_title, width, height, std::move(menus))) {
     return true;
   }
 
@@ -567,7 +613,7 @@ bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) co
     runtime_options.svg_snapshot_name = "plot-view.svg";
   }
 
-  if (launch && pluss::view::show_html_window(html, runtime_options)) {
+  if (launch && pluss::view::show_html_window(without_page_save_button(html), runtime_options)) {
     return true;
   }
 

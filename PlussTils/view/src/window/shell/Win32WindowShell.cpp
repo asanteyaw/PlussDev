@@ -156,7 +156,7 @@ class Win32WindowShell final : public IWindowShell {
     }
 
     if (toolbar_height_ > 0) {
-      save_button_ = CreateWindowExW(0, L"BUTTON", L"Save As", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 92, 30,
+      save_button_ = CreateWindowExW(0, L"BUTTON", L"Save \u25BE", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 92, 30,
                                      hwnd_, reinterpret_cast<HMENU>(static_cast<INT_PTR>(kSaveButtonId)),
                                      GetModuleHandleW(nullptr), nullptr);
       if (save_button_ != nullptr) {
@@ -539,7 +539,7 @@ class Win32WindowShell final : public IWindowShell {
     for (std::size_t index = 0; index < save_formats_.size(); ++index) {
       const std::wstring label = utf8_to_wide(save_formats_[index].label);
       AppendMenuW(menu, MF_STRING, static_cast<UINT_PTR>(kSaveMenuBaseId + static_cast<int>(index)),
-                  label.empty() ? L"Save" : label.c_str());
+                  label.empty() ? L"Save \u25BE" : label.c_str());
     }
     RECT button_rect{};
     GetWindowRect(save_button_, &button_rect);
