@@ -31,10 +31,10 @@ Every method except `.collect()` is non-mutating and chainable, returning a new
 :hidden:
 :maxdepth: 1
 
-api/nexus-query/join
-api/nexus-query/via
-api/nexus-query/pick
-api/nexus-query/drop
-api/nexus-query/name
-api/nexus-query/collect
+api/nexus-traverse/join
+api/nexus-traverse/via
+api/nexus-traverse/pick
+api/nexus-traverse/drop
+api/nexus-traverse/name
+api/nexus-traverse/collect
 ```

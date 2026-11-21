@@ -21,7 +21,7 @@ actual conversion happens when you finish the chain with one of the accessor met
 - `series()`: cast every bound feature to `Series`
 - `note()`: cast every bound feature to `Note`
 - `timeline()`: cast every bound feature to `Timeline`
-- `timeindex()`: cast every bound feature to `TimeIndex`
+- `duration()`: cast every bound feature to `Duration`
 
 This is meant to be the ergonomic public surface for the common pattern "I already
 selected the columns I care about; now cast all of them the same way":
@@ -37,7 +37,7 @@ That is the public casting contract for dataframe features.
 Every method on the accessor has its own dedicated page — start at the
 [DataFrameCastAccessor API Reference](../../dataframe_cast_accessor_api_reference)
 and use its left sidebar to jump straight to `series`, `note`, `timeline`, or
-`timeindex`.
+`duration`.
 
 ## Parameters
 

@@ -24,7 +24,7 @@ Casts every feature currently bound on the accessor to `Series`, using the share
 ## Notes
 
 - `options.series_dtype` controls the concrete numeric dtype when the source is
-  `Note`, `Timeline`, or `TimeIndex`.
+  `Note`, `Timeline`, or `Duration`.
 - Unparseable `Note -> Series` cells become `NULL`.
 
 ## See Also

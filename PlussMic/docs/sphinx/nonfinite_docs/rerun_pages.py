@@ -169,7 +169,7 @@ def main() -> int:
             pieces = []
             last = 0
             matches = list(PAT.finditer(body))
-            globals()["HEAD"] = (HEAD_BASE.replace("int main() {\n", NEXUS_USES + "int main() {\n" + (NX_FIXTURE if (("/nexus-pull/" in page or "/nexus-sql/" in page) or "/nexus-sql/" in page) else ""))) if "/nexus" in page else HEAD_BASE
+            globals()["HEAD"] = (HEAD_BASE.replace("int main() {\n", NEXUS_USES + "int main() {\n" + (NX_FIXTURE if (("/nexus-pull/" in page or "/nexus-query/" in page) or "/nexus-query/" in page) else ""))) if "/nexus" in page else HEAD_BASE
             # "Given `orders.csv`:" followed by a text block: the page shows the input file, so write it where the examples run.
             for fm in re.finditer(r"`([\w./-]+\.(?:csv|json|txt|tsv))`[^\n]*:\n\n```[a-z]*\n(.*?)```", body, re.S):
                 (work / fm.group(1)).parent.mkdir(parents=True, exist_ok=True)

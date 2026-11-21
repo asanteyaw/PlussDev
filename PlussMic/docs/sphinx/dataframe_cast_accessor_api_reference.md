@@ -16,8 +16,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/dataframe-cast/duration
 api/dataframe-cast/note
 api/dataframe-cast/series
-api/dataframe-cast/timeindex
 api/dataframe-cast/timeline
 ```

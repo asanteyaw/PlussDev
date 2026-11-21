@@ -18,6 +18,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 api/shelf-ts/add
 api/shelf-ts/align_to
+api/shelf-ts/calendar
 api/shelf-ts/diff
 api/shelf-ts/div
 api/shelf-ts/eq
@@ -39,6 +40,7 @@ api/shelf-ts/resample
 api/shelf-ts/returns
 api/shelf-ts/rolling
 api/shelf-ts/rolling_block
+api/shelf-ts/sort
 api/shelf-ts/sub
 api/shelf-ts/timed
 api/shelf-ts/zscore_rolling

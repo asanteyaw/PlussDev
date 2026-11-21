@@ -42,7 +42,7 @@ and `NexusQueryPrepared`'s own `execute`.
 :hidden:
 :maxdepth: 1
 
-api/nexus-sql/execute
-api/nexus-sql/prepare
-api/nexus-sql/prepared-execute
+api/nexus-query/execute
+api/nexus-query/prepare
+api/nexus-query/prepared-execute
 ```
