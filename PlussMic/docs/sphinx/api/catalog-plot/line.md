@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0eebf24e097e -->
+<!-- pluss-signature-hash: bc2cc172b4d6 -->
 
 # CatalogPlotAccessor::line
 
@@ -8,26 +8,29 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::line() const
 
-pluss::pl::Studio CatalogPlotAccessor::line(pluss::RangeView<std::string_view> y_keys = {},
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::line(const LinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, const LinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key,
-                                             std::optional<std::string_view> x_key,
-                                             const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(pluss::RangeView<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(pluss::RangeView<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::string_view y_key) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, pluss::RangeView<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::string_view y_key, const LinePlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const LinePlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const LinePlotOptions& options) const
 ```
 
 ## What It Does
@@ -62,7 +65,7 @@ no text form of a chart to display.
 
 Every 2D chart method that takes an `x_key` argument resolves it the same way:
 
-1. **Pass it explicitly** — `ct.plot().line("sales", "month")` always wins, regardless of
+1. **Pass it explicitly** — `ct.plot().line("month", "sales")` always wins, regardless of
    any accessor-level default.
 2. **Set a shared default on the accessor** — `ct.plot(options)` where
    `options.default_x_feature = "month"` lets every subsequent chart method omit `x_key`
@@ -91,6 +94,17 @@ requested key. Two keys of different lengths, or with unrelated labels, will not
 against each other on such a chart even though they share one pane — pass an explicit
 `x_key` (or set `default_x_feature`) whenever the keys must be visually aligned.
 ```
+
+## Argument order and which keys are drawn
+
+The order is **x first, then y**: `line("day", "temp_c")` puts `day` on the x-axis; `line("day", {"temp_c",
+"humidity"})` draws two traces against `day`; a single key, `line("temp_c")`, is a y key drawn against the
+record labels. With no y key named, the keys come from a feature selection: the `features` field of
+`LinePlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
+`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
+over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
+with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
+[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
 
 ## Parameters
 
@@ -192,7 +206,7 @@ auto weather = pluss::kindle::Catalog({
     "pressure"_k = pluss::kindle::Stream(pluss::make_series({1005.0, 1008.0, 1010.0, 1009.0, 1012.0})),
 });
 
-auto chart = weather.plot().line("temp_c", "day");
+auto chart = weather.plot().line("day", "temp_c");
 chart.show();
 ```
 
@@ -294,7 +308,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().line({"temp_c", "humidity"}, "day");
+auto chart = weather.plot().line("day", {"temp_c", "humidity"});
 chart.show();
 ```
 
@@ -317,7 +331,7 @@ auto weather = pluss::kindle::Catalog({
 });
 
 std::vector<std::string_view> y_names{"temp_c", "humidity"};
-auto chart = weather.plot().line(y_names, "day");
+auto chart = weather.plot().line("day", y_names);
 chart.show();
 ```
 
@@ -340,7 +354,7 @@ pluss::table::LinePlotOptions line_options;
 line_options.alpha = 0.85;
 line_options.line_width = 2.5;
 
-auto chart = weather.plot().line("temp_c", "day", line_options);
+auto chart = weather.plot().line("day", "temp_c", line_options);
 chart.show();
 ```
 
@@ -363,13 +377,13 @@ auto short_metric = pluss::kindle::Catalog({
 
 pluss::table::LinePlotOptions inner_options;
 inner_options.align.mode = pluss::table::XYAlignMode::Inner;
-auto chart_inner = short_metric.plot().line("sales", "day", inner_options);
+auto chart_inner = short_metric.plot().line("day", "sales", inner_options);
 chart_inner.show();
 
 pluss::table::LinePlotOptions pad_options;
 pad_options.align.mode = pluss::table::XYAlignMode::PadScalar;
 pad_options.align.pad_scalar = 0.0;
-auto chart_pad = short_metric.plot().line("sales", "day", pad_options);
+auto chart_pad = short_metric.plot().line("day", "sales", pad_options);
 chart_pad.show();
 ```
 
@@ -398,7 +412,7 @@ auto short_metric = pluss::kindle::Catalog({
 });
 
 try {
-  auto bad = short_metric.plot().line("sales", "day");
+  auto bad = short_metric.plot().line("day", "sales");
 } catch (const pluss::Error& e) {
   std::cout << e.message();
 }

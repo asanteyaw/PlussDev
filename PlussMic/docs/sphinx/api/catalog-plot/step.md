@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 7ad6ccb46b64 -->
+<!-- pluss-signature-hash: 71eaf5a5372f -->
 
 # CatalogPlotAccessor::step
 
@@ -8,26 +8,29 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::step() const
 
-pluss::pl::Studio CatalogPlotAccessor::step(pluss::RangeView<std::string_view> y_keys = {},
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::step(const StepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, const StepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
-                                             std::optional<std::string_view> x_key,
-                                             const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(pluss::RangeView<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::RangeView<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::string_view y_key) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, pluss::RangeView<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::string_view y_key, const StepPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const StepPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const StepPlotOptions& options) const
 ```
 
 ## What It Does
@@ -38,6 +41,17 @@ connecting segments. Every mechanic on this page (x-axis resolution, the empty-`
 default, the independent-per-key-axis gotcha with multiple keys and no shared `x_key`, the
 `Studio`-return/no-`cout` behavior) is identical to `line()` — see that page for the full
 explanation; only what's specific to `step()` is repeated here.
+
+## Argument order and which keys are drawn
+
+The order is **x first, then y**: `step("day", "temp_c")` puts `day` on the x-axis; `step("day", {"temp_c",
+"humidity"})` draws two traces against `day`; a single key, `step("temp_c")`, is a y key drawn against the
+record labels. With no y key named, the keys come from a feature selection: the `features` field of
+`StepPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
+`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
+over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
+with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
+[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
 
 ## Parameters
 
@@ -82,7 +96,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().step("temp_c", "day");
+auto chart = weather.plot().step("day", "temp_c");
 chart.show();
 ```
 
@@ -99,7 +113,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().step({"temp_c", "humidity"}, "day");
+auto chart = weather.plot().step("day", {"temp_c", "humidity"});
 chart.show();
 ```
 
@@ -119,7 +133,7 @@ pluss::table::StepPlotOptions step_options;
 step_options.alpha = 0.7;
 step_options.line_width = 3.0;
 
-auto chart = weather.plot().step("temp_c", "day", step_options);
+auto chart = weather.plot().step("day", "temp_c", step_options);
 chart.show();
 ```
 

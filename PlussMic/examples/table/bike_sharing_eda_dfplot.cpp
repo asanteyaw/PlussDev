@@ -496,7 +496,7 @@ int main(int argc, char** argv) {
                    .agg({{"mean_total_count", "total_count", GroupOp::Mean}})
                    .arrange({"date"}, true, true)
                    .labels().set("date", false);
-  auto fig_04 = daily.plot(build_plot_options("date")).line("mean_total_count", "date");
+  auto fig_04 = daily.plot(build_plot_options("date")).line("date", "mean_total_count");
   fig_04.headline("Daily mean bike rentals (from hourly data)");
   save_and_optionally_show(fig_04, cli.out_dir, "04_daily_mean_time_series", cli.show);
 
@@ -514,14 +514,14 @@ int main(int argc, char** argv) {
   auto monthly = df.group({.dropnull = true})
                      .by({"month_name"})
                      .agg({{"mean_total_count", "total_count", GroupOp::Mean}});
-  auto fig_07 = monthly.plot(build_plot_options("month_name")).line("mean_total_count", "month_name");
+  auto fig_07 = monthly.plot(build_plot_options("month_name")).line("month_name", "mean_total_count");
   fig_07.headline("Monthly mean bike rentals (hourly averaged)");
   save_and_optionally_show(fig_07, cli.out_dir, "07_monthly_mean", cli.show);
 
   pluss::table::BarPlotOptions bar_opts;
   bar_opts.ci_enabled = true;
   bar_opts.ci_level = 0.95;
-  auto fig_08 = df.plot(build_plot_options("month_name", std::nullopt)).bar("total_count", "month_name", bar_opts);
+  auto fig_08 = df.plot(build_plot_options("month_name", std::nullopt)).bar("month_name", "total_count", bar_opts);
   fig_08.headline("Mean hourly rentals by month (95% CI)");
   save_and_optionally_show(fig_08, cli.out_dir, "08_mean_by_month_ci", cli.show);
 

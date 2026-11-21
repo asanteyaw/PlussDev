@@ -262,7 +262,8 @@ namespace detail {
     std::string_view feature_name,
     std::string_view where) {
   PLUSS_CHECK(frame.get(feature_name).has_value(),
-              std::string(where) + ": unknown feature '" + std::string(feature_name) + "'");
+              std::string(where) + ": unknown feature '" + std::string(feature_name) +
+                  "'; DataFrame features = " + feature_list_(frame.features()));
   return frame.features(feature_name);
 }
 
@@ -327,6 +328,38 @@ namespace detail {
           ::pluss::make_series(values, {static_cast<std::int64_t>(values.size())})};
 }
 
+// Column names of a frame, and the numeric ones a plot can draw.
+struct FrameColumnNames_ {
+  std::vector<std::string> all{};
+  std::vector<std::string> numeric{};
+};
+
+[[nodiscard]] inline FrameColumnNames_ frame_column_names_(const DataFrame& frame) {
+  FrameColumnNames_ out;
+  out.all = frame.features();
+  for (const auto& name : out.all) {
+    if (frame.features(name).kind() == ShelfKind::Series) {
+      out.numeric.push_back(name);
+    }
+  }
+  return out;
+}
+
+// Frame-level plots never pick columns for the caller. The message names every way to do it.
+[[noreturn]] inline void fail_no_columns_(std::string_view where,
+                                          std::string_view how,
+                                          const std::vector<std::string>& available) {
+  PLUSS_FAIL(std::string(where) + ": no columns named. " + std::string(how) +
+             "; DataFrame features = " + feature_list_(available));
+}
+
+inline void reject_selection_(const FlashTableColumns& columns, std::string_view where) {
+  PLUSS_CHECK(!columns.selection.any(),
+              std::string(where) +
+                  ": this plot takes named columns (x_feature, y_feature, ...) only; "
+                  "column selections (all_columns, include_columns, exclude_columns) do not apply");
+}
+
 [[nodiscard]] inline std::string resolve_univariate_feature_name_(
     const FlashTableColumns& columns,
     const std::vector<std::string>& available,
@@ -336,33 +369,16 @@ namespace detail {
       static_cast<int>(columns.x_feature.has_value()) +
       static_cast<int>(columns.y_feature.has_value()) +
       static_cast<int>(columns.z_feature.has_value());
-
-  if (columns.feature.has_value()) {
-    PLUSS_CHECK(specified_count == 1,
-                std::string(where) +
-                    ": univariate selection accepts only one of feature/x_feature/y_feature");
-    return *columns.feature;
-  }
-  if (columns.x_feature.has_value()) {
-    PLUSS_CHECK(specified_count == 1,
-                std::string(where) +
-                    ": univariate selection accepts only one of feature/x_feature/y_feature");
-    return *columns.x_feature;
-  }
-  if (columns.y_feature.has_value()) {
-    PLUSS_CHECK(specified_count == 1,
-                std::string(where) +
-                    ": univariate selection accepts only one of feature/x_feature/y_feature");
-    return *columns.y_feature;
-  }
+  reject_selection_(columns, where);
   PLUSS_CHECK(!columns.z_feature.has_value(),
               std::string(where) + ": z_feature is only valid for 3D plotting");
-  PLUSS_CHECK(
-      available.size() == 1,
-      std::string(where) +
-          ": expected exactly 1 feature or an explicit feature/x_feature/y_feature selection; DataFrame features = " +
-          feature_list_(available));
-  return available.front();
+  PLUSS_CHECK(specified_count <= 1,
+              std::string(where) +
+                  ": univariate selection accepts only one of feature/x_feature/y_feature");
+  if (columns.feature.has_value()) return *columns.feature;
+  if (columns.x_feature.has_value()) return *columns.x_feature;
+  if (columns.y_feature.has_value()) return *columns.y_feature;
+  fail_no_columns_(where, "name the column with feature (or x_feature/y_feature)", available);
 }
 
 [[nodiscard]] inline std::pair<std::string, Shelf> resolve_univariate_feature_(
@@ -374,33 +390,44 @@ namespace detail {
   return {name, require_named_feature_(frame, name, where)};
 }
 
+// Distribution plots: one named column, or a column selection (one distribution per column).
+[[nodiscard]] inline std::vector<std::pair<std::string, Shelf>> resolve_univariate_features_(
+    const DataFrame& frame,
+    const FlashTableColumns& columns,
+    std::string_view where) {
+  std::vector<std::pair<std::string, Shelf>> out;
+  if (columns.selection.any()) {
+    PLUSS_CHECK(!columns.feature.has_value() && !columns.x_feature.has_value() &&
+                    !columns.y_feature.has_value() && !columns.z_feature.has_value(),
+                std::string(where) +
+                    ": name a column with feature or set a column selection, not both");
+    const auto names = frame_column_names_(frame);
+    const auto picked = ::pluss::pl::flash::detail::resolve_column_selection(
+        columns.selection, names.all, names.numeric, where);
+    for (const auto& name : *picked) {
+      out.emplace_back(name, frame.features(name));
+    }
+    return out;
+  }
+  out.push_back(resolve_univariate_feature_(frame, columns, where));
+  return out;
+}
+
 [[nodiscard]] inline std::array<std::pair<std::string, Shelf>, 2> resolve_bivariate_features_(
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
-  const auto available = frame.features();
-  if (columns.x_feature.has_value() || columns.y_feature.has_value()) {
-    PLUSS_CHECK(columns.x_feature.has_value() && columns.y_feature.has_value(),
-                std::string(where) +
-                    ": explicit 2D selection requires both x_feature and y_feature");
-    PLUSS_CHECK(!columns.feature.has_value() && !columns.z_feature.has_value(),
-                std::string(where) +
-                    ": 2D selection accepts only x_feature and y_feature");
-    return {{
-        { *columns.x_feature, require_named_feature_(frame, *columns.x_feature, where) },
-        { *columns.y_feature, require_named_feature_(frame, *columns.y_feature, where) },
-    }};
-  }
+  reject_selection_(columns, where);
   PLUSS_CHECK(!columns.feature.has_value() && !columns.z_feature.has_value(),
               std::string(where) + ": 2D selection accepts only x_feature and y_feature");
-  PLUSS_CHECK(
-      available.size() == 2,
-      std::string(where) +
-          ": expected exactly 2 features or explicit x_feature/y_feature; DataFrame features = " +
-          feature_list_(available));
+  if (!columns.x_feature.has_value() && !columns.y_feature.has_value()) {
+    fail_no_columns_(where, "name both columns with x_feature and y_feature", frame.features());
+  }
+  PLUSS_CHECK(columns.x_feature.has_value() && columns.y_feature.has_value(),
+              std::string(where) + ": a 2D plot requires both x_feature and y_feature");
   return {{
-      { available[0], frame.features(available[0]) },
-      { available[1], frame.features(available[1]) },
+      { *columns.x_feature, require_named_feature_(frame, *columns.x_feature, where) },
+      { *columns.y_feature, require_named_feature_(frame, *columns.y_feature, where) },
   }};
 }
 
@@ -408,77 +435,63 @@ namespace detail {
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
-  const auto available = frame.features();
-  if (columns.x_feature.has_value() || columns.y_feature.has_value() || columns.z_feature.has_value()) {
-    PLUSS_CHECK(columns.x_feature.has_value() &&
-                    columns.y_feature.has_value() &&
-                    columns.z_feature.has_value(),
-                std::string(where) +
-                    ": explicit 3D selection requires x_feature, y_feature, and z_feature");
-    PLUSS_CHECK(!columns.feature.has_value(),
-                std::string(where) + ": 3D selection does not accept feature");
-    return {{
-        { *columns.x_feature, require_named_feature_(frame, *columns.x_feature, where) },
-        { *columns.y_feature, require_named_feature_(frame, *columns.y_feature, where) },
-        { *columns.z_feature, require_named_feature_(frame, *columns.z_feature, where) },
-    }};
-  }
+  reject_selection_(columns, where);
   PLUSS_CHECK(!columns.feature.has_value(),
               std::string(where) + ": 3D selection does not accept feature");
-  PLUSS_CHECK(
-      available.size() == 3,
-      std::string(where) +
-          ": expected exactly 3 features or explicit x_feature/y_feature/z_feature; DataFrame features = " +
-          feature_list_(available));
+  if (!columns.x_feature.has_value() && !columns.y_feature.has_value() && !columns.z_feature.has_value()) {
+    fail_no_columns_(where, "name all three columns with x_feature, y_feature and z_feature", frame.features());
+  }
+  PLUSS_CHECK(columns.x_feature.has_value() &&
+                  columns.y_feature.has_value() &&
+                  columns.z_feature.has_value(),
+              std::string(where) +
+                  ": a 3D plot requires x_feature, y_feature, and z_feature");
   return {{
-      { available[0], frame.features(available[0]) },
-      { available[1], frame.features(available[1]) },
-      { available[2], frame.features(available[2]) },
+      { *columns.x_feature, require_named_feature_(frame, *columns.x_feature, where) },
+      { *columns.y_feature, require_named_feature_(frame, *columns.y_feature, where) },
+      { *columns.z_feature, require_named_feature_(frame, *columns.z_feature, where) },
   }};
 }
 
-// The one rule for line-like plots (line, step, and the table accessor's line, step, area, bar)
-// when no columns are named. A frame of exactly two columns is x then y (a time column goes on x).
-// Any other frame draws every numeric column against its single time column when it has exactly
-// one, and against the row positions otherwise. `default_x` names a column that is x regardless.
+// The one rule for line-like plots (line, step, area, scatter). The x axis is never guessed:
+// it is x_feature when given and the row positions otherwise. The y columns are y_feature, or
+// the columns of a selection (all_columns / include_columns / exclude_columns; the x column is
+// never one of them). A selection draws one trace per column on the same pane.
 struct WidePlan {
   std::optional<std::string> x{};
   std::vector<std::string> ys{};
 };
 
-[[nodiscard]] inline WidePlan wide_plan_(const DataFrame& frame,
-                                         const std::optional<std::string>& default_x,
-                                         std::string_view where) {
-  const auto available = frame.features();
-  std::vector<std::string> numeric;
-  std::vector<std::string> times;
-  for (const auto& name : available) {
-    const auto kind = frame.features(name).kind();
-    if (kind == ShelfKind::Series) {
-      numeric.push_back(name);
-    } else if (kind == ShelfKind::Timeline) {
-      times.push_back(name);
-    }
-  }
+[[nodiscard]] inline WidePlan resolve_wide_plan_(const DataFrame& frame,
+                                                 const FlashTableColumns& columns,
+                                                 std::string_view where) {
+  PLUSS_CHECK(!columns.feature.has_value() && !columns.z_feature.has_value(),
+              std::string(where) + ": this plot accepts only x_feature, y_feature and a column selection");
+  const auto names = frame_column_names_(frame);
   WidePlan plan;
-  if (default_x.has_value()) {
-    plan.x = *default_x;
-    for (const auto& name : numeric) {
-      if (name != *default_x) plan.ys.push_back(name);
-    }
-  } else if (available.size() == 2 && numeric.size() == 2) {
-    plan.x = numeric[0];
-    plan.ys = {numeric[1]};
-  } else if (times.size() == 1) {
-    plan.x = times.front();
-    plan.ys = numeric;
-  } else {
-    plan.ys = numeric;
+  if (columns.x_feature.has_value()) {
+    (void)require_named_feature_(frame, *columns.x_feature, where);
+    plan.x = *columns.x_feature;
   }
-  PLUSS_CHECK(!plan.ys.empty(),
-              std::string(where) + ": the frame has no numeric columns to plot; name the columns with x_feature and y_feature; DataFrame features = " +
-                  feature_list_(available));
-  return plan;
+  if (columns.selection.any()) {
+    PLUSS_CHECK(!columns.y_feature.has_value(),
+                std::string(where) + ": name y_feature or set a column selection, not both");
+    plan.ys = *::pluss::pl::flash::detail::resolve_column_selection(
+        columns.selection, names.all, names.numeric, where, plan.x);
+    return plan;
+  }
+  if (columns.y_feature.has_value()) {
+    (void)require_named_feature_(frame, *columns.y_feature, where);
+    plan.ys = {*columns.y_feature};
+    return plan;
+  }
+  if (columns.x_feature.has_value()) {
+    PLUSS_FAIL(std::string(where) + ": x_feature names the x axis only; add y_feature, or a column selection to draw");
+  }
+  fail_no_columns_(where,
+                   "name y_feature (with x_feature, or against the row positions), or set a column selection "
+                   "(selection.all_columns, selection.include_columns or selection.exclude_columns)",
+                   names.all);
 }
 
 [[nodiscard]] inline std::pair<Series, Series> paired_continuous_series_(
@@ -492,6 +505,68 @@ struct WidePlan {
       continuous_series_from_shelf_(x.filter(keep), where),
       continuous_series_from_shelf_(y.filter(keep), where),
   };
+}
+
+// Draws a WidePlan: one trace per y column on the one pane, each against x_feature or the row
+// positions, labelled by column name when there are several.
+template <class Draw>
+::pluss::pl::Trace& draw_wide_plan_(::pluss::pl::Pane& pane,
+                                    const DataFrame& frame,
+                                    const WidePlan& plan,
+                                    std::string_view where,
+                                    Draw&& draw) {
+  ::pluss::pl::Trace* last = nullptr;
+  const bool many = plan.ys.size() > 1;
+  for (const auto& y_name : plan.ys) {
+    const auto y_shelf = frame.features(y_name);
+    if (plan.x.has_value()) {
+      const auto [x, y] = paired_continuous_series_(frame.features(*plan.x), y_shelf, where);
+      last = &draw(x, y);
+    } else {
+      const auto keep = y_shelf.notnull().as_series();
+      const auto y = continuous_series_from_shelf_(y_shelf, where);
+      const auto x = Shelf(implicit_positions_(keep.numel())).filter(keep).as_series();
+      last = &draw(x, y);
+    }
+    if (many) {
+      last->label(y_name);
+    }
+  }
+  pane.x_label(plan.x.value_or(std::string("case")));
+  pane.y_label(many ? std::string("value") : plan.ys.front());
+  return *last;
+}
+
+// The columns of a selection stacked into group (column name) and value, for the plots that
+// draw one distribution per group (box, violin, strip, swarm).
+struct WideGroups_ {
+  Note group = pluss::make_note(std::vector<std::string>{});
+  Series values = pluss::series::undefined();
+};
+
+[[nodiscard]] inline WideGroups_ wide_groups_(const DataFrame& frame,
+                                              const FlashTableColumns& columns,
+                                              std::string_view where) {
+  PLUSS_CHECK(!columns.x_feature.has_value() && !columns.y_feature.has_value() &&
+                  !columns.feature.has_value() && !columns.hue_feature.has_value() &&
+                  !columns.label_feature.has_value() && !columns.z_feature.has_value(),
+              std::string(where) +
+                  ": name the group and value columns (x_feature, y_feature) or set a column selection, not both");
+  const auto names = frame_column_names_(frame);
+  const auto picked = *::pluss::pl::flash::detail::resolve_column_selection(
+      columns.selection, names.all, names.numeric, where);
+  std::vector<std::string> labels;
+  std::vector<double> values;
+  for (const auto& name : picked) {
+    const auto column = continuous_series_from_shelf_(frame.features(name), where)
+                            .to(ScalarType::Float64)
+                            .to(Platform::CPU);
+    const auto host = column.host<double>();
+    values.insert(values.end(), host.begin(), host.end());
+    labels.insert(labels.end(), host.size(), name);
+  }
+  return {::pluss::make_note(std::move(labels)),
+          ::pluss::make_series(values, {static_cast<std::int64_t>(values.size())})};
 }
 
 [[nodiscard]] inline std::tuple<Series, Series, Series> triplet_continuous_series_(
@@ -591,6 +666,7 @@ struct CatFeatureBinding_ {
     const FlashTableColumns& columns,
     std::string_view where) {
   const auto available = frame.features();
+  reject_selection_(columns, where);
   CatFeatureBinding_ out;
 
   const bool explicit_group = columns.x_feature.has_value() || columns.label_feature.has_value();
@@ -615,17 +691,10 @@ struct CatFeatureBinding_ {
     return out;
   }
 
-  PLUSS_CHECK(
-      available.size() == 2 || available.size() == 3,
-      std::string(where) +
-          ": expected exactly 2 features (group, value) or 3 features (group, value, hue), or explicit x_feature/y_feature[/hue_feature]; DataFrame features = " +
-          feature_list_(available));
-  out.group = {available[0], frame.features(available[0])};
-  out.value = {available[1], frame.features(available[1])};
-  if (available.size() == 3) {
-    out.hue = std::pair<std::string, Shelf>{available[2], frame.features(available[2])};
-  }
-  return out;
+  fail_no_columns_(where,
+                   "name the group column and the value column with x_feature (or label_feature) and y_feature "
+                   "(add hue_feature for a hue)",
+                   available);
 }
 
 struct PieBinding_ {
@@ -638,6 +707,7 @@ struct PieBinding_ {
     const FlashTableColumns& columns,
     std::string_view where) {
   const auto available = frame.features();
+  reject_selection_(columns, where);
 
   const auto explicit_single_value = [&]() -> std::optional<std::string> {
     if (columns.feature.has_value()) return columns.feature;
@@ -669,35 +739,10 @@ struct PieBinding_ {
     return {std::nullopt, continuous_series_from_shelf_(value_col, where)};
   }
 
-  if (available.size() == 1) {
-    const auto value_col = frame.features(available.front());
-    if (value_col.kind() == ShelfKind::Note) {
-      const auto categories = observed_note_from_shelf_(value_col, where);
-      const auto [labels, values] = categorical_counts_(categories);
-      return {labels, values};
-    }
-    return {std::nullopt, continuous_series_from_shelf_(value_col, where)};
-  }
-
-  PLUSS_CHECK(
-      available.size() == 2,
-      std::string(where) +
-          ": expected exactly 1 feature, an inferable 2-feature {label, value} frame, or explicit label/value selection; DataFrame features = " +
-          feature_list_(available));
-
-  const auto left = frame.features(available[0]);
-  const auto right = frame.features(available[1]);
-  if (left.kind() == ShelfKind::Note && is_continuous_shelf_(right)) {
-    const auto [labels, values] = grouped_note_series_(left, right, where);
-    return {labels, values};
-  }
-  if (right.kind() == ShelfKind::Note && is_continuous_shelf_(left)) {
-    const auto [labels, values] = grouped_note_series_(right, left, where);
-    return {labels, values};
-  }
-  PLUSS_FAIL(
-      std::string(where) +
-      ": 2-feature pie inference requires one text feature and one numeric/temporal feature");
+  fail_no_columns_(where,
+                   "name the value column with feature (or y_feature), or the label and value columns with "
+                   "label_feature and feature",
+                   available);
 }
 
 struct NumericFrameColumns_ {
@@ -710,22 +755,29 @@ struct NumericFrameColumns_ {
     const DataFrame& frame,
     std::string_view where,
     const std::vector<std::string>& excluded_names = {},
-    const Shelf* extra_required = nullptr) {
-  const auto names = frame.features();
-  PLUSS_CHECK(!names.empty(), std::string(where) + ": frame has no features");
+    const Shelf* extra_required = nullptr,
+    const ::pluss::pl::flash::ColumnSelection* selection = nullptr) {
+  // Column-set plots: the columns of the selection, or every numeric column when none is set.
+  const auto frame_names = frame_column_names_(frame);
+  PLUSS_CHECK(!frame_names.all.empty(), std::string(where) + ": frame has no features");
+  std::vector<std::string> picked;
+  if (selection != nullptr && selection->any()) {
+    picked = *::pluss::pl::flash::detail::resolve_column_selection(
+        *selection, frame_names.all, frame_names.numeric, where, std::nullopt);
+    for (const auto& ex : excluded_names) {
+      picked.erase(std::remove(picked.begin(), picked.end(), ex), picked.end());
+    }
+  } else {
+    fail_no_columns_(where,
+                     "set the column selection (selection.all_columns, selection.include_columns or "
+                     "selection.exclude_columns)",
+                     frame_names.all);
+  }
 
   std::vector<std::pair<std::string, Shelf>> selected;
-  selected.reserve(names.size());
-  for (const auto& name : names) {
-    if (std::find(excluded_names.begin(), excluded_names.end(), name) !=
-        excluded_names.end()) {
-      continue;
-    }
-    const auto column = frame.features(name);
-    PLUSS_CHECK(
-        column.kind() == ShelfKind::Series,
-        std::string(where) + ": feature '" + name + "' is not a numeric Series");
-    selected.emplace_back(name, column);
+  selected.reserve(picked.size());
+  for (const auto& name : picked) {
+    selected.emplace_back(name, frame.features(name));
   }
   PLUSS_CHECK(!selected.empty(),
               std::string(where) +
@@ -779,8 +831,9 @@ struct MatrixHeatmapPayload_ {
 
 [[nodiscard]] inline MatrixHeatmapPayload_ matrix_heatmap_payload_(
     const DataFrame& frame,
-    std::string_view where) {
-  auto numeric = numeric_series_columns_(frame, where);
+    std::string_view where,
+    const ::pluss::pl::flash::ColumnSelection* selection = nullptr) {
+  auto numeric = numeric_series_columns_(frame, where, {}, nullptr, selection);
   PLUSS_CHECK(!numeric.columns.empty(),
               std::string(where) + ": expected at least one numeric Series feature");
   const auto rows = numeric.columns.front().numel();
@@ -803,9 +856,9 @@ struct HeatmapFeatureBinding_ {
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
-  const auto available = frame.features();
   if (columns.x_feature.has_value() || columns.y_feature.has_value() ||
       columns.z_feature.has_value() || columns.feature.has_value()) {
+    reject_selection_(columns, where);
     PLUSS_CHECK(columns.x_feature.has_value() && columns.y_feature.has_value(),
                 std::string(where) +
                     ": explicit heatmap selection requires x_feature and y_feature");
@@ -819,14 +872,7 @@ struct HeatmapFeatureBinding_ {
         {*z_name, require_named_feature_(frame, *z_name, where)},
     };
   }
-  if (available.size() == 3) {
-    return HeatmapFeatureBinding_{
-        {available[0], frame.features(available[0])},
-        {available[1], frame.features(available[1])},
-        {available[2], frame.features(available[2])},
-    };
-  }
-  return std::nullopt;
+  return std::nullopt;  // no columns named: the plot is the matrix of the selected (default every numeric) columns
 }
 
 } // namespace detail
@@ -938,33 +984,10 @@ inline Trace& lineplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
-  if (!columns.x_feature.has_value() && !columns.y_feature.has_value() && !columns.feature.has_value() &&
-      !columns.z_feature.has_value()) {
-    // No columns named: every numeric column is drawn (two columns are x then y).
-    const auto plan = ::pluss::table::detail::wide_plan_(frame, std::nullopt, "flash::lineplot(DataFrame)");
-    Trace* last = nullptr;
-    for (const auto& y_name : plan.ys) {
-      const auto y_shelf = frame.features(y_name);
-      if (plan.x.has_value()) {
-        const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-            frame.features(*plan.x), y_shelf, "flash::lineplot(DataFrame)");
-        last = &lineplot(pane, x, y);
-      } else {
-        const auto y = ::pluss::table::detail::continuous_series_from_shelf_(y_shelf, "flash::lineplot(DataFrame)");
-        last = &lineplot(pane, ::pluss::table::detail::implicit_positions_(y.numel()), y);
-      }
-      last->label(y_name);
-    }
-    ::pluss::table::detail::set_bivariate_labels_(pane, plan.x.value_or("case"),
-                                                   plan.ys.size() == 1 ? plan.ys.front() : std::string("value"));
-    return *last;  // with several columns this is the last line drawn; the others are on the pane
-  }
-  const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
-      frame, columns, "flash::lineplot(DataFrame)");
-  const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-      x_col.second, y_col.second, "flash::lineplot(DataFrame)");
-  ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
-  return lineplot(pane, x, y);
+  constexpr auto where = "flash::lineplot(DataFrame)";
+  const auto plan = ::pluss::table::detail::resolve_wide_plan_(frame, columns, where);
+  return ::pluss::table::detail::draw_wide_plan_(
+      pane, frame, plan, where, [&pane](const Series& x, const Series& y) -> Trace& { return lineplot(pane, x, y); });
 }
 
 inline Trace& lineplot(
@@ -988,12 +1011,10 @@ inline Trace& scatterplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
-  const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
-      frame, columns, "flash::scatterplot(DataFrame)");
-  const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-      x_col.second, y_col.second, "flash::scatterplot(DataFrame)");
-  ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
-  return scatterplot(pane, x, y);
+  constexpr auto where = "flash::scatterplot(DataFrame)";
+  const auto plan = ::pluss::table::detail::resolve_wide_plan_(frame, columns, where);
+  return ::pluss::table::detail::draw_wide_plan_(
+      pane, frame, plan, where, [&pane](const Series& x, const Series& y) -> Trace& { return scatterplot(pane, x, y); });
 }
 
 inline Trace& scatterplot(
@@ -1017,33 +1038,10 @@ inline Trace& stepplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
-  if (!columns.x_feature.has_value() && !columns.y_feature.has_value() && !columns.feature.has_value() &&
-      !columns.z_feature.has_value()) {
-    // No columns named: every numeric column is drawn (two columns are x then y).
-    const auto plan = ::pluss::table::detail::wide_plan_(frame, std::nullopt, "flash::stepplot(DataFrame)");
-    Trace* last = nullptr;
-    for (const auto& y_name : plan.ys) {
-      const auto y_shelf = frame.features(y_name);
-      if (plan.x.has_value()) {
-        const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-            frame.features(*plan.x), y_shelf, "flash::stepplot(DataFrame)");
-        last = &stepplot(pane, x, y);
-      } else {
-        const auto y = ::pluss::table::detail::continuous_series_from_shelf_(y_shelf, "flash::stepplot(DataFrame)");
-        last = &stepplot(pane, ::pluss::table::detail::implicit_positions_(y.numel()), y);
-      }
-      last->label(y_name);
-    }
-    ::pluss::table::detail::set_bivariate_labels_(pane, plan.x.value_or("case"),
-                                                   plan.ys.size() == 1 ? plan.ys.front() : std::string("value"));
-    return *last;  // with several columns this is the last line drawn; the others are on the pane
-  }
-  const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
-      frame, columns, "flash::stepplot(DataFrame)");
-  const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-      x_col.second, y_col.second, "flash::stepplot(DataFrame)");
-  ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
-  return stepplot(pane, x, y);
+  constexpr auto where = "flash::stepplot(DataFrame)";
+  const auto plan = ::pluss::table::detail::resolve_wide_plan_(frame, columns, where);
+  return ::pluss::table::detail::draw_wide_plan_(
+      pane, frame, plan, where, [&pane](const Series& x, const Series& y) -> Trace& { return stepplot(pane, x, y); });
 }
 
 inline Trace& stepplot(
@@ -1071,12 +1069,11 @@ inline Trace& areaplot(
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns,
     double base) {
-  const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
-      frame, columns, "flash::areaplot(DataFrame)");
-  const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-      x_col.second, y_col.second, "flash::areaplot(DataFrame)");
-  ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
-  return areaplot(pane, x, y, base);
+  constexpr auto where = "flash::areaplot(DataFrame)";
+  const auto plan = ::pluss::table::detail::resolve_wide_plan_(frame, columns, where);
+  return ::pluss::table::detail::draw_wide_plan_(
+      pane, frame, plan, where,
+      [&pane, base](const Series& x, const Series& y) -> Trace& { return areaplot(pane, x, y, base); });
 }
 
 inline Trace& areaplot(
@@ -1101,12 +1098,19 @@ inline Trace& histplot(
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns,
     int bins) {
-  const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
-      frame, columns, "flash::histplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_shelf_(
-      column, "flash::histplot(DataFrame)");
-  pane.x_label(name).y_label("count");
-  return histplot(pane, x, bins);
+  constexpr auto where = "flash::histplot(DataFrame)";
+  Trace* last = nullptr;
+  const auto inputs = ::pluss::table::detail::resolve_univariate_features_(frame, columns, where);
+  const bool many = inputs.size() > 1;
+  for (const auto& [name, column] : inputs) {
+    const auto x = ::pluss::table::detail::continuous_series_from_shelf_(column, where);
+    pane.x_label(many ? std::string("value") : name).y_label("count");
+    last = &histplot(pane, x, bins);
+    if (many) {
+      last->label(name);
+    }
+  }
+  return *last;
 }
 
 inline Trace& histplot(
@@ -1154,12 +1158,19 @@ inline Trace& kdeplot(
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns,
     std::int64_t points) {
-  const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
-      frame, columns, "flash::kdeplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_shelf_(
-      column, "flash::kdeplot(DataFrame)");
-  pane.x_label(name).y_label("density");
-  return kdeplot(pane, x, points);
+  constexpr auto where = "flash::kdeplot(DataFrame)";
+  Trace* last = nullptr;
+  const auto inputs = ::pluss::table::detail::resolve_univariate_features_(frame, columns, where);
+  const bool many = inputs.size() > 1;
+  for (const auto& [name, column] : inputs) {
+    const auto x = ::pluss::table::detail::continuous_series_from_shelf_(column, where);
+    pane.x_label(many ? std::string("value") : name).y_label("density");
+    last = &kdeplot(pane, x, points);
+    if (many) {
+      last->label(name);
+    }
+  }
+  return *last;
 }
 
 inline Trace& kdeplot(
@@ -1183,12 +1194,19 @@ inline Trace& ecdfplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns) {
-  const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
-      frame, columns, "flash::ecdfplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_shelf_(
-      column, "flash::ecdfplot(DataFrame)");
-  pane.x_label(name).y_label("cdf");
-  return ecdfplot(pane, x);
+  constexpr auto where = "flash::ecdfplot(DataFrame)";
+  Trace* last = nullptr;
+  const auto inputs = ::pluss::table::detail::resolve_univariate_features_(frame, columns, where);
+  const bool many = inputs.size() > 1;
+  for (const auto& [name, column] : inputs) {
+    const auto x = ::pluss::table::detail::continuous_series_from_shelf_(column, where);
+    pane.x_label(many ? std::string("value") : name).y_label("cdf");
+    last = &ecdfplot(pane, x);
+    if (many) {
+      last->label(name);
+    }
+  }
+  return *last;
 }
 
 inline Trace& ecdfplot(
@@ -1215,12 +1233,19 @@ inline Trace& rugplot(
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns,
     double height) {
-  const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
-      frame, columns, "flash::rugplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_shelf_(
-      column, "flash::rugplot(DataFrame)");
-  pane.x_label(name);
-  return rugplot(pane, x, height);
+  constexpr auto where = "flash::rugplot(DataFrame)";
+  Trace* last = nullptr;
+  const auto inputs = ::pluss::table::detail::resolve_univariate_features_(frame, columns, where);
+  const bool many = inputs.size() > 1;
+  for (const auto& [name, column] : inputs) {
+    const auto x = ::pluss::table::detail::continuous_series_from_shelf_(column, where);
+    pane.x_label(many ? std::string("value") : name);
+    last = &rugplot(pane, x, height);
+    if (many) {
+      last->label(name);
+    }
+  }
+  return *last;
 }
 
 inline Trace& rugplot(
@@ -1463,7 +1488,7 @@ inline Trace& scatter3D(
 inline Trace& relplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter") {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::relplot(DataFrame)");
@@ -1497,7 +1522,7 @@ inline Trace& relplot(
 inline Trace& relplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter") {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::relplot(Atlas)");
@@ -1507,7 +1532,7 @@ inline Trace& relplot(
 inline Trace& relplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter",
     std::string title = {}) {
   auto& pane = studio.pane2(std::move(title));
@@ -1517,7 +1542,7 @@ inline Trace& relplot(
 inline Trace& relplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter",
     std::string title = {}) {
   auto& pane = studio.pane2(std::move(title));
@@ -1571,7 +1596,12 @@ inline Studio& jointplot(
 inline Trace& stripplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
+  if (columns.selection.any()) {
+    const auto wide = ::pluss::table::detail::wide_groups_(frame, columns, "flash::stripplot(DataFrame)");
+    ::pluss::table::detail::set_bivariate_labels_(pane, "column", "value");
+    return stripplot(pane, wide.group, wide.values);
+  }
   const auto binding = ::pluss::table::detail::resolve_catplot_features_(
       frame, columns, "flash::stripplot(DataFrame)");
   PLUSS_CHECK(!binding.hue.has_value(),
@@ -1585,7 +1615,7 @@ inline Trace& stripplot(
 inline Trace& stripplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::stripplot(Atlas)");
   return stripplot(pane, frame, columns);
@@ -1594,7 +1624,12 @@ inline Trace& stripplot(
 inline Trace& swarmplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
+  if (columns.selection.any()) {
+    const auto wide = ::pluss::table::detail::wide_groups_(frame, columns, "flash::swarmplot(DataFrame)");
+    ::pluss::table::detail::set_bivariate_labels_(pane, "column", "value");
+    return swarmplot(pane, wide.group, wide.values);
+  }
   const auto binding = ::pluss::table::detail::resolve_catplot_features_(
       frame, columns, "flash::swarmplot(DataFrame)");
   PLUSS_CHECK(!binding.hue.has_value(),
@@ -1608,7 +1643,7 @@ inline Trace& swarmplot(
 inline Trace& swarmplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::swarmplot(Atlas)");
   return swarmplot(pane, frame, columns);
@@ -1617,7 +1652,12 @@ inline Trace& swarmplot(
 inline Trace& boxplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
+  if (columns.selection.any()) {
+    const auto wide = ::pluss::table::detail::wide_groups_(frame, columns, "flash::boxplot(DataFrame)");
+    ::pluss::table::detail::set_bivariate_labels_(pane, "column", "value");
+    return boxplot(pane, wide.group, wide.values);
+  }
   const auto binding = ::pluss::table::detail::resolve_catplot_features_(
       frame, columns, "flash::boxplot(DataFrame)");
   if (!binding.hue.has_value()) {
@@ -1638,7 +1678,7 @@ inline Trace& boxplot(
 inline Trace& boxplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::boxplot(Atlas)");
   return boxplot(pane, frame, columns);
@@ -1647,7 +1687,12 @@ inline Trace& boxplot(
 inline Trace& violinplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
+  if (columns.selection.any()) {
+    const auto wide = ::pluss::table::detail::wide_groups_(frame, columns, "flash::violinplot(DataFrame)");
+    ::pluss::table::detail::set_bivariate_labels_(pane, "column", "value");
+    return violinplot(pane, wide.group, wide.values);
+  }
   const auto binding = ::pluss::table::detail::resolve_catplot_features_(
       frame, columns, "flash::violinplot(DataFrame)");
   if (!binding.hue.has_value()) {
@@ -1670,6 +1715,11 @@ inline Trace& violinplot(
     const ::pluss::table::DataFrame& frame,
     const TableColumns& columns,
     const ViolinOptions& options) {
+  if (columns.selection.any()) {
+    const auto wide = ::pluss::table::detail::wide_groups_(frame, columns, "flash::violinplot(DataFrame, options)");
+    ::pluss::table::detail::set_bivariate_labels_(pane, "column", "value");
+    return violinplot(pane, wide.group, wide.values, options);
+  }
   const auto binding = ::pluss::table::detail::resolve_catplot_features_(
       frame, columns, "flash::violinplot(DataFrame, options)");
   PLUSS_CHECK(!binding.hue.has_value(),
@@ -1683,7 +1733,7 @@ inline Trace& violinplot(
 inline Trace& violinplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::violinplot(Atlas)");
   return violinplot(pane, frame, columns);
@@ -1702,7 +1752,7 @@ inline Trace& violinplot(
 inline Trace& boxenplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::boxenplot(DataFrame)");
   const auto values = ::pluss::table::detail::continuous_series_from_shelf_(
@@ -1714,7 +1764,7 @@ inline Trace& boxenplot(
 inline Trace& boxenplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::boxenplot(Atlas)");
   return boxenplot(pane, frame, columns);
@@ -1741,7 +1791,7 @@ inline Trace& catplot(
 inline Trace& catplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "strip") {
   CatPlotOptions options;
   options.kind = ::pluss::pl::flash::detail::catplot_kind(kind);
@@ -1761,7 +1811,7 @@ inline Trace& catplot(
 inline Trace& catplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "strip") {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::catplot(Atlas)");
@@ -1771,7 +1821,7 @@ inline Trace& catplot(
 inline Trace& pieplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto binding = ::pluss::table::detail::resolve_pie_binding_(
       frame, columns, "flash::pieplot(DataFrame)");
   if (!binding.labels.has_value()) {
@@ -1785,7 +1835,7 @@ inline Trace& pieplot(
 inline Trace& pieplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::pieplot(Atlas)");
   return pieplot(pane, frame, columns);
@@ -1794,7 +1844,7 @@ inline Trace& pieplot(
 inline Trace& regplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::regplot(DataFrame)");
@@ -1807,7 +1857,7 @@ inline Trace& regplot(
 inline Trace& regplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::regplot(Atlas)");
@@ -1817,7 +1867,7 @@ inline Trace& regplot(
 inline Trace& residplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::residplot(DataFrame)");
@@ -1830,7 +1880,7 @@ inline Trace& residplot(
 inline Trace& residplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::residplot(Atlas)");
@@ -1840,7 +1890,7 @@ inline Trace& residplot(
 inline Trace& qqplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const QqPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::qqplot(DataFrame)");
@@ -1853,7 +1903,7 @@ inline Trace& qqplot(
 inline Trace& qqplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const QqPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::qqplot(Atlas)");
@@ -1876,7 +1926,7 @@ inline Trace& heatmap(
     return heatmap(pane, grid_x, grid_y, grid_z, options);
   }
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
-      frame, "flash::heatmap(DataFrame)");
+      frame, "flash::heatmap(DataFrame)", &columns.selection);
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
   pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
@@ -1908,7 +1958,7 @@ inline Trace& clustermap(
     return clustermap(pane, x, y, z, options);
   }
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
-      frame, "flash::clustermap(DataFrame)");
+      frame, "flash::clustermap(DataFrame)", &columns.selection);
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
   pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
@@ -1929,7 +1979,7 @@ inline Trace& clustermap(
 inline Trace& sheet(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto [x_col, y_col, z_col] = ::pluss::table::detail::resolve_trivariate_features_(
       frame, columns, "flash::sheet(DataFrame)");
   const auto [x, y, z] = ::pluss::table::detail::triplet_continuous_series_(
@@ -1941,7 +1991,7 @@ inline Trace& sheet(
 inline Trace& sheet(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::sheet(Atlas)");
   return sheet(pane, frame, columns);
@@ -1950,7 +2000,7 @@ inline Trace& sheet(
 inline Trace& lattice(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto [x_col, y_col, z_col] = ::pluss::table::detail::resolve_trivariate_features_(
       frame, columns, "flash::lattice(DataFrame)");
   const auto [x, y, z] = ::pluss::table::detail::triplet_continuous_series_(
@@ -1962,7 +2012,7 @@ inline Trace& lattice(
 inline Trace& lattice(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::lattice(Atlas)");
   return lattice(pane, frame, columns);
@@ -1971,7 +2021,7 @@ inline Trace& lattice(
 inline Trace& spire3(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto [x_col, y_col, z_col] = ::pluss::table::detail::resolve_trivariate_features_(
       frame, columns, "flash::spire3(DataFrame)");
   const auto [x, y, z] = ::pluss::table::detail::triplet_continuous_series_(
@@ -1983,7 +2033,7 @@ inline Trace& spire3(
 inline Trace& spire3(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::spire3(Atlas)");
   return spire3(pane, frame, columns);
@@ -1992,7 +2042,7 @@ inline Trace& spire3(
 inline Trace& ridge3(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 8) {
   const auto [x_col, y_col, z_col] = ::pluss::table::detail::resolve_trivariate_features_(
       frame, columns, "flash::ridge3(DataFrame)");
@@ -2005,7 +2055,7 @@ inline Trace& ridge3(
 inline Trace& ridge3(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 8) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::ridge3(Atlas)");
@@ -2015,35 +2065,35 @@ inline Trace& ridge3(
 inline Trace& plot_surface(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return sheet(pane, frame, columns);
 }
 
 inline Trace& plot_surface(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return sheet(pane, atlas, columns);
 }
 
 inline Trace& plot_wireframe(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return lattice(pane, frame, columns);
 }
 
 inline Trace& plot_wireframe(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return lattice(pane, atlas, columns);
 }
 
 inline Trace& contour3D(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 8) {
   return ridge3(pane, frame, columns, level_count);
 }
@@ -2051,7 +2101,7 @@ inline Trace& contour3D(
 inline Trace& contour3D(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 8) {
   return ridge3(pane, atlas, columns, level_count);
 }
@@ -2059,21 +2109,21 @@ inline Trace& contour3D(
 inline Trace& bar3d(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return spire3(pane, frame, columns);
 }
 
 inline Trace& bar3d(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   return spire3(pane, atlas, columns);
 }
 
 inline Trace& isoshell(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 4) {
   PLUSS_CHECK(
       columns.x_feature.has_value() && columns.y_feature.has_value() &&
@@ -2096,7 +2146,7 @@ inline Trace& isoshell(
 inline Trace& isoshell(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int level_count = 4) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::isoshell(Atlas)");
@@ -2106,7 +2156,7 @@ inline Trace& isoshell(
 inline Trace& hist3d(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const Hist3DOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::hist3d(DataFrame)");
@@ -2119,7 +2169,7 @@ inline Trace& hist3d(
 inline Trace& hist3d(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const Hist3DOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::hist3d(Atlas)");
@@ -2129,7 +2179,7 @@ inline Trace& hist3d(
 inline Trace& pointplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   PLUSS_CHECK(columns.x_feature.has_value() && columns.y_feature.has_value(),
               "flash::pointplot(DataFrame): x_feature and y_feature are required");
   const auto x_col = ::pluss::table::detail::require_named_feature_(
@@ -2153,7 +2203,7 @@ inline Trace& pointplot(
 inline Trace& whiskplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   PLUSS_CHECK(columns.x_feature.has_value() && columns.y_feature.has_value(),
               "flash::whiskplot(DataFrame): x_feature and y_feature are required");
   const auto x_col = ::pluss::table::detail::require_named_feature_(
@@ -2216,7 +2266,7 @@ inline Trace& whiskplot(
 inline Trace& pointplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::pointplot(Atlas)");
   return pointplot(pane, frame, columns);
@@ -2225,7 +2275,7 @@ inline Trace& pointplot(
 inline Trace& whiskplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {}) {
+    const TableColumns& columns) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::whiskplot(Atlas)");
   return whiskplot(pane, frame, columns);
@@ -2234,7 +2284,7 @@ inline Trace& whiskplot(
 inline Trace& lmplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {},
     std::string title = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
@@ -2252,7 +2302,7 @@ inline Trace& lmplot(
 inline Trace& lmplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const RegPlotOptions& options = {},
     std::string title = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
@@ -2263,7 +2313,7 @@ inline Trace& lmplot(
 inline Studio& lagplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const LagPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::lagplot(DataFrame)");
@@ -2276,7 +2326,7 @@ inline Studio& lagplot(
 inline Studio& lagplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const LagPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::lagplot(Atlas)");
@@ -2286,7 +2336,7 @@ inline Studio& lagplot(
 inline Studio& acfplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const AcfPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::acfplot(DataFrame)");
@@ -2299,7 +2349,7 @@ inline Studio& acfplot(
 inline Studio& acfplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const AcfPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::acfplot(Atlas)");
@@ -2309,7 +2359,7 @@ inline Studio& acfplot(
 inline Studio& pacfplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const PacfPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::pacfplot(DataFrame)");
@@ -2322,7 +2372,7 @@ inline Studio& pacfplot(
 inline Studio& pacfplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const PacfPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::pacfplot(Atlas)");
@@ -2332,7 +2382,7 @@ inline Studio& pacfplot(
 inline Studio& actplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const AutocorrelationPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::actplot(DataFrame)");
@@ -2345,7 +2395,7 @@ inline Studio& actplot(
 inline Studio& actplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const AutocorrelationPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::actplot(Atlas)");
@@ -2355,7 +2405,7 @@ inline Studio& actplot(
 inline Studio& bootstrapplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const BootstrapPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::bootstrapplot(DataFrame)");
@@ -2369,7 +2419,7 @@ inline Studio& bootstrapplot(
 inline Studio& bootstrapplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const BootstrapPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::bootstrapplot(Atlas)");
@@ -2379,7 +2429,7 @@ inline Studio& bootstrapplot(
 inline Studio& ccfplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const CcfPlotOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::ccfplot(DataFrame)");
@@ -2391,7 +2441,7 @@ inline Studio& ccfplot(
 inline Studio& ccfplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const CcfPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::ccfplot(Atlas)");
@@ -2401,7 +2451,7 @@ inline Studio& ccfplot(
 inline Trace& resid_histplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const ResidHistPlotOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::resid_histplot(DataFrame)");
@@ -2413,7 +2463,7 @@ inline Trace& resid_histplot(
 inline Trace& resid_histplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const ResidHistPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::resid_histplot(Atlas)");
@@ -2423,7 +2473,7 @@ inline Trace& resid_histplot(
 inline Studio& resid_acfplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const ResidAcfPlotOptions& options = {}) {
   const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
       frame, columns, "flash::resid_acfplot(DataFrame)");
@@ -2435,7 +2485,7 @@ inline Studio& resid_acfplot(
 inline Studio& resid_acfplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const ResidAcfPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::resid_acfplot(Atlas)");
@@ -2445,9 +2495,10 @@ inline Studio& resid_acfplot(
 inline Studio& pairplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns,
     const PairPlotOptions& options = {}) {
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::pairplot(DataFrame)");
+      frame, "flash::pairplot(DataFrame)", {}, nullptr, &columns.selection);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = numeric.labels;
@@ -2458,18 +2509,20 @@ inline Studio& pairplot(
 inline Studio& pairplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns,
     const PairPlotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::pairplot(Atlas)");
-  return pairplot(studio, frame, options);
+  return pairplot(studio, frame, columns, options);
 }
 
 inline Studio& triplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns,
     const TriplotOptions& options = {}) {
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::triplot(DataFrame)");
+      frame, "flash::triplot(DataFrame)", {}, nullptr, &columns.selection);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = numeric.labels;
@@ -2480,10 +2533,11 @@ inline Studio& triplot(
 inline Studio& triplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns,
     const TriplotOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::triplot(Atlas)");
-  return triplot(studio, frame, options);
+  return triplot(studio, frame, columns, options);
 }
 
 inline Studio& parallelplot(
@@ -2503,7 +2557,7 @@ inline Studio& parallelplot(
     class_ptr = &*class_col;
   }
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::parallelplot(DataFrame)", excluded, class_ptr);
+      frame, "flash::parallelplot(DataFrame)", excluded, class_ptr, &columns.selection);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = numeric.labels;
@@ -2543,7 +2597,7 @@ inline Studio& andrews_curves(
     class_ptr = &*class_col;
   }
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::andrews_curves(DataFrame)", excluded, class_ptr);
+      frame, "flash::andrews_curves(DataFrame)", excluded, class_ptr, &columns.selection);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = numeric.labels;
@@ -2583,7 +2637,7 @@ inline Studio& radviz(
     class_ptr = &*class_col;
   }
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::radviz(DataFrame)", excluded, class_ptr);
+      frame, "flash::radviz(DataFrame)", excluded, class_ptr, &columns.selection);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = numeric.labels;
@@ -2609,9 +2663,10 @@ inline Studio& radviz(
 inline Studio& summaryplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns,
     const SummaryOptions& options = {}) {
   auto numeric = ::pluss::table::detail::numeric_series_columns_(
-      frame, "flash::summaryplot(DataFrame)");
+      frame, "flash::summaryplot(DataFrame)", {}, nullptr, &columns.selection);
   const auto label_views = ::pluss::pl::flash::detail::label_views(numeric.labels);
   return summaryplot(
       studio,
@@ -2623,10 +2678,11 @@ inline Studio& summaryplot(
 inline Studio& summaryplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns,
     const SummaryOptions& options = {}) {
   const auto frame = ::pluss::table::detail::single_frame_from_atlas_(
       atlas, "flash::summaryplot(Atlas)");
-  return summaryplot(studio, frame, options);
+  return summaryplot(studio, frame, columns, options);
 }
 
 } // namespace pluss::pl::flash

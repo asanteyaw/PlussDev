@@ -155,6 +155,7 @@ api/flash/crayon_palette
 api/flash/get_dataset_names
 api/flash/load_dataset
 api/flash/Dataset
+api/flash/ColumnSelection
 api/flash/dataset_from_table
 api/flash/dataset_frame
 api/flash/dataset_nrows

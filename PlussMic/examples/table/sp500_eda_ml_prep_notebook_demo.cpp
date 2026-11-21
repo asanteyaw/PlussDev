@@ -151,7 +151,7 @@ int main() {
   brief_opts.features_per_table = 1;
   brief_opts.tables_per_row = 3;
   brief_opts.table_gap_spaces = 8;
-  auto fig_report = df.plot().line({"Close", "Open", "High", "Low", "Adj Close"}, "Date");
+  auto fig_report = df.plot().line("Date", {"Close", "Open", "High", "Low", "Adj Close"});
   fig_report.mosaic(2, 1, 12.0, 10.0).tight_layout(true, 4.0).size(1480.0, 920.0);
   df.plot().brief(fig_report, {"Close", "Open", "High", "Low", "Adj Close"}, brief_opts);
   fig_report.headline("Price trends + supporting tables");
@@ -165,7 +165,7 @@ int main() {
   pluss::table::BarPlotOptions hbar_opts;
   hbar_opts.horizontal = true;
   monthly_top24.plot()
-      .bar("TotalVolume", std::nullopt, hbar_opts)
+      .bar({"TotalVolume"}, hbar_opts)
       .headline("Top 24 (Year, Month) by traded volume - horizontal")
       .save_pdf("sp500_top24_monthly_volume_barh.pdf");
   pluss::table::PiePlotOptions pie_opts;

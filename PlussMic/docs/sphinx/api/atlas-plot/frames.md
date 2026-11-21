@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c562af9f8ee0 -->
+<!-- pluss-signature-hash: d18a3b6f3659 -->
 
 # AtlasPlotAccessor::frames
 
@@ -11,12 +11,19 @@
 DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index = 0) const
 
 pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
-                                            std::string_view y_feature,
-                                            std::optional<std::string_view> x_feature = std::nullopt) const
+                                            std::string_view y_feature) const
 
 pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                             std::string_view y_feature,
-                                            std::optional<std::string_view> x_feature,
+                                            const AtlasFramesPlotOptions& options) const
+
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
+                                            std::string_view x_feature,
+                                            std::string_view y_feature) const
+
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
+                                            std::string_view x_feature,
+                                            std::string_view y_feature,
                                             const AtlasFramesPlotOptions& options) const
 ```
 
@@ -29,7 +36,7 @@ Two genuinely different things share the name `frames()`:
   frame of the stack, so you can call any of *that* accessor's own plotting methods
   (`.line(...)`, `.scatter(...)`, `.hist(...)`, etc.) on a single frame as if it were a standalone
   `DataFrame`.
-- The **multi-index overloads** (`frames(indices, y_feature, ...)`) build an actual
+- The **multi-index overloads** (`frames(indices, y_feature)` or `frames(indices, x_feature, y_feature)`; x comes first) build an actual
   `pluss::pl::Studio` chart directly, overlaying (or faceting) the same feature across several
   frames at once, so you can compare how `y_feature` behaves frame-to-frame.
 
@@ -51,12 +58,12 @@ Like every method on `AtlasPlotAccessor`, the multi-index overloads build and re
     (after resolving negatives) are silently collapsed to one occurrence, in first-seen order.
     Must select at least one frame.
 
+**x_feature** (`std::string_view`, optional, comes first)
+    The feature to plot on the x-axis. When only one name is given it is the y feature and the
+    x-axis is each frame's own case axis (row index or row label).
+
 **y_feature** (`std::string_view`, multi-index overloads)
     The numeric feature to plot on the y-axis, read from every selected frame.
-
-**x_feature** (`std::optional<std::string_view>`, defaults to `std::nullopt`)
-    The feature to plot on the x-axis. `std::nullopt` (the default) uses each frame's own case
-    axis (row index or row label) instead of a data feature.
 
 **options** (`const AtlasFramesPlotOptions&`)
     `mode` (`AtlasFrameSelectionMode`, default `Overlay`): `Overlay` draws every selected frame as
@@ -143,7 +150,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto atlas = Atlas(frames, Shelf(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().frames({0, 2, 4}, "temp_c", "humidity");
+auto chart = atlas.plot().frames({0, 2, 4}, "humidity", "temp_c");
 chart.show();
 ```
 
@@ -170,7 +177,7 @@ AtlasFramesPlotOptions options;
 options.mode = AtlasFrameSelectionMode::Facet;
 options.rows = 1;
 options.cols = 3;
-auto chart = atlas.plot().frames({0, 2, 4}, "temp_c", std::nullopt, options);
+auto chart = atlas.plot().frames({0, 2, 4}, "temp_c", options);
 chart.show();
 ```
 
@@ -253,7 +260,7 @@ chart.show();
   support Python-style negative indexing counting from the end of the depth stack.
 - The multi-index overloads require `y_feature` (and `x_feature`, if given) to exist in **every**
   selected frame — a missing feature in any one of them throws.
-- `x_feature = std::nullopt` (the default) uses each frame's own case axis — its row index, or its
+- A call that names only `y_feature` uses each frame's own case axis — its row index, or its
   row labels if the frame was built with `Note`/`Timeline`/`TimeIndex`-kind case labels.
 - Requires the atlas to have at least one frame — an empty atlas throws
   `"Atlas::plot().frames: atlas has no frames"`.

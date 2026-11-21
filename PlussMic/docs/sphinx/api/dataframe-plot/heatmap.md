@@ -51,6 +51,10 @@ explicitly replaces any non-finite aggregated cell (e.g. a `case_feature`/`featu
 combination with no matching rows at all) with `0` before rendering.
 ```
 
+## Choosing the features
+
+`heatmap(features, options)` with an empty feature list (`heatmap({}, options)`) takes its features from `options.features` or the accessor-level selection in `DataFramePlotOptions`, and otherwise from every numeric feature. Names in the call win over both. See [`line()`](line.md) for the rules and the error messages.
+
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, direct mode)

@@ -57,6 +57,7 @@ struct AtlasDepthComparePlotOptions {
   bool show_grid{true};
   float line_width{1.5F};
   std::int64_t max_features{0};
+  FeatureSelection features{};
 };
 
 struct AtlasDepthFacetPlotOptions {
@@ -67,6 +68,7 @@ struct AtlasDepthFacetPlotOptions {
   double grid_gap_x{16.0};
   double grid_gap_y{16.0};
   std::int64_t max_features{0};
+  FeatureSelection features{};
 };
 
 struct AtlasDepthRollingPlotOptions {
@@ -99,13 +101,26 @@ public:
                     AtlasPlotOptions options = {});
 
   DataFramePlotAccessor frames(std::int64_t frame_index = 0) const;
+  // x first, then y: frames(indices, x, y). A single name is y against the case labels.
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices, std::string_view y_feature) const {
+    return frames_y(frame_indices, y_feature, std::nullopt, options_.frames);
+  }
   pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
                            std::string_view y_feature,
-                           std::optional<std::string_view> x_feature = std::nullopt) const;
+                           const AtlasFramesPlotOptions& options) const {
+    return frames_y(frame_indices, y_feature, std::nullopt, options);
+  }
   pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
+                           std::string_view x_feature,
+                           std::string_view y_feature) const {
+    return frames_y(frame_indices, y_feature, x_feature, options_.frames);
+  }
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
+                           std::string_view x_feature,
                            std::string_view y_feature,
-                           std::optional<std::string_view> x_feature,
-                           const AtlasFramesPlotOptions& options) const;
+                           const AtlasFramesPlotOptions& options) const {
+    return frames_y(frame_indices, y_feature, x_feature, options);
+  }
 
   pluss::pl::Studio surface(std::string_view feature) const;
   pluss::pl::Studio surface(std::string_view feature, const Surface3DPlotOptions& options) const;
@@ -126,13 +141,19 @@ public:
                                 const AtlasDepthFacetPlotOptions& options) const;
   pluss::pl::Studio depth_rolling(std::string_view feature) const;
   pluss::pl::Studio depth_rolling(std::string_view feature, const AtlasDepthRollingPlotOptions& options) const;
-  pluss::pl::Studio triplot() const;
-  pluss::pl::Studio triplot(const pluss::pl::flash::TriplotOptions& options) const;
+  pluss::pl::Studio triplot() const { return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options_.triplot); }
+  pluss::pl::Studio triplot(const pluss::pl::flash::TriplotOptions& options) const { return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options); }
+  pluss::pl::Studio triplot(const FeatureSelection& features) const;
+  pluss::pl::Studio triplot(const FeatureSelection& features, const pluss::pl::flash::TriplotOptions& options) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> features) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> features,
                             const pluss::pl::flash::TriplotOptions& options) const;
 
 private:
+  pluss::pl::Studio frames_y(pluss::msharp::RangeView::Int frame_indices,
+                             std::string_view y_feature,
+                             std::optional<std::string_view> x_feature,
+                             const AtlasFramesPlotOptions& options) const;
   void apply_figure_options(pluss::pl::Studio& figure) const;
 
   std::vector<DataFrame> frames_{};

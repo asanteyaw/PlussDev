@@ -443,7 +443,9 @@ bool shelf_supports_hue(const Shelf& shelf) {
 
 std::vector<std::string> numeric_feature_names(const DataFrame& frame,
                                                pluss::msharp::RangeView::Of<std::string_view> requested,
-                                               std::string_view where);
+                                               std::string_view where,
+                                               const FeatureSelection& per_plot = {},
+                                               const FeatureSelection& accessor = {});
 
 std::vector<std::string> hue_feature_names(const DataFrame& frame) {
   const auto features = frame.features();
@@ -458,13 +460,57 @@ std::vector<std::string> hue_feature_names(const DataFrame& frame) {
 }
 
 std::vector<std::string> correlation_feature_names(const DataFrame& frame,
-                                                   pluss::msharp::RangeView::Of<std::string_view> requested) {
-  return numeric_feature_names(frame, requested, "DataFrame::plot().corr_heatmap");
+                                                   pluss::msharp::RangeView::Of<std::string_view> requested,
+                                                   const FeatureSelection& per_plot = {},
+                                                   const FeatureSelection& accessor = {}) {
+  return numeric_feature_names(frame, requested, "DataFrame::plot().corr_heatmap", per_plot, accessor);
 }
+
+// Names of every column and of the numeric ones, for the shared flash column-selection resolver.
+std::pair<std::vector<std::string>, std::vector<std::string>> frame_and_numeric_names(const DataFrame& frame) {
+  std::pair<std::vector<std::string>, std::vector<std::string>> out;
+  out.first = frame.features();
+  for (const auto& name : out.first) {
+    if (shelf_supports_correlation(frame.features(name))) {
+      out.second.push_back(name);
+    }
+  }
+  return out;
+}
+
+// The y columns of a line-like plot (line, step, area, bar and their stacked forms). They are
+// never guessed: names, or options.features, or an instructive error. x is never one of them.
+std::vector<std::string> required_y_columns(const DataFrame& frame,
+                                            pluss::msharp::RangeView::Of<std::string_view> requested,
+                                            std::optional<std::string_view> x_feature,
+                                            const FeatureSelection& per_plot,
+                                            const FeatureSelection& accessor,
+                                            std::string_view where) {
+  const auto [all, numeric] = frame_and_numeric_names(frame);
+  const FeatureSelection& selection = per_plot.any() ? per_plot : accessor;
+  std::vector<std::string> names;
+  if (requested.size() > 0) {
+    for (const auto name : requested) {
+      PLUSS_CHECK(frame.get(name).has_value(),
+                  std::string(where) + ": unknown feature '" + std::string(name) + "'." +
+                      pluss::pl::flash::detail::closest_name_hint(std::string(name), all) +
+                      " Available features = " + pluss::pl::flash::detail::column_name_list(all) + ".");
+      names.emplace_back(name);
+    }
+    return names;
+  }
+  // No names: every numeric feature (or the selection), against x or the case labels.
+  std::optional<std::string> x;
+  if (x_feature.has_value()) x = std::string(*x_feature);
+  return detail::resolve_feature_selection(selection, all, numeric, where, x);
+}
+
 
 std::vector<std::string> numeric_feature_names(const DataFrame& frame,
                                                pluss::msharp::RangeView::Of<std::string_view> requested,
-                                               std::string_view where) {
+                                               std::string_view where,
+                                               const FeatureSelection& per_plot,
+                                               const FeatureSelection& accessor) {
   std::vector<std::string> names;
   if (requested.size() > 0) {
     names.reserve(requested.size());
@@ -482,15 +528,8 @@ std::vector<std::string> numeric_feature_names(const DataFrame& frame,
     return names;
   }
 
-  const auto features = frame.features();
-  names.reserve(features.size());
-  std::copy_if(
-      features.begin(),
-      features.end(),
-      std::back_inserter(names),
-      [&](const std::string& feature) { return shelf_supports_correlation(frame.features(feature)); });
-  PLUSS_CHECK(!names.empty(), std::string(where) + ": no numeric Series features available");
-  return names;
+  const auto [all, numeric] = frame_and_numeric_names(frame);
+  return detail::resolve_feature_selection(per_plot.any() ? per_plot : accessor, all, numeric, where);
 }
 
 std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
@@ -1087,17 +1126,6 @@ AggregatedBarSeries aggregate_for_bar_ci(const ResolvedPlotAxis& axis,
 DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options)
     : frame_(std::move(frame)), options_(std::move(options)) {}
 
-DataFramePlotAccessor::DefaultColumns DataFramePlotAccessor::default_columns_(std::string_view method) const {
-  // The shared rule lives with flash's table bridge (wide_plan_): two columns are x then y,
-  // otherwise every numeric column is drawn against the single time column or the row labels.
-  const auto plan = detail::wide_plan_(frame_, options_.default_x_feature,
-                                       "DataFrame::plot()." + std::string(method));
-  DefaultColumns out;
-  out.x = plan.x;
-  out.y = plan.ys;
-  return out;
-}
-
 std::optional<std::string_view> DataFramePlotAccessor::resolve_x_feature(
     std::optional<std::string_view> x_feature) const {
   if (x_feature.has_value()) {
@@ -1168,7 +1196,10 @@ pluss::pl::Studio DataFramePlotAccessor::line_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const LinePlotOptions& options) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().line",
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().line");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  auto fig = make_xy_figure(frame_, resolved_y, resolve_x_feature(x_feature), "DataFrame::plot().line",
                             [&options](Pane& pane,
                                        const ResolvedPlotAxis& axis,
                                        const std::vector<double>& y_values,
@@ -1218,7 +1249,10 @@ pluss::pl::Studio DataFramePlotAccessor::step_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const StepPlotOptions& options) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().step",
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().step");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  auto fig = make_xy_figure(frame_, resolved_y, resolve_x_feature(x_feature), "DataFrame::plot().step",
                             [&options](Pane& pane,
                                        const ResolvedPlotAxis& axis,
                                        const std::vector<double>& y_values,
@@ -1267,7 +1301,10 @@ pluss::pl::Studio DataFramePlotAccessor::area_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const AreaPlotOptions& options) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().area",
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().area");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  auto fig = make_xy_figure(frame_, resolved_y, resolve_x_feature(x_feature), "DataFrame::plot().area",
                             [&options](Pane& pane,
                                        const ResolvedPlotAxis& axis,
                                        const std::vector<double>& y_values,
@@ -1298,19 +1335,22 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const AreaStackedPlotOptions& options) const {
-  PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().area_stacked: at least one y feature is required");
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().area_stacked");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  PLUSS_CHECK(resolved_y.size() > 0, "DataFrame::plot().area_stacked: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, resolve_x_feature(x_feature), "DataFrame::plot().area_stacked", options_);
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1, &options_);
+  setup_pane(pane, resolved_y.size() > 1, &options_);
   apply_axis(pane, axis, options_);
-  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  pane.y_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
 
   auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
-  for (const auto y_name : y_features) {
+  for (const auto y_name : resolved_y) {
     auto heights = shelf_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
     auto tops = baselines.add(heights);
@@ -1423,13 +1463,16 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const BarPlotOptions& options) const {
-  PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar: at least one y feature is required");
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().bar");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  PLUSS_CHECK(resolved_y.size() > 0, "DataFrame::plot().bar: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, resolve_x_feature(x_feature), "DataFrame::plot().bar", options_);
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1, &options_);
+  setup_pane(pane, resolved_y.size() > 1, &options_);
   if (options.horizontal) {
     pane.y_label(axis.label);
     if (!axis.labels.empty()) {
@@ -1439,12 +1482,12 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
     }
   } else {
     apply_axis(pane, axis, options_);
-    pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+    pane.y_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
   }
 
-  const std::size_t group_count = y_features.size();
+  const std::size_t group_count = resolved_y.size();
   std::size_t group_index = 0;
-  for (const auto y_name : y_features) {
+  for (const auto y_name : resolved_y) {
     auto y_values = shelf_to_plot_numeric_values(frame_.features(y_name));
     require_plot_size(y_values, frame_.ncases(), y_name);
 
@@ -1491,7 +1534,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   }
 
   if (options.horizontal) {
-    pane.x_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+    pane.x_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
   }
   return fig;
 }
@@ -1506,19 +1549,22 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked_y(
     pluss::msharp::RangeView::Of<std::string_view> y_features,
     std::optional<std::string_view> x_feature,
     const BarStackedPlotOptions& options) const {
-  PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar_stacked: at least one y feature is required");
+  const auto resolved_names = required_y_columns(frame_, y_features, resolve_x_feature(x_feature), options.features, options_.selection(), "DataFrame::plot().bar_stacked");
+  const auto resolved_name_views = label_views(resolved_names);
+  const pluss::msharp::RangeView::Of<std::string_view> resolved_y(resolved_name_views);
+  PLUSS_CHECK(resolved_y.size() > 0, "DataFrame::plot().bar_stacked: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, resolve_x_feature(x_feature), "DataFrame::plot().bar_stacked", options_);
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1, &options_);
+  setup_pane(pane, resolved_y.size() > 1, &options_);
   apply_axis(pane, axis, options_);
-  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  pane.y_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
 
   auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
-  for (const auto y_name : y_features) {
+  for (const auto y_name : resolved_y) {
     auto heights = shelf_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
     auto tops = baselines.add(heights);
@@ -1543,7 +1589,7 @@ pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::s
 
 pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features,
                                              const BoxPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box", options.features, options_.selection());
   auto fig = box_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
@@ -1559,7 +1605,7 @@ pluss::pl::Studio DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std
 
 pluss::pl::Studio DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std::string_view> features,
                                                 const ViolinPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().violin");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().violin", options.features, options_.selection());
   auto fig = violin_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
@@ -1645,7 +1691,7 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, const Hi
 
 pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features,
                                               const HistPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().hist");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().hist", options.features, options_.selection());
   if (names.size() == 1) {
     auto values = shelf_to_plot_numeric_series(frame_.features(names.front())).reshape({frame_.ncases()});
     require_plot_size(values, frame_.ncases(), names.front());
@@ -1727,7 +1773,7 @@ pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, const
 
 pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features,
                                                  const DensityPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().density");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().density", options.features, options_.selection());
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
@@ -1862,13 +1908,13 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(pluss::msharp::RangeView::
 
 pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
                                                       const HeatmapPlotOptions& options) const {
-  PLUSS_CHECK(features.size() > 0, "DataFrame::plot().heatmap: at least one feature is required");
+  const auto heatmap_names = numeric_feature_names(frame_, features, "DataFrame::plot().heatmap", options.features, options_.selection());
 
   std::vector<pluss::Series> columns;
   std::vector<std::string> y_labels;
-  columns.reserve(features.size());
-  y_labels.reserve(features.size());
-  for (const auto feature : features) {
+  columns.reserve(heatmap_names.size());
+  y_labels.reserve(heatmap_names.size());
+  for (const auto& feature : heatmap_names) {
     auto feature_values = shelf_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
     PLUSS_CHECK(feature_values.numel() == frame_.ncases(),
                 "DataFrame::plot().heatmap: feature '" + std::string(feature) + "' length mismatch with cases");
@@ -2038,7 +2084,7 @@ pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(
 
 pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
                                                            const CorrHeatmapPlotOptions& options) const {
-  const auto names = correlation_feature_names(frame_, features);
+  const auto names = correlation_feature_names(frame_, features, options.features, options_.selection());
   auto fig = corr_heatmap_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
@@ -2068,7 +2114,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
                                                              const ScatterMatrixPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix", options.features, options_.selection());
   auto fig = scatter_matrix_from_names(frame_, names, resolve_scatter_matrix_pair_options(options), options_);
   apply_figure_options(fig);
   return fig;
@@ -2085,7 +2131,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_parallel(
     pluss::msharp::RangeView::Of<std::string_view> features,
     std::optional<std::string_view> class_feature,
     const ParallelPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().parallel");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().parallel", options.features, options_.selection());
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().parallel");
   auto flash_options = to_flash_options(options);
   if (flash_options.labels.empty()) {
@@ -2116,7 +2162,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_andrews_curves(
     pluss::msharp::RangeView::Of<std::string_view> features,
     std::optional<std::string_view> class_feature,
     const AndrewsCurvesPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().andrews_curves");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().andrews_curves", options.features, options_.selection());
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().andrews_curves");
   auto flash_options = to_flash_options(options);
   if (flash_options.labels.empty()) {
@@ -2147,7 +2193,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_radviz(
     pluss::msharp::RangeView::Of<std::string_view> features,
     std::optional<std::string_view> class_feature,
     const RadvizPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().radviz");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().radviz", options.features, options_.selection());
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().radviz");
   auto flash_options = to_flash_options(options);
   if (flash_options.labels.empty()) {
@@ -2228,7 +2274,7 @@ pluss::pl::Studio& DataFramePlotAccessor::brief(
     pluss::pl::Studio& figure,
     pluss::msharp::RangeView::Of<std::string_view> features,
     const BriefPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief", options.features, options_.selection());
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().brief");
   const auto name_views = label_views(names);
   flash::summaryplot(
@@ -2242,7 +2288,7 @@ pluss::pl::Studio& DataFramePlotAccessor::brief(
 pluss::pl::Studio DataFramePlotAccessor::impl_brief(
     pluss::msharp::RangeView::Of<std::string_view> features,
     const BriefPlotOptions& options) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief");
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief", options.features, options_.selection());
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().brief");
   auto fig = make_studio();
   const auto name_views = label_views(names);
@@ -2261,13 +2307,14 @@ pluss::pl::Studio DataFramePlotAccessor::auto_plot(pluss::msharp::RangeView::Of<
 
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(
     pluss::msharp::RangeView::Of<std::string_view> features,
-    const AutoPlotOptions&) const {
-  return impl_auto_plot(features);
+    const AutoPlotOptions& options) const {
+  return impl_auto_plot(features, options.features);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  const bool explicit_features = features.size() > 0;
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
+pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                        const FeatureSelection& columns) const {
+  const bool explicit_features = features.size() > 0 || columns.any();
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot", columns, options_.selection());
   if (names.size() == 1) {
     return frame_.features(names.front()).plot(options_).auto_plot();
   }

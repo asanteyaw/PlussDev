@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4b931d657ee5 -->
+<!-- pluss-signature-hash: 277f8fd4a73c -->
 
 # CatalogPlotAccessor::bar
 
@@ -8,26 +8,29 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
-                                            std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::bar() const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(pluss::RangeView<std::string_view> y_keys = {},
-                                            std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::bar(const BarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
-                                            std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, const BarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
-                                            std::optional<std::string_view> x_key,
-                                            const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(pluss::RangeView<std::string_view> y_keys,
-                                            std::optional<std::string_view> x_key,
-                                            const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::RangeView<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
-                                            std::optional<std::string_view> x_key,
-                                            const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::string_view y_key) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, pluss::RangeView<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::string_view y_key, const BarPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const BarPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const BarPlotOptions& options) const
 ```
 
 ## What It Does
@@ -43,6 +46,17 @@ mechanics; this page covers what's specific to `bar()` — mainly `BarPlotOption
 bars' *lengths* and the resolved y-key's values become the *category positions*. See
 Example 2.
 ```
+
+## Argument order and which keys are drawn
+
+The order is **x first, then y**: `bar("day", "temp_c")` puts `day` on the x-axis; `bar("day", {"temp_c",
+"humidity"})` draws two traces against `day`; a single key, `bar("temp_c")`, is a y key drawn against the
+record labels. With no y key named, the keys come from a feature selection: the `features` field of
+`BarPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
+`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
+over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
+with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
+[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
 
 ## Parameters
 
@@ -90,7 +104,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().bar("temp_c", "day");
+auto chart = weather.plot().bar("day", "temp_c");
 chart.show();
 ```
 
@@ -109,7 +123,7 @@ auto weather = pluss::kindle::Catalog({
 pluss::table::BarPlotOptions bar_options;
 bar_options.horizontal = true;
 
-auto chart = weather.plot().bar("temp_c", "day", bar_options);
+auto chart = weather.plot().bar("day", "temp_c", bar_options);
 chart.show();
 ```
 
@@ -126,7 +140,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().bar({"temp_c", "humidity"}, "day");
+auto chart = weather.plot().bar("day", {"temp_c", "humidity"});
 chart.show();
 ```
 

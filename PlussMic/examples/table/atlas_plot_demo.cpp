@@ -84,7 +84,7 @@ int main() {
   pluss::table::AtlasFramesPlotOptions frame_facet_opts;
   frame_facet_opts.mode = pluss::table::AtlasFrameSelectionMode::Facet;
   frame_facet_opts.cols = 2;
-  auto fig_frames_facet = atlas_plot.frames({0, 1, 2, 3}, "Close", std::nullopt, frame_facet_opts);
+  auto fig_frames_facet = atlas_plot.frames({0, 1, 2, 3}, "Close", frame_facet_opts);
   fig_frames_facet.headline("Atlas frames facet: Close");
   fig_frames_facet.save_pdf(out_path("atlas_frames_facet_close.pdf"));
 

@@ -1,3 +1,4 @@
+#include <functional>
 #include <algorithm>
 #include <cmath>
 #include <ranges>
@@ -428,34 +429,119 @@ void test_corr_methods_and_plot3d() {
          "plot3d().wireframe should emit lattice trace");
 }
 
+std::string error_text(const std::function<void()>& body) {
+  try {
+    body();
+  } catch (const pluss::Error& e) {
+    return e.message();
+  }
+  return {};
+}
+
+bool has(const std::string& text, std::string_view needle) { return text.find(needle) != std::string::npos; }
+
 void test_default_columns_and_date_axis() {
   const auto three = DataFrame({
       {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
       {"b", Shelf(pluss::make_series(std::vector<double>{4.0, 5.0, 7.0}))},
       {"c", Shelf(pluss::make_series(std::vector<double>{2.0, 1.0, 0.0}))},
   });
-  expect(three.plot().line().panes().front().trace_count() == 3, "plot().line() should draw every numeric column");
+  // x first, then y.
   expect(three.plot().line("a", "b").panes().front().trace_count() == 1, "line(x, y) should draw one trace");
   expect(three.plot().line("b", "a").to_svg() != three.plot().line("a", "b").to_svg(), "line(x, y) should put the first name on x");
+  expect(three.plot().line("a", {"b", "c"}).panes().front().trace_count() == 2, "line(x, {y1, y2}) should draw two traces");
+
+  // The PlussMic shortcut: no names and no selection draws every numeric feature on one axes.
+  const auto all = three.plot().line();
+  expect(all.panes().size() == 1 && all.panes().front().trace_count() == 3,
+         "plot().line() should draw every numeric feature on one axes");
+  expect(three.plot().step().panes().front().trace_count() == 3 && three.plot().area().panes().front().trace_count() == 3 &&
+             three.plot().bar().panes().front().trace_count() == 3,
+         "step, area and bar share the shortcut");
+  // The knobs, spoken in features.
+  expect(three.plot().line({.features = {.all_features = true}}).panes().front().trace_count() == 3, "all_features");
+  expect(three.plot().line({.features = {.include_features = {"c", "a"}}}).panes().front().trace_count() == 2, "include_features");
+  expect(three.plot().line({.features = {.exclude_features = {"b"}}}).panes().front().trace_count() == 2, "exclude_features");
+  expect(three.plot().line("a", {.features = {.all_features = true}}).panes().front().trace_count() == 2,
+         "all_features with an explicit x leaves x out of the traces");
+  expect(three.plot().bar({.features = {.exclude_features = {"a"}}}).panes().front().trace_count() == 2, "bar knobs");
+  expect(three.plot().area_stacked({.features = {.all_features = true}}).panes().front().trace_count() == 3, "area_stacked knobs");
+  expect(three.plot().bar_stacked({.features = {.include_features = {"a", "b"}}}).panes().front().trace_count() == 2, "bar_stacked knobs");
+
+  // Misuse: the message says what was wrong and what to do, in PlussMic's words.
+  const auto both = error_text([&] { (void)three.plot().line({.features = {.all_features = true, .exclude_features = {"a"}}}); });
+  expect(has(both, "all_features and exclude_features cannot be combined") && has(both, "already means every numeric feature") &&
+             has(both, "set exclude_features instead") && !has(both, "column"),
+         "all_features + exclude_features: " + both);
+  const auto all_inc = error_text([&] { (void)three.plot().line({.features = {.all_features = true, .include_features = {"a"}}}); });
+  expect(has(all_inc, "all_features and include_features cannot be combined") && has(all_inc, "set include_features instead"),
+         "all_features + include_features: " + all_inc);
+  const auto inc_exc = error_text([&] {
+    (void)three.plot().line({.features = {.include_features = {"a"}, .exclude_features = {"b"}}});
+  });
+  expect(has(inc_exc, "include_features and exclude_features cannot both be set") && has(inc_exc, "but not both"),
+         "include + exclude: " + inc_exc);
+  const auto unknown = error_text([&] { (void)three.plot().line({.features = {.include_features = {"aa"}}}); });
+  expect(has(unknown, "unknown feature 'aa'") && has(unknown, "Did you mean 'a'?") && has(unknown, "Available features = [a, b, c]"),
+         "unknown feature: " + unknown);
+  const auto x_in = error_text([&] { (void)three.plot().line("a", {.features = {.include_features = {"a", "b"}}}); });
+  expect(has(x_in, "also the x feature") && has(x_in, "Remove 'a' from include_features"), "x among the selection: " + x_in);
 
   const auto dated = DataFrame({
       {"date", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z", "2024-03-01T00:00:00Z"}))},
       {"amount", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
   });
-  expect(dated.plot().line().to_svg().find("2024-02-01") != std::string::npos, "the single time column should be x by default");
+  // The x axis is never guessed: the time column is x only when named.
+  expect(dated.plot().line("date", "amount").to_svg().find("2024-02-01") != std::string::npos,
+         "a named time column should label the x axis with dates");
+  expect(dated.plot().line().panes().front().trace_count() == 1, "the shortcut draws the numeric feature only");
   expect(dated.plot().line("amount", "date").to_svg().find("2024-02-01") != std::string::npos,
          "a time column on the y axis should show dates");
 
   const auto text_only = DataFrame({{"s", Shelf(pluss::make_note(std::vector<std::string>{"a", "b"}))}});
-  bool threw = false;
-  try { (void)text_only.plot().line(); } catch (const pluss::Error&) { threw = true; }
-  expect(threw, "plot().line() with no numeric column should throw and ask for columns");
+  const auto none = error_text([&] { (void)text_only.plot().line(); });
+  expect(has(none, "no numeric feature"), "plot().line() with no numeric feature should explain: " + none);
+}
+
+void test_feature_selection_precedence() {
+  const auto three = DataFrame({
+      {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+      {"b", Shelf(pluss::make_series(std::vector<double>{4.0, 5.0, 7.0}))},
+      {"c", Shelf(pluss::make_series(std::vector<double>{2.0, 1.0, 0.0}))},
+  });
+  const auto traces = [](const pluss::pl::Studio& fig) { return fig.panes().front().trace_count(); };
+  // No names and no selection: every numeric feature.
+  expect(traces(three.plot().line()) == 3, "shortcut draws every numeric feature");
+  // Accessor level: applies to every plot that works on a set of features.
+  const auto acc = three.plot({.include_features = {"a", "b"}});
+  expect(traces(acc.line()) == 2 && traces(acc.step()) == 2 && traces(acc.area()) == 2 && traces(acc.bar()) == 2,
+         "accessor-level include_features should apply to line, step, area and bar");
+  expect(acc.hist().panes().size() == 2, "accessor-level selection should apply to hist (one pane per feature)");
+  expect(traces(acc.density()) == 2, "accessor-level selection should apply to density (one axes)");
+  expect(traces(acc.box()) >= 1 && traces(acc.violin()) >= 1, "accessor-level selection should apply to box and violin");
+  expect(acc.scatter_matrix().panes().size() == 4, "accessor-level selection should apply to scatter_matrix (2 x 2 grid)");
+  expect(traces(three.plot({.exclude_features = {"c"}}).line()) == 2, "accessor-level exclude_features");
+  expect(traces(three.plot({.all_features = true}).line("a", {"b", "c"})) == 2, "names override the accessor selection");
+  // Per-plot selection overrides the accessor one for that call.
+  expect(traces(acc.line({.features = {.include_features = {"c"}}})) == 1, "per-plot selection overrides the accessor");
+  expect(traces(acc.line({.features = {.exclude_features = {"a"}}})) == 2, "per-plot exclude overrides the accessor");
+  expect(traces(acc.line()) == 2, "the accessor selection is untouched by the override");
+  // Names in the call override both.
+  expect(traces(acc.line("a", {"c"}, {.features = {.include_features = {"b"}}})) == 1, "names override both selections");
+  // Misuse at the accessor level errors with the directive message.
+  const auto bad = error_text([&] { (void)three.plot({.all_features = true, .exclude_features = {"a"}}).line(); });
+  expect(has(bad, "all_features and exclude_features cannot be combined") && has(bad, "set exclude_features instead"),
+         "accessor-level misuse: " + bad);
+  // ...but a per-plot selection replaces a misused accessor one entirely.
+  expect(traces(three.plot({.all_features = true, .exclude_features = {"a"}}).line({.features = {.include_features = {"b"}}})) == 1,
+         "per-plot selection wins even over an invalid accessor-level one");
 }
 
 } // namespace
 
 int main() {
   test_default_columns_and_date_axis();
+  test_feature_selection_precedence();
   test_shelf_plot_apis();
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();

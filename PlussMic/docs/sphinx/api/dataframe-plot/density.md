@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1102243bd05b -->
+<!-- pluss-signature-hash: 17a3b5aca516 -->
 
 # DataFramePlotAccessor::density
 
@@ -32,6 +32,10 @@ feature is requested.
 Follows the same numeric-feature validation as [`box()`](box.md) for its `features`
 parameter, though `density()` has no empty-list "infer everything" shorthand of its own —
 every overload requires at least one named feature.
+
+## Choosing the features
+
+`density()` and `density(const DensityPlotOptions& options)` draw one density per feature on one axes. With no names, the features come from `options.features` (`all_features`, `include_features`, `exclude_features`), else from the accessor-level selection in `DataFramePlotOptions`, else every numeric feature. Names in the call win over both. See [`line()`](line.md) for the rules and the error messages.
 
 ## Parameters
 

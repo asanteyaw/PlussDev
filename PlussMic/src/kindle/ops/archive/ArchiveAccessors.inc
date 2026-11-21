@@ -399,22 +399,27 @@ CatalogPlotAccessor ArchivePlotAccessor::frames(std::int64_t frame_index) const 
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
-                                              std::string_view y_key,
-                                              std::optional<std::string_view> x_key) const {
-  std::vector<std::string_view> keys{y_key};
-  if (x_key.has_value()) keys.push_back(*x_key);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .frames(frame_indices, y_key, x_key);
+                                              std::string_view y_key) const {
+  return archive_plot_accessor_scoped(archive_, {y_key}, options_).frames(frame_indices, y_key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                               std::string_view y_key,
-                                              std::optional<std::string_view> x_key,
                                               const pluss::table::AtlasFramesPlotOptions& options) const {
-  std::vector<std::string_view> keys{y_key};
-  if (x_key.has_value()) keys.push_back(*x_key);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .frames(frame_indices, y_key, x_key, options);
+  return archive_plot_accessor_scoped(archive_, {y_key}, options_).frames(frame_indices, y_key, options);
+}
+
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+                                              std::string_view x_key,
+                                              std::string_view y_key) const {
+  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_).frames(frame_indices, x_key, y_key);
+}
+
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+                                              std::string_view x_key,
+                                              std::string_view y_key,
+                                              const pluss::table::AtlasFramesPlotOptions& options) const {
+  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_).frames(frame_indices, x_key, y_key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::surface(std::string_view key) const {

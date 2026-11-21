@@ -424,6 +424,22 @@ Each y feature becomes one `Trend` trace. If there is more than one y feature,
 the pane shows a legend. The y-axis label is the feature name for a single y
 feature and `"value"` for multiple y features.
 
+The x feature always comes first, then the y features; a single name, `line("close")`, is a y feature
+drawn against the row labels. To draw many features without typing each name, choose them with a feature
+selection. The fields `all_features`, `include_features` and `exclude_features` can be set for one plot,
+in its options, or for every plot made from the accessor, in `DataFramePlotOptions`:
+
+```cpp
+auto every = df.plot().line();                                              // every numeric feature, one axes
+auto some  = df.plot().line("date", {.features = {.include_features = {"open", "close"}}});
+auto rest  = df.plot({.exclude_features = {"volume"}}).line();                // all but volume
+```
+
+Names in the call win over a plot's own selection, which wins over the accessor's, which wins over the
+default of every numeric feature. `all_features` cannot be combined with `include_features` or
+`exclude_features`, and the two lists cannot both be set; each misuse throws an error that says what to
+change. See `DataFramePlotAccessor::line` in the API reference for compiled examples and the messages.
+
 `LinePlotOptions` controls line style:
 
 ```cpp

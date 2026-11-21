@@ -318,7 +318,7 @@ void test_catalog_plot_accessor() {
   }, "Catalog::plot().scatter should support grouped hue rendering");
 
   expect_no_throw([&]() {
-    auto fig = paired.plot().bar("y", "x");
+    auto fig = paired.plot().bar("x", "y");
     (void)fig;
   }, "Catalog::plot().bar should plot an explicit x/y stream pair");
 
@@ -334,14 +334,14 @@ void test_catalog_plot_accessor() {
 
   expect_throw(
       [&]() {
-        (void)ragged.plot().line({"short", "long"}, "short");
+        (void)ragged.plot().line("short", {"short", "long"});
       },
       "Catalog::plot().line(shared x) should reject y streams whose lengths do not match the shared x stream");
 
   pluss::table::LinePlotOptions line_inner;
   line_inner.align.mode = pluss::table::XYAlignMode::Inner;
   expect_no_throw([&]() {
-    auto fig = ragged.plot().line("short", "long", line_inner);
+    auto fig = ragged.plot().line("long", "short", line_inner);
     (void)fig;
   }, "Catalog::plot().line(shared x, Inner) should trim y to the shared overlap");
 
@@ -349,14 +349,14 @@ void test_catalog_plot_accessor() {
   line_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   line_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
-    auto fig = ragged.plot().line("short", "long", line_pad);
+    auto fig = ragged.plot().line("long", "short", line_pad);
     (void)fig;
   }, "Catalog::plot().line(shared x, PadScalar) should pad missing y values against the x anchor");
 
   pluss::table::StepPlotOptions step_inner;
   step_inner.align.mode = pluss::table::XYAlignMode::Inner;
   expect_no_throw([&]() {
-    auto fig = ragged.plot().step("short", "long", step_inner);
+    auto fig = ragged.plot().step("long", "short", step_inner);
     (void)fig;
   }, "Catalog::plot().step(shared x, Inner) should trim ragged y values to the overlap");
 
@@ -364,7 +364,7 @@ void test_catalog_plot_accessor() {
   area_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   area_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
-    auto fig = ragged.plot().area("short", "long", area_pad);
+    auto fig = ragged.plot().area("long", "short", area_pad);
     (void)fig;
   }, "Catalog::plot().area(shared x, PadScalar) should pad ragged y values against the x anchor");
 
@@ -372,13 +372,50 @@ void test_catalog_plot_accessor() {
   bar_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   bar_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
-    auto fig = ragged.plot().bar("short", "long", bar_pad);
+    auto fig = ragged.plot().bar("long", "short", bar_pad);
     (void)fig;
   }, "Catalog::plot().bar(shared x, PadScalar) should pad ragged y values against the x anchor");
 
   const auto reduced = paired.keys({"x", "y"}).sum(pluss::kindle::ReduceAxis::Key);
   expect(reduced.nkeys() == 1 && reduced.has("sum"),
          "Catalog::sum(ReduceAxis::Key) should behave like cross-key reduction");
+}
+
+void test_catalog_plot_feature_selection() {
+  const auto cat = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"a", labeled_series({1.0, 2.0, 3.0}, {"Mon", "Tue", "Wed"})},
+      {"b", labeled_series({3.0, 4.0, 6.0}, {"Mon", "Tue", "Wed"})},
+      {"c", labeled_series({2.0, 1.0, 0.0}, {"Mon", "Tue", "Wed"})},
+  });
+  const auto traces = [](const pluss::pl::Studio& fig) { return fig.panes().front().trace_count(); };
+  const auto message = [](auto&& fn) {
+    try { fn(); } catch (const pluss::Error& e) { return e.message(); }
+    return std::string{};
+  };
+  const auto has = [](const std::string& text, std::string_view needle) { return text.find(needle) != std::string::npos; };
+
+  // x first, then y.
+  expect(traces(cat.plot().line("a", {"b", "c"})) == 2, "Catalog line(x, {y1, y2}) draws two traces");
+  expect(traces(cat.plot().bar("a", "b")) == 1, "Catalog bar(x, y) draws one trace");
+  // Shortcut: no names draws every numeric stream on one axes.
+  expect(cat.plot().line().panes().size() == 1 && traces(cat.plot().line()) == 3, "Catalog line() draws every numeric stream");
+  expect(traces(cat.plot().step()) == 3 && traces(cat.plot().area()) == 3 && traces(cat.plot().bar()) == 3, "Catalog shortcut for step/area/bar");
+  // Knobs.
+  expect(traces(cat.plot().line({.features = {.all_features = true}})) == 3, "Catalog all_features");
+  expect(traces(cat.plot().line({.features = {.include_features = {"c", "a"}}})) == 2, "Catalog include_features");
+  expect(traces(cat.plot().line({.features = {.exclude_features = {"b"}}})) == 2, "Catalog exclude_features");
+  expect(traces(cat.plot().line("a", {.features = {.all_features = true}})) == 2, "Catalog all_features leaves x out");
+  // Accessor-level selection, per-plot override, names override both.
+  const auto acc = cat.plot({.include_features = {"a", "b"}});
+  expect(traces(acc.line()) == 2 && traces(acc.bar()) == 2, "Catalog accessor-level include_features");
+  expect(traces(acc.line({.features = {.include_features = {"c"}}})) == 1, "Catalog per-plot selection overrides the accessor");
+  expect(traces(acc.line("a", {"c"}, {.features = {.include_features = {"b"}}})) == 1, "Catalog names override both");
+  expect(acc.hist().panes().front().trace_count() == 2, "Catalog accessor-level selection applies to hist");
+  // Misuse.
+  const auto both = message([&] { (void)cat.plot().line({.features = {.all_features = true, .exclude_features = {"a"}}}); });
+  expect(has(both, "all_features and exclude_features cannot be combined") && has(both, "set exclude_features instead"), "Catalog: " + both);
+  const auto unknown = message([&] { (void)cat.plot().line({.features = {.include_features = {"zz"}}}); });
+  expect(has(unknown, "unknown feature 'zz'") && has(unknown, "Available features = [a, b, c]"), "Catalog: " + unknown);
 }
 
 void test_catalog_plot3d_accessor() {
@@ -2340,6 +2377,7 @@ int main() {
     test_fillnull_widens_for_fractions();
     test_stream_accessors();
     test_catalog_plot_accessor();
+    test_catalog_plot_feature_selection();
     test_catalog_plot3d_accessor();
     test_catalog_accessors();
     test_catalog_reductions();

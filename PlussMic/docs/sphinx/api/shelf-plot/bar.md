@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: cc1985804f03 -->
+<!-- pluss-signature-hash: 9ffa7b422b5e -->
 
 # ShelfPlotAccessor::bar
 

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 775dbf0dc684 -->
+<!-- pluss-signature-hash: 899c4348e43d -->
 
 # CatalogPlotAccessor::area
 
@@ -8,26 +8,29 @@
 ## Signatures
 
 ```cpp
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::area() const
 
-pluss::pl::Studio CatalogPlotAccessor::area(pluss::RangeView<std::string_view> y_keys = {},
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::area(const AreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key = std::nullopt) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, const AreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key,
-                                             std::optional<std::string_view> x_key,
-                                             const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(pluss::RangeView<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(pluss::RangeView<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::initializer_list<std::string_view> y_keys,
-                                             std::optional<std::string_view> x_key,
-                                             const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::string_view y_key) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, pluss::RangeView<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::string_view y_key, const AreaPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const AreaPlotOptions& options) const
+
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const AreaPlotOptions& options) const
 ```
 
 ## What It Does
@@ -37,6 +40,17 @@ to zero instead of drawn as a bare line. Every mechanic on this page (x-axis res
 empty-`y_keys` default, the independent-per-key-axis gotcha with multiple keys and no shared
 `x_key`, the `Studio`-return/no-`cout` behavior) is identical to `line()` — see that page for
 the full explanation; only what's specific to `area()` is repeated here.
+
+## Argument order and which keys are drawn
+
+The order is **x first, then y**: `area("day", "temp_c")` puts `day` on the x-axis; `area("day", {"temp_c",
+"humidity"})` draws two traces against `day`; a single key, `area("temp_c")`, is a y key drawn against the
+record labels. With no y key named, the keys come from a feature selection: the `features` field of
+`AreaPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
+`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
+over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
+with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
+[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
 
 ## Parameters
 
@@ -80,7 +94,7 @@ auto weather = pluss::kindle::Catalog({
     "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
 });
 
-auto chart = weather.plot().area("temp_c", "day");
+auto chart = weather.plot().area("day", "temp_c");
 chart.show();
 ```
 
@@ -98,7 +112,7 @@ auto weather = pluss::kindle::Catalog({
 });
 
 std::vector<std::string_view> y_names{"temp_c", "humidity"};
-auto chart = weather.plot().area(y_names, "day");
+auto chart = weather.plot().area("day", y_names);
 chart.show();
 ```
 
@@ -118,7 +132,7 @@ pluss::table::AreaPlotOptions area_options;
 area_options.alpha = 0.4;
 area_options.line_width = 2.0;
 
-auto chart = weather.plot().area("temp_c", "day", area_options);
+auto chart = weather.plot().area("day", "temp_c", area_options);
 chart.show();
 ```
 

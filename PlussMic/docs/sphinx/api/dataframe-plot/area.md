@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c77e5341eab1 -->
+<!-- pluss-signature-hash: 720558d420e5 -->
 
 # DataFramePlotAccessor::area
 
@@ -11,6 +11,12 @@
 pluss::pl::Studio DataFramePlotAccessor::area() const
 
 pluss::pl::Studio DataFramePlotAccessor::area(const AreaPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view x_feature, const AreaPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::RangeView<std::string_view> y_features, const AreaPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features, const AreaPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature) const
 
@@ -41,6 +47,14 @@ composition view, see [`area_stacked()`](area_stacked.md)).
 
 See [`line()`](line.md) for the full explanation of the shared mechanics — this page only
 covers what's specific to `area()`.
+
+## Which features are drawn
+
+x comes first, then y, as on [`line()`](line.md). With no y-feature named, the y-features come from a feature
+selection: `features` in `AreaPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the
+accessor-level selection in `DataFramePlotOptions`, else every numeric feature, all on one axes. Names in the
+call win over both. The rules, the directive error messages and compiled examples are on
+[`line()`](line.md).
 
 ## Parameters
 

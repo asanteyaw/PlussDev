@@ -28,12 +28,12 @@ int main() {
   });
 
   smile_df.plot()
-      .line({"IV_1M", "IV_3M", "IV_6M"}, "Strike")
+      .line("Strike", {"IV_1M", "IV_3M", "IV_6M"})
       .headline("Vol smile by maturity (strike)")
       .save_pdf("smile_by_strike.pdf");
 
   smile_df.plot()
-      .line({"IV_1M", "IV_3M", "IV_6M"}, "Moneyness")
+      .line("Moneyness", {"IV_1M", "IV_3M", "IV_6M"})
       .headline("Vol smile by maturity (moneyness = strike / spot)")
       .save_pdf("smile_by_moneyness.pdf");
 
@@ -43,7 +43,7 @@ int main() {
   });
 
   skew_df.plot()
-      .line("ImpliedVol", "Delta")
+      .line("Delta", "ImpliedVol")
       .headline("Vol skew (3M, by delta)")
       .save_pdf("skew_line.pdf");
 

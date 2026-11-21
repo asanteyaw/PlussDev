@@ -308,12 +308,17 @@ public:
   explicit ArchivePlotAccessor(Archive archive, pluss::table::AtlasPlotOptions options = {});
 
   CatalogPlotAccessor frames(std::int64_t frame_index = 0) const;
+  // x first, then y: frames(indices, x_key, y_key). A single key is y against the record labels.
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices, std::string_view y_key) const;
   pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
                            std::string_view y_key,
-                           std::optional<std::string_view> x_key = std::nullopt) const;
+                           const pluss::table::AtlasFramesPlotOptions& options) const;
   pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
+                           std::string_view x_key,
+                           std::string_view y_key) const;
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
+                           std::string_view x_key,
                            std::string_view y_key,
-                           std::optional<std::string_view> x_key,
                            const pluss::table::AtlasFramesPlotOptions& options) const;
 
   pluss::pl::Studio surface(std::string_view key) const;

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 717e4d9879a1 -->
+<!-- pluss-signature-hash: fa6ef339ae7e -->
 
 # DataFramePlotAccessor::step
 
@@ -11,6 +11,12 @@
 pluss::pl::Studio DataFramePlotAccessor::step() const
 
 pluss::pl::Studio DataFramePlotAccessor::step(const StepPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view x_feature, const StepPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::RangeView<std::string_view> y_features, const StepPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features, const StepPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature) const
 
@@ -45,6 +51,14 @@ tiers) rather than one that continuously interpolates.
 See [`line()`](line.md) for the full explanation of the shared mechanics (the
 `Studio`-return / no-`cout` behavior, and the three-step x-axis resolution) — this page
 only covers what's specific to `step()`.
+
+## Which features are drawn
+
+x comes first, then y, as on [`line()`](line.md). With no y-feature named, the y-features come from a feature
+selection: `features` in `StepPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the
+accessor-level selection in `DataFramePlotOptions`, else every numeric feature, all on one axes. Names in the
+call win over both. The rules, the directive error messages and compiled examples are on
+[`line()`](line.md).
 
 ## Parameters
 

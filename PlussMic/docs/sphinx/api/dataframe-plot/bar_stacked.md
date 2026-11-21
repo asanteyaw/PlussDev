@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: a5321f7207e1 -->
+<!-- pluss-signature-hash: 4b4fe233a031 -->
 
 # DataFramePlotAccessor::bar_stacked
 
@@ -8,6 +8,16 @@
 ## Signatures
 
 ```cpp
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked() const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(const BarStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::string_view x_feature, const BarStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features, const BarStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features, const BarStackedPlotOptions& options) const
+
 pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::RangeView<std::string_view> y_features) const
 
 pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features) const
@@ -40,6 +50,14 @@ the same pane. `BarStackedPlotOptions`'s default `alpha` (`0.65`) is semi-transp
 overlapping regions blend colors from every layer drawn there rather than showing one flat
 color per band — raise `alpha` toward `1.0` for a fully solid, unambiguous per-band look.
 ```
+
+## Which features are drawn
+
+x comes first, then y, as on [`line()`](line.md). With no y-feature named, the y-features come from a feature
+selection: `features` in `BarStackedPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the
+accessor-level selection in `DataFramePlotOptions`, else every numeric feature, all on one axes. Names in the
+call win over both. The rules, the directive error messages and compiled examples are on
+[`line()`](line.md).
 
 ## Parameters
 

@@ -60,6 +60,23 @@ struct ToFrameOptions {
   std::optional<std::string> title{};
 };
 
+// Which columns of a frame a column-set plot draws, when the columns are not each named.
+//   all_columns      every numeric column
+//   include_columns  exactly these columns, in this order
+//   exclude_columns  every numeric column except these
+// The three are alternatives: include_columns and exclude_columns cannot be combined, and
+// all_columns cannot be combined with either. A plot that draws one trace per column puts them
+// all on one pane, labelled by column name.
+struct ColumnSelection {
+  bool all_columns{false};
+  std::vector<std::string> include_columns{};
+  std::vector<std::string> exclude_columns{};
+
+  [[nodiscard]] bool any() const noexcept {
+    return all_columns || !include_columns.empty() || !exclude_columns.empty();
+  }
+};
+
 struct TableColumns {
   std::optional<std::string> feature{};
   std::optional<std::string> x_feature{};
@@ -73,6 +90,7 @@ struct TableColumns {
   std::optional<std::string> ypos_feature{};
   std::optional<std::string> xneg_feature{};
   std::optional<std::string> xpos_feature{};
+  ColumnSelection selection{};
 };
 
 template <class T>
@@ -82,6 +100,130 @@ concept TableBackedValue =
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
 namespace detail {
+
+[[nodiscard]] inline std::string column_name_list(const std::vector<std::string>& names) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    if (i != 0) out += ", ";
+    out += names[i];
+  }
+  out += "]";
+  return out;
+}
+
+// The words a selection error uses. flash says "column"; a layer above can say "feature".
+struct ColumnWords {
+  std::string noun{"column"};
+  std::string nouns{"columns"};
+  std::string all{"all_columns"};
+  std::string include{"include_columns"};
+  std::string exclude{"exclude_columns"};
+};
+
+[[nodiscard]] inline std::size_t name_distance(const std::string& a, const std::string& b) {
+  std::vector<std::size_t> prev(b.size() + 1), cur(b.size() + 1);
+  for (std::size_t j = 0; j <= b.size(); ++j) prev[j] = j;
+  for (std::size_t i = 1; i <= a.size(); ++i) {
+    cur[0] = i;
+    for (std::size_t j = 1; j <= b.size(); ++j) {
+      const std::size_t sub = prev[j - 1] + (std::tolower(static_cast<unsigned char>(a[i - 1])) ==
+                                             std::tolower(static_cast<unsigned char>(b[j - 1])) ? 0 : 1);
+      cur[j] = std::min({prev[j] + 1, cur[j - 1] + 1, sub});
+    }
+    std::swap(prev, cur);
+  }
+  return prev[b.size()];
+}
+
+// " Did you mean 'x'?" for the closest name, or nothing when none is close.
+[[nodiscard]] inline std::string closest_name_hint(const std::string& wanted, const std::vector<std::string>& names) {
+  std::string best;
+  std::size_t best_d = std::numeric_limits<std::size_t>::max();
+  for (const auto& n : names) {
+    const auto d = name_distance(wanted, n);
+    if (d < best_d) { best_d = d; best = n; }
+  }
+  if (!best.empty() && best_d <= std::max<std::size_t>(2, wanted.size() / 3)) {
+    return " Did you mean '" + best + "'?";
+  }
+  return {};
+}
+
+// The one resolver for column selections. `all_names` are every column of the frame and
+// `numeric_names` those a plot can draw. `x_name` is the x column, which is never drawn as its
+// own trace: all_columns / exclude_columns drop it, and include_columns naming it is an error.
+// Returns the selected names in frame order (include_columns keeps the order given), or nullopt
+// when no knob is set so the caller can ask for names instead.
+[[nodiscard]] inline std::optional<std::vector<std::string>> resolve_column_selection(
+    const ColumnSelection& selection,
+    const std::vector<std::string>& all_names,
+    const std::vector<std::string>& numeric_names,
+    std::string_view where,
+    const std::optional<std::string>& x_name = std::nullopt,
+    const ColumnWords& w = {}) {
+  const std::string head = std::string(where) + ": ";
+  if (!selection.any()) {
+    return std::nullopt;
+  }
+  const bool has_include = !selection.include_columns.empty();
+  const bool has_exclude = !selection.exclude_columns.empty();
+  PLUSS_CHECK(!(selection.all_columns && has_include),
+              head + w.all + " and " + w.include + " cannot be combined: " + w.all + " already means every numeric " +
+                  w.noun + ". To plot only some " + w.nouns + " set " + w.include + " instead (and leave " + w.all +
+                  " false), or to plot everything remove " + w.include + ".");
+  PLUSS_CHECK(!(selection.all_columns && has_exclude),
+              head + w.all + " and " + w.exclude + " cannot be combined: " + w.all + " already means every numeric " +
+                  w.noun + ". To drop some " + w.nouns + " set " + w.exclude + " instead (and leave " + w.all +
+                  " false), or to plot everything remove " + w.exclude + ".");
+  PLUSS_CHECK(!(has_include && has_exclude),
+              head + w.include + " and " + w.exclude + " cannot both be set: " + w.include + " lists exactly the " +
+                  w.nouns + " to draw, while " + w.exclude + " drops " + w.nouns + " from every numeric " + w.noun +
+                  ". Use " + w.include + " to name the " + w.nouns + " you want, or " + w.exclude +
+                  " to remove the ones you do not, but not both.");
+  const auto contains = [](const std::vector<std::string>& names, const std::string& name) {
+    return std::find(names.begin(), names.end(), name) != names.end();
+  };
+  const auto unknown = [&](const std::string& opt, const std::string& name) {
+    PLUSS_FAIL(head + opt + " names unknown " + w.noun + " '" + name + "'." + closest_name_hint(name, all_names) +
+               " Available " + w.nouns + " = " + column_name_list(all_names) + ". Fix the spelling or remove '" + name +
+               "' from " + opt + ".");
+  };
+  std::vector<std::string> out;
+  if (has_include) {
+    for (const auto& name : selection.include_columns) {
+      if (!contains(all_names, name)) unknown(w.include, name);
+      PLUSS_CHECK(contains(numeric_names, name),
+                  head + w.include + " names " + w.noun + " '" + name + "', which is not numeric; only numeric " +
+                      w.nouns + " (Series) can be drawn here. Numeric " + w.nouns + " = " +
+                      column_name_list(numeric_names) + ". Remove '" + name + "' from " + w.include +
+                      " or convert it to a numeric " + w.noun + " first.");
+      PLUSS_CHECK(!(x_name.has_value() && name == *x_name),
+                  head + w.include + " lists '" + name + "', which is also the x " + w.noun + "; an x " + w.noun +
+                      " cannot be drawn as its own trace. Remove '" + name + "' from " + w.include +
+                      ", or choose a different x.");
+      PLUSS_CHECK(!contains(out, name),
+                  head + w.include + " lists " + w.noun + " '" + name + "' more than once. List each " + w.noun +
+                      " once.");
+      out.push_back(name);
+    }
+    return out;
+  }
+  for (const auto& name : selection.exclude_columns) {
+    if (!contains(all_names, name)) unknown(w.exclude, name);
+  }
+  for (const auto& name : numeric_names) {
+    if (contains(selection.exclude_columns, name) || (x_name.has_value() && name == *x_name)) continue;
+    out.push_back(name);
+  }
+  PLUSS_CHECK(!numeric_names.empty(),
+              head + "the frame has no numeric " + w.noun + " to draw (" + w.nouns + " = " + column_name_list(all_names) +
+                  "). Add a numeric " + w.noun + ", or convert one of these " + w.nouns + " to numbers first.");
+  PLUSS_CHECK(!out.empty(),
+              head + "the selection leaves no numeric " + w.noun + " to draw (numeric " + w.nouns + " = " +
+                  column_name_list(numeric_names) + "). Remove some of " + w.exclude + ", or use " + w.all +
+                  " on a frame that has numeric " + w.nouns + ".");
+  return out;
+}
 
 // Named numbers of the flash algorithms: published coefficients and design choices that were inline.
 inline constexpr double kPi = 3.14159265358979323846;
@@ -2733,91 +2875,91 @@ struct BarPlotOptions {
 };
 
 Trace& lineplot(Pane& pane, const ::pluss::table::Shelf& values);
-Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
 Trace& scatterplot(Pane& pane, const ::pluss::table::Shelf& values);
-Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
 Trace& stepplot(Pane& pane, const ::pluss::table::Shelf& values);
-Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
 Trace& areaplot(Pane& pane, const ::pluss::table::Shelf& values, double base = 0.0);
 Trace& areaplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     double base = 0.0);
 Trace& areaplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     double base = 0.0);
 
 Trace& histplot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& histplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 Trace& histplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 
 Trace& displot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& displot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 Trace& displot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 
 Trace& kdeplot(Pane& pane, const ::pluss::table::Shelf& values, std::int64_t points = 128);
 Trace& kdeplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::int64_t points = 128);
 Trace& kdeplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::int64_t points = 128);
 
 Trace& ecdfplot(Pane& pane, const ::pluss::table::Shelf& values);
-Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
 Trace& rugplot(Pane& pane, const ::pluss::table::Shelf& values, double height = 0.08);
 Trace& rugplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     double height = 0.08);
 Trace& rugplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     double height = 0.08);
 
 Trace& countplot(Pane& pane, const ::pluss::table::Shelf& values, int bins = 12);
 Trace& countplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 Trace& countplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     int bins = 12);
 
 Trace& barplot(
@@ -2827,30 +2969,30 @@ Trace& barplot(
 Trace& barplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const BarPlotOptions& options = {});
 Trace& barplot(
     Pane& pane,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     const BarPlotOptions& options = {});
 
-Trace& path3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& path3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& path3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& path3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
-Trace& cloud3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& cloud3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& cloud3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& cloud3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
-Trace& plot3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& plot3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& plot3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& plot3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
-Trace& scatter3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
-Trace& scatter3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+Trace& scatter3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns);
+Trace& scatter3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns);
 
 Studio& jointplot(
     Studio& studio,
     const ::pluss::table::DataFrame& frame,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter");
 Studio& jointplot(
     Studio& studio,
@@ -2860,7 +3002,7 @@ Studio& jointplot(
 Studio& jointplot(
     Studio& studio,
     const ::pluss::table::Atlas& atlas,
-    const TableColumns& columns = {},
+    const TableColumns& columns,
     std::string_view kind = "scatter");
 Studio& jointplot(
     Studio& studio,

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d1667aa6dee9 -->
+<!-- pluss-signature-hash: ff1e9c300fa5 -->
 
 # DataFramePlotAccessor::area_stacked
 
@@ -8,6 +8,16 @@
 ## Signatures
 
 ```cpp
+pluss::pl::Studio DataFramePlotAccessor::area_stacked() const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(const AreaStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::string_view x_feature, const AreaStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features, const AreaStackedPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features, const AreaStackedPlotOptions& options) const
+
 pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::RangeView<std::string_view> y_features) const
 
 pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features) const
@@ -49,6 +59,14 @@ layer drawn there, not a single flat color unique to one band. If a fully solid 
 look matters, raise `alpha` toward `1.0` in `AreaStackedPlotOptions` so each later layer's
 fill more fully occludes the ones beneath it.
 ```
+
+## Which features are drawn
+
+x comes first, then y, as on [`line()`](line.md). With no y-feature named, the y-features come from a feature
+selection: `features` in `AreaStackedPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the
+accessor-level selection in `DataFramePlotOptions`, else every numeric feature, all on one axes. Names in the
+call win over both. The rules, the directive error messages and compiled examples are on
+[`line()`](line.md).
 
 ## Parameters
 

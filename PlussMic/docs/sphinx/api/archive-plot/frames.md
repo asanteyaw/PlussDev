@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e8449ca3ac64 -->
+<!-- pluss-signature-hash: 0ec5edf0f2bc -->
 
 # ArchivePlotAccessor::frames
 
@@ -11,12 +11,19 @@
 CatalogPlotAccessor ArchivePlotAccessor::frames(std::int64_t frame_index = 0) const
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
-                                              std::string_view y_key,
-                                              std::optional<std::string_view> x_key = std::nullopt) const
+                                              std::string_view y_key) const
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
                                               std::string_view y_key,
-                                              std::optional<std::string_view> x_key,
+                                              const pluss::table::AtlasFramesPlotOptions& options) const
+
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
+                                              std::string_view x_key,
+                                              std::string_view y_key) const
+
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::RangeView<std::int64_t> frame_indices,
+                                              std::string_view x_key,
+                                              std::string_view y_key,
                                               const pluss::table::AtlasFramesPlotOptions& options) const
 ```
 
@@ -68,13 +75,13 @@ same mismatched row counts would throw.
     indices resolve the same way [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md)
     documents; duplicates (after normalizing negatives) are deduplicated.
 
+**x_key** (`std::string_view`, optional, comes first)
+    The key used as each catalog's x-axis. When only one key is named it is the y key and each
+    catalog's own record axis is used instead (positional, or the key's own label if it has one — the same
+    self-axis rule [`CatalogPlotAccessor::line`](../catalog-plot/line.md) uses).
+
 **y_key** (`std::string_view`)
     The key drawn from each selected catalog, one line trace per catalog.
-
-**x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    The key used as each catalog's x-axis. Left as `std::nullopt`, each catalog's own
-    record axis is used instead (positional, or the key's own label if it has one — the same
-    self-axis rule [`CatalogPlotAccessor::line`](../catalog-plot/line.md) uses).
 
 **options** (`const pluss::table::AtlasFramesPlotOptions&`)
     The identical struct documented on
@@ -158,7 +165,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().frames({0, 2, 4}, "temp_c", "humidity");
+auto chart = archive.plot().frames({0, 2, 4}, "humidity", "temp_c");
 chart.show();
 ```
 
@@ -187,7 +194,7 @@ pluss::table::AtlasFramesPlotOptions options;
 options.mode = pluss::table::AtlasFrameSelectionMode::Facet;
 options.rows = 1;
 options.cols = 3;
-auto chart = archive.plot().frames({0, 2, 4}, "temp_c", std::nullopt, options);
+auto chart = archive.plot().frames({0, 2, 4}, "temp_c", options);
 chart.show();
 ```
 

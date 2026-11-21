@@ -702,65 +702,59 @@ class CatalogPlotAccessor {
 public:
   explicit CatalogPlotAccessor(Catalog base, pluss::table::DataFramePlotOptions options = {});
 
-  pluss::pl::Studio line(std::string_view y_key,
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key = std::nullopt) const {
-    return line(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
-  }
-  pluss::pl::Studio line(std::string_view y_key,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::LinePlotOptions& options) const;
-  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::LinePlotOptions& options) const;
-  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::LinePlotOptions& options) const {
-    return line(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
-  }
+  // x first, then y: line(x_key, y_key) or line(x_key, {y1, y2}); a single key is y against the record labels.
+  // With no keys, options.features (all_features, include_features or exclude_features) picks the y keys; with
+  // neither, every numeric key is drawn.
+  pluss::pl::Studio line() const { return line_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(const pluss::table::LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, options); }
+  pluss::pl::Studio line(std::string_view x_key, const pluss::table::LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>{}, x_key, options); }
+  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::LinePlotOptions& options) const { return line_y(y_keys, std::nullopt, options); }
+  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys, const pluss::table::LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, options); }
+  pluss::pl::Studio line(std::string_view y_key) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), std::nullopt, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return line_y(y_keys, std::nullopt, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(std::initializer_list<std::string_view> y_keys) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(std::string_view x_key, std::string_view y_key) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return line_y(y_keys, x_key, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, pluss::table::LinePlotOptions{}); }
+  pluss::pl::Studio line(std::string_view x_key, std::string_view y_key, const pluss::table::LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options); }
+  pluss::pl::Studio line(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::LinePlotOptions& options) const { return line_y(y_keys, x_key, options); }
+  pluss::pl::Studio line(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const pluss::table::LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options); }
 
-  pluss::pl::Studio step(std::string_view y_key,
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key = std::nullopt) const {
-    return step(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
-  }
-  pluss::pl::Studio step(std::string_view y_key,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::StepPlotOptions& options) const;
-  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::StepPlotOptions& options) const;
-  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::StepPlotOptions& options) const {
-    return step(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
-  }
+  // x first, then y: step(x_key, y_key) or step(x_key, {y1, y2}); a single key is y against the record labels.
+  // With no keys, options.features (all_features, include_features or exclude_features) picks the y keys; with
+  // neither, every numeric key is drawn.
+  pluss::pl::Studio step() const { return step_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(const pluss::table::StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, options); }
+  pluss::pl::Studio step(std::string_view x_key, const pluss::table::StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>{}, x_key, options); }
+  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::StepPlotOptions& options) const { return step_y(y_keys, std::nullopt, options); }
+  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys, const pluss::table::StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, options); }
+  pluss::pl::Studio step(std::string_view y_key) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), std::nullopt, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return step_y(y_keys, std::nullopt, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(std::initializer_list<std::string_view> y_keys) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(std::string_view x_key, std::string_view y_key) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return step_y(y_keys, x_key, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, pluss::table::StepPlotOptions{}); }
+  pluss::pl::Studio step(std::string_view x_key, std::string_view y_key, const pluss::table::StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options); }
+  pluss::pl::Studio step(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::StepPlotOptions& options) const { return step_y(y_keys, x_key, options); }
+  pluss::pl::Studio step(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const pluss::table::StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options); }
 
-  pluss::pl::Studio area(std::string_view y_key,
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                         std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key = std::nullopt) const {
-    return area(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
-  }
-  pluss::pl::Studio area(std::string_view y_key,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::AreaPlotOptions& options) const;
-  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::AreaPlotOptions& options) const;
-  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys,
-                         std::optional<std::string_view> x_key,
-                         const pluss::table::AreaPlotOptions& options) const {
-    return area(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
-  }
+  // x first, then y: area(x_key, y_key) or area(x_key, {y1, y2}); a single key is y against the record labels.
+  // With no keys, options.features (all_features, include_features or exclude_features) picks the y keys; with
+  // neither, every numeric key is drawn.
+  pluss::pl::Studio area() const { return area_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(const pluss::table::AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, options); }
+  pluss::pl::Studio area(std::string_view x_key, const pluss::table::AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>{}, x_key, options); }
+  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::AreaPlotOptions& options) const { return area_y(y_keys, std::nullopt, options); }
+  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys, const pluss::table::AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, options); }
+  pluss::pl::Studio area(std::string_view y_key) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), std::nullopt, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return area_y(y_keys, std::nullopt, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(std::initializer_list<std::string_view> y_keys) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(std::string_view x_key, std::string_view y_key) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return area_y(y_keys, x_key, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, pluss::table::AreaPlotOptions{}); }
+  pluss::pl::Studio area(std::string_view x_key, std::string_view y_key, const pluss::table::AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options); }
+  pluss::pl::Studio area(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::AreaPlotOptions& options) const { return area_y(y_keys, x_key, options); }
+  pluss::pl::Studio area(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const pluss::table::AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options); }
 
   pluss::pl::Studio scatter(std::string_view x_key,
                             std::string_view y_key,
@@ -774,25 +768,23 @@ public:
                             std::optional<std::string_view> hue_key,
                             const CatalogScatterPlotOptions& options) const;
 
-  pluss::pl::Studio bar(std::string_view y_key,
-                        std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                        std::optional<std::string_view> x_key = std::nullopt) const;
-  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys,
-                        std::optional<std::string_view> x_key = std::nullopt) const {
-    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key);
-  }
-  pluss::pl::Studio bar(std::string_view y_key,
-                        std::optional<std::string_view> x_key,
-                        const pluss::table::BarPlotOptions& options) const;
-  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                        std::optional<std::string_view> x_key,
-                        const pluss::table::BarPlotOptions& options) const;
-  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys,
-                        std::optional<std::string_view> x_key,
-                        const pluss::table::BarPlotOptions& options) const {
-    return bar(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options);
-  }
+  // x first, then y: bar(x_key, y_key) or bar(x_key, {y1, y2}); a single key is y against the record labels.
+  // With no keys, options.features (all_features, include_features or exclude_features) picks the y keys; with
+  // neither, every numeric key is drawn.
+  pluss::pl::Studio bar() const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(const pluss::table::BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>{}, std::nullopt, options); }
+  pluss::pl::Studio bar(std::string_view x_key, const pluss::table::BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>{}, x_key, options); }
+  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::BarPlotOptions& options) const { return bar_y(y_keys, std::nullopt, options); }
+  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys, const pluss::table::BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, options); }
+  pluss::pl::Studio bar(std::string_view y_key) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), std::nullopt, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return bar_y(y_keys, std::nullopt, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(std::initializer_list<std::string_view> y_keys) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), std::nullopt, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(std::string_view x_key, std::string_view y_key) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys) const { return bar_y(y_keys, x_key, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, pluss::table::BarPlotOptions{}); }
+  pluss::pl::Studio bar(std::string_view x_key, std::string_view y_key, const pluss::table::BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>({y_key}), x_key, options); }
+  pluss::pl::Studio bar(std::string_view x_key, pluss::msharp::RangeView::Of<std::string_view> y_keys, const pluss::table::BarPlotOptions& options) const { return bar_y(y_keys, x_key, options); }
+  pluss::pl::Studio bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const pluss::table::BarPlotOptions& options) const { return bar_y(pluss::msharp::RangeView::Of<std::string_view>(y_keys), x_key, options); }
 
   pluss::pl::Studio hist(std::string_view key, std::int64_t bins = 20) const;
   pluss::pl::Studio hist(pluss::msharp::RangeView::Of<std::string_view> keys = {},
@@ -856,6 +848,14 @@ public:
   pluss::pl::Studio auto_plot(const pluss::table::AutoPlotOptions& options) const;
 
 private:
+  pluss::pl::Studio line_y(pluss::msharp::RangeView::Of<std::string_view> y_keys, std::optional<std::string_view> x_key,
+          const pluss::table::LinePlotOptions& options) const;
+  pluss::pl::Studio step_y(pluss::msharp::RangeView::Of<std::string_view> y_keys, std::optional<std::string_view> x_key,
+          const pluss::table::StepPlotOptions& options) const;
+  pluss::pl::Studio area_y(pluss::msharp::RangeView::Of<std::string_view> y_keys, std::optional<std::string_view> x_key,
+          const pluss::table::AreaPlotOptions& options) const;
+  pluss::pl::Studio bar_y(pluss::msharp::RangeView::Of<std::string_view> y_keys, std::optional<std::string_view> x_key,
+         const pluss::table::BarPlotOptions& options) const;
   Catalog base_{};
   pluss::table::DataFramePlotOptions options_{};
 };

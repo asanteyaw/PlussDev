@@ -350,11 +350,18 @@ std::vector<std::string> default_triplet_features(const std::vector<DataFrame>& 
 }
 
 std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<std::string_view> requested,
-                                                  const std::vector<DataFrame>& frames) {
-  if (requested.size() == 0) {
-    return default_triplet_features(frames);
-  }
+                                                  const std::vector<DataFrame>& frames,
+                                                  const FeatureSelection& selection = {}) {
   PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
+  if (requested.size() == 0) {
+    const auto numeric_names = frames.front().feataxis().series().features();
+    auto names = detail::resolve_feature_selection(selection, frames.front().features(), numeric_names,
+                                                   "Atlas::plot().triplot");
+    PLUSS_CHECK(static_cast<std::int64_t>(names.size()) >= 3,
+                "Atlas::plot().triplot: requires at least three numeric features; found " +
+                    std::to_string(names.size()) + ". Add features or name them explicitly.");
+    return names;
+  }
   const auto numeric_names = frames.front().feataxis().series().features();
   std::unordered_set<std::string> available_set;
   available_set.reserve(numeric_names.size());
@@ -383,7 +390,8 @@ std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<s
 std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std::string_view> requested,
                                                 const std::vector<DataFrame>& frames,
                                                 std::int64_t max_features,
-                                                std::string_view where) {
+                                                std::string_view where,
+                                                const FeatureSelection& selection) {
   PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
   const auto numeric = frames.front().feataxis().series();
   const auto numeric_names = numeric.features();
@@ -395,7 +403,7 @@ std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std
 
   std::vector<std::string> features;
   if (requested.size() == 0) {
-    features = numeric_names;
+    features = detail::resolve_feature_selection(selection, frames.front().features(), numeric_names, where);
   } else {
     features.reserve(requested.size());
     std::unordered_set<std::string> selected_set;
@@ -621,16 +629,10 @@ DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index) const 
   return frames_[static_cast<std::size_t>(idx)].plot(options_.figure);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
-                                            std::string_view y_feature,
-                                            std::optional<std::string_view> x_feature) const {
-  return frames(frame_indices, y_feature, x_feature, options_.frames);
-}
-
-pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
-                                            std::string_view y_feature,
-                                            std::optional<std::string_view> x_feature,
-                                            const AtlasFramesPlotOptions& options) const {
+pluss::pl::Studio AtlasPlotAccessor::frames_y(pluss::msharp::RangeView::Int frame_indices,
+                                              std::string_view y_feature,
+                                              std::optional<std::string_view> x_feature,
+                                              const AtlasFramesPlotOptions& options) const {
   PLUSS_CHECK(!frames_.empty(), "Atlas::plot().frames: atlas has no frames");
   const auto selected = normalize_frame_indices(frame_indices, static_cast<std::int64_t>(frames_.size()));
   const auto labels = depth_legend_labels(depth_labels_, selected, "Atlas::plot().frames");
@@ -890,7 +892,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<
 pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features,
                                                    const AtlasDepthComparePlotOptions& options) const {
   const auto selected = resolve_depth_features(
-      features, frames_, options.max_features, "Atlas::plot().depth_compare");
+      features, frames_, options.max_features, "Atlas::plot().depth_compare", options.features.any() ? options.features : options_.figure.selection());
   const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
   const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_compare");
 
@@ -926,7 +928,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<st
 pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
                                                  const AtlasDepthFacetPlotOptions& options) const {
   const auto selected = resolve_depth_features(
-      features, frames_, options.max_features, "Atlas::plot().depth_facet");
+      features, frames_, options.max_features, "Atlas::plot().depth_facet", options.features.any() ? options.features : options_.figure.selection());
   const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
   const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_facet");
 
@@ -1008,12 +1010,22 @@ pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature,
   return fig;
 }
 
-pluss::pl::Studio AtlasPlotAccessor::triplot() const {
-  return triplot({}, options_.triplot);
+pluss::pl::Studio AtlasPlotAccessor::triplot(const FeatureSelection& columns) const {
+  return triplot(columns, options_.triplot);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const {
-  return triplot({}, options);
+pluss::pl::Studio AtlasPlotAccessor::triplot(const FeatureSelection& columns,
+                                             const pluss::pl::flash::TriplotOptions& options) const {
+  const auto selected = resolve_triplet_features({}, frames_, columns.any() ? columns : options_.figure.selection());
+  auto flat = flatten_feature_columns(frames_, selected, "Atlas::plot().triplot");
+  auto fig = make_studio();
+  auto tri_options = options;
+  if (tri_options.labels.empty()) {
+    tri_options.labels = selected;
+  }
+  flash::triplot(fig, flat, tri_options);
+  apply_figure_options(fig);
+  return fig;
 }
 
 pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features) const {
@@ -1022,7 +1034,7 @@ pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::s
 
 pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features,
                                              const pluss::pl::flash::TriplotOptions& options) const {
-  const auto selected = resolve_triplet_features(features, frames_);
+  const auto selected = resolve_triplet_features(features, frames_, options_.figure.selection());
   auto columns = flatten_feature_columns(frames_, selected, "Atlas::plot().triplot");
 
   auto fig = make_studio();

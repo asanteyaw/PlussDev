@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: bac193139567 -->
+<!-- pluss-signature-hash: e023d7495146 -->
 
 # DataFramePlotAccessor::bar
 
@@ -11,6 +11,12 @@
 pluss::pl::Studio DataFramePlotAccessor::bar() const
 
 pluss::pl::Studio DataFramePlotAccessor::bar(const BarPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view x_feature, const BarPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::RangeView<std::string_view> y_features, const BarPlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features, const BarPlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature) const
 
@@ -41,6 +47,14 @@ accumulating variant). Same three overload families and x-axis-resolution rules 
 
 See [`line()`](line.md) for the shared x-axis-resolution rules and `Studio`-return / no-`cout`
 mechanics.
+
+## Which features are drawn
+
+x comes first, then y, as on [`line()`](line.md). With no y-feature named, the y-features come from a feature
+selection: `features` in `BarPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the
+accessor-level selection in `DataFramePlotOptions`, else every numeric feature, all on one axes. Names in the
+call win over both. The rules, the directive error messages and compiled examples are on
+[`line()`](line.md).
 
 ## Parameters
 

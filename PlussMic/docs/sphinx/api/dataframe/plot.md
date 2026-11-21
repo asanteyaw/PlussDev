@@ -34,7 +34,8 @@ left sidebar to jump straight to any method (`line`, `bar`, `scatter`, `hist`, `
 **options** (`const DataFramePlotOptions&`, optional)
 
 Chart-wide defaults shared across every plot drawn from the returned accessor —
-a default x-feature, a default hue-feature, tick/label rotation, figure size, tight
+a default x-feature, a default hue-feature, a feature selection (`all_features`,
+`include_features`, `exclude_features`), tick/label rotation, figure size, tight
 layout, and more. Omit it to use the accessor's built-in defaults.
 
 ## Returns
@@ -60,8 +61,8 @@ auto chart = sales.plot().line("month", "amount");
 chart.save_png("monthly_sales.png");
 ```
 
-`sales.plot()` returns a `DataFramePlotAccessor` bound to `sales`; `.line("amount",
-"month")` draws `amount` against `month` and returns a `pluss::pl::Studio`, which
+`sales.plot()` returns a `DataFramePlotAccessor` bound to `sales`; `.line("month",
+"amount")` draws `amount` against `month` and returns a `pluss::pl::Studio`, which
 `.save_png(...)` then writes to disk. No table is printed by any of this — the
 result is a rendered figure, not a `DataFrame`.
 
@@ -79,6 +80,62 @@ auto chart = accessor.line("amount");  // uses "month" as x automatically
 Passing `x_feature` explicitly (as in Example 1) always takes precedence; the
 `default_x_feature` in `options` only fills in when a chart method's own
 `x_feature` argument is omitted.
+
+Example 3. Choose the features once, for every plot made from the accessor.
+
+```cpp
+auto traffic = DataFrame({
+    {"web",    Shelf(pluss::make_series({120.0, 135.0, 128.0, 160.0, 171.0, 150.0, 142.0, 168.0}))},
+    {"mobile", Shelf(pluss::make_series({80.0, 95.0, 110.0, 130.0, 150.0, 120.0, 100.0, 140.0}))},
+    {"email",  Shelf(pluss::make_series({40.0, 38.0, 45.0, 41.0, 50.0, 44.0, 39.0, 47.0}))},
+});
+
+auto plot = traffic.plot({.include_features = {"web", "email"}});
+auto lines = plot.line();   // web and email on one axes, against the row labels
+auto hists = plot.hist();   // one histogram each for web and email
+auto boxes = plot.box();    // one box each for web and email
+```
+
+`all_features`, `include_features` and `exclude_features` in `DataFramePlotOptions` apply to every
+method of the accessor that works on a set of features: `line`, `step`, `area`, `bar` and their
+stacked forms, `hist`, `box`, `violin`, `density`, `corr_heatmap`, `scatter_matrix`, `heatmap`,
+`brief`, `auto_plot`, `parallel`, `andrews_curves` and `radviz`. They follow the same rules as the
+per-plot `features` field (`include_features` and `exclude_features` are mutually exclusive, and
+`all_features` cannot be combined with either), and a misuse throws the same directive `pluss::Error`.
+
+`plot.line()`:
+
+![Output of Example 3, line](img/acc-line.svg)
+
+`plot.hist()`:
+
+![Output of Example 3, hist](img/acc-hist.svg)
+
+`plot.box()`:
+
+![Output of Example 3, box](img/acc-box.svg)
+
+Example 4. Precedence: names in the call, then the plot's own selection, then the accessor's
+selection, then every numeric feature.
+
+```cpp
+auto lines = [](const pluss::pl::Studio& fig) { return fig.panes().front().trace_count(); };
+std::cout << "accessor selection (web, email):        " << lines(plot.line()) << " traces\n";
+std::cout << "per-plot include_features = {mobile}:   "
+          << lines(plot.line({.features = {.include_features = {"mobile"}}})) << " trace\n";
+std::cout << "names in the call, line(\"web\", \"mobile\"): " << lines(plot.line("web", "mobile")) << " trace\n";
+std::cout << "plain traffic.plot().line():            " << lines(traffic.plot().line()) << " traces\n";
+```
+
+```text
+accessor selection (web, email):        2 traces
+per-plot include_features = {mobile}:   1 trace
+names in the call, line("web", "mobile"): 1 trace
+plain traffic.plot().line():            3 traces
+```
+
+A per-plot selection replaces the accessor-level one for that call only; combining the two never
+errors, and the accessor keeps its own selection for the next call.
 
 ## Notes
 

@@ -119,7 +119,7 @@ DataFrame space_explicit_many() {
 void demo_lineplot() {
   Studio fig("lineplot_from_frame", Theme::paper());
   auto& pane = fig.pane2("lineplot");
-  pluss::pl::flash::lineplot(pane, curve_exact_two()).label("auto two-column");
+  pluss::pl::flash::lineplot(pane, curve_exact_two(), TableColumns{.x_feature = "observed_at", .y_feature = "sales"}).label("named columns");
   save_svg(fig, "lineplot_from_frame");
 }
 
@@ -136,7 +136,7 @@ void demo_scatterplot() {
 void demo_stepplot() {
   Studio fig("stepplot_from_frame", Theme::paper());
   auto& pane = fig.pane2("stepplot");
-  pluss::pl::flash::stepplot(pane, curve_exact_two()).label("auto two-column");
+  pluss::pl::flash::stepplot(pane, curve_exact_two(), TableColumns{.x_feature = "observed_at", .y_feature = "sales"}).label("named columns");
   save_svg(fig, "stepplot_from_frame");
 }
 
@@ -165,14 +165,14 @@ void demo_histplot() {
 void demo_displot() {
   Studio fig("displot_from_frame", Theme::paper());
   auto& pane = fig.pane2("displot");
-  pluss::pl::flash::displot(pane, numeric_one(), {}, 8).label("single column auto");
+  pluss::pl::flash::displot(pane, numeric_one(), TableColumns{.feature = "score"}, 8).label("named column");
   save_svg(fig, "displot_from_frame");
 }
 
 void demo_kdeplot() {
   Studio fig("kdeplot_from_frame", Theme::paper());
   auto& pane = fig.pane2("kdeplot");
-  pluss::pl::flash::kdeplot(pane, numeric_one(), {}, 180).label("single column auto");
+  pluss::pl::flash::kdeplot(pane, numeric_one(), TableColumns{.feature = "score"}, 180).label("named column");
   save_svg(fig, "kdeplot_from_frame");
 }
 
@@ -200,7 +200,7 @@ void demo_rugplot() {
 void demo_countplot() {
   Studio fig("countplot_from_frame", Theme::paper());
   auto& pane = fig.pane2("countplot");
-  pluss::pl::flash::countplot(pane, text_one()).label("single text column auto");
+  pluss::pl::flash::countplot(pane, text_one(), TableColumns{.feature = "city"}, 12).label("named text column");
   save_svg(fig, "countplot_from_frame");
 }
 
@@ -229,7 +229,7 @@ void demo_barplot_horizontal_univariate() {
 void demo_path3() {
   Studio fig("path3_from_frame", Theme::paper());
   auto& pane = fig.pane3("path3");
-  pluss::pl::flash::path3(pane, space_exact_three()).label("auto three-column");
+  pluss::pl::flash::path3(pane, space_exact_three(), TableColumns{.x_feature = "x", .y_feature = "y", .z_feature = "z"}).label("named columns");
   save_svg(fig, "path3_from_frame");
 }
 
@@ -246,7 +246,7 @@ void demo_cloud3() {
 void demo_plot3d() {
   Studio fig("plot3d_from_frame", Theme::paper());
   auto& pane = fig.pane3("plot3D");
-  pluss::pl::flash::plot3D(pane, space_exact_three()).label("auto three-column");
+  pluss::pl::flash::plot3D(pane, space_exact_three(), TableColumns{.x_feature = "x", .y_feature = "y", .z_feature = "z"}).label("named columns");
   save_svg(fig, "plot3d_from_frame");
 }
 

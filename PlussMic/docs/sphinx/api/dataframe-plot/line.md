@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e81d7bf44b16 -->
+<!-- pluss-signature-hash: e086af0d22e7 -->
 
 # DataFramePlotAccessor::line
 
@@ -12,6 +12,8 @@ pluss::pl::Studio DataFramePlotAccessor::line() const
 
 pluss::pl::Studio DataFramePlotAccessor::line(const LinePlotOptions& options) const
 
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, const LinePlotOptions& options) const
+
 pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature) const
 
 pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::string_view y_feature) const
@@ -21,6 +23,10 @@ pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, std::s
 pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features) const
 
 pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::RangeView<std::string_view> y_features, const LinePlotOptions& options) const
+
+pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features, const LinePlotOptions& options) const
 
 pluss::pl::Studio DataFramePlotAccessor::line(std::string_view x_feature, pluss::RangeView<std::string_view> y_features) const
 
@@ -76,21 +82,36 @@ Every 2D chart method that takes an `x_feature` argument resolves it the same wa
 
 See Examples 1, 2, and 3 below for each of these three paths in turn.
 
-### Plotting every numeric column
+### Which features are drawn
 
-`line()` with no arguments (or with only a `LinePlotOptions`) draws **every numeric column**, one
-line each, so a wide frame can be plotted without typing its column names. Every 2D chart
-method on this accessor follows the same rule. The x-axis is chosen like this:
+The order of the arguments is always **x first, then y**: `line("week", "visits")` puts `week` on
+the x-axis and `visits` on the y-axis; `line("week", {"visits", "returns"})` draws two lines against
+`week`. A single name, `line("visits")`, is a y-feature drawn against the row labels. The x-axis is
+never guessed: it is the x-feature you name, the accessor default `options.default_x_feature`, or the
+row labels, and nothing else (a time column is the x-axis only when you name it).
 
-1. `options.default_x_feature`, when the accessor has one (that column is then left out of the lines).
-2. Otherwise the frame's **single time column**, when it has exactly one.
-3. Otherwise the frame's row labels.
+When no y-feature is named, the y-features come from a **feature selection**, and every one of them is
+drawn on the same axes, one line per feature, with a legend:
 
-A frame with no numeric column throws a `pluss::Error` that asks you to name the columns.
+| Field | Type | Meaning |
+|---|---|---|
+| `all_features` | `bool` | every numeric feature (the x-feature is left out) |
+| `include_features` | `std::vector<std::string>` | exactly these features, in this order |
+| `exclude_features` | `std::vector<std::string>` | every numeric feature except these |
 
-To plot one pair, name them: the first name is x and the second is y, as in
-`line("week", "visits")`. A single name, `line("visits")`, draws that column against the row
-labels. A time column on the y-axis shows dates as its tick labels, not raw numbers.
+The selection can be set for one call, in `LinePlotOptions::features`, or for every plot made from the
+accessor, in the same three fields of `DataFramePlotOptions` (`df.plot({.include_features = {"a", "b"}})`).
+It is resolved in this order, first match wins:
+
+1. Features named in the call (`line("x", {"y1", "y2"})`).
+2. `features` in the plot's own options.
+3. The accessor-level selection in `DataFramePlotOptions`.
+4. With none of those, every numeric feature, exactly as if `all_features` were set.
+
+`include_features` and `exclude_features` cannot both be set, and `all_features` cannot be combined with
+either; an unknown feature name, a non-numeric feature in `include_features`, or the x-feature listed in
+`include_features` is an error. Each throws a `pluss::Error` that names what was wrong and what to do
+(see Example 12). A time feature on the y-axis shows dates as its tick labels, not raw numbers.
 
 ## Parameters
 
@@ -116,6 +137,7 @@ labels. A time column on the y-axis shows dates as its tick labels, not raw numb
 | `line_width` | `double` | `1.6` |
 | `y_limit_method` | `std::optional<pluss::pl::LimitMethod>` | `pluss::pl::LimitMethod::Padded` |
 | `align` | `XYAlignOptions` | default constructed |
+| `features` | `FeatureSelection` | nothing selected |
 
 `alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
 how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
@@ -266,7 +288,7 @@ auto chart = sales.plot().line("month", {"amount", "cost"}, line_options);
 
 ![Output of Example 7](img/line-7.svg)
 
-Example 8. No columns named: every numeric column is drawn.
+Example 8. No features named: every numeric feature is drawn on one axes, against the row labels.
 
 ```cpp
 using namespace pluss::table;
@@ -281,11 +303,36 @@ auto chart = traffic.plot().line();
 chart.show();
 ```
 
-Three numeric columns give three lines against the row labels, with a legend.
+Three numeric features give three lines and a legend.
 
 ![Output of Example 8](img/line-8.svg)
 
-Example 9. A frame with one time column: that column becomes the x-axis.
+Example 9. `all_features` states the same thing explicitly.
+
+```cpp
+auto chart = traffic.plot().line({.features = {.all_features = true}});
+```
+
+![Output of Example 9](img/line-9.svg)
+
+Example 10. `include_features` draws exactly the listed features.
+
+```cpp
+auto chart = traffic.plot().line({.features = {.include_features = {"web", "email"}}});
+```
+
+![Output of Example 10](img/line-10.svg)
+
+Example 11. `exclude_features` draws every numeric feature except the listed ones.
+
+```cpp
+auto chart = traffic.plot().line({.features = {.exclude_features = {"mobile"}}});
+```
+
+![Output of Example 11](img/line-11.svg)
+
+Example 12. A selection with an explicit x-feature: the x-feature is never also drawn as a line, and a
+time feature named as x labels the axis with dates.
 
 ```cpp
 auto daily = DataFrame({
@@ -295,46 +342,52 @@ auto daily = DataFrame({
     {"cost",   Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
-auto chart = daily.plot().line();
-chart.show();
+auto chart = daily.plot().line("date", {.features = {.all_features = true}});
 ```
 
-`amount` and `cost` are drawn against `date`.
+![Output of Example 12](img/line-12.svg)
 
-![Output of Example 9](img/line-9.svg)
-
-Example 10. Naming the columns puts a time column on the y-axis, labelled with dates.
+Example 13. Naming a time feature as y shows dates on the y-axis.
 
 ```cpp
 auto chart = daily.plot().line("amount", "date");
-chart.show();
 ```
 
-`amount` is x and `date` is y; the y ticks read as dates.
+![Output of Example 13](img/line-13.svg)
 
-![Output of Example 10](img/line-10.svg)
-
-Example 11. A frame with no numeric column asks for the columns.
+Example 14. Misuse throws a `pluss::Error` that says what was combined, why it is invalid and what to do.
 
 ```cpp
-auto names = DataFrame({{"city", Shelf(pluss::make_note({"Accra", "Kumasi"}))}});
+auto attempt = [](auto&& draw) {
+  try { draw(); } catch (const pluss::Error& e) { std::cout << e.message() << "\n\n"; }
+};
 
-try {
-  auto chart = names.plot().line();
-} catch (const pluss::Error& e) {
-  std::cout << e.message() << "\n";
-}
+attempt([&] { traffic.plot().line({.features = {.all_features = true, .exclude_features = {"mobile"}}}); });
+attempt([&] { traffic.plot().line({.features = {.include_features = {"web"}, .exclude_features = {"email"}}}); });
+attempt([&] { traffic.plot().line({.features = {.include_features = {"wbe"}}}); });
+attempt([&] { traffic.plot().line("web", {.features = {.include_features = {"web", "email"}}}); });
+
+auto names = DataFrame({{"city", Shelf(pluss::make_note({"Accra", "Kumasi"}))}});
+attempt([&] { names.plot().line(); });
 ```
 
 ```text
-DataFrame::plot().line: the frame has no numeric columns to plot; name the columns, e.g. plot().line("x_column", "y_column")
+DataFrame::plot().line: all_features and exclude_features cannot be combined: all_features already means every numeric feature. To drop some features set exclude_features instead (and leave all_features false), or to plot everything remove exclude_features.
+
+DataFrame::plot().line: include_features and exclude_features cannot both be set: include_features lists exactly the features to draw, while exclude_features drops features from every numeric feature. Use include_features to name the features you want, or exclude_features to remove the ones you do not, but not both.
+
+DataFrame::plot().line: include_features names unknown feature 'wbe'. Did you mean 'web'? Available features = [web, mobile, email]. Fix the spelling or remove 'wbe' from include_features.
+
+DataFrame::plot().line: include_features lists 'web', which is also the x feature; an x feature cannot be drawn as its own trace. Remove 'web' from include_features, or choose a different x.
+
+DataFrame::plot().line: the frame has no numeric feature to draw (features = [city]). Add a numeric feature, or convert one of these features to numbers first.
 ```
 
 ## Notes
 
 - Returns a `pluss::pl::Studio`, never a `DataFrame` and never printed text — see the
   important callout above for how to actually view or save the result.
-- At least one y-feature is required; an empty `y_features` list throws.
+- With no y-feature named, the feature selection decides (see "Which features are drawn"); a frame with no numeric feature throws.
 - A legend is shown automatically once more than one y-feature is requested.
 - The x-axis resolves in three steps — explicit argument, then `options.default_x_feature`,
   then the frame's own row labels titled `"case"` — see "Choosing the x-axis" above.
