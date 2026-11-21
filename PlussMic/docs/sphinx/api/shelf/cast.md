@@ -25,25 +25,25 @@ current shelf (and, optionally, a `ShelfCastOptions` policy) and hands back a
 | `series` | Method | `Shelf series() const` |
 | `note` | Method | `Shelf note() const` |
 | `timeline` | Method | `Shelf timeline() const` |
-| `timeindex` | Method | `Shelf timeindex() const` |
+| `duration` | Method | `Shelf duration() const` |
 
 Calling the target that matches the source shelf's own [`kind()`](kind.md) is always a
 cheap identity — `Shelf(...).cast().series()` on an already-`Series`-kind shelf just
 returns `*this` unchanged (subject to `options.series_dtype`, if you're also asking for a
 different numeric dtype). Converting *between* kinds follows these rules:
 
-- **→ `series()`**: `Timeline`/`TimeIndex` sources become their epoch-nanosecond integer
-  ticks (as `Int64`, further converted to `options.series_dtype` if set). `Note` sources
+- **→ `series()`**: `Timeline` sources become their epoch-nanosecond integer ticks, and `Duration`
+  sources their signed nanosecond counts, (as `Int64`, further converted to `options.series_dtype` if set). `Note` sources
   are parsed as numbers (`Float64` by default, or `Bool` if `series_dtype` is `Bool`,
   using permissive true/false-like text matching).
-- **→ `note()`**: every other kind is formatted as text — `Timeline`/`TimeIndex` as ISO
-  strings, `Series` via each scalar's own text representation.
-- **→ `timeline()`**: `TimeIndex` sources are unwrapped directly. `Series` sources must be
+- **→ `note()`**: every other kind is formatted as text — `Timeline` as ISO strings, `Duration` as
+  ISO-8601 durations, `Series` via each scalar's own text representation.
+- **→ `timeline()`**: `Duration` sources are refused (elapsed time is not a timestamp). `Series` sources must be
   numeric and are interpreted either as epoch-nanosecond ticks or, when every valid value
   looks like an 8-digit `YYYYMMDD` integer, as calendar dates. `Note` sources are parsed as
   ISO-ish datetime text (or via `options.format`, if set).
-- **→ `timeindex()`**: delegates to `timeline()` first, then wraps the result as an
-  (unsorted-tolerant) `TimeIndex`.
+- **→ `duration()`**: `Series` sources must have the `Int64` dtype and are read as signed nanoseconds. `Note`
+  sources must hold exact signed nanoseconds as decimal text. `options.format` is not accepted.
 
 ### `ShelfCastOptions` fields
 
@@ -53,10 +53,10 @@ different numeric dtype). Converting *between* kinds follows these rules:
 | `format` | `std::string` | empty |
 | `invalid` | `ParseInvalid` | `ParseInvalid::Raise` |
 
-```{important} ShelfCastOptions::invalid only actually takes effect for the Timeline target
+```{important} ShelfCastOptions::invalid only takes effect for the Timeline and Duration targets
 `invalid` (`Raise` or `Null`) is meant to choose what happens when a `Note` value can't be
 parsed. In the current implementation, that choice is only actually consulted by the
-`Timeline` (and, transitively, `TimeIndex`) target: `Raise` (the default) throws on the
+`Timeline` and `Duration` targets: `Raise` (the default) throws on the
 first unparseable value there, `Null` marks it invalid instead. For the **`Series`**
 target, unparseable `Note` text is **always** silently marked `NULL` — `invalid` is never
 consulted at all, regardless of which value you set it to. See Examples 3 and 4 for both
@@ -69,7 +69,7 @@ sides of this.
     `series_dtype` picks the concrete numeric dtype for a `series()` conversion (defaults
     to `Float64`, or effectively `Bool` when you explicitly request it). `format`, if
     non-empty, is a strptime-style pattern used to parse `Note` text for a `timeline()`
-    (or `timeindex()`) conversion instead of the default ISO-ish parser. `invalid` chooses
+    conversion instead of the default ISO-ish parser (it is rejected for `duration()`). `invalid` chooses
     `Raise`-vs-`Null` behavior — see the important callout above for exactly which target
     actually honors it.
 
@@ -193,8 +193,8 @@ ptype: Note
 ## Notes
 
 - `cast()` alone performs no conversion — it only binds an accessor; the actual work
-  happens in `.series()`/`.note()`/`.timeline()`/`.timeindex()`.
-- `ShelfCastOptions::invalid` only actually affects the `Timeline`/`TimeIndex` targets —
+  happens in `.series()`/`.note()`/`.timeline()`/`.duration()`.
+- `ShelfCastOptions::invalid` only actually affects the `Timeline` and `Duration` targets —
   see the important callout above. `astype()`, which delegates to `cast().series()`
   internally, inherits this same "always null on unparseable text" behavior.
 - Converting to a shelf's own current kind is a cheap identity (subject to
@@ -208,6 +208,7 @@ ptype: Note
   [`as_timeline`](as_timeline.md): view the current
   payload without converting it, throwing if the kind doesn't already match.
 - [`DataFrame::cast`](../dataframe/cast.md): cast several frame features in one call.
+- [`ShelfCastAccessor`](../../shelf_cast_accessor_api_reference.md): one page for each of the four targets.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="casefold.html">
