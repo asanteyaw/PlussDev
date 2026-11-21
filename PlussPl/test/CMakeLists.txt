@@ -7,6 +7,7 @@ if(TARGET Catch2::Catch2WithMain)
     add_executable(plusspl_catch2
         ${CMAKE_CURRENT_SOURCE_DIR}/plusspl_catch2.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/plusspl_matlab_parity.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/plusspl_views_catch2.cpp
     )
     target_link_libraries(plusspl_catch2 PRIVATE PlussPl Catch2::Catch2WithMain)
     target_compile_features(plusspl_catch2 PRIVATE cxx_std_20)

@@ -1583,6 +1583,30 @@ class ScopedSeriesVectorCache {
   geometry.low = low;
   geometry.high = high;
   geometry.counts = to_f64(values.histc(data.bins, low, high));
+  if (data.scale != BucketScale::Count && !geometry.counts.empty()) {
+    double total = 0.0;
+    for (const double count : geometry.counts) {
+      total += count;
+    }
+    const double width = (high - low) / static_cast<double>(geometry.counts.size());
+    const bool cumulative = data.scale == BucketScale::Cumulative || data.scale == BucketScale::CumulativeDensity;
+    if (cumulative) {
+      double running = 0.0;
+      for (double& count : geometry.counts) {
+        running += count;
+        count = running;
+      }
+    }
+    if (total > 0.0) {
+      // A density has unit area (counts / (n * width)); a cumulative density reaches one.
+      const double divisor = data.scale == BucketScale::Density ? total * width
+                             : data.scale == BucketScale::CumulativeDensity ? total
+                                                                            : 1.0;
+      for (double& count : geometry.counts) {
+        count /= divisor;
+      }
+    }
+  }
   return geometry;
 }
 
@@ -4049,7 +4073,7 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
         trace.kind() == TraceKind::Ribbon || trace.kind() == TraceKind::Columns || trace.kind() == TraceKind::Bucket ||
         trace.kind() == TraceKind::Quartet || trace.kind() == TraceKind::Violin) {
       entry.filled = true;
-      entry.fill = trace.palette_ramp().sample(look().key_swatch_palette_sample);
+      entry.fill = trace.stroke_explicit() ? trace.stroke_color() : trace.palette_ramp().sample(look().key_swatch_palette_sample);
       entry.stroke = multiply_rgb(entry.fill, look().key_swatch_outline_shade);
     }
     entries.push_back(std::move(entry));

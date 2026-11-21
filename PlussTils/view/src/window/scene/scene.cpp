@@ -80,6 +80,7 @@ Scene scale_scene(const Scene& scene, const double scale) {
             scaled.rect = rect(source.rect);
           } else if constexpr (std::is_same_v<CommandT, TextCommand>) {
             scaled.anchor = point(source.anchor);
+            scaled.pivot = point(source.pivot);
             scaled.pixel_size = positive(source.pixel_size);
           } else if constexpr (std::is_same_v<CommandT, TextCaretCommand>) {
             scaled.text_anchor = point(source.text_anchor);

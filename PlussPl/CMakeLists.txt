@@ -9,6 +9,13 @@ add_library(PlussPl STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engines/spatex/spatex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/render/renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/render/export_frontend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_look.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_series.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_data.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_analysis.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_histogram.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/views/views_axes.cpp
 )
 
 add_library(Pluss::PlussPl ALIAS PlussPl)

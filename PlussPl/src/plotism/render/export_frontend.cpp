@@ -8,11 +8,13 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 
 #include "CodeM/core/Errors.h"
+#include "pluss/pl/views.h"
 #include "pluss/pl/flash/flash.h"
 #include "pluss/tils/view/html_window.h"
 
@@ -375,6 +377,71 @@ bool show_html_window_(const std::string& html,
   return pluss::view::show_html_window(html, options);
 }
 
+std::vector<pluss::view::HtmlMenu> plot_menus_(const Studio& figure,
+                                               const std::string& window_title,
+                                               std::int64_t width,
+                                               std::int64_t height) {
+  using pluss::view::HtmlMenu;
+  using pluss::view::HtmlMenuOption;
+  auto original = std::make_shared<const Studio>(figure);
+  auto choices = std::make_shared<views::Choices>();
+  const auto page = [original, choices, window_title, width, height]() {
+    return without_page_save_button(
+        svg_embed_html(views::apply(*original, *choices).to_svg(), window_title, width, height));
+  };
+
+  std::vector<HtmlMenu> menus;
+  for (const auto& group : views::groups(figure)) {
+    HtmlMenu menu;
+    menu.id = group.id;
+    menu.title = group.title;
+    menu.in_view_menu = !group.section.empty();
+    menu.section = group.section;
+    for (const auto& option : group.options) {
+      menu.options.push_back(HtmlMenuOption{option.id, option.label});
+    }
+    const std::string first = group.options.front().id;
+    menu.selected = [choices, id = group.id, first]() {
+      const auto it = choices->find(id);
+      return it == choices->end() ? first : it->second;
+    };
+    menu.render = [choices, page, id = group.id, first](std::string_view option) {
+      std::optional<std::string> before;
+      if (const auto it = choices->find(id); it != choices->end()) {
+        before = it->second;
+      }
+      if (option == first) {
+        choices->erase(id);
+      } else {
+        (*choices)[id] = std::string(option);
+      }
+      try {
+        return page();
+      } catch (const std::exception&) {
+        // A combination that cannot be drawn: keep the figure as it was.
+        if (before.has_value()) {
+          (*choices)[id] = *before;
+        } else {
+          choices->erase(id);
+        }
+        return std::string{};
+      }
+    };
+    menus.push_back(std::move(menu));
+  }
+
+  HtmlMenu reset;
+  reset.id = "reset";
+  reset.title = "Reset";
+  reset.options.push_back(HtmlMenuOption{"all", "Back to the original figure"});
+  reset.render = [choices, page](std::string_view) {
+    choices->clear();
+    return page();
+  };
+  menus.push_back(std::move(reset));
+  return menus;
+}
+
 bool launch_html_in_default_viewer(const std::filesystem::path& html_path) {
   const auto native = html_path.string();
 #if defined(_WIN32)
@@ -527,38 +594,11 @@ bool Studio::show(std::string_view title, std::int64_t width, std::int64_t heigh
     return true;
   }
   const auto html = svg_embed_html(svg_payload, window_title, width, height);
-  // The window's Colors menu re-renders the figure with a different set of line / bar colours.
+  // The window's menus (views::groups: Theme, Colors, and a cascading View menu of whatever applies to this figure) each
+  // re-render a copy of the figure with every choice made so far applied; Reset clears them.
   std::vector<pluss::view::HtmlMenu> menus;
   if (launch) {
-    struct ColorChoice { const char* id; const char* label; };
-    static constexpr ColorChoice choices[] = {
-        {"default", "Default"}, {"deep", "Deep"}, {"muted", "Muted"}, {"pastel", "Pastel"},
-        {"bright", "Bright"}, {"dark", "Dark"}, {"colorblind", "Colorblind"}, {"ocean", "Ocean"}};
-    pluss::view::HtmlMenu menu;
-    menu.id = "colors";
-    menu.title = "Colors";
-    for (const auto& choice : choices) {
-      menu.options.push_back(pluss::view::HtmlMenuOption{choice.id, choice.label});
-    }
-    auto original = std::make_shared<const Studio>(*this);
-    menu.render = [original, window_title, width, height](std::string_view id) {
-      Studio copy = *original;
-      if (id != "default") {
-        std::vector<Rgba> accents = id == "ocean" ? Theme::ocean().accents()
-                                                   : flash::flash_palette(std::string(id)).stops();
-        if (accents.empty()) return std::string{};
-        for (auto& pane : copy.panes_) {
-          for (std::size_t index = 0; index < pane.traces_.size(); ++index) {
-            auto& trace = pane.traces_[index];
-            auto color = accents[index % accents.size()];
-            color.alpha = trace.stroke_color().alpha;  // keep the plot's own opacity
-            trace.stroke(color);
-          }
-        }
-      }
-      return without_page_save_button(svg_embed_html(copy.to_svg(), window_title, width, height));
-    };
-    menus.push_back(std::move(menu));
+    menus = plot_menus_(*this, window_title, width, height);
   }
   if (launch && show_html_window_(without_page_save_button(html), svg_payload, window_title, width, height, std::move(menus))) {
     return true;
@@ -603,6 +643,9 @@ bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) co
   runtime_options.height = window_height;
   if (runtime_options.snapshot_name.empty()) {
     runtime_options.snapshot_name = "plot-view.png";
+  }
+  if (launch && runtime_options.menus.empty()) {
+    runtime_options.menus = plot_menus_(*this, window_title, window_width, window_height);
   }
   runtime_options.svg_payload = svg_payload;
   if (runtime_options.svg_snapshot_name.empty()) {

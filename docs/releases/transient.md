@@ -7,6 +7,9 @@ The latest validated development build. It carries fixes and features that are n
 - The LibTorch bridge (`pluss::series::from_torch` and `Series::tensor()`) now compiles with any include order. `<pluss/pluss.h>` no longer has to come after `<torch/torch.h>`.
 - Apple Silicon is published twice: a CPU-only archive (`Darwin-arm64`) and one with the Apple GPU (MPS) backend (`Darwin-arm64-mps`). Intel Mac, Linux and Windows archives are CPU-only.
 - Training errors from the tagger and entity-recognition stages no longer name an internal function.
+- The plot window has views. Besides Theme, Colors and Save it now has a Reset entry and a View menu with the views that apply to the figure being shown: isolate or focus one series, split a figure into one panel per series, a window onto part of the data, transforms (index to 100, percent change, difference, running total, z-score, scaled 0 to 1, share of total), moving and exponential averages, line, steps, area, stems or points, guides and marks (mean, median, standard-deviation bands, quartiles, extremes, every value), a summary line, a fit line, outliers and density shading for a scatter, bins, density and a curve for a histogram, sort and orientation for bars, log scales, y range, legend, grid, shape and text size. Choices combine, a check mark shows what is in effect, and Reset clears them. The same views are available from code as `pluss::pl::views::groups(figure)` and `pluss::pl::views::apply(figure, choices)`.
+- PlussView draws rotated text (turned axis labels), draws translucent lines and strokes as translucent instead of as pale opaque ones, and the legend of a filled plot (bars, areas, histograms) shows the color that was set.
+- A histogram's bars can be scaled to a density or accumulated: `BucketData::scale`.
 - The PlussView test hook `PLUSSTILS_VIEW_NSEVENTS` posts real mouse events so the hover, drag and double-click paths can be tested without a person at the mouse.
 
 ## Breaking changes

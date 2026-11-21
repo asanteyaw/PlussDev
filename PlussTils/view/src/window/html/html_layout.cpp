@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <optional>
 #include <sstream>
@@ -2772,7 +2773,25 @@ void render_svg_children(Scene& scene, const HtmlNode& node, const SvgViewport& 
         point.x -= layout.width;
       }
       const Color color = paint.fill_enabled ? paint.fill_color : paint.stroke_color;
-      scene.add(TextCommand{point, text, font_px, color, 400, "Helvetica, Arial, sans-serif"});
+      TextCommand command{point, text, font_px, color, 400, "Helvetica, Arial, sans-serif"};
+      if (const std::string* transform = attribute_value(&child, "transform"); transform != nullptr) {
+        // transform="rotate(angle cx cy)": a turned axis label.
+        double angle = 0.0;
+        double cx = 0.0;
+        double cy = 0.0;
+        if (const auto at = transform->find("rotate("); at != std::string::npos) {
+          const int read = std::sscanf(transform->c_str() + at, "rotate(%lf %lf %lf", &angle, &cx, &cy);
+          if (read >= 1 && std::abs(angle) > 1e-9) {
+            if (read < 3) {
+              cx = svg_number_attr(child, "x").value_or(0.0);
+              cy = svg_number_attr(child, "y").value_or(0.0);
+            }
+            command.rotation_deg = angle;
+            command.pivot = map_svg_point(viewport, SvgPointF{cx, cy});
+          }
+        }
+      }
+      scene.add(std::move(command));
       continue;
     }
 

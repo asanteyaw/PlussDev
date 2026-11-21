@@ -345,10 +345,14 @@ struct WhiskData {
   std::optional<Series> ypos;
 };
 
+// How a histogram's bars are scaled: raw counts, a density (the bars' area totals one), or either one accumulated.
+enum class BucketScale : std::uint8_t { Count, Density, Cumulative, CumulativeDensity };
+
 struct BucketData {
   Series values = pluss::series::undefined();
   int bins{12};
   std::optional<Range1d> range;
+  BucketScale scale{BucketScale::Count};
 };
 
 struct QuartetData {
@@ -449,6 +453,10 @@ struct MosaicLayout {
 };
 
 class Pane;
+class Studio;
+namespace detail {
+struct ViewAccess;  // the window's view engine (views.h) rewrites copies of a figure through this
+}
 
 class Trace {
  public:
@@ -487,6 +495,7 @@ class Trace {
 
  private:
   friend class Pane;
+  friend struct detail::ViewAccess;
   TraceKind kind_{TraceKind::Trend};
   TracePayload payload_;
   std::string label_{};
@@ -502,6 +511,7 @@ class Trace {
   bool visible_{true};
   bool stroke_explicit_{false};
   bool width_explicit_{false};
+  std::uint8_t derived_{0};  // drawn by a window view (a fit line, markers), not part of the figure's own data: 1 follows the series it comes from, 2 sits behind it
 };
 
 namespace detail {
@@ -1421,6 +1431,7 @@ class Pane {
 
  private:
   friend class Studio;
+  friend struct detail::ViewAccess;
 
   void ensure_planar_(std::string_view op) const;
   void ensure_volumetric_(std::string_view op) const;
@@ -1532,6 +1543,7 @@ class Studio {
   bool show(const pluss::view::HtmlWindowOptions& options, bool launch = true) const;
 
  private:
+  friend struct detail::ViewAccess;
   std::string name_{};
   std::string headline_{};
   Theme theme_{Theme::paper()};

@@ -369,10 +369,105 @@ bool render_text_command_native(PixelCanvas& canvas,
 }
 #endif
 
+namespace {
+
+// Text turned by `command.rotation_deg` about its pivot: the upright text is drawn black on white into a scratch
+// canvas, and each pixel of the turned result takes its coverage from there (bilinear), blended in the text colour.
+void render_rotated_text(PixelCanvas& canvas,
+                         const TextCommand& command,
+                         const std::optional<RectI>& clip,
+                         std::vector<RenderEvent>& events) {
+  const TextLayout layout = layout_math_text(command.text, command.pixel_size);
+  const int width = std::max(layout.width, measure_text_width_native(command).value_or(layout.width));
+  constexpr int pad = 3;
+  const int ascent = layout.ascent;
+  const int sheet_w = width + 2 * pad;
+  const int sheet_h = layout.ascent + layout.descent + 2 * pad;
+  if (sheet_w <= 0 || sheet_h <= 0 || sheet_w > 4096 || sheet_h > 1024) {
+    return;
+  }
+  PixelCanvas sheet(SizeI{sheet_w, sheet_h});
+  sheet.clear(Color::rgba(255, 255, 255, 255));
+  TextCommand upright = command;
+  upright.rotation_deg = 0.0;
+  upright.anchor = PointI{pad, pad + ascent};
+  upright.color = Color::rgba(0, 0, 0, 255);
+  std::vector<RenderEvent> scratch_events;
+  render_text_command(sheet, upright, std::nullopt, scratch_events);
+  const auto bytes = sheet.bytes();
+  const auto coverage = [&](double u, double v) {
+    const double fu = u - 0.5;
+    const double fv = v - 0.5;
+    const int u0 = static_cast<int>(std::floor(fu));
+    const int v0 = static_cast<int>(std::floor(fv));
+    const double tu = fu - u0;
+    const double tv = fv - v0;
+    const auto at = [&](int x, int y) {
+      if (x < 0 || y < 0 || x >= sheet_w || y >= sheet_h) {
+        return 0.0;
+      }
+      const auto index = (static_cast<std::size_t>(y) * static_cast<std::size_t>(sheet_w) + static_cast<std::size_t>(x)) * 4;
+      return (255.0 - static_cast<double>(bytes[index])) / 255.0;
+    };
+    return at(u0, v0) * (1 - tu) * (1 - tv) + at(u0 + 1, v0) * tu * (1 - tv) + at(u0, v0 + 1) * (1 - tu) * tv +
+           at(u0 + 1, v0 + 1) * tu * tv;
+  };
+
+  const double theta = command.rotation_deg * 3.14159265358979323846 / 180.0;
+  const double c = std::cos(theta);
+  const double s = std::sin(theta);
+  // Where the sheet's corners land, to bound the pixels to visit.
+  const double ox = static_cast<double>(command.anchor.x) - pad;
+  const double oy = static_cast<double>(command.anchor.y) - pad - ascent;
+  double min_x = 1e18;
+  double max_x = -1e18;
+  double min_y = 1e18;
+  double max_y = -1e18;
+  for (const auto& corner : {std::pair{0.0, 0.0}, std::pair{double(sheet_w), 0.0}, std::pair{0.0, double(sheet_h)},
+                              std::pair{double(sheet_w), double(sheet_h)}}) {
+    const double dx = ox + corner.first - command.pivot.x;
+    const double dy = oy + corner.second - command.pivot.y;
+    const double rx = command.pivot.x + dx * c - dy * s;
+    const double ry = command.pivot.y + dx * s + dy * c;
+    min_x = std::min(min_x, rx);
+    max_x = std::max(max_x, rx);
+    min_y = std::min(min_y, ry);
+    max_y = std::max(max_y, ry);
+  }
+  RectI area{static_cast<int>(std::floor(min_x)), static_cast<int>(std::floor(min_y)),
+             static_cast<int>(std::ceil(max_x - min_x)) + 1, static_cast<int>(std::ceil(max_y - min_y)) + 1};
+  const SizeI canvas_size = canvas.size();
+  const int x_begin = std::max(area.x, clip.has_value() ? clip->x : 0);
+  const int y_begin = std::max(area.y, clip.has_value() ? clip->y : 0);
+  const int x_end = std::min({area.x + area.width, canvas_size.width, clip.has_value() ? clip->x + clip->width : canvas_size.width});
+  const int y_end = std::min({area.y + area.height, canvas_size.height, clip.has_value() ? clip->y + clip->height : canvas_size.height});
+  for (int y = y_begin; y < y_end; ++y) {
+    for (int x = x_begin; x < x_end; ++x) {
+      // Undo the turn to find the upright position of this pixel's centre.
+      const double dx = (x + 0.5) - command.pivot.x;
+      const double dy = (y + 0.5) - command.pivot.y;
+      const double ux = command.pivot.x + dx * c + dy * s;
+      const double uy = command.pivot.y - dx * s + dy * c;
+      const double cov = coverage(ux - ox, uy - oy);
+      if (cov > 0.01) {
+        canvas.blend_pixel(PointI{x, y}, command.color,
+                           static_cast<std::uint8_t>(std::clamp(cov * command.color.a, 0.0, 255.0)));
+      }
+    }
+  }
+  (void)events;
+}
+
+} // namespace
+
 void render_text_command(PixelCanvas& canvas,
                          const TextCommand& command,
                          const std::optional<RectI>& clip,
                          std::vector<RenderEvent>& events) {
+  if (command.rotation_deg != 0.0) {
+    render_rotated_text(canvas, command, clip, events);
+    return;
+  }
   const TextLayout layout = layout_math_text(command.text, command.pixel_size);
   if (clip.has_value()) {
     const RectI text_bounds{

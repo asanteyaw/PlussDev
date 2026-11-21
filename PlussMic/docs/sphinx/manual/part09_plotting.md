@@ -212,6 +212,34 @@ This is a useful testing technique. A documentation example, unit test, or CI
 job can verify that a line plot produced two trend traces without having to
 compare rendered pixels.
 
+## Looking at a plot in a window
+
+`show()` on a returned figure opens it in a window:
+
+```cpp
+df.plot().line("date", {"close", "open"}).show();
+```
+
+The window has menus that change how the figure is drawn, without editing the
+program: **Theme** and **Colors** for the look, **View** for the views that
+depend on the figure, **Reset** to return to the original, and **Save** for a
+PNG, PDF or SVG of what is shown. The View menu offers only what makes sense for
+the plot in front of you:
+
+| Figure | What View offers |
+| --- | --- |
+| Several lines | Isolate or focus one series; one panel per series or a grid of panels; a window onto the last part; transforms (index to 100, percent change, difference, running total, z-score, scaled 0 to 1, share); moving and exponential averages with the raw line kept behind; line, steps, filled area, stems or points; guides (mean, median, bands of one or two standard deviations, quartiles, smallest and largest); marks for the highest, lowest and last values; a summary line; legend, grid, shape and text size; log and symmetric-log axes; the y range. |
+| Bars | Sort by size or by label; turn the bars horizontal; mark every value; guides; transforms such as share of total. |
+| Histogram | Automatic or chosen bins; counts, density, cumulative count or cumulative share; a density curve or a normal fit over the bars; guides. |
+| Scatter | Dot size and opacity; points set aside as outliers; shading by local density; a linear, polynomial, robust or smooth fit; the correlation in a summary line. |
+
+Choices from different menus combine (a smoothed index on a log axis is three
+choices), and a check mark shows the choice in effect. The same views are
+available from code through `pluss::pl::views::groups` and
+`pluss::pl::views::apply`, which return the groups that apply to a figure and a
+copy of the figure with a set of choices applied. The PlussPl guide page "The
+plot window" lists every menu and option with a figure for each.
+
 ## A verified plotting example
 
 The following program builds a small frame, creates several 2D and 3D plots,

@@ -52,6 +52,11 @@ inline void set_pixel(PixelCanvas& canvas,
   if (clip.has_value() && !contains(*clip, point)) {
     return;
   }
+  if (color.a < 255) {
+    // A translucent colour mixes with what is there; storing it would leave a pixel that reads as see-through.
+    canvas.blend_pixel(point, color, color.a);
+    return;
+  }
   canvas.set_pixel(point, color);
 }
 
@@ -250,6 +255,85 @@ void draw_thick_line(PixelCanvas& canvas,
   }
 }
 
+// A translucent stroke wider than a pixel: the stroke's coverage is gathered first and blended once, so the overlap of
+// the discs along a path (and of the segments of a polyline) does not pile the colour up into an opaque line.
+void draw_translucent_path(PixelCanvas& canvas,
+                           const std::vector<PointI>& points,
+                           const int thickness,
+                           const Color color,
+                           const std::optional<RectI>& clip) {
+  if (points.empty()) {
+    return;
+  }
+  const int radius = std::max(1, thickness / 2);
+  RectI area = canvas_bounds(canvas);
+  if (clip.has_value()) {
+    area = intersect_rect(area, *clip);
+  }
+  int min_x = points.front().x;
+  int max_x = min_x;
+  int min_y = points.front().y;
+  int max_y = min_y;
+  for (const PointI& p : points) {
+    min_x = std::min(min_x, p.x);
+    max_x = std::max(max_x, p.x);
+    min_y = std::min(min_y, p.y);
+    max_y = std::max(max_y, p.y);
+  }
+  const RectI box = intersect_rect(RectI{min_x - radius, min_y - radius, max_x - min_x + 2 * radius + 1, max_y - min_y + 2 * radius + 1}, area);
+  if (box.empty()) {
+    return;
+  }
+  std::vector<std::uint8_t> covered(static_cast<std::size_t>(box.width) * static_cast<std::size_t>(box.height), 0);
+  const auto stamp = [&](const PointI c) {
+    for (int dy = -radius; dy <= radius; ++dy) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (dx * dx + dy * dy > radius * radius) {
+          continue;
+        }
+        const int x = c.x + dx - box.x;
+        const int y = c.y + dy - box.y;
+        if (x >= 0 && y >= 0 && x < box.width && y < box.height) {
+          covered[static_cast<std::size_t>(y) * static_cast<std::size_t>(box.width) + static_cast<std::size_t>(x)] = 1;
+        }
+      }
+    }
+  };
+  for (std::size_t i = 0; i + 1 < points.size() || (points.size() == 1 && i == 0); ++i) {
+    const PointI a = points[i];
+    const PointI b = points.size() == 1 ? points[i] : points[i + 1];
+    const int dx = std::abs(b.x - a.x);
+    const int dy = std::abs(b.y - a.y);
+    const int sx = a.x < b.x ? 1 : -1;
+    const int sy = a.y < b.y ? 1 : -1;
+    int err = dx - dy;
+    int x = a.x;
+    int y = a.y;
+    while (true) {
+      stamp(PointI{x, y});
+      if (x == b.x && y == b.y) {
+        break;
+      }
+      const int e2 = err * 2;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
+  }
+  for (int y = 0; y < box.height; ++y) {
+    for (int x = 0; x < box.width; ++x) {
+      if (covered[static_cast<std::size_t>(y) * static_cast<std::size_t>(box.width) + static_cast<std::size_t>(x)] != 0) {
+        canvas.blend_pixel(PointI{box.x + x, box.y + y}, color, color.a);
+      }
+    }
+  }
+}
+
 void draw_line(PixelCanvas& canvas,
                const PointI p0,
                const PointI p1,
@@ -258,6 +342,10 @@ void draw_line(PixelCanvas& canvas,
                const std::optional<RectI>& clip) {
   if (clamp_thickness(thickness) == 1) {
     draw_wu_line(canvas, p0, p1, color, clip);
+    return;
+  }
+  if (color.a < 255) {
+    draw_translucent_path(canvas, {p0, p1}, clamp_thickness(thickness), color, clip);
     return;
   }
   draw_thick_line(canvas, p0, p1, thickness, color, clip);
@@ -590,6 +678,10 @@ void draw_polyline(PixelCanvas& canvas, const PolylineCommand& command, const st
     return;
   }
 
+  if (command.color.a < 255 && clamp_thickness(command.thickness) > 1) {
+    draw_translucent_path(canvas, command.points, clamp_thickness(command.thickness), command.color, clip);
+    return;
+  }
   for (std::size_t index = 1; index < command.points.size(); ++index) {
     draw_line(canvas,
               command.points[index - 1],

@@ -81,6 +81,7 @@ struct ShellMenuOption {
   std::string label{};
   std::string id{};
   std::vector<ShellMenuOption> children{};
+  bool checked{false};  // drawn with a check mark (the option in effect)
 };
 
 // A pull-down in the toolbar (e.g. "View", "Theme", "Format"). Choosing an option sends
@@ -115,6 +116,10 @@ class IWindowShell {
   // Asks the window to show `cursor` while the pointer is over it. Default: no-op.
   virtual void set_cursor(ShellCursor cursor) {
     (void)cursor;
+  }
+  // Replaces the check marks of the menus given to open() (same structure, new `checked` flags). Default: no-op.
+  virtual void update_menus(const std::vector<ShellMenu>& menus) {
+    (void)menus;
   }
   // True when open() honours ShellConfig::menus with native controls.
   [[nodiscard]] virtual bool supports_menus() const noexcept {

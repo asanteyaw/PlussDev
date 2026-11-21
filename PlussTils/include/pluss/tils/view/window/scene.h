@@ -81,6 +81,9 @@ struct TextCommand {
   Color color{Color::rgba(32, 32, 32, 255)};
   int font_weight{400};
   std::string font_family{};
+  // Degrees clockwise about `pivot` (an SVG text's transform="rotate(a cx cy)"); 0 draws the text upright.
+  double rotation_deg{0.0};
+  PointI pivot{};
 };
 
 struct TextCaretCommand {

@@ -253,6 +253,26 @@ static void add_menu_options(NSMenu* menu,
   }
 }
 
+// Sets the check mark of each item of `menu` from `options` (same order as add_menu_options built them: an option whose
+// label cannot be encoded was skipped there, which only happens for invalid UTF-8).
+static void mark_menu_options(NSMenu* menu, const std::vector<ShellMenuOption>& options, NSInteger first_item) {
+  NSInteger at = first_item;
+  for (const auto& option : options) {
+    if (at >= [menu numberOfItems]) {
+      return;
+    }
+    NSMenuItem* item = [menu itemAtIndex:at];
+    ++at;
+    if (!option.children.empty()) {
+      if ([item submenu] != nil) {
+        mark_menu_options([item submenu], option.children, 0);
+      }
+      continue;
+    }
+    [item setState:(option.checked ? NSControlStateValueOn : NSControlStateValueOff)];
+  }
+}
+
 class CocoaWindowShell final : public IWindowShell {
  public:
   ~CocoaWindowShell() override { close(); }
@@ -928,6 +948,19 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
   bool supports_menus() const noexcept override { return true; }
+
+  void update_menus(const std::vector<ShellMenu>& menus) override {
+    @autoreleasepool {
+      if (host_ == nil || host_.menu_buttons == nil) {
+        return;
+      }
+      // The buttons were added last menu first (see open()).
+      for (std::size_t index = 0; index < menus.size() && index < [host_.menu_buttons count]; ++index) {
+        NSPopUpButton* button = host_.menu_buttons[menus.size() - 1 - index];
+        mark_menu_options([button menu], menus[index].options, 1);  // item 0 of a pull-down is its title
+      }
+    }
+  }
 
   double backing_scale_factor() const noexcept override {
     @autoreleasepool {

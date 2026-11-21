@@ -54,6 +54,12 @@ struct HtmlMenu {
   // When true the menu is not a toolbar pull-down of its own: it appears as a cascading
   // entry (with an arrow) inside the "View" menu.
   bool in_view_menu{false};
+  // With in_view_menu: groups the cascading entry under a named entry of the View menu (several menus with the
+  // same section share one), so a long list of menus stays browsable. Empty: the cascade sits in View itself.
+  std::string section{};
+  // Returns the id of the option currently in effect, which the menu shows with a check mark; empty means the
+  // first option. Called after every render. Optional.
+  std::function<std::string()> selected{};
 };
 
 struct HtmlWindowOptions {

@@ -1007,32 +1007,59 @@ bool show_inhouse_html_window(const std::string& title,
   // Toolbar menus, left to right: the window-level ones (Theme, ...) and then "View". View
   // lists the page's own view tabs plus any window menu marked `in_view_menu` (e.g.
   // Format) as a cascading entry.
-  std::vector<window::ShellMenu> shell_menus;
-  if (shell->supports_menus()) {
+  // The menu a window-level HtmlMenu becomes: its options, the one in effect checked.
+  const auto menu_options = [&](const HtmlMenu& menu) {
+    std::string current = menu.selected ? menu.selected() : std::string();
+    if (current.empty() && !menu.options.empty()) {
+      current = menu.options.front().id;
+    }
+    std::vector<window::ShellMenuOption> options;
+    for (const auto& option : menu.options) {
+      options.push_back(window::ShellMenuOption{option.label, option.id, {}, menu.selected && option.id == current});
+    }
+    return options;
+  };
+  const auto build_menus = [&]() {
+    std::vector<window::ShellMenu> built;
     window::ShellMenu view_menu{"view", "View", {}};
     collect_view_options(document.root, view_menu.options);
-    const bool has_view_tabs = !view_menu.options.empty();
     for (const auto& menu : menus) {
       if (!menu.render || menu.options.empty()) {
         continue;
       }
-      window::ShellMenuOption cascade{menu.title, menu.id, {}};
-      for (const auto& option : menu.options) {
-        cascade.children.push_back(window::ShellMenuOption{option.label, option.id, {}});
+      if (!menu.in_view_menu) {
+        built.push_back(window::ShellMenu{menu.id, menu.title, menu_options(menu)});
+        continue;
       }
-      if (menu.in_view_menu) {
+      window::ShellMenuOption cascade{menu.title, menu.id, menu_options(menu)};
+      if (menu.section.empty()) {
         view_menu.options.push_back(std::move(cascade));
-      } else {
-        window::ShellMenu shell_menu{menu.id, menu.title, std::move(cascade.children)};
-        shell_menus.push_back(std::move(shell_menu));
+        continue;
       }
-    }
-    if (has_view_tabs) {
-      hide_view_picker(document.root);  // the native "View" menu replaces the in-page picker
+      // A named section groups several cascades into one entry of View.
+      auto section = std::find_if(view_menu.options.begin(), view_menu.options.end(),
+                                  [&](const window::ShellMenuOption& entry) {
+                                    return entry.id == "section:" + menu.section;
+                                  });
+      if (section == view_menu.options.end()) {
+        view_menu.options.push_back(window::ShellMenuOption{menu.section, "section:" + menu.section, {}});
+        section = view_menu.options.end() - 1;
+      }
+      section->children.push_back(std::move(cascade));
     }
     if (!view_menu.options.empty()) {
-      shell_menus.push_back(std::move(view_menu));
+      built.push_back(std::move(view_menu));
     }
+    return built;
+  };
+  std::vector<window::ShellMenu> shell_menus;
+  if (shell->supports_menus()) {
+    window::ShellMenu probe{"view", "View", {}};
+    collect_view_options(document.root, probe.options);
+    if (!probe.options.empty()) {
+      hide_view_picker(document.root);  // the native "View" menu replaces the in-page picker
+    }
+    shell_menus = build_menus();
   }
   std::string last_view_button;  // survives re-renders
   // Selecting a view first fills its panel if that is still empty (views are computed on demand).
@@ -1311,6 +1338,20 @@ bool show_inhouse_html_window(const std::string& title,
         } else {
           std::fprintf(stderr, "[view-script] %s: no such border\n", command.c_str());
         }
+      } else if (command == "menus") {
+        // Test hook: the toolbar menus as the shell was last given them, checked options marked with [x].
+        std::function<void(const std::vector<window::ShellMenuOption>&, int)> print =
+            [&](const std::vector<window::ShellMenuOption>& options, const int depth) {
+              for (const auto& option : options) {
+                std::fprintf(stderr, "[view-script] menu: %*s%s %s\n", depth * 2, "", option.checked ? "[x]" : "[ ]",
+                             option.label.c_str());
+                print(option.children, depth + 1);
+              }
+            };
+        for (const auto& menu : build_menus()) {
+          std::fprintf(stderr, "[view-script] menu: %s\n", menu.title.c_str());
+          print(menu.options, 1);
+        }
       } else if (command == "dump") {
         std::vector<std::string> active;
         collect_active_panels(document.root, active);
@@ -1409,6 +1450,9 @@ bool show_inhouse_html_window(const std::string& title,
             }
             if (!last_view_button.empty()) {
               (void)select_view(last_view_button);
+            }
+            if (shell->supports_menus()) {
+              shell->update_menus(build_menus());  // move the check marks to the choice just made
             }
             needs_render = true;
           }
