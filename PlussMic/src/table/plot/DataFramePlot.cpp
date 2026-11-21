@@ -1086,34 +1086,32 @@ AggregatedBarSeries aggregate_for_bar_ci(const ResolvedPlotAxis& axis,
 DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options)
     : frame_(std::move(frame)), options_(std::move(options)) {}
 
-std::pair<std::string, std::string> DataFramePlotAccessor::default_columns_(std::string_view method) const {
-  // One policy for every call that names no columns: exactly two numeric columns are x then y; a
-  // frame of exactly two columns where one is time or text puts that one on x. Anything else is
-  // ambiguous, so the caller is asked to name the columns.
-  const auto features = frame_.features();
-  std::vector<std::string> numeric;
-  std::vector<std::string> labeled;
-  for (const auto& name : features) {
+DataFramePlotAccessor::DefaultColumns DataFramePlotAccessor::default_columns_(std::string_view method) const {
+  // Naming no columns plots every numeric column. The x-axis is the frame's single time column
+  // when it has exactly one, the accessor's default x feature when one is set, and otherwise the
+  // row labels.
+  DefaultColumns out;
+  std::vector<std::string> time_columns;
+  for (const auto& name : frame_.features()) {
     const auto shelf = frame_.features(name);
     if (shelf.kind() == ShelfKind::Series) {
-      numeric.push_back(name);
-    } else if (shelf_prefers_labeled_axis(shelf)) {
-      labeled.push_back(name);
+      out.y.push_back(name);
+    } else if (shelf.kind() == ShelfKind::Timeline) {
+      time_columns.push_back(name);
     }
   }
-  if (numeric.size() == 2) {
-    return {numeric[0], numeric[1]};
+  if (options_.default_x_feature.has_value()) {
+    const auto x = *options_.default_x_feature;
+    out.y.erase(std::remove(out.y.begin(), out.y.end(), x), out.y.end());
+    out.x = *options_.default_x_feature;
+  } else if (time_columns.size() == 1) {
+    out.x = time_columns.front();
   }
-  if (features.size() == 2 && numeric.size() == 1 && labeled.size() == 1) {
-    return {labeled[0], numeric[0]};
-  }
-  std::string found;
-  for (const auto& name : features) {
-    found += (found.empty() ? "'" : ", '") + name + "'";
-  }
-  PLUSS_FAIL("DataFrame::plot()." + std::string(method) + ": cannot choose the columns automatically (the frame has " +
-             std::to_string(features.size()) + " columns: " + found + ", " + std::to_string(numeric.size()) +
-             " numeric); name them, e.g. plot()." + std::string(method) + "(\"x_column\", \"y_column\")");
+  PLUSS_CHECK(!out.y.empty(),
+              "DataFrame::plot()." + std::string(method) +
+                  ": the frame has no numeric columns to plot; name the columns, e.g. plot()." +
+                  std::string(method) + "(\"x_column\", \"y_column\")");
+  return out;
 }
 
 std::optional<std::string_view> DataFramePlotAccessor::resolve_x_feature(

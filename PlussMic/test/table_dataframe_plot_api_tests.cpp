@@ -429,31 +429,27 @@ void test_corr_methods_and_plot3d() {
 }
 
 void test_default_columns_and_date_axis() {
-  const auto two = DataFrame({
+  const auto three = DataFrame({
       {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
       {"b", Shelf(pluss::make_series(std::vector<double>{4.0, 5.0, 7.0}))},
+      {"c", Shelf(pluss::make_series(std::vector<double>{2.0, 1.0, 0.0}))},
   });
-  const auto fig_default = two.plot().line();
-  expect(fig_default.panes().front().trace_count() == 1, "plot().line() on two numeric columns should draw one trace");
-  expect(two.plot().line("a", "b").to_svg() == fig_default.to_svg(), "line(x, y) should equal the default for two numeric columns");
-  expect(two.plot().line("b", "a").to_svg() != fig_default.to_svg(), "line(x, y) should put the first name on x");
+  expect(three.plot().line().panes().front().trace_count() == 3, "plot().line() should draw every numeric column");
+  expect(three.plot().line("a", "b").panes().front().trace_count() == 1, "line(x, y) should draw one trace");
+  expect(three.plot().line("b", "a").to_svg() != three.plot().line("a", "b").to_svg(), "line(x, y) should put the first name on x");
 
   const auto dated = DataFrame({
       {"date", Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z", "2024-03-01T00:00:00Z"}))},
       {"amount", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
   });
-  expect(dated.plot().line().to_svg().find("2024-02-01") != std::string::npos, "two-column time/numeric frame should plot date on x");
+  expect(dated.plot().line().to_svg().find("2024-02-01") != std::string::npos, "the single time column should be x by default");
   expect(dated.plot().line("amount", "date").to_svg().find("2024-02-01") != std::string::npos,
          "a time column on the y axis should show dates");
 
-  const auto wide = DataFrame({
-      {"a", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-      {"b", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-      {"c", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-  });
+  const auto text_only = DataFrame({{"s", Shelf(pluss::make_note(std::vector<std::string>{"a", "b"}))}});
   bool threw = false;
-  try { (void)wide.plot().line(); } catch (const pluss::Error&) { threw = true; }
-  expect(threw, "plot().line() on three numeric columns should throw and ask for columns");
+  try { (void)text_only.plot().line(); } catch (const pluss::Error&) { threw = true; }
+  expect(threw, "plot().line() with no numeric column should throw and ask for columns");
 }
 
 } // namespace

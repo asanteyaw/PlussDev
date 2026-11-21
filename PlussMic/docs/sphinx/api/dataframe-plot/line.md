@@ -76,18 +76,19 @@ Every 2D chart method that takes an `x_feature` argument resolves it the same wa
 
 See Examples 1, 2, and 3 below for each of these three paths in turn.
 
-### Choosing the columns when none are named
+### Plotting every numeric column
 
-`line()` with no arguments (or with only a `LinePlotOptions`) chooses the columns itself, using
-one rule that every 2D chart method on this accessor shares:
+`line()` with no arguments (or with only a `LinePlotOptions`) draws **every numeric column**, one
+line each, so a wide frame can be plotted without typing its column names. Every 2D chart
+method on this accessor follows the same rule. The x-axis is chosen like this:
 
-1. A frame with **exactly two numeric columns** draws the first as x and the second as y.
-2. A frame of **exactly two columns where one is time or text** and the other numeric puts the
-   time or text column on the x-axis and the numeric column on y.
-3. Anything else is ambiguous, so the call throws a `pluss::Error` that lists the columns it
-   found and asks you to name them.
+1. `options.default_x_feature`, when the accessor has one (that column is then left out of the lines).
+2. Otherwise the frame's **single time column**, when it has exactly one.
+3. Otherwise the frame's row labels.
 
-Naming columns always overrides the rule: the first name is x and the second is y, as in
+A frame with no numeric column throws a `pluss::Error` that asks you to name the columns.
+
+To plot one pair, name them: the first name is x and the second is y, as in
 `line("week", "visits")`. A single name, `line("visits")`, draws that column against the row
 labels. A time column on the y-axis shows dates as its tick labels, not raw numbers.
 
@@ -265,38 +266,40 @@ auto chart = sales.plot().line("month", {"amount", "cost"}, line_options);
 
 ![Output of Example 7](img/line-7.svg)
 
-Example 8. No columns named: two numeric columns are x then y.
+Example 8. No columns named: every numeric column is drawn.
 
 ```cpp
 using namespace pluss::table;
 
-auto trend = DataFrame({
-    {"week",   Shelf(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
-    {"visits", Shelf(pluss::make_series({120.0, 135.0, 128.0, 160.0, 171.0}))},
+auto traffic = DataFrame({
+    {"web",    Shelf(pluss::make_series({120.0, 135.0, 128.0, 160.0, 171.0}))},
+    {"mobile", Shelf(pluss::make_series({80.0, 95.0, 110.0, 130.0, 150.0}))},
+    {"email",  Shelf(pluss::make_series({40.0, 38.0, 45.0, 41.0, 50.0}))},
 });
 
-auto chart = trend.plot().line();
+auto chart = traffic.plot().line();
 chart.show();
 ```
 
-`week` is the first numeric column, so it becomes the x-axis; `visits` is drawn on y.
+Three numeric columns give three lines against the row labels, with a legend.
 
 ![Output of Example 8](img/line-8.svg)
 
-Example 9. A time column and a numeric column: the time column goes on x.
+Example 9. A frame with one time column: that column becomes the x-axis.
 
 ```cpp
-using namespace pluss::table;
-
 auto daily = DataFrame({
     {"date",   Shelf(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z",
                                            "2024-03-01T00:00:00Z", "2024-04-01T00:00:00Z"}))},
     {"amount", Shelf(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {"cost",   Shelf(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
 auto chart = daily.plot().line();
 chart.show();
 ```
+
+`amount` and `cost` are drawn against `date`.
 
 ![Output of Example 9](img/line-9.svg)
 
@@ -311,24 +314,20 @@ chart.show();
 
 ![Output of Example 10](img/line-10.svg)
 
-Example 11. Three numeric columns and no names: the call asks for the columns.
+Example 11. A frame with no numeric column asks for the columns.
 
 ```cpp
-auto wide = DataFrame({
-    {"a", Shelf(pluss::make_series({1.0, 2.0}))},
-    {"b", Shelf(pluss::make_series({3.0, 4.0}))},
-    {"c", Shelf(pluss::make_series({5.0, 6.0}))},
-});
+auto names = DataFrame({{"city", Shelf(pluss::make_note({"Accra", "Kumasi"}))}});
 
 try {
-  auto chart = wide.plot().line();
+  auto chart = names.plot().line();
 } catch (const pluss::Error& e) {
   std::cout << e.message() << "\n";
 }
 ```
 
 ```text
-DataFrame::plot().line: cannot choose the columns automatically (the frame has 3 columns: 'a', 'b', 'c', 3 numeric); name them, e.g. plot().line("x_column", "y_column")
+DataFrame::plot().line: the frame has no numeric columns to plot; name the columns, e.g. plot().line("x_column", "y_column")
 ```
 
 ## Notes

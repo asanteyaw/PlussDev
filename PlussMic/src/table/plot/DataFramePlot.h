@@ -354,8 +354,8 @@ public:
   explicit DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options = {});
 
   // x first, then y: line(x, y) or line(x, {y1, y2}); a single argument is y against the case labels.
-  pluss::pl::Studio line() const { const auto xy = default_columns_("line"); return line_y(std::string_view(xy.second), std::string_view(xy.first), LinePlotOptions{}); }
-  pluss::pl::Studio line(const LinePlotOptions& options) const { const auto xy = default_columns_("line"); return line_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio line() const { const auto cols = default_columns_("line"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return line_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), LinePlotOptions{}); }
+  pluss::pl::Studio line(const LinePlotOptions& options) const { const auto cols = default_columns_("line"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return line_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), options); }
   pluss::pl::Studio line(std::string_view y_feature) const { return line_y(y_feature, std::nullopt); }
   pluss::pl::Studio line(std::string_view x_feature, std::string_view y_feature) const { return line_y(y_feature, x_feature); }
   pluss::pl::Studio line(std::string_view x_feature, std::string_view y_feature, const LinePlotOptions& options) const { return line_y(y_feature, x_feature, options); }
@@ -366,8 +366,8 @@ public:
   pluss::pl::Studio line(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const LinePlotOptions& options) const { return line_y(y_features, x_feature, options); }
   pluss::pl::Studio line(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const LinePlotOptions& options) const { return line_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
   // x first, then y: step(x, y) or step(x, {y1, y2}); a single argument is y against the case labels.
-  pluss::pl::Studio step() const { const auto xy = default_columns_("step"); return step_y(std::string_view(xy.second), std::string_view(xy.first), StepPlotOptions{}); }
-  pluss::pl::Studio step(const StepPlotOptions& options) const { const auto xy = default_columns_("step"); return step_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio step() const { const auto cols = default_columns_("step"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return step_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), StepPlotOptions{}); }
+  pluss::pl::Studio step(const StepPlotOptions& options) const { const auto cols = default_columns_("step"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return step_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), options); }
   pluss::pl::Studio step(std::string_view y_feature) const { return step_y(y_feature, std::nullopt); }
   pluss::pl::Studio step(std::string_view x_feature, std::string_view y_feature) const { return step_y(y_feature, x_feature); }
   pluss::pl::Studio step(std::string_view x_feature, std::string_view y_feature, const StepPlotOptions& options) const { return step_y(y_feature, x_feature, options); }
@@ -378,8 +378,8 @@ public:
   pluss::pl::Studio step(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const StepPlotOptions& options) const { return step_y(y_features, x_feature, options); }
   pluss::pl::Studio step(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const StepPlotOptions& options) const { return step_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
   // x first, then y: area(x, y) or area(x, {y1, y2}); a single argument is y against the case labels.
-  pluss::pl::Studio area() const { const auto xy = default_columns_("area"); return area_y(std::string_view(xy.second), std::string_view(xy.first), AreaPlotOptions{}); }
-  pluss::pl::Studio area(const AreaPlotOptions& options) const { const auto xy = default_columns_("area"); return area_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio area() const { const auto cols = default_columns_("area"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return area_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), AreaPlotOptions{}); }
+  pluss::pl::Studio area(const AreaPlotOptions& options) const { const auto cols = default_columns_("area"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return area_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), options); }
   pluss::pl::Studio area(std::string_view y_feature) const { return area_y(y_feature, std::nullopt); }
   pluss::pl::Studio area(std::string_view x_feature, std::string_view y_feature) const { return area_y(y_feature, x_feature); }
   pluss::pl::Studio area(std::string_view x_feature, std::string_view y_feature, const AreaPlotOptions& options) const { return area_y(y_feature, x_feature, options); }
@@ -390,8 +390,8 @@ public:
   pluss::pl::Studio area(std::string_view x_feature, pluss::msharp::RangeView::Of<std::string_view> y_features, const AreaPlotOptions& options) const { return area_y(y_features, x_feature, options); }
   pluss::pl::Studio area(std::string_view x_feature, std::initializer_list<std::string_view> y_features, const AreaPlotOptions& options) const { return area_y(pluss::msharp::RangeView::Of<std::string_view>(y_features), x_feature, options); }
   // x first, then y: bar(x, y) or bar(x, {y1, y2}); a single argument is y against the case labels.
-  pluss::pl::Studio bar() const { const auto xy = default_columns_("bar"); return bar_y(std::string_view(xy.second), std::string_view(xy.first), BarPlotOptions{}); }
-  pluss::pl::Studio bar(const BarPlotOptions& options) const { const auto xy = default_columns_("bar"); return bar_y(std::string_view(xy.second), std::string_view(xy.first), options); }
+  pluss::pl::Studio bar() const { const auto cols = default_columns_("bar"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return bar_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), BarPlotOptions{}); }
+  pluss::pl::Studio bar(const BarPlotOptions& options) const { const auto cols = default_columns_("bar"); const std::vector<std::string_view> ys(cols.y.begin(), cols.y.end()); return bar_y(pluss::msharp::RangeView::Of<std::string_view>(ys), (cols.x ? std::optional<std::string_view>(std::string_view(*cols.x)) : std::nullopt), options); }
   pluss::pl::Studio bar(std::string_view y_feature) const { return bar_y(y_feature, std::nullopt); }
   pluss::pl::Studio bar(std::string_view x_feature, std::string_view y_feature) const { return bar_y(y_feature, x_feature); }
   pluss::pl::Studio bar(std::string_view x_feature, std::string_view y_feature, const BarPlotOptions& options) const { return bar_y(y_feature, x_feature, options); }
@@ -705,7 +705,11 @@ private:
   [[nodiscard]] std::optional<std::string_view> resolve_hue_feature(std::optional<std::string_view> hue_feature) const;
   [[nodiscard]] std::int64_t resolve_bins(std::int64_t bins) const noexcept;
   void apply_figure_options(pluss::pl::Studio& figure) const;
-  [[nodiscard]] std::pair<std::string, std::string> default_columns_(std::string_view method) const;
+  struct DefaultColumns {
+    std::optional<std::string> x{};
+    std::vector<std::string> y{};
+  };
+  [[nodiscard]] DefaultColumns default_columns_(std::string_view method) const;
 
   DataFrame frame_{};
   DataFramePlotOptions options_{};
