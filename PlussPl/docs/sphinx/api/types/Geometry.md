@@ -38,7 +38,7 @@ pane.y_limits(limits);
 pane.band_y(window, "4 to 6");
 std::cout << "limits " << pane.y_axis().limits->low << " to " << pane.y_axis().limits->high << "\n";
 std::cout << "default Range1d: " << Range1d{}.low << " to " << Range1d{}.high << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ for (int i = 0; i < 2; ++i) {
   if (i == 1) pane.lens().target_at(Vec3d{0.4, 0.0, 0.0});
   std::cout << "target (" << pane.lens().target().x << ", " << pane.lens().target().y << ", " << pane.lens().target().z << ")\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -95,7 +95,7 @@ for (int i = 0; i < 2; ++i) {
   const std::string svg = fig.to_svg();
   const auto at = svg.find("width=\"");
   std::cout << "extent " << e.width << " x " << e.height << ", the SVG begins: " << svg.substr(svg.find("<svg"), 60) << "...\n";
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 std::cout << "default Extent2d: " << Extent2d{}.width << " x " << Extent2d{}.height << "\n";
 ```

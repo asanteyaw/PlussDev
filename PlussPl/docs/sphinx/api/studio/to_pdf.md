@@ -38,7 +38,7 @@ const std::string pdf = fig.to_pdf();
 std::cout << "starts: " << pdf.substr(0, 8) << "\n";
 std::cout << "ends with EOF marker: " << (pdf.rfind("%%EOF") != std::string::npos) << "\n";
 std::cout << "non-empty: " << (pdf.size() > 200) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -49,7 +49,6 @@ ends with EOF marker: 1
 non-empty: 1
 ```
 
-![Output of Example 1](img/to_pdf-1-header.svg)
 
 Example 2. One page of the figure size. The page box in the file is the figure size, so a 600 by 400 figure is a 600 by 400 point page.
 
@@ -60,7 +59,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3})
 const std::string pdf = fig.to_pdf();
 const auto at = pdf.find("/MediaBox");
 std::cout << pdf.substr(at, pdf.find(']', at) - at + 1) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -69,7 +68,6 @@ fig.save_svg("figure.svg");
 /MediaBox [0 0 600.0000 400.0000]
 ```
 
-![Output of Example 2](img/to_pdf-2-page_size.svg)
 
 Example 3. Repeatable, and the same writer as the default engine. Two calls give identical bytes, and they equal what `save_pdf` writes with the default engine.
 
@@ -81,7 +79,7 @@ fig.save_pdf("repeat.pdf");
 std::ifstream in("repeat.pdf", std::ios::binary);
 const std::string file((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 std::cout << "equals save_pdf's file: " << (file == fig.to_pdf()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -91,7 +89,6 @@ same bytes twice: 1
 equals save_pdf's file: 1
 ```
 
-![Output of Example 3](img/to_pdf-3-repeatable.svg)
 
 Example 4. Text stays text. The headline and a pane title are in the file as text, and a math label is split into pieces, with the Greek letters in the symbol font.
 
@@ -104,7 +101,7 @@ std::cout << "headline: " << (pdf.find("(Readable headline) Tj") != std::string:
 std::cout << "pane title: " << (pdf.find("(pane title) Tj") != std::string::npos) << "\n";
 std::cout << "symbol font declared: " << (pdf.find("/BaseFont /Symbol") != std::string::npos) << "\n";
 std::cout << "mu is the symbol glyph m: " << (pdf.find("(m) Tj") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -116,7 +113,6 @@ symbol font declared: 1
 mu is the symbol glyph m: 1
 ```
 
-![Output of Example 4](img/to_pdf-4-text.svg)
 
 Example 5. A figure with no panes is a valid PDF of an empty page.
 
@@ -135,7 +131,6 @@ shown.save_svg("figure.svg");
 valid: 1
 ```
 
-![Output of Example 5](img/to_pdf-5-empty.svg)
 
 ## Notes
 

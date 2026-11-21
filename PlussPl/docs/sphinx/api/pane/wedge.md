@@ -48,7 +48,7 @@ Example 1. Values only: each wedge's angle is its share of the total, starting f
 auto fig = studio("wedge_values");
 auto& pane = fig.pane2("p");
 pane.wedge(std::vector<double>{4, 3, 2, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/wedge-1-values.svg)
@@ -59,7 +59,7 @@ Example 2. Labels name the wedges, in the order of the values.
 auto fig = studio("wedge_labels");
 auto& pane = fig.pane2("p");
 pane.wedge(std::vector<double>{4, 3, 2, 1}, {"rent", "food", "travel", "other"});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/wedge-2-labels.svg)
@@ -70,7 +70,7 @@ Example 3. A third series pulls wedges out of the pie: 0 keeps a wedge in place,
 auto fig = studio("wedge_explode");
 auto& pane = fig.pane2("p");
 pane.wedge(std::vector<double>{4, 3, 2, 1}, std::vector<double>{0, 0, 0.2, 0}, {"rent", "food", "travel", "other"});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/wedge-3-explode.svg)
@@ -88,7 +88,7 @@ std::cout << "same pie: " << (build(1.0) == build(10.0)) << "\n";
 auto fig = studio("wedge_shares_out");
 auto& pane = fig.pane2("p");
 pane.wedge(std::vector<double>{40, 30, 20, 10});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -105,7 +105,7 @@ Example 5. A zero value has no wedge, and a pie of one value is a full circle.
 auto fig = studio("wedge_zero");
 auto& pane = fig.pane2("p");
 pane.wedge(std::vector<double>{5, 0, 3}, {"a", "none", "c"});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/wedge-5-zero.svg)
@@ -130,7 +130,7 @@ report("explode differs", [](Pane& pane) { pane.wedge(std::vector<double>{1, 2, 
 auto fig = studio("wedge_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -155,7 +155,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

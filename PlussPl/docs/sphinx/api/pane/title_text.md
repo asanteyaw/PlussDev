@@ -34,7 +34,7 @@ auto fig = studio("title_text_made");
 auto& pane = fig.pane2("Revenue");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "'" << pane.title_text() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -52,7 +52,7 @@ auto fig = studio("title_text_untitled");
 auto& pane = fig.pane2();
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "empty: " << pane.title_text().empty() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ auto& pane = fig.pane2("old");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.title("new");
 std::cout << pane.title_text() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -92,7 +92,7 @@ for (const char* name : {"north", "south", "east"}) {
 }
 for (const auto& pane : fig.panes()) std::cout << pane.title_text() << " ";
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -52,7 +52,7 @@ for (int i = 0; i < 7; ++i) {
   pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2}).label("baseline");
   pane.legend(places[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/KeyPlace-1-gallery.svg)
@@ -64,7 +64,7 @@ auto fig = studio("key_place_default");
 auto& pane = fig.pane2("No legend call");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("signal");
 std::cout << "legend_place() is None: " << (pane.legend_place() == KeyPlace::None) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -87,7 +87,7 @@ for (KeyPlace place : {KeyPlace::None, KeyPlace::Auto, KeyPlace::NorthEast, KeyP
   std::cout << static_cast<int>(pane.legend_place()) << " ";
 }
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -106,7 +106,7 @@ auto& pane = fig.pane2("One entry");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("labelled");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2});
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/KeyPlace-4-unlabelled.svg)
@@ -122,7 +122,7 @@ for (int k = 1; k <= 9; ++k) {
   pane.trend(x, y).label("series " + std::to_string(k));
 }
 pane.legend(KeyPlace::OutsideEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/KeyPlace-5-outside.svg)

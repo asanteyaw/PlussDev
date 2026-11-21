@@ -24,7 +24,7 @@ std::ifstream in("pdf_out_default/default.pdf", std::ios::binary);
 const std::string file((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 std::cout << "written: " << fs::exists("pdf_out_default/default.pdf") << "\\n";
 std::cout << "equals to_pdf(): " << (file == fig.to_pdf()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="engines", text="The engines. `Auto` and `Internal` write identical files; `SvgConvert` writes a PDF made by the installed converter, so its bytes differ.",
              code="""auto read = [](const std::string& path) {
   std::ifstream in(path, std::ios::binary);
@@ -43,7 +43,7 @@ try {
 } catch (const pluss::Error& e) {
   std::cout << "no converter available: " << e.message() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="folders", text="Folders, overwriting and the extension. Missing folders are created, a second save replaces the file, and `.PDF` is accepted.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("pdf_out_folders");
@@ -56,7 +56,7 @@ fig.save_pdf("pdf_out_folders/x/y/figure.pdf");
 std::cout << "created: " << fs::exists("pdf_out_folders/x/y/figure.pdf") << ", overwritten: " << (fs::file_size("pdf_out_folders/x/y/figure.pdf") != first) << "\\n";
 fig.save_pdf("pdf_out_folders/UPPER.PDF");
 std::cout << "UPPER.PDF: " << fs::exists("pdf_out_folders/UPPER.PDF") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="errors", text="Representative failures. A wrong or missing extension and an empty path are refused before anything is rendered or written, and a path that cannot be written names the path.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("pdf_out_errors");
@@ -72,7 +72,7 @@ for (const char* bad : {"pdf_out_errors/figure.svg", "pdf_out_errors/figure", ""
   }
 }
 std::cout << "files written for the bad paths: " << (fs::exists("pdf_out_errors/figure.svg") || fs::exists("pdf_out_errors/figure")) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Use `SvgConvert` only when the converter's page layout is wanted; it needs a program on the machine, the built-in engines do not.
 - The page is the figure size in points; set it with [`size`](size.md) before saving.""",

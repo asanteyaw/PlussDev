@@ -52,7 +52,7 @@ pane.z_tick_labels(false);
 std::cout << "automatic: " << texts(fig.to_svg()) << "\n";
 pane.x_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
 std::cout << "explicit:  " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -85,7 +85,7 @@ std::vector<double> positions;
 for (std::size_t i = 0; i < names.size(); ++i) positions.push_back(1.0 + static_cast<double>(i));
 pane.x_ticks(positions, names);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -115,7 +115,7 @@ pane.z_tick_labels(false);
 auto positions = pluss::make_series(std::vector<double>{1.0, 4.0}, {2});
 pane.x_ticks(positions, std::vector<std::string_view>{"first", "last"});
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.x_ticks(std::vector<double>{0, 2, 10}, {"zero", "two", "ten"});
 pane.x_limits(Range1d{0.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -180,7 +180,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("x_ticks_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -209,7 +209,7 @@ attempt("no positions", [&] { pane.x_ticks(std::vector<double>{}, {}); });
 attempt("length mismatch", [&] { pane.x_ticks(std::vector<double>{1, 2}, {"only one"}); });
 attempt("not a vector", [&] { pane.x_ticks(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {2, 2}), {"a", "b"}); });
 std::cout << "kept: " << pane.x_axis().ticks->labels.size() << " labels\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

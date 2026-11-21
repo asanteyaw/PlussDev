@@ -26,7 +26,7 @@ const char* names[] = {"Faceted", "Flat", "Smooth"};
 auto fig = studio("shade_gallery");
 fig.mosaic(1, 3);
 for (int i = 0; i < 3; ++i) fig.pane3(names[i]).sheet(coord, coord, z).shade(modes[i]);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="Reading the mode back. The default is `Faceted`; each call stores its mode and returns the trace, so it chains with the other setters.",
              code=SURFACE + """
 
@@ -38,7 +38,7 @@ t.shade(ShadeMode::Smooth).label("surface");
 std::cout << "after shade(Smooth): " << static_cast<int>(t.shade_mode()) << "\\n";
 t.shade(ShadeMode::Flat);
 std::cout << "after shade(Flat):   " << static_cast<int>(t.shade_mode()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="kinds", text="Which kinds answer to the mode. Each is drawn with `Faceted` and with `Smooth` and the SVG text compared: the surface, the pillars of `spire3` and the level surfaces of `isoshell` change; a line, a lattice and a field map do not.",
              code=SURFACE + """
 
@@ -64,7 +64,7 @@ std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(
 std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}); }, false) << "\\n";
 auto fig = studio("shade_kinds_out");
 fig.pane3("spire3, Smooth").spire3(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="lit", text="Shading and lighting combine. With a sun-like light and Gouraud lighting, `Faceted` gives each cell its own tone and `Smooth` a continuous lit surface.",
              code=SURFACE + """
 
@@ -77,7 +77,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(modes[i]).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `shade` is `noexcept` and accepts every value.
 - On a very fine grid the cells are smaller than the eye can resolve and the three modes converge.""",

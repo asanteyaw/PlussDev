@@ -43,7 +43,7 @@ std::cout << "after Vertical: " << name(fig.legend_shape()) << "\n";
 fig.legend_shape(KeyShape::Horizontal);
 std::cout << "after Horizontal: " << name(fig.legend_shape()) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -68,7 +68,7 @@ auto build = [](KeyShape shape) {
   return fig;
 };
 std::cout << "east: Auto == Vertical: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Vertical).to_svg()) << ", Auto == Horizontal: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Horizontal).to_svg()) << "\n";
-build(KeyShape::Vertical).save_svg("figure.svg");
+build(KeyShape::Vertical).show();
 ```
 
 ### Output
@@ -87,7 +87,7 @@ fig.size(900.0, 420.0);
 fig.legend(KeyDock::East).legend_shape(KeyShape::Horizontal);
 auto& pane = fig.pane2("p");
 for (int i = 0; i < 8; ++i) pane.trend(std::vector<double>{0, 1}, std::vector<double>{double(i), double(i + 1)}).label("series " + std::to_string(i));
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/legend_shape-3-east_horizontal.svg)
@@ -104,7 +104,7 @@ auto build = [](KeyShape shape) {
   return fig;
 };
 std::cout << "south: Auto == Horizontal: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Horizontal).to_svg()) << ", Auto == Vertical: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Vertical).to_svg()) << "\n";
-build(KeyShape::Auto).save_svg("figure.svg");
+build(KeyShape::Auto).show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ auto build = [](KeyShape shape) {
   return fig;
 };
 std::cout << "Horizontal == Vertical: " << (build(KeyShape::Horizontal).to_svg() == build(KeyShape::Vertical).to_svg()) << "\n";
-build(KeyShape::Horizontal).save_svg("figure.svg");
+build(KeyShape::Horizontal).show();
 ```
 
 ### Output
@@ -151,7 +151,7 @@ auto build = [](bool set_shape) {
 std::cout << "same figure: " << (build(true) == build(false)) << "\n";
 auto fig = studio("legend_shape_nolegend_out");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

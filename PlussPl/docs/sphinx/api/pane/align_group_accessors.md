@@ -36,7 +36,7 @@ auto fig = studio("accessors_new");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "', z '" << pane.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -55,7 +55,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 pane.align_x("columns").align_y("rows").align_z("depth");
 std::cout << pane.x_align_group() << " " << pane.y_align_group() << " " << pane.z_align_group() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ for (int i = 0; i < 4; ++i) {
 for (const auto& pane : fig.panes()) {
   std::cout << pane.title_text() << ": '" << pane.x_align_group() << "'\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -106,7 +106,7 @@ auto& second = fig.pane2("second");
 second.trend(std::vector<double>{0, 10, 20}, std::vector<double>{0, 10, 0});
 second.align_x(std::string(first.x_align_group())).align_y(std::string(first.y_align_group()));
 std::cout << "second: '" << second.x_align_group() << "' '" << second.y_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

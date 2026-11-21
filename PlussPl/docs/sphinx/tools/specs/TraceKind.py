@@ -58,13 +58,13 @@ auto name = [](TraceKind k) {
   std::cout << "cloud3:  " << name(pane.cloud3(x, y, x).kind()) << "\\n";
   std::cout << "path3:   " << name(pane.path3(x, y, x).kind()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="wrong_pane", text="The kind decides the pane. A 3D kind on a planar pane and a 2D kind on a volumetric pane are refused with `pluss::Error`, and the message names the method.",
              code="""auto fig = studio("trace_kind_wrong_pane");
 const std::vector<double> x{1, 2, 3}, y{2, 4, 3};
 try { fig.pane2("planar").cloud3(x, y, x); } catch (const pluss::Error& e) { std::cout << e.message() << "\\n"; }
 try { fig.pane3("volumetric").trend(x, y); } catch (const pluss::Error& e) { std::cout << e.message() << "\\n"; }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="payload", text="The payload follows the kind. A `Trend` holds `TrendData` (x and y series), a `Violin` holds `ViolinData` (with its options), and `std::holds_alternative` tells them apart, which is how code that draws or exports a trace dispatches on it.",
              code="""auto fig = studio("trace_kind_payload");
 auto& pane = fig.pane2("payload");
@@ -77,7 +77,7 @@ const std::vector<double> x{1, 2, 3, 4}, y{2, 4, 3, 5};
   Trace& v = pane.violin(y);
   std::cout << "violin: ViolinData " << std::holds_alternative<ViolinData>(v.payload()) << ", inner Box " << (std::get<ViolinData>(v.payload()).options.inner == ViolinInner::Box) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="surface_options", text="Which options a kind answers to. The same shade call on a `Trend` and on a `Sheet`: on the line nothing changes (the two SVG texts are equal), on the surface the figure changes. Style calls for a different kind than the trace are stored but have no visible effect.",
              code="""constexpr std::int64_t n = 10;
 auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
@@ -102,7 +102,7 @@ std::cout << "line: Faceted == Smooth: " << (line[0] == line[1]) << "\\n";
 std::cout << "sheet: Faceted == Smooth: " << (surface[0] == surface[1]) << "\\n";
 auto fig = studio("kind_options_out");
 fig.pane3("surface").sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `Band` is the kind of an internal shaded band and has no public creation method; bands you add yourself are cues ([`Cues`](Cues.md)).
 - A trace's kind never changes after it is created.

@@ -27,13 +27,12 @@ auto fig = studio("pdf_engine");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 const std::string dir = std::filesystem::temp_directory_path().string() + "/pdf_engine_";
 auto read = [](const std::string& path) { std::ifstream in(path, std::ios::binary); return std::string(std::istreambuf_iterator<char>(in), {}); };
-fig.save_pdf(dir + "auto.pdf", PdfEngine::Auto);
-fig.save_pdf(dir + "internal.pdf", PdfEngine::Internal);
-fig.save_pdf(dir + "default.pdf");
+fig.show();
+fig.show();
 const std::string a = read(dir + "auto.pdf"), b = read(dir + "internal.pdf"), c = read(dir + "default.pdf");
 std::cout << "starts with " << a.substr(0, 8) << "\n";
 std::cout << "Auto == Internal: " << (a == b) << ", default argument == Auto: " << (a == c) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -52,11 +51,11 @@ auto fig = studio("pdf_engine_string");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 const std::string pdf = fig.to_pdf();
 const std::string path = std::filesystem::temp_directory_path().string() + "/pdf_engine_string.pdf";
-fig.save_pdf(path, PdfEngine::Internal);
+fig.show();
 std::ifstream in(path, std::ios::binary);
 const std::string file(std::istreambuf_iterator<char>(in), {});
 std::cout << "to_pdf() starts with " << pdf.substr(0, 8) << ", equals the saved file: " << (pdf == file) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -74,7 +73,7 @@ auto fig = studio("pdf_engine_convert");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 const std::string path = std::filesystem::temp_directory_path().string() + "/pdf_engine_convert.pdf";
 try {
-  fig.save_pdf(path, PdfEngine::SvgConvert);
+  fig.show();
   std::ifstream in(path, std::ios::binary);
   std::string head(8, ' ');
   in.read(head.data(), 8);
@@ -82,7 +81,7 @@ try {
 } catch (const pluss::Error& e) {
   std::cout << "no converter: " << e.message() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,13 +99,13 @@ auto fig = studio("pdf_engine_extension");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 for (PdfEngine engine : {PdfEngine::Internal, PdfEngine::SvgConvert}) {
   try {
-    fig.save_pdf(std::filesystem::temp_directory_path().string() + "/figure.svg", engine);
+    fig.show();
   } catch (const pluss::Error& e) {
     const std::string message = e.message();
     std::cout << message.substr(0, message.find('\n')) << "\n";
   }
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

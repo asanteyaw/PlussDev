@@ -115,7 +115,7 @@ opts.rot_yz_deg = 15.0;
 opts.rot_zw_deg = 24.0;
 opts.w_perspective_distance = 3.6;
 flash::path4(pane, hx, hy, hz, hw, opts).label("animate4_example1_companion");
-fig.save_svg("/tmp/animate4_example1_companion.svg");
+fig.show();
 std::cout << "saved /tmp/animate4_example1_companion.svg\n";
 ```
 
@@ -188,7 +188,7 @@ opts.w_perspective_distance = 3.6;
 opts.w_slice = pluss::Range1d{-0.42, 0.42};
 opts.point_size = 10.0;
 flash::cloud4(pane, hx, hy, hz, hw, opts).label("animate4_example2_companion");
-fig.save_svg("/tmp/animate4_example2_companion.svg");
+fig.show();
 std::cout << "saved /tmp/animate4_example2_companion.svg\n";
 ```
 

@@ -42,7 +42,7 @@ fig.row_title(0, "2024").row_title(1, "2025");
 const char* names[] = {"north", "south", "north", "south"};
 for (const char* name : names) fig.pane2(name).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "titles stored: " << fig.row_titles().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -62,7 +62,7 @@ fig.row_title(0, "draft").row_title(1, "keep");
 fig.row_title(0, "final");
 std::cout << "row 0: " << fig.row_titles().at(0) << ", row 1: " << fig.row_titles().at(1) << ", entries: " << fig.row_titles().size() << "\n";
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ auto fig = studio("row_title_norow_out");
 fig.mosaic(6, 1);
 fig.row_title(5, "far away");
 for (int i = 0; i < 6; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ auto build = [](bool empty_title) {
 };
 auto with = build(true), without = build(false);
 std::cout << "same figure: " << (with.to_svg() == without.to_svg()) << ", entries stored: " << with.row_titles().size() << "\n";
-without.save_svg("figure.svg");
+without.show();
 ```
 
 ### Output
@@ -133,7 +133,7 @@ fig.headline("A headline long enough that it has to wrap onto a second line of t
 fig.mosaic(2, 1);
 fig.row_title(0, "first row").row_title(1, "second row");
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/row_title-5-headline.svg)
@@ -151,7 +151,7 @@ try {
 }
 std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\n";
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

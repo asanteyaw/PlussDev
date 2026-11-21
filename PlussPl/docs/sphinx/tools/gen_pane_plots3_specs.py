@@ -53,11 +53,11 @@ def path3():
            f"""{head3('path3_helix')}
 {HELIX}
 pane.path3(hx, hy, hz);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("broadcast", "A single value is repeated: this path stays in the plane z = 0.5.",
            f"""{head3('path3_broadcast')}
 pane.path3(std::vector<double>{{0, 1, 1, 0, 0}}, std::vector<double>{{0, 0, 1, 1, 0}}, std::vector<double>{{0.5}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two", "Several paths on one pane, each with its own call and its own colour.",
            f"""{head3('path3_two')}
 {HELIX}
@@ -66,7 +66,7 @@ std::vector<double> sx, sy, sz;
 for (std::size_t i = 0; i < hx.size(); ++i) {{ sx.push_back(0.5 * hx[i]); sy.push_back(0.5 * hy[i]); sz.push_back(hz[i]); }}
 pane.path3(sx, sy, sz).label("inner");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("view", "The view is the pane's [`lens`](lens.md). The same path seen from the side and from above.",
            f"""auto fig = studio("path3_view");
 fig.mosaic(1, 2);
@@ -77,7 +77,7 @@ side.lens().look(0.0, 5.0);
 auto& above = fig.pane3("above");
 above.path3(hx, hy, hz);
 above.lens().look(0.0, 85.0);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("path3", [("lengths differ", "pane.path3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})")], planar=False),
         wrong_kind("path3", "pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1})", planar=False),
     ]
@@ -100,20 +100,20 @@ def cloud3():
            f"""{head3('cloud3_plain')}
 {HELIX}
 pane.cloud3(hx, hy, hz);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("size", "A fourth series gives each marker its own size: here they grow along the helix.",
            f"""{head3('cloud3_size')}
 {HELIX}
 std::vector<double> size;
 for (std::size_t i = 0; i < hx.size(); ++i) size.push_back(10.0 + 2.0 * i);
 pane.cloud3(hx, hy, hz, size);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color", "A fifth series colours the markers through the palette, with the guide to say what the colours mean. A single size keeps the markers equal.",
            f"""{head3('cloud3_color')}
 {HELIX}
 pane.cloud3(hx, hy, hz, std::vector<double>{{3}}, hz);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("scalar", "A single size or colour is repeated for every point.",
            f"""auto build = [&](double size) {{
   auto fig = studio("cloud3_scalar");
@@ -124,7 +124,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "size 50 != size 150: " << (build(50.0) != build(150.0)) << "\\n";
 {head3('cloud3_scalar_out')}
 pane.cloud3(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 1, 0}}, std::vector<double>{{0, 1, 2}}, std::vector<double>{{150}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("cloud3", [("z differs", "pane.cloud3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})"),
                           ("size differs", "pane.cloud3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})")], planar=False),
         wrong_kind("cloud3", "pane.cloud3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1})", planar=False),
@@ -158,29 +158,29 @@ def spire3():
            f"""{head3('spire3_z')}
 {sp}
 pane.spire3(z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("yz", "With `y` given, the rows stand at those positions; the columns keep the positions 1, 2, 3.",
            f"""{head3('spire3_yz')}
 {sp}
 pane.spire3(std::vector<double>{{0, 5, 10}}, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("xyz", "Both coordinates given: bars on a grid of your own spacing.",
            f"""{head3('spire3_xyz')}
 {sp}
 pane.spire3(std::vector<double>{{0, 1, 4}}, std::vector<double>{{0, 2, 3}}, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color", "A fourth argument colours the bars by another quantity, a matrix of the same shape as `z`. Here the bars are coloured by a matrix running the other way from their heights.",
            f"""{head3('spire3_color')}
 {sp}
 auto c = pluss::series::linspace(1.0, 0.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}});
 pane.spire3(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 1, 2}}, z, c);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("negative", "Bars go down from zero for negative values.",
            f"""{head3('spire3_negative')}
 auto z = pluss::make_series(std::vector<double>{{2, -1, 3, -2, 1, 2, 0, 3, -3}}, {{3, 3}});
 pane.spire3(z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("spire3", [("z is not a matrix", "pane.spire3(std::vector<double>{1, 2, 3})"),
                           ("coordinates do not match z", "auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.spire3(std::vector<double>{1, 2}, std::vector<double>{1, 2, 3}, z)")], planar=False),
         wrong_kind("spire3", "pane.spire3(pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}))", planar=False),
@@ -220,7 +220,7 @@ def surface(slug):
            f"""{head3(slug + '_bump')}
 {BUMP}
 pane.{slug}(axis, axis, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color", f"A fourth argument colours {'the surface' if sheet else 'the lines'} by another quantity: here the field is drawn as it is and coloured by a matrix that runs the other way, so high ground is shown in low colours. The colours of the two figures differ.",
            f"""auto build = [&](bool with_color) {{
   auto fig = studio("{slug}_color");
@@ -237,19 +237,19 @@ std::cout << "colour series changes the figure: " << (build(true) != build(false
 auto c = pluss::series::linspace(1.0, 0.0, n * n, pluss::ScalarType::Float64).reshape({{n, n}});
 pane.{slug}(axis, axis, z, c);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("coarse", f"A small grid shows the structure: a 3 by 3 field is four cells {'of a mesh' if sheet else 'of wire'}.",
            f"""{head3(slug + '_coarse')}
 {GRID}
 pane.{slug}(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 1, 2}}, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("matrices", "Coordinates can be full matrices, one value for each grid point, for grids that are not rectangular. Here the grid is sheared: each row is shifted along x.",
            f"""{head3(slug + '_matrices')}
 {GRID}
 auto x = pluss::make_series(std::vector<double>{{0, 1, 2, 0.5, 1.5, 2.5, 1, 2, 3}}, {{3, 3}});
 auto y = pluss::make_series(std::vector<double>{{0, 0, 0, 1, 1, 1, 2, 2, 2}}, {{3, 3}});
 pane.{slug}(x, y, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("view", "Seen from other sides: the lens turns the picture and nothing else.",
            f"""auto fig = studio("{slug}_view");
 fig.mosaic(1, 3);
@@ -260,7 +260,7 @@ for (int i = 0; i < 3; ++i) {{
   pane.{slug}(axis, axis, z);
   pane.lens().look(views[i][0], views[i][1]);
 }}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors(slug, [("coordinates do not match z", f"auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}); pane.{slug}(std::vector<double>{{1, 2}}, std::vector<double>{{1, 2, 3}}, z)"),
                       ("colour has another shape", f"auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}); auto c = pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({{2, 2}}); pane.{slug}(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z, c)")], planar=False),
         wrong_kind(slug, f"pane.{slug}(std::vector<double>{{0, 1}}, std::vector<double>{{0, 1}}, pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({{2, 2}}))", planar=False),
@@ -271,7 +271,7 @@ fig.save_svg("figure.svg");"""),
 {BUMP}
 pane.sheet(axis, axis, z).shade(ShadeMode::Smooth).lighting(LightingMode::Flat);
 pane.lights().lamp_right();
-fig.save_svg("figure.svg");"""))
+fig.show();"""))
     else:
         ex_.insert(2, ex("color_reversed", "The colour matrix really does colour the wires: reversing it reverses the colours of the lines, so the two figures differ. (A colour matrix that is a linear rescaling of `z` gives the same colours as none, because colours depend on where a value sits in its own range.)",
                          f"""auto build = [&](double from, double to) {{
@@ -287,7 +287,7 @@ std::cout << "reversed colours differ: " << (build(5000.0, 0.0) != build(0.0, 1.
 {head3('lattice_reversed_out')}
 {GRID}
 pane.lattice(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 1, 2}}, z, pluss::series::linspace(1.0, 0.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}));
-fig.save_svg("figure.svg");"""))
+fig.show();"""))
     write(slug, dict(
         slug=slug, title=f"Pane::{slug}",
         signature=f"template <class X, class Y, class Z>\nTrace& Pane::{slug}(X&& x, Y&& y, Z&& z)\ntemplate <class X, class Y, class Z, class C>\nTrace& Pane::{slug}(X&& x, Y&& y, Z&& z, C&& c)",
@@ -320,28 +320,28 @@ def ridge3():
            f"""{head3('ridge3_default')}
 {BUMP}
 pane.ridge3(axis, axis, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("count", "An integer is a number of levels: three give a coarse picture.",
            f"""{head3('ridge3_count')}
 {BUMP}
 pane.ridge3(axis, axis, z, 3);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("levels", "A container is a list of levels: here the lines at 0.2, 0.6 and 1.0.",
            f"""{head3('ridge3_levels')}
 {BUMP}
 pane.ridge3(axis, axis, z, std::vector<double>{{0.2, 0.6, 1.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("with_sheet", "On the surface they came from: a [`sheet`](sheet.md) and its contour lines on one pane. The lines follow the surface because each is drawn at its own height.",
            f"""{head3('ridge3_with_sheet')}
 {BUMP}
 pane.sheet(axis, axis, z).transparent(true);
 pane.ridge3(axis, axis, z, 6);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("annotate", "The value of each level can be written on its line with [`Trace::annotate_levels`](../trace/annotate_levels.md).",
            f"""{head3('ridge3_annotate')}
 {BUMP}
 pane.ridge3(axis, axis, z, 4).annotate_levels(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("ridge3", [("no levels", "auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.ridge3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z, 0)"),
                           ("z is not a matrix", "pane.ridge3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3})")], planar=False),
         wrong_kind("ridge3", "pane.ridge3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}))", planar=False),
@@ -379,32 +379,32 @@ def isoshell():
            f"""{head3('isoshell_default')}
 {FIELD3}
 pane.isoshell(field);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("count", "A count of levels: two shells show the inside of the nest.",
            f"""{head3('isoshell_count')}
 {FIELD3}
 pane.isoshell(field, 2);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("coordinates", "With coordinates of your own the field is placed in space: the axes run from -1 to 1 here, so the shells are placed around the origin and the axes are labelled in those units.",
            f"""{head3('isoshell_coordinates')}
 {FIELD3}
 pane.isoshell(axis, axis, axis, field);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("coordinates_count", "Coordinates and a count of levels.",
            f"""{head3('isoshell_coordinates_count')}
 {FIELD3}
 pane.isoshell(axis, axis, axis, field, 3);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("levels", "Explicit levels, in a container: the shells at the squared distances 0.2 and 0.8.",
            f"""{head3('isoshell_levels')}
 {FIELD3}
 pane.isoshell(axis, axis, axis, field, std::vector<double>{{0.2, 0.8}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("transparent", "The shells hide one another. A transparent trace shows the inner ones through the outer.",
            f"""{head3('isoshell_transparent')}
 {FIELD3}
 pane.isoshell(field, 3).transparent(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("isoshell", [("values are not a field", "pane.isoshell(pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}))"),
                             ("no levels", "pane.isoshell(pluss::series::linspace(0.0, 1.0, 27, pluss::ScalarType::Float64).reshape({3, 3, 3}), 0)")], planar=False),
         wrong_kind("isoshell", "pane.isoshell(pluss::series::linspace(0.0, 1.0, 8, pluss::ScalarType::Float64).reshape({2, 2, 2}))", planar=False),

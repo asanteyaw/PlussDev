@@ -50,7 +50,7 @@ pane.z_tick_format(TickFormat::Percent);
 std::cout << "after Percent: " << static_cast<int>(pane.z_axis().tick_format) << "\n";
 pane.z_tick_format(TickFormat::Auto);
 std::cout << "back to Auto: " << static_cast<int>(pane.z_axis().tick_format) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ auto fig = studio("z_format_small_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0.0, 0.25, 0.5, 1.0});
 pane.z_tick_format(TickFormat::Percent);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ auto fig = studio("z_format_large_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{0, 1, 0, 1, 0}, std::vector<double>{1200, 34000, 560000, 7800000, 9000000});
 pane.z_tick_format(TickFormat::Scientific);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -163,7 +163,7 @@ std::cout << "same format twice: " << (build(TickFormat::Percent) == build(TickF
 auto fig = studio("z_format_distinct_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0.0, 0.25, 0.5, 1.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -194,7 +194,7 @@ pane.y_tick_labels(false);
 pane.z_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
 pane.z_tick_format(TickFormat::Percent);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

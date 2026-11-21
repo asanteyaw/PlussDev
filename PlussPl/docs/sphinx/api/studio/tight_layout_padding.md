@@ -39,7 +39,7 @@ std::cout << "tight_layout(): " << fig.tight_layout_padding() << "\n";
 fig.tight_layout(true, 0.0);
 std::cout << "zero is allowed: " << fig.tight_layout_padding() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ std::cout << "0 vs 6: " << (build(0.0) != build(6.0)) << ", 6 vs 24: " << (build
 auto fig = studio("tight_padding_effect_out");
 fig.tight_layout(true, 24.0);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ auto build = [](bool store_padding) {
 std::cout << "padding stored, layout off == untouched figure: " << (build(true) == build(false)) << "\n";
 auto fig = studio("tight_padding_off_out");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -115,7 +115,7 @@ for (double bad : {-1.0, inf, std::numeric_limits<double>::quiet_NaN()}) {
 }
 std::cout << "still " << fig.tight_layout_padding() << ", enabled: " << fig.tight_layout_enabled() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -38,7 +38,7 @@ std::cout << "before: '" << pane.y_axis().label << "'\n";
 pane.y_label("Elapsed time (s)");
 std::cout << "after: '" << pane.y_axis().label << "'\n";
 std::cout << "drawn: " << (fig.to_svg().find(">Elapsed time (s)<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -68,7 +68,7 @@ auto fig = studio("y_label_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.y_label("Final label");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -92,7 +92,7 @@ pane.align_y("group");
 fig.y_caption("group", "Shared caption");
 const std::string svg = fig.to_svg();
 std::cout << "title: " << (svg.find(">Pane title<") != std::string::npos) << ", label: " << (svg.find(">Axis label<") != std::string::npos) << ", caption: " << (svg.find(">Shared caption<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ pane.y_label("this axis only");
 std::cout << "x: '" << pane.x_axis().label << "', y: '" << pane.y_axis().label << "', z: '" << pane.z_axis().label << "'\n";
 pane.x_label("x text").y_label("y text").z_label("z text");
 std::cout << "all set: '" << pane.x_axis().label << "', '" << pane.y_axis().label << "', '" << pane.z_axis().label << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -134,7 +134,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.y_label("$\\sigma_t$ (volatility)");
 const std::string svg = fig.to_svg();
 std::cout << "raw markup drawn: " << (svg.find("$\\sigma_t$") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

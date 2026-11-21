@@ -17,7 +17,7 @@ The text is read when the figure is rendered, so `headline` can be called before
 fig.headline("Quarterly revenue trend");
 fig.pane2("revenue").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 std::cout << "stored: " << fig.headline_text() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="replace_clear", text="Replacing and removing. A second call replaces the text, and an empty string removes it; the figure with the headline removed is exactly the figure that never had one.",
              code="""auto build = [](const char* first, const char* second) {
   auto fig = studio("headline_replace");
@@ -30,7 +30,7 @@ auto replaced = build("first", "second");
 std::cout << "after two calls: " << replaced.headline_text() << "\\n";
 std::cout << "empty string == never set: " << (build("first", "").to_svg() == build(nullptr, nullptr).to_svg()) << "\\n";
 std::cout << "only spaces == never set:  " << (build("  \\n  ", nullptr).to_svg() == build(nullptr, nullptr).to_svg()) << "\\n";
-replaced.save_svg("figure.svg");"""),
+replaced.show();"""),
         dict(id="wrap", text="A long headline wraps. At 700 points wide the text is broken at word boundaries, centred line by line, and the pane moves down to make room; nothing is cut off.",
              code="""auto fig = studio("headline_wrap");
 fig.size(700.0, 320.0);
@@ -39,7 +39,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3})
 const std::string svg = fig.to_svg();
 std::cout << "whole text in one element: " << (svg.find(">A very long headline that keeps going and going well past the width of the figure so that it cannot possibly fit on a single line of this size<") != std::string::npos) << "\\n";
 std::cout << "the last words are drawn: " << (svg.find("of this size<") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="lines", text="Explicit line breaks. A `\\n` starts a new line, each line is its own text element, and the extra height pushes the pane down by the same amount a wrapped headline would.",
              code="""auto build = [](const char* headline) {
   auto fig = studio("headline_lines");
@@ -54,7 +54,7 @@ std::cout << "taller headline moves the pane: " << (build("one line") != two) <<
 auto fig = studio("headline_lines_out");
 fig.headline("Sales by region\\nFiscal year 2025");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="limits", text="Every line is drawn. Six explicit lines are all drawn and the pane moves down for each of them; a headline of only math is not wrapped, and one of only white space takes no room.",
              code="""auto lines_drawn = [](const std::string& headline) {
   auto fig = studio("headline_limits");
@@ -69,14 +69,14 @@ std::cout << "six explicit lines, lines drawn: " << lines_drawn("one\\ntwo\\nthr
 auto fig = studio("headline_math");
 fig.headline("$\\\\mu + \\\\sigma$ per period");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="independent", text="Independent of the name. `rename` changes only the figure's bookkeeping name, the headline is the only text drawn at the top, and the two can be chained.",
              code="""auto fig = studio("headline_name");
 fig.rename("report").headline("Visible title");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const std::string svg = fig.to_svg();
 std::cout << name_and_headline(fig) << "\\n";
-fig.save_svg("figure.svg");""".replace("name_and_headline(fig)", 'fig.name() + " / " + fig.headline_text() + ", name drawn: " + std::to_string(svg.find(">report<") != std::string::npos)')),
+fig.show();""".replace("name_and_headline(fig)", 'fig.name() + " / " + fig.headline_text() + ", name drawn: " + std::to_string(svg.find(">report<") != std::string::npos)')),
     ],
     notes="""- The headline takes room only when it draws something; the figure of a whitespace-only headline equals the figure with none.
 - The headline is figure state read at render time, so its position in the call order does not matter.

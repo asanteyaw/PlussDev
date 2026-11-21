@@ -45,7 +45,7 @@ std::cout << "after y_limits: "; show();
 pane.auto_y();
 std::cout << "after auto_y: "; show();
 pane.y_limits(Range1d{-2.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ auto fig = studio("y_limits_effect_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.y_limits(Range1d{-2.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 2, 1, 3, 2, 4, 3}, std::vector<double>{0, 1, 2, 3, 4, 5, 6});
 pane.y_limits(Range1d{1.0, 3.0});
 std::cout << "range: " << pane.y_axis().limits->low << " .. " << pane.y_axis().limits->high << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -129,7 +129,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("y_limits_auto_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -157,7 +157,7 @@ for (const Range1d& range : bad) {
   }
 }
 std::cout << "kept: " << pane.y_axis().limits->low << " .. " << pane.y_axis().limits->high << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -195,7 +195,7 @@ try {
 } catch (const pluss::Error& e) {
   std::cout << "limits first, then log10: " << e.message() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

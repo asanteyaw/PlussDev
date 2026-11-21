@@ -59,7 +59,7 @@ auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 pane.scale_guide(true);
 std::cout << "default is Tight: " << (pane.color_axis().limit_method == LimitMethod::Tight) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -95,7 +95,7 @@ auto fig = studio("color_method_tick");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 pane.scale_guide(true).color_limit_method(LimitMethod::TickAligned);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -130,7 +130,7 @@ auto fig = studio("color_method_padded");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 pane.scale_guide(true).color_limit_method(LimitMethod::Padded);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -157,7 +157,7 @@ std::cout << "tight != aligned: " << (tight != aligned) << ", tight != padded: "
 auto fig = studio("color_method_three");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -184,7 +184,7 @@ auto fig = studio("color_method_manual_out");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 pane.color_limits(Range1d{0.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -210,7 +210,7 @@ auto fig = studio("color_method_field_out");
 auto& pane = fig.pane2("p");
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, pluss::series::linspace(0.13, 0.97, 9, pluss::ScalarType::Float64).reshape({3, 3}));
 pane.scale_guide(true).color_limit_method(LimitMethod::TickAligned);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -38,7 +38,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 pane.align_xyz("g");
 std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "', z '" << pane.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -60,7 +60,7 @@ for (int i = 0; i < 2; ++i) {
   pane.path3(std::vector<double>{0, s, 0}, std::vector<double>{0, s, 2 * s}, std::vector<double>{0, s, 3 * s});
   pane.align_xyz("grid");
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/align_xyz-2-grid.svg)
@@ -78,7 +78,7 @@ for (int i = 0; i < 2; ++i) {
   pane.align_xyz("grid");
 }
 std::cout << "x captions: " << fig.x_captions().size() << ", y captions: " << fig.y_captions().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -98,7 +98,7 @@ pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vect
 pane.align_xyz("g");
 pane.align_y("other");
 std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

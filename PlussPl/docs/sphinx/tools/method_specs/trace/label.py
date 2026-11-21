@@ -24,7 +24,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).l
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).label("model");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 4, 3.5, 5});
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="Reading and changing a label. The default is empty; `label` returns the trace, so it chains; setting an empty string takes the trace out of the legend again, which the comparison of the SVG text of the figure with a never-labelled trace shows.",
              code="""std::string svg[2];
 for (int i = 0; i < 2; ++i) {
@@ -44,7 +44,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "cleared label == never labelled: " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("label_readback_out");
 fig.pane2("Label").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("named");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="text", text="What can go in a label. Mathematical symbols and characters that SVG treats specially are escaped, so the label shows what was typed: the printed check confirms that the SVG contains the escaped form `a &lt; b &amp; c` and not the raw one.",
              code="""auto fig = studio("label_text");
 auto& pane = fig.pane2("Special characters");
@@ -53,14 +53,14 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 5, 4}).label("ra
 pane.legend(KeyPlace::NorthWest);
 const std::string svg = fig.to_svg();
 std::cout << "escaped form present: " << (svg.find("a &lt; b &amp; c") != std::string::npos) << ", raw form present: " << (svg.find("a < b & c") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="long", text="Long labels wrap, and are cut. A label of eleven words wraps onto four lines inside the legend box, which grows taller to hold it, and the text that does not fit in four lines is replaced by an ellipsis (`describe...`); a short label sits on one line. Keep labels short enough to read whole.",
              code="""auto fig = studio("label_long");
 auto& pane = fig.pane2("Long label");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).label("short");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).label("a much longer label that describes this series in full sentences");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="other_kinds", text="Labels on every kind of trace. A column trace, a surface and a cloud are named in the same way; here two traces of different kinds share one pane and both appear in the legend.",
              code="""auto fig = studio("label_other_kinds");
 auto& pane = fig.pane2("Mixed kinds");
@@ -68,14 +68,14 @@ pane.columns(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4})
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1.5, 2.5, 2, 3.5}).label("line");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2.5, 3.5, 3, 4.5}).label("points");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="docked", text="Labels in a docked legend. The two panes each have a labelled trace; the docked legend pools them, each entry prefixed with its pane's title, so the same label can be used in both panes and still be told apart.",
              code="""auto fig = studio("label_docked");
 fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("signal");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 2, 4}).label("signal");
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A label changes nothing about how the trace is drawn: its colour, width and everything else are set by the other `Trace` calls.
 - The reference a creation method returns stays valid for the life of the pane, so a trace can be labelled at any time, not only in the statement that creates it.""",

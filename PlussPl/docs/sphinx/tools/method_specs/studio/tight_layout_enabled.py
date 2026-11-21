@@ -15,7 +15,7 @@ std::cout << "after tight_layout(): " << fig.tight_layout_enabled() << "\\n";
 fig.tight_layout(false);
 std::cout << "after tight_layout(false): " << fig.tight_layout_enabled() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text="The switch changes the picture. The same figure drawn with the layout off and on gives different SVG, and switching it off again restores the original exactly.",
              code="""auto fig = studio("tight_enabled_effect");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -26,7 +26,7 @@ fig.tight_layout(false);
 std::cout << "tight differs from relaxed: " << (tight != relaxed) << "\\n";
 std::cout << "off again equals the original: " << (fig.to_svg() == relaxed) << "\\n";
 fig.tight_layout();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="padding_kept", text="The padding is kept while the layout is off. Setting a padding with `enable = false` stores it, and turning the layout on later without a padding argument resets it to the default of 6.",
              code="""auto fig = studio("tight_enabled_padding");
 fig.tight_layout(false, 12.0);
@@ -34,7 +34,7 @@ std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding kept: " << 
 fig.tight_layout();
 std::cout << "tight_layout() again: enabled " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - Only `tight_layout` changes the switch; no other setting turns the compact layout on.""",

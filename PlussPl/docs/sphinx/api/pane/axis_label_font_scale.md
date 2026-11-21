@@ -45,7 +45,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 };
 const std::string svg = fig.to_svg();
 std::cout << "scale: " << pane.axis_label_font_scale() << ", axis label size: " << size_of(svg, "time") << ", tick size: " << size_of(svg, "1.0") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 pane.axis_label_font_scale(2.0);
 const std::string svg = fig.to_svg();
 std::cout << "x label: " << size_of(svg, "time") << ", y label: " << size_of(svg, "level") << ", tick: " << size_of(svg, "1.0") << ", title: " << size_of(svg, "scaled") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 };
 pane.axis_label_font_scale(0.7);
 std::cout << "x label: " << size_of(fig.to_svg(), "time") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 pane.tick_font_scale(1.6);
 const std::string svg = fig.to_svg();
 std::cout << "axis scale " << pane.axis_label_font_scale() << ": x label " << size_of(svg, "time") << ", tick " << size_of(svg, "1.0") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -147,7 +147,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
 pane.x_label("x").y_label("y").z_label("z");
 pane.axis_label_font_scale(1.6);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/axis_label_font_scale-5-three_d.svg)
@@ -166,7 +166,7 @@ for (double bad : {0.0, -2.0, std::numeric_limits<double>::quiet_NaN()}) {
   }
 }
 std::cout << "still " << pane.axis_label_font_scale() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

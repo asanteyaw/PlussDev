@@ -114,7 +114,7 @@ flash::camera3d(
     });
 auto& tr = flash::path3(pane, x, y, z).label("animate3_example1_companion");
 flash::trace_preset3d(tr, flash::TracePreset3D::Path);
-fig.save_svg("/tmp/animate3_example1_companion.svg");
+fig.show();
 std::cout << "saved /tmp/animate3_example1_companion.svg\n";
 ```
 
@@ -178,7 +178,7 @@ auto sizes = pluss::Series::full({x.numel()}, 7.0, pluss::ScalarType::Float64);
 auto colors = pluss::series::linspace(0.15, 0.95, x.numel(), pluss::ScalarType::Float64);
 auto& tr = flash::cloud3(pane, x, y, z, sizes, colors).label("animate3_example2_companion");
 flash::trace_preset3d(tr, flash::TracePreset3D::Cloud);
-fig.save_svg("/tmp/animate3_example2_companion.svg");
+fig.show();
 std::cout << "saved /tmp/animate3_example2_companion.svg\n";
 ```
 

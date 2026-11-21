@@ -19,7 +19,7 @@ fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "x grid on both: " << (fig.panes()[0].x_axis().major_grid && fig.panes()[1].x_axis().major_grid) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="only_after", text="Only panes created afterwards. A pane that exists when the defaults are set keeps its own style, and the next one takes the defaults.",
              code="""Pane look(PaneKind::Planar, Theme::paper(), "look");
 look.x_major_grid(true).y_major_grid(true);
@@ -29,7 +29,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.pane_style_defaults(look);
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "before has the grid: " << fig.panes()[0].x_axis().major_grid << ", after has it: " << fig.panes()[1].x_axis().major_grid << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="override", text="Still adjustable. A pane created with the defaults can change any of them, and the other panes are unaffected.",
              code="""Pane look(PaneKind::Planar, Theme::paper(), "look");
 look.x_major_grid(true).y_major_grid(true);
@@ -41,7 +41,7 @@ plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 plain.x_major_grid(false).y_major_grid(false);
 fig.pane2("default grid").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first: " << plain.x_axis().major_grid << ", second: " << fig.panes()[1].x_axis().major_grid << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="snapshot", text="A snapshot of the example pane. Changing the example afterwards does not change the defaults, and a second call replaces them.",
              code="""Pane look(PaneKind::Planar, Theme::paper(), "look");
 look.x_major_grid(true);
@@ -54,7 +54,7 @@ Pane other(PaneKind::Planar, Theme::paper(), "other");
 fig.pane_style_defaults(other);
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "after a second call, new pane has no grid: " << !fig.panes()[1].x_axis().major_grid << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="legend", text="Legend settings come along. The example pane's legend place and frame are the defaults, so every new pane shows its legend in that corner.",
              code="""Pane look(PaneKind::Planar, Theme::paper(), "look");
 look.legend(KeyPlace::NorthWest).legend_frame(KeyFrame::Framed);
@@ -64,7 +64,7 @@ fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2}).label("series b");
 std::cout << "legend at NorthWest on both: " << (fig.panes()[0].legend_place() == KeyPlace::NorthWest && fig.panes()[1].legend_place() == KeyPlace::NorthWest) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`. The defaults copy the style fields listed above; the traces, title, limits and labels of the example pane are not copied.
 - The figure's headline, legend dock and captions are figure settings and are not part of a pane's defaults.""",

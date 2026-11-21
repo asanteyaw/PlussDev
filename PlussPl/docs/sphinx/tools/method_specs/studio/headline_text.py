@@ -17,7 +17,7 @@ std::cout << "after first: '" << fig.headline_text() << "'\\n";
 fig.headline("Second");
 std::cout << "after second: '" << fig.headline_text() << "'\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="stored_not_drawn", text="The stored text, not the drawn text. A headline made only of spaces is stored as given while the figure is drawn as if it had none; a long headline is stored whole while it is wrapped on the canvas.",
              code="""auto plain = studio("headline_text_stored");
 plain.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -28,7 +28,7 @@ std::cout << "stored length: " << blank.headline_text().size() << ", figure equa
 const std::string long_text(200, 'x');
 plain.headline(long_text);
 std::cout << "long headline stored whole: " << (plain.headline_text() == long_text) << "\\n";
-plain.save_svg("figure.svg");"""),
+plain.show();"""),
         dict(id="line_breaks", text="Line breaks come back as given. The getter returns the `\\n` that was passed, so a caller can split the headline itself.",
              code="""auto fig = studio("headline_text_lines");
 fig.headline("Sales by region\\nFiscal year 2025");
@@ -37,7 +37,7 @@ const auto at = text.find('\\n');
 std::cout << "first line: " << text.substr(0, at) << "\\n";
 std::cout << "second line: " << text.substr(at + 1) << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="independent", text="Separate from the name. Setting the name does not touch the headline and setting the headline does not touch the name.",
              code="""auto fig = studio("original");
 fig.headline("A headline");
@@ -46,7 +46,7 @@ std::cout << fig.name() << " / " << fig.headline_text() << "\\n";
 fig.headline("");
 std::cout << fig.name() << " / '" << fig.headline_text() << "'\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - The headline of a copied figure is a separate string; changing one does not change the other.""",

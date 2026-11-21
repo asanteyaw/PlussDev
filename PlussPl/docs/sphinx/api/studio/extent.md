@@ -35,7 +35,7 @@ std::cout << "new figure: " << fig.extent().width << " x " << fig.extent().heigh
 fig.size(900.0, 500.0);
 std::cout << "after size: " << fig.extent().width << " x " << fig.extent().height << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -57,7 +57,7 @@ const std::string svg = fig.to_svg();
 const auto at = svg.find("<svg");
 std::cout << svg.substr(svg.find("width=", at), 40) << "\n";
 std::cout << "extent: " << fig.extent().width << " x " << fig.extent().height << ", at 192 dpi: " << fig.extent().width * 2 << " x " << fig.extent().height * 2 << " pixels\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ for (int i = 0; i < 6; ++i) {
   fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series " + std::to_string(i));
 }
 std::cout << "still " << fig.extent().width << " x " << fig.extent().height << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -101,7 +101,7 @@ fig.size(500.0, 300.0);
 std::cout << "copy: " << before.width << " x " << before.height << "\n";
 std::cout << "reference: " << live.width << " x " << live.height << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

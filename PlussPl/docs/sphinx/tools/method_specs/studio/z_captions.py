@@ -16,7 +16,7 @@ fig.z_caption("zeta", "last group").z_caption("alpha", "first group");
 fig.z_caption("alpha", "first group, revised");
 for (const auto& [group, text] : fig.z_captions()) std::cout << group << " => " << text << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="registered_not_drawn", text="Registered is not drawn. A caption for a group nobody joined is in the map while the figure is exactly the figure without it; a pane joining the group makes it appear.",
              code="""auto build = [](bool join) {
   auto fig = studio("z_captions_drawn");
@@ -29,13 +29,13 @@ fig.save_svg("figure.svg");"""),
 auto alone = build(false), joined = build(true);
 std::cout << "registered either way: " << alone.z_captions().size() << " and " << joined.z_captions().size() << "\\n";
 std::cout << "drawn without the group: " << (alone.to_svg().find("caption text") != std::string::npos) << ", with it: " << (joined.to_svg().find("caption text") != std::string::npos) << "\\n";
-joined.save_svg("figure.svg");"""),
+joined.show();"""),
         dict(id="axes_separate", text="The three axes are separate registries. A caption set for one axis is not in the maps of the others.",
              code="""auto fig = studio("z_captions_axes");
 fig.z_caption("g", "z only");
 std::cout << "x: " << fig.x_captions().size() << ", y: " << fig.y_captions().size() << ", z: " << fig.z_captions().size() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - Groups are matched exactly and case-sensitively against the names panes pass to [`Pane::align_z`](../pane/align_z.md).""",

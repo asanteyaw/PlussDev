@@ -49,7 +49,6 @@ written: 1
 equals to_svg(): 1
 ```
 
-![Output of Example 1](img/save_svg-1-basic.svg)
 
 Example 2. Folders and overwriting. A path through folders that do not exist creates them, and saving to the same path again replaces the file.
 
@@ -74,7 +73,6 @@ created folders and file: 1
 overwritten (the size changed): 1
 ```
 
-![Output of Example 2](img/save_svg-2-folders.svg)
 
 Example 3. The extension. `.SVG` in capitals is accepted; any other extension, or none, is refused before anything is rendered or written.
 
@@ -107,7 +105,6 @@ UPPER.SVG: 1
 files written for the bad paths: 0
 ```
 
-![Output of Example 3](img/save_svg-3-extension.svg)
 
 Example 4. A path that cannot be written. A file where a folder is needed, and a folder where a file is wanted, each throw `pluss::Error` that names the path.
 
@@ -136,7 +133,6 @@ unable to create the folder for 'svg_out_unwritable/plain_file/figure.svg': File
 unable to open 'svg_out_unwritable/is_a_folder.svg' for writing
 ```
 
-![Output of Example 4](img/save_svg-4-unwritable.svg)
 
 ## Notes
 

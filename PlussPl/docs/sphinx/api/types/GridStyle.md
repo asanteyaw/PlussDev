@@ -37,7 +37,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
   pane.grid(styles[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/GridStyle-1-gallery.svg)
@@ -54,7 +54,7 @@ std::cout << "after grid(MajorMinor): " << static_cast<int>(pane.grid_style()) <
 pane.grid(GridStyle::None);
 pane.x_major_grid(true);
 std::cout << "after grid(None), x_major_grid(true): " << static_cast<int>(pane.grid_style()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -74,7 +74,7 @@ auto fig = studio("grid_style_per_axis");
 auto& pane = fig.pane2("Horizontal lines only");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
 pane.y_major_grid(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/GridStyle-3-per_axis.svg)
@@ -86,7 +86,7 @@ auto fig = studio("grid_style_minor_only");
 auto& pane = fig.pane2("x minor only");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
 pane.x_minor_grid(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/GridStyle-4-minor_only.svg)
@@ -99,7 +99,7 @@ auto& pane = fig.pane2("Log y, major and minor");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5, 6}, std::vector<double>{1.5, 8, 40, 300, 2000, 9000});
 pane.scale_y(ScalePolicy::log10());
 pane.grid(GridStyle::MajorMinor);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/GridStyle-5-log.svg)

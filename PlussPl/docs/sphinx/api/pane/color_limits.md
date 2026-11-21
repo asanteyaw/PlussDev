@@ -49,7 +49,7 @@ auto texts = [](const std::string& svg) {
 std::cout << "from the data: " << texts(fig.to_svg()) << "\n";
 pane.color_limits(Range1d{0.0, 10.0});
 std::cout << "limits 0..10:  " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ auto fig = studio("color_limits_auto_out");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -99,7 +99,7 @@ for (int i = 0; i < 2; ++i) {
   pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{lo, lo + 0.1, lo + 0.3, lo + 0.5});
   pane.color_limits(Range1d{0.0, 1.0}).scale_guide(true);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/color_limits-3-two_panes.svg)
@@ -120,7 +120,7 @@ auto fig = studio("color_limits_field_out");
 auto& pane = fig.pane2("p");
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}));
 pane.scale_guide(true).color_limits(Range1d{0.0, 4.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -146,7 +146,7 @@ auto fig = studio("color_limits_trace_out");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97}).color_limits(Range1d{0.0, 1.0});
 pane.color_limits(Range1d{0.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -167,7 +167,7 @@ try { pane.color_limits(Range1d{2.0, 1.0}); } catch (const pluss::Error& e) { st
 try { pane.color_limits(Range1d{1.0, 1.0}); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 try { pane.color_limits(Range1d{0.0, std::numeric_limits<double>::infinity()}); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 std::cout << "limits still unset: " << !pane.color_axis().limits.has_value() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

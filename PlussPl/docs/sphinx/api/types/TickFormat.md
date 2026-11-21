@@ -44,7 +44,7 @@ for (int i = 0; i < 4; ++i) {
   pane.trend(x, y);
   pane.y_tick_format(formats[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/TickFormat-1-large.svg)
@@ -64,7 +64,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.y_tick_format(formats[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/TickFormat-2-small.svg)
@@ -80,7 +80,7 @@ years.x_tick_format(TickFormat::Integer);
 auto& share = fig.pane2("Percent");
 share.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{0.12, 0.25, 0.4, 0.55, 0.7});
 share.y_tick_format(TickFormat::Percent);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/TickFormat-3-integer_percent.svg)
@@ -94,7 +94,7 @@ pane.trend(std::vector<double>{10, 20, 30, 40}, std::vector<double>{1.5e5, 4e5, 
 pane.x_tick_format(TickFormat::Integer);
 pane.y_tick_format(TickFormat::Scientific);
 std::cout << "x: " << static_cast<int>(pane.x_axis().tick_format) << ", y: " << static_cast<int>(pane.y_axis().tick_format) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ for (int i = 0; i < 2; ++i) {
   pane.trend(x, y);
   if (i == 1) pane.y_auto_tick_decimals(1);
   svg[i] = fig.to_svg();
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 std::cout << "capped == uncapped: " << (svg[0] == svg[1]) << "\n";
 ```

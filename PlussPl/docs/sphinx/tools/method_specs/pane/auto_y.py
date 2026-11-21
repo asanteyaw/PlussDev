@@ -20,7 +20,7 @@ pane.y_limits(Range1d{0.0, 20.0});
 std::cout << "after y_limits: " << mode() << "\\n";
 pane.auto_y();
 std::cout << "after auto_y:  " << mode() << ", limits cleared: " << !pane.y_axis().limits.has_value() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="identical", text="After `auto_y()` the figure is the figure of a pane that never had a manual range: the SVG text of the two is identical.",
              code="""std::string svg[2];
 for (int i = 0; i < 2; ++i) {
@@ -37,7 +37,7 @@ std::cout << "never set == set and cleared: " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("auto_y_identical_out");
 auto& pane = fig.pane2("auto_y");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2.3, 4.7, 3.1, 5.85, 6.2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="method_kept", text="The fitting method survives the round trip. `Tight` is set, a manual range replaces it, and after `auto_y()` the axis is fitted `Tight` again, as the printed method shows.",
              code="""auto fig = studio("auto_y_method");
 auto& pane = fig.pane2("auto_y");
@@ -47,7 +47,7 @@ pane.y_limits(Range1d{0.0, 20.0});
 std::cout << "while manual, method: " << static_cast<int>(pane.y_axis().limit_method) << " (TickAligned = 0, Tight = 1, Padded = 2)\\n";
 pane.auto_y();
 std::cout << "after auto_y, method: " << static_cast<int>(pane.y_axis().limit_method) << ", mode " << static_cast<int>(pane.y_axis().limit_mode) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `auto_y()` returns the pane, so it chains: `pane.auto_y().y_limit_method(LimitMethod::Padded)`.
 - A manual range set with `y_limits` is validated against the axis scale ([`ScalePolicy`](../types/ScalePolicy.md)); `auto_y()` has nothing to validate.

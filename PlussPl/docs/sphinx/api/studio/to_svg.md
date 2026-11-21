@@ -39,7 +39,7 @@ std::cout << svg.substr(0, svg.find('\n')) << "\n";
 const auto at = svg.find("<svg");
 std::cout << svg.substr(at, svg.find('>', at) - at + 1) << "\n";
 std::cout << "ends with </svg>: " << (svg.rfind("</svg>") + 7 >= svg.size()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -50,7 +50,6 @@ fig.save_svg("figure.svg");
 ends with </svg>: 1
 ```
 
-![Output of Example 1](img/to_svg-1-basic.svg)
 
 Example 2. Repeatable and side-effect free. Rendering twice gives the same text, and rendering does not change the figure: the pane count and size are the same before and after.
 
@@ -61,7 +60,7 @@ const std::string first = fig.to_svg();
 const std::string second = fig.to_svg();
 std::cout << "same text twice: " << (first == second) << "\n";
 std::cout << "panes: " << fig.pane_count() << ", size: " << fig.extent().width << " x " << fig.extent().height << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +70,6 @@ same text twice: 1
 panes: 1, size: 1280 x 820
 ```
 
-![Output of Example 2](img/to_svg-2-repeatable.svg)
 
 Example 3. The figure at the moment of the call. Adding a headline changes what `to_svg` returns, and the text rendered earlier is a snapshot that is not updated.
 
@@ -83,7 +81,7 @@ fig.headline("A headline");
 const std::string after = fig.to_svg();
 std::cout << "headline in the first string: " << (before.find("A headline") != std::string::npos) << "\n";
 std::cout << "headline in the second string: " << (after.find("A headline") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -93,7 +91,6 @@ headline in the first string: 0
 headline in the second string: 1
 ```
 
-![Output of Example 3](img/to_svg-3-reads_now.svg)
 
 Example 4. The text is real text. Titles, tick labels and legend entries are `<text>` elements in the document, so they can be found in the string; the path data of the traces are `<path>` elements.
 
@@ -107,7 +104,7 @@ std::cout << "headline: " << (svg.find(">Searchable<") != std::string::npos) << 
 std::cout << "pane title: " << (svg.find(">my pane<") != std::string::npos) << "\n";
 std::cout << "legend entry: " << (svg.find("my series") != std::string::npos) << "\n";
 std::cout << "has path data: " << (svg.find("<path") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -119,7 +116,6 @@ legend entry: 1
 has path data: 1
 ```
 
-![Output of Example 4](img/to_svg-4-text.svg)
 
 Example 5. A figure with no panes. It is not an error: the result is a valid document with the canvas and no text on it.
 
@@ -142,7 +138,6 @@ valid document: 1
 has any text: 0
 ```
 
-![Output of Example 5](img/to_svg-5-empty.svg)
 
 ## Notes
 

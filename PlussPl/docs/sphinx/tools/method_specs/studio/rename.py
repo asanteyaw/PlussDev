@@ -18,7 +18,7 @@ std::cout << "after: " << fig.name() << "\\n";
 fig.rename("");
 std::cout << "empty allowed: '" << fig.name() << "'\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_effect", text="No effect on the picture. The SVG is identical before and after renaming, and the figure's size, panes and headline are untouched.",
              code="""auto fig = studio("before");
 fig.headline("Visible");
@@ -27,13 +27,13 @@ const std::string svg = fig.to_svg();
 fig.rename("after");
 std::cout << "same SVG: " << (fig.to_svg() == svg) << "\\n";
 std::cout << "headline kept: " << fig.headline_text() << ", panes: " << fig.pane_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="chain", text="Chaining. `rename` returns the figure, so it chains with the other setters in one statement, in any order.",
              code="""auto fig = studio("a");
 fig.rename("b").headline("Chained").size(900.0, 500.0).rename("c");
 std::cout << fig.name() << " / " << fig.headline_text() << " / " << fig.extent().width << " x " << fig.extent().height << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="any_text", text="Any text. Spaces, non-ASCII characters and line breaks are stored as given; the name is not interpreted.",
              code="""auto fig = studio();
 for (const char* text : {"two words", "naïve — figure", "line one\\nline two", " "}) {
@@ -41,7 +41,7 @@ for (const char* text : {"two words", "naïve — figure", "line one\\nline two"
   std::cout << "length " << fig.name().size() << ": " << (fig.name() == text) << "\\n";
 }
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`: it moves a string into the figure.
 - To change the text that is drawn, use [`headline`](headline.md); `rename` never changes the picture.""",

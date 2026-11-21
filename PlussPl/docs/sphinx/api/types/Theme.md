@@ -54,7 +54,7 @@ for (int i = 0; i < 2; ++i) {
   lines.legend(KeyPlace::OutsideEast);
   auto& surface = fig.pane3(themes_to_show[i].name() + ": surface");
   surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 ```
 
@@ -84,7 +84,7 @@ for (int k = 0; k < 5; ++k) {
 lines.legend(KeyPlace::OutsideEast);
 auto& surface = fig.pane3("paper: surface");
 surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/Theme-2-paper.svg)
@@ -101,7 +101,7 @@ for (const Theme& t : {Theme::paper(), Theme::ocean()}) {
 std::cout << "themes::paper() has the same name: " << (themes::paper().name() == Theme::paper().name()) << "\n";
 auto fig = studio("theme_read");
 fig.pane2("theme").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -148,7 +148,7 @@ lines.legend(KeyPlace::OutsideEast);
 auto& surface = fig.pane3("dark: surface");
 surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
 std::cout << fig.theme_tokens().name() << " with " << fig.theme_tokens().accents().size() << " accents\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -176,7 +176,7 @@ fig.theme(Theme::ocean());
   std::cout << "second pane: " << second.theme_tokens().name() << "\n";
 }
 std::cout << "the studio:  " << fig.theme_tokens().name() << ", the first pane still: " << fig.panes()[0].theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

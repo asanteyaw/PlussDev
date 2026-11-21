@@ -34,7 +34,7 @@ for (int i = 0; i < 4; ++i) {
   pane.trend(x, y);
   pane.y_tick_format(formats[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="small", text="The formats on small decimals (0.02 to 0.09). `Auto` writes `0.09`, `Fixed3` writes `0.090` and `Fixed6` writes `0.090000`: every label has the same number of decimals, which is what lets two panes be compared label by label.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5};
 const std::vector<double> y{0.02, 0.045, 0.06, 0.075, 0.09};
@@ -48,7 +48,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.y_tick_format(formats[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="integer_percent", text="`Integer` and `Percent`. A series of years reads naturally as integers, and a series of proportions as percentages; the data in the second pane are fractions between 0 and 1, which `Percent` multiplies by 100 and writes with one decimal (`70.0%`). The x-axis of that pane is untouched.",
              code="""auto fig = studio("tick_format_integer_percent");
 fig.mosaic(1, 2);
@@ -58,7 +58,7 @@ years.x_tick_format(TickFormat::Integer);
 auto& share = fig.pane2("Percent");
 share.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{0.12, 0.25, 0.4, 0.55, 0.7});
 share.y_tick_format(TickFormat::Percent);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="per_axis", text="Each axis has its own format. The x-axis here is `Integer` and the y-axis `Scientific`; `x_axis().tick_format` and `y_axis().tick_format` report them separately.",
              code="""auto fig = studio("tick_format_per_axis");
 auto& pane = fig.pane2("x Integer, y Scientific");
@@ -66,7 +66,7 @@ pane.trend(std::vector<double>{10, 20, 30, 40}, std::vector<double>{1.5e5, 4e5, 
 pane.x_tick_format(TickFormat::Integer);
 pane.y_tick_format(TickFormat::Scientific);
 std::cout << "x: " << static_cast<int>(pane.x_axis().tick_format) << ", y: " << static_cast<int>(pane.y_axis().tick_format) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="decimals", text="`Auto` with a decimals cap. `y_auto_tick_decimals(1)` limits the automatic form to one decimal, and `clear_y_auto_tick_decimals` removes the cap again. The cap changes the labels: the two figures are not equal.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5};
 const std::vector<double> y{0.123, 0.241, 0.387, 0.452, 0.598};
@@ -77,7 +77,7 @@ for (int i = 0; i < 2; ++i) {
   pane.trend(x, y);
   if (i == 1) pane.y_auto_tick_decimals(1);
   svg[i] = fig.to_svg();
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 std::cout << "capped == uncapped: " << (svg[0] == svg[1]) << "\\n";"""),
     ],

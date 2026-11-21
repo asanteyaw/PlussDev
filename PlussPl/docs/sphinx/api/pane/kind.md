@@ -39,7 +39,7 @@ flat.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 auto& deep = fig.pane3("deep");
 deep.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 std::cout << "flat is Planar: " << (flat.kind() == PaneKind::Planar) << ", deep is Volumetric: " << (deep.kind() == PaneKind::Volumetric) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ try {
   std::cout << e.message() << "\n";
 }
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -83,7 +83,7 @@ try {
   std::cout << e.message() << "\n";
 }
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -105,7 +105,7 @@ auto& deep = fig.pane3("deep");
 deep.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 std::cout << "flat: azimuth " << flat.lens().azimuth_deg() << ", elevation " << flat.lens().elevation_deg() << "\n";
 std::cout << "deep: azimuth " << deep.lens().azimuth_deg() << ", elevation " << deep.lens().elevation_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -131,7 +131,7 @@ for (auto* pane : {&flat, &deep}) {
   if (pane->kind() == PaneKind::Volumetric) pane->z_label("z");
 }
 std::cout << "flat z label: '" << flat.z_axis().label << "', deep z label: '" << deep.z_axis().label << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

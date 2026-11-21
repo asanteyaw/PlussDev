@@ -51,7 +51,7 @@ auto& pane = make("lower left");
 pane.place(1, 0);
 const auto& slot = pane.placement();
 std::cout << "row " << slot.row << ", col " << slot.col << ", spans " << slot.row_span << "x" << slot.col_span << ", explicit " << slot.explicit_slot << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -74,7 +74,7 @@ auto make = [&](const char* name) -> Pane& {
 };
 auto& pane = make("auto");
 std::cout << "explicit: " << pane.placement().explicit_slot << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ make("top right");
 auto& wide = make("bottom, both columns");
 wide.place(1, 0, 1, 2);
 std::cout << "spans " << wide.placement().row_span << " row(s) and " << wide.placement().col_span << " column(s)\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -125,7 +125,7 @@ make("tall right").place(0, 1, 2, 1);
 make("a");
 make("b");
 std::cout << "panes: " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -152,7 +152,7 @@ try { pane.place(0, -2); } catch (const pluss::Error& e) { std::cout << e.messag
 try { pane.place(0, 0, 0, 1); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 try { pane.place(0, 0, 1, -1); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 std::cout << "still explicit: " << pane.placement().explicit_slot << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -182,7 +182,7 @@ try { fig.to_svg(); } catch (const pluss::Error& e) { std::cout << e.message() <
 auto ok = studio("place_outside_out");
 ok.mosaic(2, 2);
 ok.pane2("fits").trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-ok.save_svg("figure.svg");
+ok.show();
 ```
 
 ### Output
@@ -214,7 +214,7 @@ wide.place(0, 0, 1, 2);
 auto& below = ok.pane2("below");
 below.trend(std::vector<double>{0, 1}, std::vector<double>{1, 0});
 below.place(1, 0);
-ok.save_svg("figure.svg");
+ok.show();
 ```
 
 ### Output

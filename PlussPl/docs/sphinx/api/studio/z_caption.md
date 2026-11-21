@@ -46,7 +46,7 @@ auto& bottom = fig.pane3("bottom");
 bottom.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 bottom.align_z("shared");
 std::cout << "captions: " << fig.z_captions().size() << ", text: " << fig.z_captions().at("shared") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ fig.z_caption("g", "second text");
 std::cout << "entries: " << fig.z_captions().size() << ", text: " << fig.z_captions().at("g") << "\n";
 const std::string svg = fig.to_svg();
 std::cout << "first text drawn: " << (svg.find("first text") != std::string::npos) << ", second text drawn: " << (svg.find("second text") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ a4.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector
 fig.z_caption("left", "left group");
 fig.z_caption("right", "right group");
 std::cout << "captions: " << fig.z_captions().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -134,7 +134,7 @@ auto& pane = fig.pane3("p");
   pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
   pane.align_z("g");
 fig.z_caption("nobody", "never drawn");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -177,7 +177,7 @@ a.hide();
 auto& b = fig.pane3("b");
 b.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 b.align_z("g");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -22,7 +22,7 @@ const TrendData& data = std::get<TrendData>(t.payload());
 std::cout << "points: " << data.x.numel() << " and " << data.y.numel() << "\\n";
 const auto ys = data.y.items<double>();
 std::cout << "y values: " << ys[0] << " " << ys[1] << " " << ys[2] << " " << ys[3] << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shared", text="One payload, two kinds. Vertical and horizontal bars both hold `ColumnsData`; its `horizontal` flag says which, and `base` and `width` are the values the trace was made with.",
              code="""auto fig = studio("payload_columns");
 auto& pane = fig.pane2("Columns");
@@ -36,7 +36,7 @@ auto& pane = fig.pane2("Columns");
   const ColumnsData& d = std::get<ColumnsData>(h.payload());
   std::cout << "columns_h: horizontal " << d.horizontal << ", base " << d.base << ", width " << d.width << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="visit", text="Handling every case with `std::visit`. A helper reports the size of whatever a trace holds: it visits the variant and, for the alternatives it knows, counts the points. The three traces hold three different alternatives.",
              code="""auto count = [](const Trace& t) -> std::int64_t {
   return std::visit([](const auto& data) -> std::int64_t {
@@ -52,7 +52,7 @@ auto& pane = fig.pane2("Visit");
 std::cout << "trend:  " << count(pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5})) << "\\n";
 std::cout << "bucket: " << count(pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3})) << "\\n";
 std::cout << "wedge:  " << count(pane.wedge(std::vector<double>{3, 2, 1})) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="surface", text="Surfaces hold `SurfaceData`, whether drawn as a solid or a wireframe: `Sheet` and `Lattice` have the same payload type and differ only in their kind. The grid is held as three series.",
              code=SURFACE + """
 
@@ -67,7 +67,7 @@ auto& pane = fig.pane3("Surface");
   const SurfaceData& d = std::get<SurfaceData>(l.payload());
   std::cout << "lattice: SurfaceData " << std::holds_alternative<SurfaceData>(l.payload()) << ", kind " << static_cast<int>(l.kind()) << ", z elements " << d.z.numel() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="options", text="Options travel in the payload. A violin holds its [`ViolinOptions`](../types/ViolinOptions.md): the options passed when it was made are read back from the payload, here the half-violin and the point marks asked for.",
              code="""auto fig = studio("payload_options");
 auto& pane = fig.pane2("Violin");
@@ -77,7 +77,7 @@ options.inner = ViolinInner::Point;
 Trace& v = pane.violin(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 5}, options);
 const ViolinData& data = std::get<ViolinData>(v.payload());
 std::cout << "side Left: " << (data.options.side == ViolinSide::Left) << ", inner Point: " << (data.options.inner == ViolinInner::Point) << ", has groups: " << data.group.has_value() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="wrong", text="A wrong `std::get` throws. Asking a `Trend` for its `CloudData` fails with `std::bad_variant_access`; test with `holds_alternative`, or read `kind()` first, to avoid it.",
              code="""auto fig = studio("payload_wrong");
 auto& pane = fig.pane2("Wrong alternative");
@@ -88,7 +88,7 @@ try {
 } catch (const std::bad_variant_access&) {
   std::cout << "std::get<CloudData> on a trend: std::bad_variant_access\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The payload is read-only through this accessor. To change the data, build a new trace.
 - The reference a creation method returns stays valid for the life of the pane, and so does a reference taken from `payload()`, until that trace's kind or data is replaced.

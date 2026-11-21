@@ -20,7 +20,7 @@ fig.pane3("volume").path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1
 for (const Pane& pane : fig.panes()) {
   std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Planar ? "planar" : "volumetric") << ", traces " << pane.traces().size() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="same_object", text="The same objects. An element of `panes()` is the pane the creation call returned, at the same address, and it stays so after many more panes are added.",
              code="""auto fig = studio("panes_same");
 Pane& first = fig.pane2("first");
@@ -29,7 +29,7 @@ std::cout << "same address: " << (&fig.panes()[0] == &first) << "\\n";
 first.title("renamed through the reference");
 std::cout << "seen through panes(): " << fig.panes()[0].title_text() << "\\n";
 fig.mosaic(3, 7);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="order", text="Creation order, and sub-panes included. `pane_index` of each pane is its position, and a sub-pane follows the panes created before it.",
              code="""auto fig = studio("panes_order");
 auto& parent = fig.pane2("parent");
@@ -37,7 +37,7 @@ const std::size_t parent_index = fig.pane_index(parent);
 fig.subpane2(parent_index, 1, 2, 0, 0, 1, 1, "left").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.subpane2(parent_index, 1, 2, 0, 1, 1, 1, "right").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 for (std::size_t i = 0; i < fig.panes().size(); ++i) std::cout << i << ": " << fig.panes()[i].title_text() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="read_only", text="Read-only and including hidden panes. A hidden pane is still listed, with `visible()` false, and the sequence offers no way to change or remove a pane.",
              code="""auto fig = studio("panes_hidden");
 fig.mosaic(1, 2);
@@ -46,7 +46,7 @@ auto& other = fig.pane2("hidden");
 other.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 other.hide();
 for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": visible " << pane.visible() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`. The type is a standard container, so the usual algorithms and iterators work; pane objects are not copied by reading them through a reference.
 - Add panes with [`pane2`](pane2.md) and [`pane3`](pane3.md) and configure them through the reference those return.""",

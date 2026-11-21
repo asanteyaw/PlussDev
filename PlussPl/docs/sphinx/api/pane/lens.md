@@ -54,7 +54,7 @@ auto show = [](const char* name, const Lens& lens) {
 };
 show("planar    ", flat.lens());
 show("volumetric", deep.lens());
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -78,7 +78,7 @@ for (int i = 0; i < 4; ++i) {
   pane.lens().look(0.0, 0.0).look(views[i][0], views[i][1]);
 }
 std::cout << "last pane: azimuth " << fig.panes().back().lens().azimuth_deg() << ", elevation " << fig.panes().back().lens().elevation_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -99,7 +99,7 @@ pane.lens().look(10.0, 20.0).spin(5.0, -5.0);
 std::cout << "after look(10, 20).spin(5, -5): " << pane.lens().azimuth_deg() << ", " << pane.lens().elevation_deg() << "\n";
 pane.lens().spin(5.0, -5.0);
 std::cout << "after a second spin: " << pane.lens().azimuth_deg() << ", " << pane.lens().elevation_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -122,7 +122,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lens().project(i == 0 ? ProjectionKind::Orthographic : ProjectionKind::Perspective);
 }
 std::cout << "default is Orthographic: " << (studio("d").pane3().lens().projection() == ProjectionKind::Orthographic) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -152,7 +152,7 @@ for (int i = 0; i < 2; ++i) {
   pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
   pane.lens().project(ProjectionKind::Perspective).view_angle(i == 0 ? 20.0 : 70.0);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -178,7 +178,7 @@ for (double bad : {0.0, 180.0, -5.0, std::numeric_limits<double>::quiet_NaN()}) 
   }
 }
 std::cout << "still " << pane.lens().view_angle_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -205,7 +205,7 @@ for (int i = 0; i < 2; ++i) {
 }
 const Lens& lens = fig.panes().back().lens();
 std::cout << "target (" << lens.target().x << ", " << lens.target().y << ", " << lens.target().z << ")\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -226,7 +226,7 @@ for (int i = 0; i < 2; ++i) {
   pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
   if (i == 1) pane.lens().up(Vec3d{0.0, 1.0, 0.0});
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 8](img/lens-8-up.svg)
@@ -248,7 +248,7 @@ third.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, st
 third.lens() = Lens::planar();
 std::cout << "copied: azimuth " << second.lens().azimuth_deg() << ", elevation " << second.lens().elevation_deg() << "\n";
 std::cout << "from above: elevation " << third.lens().elevation_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -274,7 +274,7 @@ std::cout << "planar pane unchanged by look(): " << (build(true) == build(false)
 auto fig = studio("lens_planar_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

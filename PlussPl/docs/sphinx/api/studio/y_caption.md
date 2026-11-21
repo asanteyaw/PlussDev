@@ -46,7 +46,7 @@ auto& bottom = fig.pane2("bottom");
 bottom.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 bottom.align_y("shared");
 std::cout << "captions: " << fig.y_captions().size() << ", text: " << fig.y_captions().at("shared") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ fig.y_caption("g", "second text");
 std::cout << "entries: " << fig.y_captions().size() << ", text: " << fig.y_captions().at("g") << "\n";
 const std::string svg = fig.to_svg();
 std::cout << "first text drawn: " << (svg.find("first text") != std::string::npos) << ", second text drawn: " << (svg.find("second text") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ a4.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.y_caption("left", "left group");
 fig.y_caption("right", "right group");
 std::cout << "captions: " << fig.y_captions().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -134,7 +134,7 @@ auto& pane = fig.pane2("p");
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
   pane.align_y("g");
 fig.y_caption("nobody", "never drawn");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -177,7 +177,7 @@ a.hide();
 auto& b = fig.pane2("b");
 b.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 b.align_y("g");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

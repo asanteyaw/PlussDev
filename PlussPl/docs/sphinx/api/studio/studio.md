@@ -40,7 +40,7 @@ std::cout << "name: " << fig.name() << ", panes: " << fig.pane_count() << "\n";
 std::cout << "size: " << fig.extent().width << " x " << fig.extent().height << ", theme: " << fig.theme_tokens().name() << "\n";
 std::cout << "headline empty: " << fig.headline_text().empty() << ", mosaic active: " << fig.mosaic_layout().active << ", dock: " << static_cast<int>(fig.legend_dock()) << ", tight layout: " << fig.tight_layout_enabled() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ Studio b("same");
 Studio unnamed;
 for (Studio* fig : {&a, &b}) fig->pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "same SVG: " << (a.to_svg() == b.to_svg()) << ", unnamed name empty: " << unnamed.name().empty() << "\n";
-a.save_svg("figure.svg");
+a.show();
 ```
 
 ### Output
@@ -79,7 +79,7 @@ Studio fig("studio_ocean", Theme::ocean());
 fig.headline("Ocean theme");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 std::cout << "figure theme: " << fig.theme_tokens().name() << ", pane theme: " << fig.panes()[0].theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ copy.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 
 copy.mosaic(1, 2);
 std::cout << "original panes: " << original.pane_count() << ", copy panes: " << copy.pane_count() << "\n";
 std::cout << "original mosaic: " << original.mosaic_layout().active << ", copy mosaic: " << copy.mosaic_layout().active << "\n";
-copy.save_svg("figure.svg");
+copy.show();
 ```
 
 ### Output
@@ -120,7 +120,7 @@ const std::string svg = fig.to_svg();
 std::cout << "svg: " << (svg.find("<svg") != std::string::npos) << ", pdf: " << (fig.to_pdf().rfind("%PDF", 0) == 0) << "\n";
 auto shown = studio("studio_empty_out");
 shown.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-shown.save_svg("figure.svg");
+shown.show();
 ```
 
 ### Output

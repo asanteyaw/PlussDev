@@ -39,7 +39,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.align_z("depth");
 pane.align_xy("g");
 std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "', z (not covered) '" << pane.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ for (int i = 0; i < 4; ++i) {
   pane.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, scales[i], scales[i] / 2, scales[i]});
   pane.align_xy("grid");
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/align_xy-2-grid.svg)
@@ -79,7 +79,7 @@ for (int i = 0; i < 2; ++i) {
   pane.align_xy("grid");
 }
 std::cout << "x captions: " << fig.x_captions().size() << ", y captions: " << fig.y_captions().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -99,7 +99,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.align_xy("g");
 pane.align_y("other");
 std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

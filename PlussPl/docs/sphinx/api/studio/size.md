@@ -43,7 +43,7 @@ fig.size(900.0, 420.0);
 std::cout << "after size(900, 420): " << fig.extent().width << " x " << fig.extent().height << "\n";
 const std::string svg = fig.to_svg();
 std::cout << svg.substr(svg.find("<svg"), svg.find('>', svg.find("<svg")) - svg.find("<svg") + 1) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ for (const auto& s : sizes) {
 auto fig = studio("size_tall");
 fig.size(480.0, 640.0);
 fig.pane2("480 x 640").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -102,7 +102,7 @@ fig.size(700.0, 400.0);
 fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -130,7 +130,7 @@ for (const auto& b : bad) {
 }
 std::cout << "still " << fig.extent().width << " x " << fig.extent().height << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ fig.headline("tiny");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const std::string svg = fig.to_svg();
 std::cout << "svg bytes: " << svg.size() << ", closed: " << (svg.rfind("</svg>") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

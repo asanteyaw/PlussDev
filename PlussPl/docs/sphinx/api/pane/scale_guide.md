@@ -38,7 +38,7 @@ auto fig = studio("guide_default");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 5, 5, 5}, std::vector<double>{0.13, 0.4, 0.62, 0.97});
 std::cout << "enabled: " << pane.scale_guide_enabled() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -68,7 +68,7 @@ pane.scale_guide();
 std::cout << "enabled: " << pane.scale_guide_enabled() << "\n";
 std::cout << "off: " << off << "\n";
 std::cout << "on:  " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -88,7 +88,7 @@ auto fig = studio("guide_fieldmap");
 auto& pane = fig.pane2("p");
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}));
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/scale_guide-3-fieldmap.svg)
@@ -111,7 +111,7 @@ pane.scale_guide(true);
 std::cout << "data range:   " << texts(fig.to_svg()) << "\n";
 pane.color_limits(Range1d{0.0, 10.0});
 std::cout << "limits 0..10: " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -139,7 +139,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.scale_guide(true);
 std::cout << "enabled: " << pane.scale_guide_enabled() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -158,7 +158,7 @@ auto fig = studio("guide_3d");
 auto& pane = fig.pane3("p");
 pane.spire3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3}));
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/scale_guide-6-three_d.svg)

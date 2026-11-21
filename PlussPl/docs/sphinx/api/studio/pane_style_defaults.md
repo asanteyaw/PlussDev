@@ -39,7 +39,7 @@ fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "x grid on both: " << (fig.panes()[0].x_axis().major_grid && fig.panes()[1].x_axis().major_grid) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.pane_style_defaults(look);
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "before has the grid: " << fig.panes()[0].x_axis().major_grid << ", after has it: " << fig.panes()[1].x_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -85,7 +85,7 @@ plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 plain.x_major_grid(false).y_major_grid(false);
 fig.pane2("default grid").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first: " << plain.x_axis().major_grid << ", second: " << fig.panes()[1].x_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -110,7 +110,7 @@ Pane other(PaneKind::Planar, Theme::paper(), "other");
 fig.pane_style_defaults(other);
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "after a second call, new pane has no grid: " << !fig.panes()[1].x_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -133,7 +133,7 @@ fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2}).label("series b");
 std::cout << "legend at NorthWest on both: " << (fig.panes()[0].legend_place() == KeyPlace::NorthWest && fig.panes()[1].legend_place() == KeyPlace::NorthWest) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

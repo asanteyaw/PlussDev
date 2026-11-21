@@ -49,7 +49,7 @@ Example 1. Points at `(x[i], y[i])`, all of one size and colour.
 auto fig = studio("cloud_plain");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/cloud-1-plain.svg)
@@ -60,7 +60,7 @@ Example 2. A third series gives each point its own size: a bubble chart. The siz
 auto fig = studio("cloud_size");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}, std::vector<double>{20, 40, 60, 80, 100});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/cloud-2-size.svg)
@@ -78,7 +78,7 @@ std::cout << "size 25 != size 100: " << (build(25.0) != build(100.0)) << "\n";
 auto fig = studio("cloud_size_scalar_out");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}, std::vector<double>{100.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -96,7 +96,7 @@ auto fig = studio("cloud_color");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}, std::vector<double>{3, 3, 3, 3, 3}, std::vector<double>{0.1, 0.3, 0.5, 0.7, 0.9});
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/cloud-4-color.svg)
@@ -108,7 +108,7 @@ auto fig = studio("cloud_both");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}, std::vector<double>{5, 4, 3, 2, 1}, std::vector<double>{10, 20, 30, 40, 50});
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/cloud-5-size_and_color.svg)
@@ -119,7 +119,7 @@ Example 6. A single colour value is repeated: every point takes the same place i
 auto fig = studio("cloud_color_scalar");
 auto& pane = fig.pane2("p");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}, std::vector<double>{3}, std::vector<double>{0.8});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/cloud-6-color_scalar.svg)
@@ -143,7 +143,7 @@ report("color differs", [](Pane& pane) { pane.cloud(std::vector<double>{1, 2, 3}
 auto fig = studio("cloud_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -167,7 +167,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

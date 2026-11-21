@@ -23,7 +23,7 @@ fig.save_pdf(dir + "default.pdf");
 const std::string a = read(dir + "auto.pdf"), b = read(dir + "internal.pdf"), c = read(dir + "default.pdf");
 std::cout << "starts with " << a.substr(0, 8) << "\\n";
 std::cout << "Auto == Internal: " << (a == b) << ", default argument == Auto: " << (a == c) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="to_pdf", text="`Studio::to_pdf()` returns the internal writer's PDF as a string instead of writing a file, so it is the same bytes as `save_pdf` with `Auto` or `Internal`, with no file involved.",
              code="""auto fig = studio("pdf_engine_string");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
@@ -33,7 +33,7 @@ fig.save_pdf(path, PdfEngine::Internal);
 std::ifstream in(path, std::ios::binary);
 const std::string file(std::istreambuf_iterator<char>(in), {});
 std::cout << "to_pdf() starts with " << pdf.substr(0, 8) << ", equals the saved file: " << (pdf == file) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="svg_convert", text="`SvgConvert` depends on the machine. The call either writes a PDF (printed here as the header of the file it wrote, which differs from the internal writer's) or, on a machine with none of the converters installed, throws and says which tools it looked for. Either outcome is reported, so the example is correct on both kinds of machine.",
              code="""auto fig = studio("pdf_engine_convert");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
@@ -47,7 +47,7 @@ try {
 } catch (const pluss::Error& e) {
   std::cout << "no converter: " << e.message() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="extension", text="The path must end in `.pdf`; a path with another extension is refused before anything is written, whichever engine is asked for.",
              code="""auto fig = studio("pdf_engine_extension");
 fig.pane2("PDF").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -59,7 +59,7 @@ for (PdfEngine engine : {PdfEngine::Internal, PdfEngine::SvgConvert}) {
     std::cout << message.substr(0, message.find('\\n')) << "\\n";
   }
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `to_pdf()` and `save_pdf(path)` need no external tool; `save_png` always rasterises through a converter and throws if there is none (it is not governed by `PdfEngine`).
 - The converter route writes a temporary SVG next to the system's temporary files and removes it again.""",

@@ -57,7 +57,6 @@ figure: 1280 x 820
 default.png: 1920 x 1230
 ```
 
-![Output of Example 1](img/save_png-1-default.svg)
 
 Example 2. Several densities of the same figure: 36, 96, 144 and 300 dpi. The pixel size is the figure size times `dpi / 96`, rounded.
 
@@ -89,7 +88,6 @@ fig.save_svg("figure.svg");
 300 dpi: 2500 x 1563
 ```
 
-![Output of Example 2](img/save_png-2-dpi.svg)
 
 Example 3. The 64-pixel floor. A 100 by 60 figure at 36 dpi would be 38 by 22 pixels, and each side is raised to 64.
 
@@ -115,7 +113,6 @@ fig.save_svg("figure.svg");
 small.png: 64 x 64
 ```
 
-![Output of Example 3](img/save_png-3-small.svg)
 
 Example 4. Folders, overwriting and the extension. A path with folders that do not exist creates them; writing the same path again replaces the file; `.PNG` is accepted.
 
@@ -149,7 +146,6 @@ upper-case extension: 1
 files other than PNGs left behind: 0
 ```
 
-![Output of Example 4](img/save_png-4-folders.svg)
 
 Example 5. Representative failures. The extension, the density and an enormous density are each refused with `pluss::Error` before anything is rendered or written.
 
@@ -184,7 +180,6 @@ dpi 100000000: save_png(): dpi gives a raster larger than 32768 pixels on a side
 never.png written: 0
 ```
 
-![Output of Example 5](img/save_png-5-errors.svg)
 
 ## Notes
 

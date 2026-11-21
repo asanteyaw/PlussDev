@@ -41,7 +41,7 @@ Example 1. Without a `mosaic()` call a figure has one grid cell, and a single pa
 auto fig = studio("mosaic_single");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "active: " << fig.mosaic_layout().active << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ auto at = [](const std::string& svg, const std::string& text) {
 };
 for (int i = 0; i < 4; ++i) std::cout << "cell " << i << " title at " << at(svg, "cell " + std::to_string(i)) << "\n";
 std::cout << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << ", active " << fig.mosaic_layout().active << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -115,7 +115,7 @@ auto fig = studio("mosaic_auto_out");
 fig.mosaic(1, 2);
 fig.pane2("left").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 fig.pane2("right").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -152,7 +152,7 @@ auto fig = studio("mosaic_gutter_out");
 fig.mosaic(1, 2, 120.0, 120.0);
 fig.pane2("left").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 fig.pane2("right").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -171,7 +171,7 @@ Example 5. The two gutters are independent: here the columns are close and the r
 auto fig = studio("mosaic_gutters_xy");
 fig.mosaic(2, 2, 8.0, 80.0);
 for (int i = 0; i < 4; ++i) fig.pane2("cell " + std::to_string(i)).trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/mosaic-5-axes_apart.svg)
@@ -198,7 +198,7 @@ auto at = [](const std::string& svg, const std::string& text) {
 };
 std::cout << "placed: " << at(svg, "placed bottom right") << "\n";
 for (int i = 0; i < 3; ++i) std::cout << "auto " << i << ": " << at(svg, "auto " + std::to_string(i)) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -219,7 +219,7 @@ auto fig = studio("mosaic_replace");
 fig.mosaic(2, 2).mosaic(1, 4);
 for (int i = 0; i < 4; ++i) fig.pane2("cell " + std::to_string(i)).trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -249,7 +249,7 @@ report("NaN gutter", [&] { fig.mosaic(2, 2, 10.0, std::numeric_limits<double>::q
 std::cout << "grid kept: " << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << "\n";
 fig.pane2("a").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 fig.pane2("b").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -279,7 +279,7 @@ try {
 auto ok = studio("mosaic_overflow_out");
 ok.mosaic(2, 2);
 for (int i = 0; i < 4; ++i) ok.pane2().trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-ok.save_svg("figure.svg");
+ok.show();
 ```
 
 ### Output
@@ -317,7 +317,7 @@ auto fig = studio("mosaic_tight_out");
 fig.mosaic(1, 2, 60.0, 60.0).tight_layout();
 fig.pane2("left").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 fig.pane2("right").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

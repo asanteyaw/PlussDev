@@ -50,7 +50,7 @@ auto fig = studio("transparent_surface");
 fig.mosaic(1, 2);
 fig.pane3("opaque").sheet(coord, coord, z).shade(ShadeMode::Smooth);
 fig.pane3("transparent(true)").sheet(coord, coord, z).shade(ShadeMode::Smooth).transparent(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/transparent-1-surface.svg)
@@ -77,7 +77,7 @@ for (int i = 0; i < 2; ++i) {
   Trace& front = pane.sheet(coord, coord, z).shade(ShadeMode::Smooth);
   if (i == 1) front.transparent(true);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/transparent-2-two_surfaces.svg)
@@ -104,7 +104,7 @@ std::cout << "after transparent(true): " << t.transparent() << "\n";
 t.transparent(false);
 std::cout << "after transparent(false): " << t.transparent() << "\n";
 t.transparent(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -151,7 +151,7 @@ std::cout << "lattice:  " << changes([&](Pane& p) -> Trace& { return p.lattice(c
 std::cout << "contour:  " << changes([&](Pane& p) -> Trace& { return p.contour(coord, coord, z); }, false) << "\n";
 auto fig = studio("transparent_kinds_out");
 fig.pane3("spire3, transparent").spire3(coord, coord, z).transparent(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

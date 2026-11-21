@@ -37,7 +37,7 @@ std::cout << "factory: '" << by_factory.name() << "'\n";
 std::cout << "constructor: '" << by_constructor.name() << "'\n";
 std::cout << "unnamed: '" << unnamed.name() << "', empty: " << unnamed.name().empty() << "\n";
 by_factory.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-by_factory.save_svg("figure.svg");
+by_factory.show();
 ```
 
 ### Output
@@ -62,7 +62,7 @@ auto a = build("alpha");
 auto b = build("a completely different name");
 std::cout << "same SVG: " << (a.to_svg() == b.to_svg()) << "\n";
 std::cout << "name in the SVG: " << (a.to_svg().find("alpha") != std::string::npos) << "\n";
-a.save_svg("figure.svg");
+a.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ original.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 Studio copy = original;
 copy.rename("copy");
 std::cout << original.name() << " / " << copy.name() << "\n";
-original.save_svg("figure.svg");
+original.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto fig = studio("named figure");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "page written: " << fig.show({}, 1280, 820, false) << "\n";
 std::cout << "name is still: " << fig.name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

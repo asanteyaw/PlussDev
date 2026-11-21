@@ -40,7 +40,7 @@ for (int i = 0; i < 3; ++i) {
   b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("signal");
   fig.legend(docks[i]);
   std::cout << names[i] << ": legend_dock() = " << static_cast<int>(fig.legend_dock()) << "\n";
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 ```
 
@@ -64,7 +64,7 @@ a.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).
 auto& b = fig.pane2("Group B");
 b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("signal");
 fig.legend(KeyDock::South);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/KeyDock-2-south.svg)
@@ -77,7 +77,7 @@ auto& pane = fig.pane2("Only pane");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("signal");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2}).label("baseline");
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/KeyDock-3-single.svg)
@@ -93,7 +93,7 @@ auto& b = fig.pane2("Hidden");
 b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("from the hidden pane");
 b.hide();
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/KeyDock-4-hidden_pane.svg)

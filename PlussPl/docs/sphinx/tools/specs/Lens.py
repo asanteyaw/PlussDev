@@ -54,7 +54,7 @@ for (int i = 0; i < 4; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().look(views[i][0], views[i][1]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="projection", text="`project`. The same view in perspective and in orthographic projection. A pane starts out orthographic, so `Orthographic` here is the default; in the perspective view the near parts of the surface look larger than the far parts and parallel edges converge.",
              code=SURFACE + """
 
@@ -67,7 +67,7 @@ for (int i = 0; i < 2; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().project(kinds[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="view_angle", text="`view_angle`, which only the perspective projection uses, so each pane here switches to perspective first. A wider field of view, 60 degrees, exaggerates the perspective, and a narrow one, 10 degrees, flattens it towards the orthographic view. With the default orthographic projection the angle would change nothing.",
              code=SURFACE + """
 
@@ -79,7 +79,7 @@ for (int i = 0; i < 3; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().project(ProjectionKind::Perspective).view_angle(angles[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="spin", text="`spin` turns the view relative to where it is, which is what an animation loop does. Starting from the default, two spins of 40 degrees of azimuth move the camera round the surface in steps; `look` would set each angle absolutely.",
              code=SURFACE + """
 
@@ -91,7 +91,7 @@ for (int i = 0; i < 3; ++i) {
   for (int s = 0; s < i; ++s) pane.lens().spin(40.0, 0.0);
   std::cout << "spins " << i << ": azimuth " << pane.lens().azimuth_deg() << ", elevation " << pane.lens().elevation_deg() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="The state of the lens, read back. A 3D pane starts at azimuth -37.5, elevation 30, a 30 degree field of view and an orthographic projection, looking at the origin with +z up. The lens of a 2D pane is the planar one: it looks straight down, at elevation 90, with +y up. A lens built directly with `Lens()` is a perspective one, unlike the lens a pane starts with. Each pane is read straight after it is created, because creating the next pane can move the earlier ones in memory.",
              code="""auto print = [](const char* name, const Pane& pane) {
   const Lens& lens = pane.lens();
@@ -115,7 +115,7 @@ const Lens bare;
 std::cout << "Lens():           orthographic " << (bare.projection() == ProjectionKind::Orthographic) << ", azimuth " << bare.azimuth_deg() << ", elevation " << bare.elevation_deg() << "\\n";
 std::cout << "Lens::spatial():  orthographic " << (Lens::spatial().projection() == ProjectionKind::Orthographic) << "\\n";
 std::cout << "Lens::planar():   elevation " << Lens::planar().elevation_deg() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Set the lens on the pane that owns the 3D traces; each pane has its own, so panes in one figure can be viewed from different directions.
 - [`LightRig`](LightRig.md) lights can be fixed to the camera or to the data (`LightSpace`), so moving the lens either carries the lights with it or leaves them where the data are.

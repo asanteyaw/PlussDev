@@ -53,7 +53,7 @@ pane.y_tick_labels(false);
 pane.z_tick_labels(false);
 pane.x_categories({"north", "south", "east", "west"});
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ pane.y_tick_labels(false);
 pane.z_tick_labels(false);
 pane.x_categories({"low", "mid", "high"}, 10.0, 5.0);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -111,7 +111,7 @@ pane.y_tick_labels(false);
 pane.z_tick_labels(false);
 pane.x_categories({"c", "b", "a"}, 3.0, -1.0);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -143,7 +143,7 @@ auto fig = studio("x_categories_same_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 5, 4});
 pane.x_categories({"a", "b", "c"});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -174,7 +174,7 @@ attempt("step zero", [&] { pane.x_categories({"a"}, 1.0, 0.0); });
 attempt("first not finite", [&] { pane.x_categories({"a"}, std::numeric_limits<double>::quiet_NaN(), 1.0); });
 attempt("step infinite", [&] { pane.x_categories({"a"}, 1.0, std::numeric_limits<double>::infinity()); });
 std::cout << "kept: " << pane.x_axis().ticks->labels.size() << " labels\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

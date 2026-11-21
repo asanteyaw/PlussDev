@@ -52,7 +52,7 @@ for (int i = 0; i <= 40; ++i) {
   hz.push_back(0.1 * t);
 }
 pane.cloud3(hx, hy, hz);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/cloud3-1-plain.svg)
@@ -72,7 +72,7 @@ for (int i = 0; i <= 40; ++i) {
 std::vector<double> size;
 for (std::size_t i = 0; i < hx.size(); ++i) size.push_back(10.0 + 2.0 * i);
 pane.cloud3(hx, hy, hz, size);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/cloud3-2-size.svg)
@@ -91,7 +91,7 @@ for (int i = 0; i <= 40; ++i) {
 }
 pane.cloud3(hx, hy, hz, std::vector<double>{3}, hz);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/cloud3-3-color.svg)
@@ -109,7 +109,7 @@ std::cout << "size 50 != size 150: " << (build(50.0) != build(150.0)) << "\n";
 auto fig = studio("cloud3_scalar_out");
 auto& pane = fig.pane3("p");
 pane.cloud3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2}, std::vector<double>{150});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -138,7 +138,7 @@ report("size differs", [](Pane& pane) { pane.cloud3(std::vector<double>{1, 2, 3}
 auto fig = studio("cloud3_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -161,7 +161,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

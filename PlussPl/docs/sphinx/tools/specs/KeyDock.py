@@ -30,7 +30,7 @@ for (int i = 0; i < 3; ++i) {
   b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("signal");
   fig.legend(docks[i]);
   std::cout << names[i] << ": legend_dock() = " << static_cast<int>(fig.legend_dock()) << "\\n";
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }"""),
         dict(id="south", text="`South` on the same figure, so that the band along the bottom edge can be compared with the column on the east edge of Example 1.",
              code="""auto fig = studio("key_dock_south");
@@ -40,14 +40,14 @@ a.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).
 auto& b = fig.pane2("Group B");
 b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("signal");
 fig.legend(KeyDock::South);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="single", text="With a single visible pane the entries are not prefixed with a pane title, because the prefix would carry no information.",
              code="""auto fig = studio("key_dock_single");
 auto& pane = fig.pane2("Only pane");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("signal");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2}).label("baseline");
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="hidden_pane", text="Only visible panes contribute. The second pane is hidden, so only the first pane's label is pooled, and since one visible pane remains no prefix is added.",
              code="""auto fig = studio("key_dock_hidden");
 fig.mosaic(1, 2);
@@ -57,7 +57,7 @@ auto& b = fig.pane2("Hidden");
 b.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 2, 4, 3, 5}).label("from the hidden pane");
 b.hide();
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The docked legend and a pane's inset legend are drawn independently. If you want only the pooled key, leave every pane's [`KeyPlace`](KeyPlace.md) at `None`, which is its default.
 - The look of the docked legend is set with `Studio::legend_frame` ([`KeyFrame`](KeyFrame.md)) and `Studio::legend_shape` ([`KeyShape`](KeyShape.md)).""",

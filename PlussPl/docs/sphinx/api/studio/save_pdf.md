@@ -54,7 +54,6 @@ written: 1
 equals to_pdf(): 1
 ```
 
-![Output of Example 1](img/save_pdf-1-default.svg)
 
 Example 2. The engines. `Auto` and `Internal` write identical files; `SvgConvert` writes a PDF made by the installed converter, so its bytes differ.
 
@@ -87,7 +86,6 @@ SvgConvert wrote a PDF: 1
 SvgConvert == Internal: 0
 ```
 
-![Output of Example 2](img/save_pdf-2-engines.svg)
 
 Example 3. Folders, overwriting and the extension. Missing folders are created, a second save replaces the file, and `.PDF` is accepted.
 
@@ -113,7 +111,6 @@ created: 1, overwritten: 1
 UPPER.PDF: 1
 ```
 
-![Output of Example 3](img/save_pdf-3-folders.svg)
 
 Example 4. Representative failures. A wrong or missing extension and an empty path are refused before anything is rendered or written, and a path that cannot be written names the path.
 
@@ -145,7 +142,6 @@ fig.save_svg("figure.svg");
 files written for the bad paths: 0
 ```
 
-![Output of Example 4](img/save_pdf-4-errors.svg)
 
 ## Notes
 

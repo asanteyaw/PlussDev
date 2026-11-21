@@ -15,7 +15,7 @@ std::cout << "new figure: " << fig.extent().width << " x " << fig.extent().heigh
 fig.size(900.0, 500.0);
 std::cout << "after size: " << fig.extent().width << " x " << fig.extent().height << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="matches_output", text="It is the size of the output. The SVG header carries the extent, and the PNG is the extent times `dpi / 96` pixels.",
              code="""auto fig = studio("extent_output");
 fig.size(640.0, 400.0);
@@ -24,7 +24,7 @@ const std::string svg = fig.to_svg();
 const auto at = svg.find("<svg");
 std::cout << svg.substr(svg.find("width=", at), 40) << "\\n";
 std::cout << "extent: " << fig.extent().width << " x " << fig.extent().height << ", at 192 dpi: " << fig.extent().width * 2 << " x " << fig.extent().height * 2 << " pixels\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="fixed_size", text="A setting, not a measurement. Adding a long headline, a docked legend and many panes does not change the extent; the content is laid out inside it.",
              code="""auto fig = studio("extent_fixed");
 fig.headline("A headline that is long enough that it has to wrap onto a second line of the canvas, easily");
@@ -34,7 +34,7 @@ for (int i = 0; i < 6; ++i) {
   fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series " + std::to_string(i));
 }
 std::cout << "still " << fig.extent().width << " x " << fig.extent().height << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="copy_it", text="Copy when the value must stay. The reference follows the figure, so a copy taken before a `size` call keeps the old value.",
              code="""auto fig = studio("extent_copy");
 const Extent2d before = fig.extent();
@@ -43,7 +43,7 @@ fig.size(500.0, 300.0);
 std::cout << "copy: " << before.width << " x " << before.height << "\\n";
 std::cout << "reference: " << live.width << " x " << live.height << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - Only [`size`](size.md) changes the extent; other settings never do.""",

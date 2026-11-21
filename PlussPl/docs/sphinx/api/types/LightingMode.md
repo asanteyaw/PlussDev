@@ -47,7 +47,7 @@ for (int i = 0; i < 3; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(modes[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/LightingMode-1-gallery.svg)
@@ -106,7 +106,7 @@ head.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gour
 auto& sun = fig.pane3("sun_key");
 sun.lights().sun_key();
 sun.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/LightingMode-3-rig.svg)
@@ -132,7 +132,7 @@ for (LightingMode m : {LightingMode::None, LightingMode::Flat, LightingMode::Gou
   trace.lighting(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.lighting_mode()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

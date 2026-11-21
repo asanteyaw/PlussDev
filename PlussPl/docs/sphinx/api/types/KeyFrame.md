@@ -45,7 +45,7 @@ for (int i = 0; i < 3; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_frame(frames[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/KeyFrame-1-gallery.svg)
@@ -61,7 +61,7 @@ for (KeyFrame f : {KeyFrame::Framed, KeyFrame::Soft, KeyFrame::None}) {
   pane.legend_frame(f);
   std::cout << static_cast<int>(f) << " -> " << static_cast<int>(pane.legend_frame()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -87,7 +87,7 @@ for (int i = 0; i < 3; ++i) {
   fig.legend(KeyDock::East);
   fig.legend_frame(frames[i]);
   std::cout << "Studio frame " << static_cast<int>(fig.legend_frame()) << "\n";
-  if (i == 0) fig.save_svg("figure.svg");
+  if (i == 0) fig.show();
 }
 ```
 

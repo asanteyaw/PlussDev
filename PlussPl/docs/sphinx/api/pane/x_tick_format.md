@@ -50,7 +50,7 @@ pane.x_tick_format(TickFormat::Percent);
 std::cout << "after Percent: " << static_cast<int>(pane.x_axis().tick_format) << "\n";
 pane.x_tick_format(TickFormat::Auto);
 std::cout << "back to Auto: " << static_cast<int>(pane.x_axis().tick_format) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ auto fig = studio("x_format_small_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
 pane.x_tick_format(TickFormat::Percent);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ auto fig = studio("x_format_large_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
 pane.x_tick_format(TickFormat::Scientific);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -163,7 +163,7 @@ std::cout << "same format twice: " << (build(TickFormat::Percent) == build(TickF
 auto fig = studio("x_format_distinct_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -194,7 +194,7 @@ pane.z_tick_labels(false);
 pane.x_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
 pane.x_tick_format(TickFormat::Percent);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

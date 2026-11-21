@@ -46,7 +46,7 @@ Example 1. Values only: the positions are the indices 1, 2, 3, ... A stem rises 
 auto fig = studio("spike_y");
 auto& pane = fig.pane2("p");
 pane.spike(std::vector<double>{2, 4, 3, 5, 4, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/spike-1-y.svg)
@@ -57,7 +57,7 @@ Example 2. Positions and values. The positions need not be evenly spaced.
 auto fig = studio("spike_xy");
 auto& pane = fig.pane2("p");
 pane.spike(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/spike-2-xy.svg)
@@ -69,7 +69,7 @@ auto fig = studio("spike_base");
 auto& pane = fig.pane2("p");
 pane.spike(std::vector<double>{2, 4, 3, 5, 4, 6}, 3.0);
 pane.rule_y(3.0, "base");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/spike-3-base.svg)
@@ -80,7 +80,7 @@ Example 4. The base with positions: the second overload takes it after the data.
 auto fig = studio("spike_base_xy");
 auto& pane = fig.pane2("p");
 pane.spike(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6}, 1.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/spike-4-base_xy.svg)
@@ -91,7 +91,7 @@ Example 5. Negative values lie below the base, which is zero by default.
 auto fig = studio("spike_negative");
 auto& pane = fig.pane2("p");
 pane.spike(std::vector<double>{2, -1, 3, -2, 4});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/spike-5-negative.svg)
@@ -113,7 +113,7 @@ report("x and y differ", [](Pane& pane) { pane.spike(std::vector<double>{1, 2, 3
 auto fig = studio("spike_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -135,7 +135,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

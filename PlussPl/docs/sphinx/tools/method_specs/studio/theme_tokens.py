@@ -15,7 +15,7 @@ const Theme& theme = fig.theme_tokens();
 std::cout << "name: " << theme.name() << ", accents: " << theme.accents().size() << "\\n";
 std::cout << "background (r, g, b): " << theme.background().red << ", " << theme.background().green << ", " << theme.background().blue << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="edit", text="Editing in place. Assigning a theme through the reference changes the figure's own parts at the next render; the figure differs from before and the name reads back.",
              code="""auto fig = studio("theme_tokens_edit");
 fig.headline("Edited through the reference");
@@ -23,7 +23,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3})
 const std::string before = fig.to_svg();
 fig.theme_tokens() = Theme::ocean();
 std::cout << "name now: " << fig.theme_tokens().name() << ", figure changed: " << (fig.to_svg() != before) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="panes_keep", text="Panes keep their own copy. A pane created before the edit keeps the theme it was created with, while one created after takes the new one.",
              code="""auto fig = studio("theme_tokens_panes");
 fig.mosaic(1, 2);
@@ -31,7 +31,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.theme_tokens() = Theme::ocean();
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "pane 0: " << fig.panes()[0].theme_tokens().name() << ", pane 1: " << fig.panes()[1].theme_tokens().name() << ", figure: " << fig.theme_tokens().name() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="same_as_theme", text="The same as `theme`. Setting the figure's theme with `theme(...)` or by assigning through the reference gives the same figure.",
              code="""auto build = [](bool through_reference) {
   auto fig = studio("theme_tokens_same");
@@ -44,7 +44,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("theme_tokens_same_out");
 fig.theme_tokens() = Theme::ocean();
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept` in both forms. The non-const form lets the caller change the figure, so a reference taken from a `const Studio` is the const one.
 - To restyle a pane, change the pane's own theme, or set the figure's theme before creating the pane.""",

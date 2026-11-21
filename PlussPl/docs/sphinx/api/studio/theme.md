@@ -36,7 +36,7 @@ fig.theme(Theme::ocean());
 fig.headline("Ocean everywhere");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 std::cout << "figure: " << fig.theme_tokens().name() << ", pane: " << fig.panes()[0].theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -56,7 +56,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.theme(Theme::ocean());
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "figure: " << fig.theme_tokens().name() << ", pane 0: " << fig.panes()[0].theme_tokens().name() << ", pane 1: " << fig.panes()[1].theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).lab
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 3, 4, 2}).label("second");
 pane.legend(KeyPlace::NorthWest);
 std::cout << "theme: " << fig.theme_tokens().name() << ", accents: " << fig.theme_tokens().accents().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -105,7 +105,7 @@ auto fig = studio("theme_two_out");
 fig.theme(Theme::ocean()).theme(Theme::paper());
 std::cout << "last call wins: " << fig.theme_tokens().name() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

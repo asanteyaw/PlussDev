@@ -27,7 +27,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
   pane.grid(styles[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="`grid` sets the whole combination and `grid_style` reads back which of the three it amounts to. Switching an individual axis toggle changes the reported style: after `x_major_grid(true)` alone the pane reports `Major`.",
              code="""auto fig = studio("grid_style_readback");
 auto& pane = fig.pane2("Grid");
@@ -38,26 +38,26 @@ std::cout << "after grid(MajorMinor): " << static_cast<int>(pane.grid_style()) <
 pane.grid(GridStyle::None);
 pane.x_major_grid(true);
 std::cout << "after grid(None), x_major_grid(true): " << static_cast<int>(pane.grid_style()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="per_axis", text="The per-axis toggles. Only the y-axis has major lines here, so the plot has horizontal lines to read values across, and none vertically.",
              code="""auto fig = studio("grid_style_per_axis");
 auto& pane = fig.pane2("Horizontal lines only");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
 pane.y_major_grid(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="minor_only", text="Minor lines can be turned on without major lines. Here only the x-axis has minor lines, drawn between the labelled ticks.",
              code="""auto fig = studio("grid_style_minor_only");
 auto& pane = fig.pane2("x minor only");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
 pane.x_minor_grid(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="log", text="On a logarithmic axis `MajorMinor` earns its place: the major lines are the labelled decades, and the minor lines subdivide each decade, crowding together towards its top as a logarithmic axis does.",
              code="""auto fig = studio("grid_style_log");
 auto& pane = fig.pane2("Log y, major and minor");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5, 6}, std::vector<double>{1.5, 8, 40, 300, 2000, 9000});
 pane.scale_y(ScalePolicy::log10());
 pane.grid(GridStyle::MajorMinor);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A new pane starts with no grid; a figure-wide default can be set once with [`Studio::pane_style_defaults`](../studio/pane_style_defaults.md) so that every pane created afterwards starts with it.
 - The grid is part of the pane, not of a trace: it is drawn whether or not the pane has traces, and it is unaffected by a trace's visibility.""",

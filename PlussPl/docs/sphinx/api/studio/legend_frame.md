@@ -43,7 +43,7 @@ std::cout << "after Framed: " << name(fig.legend_frame()) << "\n";
 fig.legend_frame(KeyFrame::None);
 std::cout << "after None: " << name(fig.legend_frame()) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -62,7 +62,7 @@ Example 2. `Framed`. The docked legend is drawn in a bordered box.
 auto fig = studio("legend_frame_framed");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::Framed);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/legend_frame-2-framed.svg)
@@ -73,7 +73,7 @@ Example 3. `Soft`, the default. A light filled panel with no hard edge.
 auto fig = studio("legend_frame_soft");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::Soft);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/legend_frame-3-soft.svg)
@@ -88,7 +88,7 @@ auto build = [](KeyFrame frame) {
   return fig;
 };
 std::cout << "Framed vs Soft: " << (build(KeyFrame::Framed).to_svg() != build(KeyFrame::Soft).to_svg()) << ", Soft vs None: " << (build(KeyFrame::Soft).to_svg() != build(KeyFrame::None).to_svg()) << "\n";
-build(KeyFrame::None).save_svg("figure.svg");
+build(KeyFrame::None).show();
 ```
 
 ### Output
@@ -111,7 +111,7 @@ auto build = [](bool set_frame) {
   return fig;
 };
 std::cout << "figure frame set, pane legend unchanged: " << (build(true).to_svg() == build(false).to_svg()) << "\n";
-build(false).save_svg("figure.svg");
+build(false).show();
 ```
 
 ### Output

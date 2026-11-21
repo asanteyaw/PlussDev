@@ -47,7 +47,7 @@ Example 1. Values and one error: the same distance above and below each point. T
 auto fig = studio("whisk_symmetric");
 auto& pane = fig.pane2("p");
 pane.whisk(std::vector<double>{3, 5, 4, 6}, std::vector<double>{0.5, 1.0, 0.4, 0.8});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/whisk-1-symmetric.svg)
@@ -58,7 +58,7 @@ Example 2. A single error is used for every point.
 auto fig = studio("whisk_scalar");
 auto& pane = fig.pane2("p");
 pane.whisk(std::vector<double>{3, 5, 4, 6}, std::vector<double>{0.7});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/whisk-2-scalar.svg)
@@ -69,7 +69,7 @@ Example 3. With positions: `whisk(x, y, error)`.
 auto fig = studio("whisk_xy");
 auto& pane = fig.pane2("p");
 pane.whisk(std::vector<double>{1, 2, 4, 8}, std::vector<double>{3, 5, 4, 6}, std::vector<double>{0.5, 1.0, 0.4, 0.8});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/whisk-3-xy.svg)
@@ -80,7 +80,7 @@ Example 4. Different errors below and above: `whisk(x, y, below, above)`. Here t
 auto fig = studio("whisk_asymmetric");
 auto& pane = fig.pane2("p");
 pane.whisk(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}, std::vector<double>{0.2, 0.3, 0.2, 0.4}, std::vector<double>{1.0, 1.5, 0.8, 1.2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/whisk-4-asymmetric.svg)
@@ -93,7 +93,7 @@ auto& pane = fig.pane2("p");
 pane.whisk(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6},
            std::vector<double>{0.5, 0.5, 0.5, 0.5}, std::vector<double>{0.5, 0.5, 0.5, 0.5},
            std::vector<double>{0.2, 0.3, 0.2, 0.3}, std::vector<double>{0.2, 0.3, 0.2, 0.3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/whisk-5-both.svg)
@@ -106,7 +106,7 @@ auto& pane = fig.pane2("p");
 const std::vector<double> x{1, 2, 3, 4}, y{3, 5, 4, 6};
 pane.whisk(x, y, std::vector<double>{0.5, 1.0, 0.4, 0.8});
 pane.cloud(x, y);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/whisk-6-with_points.svg)
@@ -130,7 +130,7 @@ report("negative error", [](Pane& pane) { pane.whisk(std::vector<double>{1, 2, 3
 auto fig = studio("whisk_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

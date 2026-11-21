@@ -20,7 +20,7 @@ fig.subpane2(0, 1, 2, 0, 0, 1, 1, "c");
 fig.subpane3(0, 1, 2, 0, 1, 1, 1, "d");
 std::cout << "after two sub-panes: " << fig.pane_count() << "\\n";
 fig.pane2("e").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="hidden", text="Hidden panes still count. Hiding changes what is drawn, not what the figure holds, so the count is unchanged and the pane can be shown again.",
              code="""auto fig = studio("pane_count_hidden");
 fig.mosaic(1, 2);
@@ -31,14 +31,14 @@ second.hide();
 std::cout << "panes: " << fig.pane_count() << ", visible: " << (fig.panes()[0].visible() ? 1 : 0) + (fig.panes()[1].visible() ? 1 : 0) << "\\n";
 second.visible(true);
 std::cout << "after showing it again: " << (fig.panes()[1].visible() ? 1 : 0) + 1 << " visible of " << fig.pane_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="matches_panes", text="Equal to the pane list. `pane_count()` is `panes().size()`, and the valid indices are `0` to `pane_count() - 1`.",
              code="""auto fig = studio("pane_count_panes");
 fig.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "count == size: " << (fig.pane_count() == fig.panes().size()) << "\\n";
 for (std::size_t i = 0; i < fig.pane_count(); ++i) std::cout << i << ": " << fig.panes()[i].title_text() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="grid_full", text="More panes than cells is refused at render time. A 1 by 2 mosaic holds two panes; a third pane is created without complaint (the grid could still change), and rendering the figure throws a message that names the problem.",
              code="""auto fig = studio("pane_count_full");
 fig.mosaic(1, 2);
@@ -54,7 +54,7 @@ try {
 auto fits = studio("pane_count_fits");
 fits.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fits.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fits.save_svg("figure.svg");"""),
+fits.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - A figure with no panes is valid: [`to_svg`](to_svg.md), [`save_pdf`](save_pdf.md) and [`show`](show.md) draw an empty canvas.""",

@@ -57,7 +57,7 @@ try {{
   std::cout << e.message() << "\\n";
 }}
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");""")
+fig.show();""")
 
 
 def errors(method, cases, planar=True, text=None):
@@ -80,7 +80,7 @@ def errors(method, cases, planar=True, text=None):
 auto fig = studio("{method}_errors_out");
 auto& pane = fig.{kind}("p");
 {valid}
-fig.save_svg("figure.svg");""")
+fig.show();""")
 
 
 def trace_notes(extra=""):
@@ -95,7 +95,7 @@ def trend():
            f"""{head('trend_basic')}
 Trace& line = pane.trend({X5}, {Y5});
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("order", "The order is the order of the data: `trend` does not sort by x. The same five points in a different order make a different path.",
            f"""auto fig = studio("trend_order");
 fig.mosaic(1, 2);
@@ -103,19 +103,19 @@ auto& sorted = fig.pane2("sorted by x");
 sorted.trend(std::vector<double>{{1, 2, 3, 4, 5}}, std::vector<double>{{1, 3, 2, 5, 4}});
 auto& shuffled = fig.pane2("as given");
 shuffled.trend(std::vector<double>{{3, 1, 5, 2, 4}}, std::vector<double>{{2, 1, 4, 3, 5}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two", "Several traces on one pane, each added by its own call, take the accent colours of the theme in turn.",
            f"""{head('trend_two')}
 pane.trend({X5}, {Y5}).label("first");
 pane.trend({X5}, {Y5B}).label("second");
 pane.legend(KeyPlace::NorthWest);
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("broadcast", "A single value is repeated to the length of the other series, so a flat line is `trend(x, 3.0)` written as a one-element series.",
            f"""{head('trend_broadcast')}
 pane.trend({X5}, pluss::series::linspace(3.0, 3.0, 1, pluss::ScalarType::Float64));
 pane.trend({X5}, {Y5});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("types", "Anything that converts to a `Series` is accepted: `std::vector` of any arithmetic type, an initializer list, or a `Series`. The three calls draw the same line.",
            f"""auto build = [&](int how) {{
   auto fig = studio("trend_types");
@@ -128,13 +128,13 @@ fig.save_svg("figure.svg");"""),
 std::cout << "vector<int>/<float> == vector<double>: " << (build(1) == build(0)) << ", linspace Series == vector: " << (build(2) == build(0)) << "\\n";
 {head('trend_types_out')}
 pane.trend(std::vector<double>{{1, 2, 3}}, std::vector<double>{{2, 4, 3}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("single", "One point is a valid trace, with nothing to join: it adds a trace that draws no line, and the pane's range still comes from it.",
            """auto fig = studio("trend_single");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{2.0}, std::vector<double>{3.0});
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("trend", [("lengths differ", "pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})"),
                          ("empty", "pane.trend(std::vector<double>{}, std::vector<double>{})")]),
         wrong_kind("trend", "pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1})"),
@@ -160,11 +160,11 @@ def cloud():
         ex("plain", "Points at `(x[i], y[i])`, all of one size and colour.",
            f"""{head('cloud_plain')}
 pane.cloud({X5}, {Y5});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("size", "A third series gives each point its own size: a bubble chart. The size is an area: a point of size 100 has the area of four points of size 25, and so twice their radius. Here the sizes grow from 20 to 100.",
            f"""{head('cloud_size')}
 pane.cloud({X5}, {Y5}, std::vector<double>{{20, 40, 60, 80, 100}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("size_scalar", "A single size is repeated for every point, so a series of equal markers can be larger or smaller than the default. Sizes 25 and 100 are two and one scale.",
            f"""auto build = [&](double size) {{
   auto fig = studio("cloud_size_scalar");
@@ -175,21 +175,21 @@ fig.save_svg("figure.svg");"""),
 std::cout << "size 25 != size 100: " << (build(25.0) != build(100.0)) << "\\n";
 {head('cloud_size_scalar_out')}
 pane.cloud({X5}, {Y5}, std::vector<double>{{100.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color", "A fourth series colours the points through the palette, from its lowest value to its highest. The colour guide, switched on with [`scale_guide`](scale_guide.md), shows which value each colour stands for.",
            f"""{head('cloud_color')}
 pane.cloud({X5}, {Y5}, std::vector<double>{{3, 3, 3, 3, 3}}, std::vector<double>{{0.1, 0.3, 0.5, 0.7, 0.9}});
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("size_and_color", "Size and colour together: two more quantities on the same plot.",
            f"""{head('cloud_both')}
 pane.cloud({X5}, {Y5}, std::vector<double>{{5, 4, 3, 2, 1}}, std::vector<double>{{10, 20, 30, 40, 50}});
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color_scalar", "A single colour value is repeated: every point takes the same place in the palette.",
            f"""{head('cloud_color_scalar')}
 pane.cloud({X5}, {Y5}, std::vector<double>{{3}}, std::vector<double>{{0.8}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("cloud", [("x and y differ", "pane.cloud(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})"),
                          ("size differs", "pane.cloud(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2})"),
                          ("color differs", "pane.cloud(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 1, 1}, std::vector<double>{1, 2})")]),
@@ -232,25 +232,25 @@ def columns(horizontal):
         ex("one", f"One series. The values are the {'lengths' if horizontal else 'heights'} of the bars, and the {pos} positions are the indices 1, 2, 3, 4.",
            f"""{head(name + '_one')}
 {one};
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two", f"Two series: the first is the {'bar lengths' if horizontal else 'positions'}, the second the {'positions' if horizontal else 'heights'}. The bars stand at the positions given, 10, 20, 30 and 40, and are 8 wide, 0.8 of the gap of 10 between neighbours.",
            f"""{head(name + '_two')}
 {two};
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("negative", "Values below zero run the other way: bars are drawn from zero to the value, so negative values go down (or left).",
            f"""{head(name + '_negative')}
 pane.{name}({neg});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("broadcast", "A single value is repeated for every position: equal bars at the positions given.",
            f"""{head(name + '_broadcast')}
 pane.{name}({'std::vector<double>{4}, std::vector<double>{1, 2, 3}' if horizontal else 'std::vector<double>{1, 2, 3}, std::vector<double>{4}'});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two_series", "Two traces on one pane are drawn over one another at the same positions, the later in front: useful for a total and a part of it.",
            f"""{head(name + '_two_series')}
 pane.{name}(std::vector<double>{{5, 6, 4, 7}}).label("total");
 pane.{name}(std::vector<double>{{3, 2, 3, 4}}).label("part");
 pane.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("spacing", "The bars adapt to the spacing of their positions: they are 0.8 of the smallest gap between two positions wide. Positions 1, 2, 5 and 6 (gap 1) give bars 0.8 wide; positions 10, 20, 50 and 60 (gap 10) give bars 8 wide, so the same picture is drawn at any scale.",
            f"""auto fig = studio("%s_spacing");
 fig.mosaic(1, 2);
@@ -258,11 +258,11 @@ auto& near = fig.pane2("positions 1, 2, 5, 6");
 near.%s(%s);
 auto& far = fig.pane2("positions 10, 20, 50, 60");
 far.%s(%s);
-fig.save_svg("figure.svg");""" % (name, name, "std::vector<double>{1, 2, 5, 6}, std::vector<double>{3, 5, 2, 6}" if not horizontal else "std::vector<double>{3, 5, 2, 6}, std::vector<double>{1, 2, 5, 6}", name, "std::vector<double>{10, 20, 50, 60}, std::vector<double>{3, 5, 2, 6}" if not horizontal else "std::vector<double>{3, 5, 2, 6}, std::vector<double>{10, 20, 50, 60}")),
+fig.show();""" % (name, name, "std::vector<double>{1, 2, 5, 6}, std::vector<double>{3, 5, 2, 6}" if not horizontal else "std::vector<double>{3, 5, 2, 6}, std::vector<double>{1, 2, 5, 6}", name, "std::vector<double>{10, 20, 50, 60}, std::vector<double>{3, 5, 2, 6}" if not horizontal else "std::vector<double>{3, 5, 2, 6}, std::vector<double>{10, 20, 50, 60}")),
         ex("outline", "The outline of the bars is a line of the trace, set with [`Trace::width`](../trace/width.md) and [`Trace::stroke`](../trace/stroke.md); the width of the bars themselves follows the positions.",
            f"""{head(name + '_outline')}
 pane.%s(std::vector<double>{{3, 5, 2, 6}}).width(3.0);
-fig.save_svg("figure.svg");""" % name),
+fig.show();""" % name),
         errors(name, [("lengths differ", f"pane.{name}(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2}})")]),
         wrong_kind(name, f"pane.{name}(std::vector<double>{{1, 2}})"),
     ]
@@ -294,7 +294,7 @@ def bucket():
         ex("default", "Ten values counted into 12 bins by default. The bins span the data's own range, 1 to 9.",
            f"""{head('bucket_default')}
 pane.bucket({data});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("bins", "The number of bins is the second argument. Five bins gives wider bars with larger counts, and the tallest bar is read from the axis.",
            f"""auto build = [&](int bins) {{
   auto fig = studio("bucket_bins");
@@ -308,21 +308,21 @@ std::cout << "3 bins:  " << texts(build(3)) << "\\n";
 std::cout << "12 bins: " << texts(build(12)) << "\\n";
 {head('bucket_bins_out')}
 pane.bucket({data}, 5);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("range", "An explicit range replaces the data's own: the bins divide the range given. Here 8 bins span 0 to 10, a little wider than the data, and the bars stand in their places on that scale.",
            f"""{head('bucket_range')}
 pane.bucket({data}, 8, Range1d{{0.0, 10.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two_traces", "To compare two samples on one scale, give both the same range and the same number of bins.",
            f"""{head('bucket_two')}
 pane.bucket(std::vector<double>{{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}}, 9, Range1d{{0.0, 10.0}}).label("sample a");
 pane.bucket(std::vector<double>{{5, 6, 6, 7, 7, 7, 8, 8, 9, 2}}, 9, Range1d{{0.0, 10.0}}).label("sample b");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("integers", "Integer data is accepted as it is.",
            f"""{head('bucket_ints')}
 pane.bucket(std::vector<int>{{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}}, 6);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("bucket", [("no bins", "pane.bucket(std::vector<double>{1, 2, 3}, 0)"), ("negative bins", "pane.bucket(std::vector<double>{1, 2, 3}, -3)"),
                           ("range reversed", "pane.bucket(std::vector<double>{1, 2, 3}, 4, Range1d{3.0, 1.0})"), ("no values", "pane.bucket(std::vector<double>{}, 4)")]),
         wrong_kind("bucket", "pane.bucket(std::vector<double>{1, 2, 3})"),
@@ -357,11 +357,11 @@ def quartet():
         ex("one", "One summary over all the values: the box spans the middle half of the data, the line in it is the median, and the whiskers reach out to the extremes that are not outliers.",
            f"""{head('quartet_one')}
 pane.quartet(std::vector<double>{{1, 2, 3, 4, 5, 6, 7, 8, 9, 30}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("groups", "A group series splits the values into groups, one box for each distinct group value, in the order the groups first appear.",
            f"""{head('quartet_groups')}
 pane.quartet(std::vector<double>{{1, 1, 1, 1, 1, 2, 2, 2, 2, 2}}, std::vector<double>{{3, 4, 5, 6, 7, 6, 7, 8, 9, 10}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("three", "Three groups, to compare the spread of three samples at a glance.",
            f"""{head('quartet_three')}
 std::vector<double> group, value;
@@ -372,7 +372,7 @@ for (int g = 0; g < 3; ++g) {{
   }}
 }}
 pane.quartet(group, value);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("outlier", "A value far from the rest is drawn on its own beyond the whisker rather than stretching the box: the single 30 above stands apart from the data that runs to 9.",
            f"""auto fig = studio("quartet_outlier");
 fig.mosaic(1, 2);
@@ -380,7 +380,7 @@ auto& with = fig.pane2("with an outlier");
 with.quartet(std::vector<double>{{1, 2, 3, 4, 5, 6, 7, 8, 9, 30}});
 auto& without = fig.pane2("without");
 without.quartet(std::vector<double>{{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("quartet", [("group and values differ", "pane.quartet(std::vector<double>{1, 2}, std::vector<double>{1, 2, 3})"), ("no values", "pane.quartet(std::vector<double>{})")]),
         wrong_kind("quartet", "pane.quartet(std::vector<double>{1, 2, 3})"),
     ]
@@ -414,7 +414,7 @@ def violin():
         ex("one", "One violin for all the values: the outline is a smoothed estimate of how the values are distributed, wide where they are dense.",
            f"""{head('violin_one')}
 pane.violin({s});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("options", "With a `ViolinOptions` the shape is chosen: here the violin is narrower, smoothed more, and drawn as one half only. Each field is described on the [`ViolinOptions`](../types/ViolinOptions.md) page.",
            f"""{head('violin_options')}
 ViolinOptions options;
@@ -422,18 +422,18 @@ options.width = 0.5;
 options.bw_adjust = 1.5;
 options.side = ViolinSide::Right;
 pane.violin({s}, options);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("groups", "A group series gives one violin for each distinct group value.",
            f"""{head('violin_groups')}
 pane.violin({g}, {s2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("groups_options", "Groups and options together.",
            f"""{head('violin_groups_options')}
 ViolinOptions options;
 options.inner = ViolinInner::Quartile;
 options.scale = ViolinScale::Width;
 pane.violin({g}, {s2}, options);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("defaults", "The calls without options use `ViolinOptions{}`: the two figures are the same.",
            f"""auto build = [&](bool explicit_options) {{
   auto fig = studio("violin_defaults");
@@ -445,13 +445,13 @@ fig.save_svg("figure.svg");"""),
 std::cout << "same figure: " << (build(true) == build(false)) << "\\n";
 {head('violin_defaults_out')}
 pane.violin({s});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("one_value", "A single value has no distribution to estimate. It is accepted and drawn as a thin violin at that value.",
            """auto fig = studio("violin_one_value");
 auto& pane = fig.pane2("p");
 pane.violin(std::vector<double>{3.0});
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("violin", [("width zero", "ViolinOptions o; o.width = 0.0; pane.violin(std::vector<double>{1, 2, 3, 4}, o)"),
                           ("smoothing negative", "ViolinOptions o; o.bw_adjust = -1.0; pane.violin(std::vector<double>{1, 2, 3, 4}, o)"),
                           ("cut negative", "ViolinOptions o; o.cut = -1.0; pane.violin(std::vector<double>{1, 2, 3, 4}, o)"),
@@ -496,7 +496,7 @@ auto& pane = fig.pane2("p");
 std::vector<double> theta, radius{{3, 5, 2, 4, 5}};
 for (int i = 0; i < 5; ++i) theta.push_back(2.0 * {PI} * i / 5.0);
 pane.radial(theta, radius);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("closed", "The points are joined in the order given and the last is not joined to the first. To close a shape, repeat the first point at the end: the second figure is closed.",
            f"""auto fig = studio("radial_closed");
 fig.mosaic(1, 2);
@@ -508,7 +508,7 @@ theta.push_back(theta.front());
 radius.push_back(radius.front());
 auto& closed = fig.pane2("closed");
 closed.radial(theta, radius);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("rose", "Many points make a smooth curve: a three-petal rose, `r = 1 + cos(3 theta)`, sampled every 5 degrees (theta in radians).",
            f"""auto fig = studio("radial_rose");
 auto& pane = fig.pane2("p");
@@ -519,7 +519,7 @@ for (int degrees = 0; degrees <= 360; degrees += 5) {{
   radius.push_back(1.0 + std::cos(3.0 * t));
 }}
 pane.radial(theta, radius);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("two", "Two traces on one polar pane, to compare two profiles on the same scale: six directions each, both closed.",
            f"""auto fig = studio("radial_two");
 auto& pane = fig.pane2("p");
@@ -528,14 +528,14 @@ for (int i = 0; i <= 6; ++i) theta.push_back(2.0 * {PI} * i / 6.0);
 pane.radial(theta, std::vector<double>{{4, 5, 3, 4, 2, 5, 4}}).label("this year");
 pane.radial(theta, std::vector<double>{{2, 3, 4, 2, 4, 3, 2}}).label("last year");
 pane.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("broadcast", "A single radius is repeated for every angle: points on a circle of that radius, here 33 points around it.",
            f"""auto fig = studio("radial_circle");
 auto& pane = fig.pane2("p");
 std::vector<double> theta;
 for (int i = 0; i <= 32; ++i) theta.push_back(2.0 * {PI} * i / 32.0);
 pane.radial(theta, std::vector<double>{{4}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("radial", [("lengths differ", "pane.radial(std::vector<double>{0, 1.5, 3}, std::vector<double>{1, 2})")]),
         wrong_kind("radial", "pane.radial(std::vector<double>{0, 1}, std::vector<double>{1, 2})"),
     ]
@@ -562,24 +562,24 @@ def ribbon_spike(slug):
         ex("y", f"Values only: the positions are the indices 1, 2, 3, ... {'The region between the values and the base (0) is filled.' if ribbon else 'A stem rises from the base (0) to each value.'}",
            f"""{head(slug + '_y')}
 pane.{slug}(std::vector<double>{{2, 4, 3, 5, 4, 6}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("xy", "Positions and values. The positions need not be evenly spaced.",
            f"""{head(slug + '_xy')}
 pane.{slug}(std::vector<double>{{0, 1, 3, 4, 8, 9}}, std::vector<double>{{2, 4, 3, 5, 4, 6}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("base", f"The base moves the baseline. With base 3 the {'band' if ribbon else 'stems'} {'is' if ribbon else 'are'} drawn between 3 and each value, so values below 3 {'fill upward from the line to the data' if ribbon else 'give stems that hang down'}.",
            f"""{head(slug + '_base')}
 pane.{slug}(std::vector<double>{{2, 4, 3, 5, 4, 6}}, 3.0);
 pane.rule_y(3.0, "base");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("base_xy", "The base with positions: the second overload takes it after the data.",
            f"""{head(slug + '_base_xy')}
 pane.{slug}(std::vector<double>{{0, 1, 3, 4, 8, 9}}, std::vector<double>{{2, 4, 3, 5, 4, 6}}, 1.0);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("negative", "Negative values lie below the base, which is zero by default.",
            f"""{head(slug + '_negative')}
 pane.{slug}(std::vector<double>{{2, -1, 3, -2, 4}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     if ribbon:
         ex_ += [ex("matrix", "A rank-2 `y` makes one band for each column, **stacked**: the rows are the positions, and each band is drawn on top of the ones before it, so its upper edge is the running total. Here two columns give two bands; the upper edge of the second is the sum of the two.",
@@ -588,7 +588,7 @@ auto& pane = fig.pane2("p");
 auto y = pluss::make_series(std::vector<double>{2, 1, 4, 2, 3, 3, 5, 2}, {4, 2});
 pane.ribbon(y);
 std::cout << "traces: " << pane.trace_count() << "\\n";
-fig.save_svg("figure.svg");""")]
+fig.show();""")]
     ex_ += [errors(slug, [("x and y differ", f"pane.{slug}(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2}})")]), wrong_kind(slug, f"pane.{slug}(std::vector<double>{{1, 2}})")]
     write(slug, dict(
         slug=slug, title=f"Pane::{slug}",
@@ -628,15 +628,15 @@ def wedge():
         ex("values", "Values only: each wedge's angle is its share of the total, starting from the top and going clockwise. Each wedge is annotated with its share as a percentage.",
            f"""{head('wedge_values')}
 pane.wedge(std::vector<double>{{4, 3, 2, 1}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("labels", "Labels name the wedges, in the order of the values.",
            f"""{head('wedge_labels')}
 pane.wedge(std::vector<double>{{4, 3, 2, 1}}, {{"rent", "food", "travel", "other"}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("explode", "A third series pulls wedges out of the pie: 0 keeps a wedge in place, larger values move it further away.",
            f"""{head('wedge_explode')}
 pane.wedge(std::vector<double>{{4, 3, 2, 1}}, std::vector<double>{{0, 0, 0.2, 0}}, {{"rent", "food", "travel", "other"}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("shares", "Only the shares matter: values 4, 3, 2, 1 and 40, 30, 20, 10 draw the same pie.",
            f"""auto build = [&](double scale) {{
   auto fig = studio("wedge_shares");
@@ -647,11 +647,11 @@ fig.save_svg("figure.svg");"""),
 std::cout << "same pie: " << (build(1.0) == build(10.0)) << "\\n";
 {head('wedge_shares_out')}
 pane.wedge(std::vector<double>{{40, 30, 20, 10}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("zero", "A zero value has no wedge, and a pie of one value is a full circle.",
            f"""{head('wedge_zero')}
 pane.wedge(std::vector<double>{{5, 0, 3}}, {{"a", "none", "c"}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("wedge", [("negative value", "pane.wedge(std::vector<double>{1, -2, 3})"), ("all zero", "pane.wedge(std::vector<double>{0, 0})"),
                          ("labels differ", "pane.wedge(std::vector<double>{1, 2, 3}, {\"a\", \"b\"})"), ("explode differs", "pane.wedge(std::vector<double>{1, 2, 3}, std::vector<double>{0, 0.1}, {\"a\", \"b\", \"c\"})")]),
         wrong_kind("wedge", "pane.wedge(std::vector<double>{1, 2, 3})"),
@@ -687,31 +687,31 @@ def whisk():
         ex("symmetric", "Values and one error: the same distance above and below each point. The positions are the indices 1, 2, 3, ...",
            f"""{head('whisk_symmetric')}
 pane.whisk(std::vector<double>{{3, 5, 4, 6}}, std::vector<double>{{0.5, 1.0, 0.4, 0.8}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("scalar", "A single error is used for every point.",
            f"""{head('whisk_scalar')}
 pane.whisk(std::vector<double>{{3, 5, 4, 6}}, std::vector<double>{{0.7}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("xy", "With positions: `whisk(x, y, error)`.",
            f"""{head('whisk_xy')}
 pane.whisk(std::vector<double>{{1, 2, 4, 8}}, std::vector<double>{{3, 5, 4, 6}}, std::vector<double>{{0.5, 1.0, 0.4, 0.8}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("asymmetric", "Different errors below and above: `whisk(x, y, below, above)`. Here the lower whiskers are short and the upper ones long.",
            f"""{head('whisk_asymmetric')}
 pane.whisk(std::vector<double>{{1, 2, 3, 4}}, std::vector<double>{{3, 5, 4, 6}}, std::vector<double>{{0.2, 0.3, 0.2, 0.4}}, std::vector<double>{{1.0, 1.5, 0.8, 1.2}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("both", "Errors in both directions: `whisk(x, y, y_below, y_above, x_below, x_above)`. Note the order: the y errors come first.",
            f"""{head('whisk_both')}
 pane.whisk(std::vector<double>{{1, 2, 3, 4}}, std::vector<double>{{3, 5, 4, 6}},
            std::vector<double>{{0.5, 0.5, 0.5, 0.5}}, std::vector<double>{{0.5, 0.5, 0.5, 0.5}},
            std::vector<double>{{0.2, 0.3, 0.2, 0.3}}, std::vector<double>{{0.2, 0.3, 0.2, 0.3}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("with_points", "Whiskers are usually drawn with the points they belong to: a cloud and a whisk of the same data on one pane.",
            f"""{head('whisk_with_points')}
 const std::vector<double> x{{1, 2, 3, 4}}, y{{3, 5, 4, 6}};
 pane.whisk(x, y, std::vector<double>{{0.5, 1.0, 0.4, 0.8}});
 pane.cloud(x, y);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("whisk", [("x and y differ", "pane.whisk(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2}, std::vector<double>{0.1})"),
                          ("error length differs", "pane.whisk(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{0.1, 0.1})"),
                          ("negative error", "pane.whisk(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{-0.1, 0.1, 0.1})")]),
@@ -749,13 +749,13 @@ def fieldmap():
 {GRID}
 pane.fieldmap(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("smooth", "A smooth field, a hill and a smaller one, on a 25 by 25 grid: the cells are small enough to read as a continuous picture.",
            f"""{head('fieldmap_smooth')}
 {BUMP}
 pane.fieldmap(axis, axis, z);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("color", "A fourth argument colours the cells by another quantity: the figure is drawn at the positions of `z`, and coloured by `c`. Here `c` is the field turned upside down, so the colours run the other way.",
            f"""{head('fieldmap_color')}
 {GRID}
@@ -769,12 +769,12 @@ auto build = [&](bool with_color) {{
 }};
 std::cout << "colour series changes the figure: " << (build(true) != build(false)) << "\\n";
 pane.fieldmap(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z, c);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("uneven", "The coordinates need not be evenly spaced: the cells are drawn where the coordinates put them.",
            f"""{head('fieldmap_uneven')}
 {GRID}
 pane.fieldmap(std::vector<double>{{0, 1, 4}}, std::vector<double>{{0, 2, 3}}, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("limits", "The range of the colours is the data's own, or what [`color_limits`](color_limits.md) sets. Limits 0..2 over data 0..1 use only the lower half of the palette.",
            f"""auto build = [&](bool limited) {{
   auto fig = studio("fieldmap_limits");
@@ -789,7 +789,7 @@ std::cout << "limits change the colours: " << (build(true) != build(false)) << "
 {GRID}
 pane.fieldmap(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z);
 pane.color_limits(Range1d{{0.0, 2.0}}).scale_guide(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors("fieldmap", [("coordinates do not match z", "auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.fieldmap(std::vector<double>{1, 2}, std::vector<double>{1, 2, 3}, z)"),
                             ("colour has another shape", "auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); auto c = pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}); pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z, c)")]),
         wrong_kind("fieldmap", "pane.fieldmap(std::vector<double>{1, 2}, std::vector<double>{1, 2}, pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}))"),
@@ -827,17 +827,17 @@ def contour_like(slug, filled):
            f"""{head(slug + '_default')}
 {BUMP}
 pane.{slug}(axis, axis, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("count", "A count of levels, as an integer, spaces that many levels evenly. Three levels give a coarse picture.",
            f"""{head(slug + '_count')}
 {BUMP}
 pane.{slug}(axis, axis, z, 3);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("levels", "Explicit levels, in a container, are used as given: here the levels at 0.1, 0.5 and 0.9 of a field that runs from 0 to about 1.2.",
            f"""{head(slug + '_levels')}
 {BUMP}
 pane.{slug}(axis, axis, z, std::vector<double>{{0.1, 0.5, 0.9}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("integer_or_container", "An integer is a count and a container is a list of levels: `4` and `std::vector<double>{4}` are different calls. The first draws four levels, the second one level at the value 4, which a field below 4 does not reach.",
            f"""auto build = [&](bool count) {{
   auto fig = studio("{slug}_int_or_container");
@@ -851,18 +851,18 @@ std::cout << "count and list differ: " << (build(true) != build(false)) << "\\n"
 {head(slug + '_int_or_container_out')}
 {BUMP}
 pane.{slug}(axis, axis, z, 4);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("with_map", f"Over a heat map of the same field the {verb} mark where the colours change. Both traces are on one pane, the {'bands' if filled else 'lines'} drawn after the map.",
            f"""{head(slug + '_with_map')}
 {BUMP}
 pane.fieldmap(axis, axis, z);
 pane.{slug}(axis, axis, z, 6);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("uneven", "The coordinates can be uneven: the grid is stretched to them.",
            f"""{head(slug + '_uneven')}
 {GRID}
 pane.{slug}(std::vector<double>{{0, 1, 4}}, std::vector<double>{{0, 2, 3}}, z, 4);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         errors(slug, [("no levels", f"auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}); pane.{slug}(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z, 0)"),
                       ("negative levels", f"auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}); pane.{slug}(std::vector<double>{{1, 2, 3}}, std::vector<double>{{1, 2, 3}}, z, -1)"),
                       ("coordinates do not match z", f"auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({{3, 3}}); pane.{slug}(std::vector<double>{{1, 2}}, std::vector<double>{{1, 2, 3}}, z)"),

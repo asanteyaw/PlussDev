@@ -43,7 +43,7 @@ pane.y_limits(limits);
 pane.band_y(window, "4 to 6");
 std::cout << "limits " << pane.y_axis().limits->low << " to " << pane.y_axis().limits->high << "\\n";
 std::cout << "default Range1d: " << Range1d{}.low << " to " << Range1d{}.high << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="vec3", text="`Vec3d` as the anchor of a pin and as the target of the lens. The pin is attached to the point (0, 0, 1) of a 3D pane; the lens is aimed at a point off the centre of the scene, which shifts the picture.",
              code="""constexpr std::int64_t n = 12;
 auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
@@ -63,7 +63,7 @@ for (int i = 0; i < 2; ++i) {
   if (i == 1) pane.lens().target_at(Vec3d{0.4, 0.0, 0.0});
   std::cout << "target (" << pane.lens().target().x << ", " << pane.lens().target().y << ", " << pane.lens().target().z << ")\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="extent", text="`Extent2d` as the figure size. `size(width, height)` sets it and `extent()` reads it back; the SVG's own width and height follow. A figure the size of a phone screen and the default one are drawn from the same data.",
              code="""const double sizes[2][2] = {{1280.0, 820.0}, {480.0, 320.0}};
 for (int i = 0; i < 2; ++i) {
@@ -74,7 +74,7 @@ for (int i = 0; i < 2; ++i) {
   const std::string svg = fig.to_svg();
   const auto at = svg.find("width=\\"");
   std::cout << "extent " << e.width << " x " << e.height << ", the SVG begins: " << svg.substr(svg.find("<svg"), 60) << "...\\n";
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 std::cout << "default Extent2d: " << Extent2d{}.width << " x " << Extent2d{}.height << "\\n";"""),
     ],

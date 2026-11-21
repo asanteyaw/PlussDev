@@ -20,20 +20,20 @@ plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& titled = fig.pane2("Titled pane");
 titled.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first title: '" << plain.title_text() << "', second: '" << titled.title_text() << "'\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="stack", text="Stacked by default. With no mosaic, panes stack top to bottom in creation order.",
              code="""auto fig = studio("pane2_stack");
 fig.pane2("first").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "panes: " << fig.pane_count() << ", mosaic active: " << fig.mosaic_layout().active << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="grid", text="On a grid. With `mosaic(2, 2)` four panes fill the cells row by row, and the first pane is the top-left cell.",
              code="""auto fig = studio("pane2_grid");
 fig.mosaic(2, 2);
 for (int i = 0; i < 4; ++i) {
   fig.pane2("cell " + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2.0 + i, 4.0, 3.0});
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="stable", text="The reference stays valid. The first pane is configured after twenty more have been created, and it is the same object `panes()` holds.",
              code="""auto fig = studio("pane2_stable");
 auto& first = fig.pane2("first");
@@ -42,7 +42,7 @@ first.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 first.title("configured late");
 std::cout << "same object: " << (&fig.panes()[0] == &first) << ", title: " << fig.panes()[0].title_text() << "\\n";
 fig.mosaic(3, 7);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="snapshots", text="Settings are copied at creation. The pane created before `context_scales` and `theme` keeps its old settings; the one created after takes the new ones.",
              code="""auto fig = studio("pane2_snapshots");
 fig.mosaic(1, 2);
@@ -52,7 +52,7 @@ fig.theme(Theme::ocean());
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "before: tick scale " << fig.panes()[0].tick_font_scale() << ", " << fig.panes()[0].theme_tokens().name() << "\\n";
 std::cout << "after:  tick scale " << fig.panes()[1].tick_font_scale() << ", " << fig.panes()[1].theme_tokens().name() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="too_many", text="More panes than cells. A third pane in a 1 by 2 mosaic is created without complaint, because the grid could still change, and rendering the figure reports it.",
              code="""auto fig = studio("pane2_too_many");
 fig.mosaic(1, 2);
@@ -65,7 +65,7 @@ try {
 auto fits = studio("pane2_fits");
 fits.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fits.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fits.save_svg("figure.svg");"""),
+fits.show();"""),
     ],
     notes="""- Not `noexcept`. It never fails for a bad title; any text is accepted.
 - Hide a pane with [`Pane::hide`](../pane/visible.md); it keeps its place in the list and its cell in the grid.""",

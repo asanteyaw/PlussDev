@@ -37,7 +37,7 @@ auto fig = studio("headline_basic");
 fig.headline("Quarterly revenue trend");
 fig.pane2("revenue").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 std::cout << "stored: " << fig.headline_text() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -62,7 +62,7 @@ auto replaced = build("first", "second");
 std::cout << "after two calls: " << replaced.headline_text() << "\n";
 std::cout << "empty string == never set: " << (build("first", "").to_svg() == build(nullptr, nullptr).to_svg()) << "\n";
 std::cout << "only spaces == never set:  " << (build("  \n  ", nullptr).to_svg() == build(nullptr, nullptr).to_svg()) << "\n";
-replaced.save_svg("figure.svg");
+replaced.show();
 ```
 
 ### Output
@@ -85,7 +85,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3})
 const std::string svg = fig.to_svg();
 std::cout << "whole text in one element: " << (svg.find(">A very long headline that keeps going and going well past the width of the figure so that it cannot possibly fit on a single line of this size<") != std::string::npos) << "\n";
 std::cout << "the last words are drawn: " << (svg.find("of this size<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ std::cout << "taller headline moves the pane: " << (build("one line") != two) <<
 auto fig = studio("headline_lines_out");
 fig.headline("Sales by region\nFiscal year 2025");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -142,7 +142,7 @@ std::cout << "six explicit lines, lines drawn: " << lines_drawn("one\ntwo\nthree
 auto fig = studio("headline_math");
 fig.headline("$\\mu + \\sigma$ per period");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -161,7 +161,7 @@ fig.rename("report").headline("Visible title");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const std::string svg = fig.to_svg();
 std::cout << fig.name() + " / " + fig.headline_text() + ", name drawn: " + std::to_string(svg.find(">report<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

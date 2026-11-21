@@ -41,7 +41,7 @@ pane.rule_y(2.0, "target");
 const auto& rule = pane.rules().front();
 std::cout << "stored: axis " << static_cast<int>(rule.axis) << ", value " << rule.value << ", label '" << rule.label << "', width " << rule.width << "\n";
 std::cout << "label drawn: " << (fig.to_svg().find(">target<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ auto fig = studio("rule_y_nolabel_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.rule_y(2.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ pane.rule_y(1.5, "low").rule_y(2.5, "mid").rule_y(3.5, "high");
 std::cout << "rules: " << pane.rules().size() << ":";
 for (const auto& r : pane.rules()) std::cout << " " << r.label << "@" << r.value;
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ auto fig = studio("rule_y_range_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.rule_y(40.0, "far");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -158,7 +158,7 @@ for (double bad : {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits
   }
 }
 std::cout << "rules added: " << pane.rules().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

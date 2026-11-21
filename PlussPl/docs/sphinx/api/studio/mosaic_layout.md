@@ -45,7 +45,7 @@ std::cout << "active: " << grid.active << ", rows: " << grid.rows << ", cols: " 
 std::cout << "gutters: " << gap(grid.gutter_x) << " x " << gap(grid.gutter_y) << "\n";
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -69,7 +69,7 @@ fig.mosaic(1, 4, 5.0, 30.0);
 grid = fig.mosaic_layout();
 std::cout << "mosaic(1, 4, 5, 30): " << grid.rows << " x " << grid.cols << ", gutters " << gap(grid.gutter_x) << ", " << gap(grid.gutter_y) << "\n";
 for (int i = 0; i < 4; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ auto build = [](double gutter) {
 auto narrow = build(0.0), wide = build(80.0);
 std::cout << "gutters stored: " << narrow.mosaic_layout().gutter_x << " and " << wide.mosaic_layout().gutter_x << "\n";
 std::cout << "figures differ: " << (narrow.to_svg() != wide.to_svg()) << "\n";
-wide.save_svg("figure.svg");
+wide.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ auto gap = [](double g) { return g == auto_gutter ? std::string("auto_gutter") :
 const auto& grid = fig.mosaic_layout();
 std::cout << "still " << grid.rows << " x " << grid.cols << ", gutters " << grid.gutter_x << ", " << grid.gutter_y << "\n";
 for (int i = 0; i < 4; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

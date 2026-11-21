@@ -37,7 +37,7 @@ std::cout << "after first: '" << fig.headline_text() << "'\n";
 fig.headline("Second");
 std::cout << "after second: '" << fig.headline_text() << "'\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -62,7 +62,7 @@ std::cout << "stored length: " << blank.headline_text().size() << ", figure equa
 const std::string long_text(200, 'x');
 plain.headline(long_text);
 std::cout << "long headline stored whole: " << (plain.headline_text() == long_text) << "\n";
-plain.save_svg("figure.svg");
+plain.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ const auto at = text.find('\n');
 std::cout << "first line: " << text.substr(0, at) << "\n";
 std::cout << "second line: " << text.substr(at + 1) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -106,7 +106,7 @@ std::cout << fig.name() << " / " << fig.headline_text() << "\n";
 fig.headline("");
 std::cout << fig.name() << " / '" << fig.headline_text() << "'\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

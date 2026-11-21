@@ -40,7 +40,7 @@ pane.color_limits(Range1d{0.0, 10.0});
 std::cout << "after color_limits: " << mode() << "\n";
 pane.auto_color();
 std::cout << "after auto_color:  " << mode() << ", limits cleared: " << !pane.color_axis().limits.has_value() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -72,7 +72,7 @@ std::cout << "never set == set and cleared: " << (svg[0] == svg[1]) << "\n";
 auto fig = studio("auto_color_identical_out");
 auto& pane = fig.pane2("auto_color");
 pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 3, 2, 5, 4}, std::vector<double>(5, 8.0), std::vector<double>{2.3, 4.7, 3.1, 5.85, 6.2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ pane.color_limits(Range1d{0.0, 10.0});
 std::cout << "while manual, method: " << static_cast<int>(pane.color_axis().limit_method) << " (TickAligned = 0, Tight = 1, Padded = 2)\n";
 pane.auto_color();
 std::cout << "after auto_color, method: " << static_cast<int>(pane.color_axis().limit_method) << ", mode " << static_cast<int>(pane.color_axis().limit_mode) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

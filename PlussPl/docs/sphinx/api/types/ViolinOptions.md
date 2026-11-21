@@ -51,7 +51,7 @@ for (int i = 0; i < 5; ++i) {
   options.inner = inners[i];
   pane.violin(sample, options);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/ViolinOptions-1-inner.svg)
@@ -80,7 +80,7 @@ left.inner = right.inner = ViolinInner::None;
 paired.violin(a, left).label("a");
 paired.violin(b, right).label("b");
 paired.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/ViolinOptions-2-side.svg)
@@ -104,7 +104,7 @@ ViolinOptions options;
 options.cut = 0.0;
 options.inner = ViolinInner::Point;
 tight.violin(sample, options);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/ViolinOptions-3-bandwidth.svg)
@@ -130,7 +130,7 @@ for (int i = 0; i < 3; ++i) {
   options.inner = ViolinInner::Quartile;
   pane.violin(group, values, options);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/ViolinOptions-4-scale.svg)
@@ -148,7 +148,7 @@ for (int i = 0; i < 3; ++i) {
   options.width = widths[i];
   pane.violin(sample, options);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/ViolinOptions-5-width.svg)
@@ -170,7 +170,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "violin(values) == violin(values, ViolinOptions{}): " << (svg[0] == svg[1]) << "\n";
 auto fig = studio("violin_defaults_out");
 fig.pane2("default").violin(sample);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

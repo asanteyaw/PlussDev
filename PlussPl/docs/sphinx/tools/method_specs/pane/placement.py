@@ -27,7 +27,7 @@ const auto& p = pane.placement();
 std::cout << "cell " << p.row << "," << p.col << " span " << p.row_span << "x" << p.col_span << ", explicit " << p.explicit_slot << "\\n";
 std::cout << "parent " << p.parent << ", nested grid " << p.local_rows << "x" << p.local_cols << "\\n";
 fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="placed", text="After `place`. The record holds the requested cell and spans, and `explicit_slot` is true; `place(row, col)` is the one-cell form.",
              code="""auto fig = studio("placement_placed");
 fig.mosaic(2, 2);
@@ -39,7 +39,7 @@ auto& below = fig.pane2("below left");
 below.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 below.place(1, 0);
 std::cout << "below: cell " << below.placement().row << "," << below.placement().col << " span " << below.placement().row_span << "x" << below.placement().col_span << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="subpane", text="A sub-pane. The record names the parent pane and the shape of the nested grid, and the cell is the cell inside that nested grid.",
              code="""auto fig = studio("placement_subpane");
 auto& parent = fig.pane2("parent");
@@ -49,7 +49,7 @@ child.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const auto& p = child.placement();
 std::cout << "parent " << p.parent << ", nested grid " << p.local_rows << "x" << p.local_cols << ", cell " << p.row << "," << p.col << ", explicit " << p.explicit_slot << "\\n";
 std::cout << "gutters " << p.local_gutter_x << ", " << p.local_gutter_y << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="fit_checked_later", text="Shape is checked when placing, fit when rendering. A cell outside the grid is accepted by `place` and recorded; rendering the figure reports that it does not fit.",
              code="""auto fig = studio("placement_fit");
 fig.mosaic(1, 2);
@@ -70,7 +70,7 @@ try {
 auto ok = studio("placement_fit_ok");
 ok.mosaic(1, 2);
 ok.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-ok.save_svg("figure.svg");"""),
+ok.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure. The reference stays valid for the life of the pane.
 - `explicit_slot` is the way to tell a placed pane from one the renderer placed.""",

@@ -65,7 +65,7 @@ auto name = [](TraceKind k) {
   std::cout << "cloud3:  " << name(pane.cloud3(x, y, x).kind()) << "\n";
   std::cout << "path3:   " << name(pane.path3(x, y, x).kind()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -91,7 +91,7 @@ auto fig = studio("trace_kind_wrong_pane");
 const std::vector<double> x{1, 2, 3}, y{2, 4, 3};
 try { fig.pane2("planar").cloud3(x, y, x); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 try { fig.pane3("volumetric").trend(x, y); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ const std::vector<double> x{1, 2, 3, 4}, y{2, 4, 3, 5};
   Trace& v = pane.violin(y);
   std::cout << "violin: ViolinData " << std::holds_alternative<ViolinData>(v.payload()) << ", inner Box " << (std::get<ViolinData>(v.payload()).options.inner == ViolinInner::Box) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -155,7 +155,7 @@ std::cout << "line: Faceted == Smooth: " << (line[0] == line[1]) << "\n";
 std::cout << "sheet: Faceted == Smooth: " << (surface[0] == surface[1]) << "\n";
 auto fig = studio("kind_options_out");
 fig.pane3("surface").sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -32,7 +32,7 @@ for (int i = 0; i < 3; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(modes[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_lights", text="A lighting mode needs lights. With an empty rig `Gouraud` has nothing to compute, and the figure is the same as with `None`: the SVG text of the two is equal.",
              code=SURFACE + """
 
@@ -57,7 +57,7 @@ head.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gour
 auto& sun = fig.pane3("sun_key");
 sun.lights().sun_key();
 sun.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="`lighting` returns the trace; `lighting_mode` reads it back. A new trace's default is `None`.",
              code=SURFACE + """
 
@@ -69,7 +69,7 @@ for (LightingMode m : {LightingMode::None, LightingMode::Flat, LightingMode::Gou
   trace.lighting(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.lighting_mode()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Lighting is per trace and the rig is per pane: two traces in one pane share the lights but can have different modes and materials.
 - `Gouraud` costs more to evaluate than `Flat` on very large grids, but is the usual choice for a smooth surface.""",

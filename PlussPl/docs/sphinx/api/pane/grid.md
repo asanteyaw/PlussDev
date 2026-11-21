@@ -44,7 +44,7 @@ auto fig = studio("grid_default");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 std::cout << "None: " << (pane.grid_style() == GridStyle::None) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -63,7 +63,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 pane.grid(GridStyle::Major);
 std::cout << "x major: " << pane.x_axis().major_grid << ", y major: " << pane.y_axis().major_grid << ", x minor: " << pane.x_axis().minor_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 pane.grid(GridStyle::MajorMinor);
 std::cout << "x major: " << pane.x_axis().major_grid << ", x minor: " << pane.x_axis().minor_grid << ", y minor: " << pane.y_axis().minor_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -109,7 +109,7 @@ auto fig = studio("grid_compare_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 pane.grid(GridStyle::MajorMinor);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -130,7 +130,7 @@ pane.y_major_grid(true);
 std::cout << "before: y major " << pane.y_axis().major_grid << "\n";
 pane.grid(GridStyle::None);
 std::cout << "after:  y major " << pane.y_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ pane.x_major_grid(false);
 std::cout << "x off, y still on: " << static_cast<int>(pane.grid_style()) << "\n";
 pane.y_minor_grid(true);
 std::cout << "y minor added: " << static_cast<int>(pane.grid_style()) << " (MajorMinor = 2)\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -175,7 +175,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
 pane.grid(GridStyle::Major);
 std::cout << "z major: " << pane.z_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

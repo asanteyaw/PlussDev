@@ -41,7 +41,7 @@ pane.x_auto_tick_decimals(2);
 std::cout << "after x_auto_tick_decimals(2): "; show();
 pane.clear_x_auto_tick_decimals();
 std::cout << "after clear: "; show();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -78,7 +78,7 @@ auto fig = studio("x_decimals_effect_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0.0, 0.1234, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3, 2});
 pane.x_auto_tick_decimals(2);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ std::cout << "4 decimals: " << texts(build(true)) << "\n";
 auto fig = studio("x_decimals_sci_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -148,7 +148,7 @@ pane.x_auto_tick_decimals(8);
 std::cout << "0 and 8 accepted, stored: " << *pane.x_axis().auto_tick_decimals << "\n";
 pane.x_auto_tick_decimals(3);
 std::cout << "kept after errors: " << *pane.x_axis().auto_tick_decimals << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -177,7 +177,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("x_decimals_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

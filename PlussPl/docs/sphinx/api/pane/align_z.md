@@ -81,7 +81,7 @@ large.x_tick_labels(false);
 large.y_tick_labels(false);
 small.align_z("range");
 large.align_z("range");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -112,7 +112,7 @@ fig.z_caption("range", "Shared z axis");
 const std::string svg = fig.to_svg();
 std::cout << "members: " << small.z_align_group() << ", " << large.z_align_group() << "\n";
 std::cout << "caption drawn once: " << (svg.find(">Shared z axis<") == svg.rfind(">Shared z axis<")) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -166,7 +166,7 @@ large.y_tick_labels(false);
 small.align_z("range");
 large.align_z("range");
 small.z_limits(Range1d{0.0, 5.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -206,7 +206,7 @@ auto texts = [](const std::string& svg) {
   return out;
 };
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -257,7 +257,7 @@ small.align_z("range");
 std::cout << "group: '" << small.z_align_group() << "'\n";
 small.clear_z_align();
 std::cout << "group after clear: '" << small.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -300,7 +300,7 @@ large.path3(std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3}, st
 large.x_tick_labels(false);
 large.y_tick_labels(false);
 small.align_z("only_me");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

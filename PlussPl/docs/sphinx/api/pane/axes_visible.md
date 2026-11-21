@@ -41,7 +41,7 @@ std::cout << "default: " << pane.axes_visible() << "\n";
 pane.axes_visible(false);
 std::cout << "after false: " << pane.axes_visible() << "\n";
 pane.axes_visible(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -64,7 +64,7 @@ pane.axes_visible(false);
 const std::string without = fig.to_svg();
 std::cout << "figures differ: " << (with_axes != without) << "\n";
 std::cout << "tick label 1.0 still drawn: " << (without.find(">1.0<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto fig = studio("axes_bare_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 2, 1, 3});
 pane.axes_visible(false).x_tick_labels(false).y_tick_labels(false);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -126,7 +126,7 @@ auto fig = studio("axes_3d_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
 pane.axes_visible(false);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -150,7 +150,7 @@ hidden.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 hidden.hide();
 const std::string svg = fig.to_svg();
 std::cout << "axes-off title drawn: " << (svg.find(">axes off<") != std::string::npos) << ", hidden title drawn: " << (svg.find(">hidden<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

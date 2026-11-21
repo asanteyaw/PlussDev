@@ -34,7 +34,7 @@ auto fig = studio("legend_place_default");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("a");
 std::cout << "None: " << (pane.legend_place() == KeyPlace::None) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ for (int i = 0; i < 7; ++i) {
   std::cout << names[i] << ": " << (pane.legend_place() == places[i]) << "\n";
 }
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 2, 1}).label("a"
 pane.legend(KeyPlace::Auto);
 fig.to_svg();
 std::cout << "still Auto after drawing: " << (pane.legend_place() == KeyPlace::Auto) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -108,7 +108,7 @@ right.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2}).label("b
 for (const auto& pane : fig.panes()) {
   std::cout << pane.title_text() << ": " << (pane.legend_place() != KeyPlace::None ? "has its own legend" : "needs one") << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

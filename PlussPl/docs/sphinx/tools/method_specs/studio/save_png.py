@@ -27,7 +27,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 
 fig.save_png("default.png");
 std::cout << "figure: " << fig.extent().width << " x " << fig.extent().height << "\\n";
 std::cout << "default.png: " << png_size("default.png") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="dpi", text="Several densities of the same figure: 36, 96, 144 and 300 dpi. The pixel size is the figure size times `dpi / 96`, rounded.",
              code="""auto png_size = [](const std::string& path) {
   std::ifstream in(path, std::ios::binary);
@@ -44,7 +44,7 @@ for (std::int64_t dpi : {36, 96, 144, 300}) {
   fig.save_png(path, dpi);
   std::cout << dpi << " dpi: " << png_size(path) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="small", text="The 64-pixel floor. A 100 by 60 figure at 36 dpi would be 38 by 22 pixels, and each side is raised to 64.",
              code="""auto png_size = [](const std::string& path) {
   std::ifstream in(path, std::ios::binary);
@@ -58,7 +58,7 @@ fig.size(100.0, 60.0);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.save_png("small.png", 36);
 std::cout << "small.png: " << png_size("small.png") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="folders", text="Folders, overwriting and the extension. A path with folders that do not exist creates them; writing the same path again replaces the file; `.PNG` is accepted.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("png_out");
@@ -77,7 +77,7 @@ for (const auto& e : fs::recursive_directory_iterator("png_out")) {
   if (e.is_regular_file() && e.path().extension() != ".png" && e.path().extension() != ".PNG") ++others;
 }
 std::cout << "files other than PNGs left behind: " << others << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="errors", text="Representative failures. The extension, the density and an enormous density are each refused with `pluss::Error` before anything is rendered or written.",
              code="""auto fig = studio("save_png_errors");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -95,7 +95,7 @@ attempt("dpi 0", [&] { fig.save_png("never.png", 0); });
 attempt("dpi -50", [&] { fig.save_png("never.png", -50); });
 attempt("dpi 100000000", [&] { fig.save_png("never.png", 100000000); });
 std::cout << "never.png written: " << std::filesystem::exists("never.png") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The raster is made from the same SVG that [`save_svg`](save_svg.md) writes, so a PNG and an SVG of one figure always agree.
 - The figure size is set with [`size`](size.md); raise `dpi`, not the size, to get a sharper picture of the same layout, because the size also changes how the panes are laid out.

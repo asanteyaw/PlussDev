@@ -477,7 +477,7 @@ options.tick_font_pt = 16.0;
 std::cout << "figure still uses " << fig.style_options().tick_font_pt << "\\n";
 fig.style(options);
 std::cout << "figure now uses " << fig.style_options().tick_font_pt << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="restyle", text="Restyling a figure for a talk: larger fonts, longer ticks and larger markers, set in one place. The two figures hold the same data.",
              code="""auto build = [&](bool talk) {
   auto fig = studio(talk ? "style_talk" : "style_default");
@@ -496,7 +496,7 @@ fig.save_svg("figure.svg");"""),
 };
 auto plain = build(false), talk = build(true);
 std::cout << "figures differ: " << (plain.to_svg() != talk.to_svg()) << "\\n";
-talk.save_svg("figure.svg");"""),
+talk.show();"""),
         dict(id="per_figure", text="A style belongs to the figure it is given to. Two figures built one after the other, the first styled and the second not: the second is drawn with the defaults.",
              code="""auto build = [&](bool styled) {
   auto fig = studio("style_per_figure");
@@ -515,7 +515,7 @@ std::cout << "unstyled figure after a styled one is unchanged: " << (plain_after
 std::cout << "styled differs from unstyled: " << (styled_first != plain_after) << "\\n";
 auto fig = studio("style_per_figure_out");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shared", text="One set for many figures. A program that makes several figures builds the set once and gives it to each, so they share a look.",
              code="""StyleOptions house;
 house.tick_font_pt = 12.0;
@@ -529,7 +529,7 @@ for (auto* fig : {&fig_a, &fig_b}) {
   fig->pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 3, 2});
 }
 std::cout << "same tick font: " << (fig_a.style_options().tick_font_pt == fig_b.style_options().tick_font_pt) << "\\n";
-fig_a.save_svg("figure.svg");"""),
+fig_a.show();"""),
         dict(id="spacing", text="A pair of values for the two layouts. The room left of the plot in the relaxed layout is changed, and the figure moves; the compact layout keeps its own value.",
              code="""auto build = [&](double left) {
   auto fig = studio("style_spacing");
@@ -547,7 +547,7 @@ fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0}
 StyleOptions options = fig.style_options();
 options.pane_left_inset.relaxed = defaults + 40.0;
 fig.style(options);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="errors", text="A value that is not a finite number is refused, naming it, and the figure keeps the style it had.",
              code="""auto fig = studio("style_errors");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
@@ -565,7 +565,7 @@ try {
   std::cout << e.message() << "\\n";
 }
 std::cout << "figure keeps " << fig.style_options().tick_font_pt << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A set is copied into the figure when it is given, and a figure that was never given one uses the defaults listed above.
 - Fonts that a figure scales ([`context_scales`](../studio/context_scales.md), [`Pane::tick_font_scale`](../pane/tick_font_scale.md)) multiply the point sizes here.

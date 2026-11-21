@@ -38,7 +38,7 @@ fig.mosaic(1, 2);
 fig.pane2("A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 std::cout << "dock: " << static_cast<int>(fig.legend_dock()) << " (None = 0)\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 std::cout << "dock: " << static_cast<int>(fig.legend_dock()) << " (East = 1)\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ fig.legend(KeyDock::South);
 fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/legend-3-south.svg)
@@ -92,7 +92,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).lab
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 const std::string svg = fig.to_svg();
 std::cout << "title used as a prefix: " << (svg.find("Ignored title: ") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -120,7 +120,7 @@ std::cout << "East, hidden trace == None:  " << (build(KeyDock::East, true) == b
 auto fig = studio("legend_empty_out");
 fig.legend(KeyDock::East);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ std::cout << "B hidden:     prefix " << (one.find("Group A: series a") != std::s
 auto fig = studio("legend_hidden_out");
 fig.legend(KeyDock::East);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -176,7 +176,7 @@ auto& a = fig.pane2("Group A");
 a.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 a.legend(KeyPlace::NorthWest);
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 7](img/legend-7-both.svg)
@@ -192,7 +192,7 @@ for (int i = 0; i < 12; ++i) {
   pane.trend(std::vector<double>{0, 1}, std::vector<double>{double(i), double(i + 1)})
       .label(i == 5 ? "a deliberately long label that does not fit in the key at all, however wide it is" : "series " + std::to_string(i));
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 8](img/legend-8-many.svg)

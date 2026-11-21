@@ -41,7 +41,7 @@ pane.band_y(Range1d{2.0, 3.0}, "target zone");
 const auto& band = pane.bands().front();
 std::cout << "stored: axis " << static_cast<int>(band.axis) << ", span " << band.span.low << " .. " << band.span.high << ", label '" << band.label << "'\n";
 std::cout << "label drawn: " << (fig.to_svg().find(">target zone<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ auto fig = studio("band_y_nolabel_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.band_y(Range1d{2.0, 3.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ pane.band_y(Range1d{1.0, 2.0}, "low").band_y(Range1d{2.5, 3.5}, "high");
 std::cout << "bands: " << pane.bands().size() << ":";
 for (const auto& b : pane.bands()) std::cout << " " << b.label << " [" << b.span.low << ", " << b.span.high << "]";
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ auto fig = studio("band_y_range_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.band_y(Range1d{30.0, 40.0}, "far");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -160,7 +160,7 @@ for (const Range1d& span : bad) {
   }
 }
 std::cout << "bands added: " << pane.bands().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -39,7 +39,7 @@ for (LimitMethod m : {LimitMethod::Tight, LimitMethod::Padded, LimitMethod::Tick
   pane.y_limit_method(m);
   std::cout << "set " << static_cast<int>(m) << ", read " << static_cast<int>(pane.y_axis().limit_method) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ auto texts = [](const std::string& svg) {
   return out;
 };
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto texts = [](const std::string& svg) {
   return out;
 };
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -122,7 +122,7 @@ auto build = [&](LimitMethod method) {
   return fig;
 };
 std::cout << "TickAligned vs Tight: " << (build(LimitMethod::TickAligned).to_svg() != build(LimitMethod::Tight).to_svg()) << ", Tight vs Padded: " << (build(LimitMethod::Tight).to_svg() != build(LimitMethod::Padded).to_svg()) << "\n";
-build(LimitMethod::Padded).save_svg("figure.svg");
+build(LimitMethod::Padded).show();
 ```
 
 ### Output
@@ -148,7 +148,7 @@ std::cout << "all equal: " << (build(LimitMethod::TickAligned) == build(LimitMet
 auto fig = studio("y_method_manual_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

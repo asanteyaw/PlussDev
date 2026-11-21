@@ -39,13 +39,13 @@ for (int i = 0; i < 7; ++i) {
   pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2}).label("baseline");
   pane.legend(places[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="default", text="The default. A pane that never calls `legend` reports `None`, and its labelled traces are not listed anywhere.",
              code="""auto fig = studio("key_place_default");
 auto& pane = fig.pane2("No legend call");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("signal");
 std::cout << "legend_place() is None: " << (pane.legend_place() == KeyPlace::None) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="`legend` returns the pane, and `legend_place` reads the value back. The underlying integers are the declaration order of the enumerators, which is what a stored or serialised value would contain.",
              code="""auto fig = studio("key_place_readback");
 auto& pane = fig.pane2("Placement");
@@ -56,14 +56,14 @@ for (KeyPlace place : {KeyPlace::None, KeyPlace::Auto, KeyPlace::NorthEast, KeyP
   std::cout << static_cast<int>(pane.legend_place()) << " ";
 }
 std::cout << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="unlabelled", text="Only labelled traces are listed. The second trace has no `label`, so a legend with two lines in the plot has one entry.",
              code="""auto fig = studio("key_place_unlabelled");
 auto& pane = fig.pane2("One entry");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("labelled");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 2.5, 3, 3.2});
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="outside", text="`OutsideEast` leaves the whole plot area free of the key. With nine labelled series a key inside the plot area would cover data in every corner; outside, it takes width from the figure instead.",
              code="""auto fig = studio("key_place_outside");
 auto& pane = fig.pane2("Nine series");
@@ -73,7 +73,7 @@ for (int k = 1; k <= 9; ++k) {
   pane.trend(x, y).label("series " + std::to_string(k));
 }
 pane.legend(KeyPlace::OutsideEast);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `Auto` chooses for the data it is given. Do not rely on a particular corner: an explicit value is the only way to make the placement part of the figure's specification.
 - A pane's legend lists that pane's labelled traces only. To pool the traces of every pane into one key, use [`Studio::legend`](../studio/legend.md) with a [`KeyDock`](KeyDock.md).

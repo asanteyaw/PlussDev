@@ -55,7 +55,7 @@ for (int i = 0; i < 3; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(modes[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/lighting-1-gallery.svg)
@@ -87,7 +87,7 @@ auto fig = studio("lighting_no_lights_out");
 auto& pane = fig.pane3("headlight, Gouraud");
 pane.lights().headlight();
 pane.sheet(coord, coord, z).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -120,7 +120,7 @@ t.lighting(LightingMode::Flat);
 std::cout << "after lighting(Flat):    " << static_cast<int>(t.lighting_mode()) << "\n";
 t.lighting(LightingMode::Gouraud).label("lit");
 std::cout << "after lighting(Gouraud): " << static_cast<int>(t.lighting_mode()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -152,7 +152,7 @@ pane.lights().sun_key();
 pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
 auto shifted = pluss::series::linspace(1.5, 3.5, n, pluss::ScalarType::Float64);
 pane.sheet(shifted, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/lighting-4-two_traces.svg)
@@ -193,7 +193,7 @@ auto fig = studio("lighting_kinds_out");
 auto& pane = fig.pane3("spire3, lit");
 pane.lights().sun_key();
 pane.spire3(coord, coord, z).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

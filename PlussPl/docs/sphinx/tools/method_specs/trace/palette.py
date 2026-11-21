@@ -32,7 +32,7 @@ for (int i = 0; i < 5; ++i) {
   PaletteRamp ramp = i == 0 ? PaletteRamp::thermal() : i == 1 ? PaletteRamp::neutral() : i == 2 ? PaletteRamp::lagoon() : i == 3 ? PaletteRamp::ocean() : PaletteRamp::meadow();
   fig.pane2(names[i]).fieldmap(coord, coord, z).palette(ramp);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="default", text="The default and a custom ramp. A new trace carries the theme's surface palette, read back with `palette_ramp()`; a ramp of three colours replaces it and is read back by name.",
              code="""auto fig = studio("palette_default");
 auto& pane = fig.pane2("Palette");
@@ -40,7 +40,7 @@ Trace& t = pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1,
 std::cout << "default: " << t.palette_ramp().name() << " (the theme's is " << pane.theme_tokens().surface_palette().name() << ")\\n";
 t.palette(PaletteRamp("duo", {Rgba::from_u8(20, 40, 160), Rgba::from_u8(250, 200, 40)}));
 std::cout << "after palette(): " << t.palette_ramp().name() << ", " << t.palette_ramp().stops().size() << " stops\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="colored_cloud", text="A cloud coloured by data. The points of a `cloud` made with a colour series are mapped through the palette: the same points with `thermal` and with `ocean`. A cloud with no colour series ignores the palette, which the equality shows.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5, 6, 7, 8}, y{2, 4, 3, 5, 4, 6, 5, 7}, size(8, 9.0), c{1, 2, 3, 4, 5, 6, 7, 8};
 auto fig = studio("palette_cloud");
@@ -55,7 +55,7 @@ for (int i = 0; i < 2; ++i) {
   svg[i] = probe.to_svg();
 }
 std::cout << "a cloud without colour data ignores the palette: " << (svg[0] == svg[1]) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="fills", text="Filled kinds sample the palette at a fixed point. Columns, a histogram and a pie each take their fill from the ramp: the same three traces with `thermal` and `meadow`. A single colour for each trace is chosen from the ramp, so a palette with a contrast between its ends gives distinct fills for different kinds.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
 auto fig = studio("palette_fills");
@@ -67,7 +67,7 @@ for (int i = 0; i < 2; ++i) {
   fig.pane2(name + ": bucket").bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5}).palette(ramp);
   fig.pane2(name + ": wedge").wedge(std::vector<double>{3, 2, 1, 2}).palette(ramp);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="surface", text="A palette on a surface, together with its limits. The surface is coloured by height with `lagoon`, and with `lagoon` restricted to the upper half of the heights, so the lower half is all one colour.",
              code="""constexpr std::int64_t n = 16;
 auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
@@ -82,7 +82,7 @@ auto fig = studio("palette_surface");
 fig.mosaic(1, 2);
 fig.pane3("lagoon").sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(PaletteRamp::lagoon());
 fig.pane3("lagoon, limits 0.5 to 1").sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(PaletteRamp::lagoon()).color_limits(Range1d{0.5, 1.0});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A palette is copied into the trace, so changing the original `PaletteRamp` afterwards does not change traces that have already used it.
 - Ramps have no direction built in: to colour high values dark instead of light, build a ramp whose stops run the other way.

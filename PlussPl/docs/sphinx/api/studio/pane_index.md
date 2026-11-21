@@ -38,7 +38,7 @@ first.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& second = fig.pane2("second");
 second.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first: " << fig.pane_index(first) << ", second: " << fig.pane_index(second) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector
 bool consistent = true;
 for (std::size_t i = 0; i < fig.panes().size(); ++i) consistent = consistent && fig.pane_index(fig.panes()[i]) == i;
 std::cout << "pane_index(panes()[i]) == i for all: " << consistent << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ left.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& right = fig.subpane2(parent_index, 1, 2, 0, 1, 1, 1, "right");
 right.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "parent " << parent_index << ", left " << fig.pane_index(left) << ", right " << fig.pane_index(right) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ attempt("own pane", mine);
 attempt("standalone pane", standalone);
 attempt("pane of another figure", theirs);
 attempt("copy of a pane", copy);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

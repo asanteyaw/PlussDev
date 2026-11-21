@@ -41,7 +41,7 @@ pane.y_tick_rotation(45.0);
 std::cout << "after y_tick_rotation(45): "; show();
 pane.clear_y_tick_rotation();
 std::cout << "after clear_y_tick_rotation(): "; show();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ for (double degrees : {0.0, 45.0, 90.0, -90.0, 720.0}) {
   std::cout << degrees << " stored as " << *pane.y_axis().tick_rotation_deg << "\n";
 }
 pane.y_tick_rotation(45.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 
 pane.y_tick_rotation(60.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ for (double bad : {std::numeric_limits<double>::infinity(), -std::numeric_limits
   }
 }
 std::cout << "kept: " << *pane.y_axis().tick_rotation_deg << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -158,7 +158,7 @@ auto fig = studio("y_tick_rotation_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

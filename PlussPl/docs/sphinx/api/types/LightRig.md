@@ -61,7 +61,7 @@ for (int i = 0; i < 4; ++i) {
   if (i == 3) pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/LightRig-1-presets.svg)
@@ -85,7 +85,7 @@ for (int i = 0; i < 4; ++i) {
 auto fig = studio("light_rig_contents");
 fig.pane3("rig").lights().headlight();
 std::cout << "a new pane has no lights: " << studio("x").pane3("y").lights().empty() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -125,7 +125,7 @@ pane.lights().clear()
     .add(LightSpec{70.0, 15.0, LightSpace::Camera, LightStyle::Local});
 std::cout << "lights: " << pane.lights().lights().size() << "\n";
 pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -159,7 +159,7 @@ for (int i = 0; i < 2; ++i) {
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
   pane.lens().look(120.0, 30.0);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/LightRig-4-space.svg)
@@ -177,7 +177,7 @@ pane.lights().clear();
 std::cout << "after clear():               " << pane.lights().lights().size() << " lights, empty " << pane.lights().empty() << "\n";
 pane.lights().clear().sun_key();
 std::cout << "after clear().sun_key():     " << pane.lights().lights().size() << " lights\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -220,7 +220,7 @@ for (int i = 0; i < 2; ++i) {
   svg[i] = alone.to_svg();
 }
 std::cout << "Infinite == Local: " << (svg[0] == svg[1]) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

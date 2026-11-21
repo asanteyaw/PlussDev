@@ -34,7 +34,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.y_limit_method(methods[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="manual", text="A manual range overrides the method. After `y_limits` the two figures below, which differ only in the method, are byte for byte identical, and the axis runs exactly from 0 to 10.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5};
 const std::vector<double> y{2.3, 4.7, 3.1, 5.85, 6.2};
@@ -47,7 +47,7 @@ for (int i = 0; i < 2; ++i) {
   pane.y_limits(Range1d{0.0, 10.0});
   pane.y_limit_method(methods[i]);
   svg[i] = fig.to_svg();
-  if (i == 0) fig.save_svg("figure.svg");
+  if (i == 0) fig.show();
 }
 std::cout << "Tight == Padded with manual limits: " << (svg[0] == svg[1]) << "\\n";"""),
         dict(id="auto_again", text="`auto_y` returns an axis to automatic fitting, and the method it had before applies again. The limits are manual after `y_limits`, automatic again after `auto_y`.",
@@ -61,7 +61,7 @@ std::cout << "after y_limits:    " << static_cast<int>(pane.y_axis().limit_mode)
 pane.auto_y();
 std::cout << "after auto_y:      " << static_cast<int>(pane.y_axis().limit_mode) << "\\n";
 std::cout << "method is still Tight: " << (pane.y_axis().limit_method == LimitMethod::Tight) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="color", text="The colour axis has a method too. A `cloud` coloured by a series takes its colour range from the data, here with a constant marker size, and `Tight` makes the extremes of the data the ends of the colour scale.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5, 6};
 const std::vector<double> y{1, 3, 2, 5, 4, 6};
@@ -77,7 +77,7 @@ for (int i = 0; i < 2; ++i) {
   pane.color_limit_method(methods[i]);
   std::cout << names[i] << ": colour range in force " << static_cast<int>(pane.color_axis().limit_method) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `LimitMethod` and `LimitMode` describe an axis that holds the limits; they are read through `Pane::x_axis()`, `y_axis()`, `z_axis()` and `color_axis()`.
 - Fitting happens when the figure is rendered, so the order in which you call `y_limit_method` and `trend` does not matter.

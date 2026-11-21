@@ -47,7 +47,7 @@ for (int i = 0; i < 4; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(profiles[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/MaterialProfile-1-gallery.svg)
@@ -141,7 +141,7 @@ for (MaterialProfile m : {MaterialProfile::Dull, MaterialProfile::Shiny, Materia
   trace.material(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.material_profile()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -124,6 +124,7 @@ api/series_factory/pile
 api/series_factory/logspace
 api/series_factory/nan
 api/series_factory/inf
+api/series_factory/from_host
 ```
 
 <div class="pluss-inline-prev-next">

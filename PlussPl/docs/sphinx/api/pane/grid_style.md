@@ -42,7 +42,7 @@ pane.grid(GridStyle::MajorMinor);
 std::cout << "after grid(MajorMinor): " << static_cast<int>(pane.grid_style()) << "\n";
 pane.grid(GridStyle::None);
 std::cout << "after grid(None):       " << static_cast<int>(pane.grid_style()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -72,7 +72,7 @@ pane.x_major_grid(false);
 show("x_major_grid(false)      ");
 pane.y_minor_grid(false);
 show("y_minor_grid(false)      ");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -97,7 +97,7 @@ pane.y_major_grid(true);
 std::cout << "grid_style: " << static_cast<int>(pane.grid_style()) << "\n";
 std::cout << "x major " << pane.x_axis().major_grid << ", minor " << pane.x_axis().minor_grid << "\n";
 std::cout << "y major " << pane.y_axis().major_grid << ", minor " << pane.y_axis().minor_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

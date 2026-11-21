@@ -40,7 +40,7 @@ std::cout << "after x_minor_grid(): " << pane.x_axis().minor_grid << "\n";
 pane.x_minor_grid(false);
 std::cout << "after x_minor_grid(false): " << pane.x_axis().minor_grid << "\n";
 pane.x_minor_grid(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -70,7 +70,7 @@ auto fig = studio("x_minor_grid_effect_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.x_minor_grid();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -90,7 +90,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.x_minor_grid();
 std::cout << "x: " << pane.x_axis().minor_grid << ", y: " << pane.y_axis().minor_grid << ", z: " << pane.z_axis().minor_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ std::cout << "major on: " << static_cast<int>(pane.grid_style()) << "\n";
 pane.x_minor_grid();
 std::cout << "major and minor on: " << static_cast<int>(pane.grid_style()) << "\n";
 pane.x_minor_grid(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -142,7 +142,7 @@ auto fig = studio("x_minor_grid_independent_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.x_major_grid().x_minor_grid();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

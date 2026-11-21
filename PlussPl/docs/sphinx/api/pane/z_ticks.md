@@ -52,7 +52,7 @@ pane.y_tick_labels(false);
 std::cout << "automatic: " << texts(fig.to_svg()) << "\n";
 pane.z_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
 std::cout << "explicit:  " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -85,7 +85,7 @@ std::vector<double> positions;
 for (std::size_t i = 0; i < names.size(); ++i) positions.push_back(1.0 + static_cast<double>(i));
 pane.z_ticks(positions, names);
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -115,7 +115,7 @@ pane.y_tick_labels(false);
 auto positions = pluss::make_series(std::vector<double>{1.0, 4.0}, {2});
 pane.z_ticks(positions, std::vector<std::string_view>{"first", "last"});
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -154,7 +154,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{1, 2, 3, 4});
 pane.z_ticks(std::vector<double>{0, 2, 10}, {"zero", "two", "ten"});
 pane.z_limits(Range1d{0.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -180,7 +180,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("z_ticks_clear_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -209,7 +209,7 @@ attempt("no positions", [&] { pane.z_ticks(std::vector<double>{}, {}); });
 attempt("length mismatch", [&] { pane.z_ticks(std::vector<double>{1, 2}, {"only one"}); });
 attempt("not a vector", [&] { pane.z_ticks(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {2, 2}), {"a", "b"}); });
 std::cout << "kept: " << pane.z_axis().ticks->labels.size() << " labels\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

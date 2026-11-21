@@ -39,7 +39,7 @@ auto& pane = fig.pane2("p");
 std::vector<double> theta, radius{3, 5, 2, 4, 5};
 for (int i = 0; i < 5; ++i) theta.push_back(2.0 * 3.141592653589793 * i / 5.0);
 pane.radial(theta, radius);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/radial-1-basic.svg)
@@ -57,7 +57,7 @@ theta.push_back(theta.front());
 radius.push_back(radius.front());
 auto& closed = fig.pane2("closed");
 closed.radial(theta, radius);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/radial-2-closed.svg)
@@ -74,7 +74,7 @@ for (int degrees = 0; degrees <= 360; degrees += 5) {
   radius.push_back(1.0 + std::cos(3.0 * t));
 }
 pane.radial(theta, radius);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/radial-3-rose.svg)
@@ -89,7 +89,7 @@ for (int i = 0; i <= 6; ++i) theta.push_back(2.0 * 3.141592653589793 * i / 6.0);
 pane.radial(theta, std::vector<double>{4, 5, 3, 4, 2, 5, 4}).label("this year");
 pane.radial(theta, std::vector<double>{2, 3, 4, 2, 4, 3, 2}).label("last year");
 pane.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/radial-4-two.svg)
@@ -102,7 +102,7 @@ auto& pane = fig.pane2("p");
 std::vector<double> theta;
 for (int i = 0; i <= 32; ++i) theta.push_back(2.0 * 3.141592653589793 * i / 32.0);
 pane.radial(theta, std::vector<double>{4});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/radial-5-broadcast.svg)
@@ -124,7 +124,7 @@ report("lengths differ", [](Pane& pane) { pane.radial(std::vector<double>{0, 1.5
 auto fig = studio("radial_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -146,7 +146,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

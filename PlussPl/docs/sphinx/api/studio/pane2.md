@@ -40,7 +40,7 @@ plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& titled = fig.pane2("Titled pane");
 titled.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first title: '" << plain.title_text() << "', second: '" << titled.title_text() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ auto fig = studio("pane2_stack");
 fig.pane2("first").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "panes: " << fig.pane_count() << ", mosaic active: " << fig.mosaic_layout().active << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ fig.mosaic(2, 2);
 for (int i = 0; i < 4; ++i) {
   fig.pane2("cell " + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2.0 + i, 4.0, 3.0});
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/pane2-3-grid.svg)
@@ -92,7 +92,7 @@ first.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 first.title("configured late");
 std::cout << "same object: " << (&fig.panes()[0] == &first) << ", title: " << fig.panes()[0].title_text() << "\n";
 fig.mosaic(3, 7);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -114,7 +114,7 @@ fig.theme(Theme::ocean());
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "before: tick scale " << fig.panes()[0].tick_font_scale() << ", " << fig.panes()[0].theme_tokens().name() << "\n";
 std::cout << "after:  tick scale " << fig.panes()[1].tick_font_scale() << ", " << fig.panes()[1].theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -140,7 +140,7 @@ try {
 auto fits = studio("pane2_fits");
 fits.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fits.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fits.save_svg("figure.svg");
+fits.show();
 ```
 
 ### Output

@@ -41,7 +41,7 @@ pane.z_tick_label_gap(24.0);
 std::cout << "after z_tick_label_gap(24): "; show();
 pane.clear_z_tick_label_gap();
 std::cout << "after clear_z_tick_label_gap(): "; show();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ auto build = [&](double gap) {
   return fig;
 };
 std::cout << "0 vs 14: " << (build(0.0).to_svg() != build(14.0).to_svg()) << ", 14 vs 60: " << (build(14.0).to_svg() != build(60.0).to_svg()) << "\n";
-build(60.0).save_svg("figure.svg");
+build(60.0).show();
 ```
 
 ### Output
@@ -93,7 +93,7 @@ auto fig = studio("z_tick_label_gap_clear_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 pane.z_label("Axis label");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -123,7 +123,7 @@ pane.z_tick_label_gap(0.0);
 std::cout << "zero accepted: " << *pane.z_axis().tick_label_gap << "\n";
 pane.z_tick_label_gap(10.0);
 std::cout << "kept after errors: " << *pane.z_axis().tick_label_gap << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

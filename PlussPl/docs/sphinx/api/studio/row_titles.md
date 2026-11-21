@@ -36,7 +36,7 @@ fig.row_title(2, "third").row_title(0, "first").row_title(1, "second");
 for (const auto& [row, text] : fig.row_titles()) std::cout << row << " => " << text << "\n";
 fig.mosaic(3, 1);
 for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -60,7 +60,7 @@ std::cout << "entries: " << fig.row_titles().size() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const std::string svg = fig.to_svg();
 std::cout << "row 0 drawn: " << (svg.find(">drawn<") != std::string::npos) << ", row 3 drawn: " << (svg.find("no such row") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ std::cout << "clearing a row with no title: " << fig.row_titles().size() << "\n"
 fig.clear_row_titles();
 std::cout << "after clear_row_titles: " << fig.row_titles().size() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -107,7 +107,7 @@ const auto& live = fig.row_titles();
 fig.row_title(0, "after");
 std::cout << "snapshot: " << snapshot.at(0) << ", live: " << live.at(0) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

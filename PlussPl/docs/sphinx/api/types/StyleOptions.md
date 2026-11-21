@@ -482,7 +482,7 @@ options.tick_font_pt = 16.0;
 std::cout << "figure still uses " << fig.style_options().tick_font_pt << "\n";
 fig.style(options);
 std::cout << "figure now uses " << fig.style_options().tick_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -515,7 +515,7 @@ auto build = [&](bool talk) {
 };
 auto plain = build(false), talk = build(true);
 std::cout << "figures differ: " << (plain.to_svg() != talk.to_svg()) << "\n";
-talk.save_svg("figure.svg");
+talk.show();
 ```
 
 ### Output
@@ -546,7 +546,7 @@ std::cout << "unstyled figure after a styled one is unchanged: " << (plain_after
 std::cout << "styled differs from unstyled: " << (styled_first != plain_after) << "\n";
 auto fig = studio("style_per_figure_out");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -573,7 +573,7 @@ for (auto* fig : {&fig_a, &fig_b}) {
   fig->pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 3, 2});
 }
 std::cout << "same tick font: " << (fig_a.style_options().tick_font_pt == fig_b.style_options().tick_font_pt) << "\n";
-fig_a.save_svg("figure.svg");
+fig_a.show();
 ```
 
 ### Output
@@ -603,7 +603,7 @@ fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0}
 StyleOptions options = fig.style_options();
 options.pane_left_inset.relaxed = defaults + 40.0;
 fig.style(options);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -634,7 +634,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "figure keeps " << fig.style_options().tick_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

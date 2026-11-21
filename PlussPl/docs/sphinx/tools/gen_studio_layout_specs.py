@@ -33,7 +33,7 @@ def mosaic():
            f"""auto fig = studio("mosaic_single");
 fig.pane2("p").trend({LINE});
 std::cout << "active: " << fig.mosaic_layout().active << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("autoflow", "A 2x2 grid filled by four `pane2` calls. Each pane takes the next free cell, row by row, in the order it was added: the titles' positions show the order.",
            f"""auto fig = studio("mosaic_2x2");
 fig.mosaic(2, 2);
@@ -42,7 +42,7 @@ const std::string svg = fig.to_svg();
 {AT}
 for (int i = 0; i < 4; ++i) std::cout << "cell " << i << " title at " << at(svg, "cell " + std::to_string(i)) << "\\n";
 std::cout << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << ", active " << fig.mosaic_layout().active << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("auto_gutter", "The gutter between cells. By default (`auto_gutter`) it is a share of a cell, so it grows and shrinks with the figure: in a figure twice as wide the gap is twice as wide.",
            f"""auto build = [&](double width) {{
   auto fig = studio("mosaic_auto");
@@ -61,7 +61,7 @@ auto fig = studio("mosaic_auto_out");
 fig.mosaic(1, 2);
 fig.pane2("left").trend({LINE});
 fig.pane2("right").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("gutter", "A number is a distance in drawing units. A gutter of 0 puts the cells side by side, and 120 leaves a wide gap: the right-hand pane moves with it.",
            f"""auto build = [&](double gutter) {{
   auto fig = studio("mosaic_gutter");
@@ -76,12 +76,12 @@ auto fig = studio("mosaic_gutter_out");
 fig.mosaic(1, 2, 120.0, 120.0);
 fig.pane2("left").trend({LINE});
 fig.pane2("right").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("axes_apart", "The two gutters are independent: here the columns are close and the rows far apart.",
            f"""auto fig = studio("mosaic_gutters_xy");
 fig.mosaic(2, 2, 8.0, 80.0);
 for (int i = 0; i < 4; ++i) fig.pane2("cell " + std::to_string(i)).trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("claimed", "Panes placed by [`Pane::place`](../pane/place.md) take their cells first, and the other panes fill the cells that are left, still row by row. The first pane added is placed at the bottom right; the next three take the three cells that are free.",
            f"""auto fig = studio("mosaic_claimed");
 fig.mosaic(2, 2);
@@ -93,13 +93,13 @@ const std::string svg = fig.to_svg();
 {AT}
 std::cout << "placed: " << at(svg, "placed bottom right") << "\\n";
 for (int i = 0; i < 3; ++i) std::cout << "auto " << i << ": " << at(svg, "auto " + std::to_string(i)) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("replace", "Calling `mosaic` again replaces the grid: the later call decides how the panes are laid out.",
            f"""auto fig = studio("mosaic_replace");
 fig.mosaic(2, 2).mosaic(1, 4);
 for (int i = 0; i < 4; ++i) fig.pane2("cell " + std::to_string(i)).trend({LINE});
 std::cout << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("errors", "A grid needs at least one row and one column, and a gutter is `auto_gutter` or a finite, non-negative distance. Anything else is refused at once and the previous grid is kept.",
            f"""auto fig = studio("mosaic_errors");
 fig.mosaic(1, 2);
@@ -117,7 +117,7 @@ report("NaN gutter", [&] {{ fig.mosaic(2, 2, 10.0, std::numeric_limits<double>::
 std::cout << "grid kept: " << fig.mosaic_layout().rows << "x" << fig.mosaic_layout().cols << "\\n";
 fig.pane2("a").trend({LINE});
 fig.pane2("b").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("overflow", "`mosaic` cannot know how many panes will come, so too many panes is found when the figure is drawn: five panes for four cells.",
            f"""auto fig = studio("mosaic_overflow");
 fig.mosaic(2, 2);
@@ -131,7 +131,7 @@ try {{
 auto ok = studio("mosaic_overflow_out");
 ok.mosaic(2, 2);
 for (int i = 0; i < 4; ++i) ok.pane2().trend({LINE});
-ok.save_svg("figure.svg");"""),
+ok.show();"""),
         ex("tight", "With the compact layout ([`tight_layout`](tight_layout.md)) the gutters are smaller too: both kinds of gutter go to 62% of their size (a given distance is not reduced below 6).",
            f"""auto build = [&](bool tight) {{
   auto fig = studio("mosaic_tight");
@@ -147,7 +147,7 @@ auto fig = studio("mosaic_tight_out");
 fig.mosaic(1, 2, 60.0, 60.0).tight_layout();
 fig.pane2("left").trend({LINE});
 fig.pane2("right").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     write("mosaic", dict(
         slug="mosaic", title="Studio::mosaic",
@@ -177,7 +177,7 @@ def tight_layout():
            f"""auto fig = studio("tight_default");
 fig.pane2("p").trend({LINE});
 std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("on", "With the compact layout the plot area is larger: the tick labels of the y axis, which end at the axis, stand further to the left, and the data is drawn over more of the canvas.",
            f"""auto build = [&](bool tight) {{
   auto fig = studio("tight_on");
@@ -190,7 +190,7 @@ std::cout << "tick '10' at " << at(build(false), "10") << " relaxed, " << at(bui
 auto fig = studio("tight_on_out");
 fig.tight_layout();
 fig.pane2("p").trend(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 10, 0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("padding", "The padding is room given back around the edges of the figure. 0 is the most compact, and a larger padding moves everything in from the edge.",
            f"""auto build = [&](double padding) {{
   auto fig = studio("tight_padding");
@@ -203,7 +203,7 @@ for (double padding : {{0.0, 6.0, 24.0}}) std::cout << "padding " << padding << 
 auto fig = studio("tight_padding_out");
 fig.tight_layout(true, 24.0);
 fig.pane2("p").trend(std::vector<double>{{0, 1, 2}}, std::vector<double>{{0, 10, 0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("no_args", "`tight_layout()` is `tight_layout(true, 6.0)`.",
            f"""auto build = [&](bool explicit_args) {{
   auto fig = studio("tight_no_args");
@@ -216,7 +216,7 @@ std::cout << "same figure: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("tight_no_args_out");
 fig.tight_layout();
 fig.pane2("p").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("off_again", "`tight_layout(false)` goes back to the relaxed layout: the figure is the one that never asked for the compact one.",
            f"""auto build = [&](bool toggled) {{
   auto fig = studio("tight_off_again");
@@ -227,7 +227,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "same as never set: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("tight_off_again_out");
 fig.pane2("p").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("many_panes", "It matters most with many panes, where each cell has little room: a 2x3 grid of small plots in the relaxed and in the compact layout. The compact figure gives the plots more of the canvas.",
            f"""auto build = [&](bool tight) {{
   auto fig = studio("tight_many");
@@ -243,7 +243,7 @@ fig.save_svg("figure.svg");"""),
 auto relaxed = build(false);
 auto compact = build(true);
 std::cout << "figures differ: " << (relaxed.to_svg() != compact.to_svg()) << "\\n";
-compact.save_svg("figure.svg");"""),
+compact.show();"""),
         ex("errors", "The padding must be finite and not negative; otherwise the call throws, and the layout and padding stay as they were.",
            f"""auto fig = studio("tight_errors");
 for (double bad : {{-1.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()}}) {{
@@ -255,7 +255,7 @@ for (double bad : {{-1.0, std::numeric_limits<double>::quiet_NaN(), std::numeric
 }}
 std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\\n";
 fig.pane2("p").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     write("tight_layout", dict(
         slug="tight_layout", title="Studio::tight_layout",
@@ -289,7 +289,7 @@ pane.x_label("time");
 const std::string svg = fig.to_svg();
 std::cout << "figure: " << fig.default_tick_font_scale() << " / " << fig.default_axis_label_font_scale() << "; pane: " << pane.tick_font_scale() << " / " << pane.axis_label_font_scale() << "\\n";
 std::cout << "tick size " << size_of(svg, "1.0") << ", axis label size " << size_of(svg, "time") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("larger", "Setting the scales before the panes are made: every pane takes them. With 1.4 and 1.2 the tick labels and axis labels are larger in both panes of the figure.",
            f"""auto fig = studio("scales_larger");
 fig.context_scales(1.4, 1.2);
@@ -303,7 +303,7 @@ for (int i = 0; i < 2; ++i) {{
 const std::string svg = fig.to_svg();
 std::cout << "tick size " << size_of(svg, "1.0") << ", axis label size " << size_of(svg, "time") << "\\n";
 std::cout << "panes: " << fig.panes()[0].tick_font_scale() << ", " << fig.panes()[1].tick_font_scale() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("after", "Only panes made afterwards are affected. The first pane was made before the call and keeps 1, the second takes 2.",
            f"""auto fig = studio("scales_after");
 auto& before = fig.pane2("before");
@@ -312,7 +312,7 @@ fig.context_scales(2.0, 2.0);
 auto& after = fig.pane2("after");
 after.trend({LINE});
 std::cout << "before: " << before.tick_font_scale() << ", after: " << after.tick_font_scale() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("pane_wins", "A pane's own call is made on the pane and wins for it. The figure's scales set the starting point; `Pane::tick_font_scale` then changes one pane.",
            f"""auto fig = studio("scales_pane_wins");
 fig.context_scales(1.5, 1.5);
@@ -323,7 +323,7 @@ auto& own = fig.pane2("own scale");
 own.trend({LINE});
 own.tick_font_scale(0.8);
 std::cout << "plain: " << plain.tick_font_scale() << ", own: " << own.tick_font_scale() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("smaller", "Scales below 1 make text smaller, to fit a small canvas with many panes.",
            f"""auto fig = studio("scales_smaller");
 fig.size(640.0, 400.0);
@@ -334,7 +334,7 @@ for (int i = 0; i < 4; ++i) {{
   pane.trend({LINE});
   pane.x_label("x");
 }}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         ex("errors", "Each scale must be finite and positive. A bad value is refused with a message that names it, and the figure's scales are not changed.",
            f"""auto fig = studio("scales_errors");
 auto report = [&](const char* what, auto&& call) {{
@@ -351,7 +351,7 @@ report("label zero", [&] {{ fig.context_scales(1.0, 0.0); }});
 report("label infinite", [&] {{ fig.context_scales(1.0, std::numeric_limits<double>::infinity()); }});
 std::cout << "unchanged: " << fig.default_tick_font_scale() << " / " << fig.default_axis_label_font_scale() << "\\n";
 fig.pane2("p").trend({LINE});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     write("context_scales", dict(
         slug="context_scales", title="Studio::context_scales",

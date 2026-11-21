@@ -36,7 +36,7 @@ const Theme& theme = fig.theme_tokens();
 std::cout << "name: " << theme.name() << ", accents: " << theme.accents().size() << "\n";
 std::cout << "background (r, g, b): " << theme.background().red << ", " << theme.background().green << ", " << theme.background().blue << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -57,7 +57,7 @@ fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3})
 const std::string before = fig.to_svg();
 fig.theme_tokens() = Theme::ocean();
 std::cout << "name now: " << fig.theme_tokens().name() << ", figure changed: " << (fig.to_svg() != before) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.theme_tokens() = Theme::ocean();
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "pane 0: " << fig.panes()[0].theme_tokens().name() << ", pane 1: " << fig.panes()[1].theme_tokens().name() << ", figure: " << fig.theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -102,7 +102,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("theme_tokens_same_out");
 fig.theme_tokens() = Theme::ocean();
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

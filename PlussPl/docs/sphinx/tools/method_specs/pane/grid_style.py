@@ -22,7 +22,7 @@ pane.grid(GridStyle::MajorMinor);
 std::cout << "after grid(MajorMinor): " << static_cast<int>(pane.grid_style()) << "\\n";
 pane.grid(GridStyle::None);
 std::cout << "after grid(None):       " << static_cast<int>(pane.grid_style()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="toggles", text="The per-axis toggles change the summary. One major grid on one axis makes the pane `Major`; adding a minor grid on any axis makes it `MajorMinor`; and minor lines on their own, with no major lines, also read `MajorMinor`.",
              code="""auto fig = studio("grid_style_toggles");
 auto& pane = fig.pane2("Toggles");
@@ -37,7 +37,7 @@ pane.x_major_grid(false);
 show("x_major_grid(false)      ");
 pane.y_minor_grid(false);
 show("y_minor_grid(false)      ");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="axes", text="The summary does not say which axes have lines; the flags of each axis do. After `y_major_grid(true)` the pane reports `Major`, and reading the axes shows that only the y axis has major lines.",
              code="""auto fig = studio("grid_style_axes");
 auto& pane = fig.pane2("y only");
@@ -46,7 +46,7 @@ pane.y_major_grid(true);
 std::cout << "grid_style: " << static_cast<int>(pane.grid_style()) << "\\n";
 std::cout << "x major " << pane.x_axis().major_grid << ", minor " << pane.x_axis().minor_grid << "\\n";
 std::cout << "y major " << pane.y_axis().major_grid << ", minor " << pane.y_axis().minor_grid << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `grid_style()` is `noexcept` and never throws.
 - The summary is what `grid(GridStyle)` sets: `grid(GridStyle::Major)` turns the major lines on for every axis of the pane and the minor lines off, and `grid(GridStyle::None)` turns every line off.

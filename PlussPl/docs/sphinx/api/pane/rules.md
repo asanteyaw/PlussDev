@@ -47,7 +47,7 @@ const char* axes[] = {"x", "y", "z"};
 for (const auto& rule : pane.rules()) {
   std::cout << axes[static_cast<int>(rule.axis)] << " = " << rule.value << (rule.label.empty() ? "" : "  '" + rule.label + "'") << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -70,7 +70,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.rule_y(3.0);
 const RuleCue& rule = pane.rules().front();
 std::cout << "label empty: " << rule.label.empty() << ", width: " << rule.width << ", alpha: " << rule.color.alpha << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -90,7 +90,7 @@ pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vect
 pane.rule_x(1.0, "x").rule_y(0.5, "y").rule_z(1.5, "z");
 std::cout << "count: " << pane.rules().size() << "\n";
 for (const auto& rule : pane.rules()) std::cout << static_cast<int>(rule.axis) << ": " << rule.label << " at " << rule.value << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -115,7 +115,7 @@ const auto snapshot = pane.rules();
 const auto& live = pane.rules();
 pane.rule_x(3.0);
 std::cout << "snapshot: " << snapshot.size() << ", live: " << live.size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

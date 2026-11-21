@@ -22,14 +22,14 @@ for (int i = 0; i < 60; ++i) {
 }
 pane.path3(x, y, z);
 std::cout << "volumetric: " << (pane.kind() == PaneKind::Volumetric) << ", traces: " << pane.traces().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="mixed", text="Mixed with 2D. A figure can hold both kinds side by side; each pane reports its own kind.",
              code="""auto fig = studio("pane3_mixed");
 fig.mosaic(1, 2);
 fig.pane2("flat").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 fig.pane3("volume").path3(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Volumetric ? "volumetric" : "planar") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="surface", text="A surface. A sheet over a grid, in a volumetric pane with a title.",
              code="""constexpr std::int64_t n = 24;
 auto axis = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
@@ -43,7 +43,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(heights, {n, n});
 auto fig = studio("pane3_surface");
 fig.pane3("hill").sheet(axis, axis, z);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="refused", text="A 3D trace needs a 3D pane. Adding `path3` to a planar pane throws `pluss::Error`, and the pane is left without it.",
              code="""auto fig = studio("pane3_refused");
 auto& flat = fig.pane2("flat");
@@ -54,7 +54,7 @@ try {
 }
 std::cout << "traces on the flat pane: " << flat.traces().size() << "\\n";
 fig.pane2("ok").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`. A planar pane cannot be turned into a volumetric one; make the pane with the kind the traces need.
 - The camera and lights are settings of the pane, reached through the returned reference.""",

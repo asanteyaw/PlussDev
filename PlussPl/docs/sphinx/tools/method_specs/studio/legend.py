@@ -18,7 +18,7 @@ fig.mosaic(1, 2);
 fig.pane2("A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 std::cout << "dock: " << static_cast<int>(fig.legend_dock()) << " (None = 0)\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="east", text="`KeyDock::East` with two panes. One key on the right edge gathers both panes' traces, each entry prefixed with its pane's title.",
              code="""auto fig = studio("legend_east");
 fig.legend(KeyDock::East);
@@ -26,14 +26,14 @@ fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 std::cout << "dock: " << static_cast<int>(fig.legend_dock()) << " (East = 1)\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="south", text="`KeyDock::South`. The same figure with the key along the bottom edge; the panes lose height instead of width.",
              code="""auto fig = studio("legend_south");
 fig.legend(KeyDock::South);
 fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="single", text="One pane, no prefix. With a single visible pane the entries are the trace labels as they are.",
              code="""auto fig = studio("legend_single");
 fig.legend(KeyDock::East);
@@ -42,7 +42,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).lab
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
 const std::string svg = fig.to_svg();
 std::cout << "title used as a prefix: " << (svg.find("Ignored title: ") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="empty", text="A dock with nothing to show takes no room. No trace has a label, so East and South give the same SVG as no dock at all. A hidden trace and an unlabelled one are treated alike.",
              code="""auto build = [](KeyDock dock, bool label) {
   auto fig = studio("legend_empty");
@@ -58,7 +58,7 @@ std::cout << "East, hidden trace == None:  " << (build(KeyDock::East, true) == b
 auto fig = studio("legend_empty_out");
 fig.legend(KeyDock::East);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="hidden", text="Hiding a pane. With two panes visible the entries carry their pane titles; hide one and the prefix goes, and its traces leave the key.",
              code="""auto build = [](bool hide_b) {
   auto fig = studio("legend_hidden");
@@ -78,7 +78,7 @@ std::cout << "B hidden:     prefix " << (one.find("Group A: series a") != std::s
 auto fig = studio("legend_hidden_out");
 fig.legend(KeyDock::East);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="both", text="A docked legend and a pane's own legend together. The first pane keeps an inset key in its north-west corner while the figure also docks one at the east edge.",
              code="""auto fig = studio("legend_both");
 fig.legend(KeyDock::East);
@@ -87,7 +87,7 @@ auto& a = fig.pane2("Group A");
 a.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("series a");
 a.legend(KeyPlace::NorthWest);
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6}).label("series b");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="many", text="Many entries. Twelve labelled traces in one pane: the docked key fits itself to the height of the figure, and the label that is too long for one line wraps onto several.",
              code="""auto fig = studio("legend_many");
 fig.size(1000.0, 420.0);
@@ -97,7 +97,7 @@ for (int i = 0; i < 12; ++i) {
   pane.trend(std::vector<double>{0, 1}, std::vector<double>{double(i), double(i + 1)})
       .label(i == 5 ? "a deliberately long label that does not fit in the key at all, however wide it is" : "series " + std::to_string(i));
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The setter is `noexcept` and takes any `KeyDock`; there is no west or north dock.
 - The dock is figure state, not pane state: it applies to every pane that exists when the figure is rendered, whenever `legend` is called.

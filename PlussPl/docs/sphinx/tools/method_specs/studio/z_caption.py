@@ -26,7 +26,7 @@ auto& bottom = fig.pane3("bottom");
 bottom.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 bottom.align_z("shared");
 std::cout << "captions: " << fig.z_captions().size() << ", text: " << fig.z_captions().at("shared") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="overwrite", text="Calling again with the same group replaces the text. The map still holds one entry; the figure shows the second text only.",
              code="""auto fig = studio("z_caption_overwrite");
 fig.mosaic(1, 2);
@@ -41,7 +41,7 @@ fig.z_caption("g", "second text");
 std::cout << "entries: " << fig.z_captions().size() << ", text: " << fig.z_captions().at("g") << "\\n";
 const std::string svg = fig.to_svg();
 std::cout << "first text drawn: " << (svg.find("first text") != std::string::npos) << ", second text drawn: " << (svg.find("second text") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="groups", text="Two groups, two captions. The panes of each group are captioned separately; a pane in neither group has no caption.",
              code="""auto fig = studio("z_caption_groups");
 fig.mosaic(2, 2);
@@ -59,7 +59,7 @@ a4.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector
 fig.z_caption("left", "left group");
 fig.z_caption("right", "right group");
 std::cout << "captions: " << fig.z_captions().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="unmatched", text="A caption nobody shows. The group `nobody` has no pane, so the caption is stored but the SVG is identical to the figure without the call: no text, no reserved space. An empty text behaves the same way.",
              code="""auto build = [](int variant) {
   auto fig = studio("z_caption_unmatched");
@@ -77,7 +77,7 @@ auto& pane = fig.pane3("p");
   pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
   pane.align_z("g");
 fig.z_caption("nobody", "never drawn");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="hidden", text="Hiding the panes of a group removes the caption and its room. The caption is drawn while at least one pane of the group is visible, and is not drawn once every one of them is hidden.",
              code="""auto build = [](bool hide_a, bool hide_b) {
   auto fig = studio("z_caption_hidden");
@@ -107,7 +107,7 @@ a.hide();
 auto& b = fig.pane3("b");
 b.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 b.align_z("g");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The group string is the only link between the caption and the panes, so a misspelt group draws nothing. [`z_captions`](z_captions.md) lists the registered groups, which makes a mismatch easy to spot.
 - A caption is figure-level text. For text that belongs to one pane use the pane's own axis label ([`Pane::z_label`](../pane/z_label.md)).

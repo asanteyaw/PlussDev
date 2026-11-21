@@ -28,7 +28,7 @@ for (int i = 0; i < 3; ++i) {
   auto& pane = fig.pane3(names[i]);
   pane.sheet(coord, coord, z).shade(modes[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="`shade` returns the trace, so it chains with the other trace setters, and `shade_mode` reads the value back. The default of a new surface trace is printed first.",
              code=SURFACE + """
 
@@ -40,7 +40,7 @@ for (ShadeMode m : {ShadeMode::Faceted, ShadeMode::Flat, ShadeMode::Smooth}) {
   trace.shade(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.shade_mode()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="distinct", text="The three modes render three different figures: comparing the SVG text of the three, no two are equal. (Faceted and Flat in particular are alike in colour, and differ in the outlines.)",
              code=SURFACE + """
 
@@ -56,7 +56,7 @@ std::cout << "Faceted == Smooth: " << (svg[0] == svg[2]) << "\\n";
 std::cout << "Flat == Smooth:    " << (svg[1] == svg[2]) << "\\n";
 auto fig = studio("shade_mode_distinct_out");
 fig.pane3("Smooth").sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="with_light", text="Shading and lighting combine. `Smooth` colouring with Gouraud lighting and a sun-like rig gives the familiar smooth, lit surface, while `Faceted` with the same light shades each cell as one tile of its own brightness.",
              code=SURFACE + """
 
@@ -69,7 +69,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(modes[i]).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `ShadeMode` only affects surface-family 3D traces. On a 2D trace it has no visible effect.
 - Smooth colouring needs a value at each corner, so it is most striking on coarse grids; on a very fine grid the cells are smaller than the eye can see and `Faceted`, `Flat` and `Smooth` converge.""",

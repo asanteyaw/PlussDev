@@ -43,7 +43,7 @@ for (int i = 0; i < 3; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_shape(shapes[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="docked", text="The docked legend. At the bottom edge `Auto` is already a row, so it equals `Horizontal` (the first comparison is true) and differs from `Vertical`, the stacked version (the second is false). The saved figure is `Vertical`, to compare with the row of Example 3.",
              code="""const KeyShape shapes[] = {KeyShape::Auto, KeyShape::Horizontal, KeyShape::Vertical};
 std::string svg[3];
@@ -58,7 +58,7 @@ for (int i = 0; i < 3; ++i) {
   fig.legend(KeyDock::South);
   fig.legend_shape(shapes[i]);
   svg[i] = fig.to_svg();
-  if (i == 2) fig.save_svg("figure.svg");
+  if (i == 2) fig.show();
 }
 std::cout << "Auto == Horizontal at the south edge: " << (svg[0] == svg[1]) << "\\n";
 std::cout << "Auto == Vertical at the south edge:   " << (svg[0] == svg[2]) << "\\n";"""),
@@ -72,7 +72,7 @@ for (int k = 1; k <= 4; ++k) {
 }
 fig.legend(KeyDock::South);
 fig.legend_shape(KeyShape::Horizontal);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="east", text="On the east dock `Auto` is a column, so `Auto` and `Vertical` are the same figure (first comparison true), while `Horizontal` differs (second false). With long labels a row cannot fit in the width of the east dock, so `Horizontal` there is a column too, as the third comparison shows.",
              code="""const KeyShape shapes[] = {KeyShape::Auto, KeyShape::Horizontal, KeyShape::Vertical};
 std::string svg[3];
@@ -120,7 +120,7 @@ for (int i = 0; i < 2; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_shape(shapes[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shorthand", text="The `ks` spellings are the same constants: the comparisons are true, so either spelling can be used wherever a `KeyShape` is expected.",
              code="""auto fig = studio("key_shape_shorthand");
 auto& pane = fig.pane2("Shorthand");
@@ -128,7 +128,7 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("si
 pane.legend(KeyPlace::NorthEast).legend_shape(ks::Horizontal);
 std::cout << "ks::Horizontal == KeyShape::Horizontal: " << (ks::Horizontal == KeyShape::Horizontal) << "\\n";
 std::cout << "legend_shape() == ks::Horizontal: " << (pane.legend_shape() == ks::Horizontal) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A single entry has nothing to put in a row, so `Horizontal` and `Vertical` agree for a legend with one entry.
 - The shape and the placement are independent: any `KeyShape` can be combined with any [`KeyPlace`](KeyPlace.md) or [`KeyDock`](KeyDock.md).

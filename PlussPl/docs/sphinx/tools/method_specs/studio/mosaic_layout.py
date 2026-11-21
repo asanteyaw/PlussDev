@@ -25,7 +25,7 @@ std::cout << "active: " << grid.active << ", rows: " << grid.rows << ", cols: " 
 std::cout << "gutters: " << gap(grid.gutter_x) << " x " << gap(grid.gutter_y) << "\\n";
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="after_mosaic", text="After `mosaic`. Every field is the argument that was passed, and `active` is true; omitted gutters are `auto_gutter`.",
              code="""auto fig = studio("mosaic_layout_set");
 auto gap = [](double g) { return g == auto_gutter ? std::string("auto_gutter") : std::to_string(g); };
@@ -36,7 +36,7 @@ fig.mosaic(1, 4, 5.0, 30.0);
 grid = fig.mosaic_layout();
 std::cout << "mosaic(1, 4, 5, 30): " << grid.rows << " x " << grid.cols << ", gutters " << gap(grid.gutter_x) << ", " << gap(grid.gutter_y) << "\\n";
 for (int i = 0; i < 4; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="gutters", text="The gutters are the gaps between cells. The same two panes with gutters of 0 and 80 give different figures, and the stored fields say which.",
              code="""auto build = [](double gutter) {
   auto fig = studio("mosaic_layout_gutters");
@@ -48,7 +48,7 @@ fig.save_svg("figure.svg");"""),
 auto narrow = build(0.0), wide = build(80.0);
 std::cout << "gutters stored: " << narrow.mosaic_layout().gutter_x << " and " << wide.mosaic_layout().gutter_x << "\\n";
 std::cout << "figures differ: " << (narrow.to_svg() != wide.to_svg()) << "\\n";
-wide.save_svg("figure.svg");"""),
+wide.show();"""),
         dict(id="invalid", text="A refused call leaves the grid as it was. Zero or negative rows or columns and invalid gutters throw `pluss::Error`; the stored layout is unchanged.",
              code="""auto fig = studio("mosaic_layout_invalid");
 fig.mosaic(2, 2);
@@ -58,7 +58,7 @@ auto gap = [](double g) { return g == auto_gutter ? std::string("auto_gutter") :
 const auto& grid = fig.mosaic_layout();
 std::cout << "still " << grid.rows << " x " << grid.cols << ", gutters " << grid.gutter_x << ", " << grid.gutter_y << "\\n";
 for (int i = 0; i < 4; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - The grid is the figure's; the position of an individual pane in it is the pane's own [`placement`](../pane/placement.md).""",

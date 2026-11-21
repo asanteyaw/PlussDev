@@ -246,7 +246,7 @@ auto data = flash::Dataset::from_table(
 
 Studio fig("dataset_from_table_pairplot", Theme::paper());
 flash::pairplot(fig, data);
-fig.save_svg("/tmp/dataset_from_table_pairplot.svg");
+fig.show();
 std::cout << "saved /tmp/dataset_from_table_pairplot.svg\n";
 ```
 
@@ -280,7 +280,7 @@ auto data = flash::Dataset::from_table(
 
 Studio fig("dataset_from_table_jointplot", Theme::paper());
 flash::jointplot(fig, data, "units", "margin", "reg");
-fig.save_svg("/tmp/dataset_from_table_jointplot.svg");
+fig.show();
 std::cout << "saved /tmp/dataset_from_table_jointplot.svg\n";
 ```
 

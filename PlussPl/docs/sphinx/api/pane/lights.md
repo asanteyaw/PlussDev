@@ -46,7 +46,7 @@ auto fig = studio("lights_default");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
 std::cout << "empty: " << pane.lights().empty() << ", count: " << pane.lights().lights().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -74,7 +74,7 @@ pane.lights().headlight();  list("headlight ");
 pane.lights().lamp_right(); list("lamp_right");
 pane.lights().lamp_left();  list("lamp_left ");
 pane.lights().sun_key();    list("sun_key   ");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -98,7 +98,7 @@ pane.lights().add(LightSpec{90.0, 10.0, LightSpace::Data, LightStyle::Infinite})
 const auto& light = pane.lights().lights().front();
 std::cout << "lights: " << pane.lights().lights().size() << ", azimuth " << light.azimuth_deg << ", elevation " << light.elevation_deg
           << ", fixed to data " << (light.space == LightSpace::Data) << ", infinite " << (light.style == LightStyle::Infinite) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -126,7 +126,7 @@ auto fig = studio("lights_needs_out");
 auto& pane = fig.pane3("p");
 pane.spire3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, z).lighting(LightingMode::Flat);
 pane.lights().lamp_right();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -164,7 +164,7 @@ for (int i = 0; i < 4; ++i) {
   if (i == 2) pane.lights().lamp_left();
   if (i == 3) pane.lights().sun_key();
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -192,7 +192,7 @@ auto& pane = fig.pane3("p");
 pane.spire3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, z).lighting(LightingMode::Flat);
 pane.lights().sun_key().clear();
 std::cout << "empty: " << pane.lights().empty() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -226,7 +226,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lights().add(LightSpec{30.0, 30.0, i == 0 ? LightSpace::Camera : LightSpace::Data, LightStyle::Infinite});
   pane.lens().look(60.0, 30.0);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

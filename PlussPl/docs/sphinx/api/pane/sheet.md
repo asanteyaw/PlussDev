@@ -58,7 +58,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.sheet(axis, axis, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/sheet-1-bump.svg)
@@ -100,7 +100,7 @@ auto z = pluss::make_series(field, {n, n});
 auto c = pluss::series::linspace(1.0, 0.0, n * n, pluss::ScalarType::Float64).reshape({n, n});
 pane.sheet(axis, axis, z, c);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -118,7 +118,7 @@ auto fig = studio("sheet_coarse");
 auto& pane = fig.pane3("p");
 auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.sheet(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/sheet-3-coarse.svg)
@@ -140,7 +140,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(field, {n, n});
 pane.sheet(axis, axis, z).shade(ShadeMode::Smooth).lighting(LightingMode::Flat);
 pane.lights().lamp_right();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/sheet-4-shade.svg)
@@ -154,7 +154,7 @@ auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshap
 auto x = pluss::make_series(std::vector<double>{0, 1, 2, 0.5, 1.5, 2.5, 1, 2, 3}, {3, 3});
 auto y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1, 2, 2, 2}, {3, 3});
 pane.sheet(x, y, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/sheet-5-matrices.svg)
@@ -180,7 +180,7 @@ for (int i = 0; i < 3; ++i) {
   pane.sheet(axis, axis, z);
   pane.lens().look(views[i][0], views[i][1]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/sheet-6-view.svg)
@@ -203,7 +203,7 @@ report("colour has another shape", [](Pane& pane) { auto z = pluss::series::lins
 auto fig = studio("sheet_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -226,7 +226,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

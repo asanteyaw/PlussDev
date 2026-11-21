@@ -40,7 +40,7 @@ fig.subpane2(0, 1, 2, 0, 0, 1, 1, "c");
 fig.subpane3(0, 1, 2, 0, 1, 1, 1, "d");
 std::cout << "after two sub-panes: " << fig.pane_count() << "\n";
 fig.pane2("e").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ second.hide();
 std::cout << "panes: " << fig.pane_count() << ", visible: " << (fig.panes()[0].visible() ? 1 : 0) + (fig.panes()[1].visible() ? 1 : 0) << "\n";
 second.visible(true);
 std::cout << "after showing it again: " << (fig.panes()[1].visible() ? 1 : 0) + 1 << " visible of " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -86,7 +86,7 @@ fig.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "count == size: " << (fig.pane_count() == fig.panes().size()) << "\n";
 for (std::size_t i = 0; i < fig.pane_count(); ++i) std::cout << i << ": " << fig.panes()[i].title_text() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ try {
 auto fits = studio("pane_count_fits");
 fits.mosaic(2, 2);
 for (int i = 0; i < 3; ++i) fits.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fits.save_svg("figure.svg");
+fits.show();
 ```
 
 ### Output

@@ -34,7 +34,7 @@ auto fig = studio("annotate_contour");
 fig.mosaic(1, 2);
 fig.pane2("no labels").contour(coord, coord, z);
 fig.pane2("annotate_levels(true)").contour(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="Reading the setting back. It is false by default; the setter turns it on and returns the trace; calling the getter with no argument never changes anything.",
              code=FIELD + """
 
@@ -47,7 +47,7 @@ std::cout << "after annotate_levels(true): " << t.annotate_levels() << "\\n";
 t.annotate_levels(false);
 std::cout << "after annotate_levels(false): " << t.annotate_levels() << "\\n";
 t.annotate_levels(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="bands", text="Level labels on filled bands. An `isoband` fills the regions between levels, and `annotate_levels(true)` writes the level values on its boundaries, which replaces a colour bar.",
              code=FIELD + """
 
@@ -55,7 +55,7 @@ auto fig = studio("annotate_isoband");
 fig.mosaic(1, 2);
 fig.pane2("isoband").isoband(coord, coord, z);
 fig.pane2("isoband, annotated").isoband(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="kinds", text="Which kinds draw labels. Each is drawn with and without the labels and the SVG text compared: a contour, an isoband, a ridge surface and a field map change; a line and a surface do not.",
              code=FIELD + """
 
@@ -78,7 +78,7 @@ std::cout << "sheet:    " << changes([&](Pane& p) -> Trace& { return p.sheet(coo
 std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}); }, false) << "\\n";
 auto fig = studio("annotate_kinds_out");
 fig.pane2("fieldmap, annotated").fieldmap(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Labels are drawn only where a contour line is long enough to hold the text, so a tiny closed ring carries no label.
 - The labelled values are the contour levels, which are chosen automatically from the data or given when the trace is made.

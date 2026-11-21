@@ -22,7 +22,7 @@ std::cout << "after Vertical: " << name(fig.legend_shape()) << "\\n";
 fig.legend_shape(KeyShape::Horizontal);
 std::cout << "after Horizontal: " << name(fig.legend_shape()) << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="east_vertical", text="`Vertical` on the east dock: eight entries in one column, the narrowest key. This is also what `Auto` gives on the east dock.",
              code="""auto build = [](KeyShape shape) {
   auto fig = studio("legend_shape_east");
@@ -33,14 +33,14 @@ fig.save_svg("figure.svg");"""),
   return fig;
 };
 std::cout << "east: Auto == Vertical: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Vertical).to_svg()) << ", Auto == Horizontal: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Horizontal).to_svg()) << "\\n";
-build(KeyShape::Vertical).save_svg("figure.svg");"""),
+build(KeyShape::Vertical).show();"""),
         dict(id="east_horizontal", text="`Horizontal` on the same east dock: the eight entries share two columns, so the key is shorter and wider.",
              code="""auto fig = studio("legend_shape_east_horizontal");
 fig.size(900.0, 420.0);
 fig.legend(KeyDock::East).legend_shape(KeyShape::Horizontal);
 auto& pane = fig.pane2("p");
 for (int i = 0; i < 8; ++i) pane.trend(std::vector<double>{0, 1}, std::vector<double>{double(i), double(i + 1)}).label("series " + std::to_string(i));
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="south", text="The south dock. Here `Auto` is a row, so it equals `Horizontal` and differs from `Vertical`; the saved figure is the row beneath the plot.",
              code="""auto build = [](KeyShape shape) {
   auto fig = studio("legend_shape_south");
@@ -51,7 +51,7 @@ fig.save_svg("figure.svg");"""),
   return fig;
 };
 std::cout << "south: Auto == Horizontal: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Horizontal).to_svg()) << ", Auto == Vertical: " << (build(KeyShape::Auto).to_svg() == build(KeyShape::Vertical).to_svg()) << "\\n";
-build(KeyShape::Auto).save_svg("figure.svg");"""),
+build(KeyShape::Auto).show();"""),
         dict(id="long", text="Labels too long for two columns. The three labels do not fit side by side in the width the east dock allows, so `Horizontal` falls back to one column and gives the same figure as `Vertical`.",
              code="""auto build = [](KeyShape shape) {
   auto fig = studio("legend_shape_long");
@@ -63,7 +63,7 @@ build(KeyShape::Auto).save_svg("figure.svg");"""),
   return fig;
 };
 std::cout << "Horizontal == Vertical: " << (build(KeyShape::Horizontal).to_svg() == build(KeyShape::Vertical).to_svg()) << "\\n";
-build(KeyShape::Horizontal).save_svg("figure.svg");"""),
+build(KeyShape::Horizontal).show();"""),
         dict(id="no_legend", text="No docked legend, no effect. The shape is stored but the figure is unchanged, and a pane's own legend is not touched.",
              code="""auto build = [](bool set_shape) {
   auto fig = studio("legend_shape_nolegend");
@@ -74,7 +74,7 @@ build(KeyShape::Horizontal).save_svg("figure.svg");"""),
 std::cout << "same figure: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("legend_shape_nolegend_out");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The setter is `noexcept`; the getter has no effect on the figure.
 - The key is still fitted to the height of the figure: entries that do not fit are cut and replaced by a line saying how many more there are.""",

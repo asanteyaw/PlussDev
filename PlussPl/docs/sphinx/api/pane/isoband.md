@@ -60,7 +60,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.isoband(axis, axis, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/isoband-1-default.svg)
@@ -81,7 +81,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.isoband(axis, axis, z, 3);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/isoband-2-count.svg)
@@ -102,7 +102,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.isoband(axis, axis, z, std::vector<double>{0.1, 0.5, 0.9});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/isoband-3-levels.svg)
@@ -141,7 +141,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.isoband(axis, axis, z, 4);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -169,7 +169,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(field, {n, n});
 pane.fieldmap(axis, axis, z);
 pane.isoband(axis, axis, z, 6);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/isoband-5-with_map.svg)
@@ -181,7 +181,7 @@ auto fig = studio("isoband_uneven");
 auto& pane = fig.pane2("p");
 auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.isoband(std::vector<double>{0, 1, 4}, std::vector<double>{0, 2, 3}, z, 4);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/isoband-6-uneven.svg)
@@ -206,7 +206,7 @@ report("z is not a matrix", [](Pane& pane) { pane.isoband(std::vector<double>{1,
 auto fig = studio("isoband_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -231,7 +231,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

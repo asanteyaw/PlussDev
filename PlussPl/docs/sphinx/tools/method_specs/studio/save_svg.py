@@ -19,7 +19,7 @@ std::ifstream in("svg_out_basic/basic.svg", std::ios::binary);
 const std::string file((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 std::cout << "written: " << fs::exists("svg_out_basic/basic.svg") << "\\n";
 std::cout << "equals to_svg(): " << (file == fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="folders", text="Folders and overwriting. A path through folders that do not exist creates them, and saving to the same path again replaces the file.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("svg_out_folders");
@@ -31,7 +31,7 @@ const auto first = fs::file_size("svg_out_folders/a/b/c/figure.svg");
 fig.headline("with a headline");
 fig.save_svg("svg_out_folders/a/b/c/figure.svg");
 std::cout << "overwritten (the size changed): " << (fs::file_size("svg_out_folders/a/b/c/figure.svg") != first) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="extension", text="The extension. `.SVG` in capitals is accepted; any other extension, or none, is refused before anything is rendered or written.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("svg_out_extension");
@@ -47,7 +47,7 @@ for (const char* bad : {"svg_out_extension/figure.png", "svg_out_extension/figur
   }
 }
 std::cout << "files written for the bad paths: " << (fs::exists("svg_out_extension/figure.png") || fs::exists("svg_out_extension/figure")) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="unwritable", text="A path that cannot be written. A file where a folder is needed, and a folder where a file is wanted, each throw `pluss::Error` that names the path.",
              code="""namespace fs = std::filesystem;
 fs::remove_all("svg_out_unwritable");
@@ -63,7 +63,7 @@ for (const char* bad : {"svg_out_unwritable/plain_file/figure.svg", "svg_out_unw
     std::cout << e.message() << "\\n";
   }
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- When the error is not caught, the message printed by the runtime is a traceback ending at the failing `save_svg` line of your program.
 - To keep a copy that survives figure changes, save before editing; `save_svg` writes the figure as it is at the time of the call.""",

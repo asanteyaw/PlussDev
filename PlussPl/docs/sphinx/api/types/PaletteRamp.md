@@ -50,7 +50,7 @@ for (int i = 0; i < 5; ++i) {
   auto& pane = fig.pane3(names[i]);
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(ramp);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/PaletteRamp-1-gallery.svg)
@@ -67,7 +67,7 @@ for (double position : {-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5}) {
 }
 auto fig = studio("palette_ramp_sample");
 fig.pane2("ramp").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -105,7 +105,7 @@ auto& preset = fig.pane3("thermal");
 preset.sheet(coord, coord, z).shade(ShadeMode::Smooth);
 auto& custom = fig.pane3("diverging, limits -1 to 1");
 custom.sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(diverging).color_limits(Range1d{-1.0, 1.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/PaletteRamp-3-diverging.svg)
@@ -122,7 +122,7 @@ for (const PaletteRamp& p : presets) {
 std::cout << "PaletteRamp(): empty " << PaletteRamp().empty() << "\n";
 auto fig = studio("palette_ramp_presets");
 fig.pane2("presets").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

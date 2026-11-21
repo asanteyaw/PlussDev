@@ -53,7 +53,7 @@ const std::string svg = fig.to_svg();
 std::cout << "default: " << pane.parallel_xy_labels() << "\n";
 std::cout << "x label: " << look(svg, "xx") << "\n";
 std::cout << "y label: " << look(svg, "yy") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ const std::string svg = fig.to_svg();
 std::cout << "now: " << pane.parallel_xy_labels() << "\n";
 std::cout << "x label: " << look(svg, "xx") << "\n";
 std::cout << "y label: " << look(svg, "yy") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -125,7 +125,7 @@ pane.lens().look(60.0, 25.0);
 const std::string after = fig.to_svg();
 std::cout << "x label at the default view: " << look(before, "xx") << "\n";
 std::cout << "x label after look(60, 25):  " << look(after, "xx") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -159,7 +159,7 @@ pane.x_label_rotation(0.0);
 const std::string svg = fig.to_svg();
 std::cout << "x label: " << look(svg, "xx") << "\n";
 std::cout << "y label: " << look(svg, "yy") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -193,7 +193,7 @@ std::cout << "3D without labels unchanged: " << (build3(true) == build3(false)) 
 auto fig = studio("parallel_nolabels_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

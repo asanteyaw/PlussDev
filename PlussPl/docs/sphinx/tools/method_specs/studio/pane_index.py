@@ -18,7 +18,7 @@ first.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& second = fig.pane2("second");
 second.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "first: " << fig.pane_index(first) << ", second: " << fig.pane_index(second) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="from_panes", text="From the pane list. A pane taken from `panes()` gives its own position back, so the index and the sequence agree for every pane.",
              code="""auto fig = studio("pane_index_list");
 fig.mosaic(2, 2);
@@ -26,7 +26,7 @@ for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector
 bool consistent = true;
 for (std::size_t i = 0; i < fig.panes().size(); ++i) consistent = consistent && fig.pane_index(fig.panes()[i]) == i;
 std::cout << "pane_index(panes()[i]) == i for all: " << consistent << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="parent", text="The parent of a sub-pane. The index of the parent is what `subpane2` takes; the sub-panes follow it in the list.",
              code="""auto fig = studio("pane_index_parent");
 auto& parent = fig.pane2("parent");
@@ -36,7 +36,7 @@ left.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 auto& right = fig.subpane2(parent_index, 1, 2, 0, 1, 1, 1, "right");
 right.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "parent " << parent_index << ", left " << fig.pane_index(left) << ", right " << fig.pane_index(right) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="not_ours", text="Panes that are not in this figure. A standalone pane, a pane of another figure and a copy of a pane are each refused with `pluss::Error`.",
              code="""auto fig = studio("pane_index_not_ours");
 auto& mine = fig.pane2("mine");
@@ -57,7 +57,7 @@ attempt("own pane", mine);
 attempt("standalone pane", standalone);
 attempt("pane of another figure", theirs);
 attempt("copy of a pane", copy);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`. It scans the panes, so it takes time proportional to the number of panes; keep the index when it is needed often.
 - Indices are never reused: panes cannot be removed, so an index stays valid for the life of the figure.""",

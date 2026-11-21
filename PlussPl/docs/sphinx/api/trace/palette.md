@@ -52,7 +52,7 @@ for (int i = 0; i < 5; ++i) {
   PaletteRamp ramp = i == 0 ? PaletteRamp::thermal() : i == 1 ? PaletteRamp::neutral() : i == 2 ? PaletteRamp::lagoon() : i == 3 ? PaletteRamp::ocean() : PaletteRamp::meadow();
   fig.pane2(names[i]).fieldmap(coord, coord, z).palette(ramp);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/palette-1-field.svg)
@@ -66,7 +66,7 @@ Trace& t = pane.cloud(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1,
 std::cout << "default: " << t.palette_ramp().name() << " (the theme's is " << pane.theme_tokens().surface_palette().name() << ")\n";
 t.palette(PaletteRamp("duo", {Rgba::from_u8(20, 40, 160), Rgba::from_u8(250, 200, 40)}));
 std::cout << "after palette(): " << t.palette_ramp().name() << ", " << t.palette_ramp().stops().size() << " stops\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ for (int i = 0; i < 2; ++i) {
   svg[i] = probe.to_svg();
 }
 std::cout << "a cloud without colour data ignores the palette: " << (svg[0] == svg[1]) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -118,7 +118,7 @@ for (int i = 0; i < 2; ++i) {
   fig.pane2(name + ": bucket").bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5}).palette(ramp);
   fig.pane2(name + ": wedge").wedge(std::vector<double>{3, 2, 1, 2}).palette(ramp);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/palette-4-fills.svg)
@@ -139,7 +139,7 @@ auto fig = studio("palette_surface");
 fig.mosaic(1, 2);
 fig.pane3("lagoon").sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(PaletteRamp::lagoon());
 fig.pane3("lagoon, limits 0.5 to 1").sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(PaletteRamp::lagoon()).color_limits(Range1d{0.5, 1.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/palette-5-surface.svg)

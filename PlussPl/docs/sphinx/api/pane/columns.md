@@ -43,7 +43,7 @@ Example 1. One series. The values are the heights of the bars, and the x positio
 auto fig = studio("columns_one");
 auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{3, 5, 2, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/columns-1-one.svg)
@@ -54,7 +54,7 @@ Example 2. Two series: the first is the positions, the second the heights. The b
 auto fig = studio("columns_two");
 auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{10, 20, 30, 40}, std::vector<double>{3, 5, 2, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/columns-2-two.svg)
@@ -65,7 +65,7 @@ Example 3. Values below zero run the other way: bars are drawn from zero to the 
 auto fig = studio("columns_negative");
 auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{3, -2, 4, -1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/columns-3-negative.svg)
@@ -76,7 +76,7 @@ Example 4. A single value is repeated for every position: equal bars at the posi
 auto fig = studio("columns_broadcast");
 auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{1, 2, 3}, std::vector<double>{4});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/columns-4-broadcast.svg)
@@ -89,7 +89,7 @@ auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{5, 6, 4, 7}).label("total");
 pane.columns(std::vector<double>{3, 2, 3, 4}).label("part");
 pane.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/columns-5-two_series.svg)
@@ -103,7 +103,7 @@ auto& near = fig.pane2("positions 1, 2, 5, 6");
 near.columns(std::vector<double>{1, 2, 5, 6}, std::vector<double>{3, 5, 2, 6});
 auto& far = fig.pane2("positions 10, 20, 50, 60");
 far.columns(std::vector<double>{10, 20, 50, 60}, std::vector<double>{3, 5, 2, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/columns-6-spacing.svg)
@@ -114,7 +114,7 @@ Example 7. The outline of the bars is a line of the trace, set with [`Trace::wid
 auto fig = studio("columns_outline");
 auto& pane = fig.pane2("p");
 pane.columns(std::vector<double>{3, 5, 2, 6}).width(3.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 7](img/columns-7-outline.svg)
@@ -136,7 +136,7 @@ report("lengths differ", [](Pane& pane) { pane.columns(std::vector<double>{1, 2,
 auto fig = studio("columns_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -158,7 +158,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

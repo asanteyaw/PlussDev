@@ -22,7 +22,7 @@ The figure afterwards is exactly the figure that never set a title for that row.
 auto cleared = build(true), never = build(false);
 std::cout << "entries left: " << cleared.row_titles().size() << " (row 0: " << cleared.row_titles().at(0) << ")\\n";
 std::cout << "equals the figure that never set it: " << (cleared.to_svg() == never.to_svg()) << "\\n";
-cleared.save_svg("figure.svg");"""),
+cleared.show();"""),
         dict(id="nothing_to_clear", text="Nothing to clear is not an error. A row without a title, a negative row and a huge row are all ignored, and the stored titles do not change.",
              code="""auto fig = studio("clear_row_title_none");
 fig.mosaic(1, 1);
@@ -30,7 +30,7 @@ fig.row_title(0, "only");
 fig.clear_row_title(3).clear_row_title(-5).clear_row_title(1000000);
 std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="set_again", text="A cleared row can be set again. Clearing frees the row, and a later `row_title` stores a new title as if it were the first.",
              code="""auto fig = studio("clear_row_title_again");
 fig.mosaic(1, 1);
@@ -39,7 +39,7 @@ std::cout << "after clearing: " << fig.row_titles().size() << "\\n";
 fig.row_title(0, "new");
 std::cout << "after setting again: " << fig.row_titles().at(0) << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`. To remove every title at once use [`clear_row_titles`](clear_row_titles.md).
 - To keep the entry but draw nothing, set an empty text with [`row_title`](row_title.md).""",

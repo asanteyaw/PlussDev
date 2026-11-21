@@ -38,7 +38,7 @@ std::cout << "after: " << fig.name() << "\n";
 fig.rename("");
 std::cout << "empty allowed: '" << fig.name() << "'\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ const std::string svg = fig.to_svg();
 fig.rename("after");
 std::cout << "same SVG: " << (fig.to_svg() == svg) << "\n";
 std::cout << "headline kept: " << fig.headline_text() << ", panes: " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ auto fig = studio("a");
 fig.rename("b").headline("Chained").size(900.0, 500.0).rename("c");
 std::cout << fig.name() << " / " << fig.headline_text() << " / " << fig.extent().width << " x " << fig.extent().height << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ for (const char* text : {"two words", "naïve — figure", "line one\nline two",
   std::cout << "length " << fig.name().size() << ": " << (fig.name() == text) << "\n";
 }
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

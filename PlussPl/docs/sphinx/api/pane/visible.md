@@ -44,7 +44,7 @@ std::cout << "after hide: " << pane.visible() << "\n";
 std::cout << "reading again: " << pane.visible() << "\n";
 pane.show();
 std::cout << "after show: " << pane.visible() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ auto fig = studio("visible_spellings_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.visible(false).visible(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -96,7 +96,7 @@ const std::string hidden = fig.to_svg();
 pane.show();
 std::cout << "title while shown: " << (shown.find(">alpha<") != std::string::npos) << ", while hidden: " << (hidden.find(">alpha<") != std::string::npos) << "\n";
 std::cout << "shown again == shown before: " << (fig.to_svg() == shown) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -131,7 +131,7 @@ const std::string before = fig.to_svg();
 left.hide();
 const std::string after = fig.to_svg();
 std::cout << "right title before " << at(before, "right") << ", after " << at(after, "right") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -163,7 +163,7 @@ overview.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 2, 1, 3})
 auto& detail = fig.pane2("detail");
 detail.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{1, 3, 2, 4});
 detail.hide();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

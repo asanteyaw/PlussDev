@@ -34,7 +34,7 @@ fig.mosaic(1, 2);
   pane.legend(KeyPlace::NorthWest);
   std::cout << "still counted as a trace: " << pane.trace_count() << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="as_if_absent", text="A hidden trace is as if it were not there. The figure of a pane whose second trace is hidden is identical to the figure of a pane that never had it: the SVG text is equal, legend and axis fit included.",
              code="""std::string svg[2];
 for (int i = 0; i < 2; ++i) {
@@ -48,7 +48,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "hidden trace == never added: " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("visible_absent_out");
 fig.pane2("pane").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("kept");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="restore", text="Showing again restores the trace exactly. The figure after `hide()` and `show()` equals the figure of a trace that was never hidden, and the style set before hiding, the colour and the width, is kept.",
              code="""std::string svg[2];
 for (int i = 0; i < 2; ++i) {
@@ -63,7 +63,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "hide().show() == untouched: " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("visible_restore_out");
 fig.pane2("pane").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).stroke(Rgba::from_u8(200, 30, 30)).width(3.0f);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="layers", text="Building a figure in layers: three panes show the same four series, with one, two and then three of them visible. Each pane is made by creating all the series and hiding the ones not yet wanted, which is how a figure for a talk reveals a result step by step.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5};
 const std::vector<double> ys[3] = {{2, 4, 3, 5, 4}, {3, 5, 4, 6, 5}, {1, 2, 2, 3, 3}};
@@ -78,7 +78,7 @@ for (int step = 1; step <= 3; ++step) {
   pane.y_limits(Range1d{0.0, 7.0});
   pane.legend(KeyPlace::NorthWest);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `visible()` is a getter only: there is no `visible(bool)`. This is deliberate, because a getter and a setter with one name let a bare `trace.visible()` call a setter.
 - To hide or show a whole pane, use [`Pane::visible`](../pane/visible.md) and `Pane::hide`/`show`; hiding every trace of a pane leaves its axes and title.

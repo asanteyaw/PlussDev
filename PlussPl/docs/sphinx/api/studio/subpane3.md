@@ -61,7 +61,7 @@ for (int r = 0; r < 2; ++r) {
   }
 }
 std::cout << "panes: " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -86,7 +86,7 @@ auto& right = fig.subpane3(parent_index, 2, 2, 1, 1, 1, 1, "right");
 right.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 const auto& p = wide.placement();
 std::cout << "wide: cell " << p.row << "," << p.col << " span " << p.row_span << "x" << p.col_span << ", parent " << p.parent << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -109,7 +109,7 @@ top.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vecto
 auto& bottom = fig.subpane3(parent_index, 2, 1, 1, 0, 1, 1, "bottom");
 bottom.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 fig.pane2("ordinary").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/subpane3-3-in_mosaic.svg)
@@ -134,7 +134,7 @@ attempt("negative row", [&] { fig.subpane3(p, 1, 2, -1, 0); });
 attempt("zero span", [&] { fig.subpane3(p, 1, 2, 0, 0, 0, 1); });
 attempt("does not fit", [&] { fig.subpane3(p, 1, 2, 0, 1, 1, 2); });
 std::cout << "panes: " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -169,7 +169,7 @@ attempt("same cell again", [&] { fig.subpane3(p, 1, 2, 0, 0, 1, 1, "again"); });
 attempt("another grid", [&] { fig.subpane3(p, 2, 2, 1, 1, 1, 1, "other grid"); });
 attempt("free cell", [&] { fig.subpane3(p, 1, 2, 0, 1, 1, 1, "right"); });
 std::cout << "panes: " << fig.pane_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -195,7 +195,7 @@ std::cout << "subpane2: " << (two.kind() == PaneKind::Planar ? "planar" : "volum
 std::cout << "parent kind: " << (fig.panes()[p].kind() == PaneKind::Planar ? "planar" : "volumetric") << "\n";
 two.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 three.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

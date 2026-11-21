@@ -45,7 +45,7 @@ for (int i = 0; i < 7; ++i) {
   const Rgba c = t.stroke_color();
   std::cout << "trace " << i << ": (" << static_cast<int>(c.red * 255 + 0.5) << ", " << static_cast<int>(c.green * 255 + 0.5) << ", " << static_cast<int>(c.blue * 255 + 0.5) << ")\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).s
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).stroke(Rgba::from_u8(30, 150, 60)).width(3.0f).label("green");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 4, 3.5, 5}).stroke(Rgba::from_u8(40, 70, 190)).width(3.0f).label("blue");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/stroke-2-explicit.svg)
@@ -88,7 +88,7 @@ for (int i = 0; i < 3; ++i) {
   colour.alpha = alphas[i];
   pane.trend(std::vector<double>{1, 5}, std::vector<double>{3.0 - i, 1.0 + 1.2 * i}).stroke(colour).width(14.0f);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/stroke-3-alpha.svg)
@@ -102,7 +102,7 @@ fig.mosaic(1, 3);
 fig.pane2("cloud, default").cloud(x, y);
 fig.pane2("spike").spike(x, y).stroke(Rgba::from_u8(180, 40, 120));
 fig.pane2("cloud, stroke set").cloud(x, y).stroke(Rgba::from_u8(180, 40, 120));
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/stroke-4-markers.svg)
@@ -117,7 +117,7 @@ fig.pane2("no call").columns(x, y);
 fig.pane2("stroke").columns(x, y).stroke(Rgba::from_u8(200, 30, 30));
 fig.pane2("stroke and width 3").columns(x, y).stroke(Rgba::from_u8(200, 30, 30)).width(3.0f);
 std::cout << "explicit before and after: " << fig.panes()[0].traces()[0].stroke_explicit() << " " << fig.panes()[1].traces()[0].stroke_explicit() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -156,7 +156,7 @@ auto z = pluss::make_series(hills, {n, n});
 std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(coord, coord, z); }) << "\n";
 auto fig = studio("stroke_applies_out");
 fig.pane2("columns with a red stroke").columns(x, y).stroke(Rgba::from_u8(200, 30, 30));
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

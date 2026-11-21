@@ -52,7 +52,7 @@ Example 1. One violin for all the values: the outline is a smoothed estimate of 
 auto fig = studio("violin_one");
 auto& pane = fig.pane2("p");
 pane.violin(std::vector<double>{1.0, 1.4, 1.7, 2.0, 2.1, 2.4, 2.6, 3.0, 3.3, 3.5, 4.1, 5.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/violin-1-one.svg)
@@ -67,7 +67,7 @@ options.width = 0.5;
 options.bw_adjust = 1.5;
 options.side = ViolinSide::Right;
 pane.violin(std::vector<double>{1.0, 1.4, 1.7, 2.0, 2.1, 2.4, 2.6, 3.0, 3.3, 3.5, 4.1, 5.0}, options);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/violin-2-options.svg)
@@ -78,7 +78,7 @@ Example 3. A group series gives one violin for each distinct group value.
 auto fig = studio("violin_groups");
 auto& pane = fig.pane2("p");
 pane.violin(std::vector<double>{1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2}, std::vector<double>{1.0, 1.4, 1.7, 2.0, 2.1, 2.4, 3.6, 4.0, 4.3, 4.5, 5.1, 6.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/violin-3-groups.svg)
@@ -92,7 +92,7 @@ ViolinOptions options;
 options.inner = ViolinInner::Quartile;
 options.scale = ViolinScale::Width;
 pane.violin(std::vector<double>{1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2}, std::vector<double>{1.0, 1.4, 1.7, 2.0, 2.1, 2.4, 3.6, 4.0, 4.3, 4.5, 5.1, 6.0}, options);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/violin-4-groups_options.svg)
@@ -111,7 +111,7 @@ std::cout << "same figure: " << (build(true) == build(false)) << "\n";
 auto fig = studio("violin_defaults_out");
 auto& pane = fig.pane2("p");
 pane.violin(std::vector<double>{1.0, 1.4, 1.7, 2.0, 2.1, 2.4, 2.6, 3.0, 3.3, 3.5, 4.1, 5.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -129,7 +129,7 @@ auto fig = studio("violin_one_value");
 auto& pane = fig.pane2("p");
 pane.violin(std::vector<double>{3.0});
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -160,7 +160,7 @@ report("group and values differ", [](Pane& pane) { pane.violin(std::vector<doubl
 auto fig = studio("violin_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -185,7 +185,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

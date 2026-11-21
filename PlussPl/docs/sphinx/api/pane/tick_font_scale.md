@@ -44,7 +44,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
   return svg.substr(k, svg.find('"', k) - k);
 };
 std::cout << "scale: " << pane.tick_font_scale() << ", tick label size: " << size_of(fig.to_svg(), "1.0") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -72,7 +72,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 pane.tick_font_scale(1.5);
 const std::string svg = fig.to_svg();
 std::cout << "tick: " << size_of(svg, "1.0") << ", axis label: " << size_of(svg, "time") << ", title: " << size_of(svg, "scaled") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -99,7 +99,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 };
 pane.tick_font_scale(0.75);
 std::cout << "tick: " << size_of(fig.to_svg(), "1.0") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ auto fig = studio("tickfont_3d");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
 pane.tick_font_scale(1.4);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/tick_font_scale-4-all_axes.svg)
@@ -147,7 +147,7 @@ auto fig = studio("tickfont_layout_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 100, 200}, std::vector<double>{0, 1000, 0});
 pane.tick_font_scale(2.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -172,7 +172,7 @@ for (double bad : {0.0, -1.0, std::numeric_limits<double>::quiet_NaN(), std::num
   }
 }
 std::cout << "still " << pane.tick_font_scale() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

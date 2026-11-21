@@ -50,7 +50,7 @@ for (int i = 0; i < 3; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_shape(shapes[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/KeyShape-1-gallery.svg)
@@ -71,7 +71,7 @@ for (int i = 0; i < 3; ++i) {
   fig.legend(KeyDock::South);
   fig.legend_shape(shapes[i]);
   svg[i] = fig.to_svg();
-  if (i == 2) fig.save_svg("figure.svg");
+  if (i == 2) fig.show();
 }
 std::cout << "Auto == Horizontal at the south edge: " << (svg[0] == svg[1]) << "\n";
 std::cout << "Auto == Vertical at the south edge:   " << (svg[0] == svg[2]) << "\n";
@@ -98,7 +98,7 @@ for (int k = 1; k <= 4; ++k) {
 }
 fig.legend(KeyDock::South);
 fig.legend_shape(KeyShape::Horizontal);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/KeyShape-3-south_row.svg)
@@ -164,7 +164,7 @@ for (int i = 0; i < 2; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_shape(shapes[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/KeyShape-5-many.svg)
@@ -178,7 +178,7 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("si
 pane.legend(KeyPlace::NorthEast).legend_shape(ks::Horizontal);
 std::cout << "ks::Horizontal == KeyShape::Horizontal: " << (ks::Horizontal == KeyShape::Horizontal) << "\n";
 std::cout << "legend_shape() == ks::Horizontal: " << (pane.legend_shape() == ks::Horizontal) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

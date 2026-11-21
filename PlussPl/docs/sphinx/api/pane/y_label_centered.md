@@ -49,7 +49,7 @@ auto look = [](const std::string& svg, const std::string& text) {
   return out;
 };
 std::cout << look(fig.to_svg(), "measured value") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ auto look = [](const std::string& svg, const std::string& text) {
 };
 pane.y_label_centered();
 std::cout << look(fig.to_svg(), "measured value") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -108,7 +108,7 @@ auto fig = studio("ycentered_off_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.y_label("measured value");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -130,7 +130,7 @@ upright.y_label("a rather long measured value in arbitrary units");
 auto& centered = fig.pane2("centered");
 centered.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 centered.y_label("a rather long measured value in arbitrary units").y_label_centered();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/y_label_centered-4-long.svg)
@@ -155,7 +155,7 @@ auto look = [](const std::string& svg, const std::string& text) {
 };
 pane.y_label_centered().y_label_rotation(-45.0);
 std::cout << look(fig.to_svg(), "measured value") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

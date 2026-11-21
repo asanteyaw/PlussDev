@@ -50,7 +50,7 @@ for (int i = 0; i < 4; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().look(views[i][0], views[i][1]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/Lens-1-angles.svg)
@@ -77,7 +77,7 @@ for (int i = 0; i < 2; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().project(kinds[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/Lens-2-projection.svg)
@@ -103,7 +103,7 @@ for (int i = 0; i < 3; ++i) {
   pane.sheet(coord, coord, z);
   pane.lens().project(ProjectionKind::Perspective).view_angle(angles[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/Lens-3-view_angle.svg)
@@ -129,7 +129,7 @@ for (int i = 0; i < 3; ++i) {
   for (int s = 0; s < i; ++s) pane.lens().spin(40.0, 0.0);
   std::cout << "spins " << i << ": azimuth " << pane.lens().azimuth_deg() << ", elevation " << pane.lens().elevation_deg() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -167,7 +167,7 @@ const Lens bare;
 std::cout << "Lens():           orthographic " << (bare.projection() == ProjectionKind::Orthographic) << ", azimuth " << bare.azimuth_deg() << ", elevation " << bare.elevation_deg() << "\n";
 std::cout << "Lens::spatial():  orthographic " << (Lens::spatial().projection() == ProjectionKind::Orthographic) << "\n";
 std::cout << "Lens::planar():   elevation " << Lens::planar().elevation_deg() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

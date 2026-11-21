@@ -22,17 +22,17 @@ std::cout << "after Framed: " << name(fig.legend_frame()) << "\\n";
 fig.legend_frame(KeyFrame::None);
 std::cout << "after None: " << name(fig.legend_frame()) << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="framed", text="`Framed`. The docked legend is drawn in a bordered box.",
              code="""auto fig = studio("legend_frame_framed");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::Framed);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="soft", text="`Soft`, the default. A light filled panel with no hard edge.",
              code="""auto fig = studio("legend_frame_soft");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::Soft);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="none", text="`None`. Only the entries are drawn, with no box; the three frames give three different figures.",
              code="""auto build = [](KeyFrame frame) {
   auto fig = studio("legend_frame_none");
@@ -41,7 +41,7 @@ fig.save_svg("figure.svg");"""),
   return fig;
 };
 std::cout << "Framed vs Soft: " << (build(KeyFrame::Framed).to_svg() != build(KeyFrame::Soft).to_svg()) << ", Soft vs None: " << (build(KeyFrame::Soft).to_svg() != build(KeyFrame::None).to_svg()) << "\\n";
-build(KeyFrame::None).save_svg("figure.svg");"""),
+build(KeyFrame::None).show();"""),
         dict(id="no_legend", text="No legend, no effect. With no docked legend the frame is stored but the figure is unchanged, and it does not touch a pane's own legend.",
              code="""auto build = [](bool set_frame) {
   auto fig = studio("legend_frame_nolegend");
@@ -52,7 +52,7 @@ build(KeyFrame::None).save_svg("figure.svg");"""),
   return fig;
 };
 std::cout << "figure frame set, pane legend unchanged: " << (build(true).to_svg() == build(false).to_svg()) << "\\n";
-build(false).save_svg("figure.svg");"""),
+build(false).show();"""),
     ],
     notes="""- The setter is `noexcept`; the getter has no effect on the figure.
 - The frame is figure state read at render time, so it can be set before or after the legend and the panes.""",

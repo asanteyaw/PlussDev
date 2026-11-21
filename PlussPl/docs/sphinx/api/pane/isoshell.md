@@ -62,7 +62,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(field);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/isoshell-1-default.svg)
@@ -85,7 +85,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(field, 2);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/isoshell-2-count.svg)
@@ -108,7 +108,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(axis, axis, axis, field);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/isoshell-3-coordinates.svg)
@@ -131,7 +131,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(axis, axis, axis, field, 3);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/isoshell-4-coordinates_count.svg)
@@ -154,7 +154,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(axis, axis, axis, field, std::vector<double>{0.2, 0.8});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/isoshell-5-levels.svg)
@@ -177,7 +177,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto field = pluss::make_series(values, {n, n, n});
 pane.isoshell(field, 3).transparent(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/isoshell-6-transparent.svg)
@@ -200,7 +200,7 @@ report("no levels", [](Pane& pane) { pane.isoshell(pluss::series::linspace(0.0, 
 auto fig = studio("isoshell_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -223,7 +223,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

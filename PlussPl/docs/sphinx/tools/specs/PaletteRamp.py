@@ -47,7 +47,7 @@ for (int i = 0; i < 5; ++i) {
   auto& pane = fig.pane3(names[i]);
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(ramp);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="sample", text="`sample`. A custom ramp of three stops, red, white and blue, and the colour it gives at five positions. The ends are the first and last stops, the middle is the middle stop, and a position between two stops is a blend of them. Out-of-range positions are clamped.",
              code="""const PaletteRamp ramp("diverging", {Rgba::from_u8(178, 24, 43), Rgba::from_u8(247, 247, 247), Rgba::from_u8(33, 102, 172)});
 std::cout << ramp.name() << ", " << ramp.stops().size() << " stops, empty " << ramp.empty() << "\\n";
@@ -58,7 +58,7 @@ for (double position : {-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5}) {
 }
 auto fig = studio("palette_ramp_sample");
 fig.pane2("ramp").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="diverging", text="A custom diverging ramp on data that is positive and negative. With the colour limits set symmetrically about zero, the middle stop, white, is exactly zero; a preset like `thermal` would colour zero as an arbitrary middle value.",
              code="""constexpr std::int64_t n = 16;
 auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
@@ -77,7 +77,7 @@ auto& preset = fig.pane3("thermal");
 preset.sheet(coord, coord, z).shade(ShadeMode::Smooth);
 auto& custom = fig.pane3("diverging, limits -1 to 1");
 custom.sheet(coord, coord, z).shade(ShadeMode::Smooth).palette(diverging).color_limits(Range1d{-1.0, 1.0});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="presets", text="The presets are ordinary ramps with a name and stops that can be read: this prints each preset's name and its first and last colours. A default-constructed ramp is empty.",
              code="""const PaletteRamp presets[] = {PaletteRamp::thermal(), PaletteRamp::neutral(), PaletteRamp::lagoon(), PaletteRamp::ocean(), PaletteRamp::meadow()};
 for (const PaletteRamp& p : presets) {
@@ -88,7 +88,7 @@ for (const PaletteRamp& p : presets) {
 std::cout << "PaletteRamp(): empty " << PaletteRamp().empty() << "\\n";
 auto fig = studio("palette_ramp_presets");
 fig.pane2("presets").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The ramp is applied to the trace's colour limits, so the same ramp on two traces with different limits colours different values alike; set the limits explicitly when panes must be compared.
 - A ramp with a single stop is a constant colour; an empty ramp has nothing to sample, so give a custom ramp at least two stops.

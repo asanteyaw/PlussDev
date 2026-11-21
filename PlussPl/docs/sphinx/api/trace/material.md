@@ -55,7 +55,7 @@ for (int i = 0; i < 4; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(profiles[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/material-1-gallery.svg)
@@ -85,7 +85,7 @@ std::cout << "Default == Shiny: " << (svg[0] == svg[2]) << "\n";
 std::cout << "Default == Metal: " << (svg[0] == svg[3]) << "\n";
 auto fig = studio("material_unlit_out");
 fig.pane3("Unlit, Metal").sheet(coord, coord, z).material(MaterialProfile::Metal);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -127,7 +127,7 @@ auto fig = studio("material_default_out");
 auto& pane = fig.pane3("Dull");
 pane.lights().sun_key();
 pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(MaterialProfile::Dull);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -161,7 +161,7 @@ for (MaterialProfile m : {MaterialProfile::Dull, MaterialProfile::Shiny, Materia
   t.material(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(t.material_profile()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -196,7 +196,7 @@ head.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gour
 auto& sun = fig.pane3("Metal, sun_key");
 sun.lights().sun_key();
 sun.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(MaterialProfile::Metal);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/material-5-rigs.svg)

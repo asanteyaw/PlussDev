@@ -41,7 +41,7 @@ for (int r = 0; r < 2; ++r) {
   }
 }
 std::cout << "panes: " << fig.pane_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="span", text="Blocks of cells. A wide sub-pane covers the top row (`col_span = 2`) and two narrow ones share the bottom row.",
              code="""auto fig = studio("subpane3_span");
 auto& parent = fig.pane2("layout");
@@ -54,7 +54,7 @@ auto& right = fig.subpane3(parent_index, 2, 2, 1, 1, 1, 1, "right");
 right.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 const auto& p = wide.placement();
 std::cout << "wide: cell " << p.row << "," << p.col << " span " << p.row_span << "x" << p.col_span << ", parent " << p.parent << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="in_mosaic", text="Inside a mosaic. The parent is one cell of a 1 by 2 mosaic; the other cell is an ordinary pane, so a figure mixes plain and nested panes.",
              code="""auto fig = studio("subpane3_mosaic");
 fig.mosaic(1, 2);
@@ -65,7 +65,7 @@ top.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vecto
 auto& bottom = fig.subpane3(parent_index, 2, 1, 1, 0, 1, 1, "bottom");
 bottom.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 fig.pane2("ordinary").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shape_errors", text="Shape errors. A missing parent, a bad grid, a negative cell, a zero span and a block that does not fit are each refused with a message, and no pane is added.",
              code="""auto fig = studio("subpane3_shape");
 auto& parent = fig.pane2("parent");
@@ -84,7 +84,7 @@ attempt("negative row", [&] { fig.subpane3(p, 1, 2, -1, 0); });
 attempt("zero span", [&] { fig.subpane3(p, 1, 2, 0, 0, 0, 1); });
 attempt("does not fit", [&] { fig.subpane3(p, 1, 2, 0, 1, 1, 2); });
 std::cout << "panes: " << fig.pane_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="clashes", text="Clashes between sub-panes. A second sub-pane on an occupied cell, and one that declares a different grid for the same parent, are refused when they are created; a free cell is accepted.",
              code="""auto fig = studio("subpane3_clash");
 auto& parent = fig.pane2("parent");
@@ -102,7 +102,7 @@ attempt("same cell again", [&] { fig.subpane3(p, 1, 2, 0, 0, 1, 1, "again"); });
 attempt("another grid", [&] { fig.subpane3(p, 2, 2, 1, 1, 1, 1, "other grid"); });
 attempt("free cell", [&] { fig.subpane3(p, 1, 2, 0, 1, 1, 1, "right"); });
 std::cout << "panes: " << fig.pane_count() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="kinds", text="The kind follows the call, not the parent. A planar parent can hold 3D sub-panes and the reverse; each sub-pane reports the kind of the method that made it.",
              code="""auto fig = studio("subpane3_kinds");
 auto& parent = fig.pane3("volumetric parent");
@@ -113,7 +113,7 @@ std::cout << "subpane2: " << (two.kind() == PaneKind::Planar ? "planar" : "volum
 std::cout << "parent kind: " << (fig.panes()[p].kind() == PaneKind::Planar ? "planar" : "volumetric") << "\\n";
 two.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 three.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`. A failed call adds nothing, so the figure is exactly as it was before it.
 - The parent is an ordinary pane and can also hold traces of its own; it is usually left as a container.

@@ -49,7 +49,7 @@ linear.trend(x, y);
 auto& symlog = fig.pane2("SymLog (base 10, threshold 1)");
 symlog.trend(x, y);
 symlog.scale_y(ScalePolicy::symlog());
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/ScalePolicy-1-gallery.svg)
@@ -67,7 +67,7 @@ linear.trend(x, y);
 auto& logarithmic = fig.pane2("Log10");
 logarithmic.trend(x, y);
 logarithmic.scale_y(ScalePolicy::log10());
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/ScalePolicy-2-log10.svg)
@@ -86,7 +86,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.scale_y(ScalePolicy::symlog(10.0, thresholds[i]));
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/ScalePolicy-3-threshold.svg)
@@ -106,7 +106,7 @@ auto& pane = fig.pane2("Readback");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 10, 100});
 pane.scale_y(ScalePolicy::log10());
 std::cout << "y axis kind: " << static_cast<int>(pane.y_axis().scale.kind) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

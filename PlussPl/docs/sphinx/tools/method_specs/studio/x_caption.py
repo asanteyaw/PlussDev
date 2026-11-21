@@ -26,7 +26,7 @@ auto& bottom = fig.pane2("bottom");
 bottom.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 bottom.align_x("shared");
 std::cout << "captions: " << fig.x_captions().size() << ", text: " << fig.x_captions().at("shared") << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="overwrite", text="Calling again with the same group replaces the text. The map still holds one entry; the figure shows the second text only.",
              code="""auto fig = studio("x_caption_overwrite");
 fig.mosaic(2, 1);
@@ -41,7 +41,7 @@ fig.x_caption("g", "second text");
 std::cout << "entries: " << fig.x_captions().size() << ", text: " << fig.x_captions().at("g") << "\\n";
 const std::string svg = fig.to_svg();
 std::cout << "first text drawn: " << (svg.find("first text") != std::string::npos) << ", second text drawn: " << (svg.find("second text") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="groups", text="Two groups, two captions. The panes of each group are captioned separately; a pane in neither group has no caption.",
              code="""auto fig = studio("x_caption_groups");
 fig.mosaic(2, 2);
@@ -59,7 +59,7 @@ a4.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.x_caption("left", "left group");
 fig.x_caption("right", "right group");
 std::cout << "captions: " << fig.x_captions().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="unmatched", text="A caption nobody shows. The group `nobody` has no pane, so the caption is stored but the SVG is identical to the figure without the call: no text, no reserved space. An empty text behaves the same way.",
              code="""auto build = [](int variant) {
   auto fig = studio("x_caption_unmatched");
@@ -77,7 +77,7 @@ auto& pane = fig.pane2("p");
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
   pane.align_x("g");
 fig.x_caption("nobody", "never drawn");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="hidden", text="Hiding the panes of a group removes the caption and its room. The caption is drawn while at least one pane of the group is visible, and is not drawn once every one of them is hidden.",
              code="""auto build = [](bool hide_a, bool hide_b) {
   auto fig = studio("x_caption_hidden");
@@ -107,7 +107,7 @@ a.hide();
 auto& b = fig.pane2("b");
 b.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 b.align_x("g");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The group string is the only link between the caption and the panes, so a misspelt group draws nothing. [`x_captions`](x_captions.md) lists the registered groups, which makes a mismatch easy to spot.
 - A caption is figure-level text. For text that belongs to one pane use the pane's own axis label ([`Pane::x_label`](../pane/x_label.md)).

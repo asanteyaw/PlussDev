@@ -35,7 +35,7 @@ auto fig = studio("theme_default");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "figure: " << fig.theme_tokens().name() << ", pane: " << pane.theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ auto& b = fig.pane2("ocean");
 b.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 b.theme_tokens() = Theme::ocean();
 std::cout << a.theme_tokens().name() << " and " << b.theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -81,7 +81,7 @@ fig.theme(Theme::paper());
 auto& second = fig.pane2("made under paper");
 second.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "first: " << first.theme_tokens().name() << ", second: " << second.theme_tokens().name() << ", figure: " << fig.theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ untouched.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 const std::string before = fig.theme_tokens().name();
 changed.theme_tokens() = before == "paper" ? Theme::ocean() : Theme::paper();
 std::cout << "changed: " << changed.theme_tokens().name() << ", untouched: " << untouched.theme_tokens().name() << ", figure still " << fig.theme_tokens().name() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -124,7 +124,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 const Theme& theme = pane.theme_tokens();
 std::cout << theme.name() << ": " << theme.accents().size() << " accents; accent(0) red " << theme.accent(0).red << "\n";
 std::cout << "background alpha " << theme.background().alpha << ", foreground alpha " << theme.foreground().alpha << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -145,7 +145,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});
 pane.theme_tokens() = Theme("night", {Rgba::from_u8(255, 170, 60), Rgba::from_u8(90, 200, 255)}, Rgba::from_u8(18, 20, 28), Rgba::from_u8(230, 230, 235), PaletteRamp::thermal());
 std::cout << pane.theme_tokens().name() << " with " << pane.theme_tokens().accents().size() << " accents\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

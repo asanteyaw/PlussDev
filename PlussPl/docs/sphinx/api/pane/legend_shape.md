@@ -58,7 +58,7 @@ auto where = [](const std::string& svg, const std::string& text) {
 std::cout << "reads back Auto: " << (pane.legend_shape() == KeyShape::Auto) << "\n";
 for (const char* name : names) std::cout << name << " " << where(svg, name) << "  ";
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -93,7 +93,7 @@ auto where = [](const std::string& svg, const std::string& text) {
 std::cout << "reads back Horizontal: " << (pane.legend_shape() == KeyShape::Horizontal) << "\n";
 for (const char* name : names) std::cout << name << " " << where(svg, name) << "  ";
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ auto where = [](const std::string& svg, const std::string& text) {
 std::cout << "reads back Vertical: " << (pane.legend_shape() == KeyShape::Vertical) << "\n";
 for (const char* name : names) std::cout << name << " " << where(svg, name) << "  ";
 std::cout << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -172,7 +172,7 @@ for (int i = 0; i < 6; ++i) {
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{static_cast<double>(i), i + 1.0, static_cast<double>(i)}).label(names[i]);
 }
 pane.legend(KeyPlace::OutsideEast).legend_shape(KeyShape::Horizontal);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -202,7 +202,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).label("a long descriptive label for the first series");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 3, 2, 4}).label("another long descriptive label for the second");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -228,7 +228,7 @@ auto fig = studio("legend_shape_one_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("only");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

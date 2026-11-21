@@ -36,7 +36,7 @@ std::cout << "brace-initialised:       " << fields.red << ", " << fields.green <
 std::cout << "default:                 " << Rgba{}.red << ", " << Rgba{}.green << ", " << Rgba{}.blue << ", alpha " << Rgba{}.alpha << "\n";
 auto fig = studio("rgba_from_u8");
 fig.pane2("colour").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).stroke(orange);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -59,7 +59,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).s
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).stroke(Rgba::from_u8(30, 150, 60)).width(3.0f).label("green");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 4, 3.5, 5}).stroke(Rgba::from_u8(40, 70, 190)).width(3.0f).label("blue");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/Rgba-2-stroke.svg)
@@ -74,7 +74,7 @@ const unsigned alphas[] = {255, 128, 40};
 for (int i = 0; i < 3; ++i)
   pane.trend(std::vector<double>{1, 5}, std::vector<double>{3.0 - i, 1.0 + i * 1.2}).stroke(Rgba::from_u8(255, 120, 0, alphas[i])).width(14.0f).label("alpha " + std::to_string(alphas[i]));
 pane.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/Rgba-3-alpha.svg)

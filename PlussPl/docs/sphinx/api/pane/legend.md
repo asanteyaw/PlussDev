@@ -45,7 +45,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7
 const std::string svg = fig.to_svg();
 std::cout << "place is None: " << (pane.legend_place() == KeyPlace::None) << "\n";
 std::cout << "label drawn: " << (svg.find(">series a<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ auto at = [](const std::string& svg, const std::string& text) {
   return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
 };
 std::cout << "series a at " << at(svg, "series a") << ", series b at " << at(svg, "series b") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -108,7 +108,7 @@ auto at = [](const std::string& svg, const std::string& text) {
   return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
 };
 std::cout << "series a at " << at(svg, "series a") << ", series b at " << at(svg, "series b") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -139,7 +139,7 @@ auto at = [](const std::string& svg, const std::string& text) {
   return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
 };
 std::cout << "series a at " << at(svg, "series a") << ", series b at " << at(svg, "series b") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -170,7 +170,7 @@ auto at = [](const std::string& svg, const std::string& text) {
   return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
 };
 std::cout << "series a at " << at(svg, "series a") << ", series b at " << at(svg, "series b") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -201,7 +201,7 @@ auto at = [](const std::string& svg, const std::string& text) {
   return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
 };
 std::cout << "series a at " << at(svg, "series a") << ", series b at " << at(svg, "series b") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -241,7 +241,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 3, 4, 5, 6}).label("series a");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 2, 3, 4, 5}).label("series b");
 pane.legend(KeyPlace::Auto);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -269,7 +269,7 @@ other.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 auto bare_plain = bare.to_svg();
 other.legend(KeyPlace::OutsideEast);
 std::cout << "unlabelled pane unchanged by an outside legend: " << (bare.to_svg() == bare_plain) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -298,7 +298,7 @@ std::cout << "same as never set: " << (build(true) == build(false)) << "\n";
 auto fig = studio("pane_legend_off_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("series a");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -321,7 +321,7 @@ fig.legend(KeyDock::East);
 const std::string svg = fig.to_svg();
 const auto first = svg.find(">series a<");
 std::cout << "series a drawn twice: " << (first != std::string::npos && svg.find(">series a<", first + 1) != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

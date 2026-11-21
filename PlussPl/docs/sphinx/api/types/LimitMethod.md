@@ -38,7 +38,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.y_limit_method(methods[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/LimitMethod-1-gallery.svg)
@@ -57,7 +57,7 @@ for (int i = 0; i < 2; ++i) {
   pane.y_limits(Range1d{0.0, 10.0});
   pane.y_limit_method(methods[i]);
   svg[i] = fig.to_svg();
-  if (i == 0) fig.save_svg("figure.svg");
+  if (i == 0) fig.show();
 }
 std::cout << "Tight == Padded with manual limits: " << (svg[0] == svg[1]) << "\n";
 ```
@@ -83,7 +83,7 @@ std::cout << "after y_limits:    " << static_cast<int>(pane.y_axis().limit_mode)
 pane.auto_y();
 std::cout << "after auto_y:      " << static_cast<int>(pane.y_axis().limit_mode) << "\n";
 std::cout << "method is still Tight: " << (pane.y_axis().limit_method == LimitMethod::Tight) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -114,7 +114,7 @@ for (int i = 0; i < 2; ++i) {
   pane.color_limit_method(methods[i]);
   std::cout << names[i] << ": colour range in force " << static_cast<int>(pane.color_axis().limit_method) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

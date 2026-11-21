@@ -53,7 +53,7 @@ auto fig = studio("spire3_z");
 auto& pane = fig.pane3("p");
 auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.spire3(z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/spire3-1-z.svg)
@@ -65,7 +65,7 @@ auto fig = studio("spire3_yz");
 auto& pane = fig.pane3("p");
 auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.spire3(std::vector<double>{0, 5, 10}, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/spire3-2-yz.svg)
@@ -77,7 +77,7 @@ auto fig = studio("spire3_xyz");
 auto& pane = fig.pane3("p");
 auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.spire3(std::vector<double>{0, 1, 4}, std::vector<double>{0, 2, 3}, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/spire3-3-xyz.svg)
@@ -91,7 +91,7 @@ auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshap
 auto c = pluss::series::linspace(1.0, 0.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.spire3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, z, c);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/spire3-4-color.svg)
@@ -103,7 +103,7 @@ auto fig = studio("spire3_negative");
 auto& pane = fig.pane3("p");
 auto z = pluss::make_series(std::vector<double>{2, -1, 3, -2, 1, 2, 0, 3, -3}, {3, 3});
 pane.spire3(z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/spire3-5-negative.svg)
@@ -126,7 +126,7 @@ report("coordinates do not match z", [](Pane& pane) { auto z = pluss::series::li
 auto fig = studio("spire3_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -149,7 +149,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

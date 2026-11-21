@@ -37,7 +37,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.caption("Source: field survey, 2025");
 std::cout << pane.caption_text() << "\n";
 std::cout << "drawn: " << (fig.to_svg().find(">Source: field survey, 2025<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ auto fig = studio("caption_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.caption("second");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ a.caption("measured in June");
 auto& b = fig.pane2("b");
 b.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});
 b.caption("measured in July");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/caption-3-each_pane.svg)
@@ -103,7 +103,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.title("title").caption("caption").x_label("axis label");
 const std::string svg = fig.to_svg();
 std::cout << "title, caption and label all drawn: " << (svg.find(">title<") != std::string::npos && svg.find(">caption<") != std::string::npos && svg.find(">axis label<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -121,7 +121,7 @@ auto fig = studio("caption_math");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.caption("Fitted with $y = a e^{-bt}$");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/caption-5-math.svg)

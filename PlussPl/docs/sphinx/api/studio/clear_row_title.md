@@ -42,7 +42,7 @@ auto build = [](bool set_second_then_clear) {
 auto cleared = build(true), never = build(false);
 std::cout << "entries left: " << cleared.row_titles().size() << " (row 0: " << cleared.row_titles().at(0) << ")\n";
 std::cout << "equals the figure that never set it: " << (cleared.to_svg() == never.to_svg()) << "\n";
-cleared.save_svg("figure.svg");
+cleared.show();
 ```
 
 ### Output
@@ -63,7 +63,7 @@ fig.row_title(0, "only");
 fig.clear_row_title(3).clear_row_title(-5).clear_row_title(1000000);
 std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ std::cout << "after clearing: " << fig.row_titles().size() << "\n";
 fig.row_title(0, "new");
 std::cout << "after setting again: " << fig.row_titles().at(0) << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

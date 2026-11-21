@@ -50,7 +50,7 @@ pane.pin("peak", 2.0, 5.0);
 const auto& pin = pane.pins().front();
 std::cout << "stored: '" << pin.text << "' at (" << pin.anchor.x << ", " << pin.anchor.y << "), offset (" << pin.offset_x << ", " << pin.offset_y << ")\n";
 std::cout << "drawn: " << (fig.to_svg().find(">peak<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -71,7 +71,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.pin("default offset", 2.0, 5.0);
 pane.pin("below left", 4.0, 3.0, -60.0, 30.0);
 for (const auto& pin : pane.pins()) std::cout << pin.text << ": offset (" << pin.offset_x << ", " << pin.offset_y << ")\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -91,7 +91,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
 pane.pin("top of the path", Vec3d{2.0, 0.0, 2.0});
 std::cout << "pins: " << pane.pins().size() << ", drawn: " << (fig.to_svg().find(">top of the path<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -124,7 +124,7 @@ auto build = [&](bool manual) {
 };
 std::cout << "automatic: " << texts(build(false).to_svg()) << "\n";
 std::cout << "manual:    " << texts(build(true).to_svg()) << "\n";
-build(false).save_svg("figure.svg");
+build(false).show();
 ```
 
 ### Output
@@ -157,7 +157,7 @@ attempt("infinite anchor", [&] { pane.pin("x", 1.0, inf); });
 attempt("NaN offset", [&] { pane.pin("x", 1.0, 1.0, nan, 0.0); });
 attempt("empty text", [&] { pane.pin("", 2.0, 5.0); });
 std::cout << "pins added: " << pane.pins().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

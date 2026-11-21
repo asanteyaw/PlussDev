@@ -126,9 +126,8 @@ int main() {
   std::cout << "figure " << fig.extent().width << " x " << fig.extent().height << ", panes " << fig.pane_count() << "\n";
 
   // 4. One figure, three formats.
-  fig.save_svg(out("styled_report.svg"));
-  fig.save_png(out("styled_report.png"), 144);
-  fig.save_pdf(out("styled_report.pdf"));
+  fig.show();
+  fig.show();
   fig.show();   // opens a window; the documentation build captures the figure instead
   std::cout << "saved SVG, PNG and PDF: " << std::filesystem::exists(out("styled_report.svg")) << std::filesystem::exists(out("styled_report.png")) << std::filesystem::exists(out("styled_report.pdf")) << "\n";
 }

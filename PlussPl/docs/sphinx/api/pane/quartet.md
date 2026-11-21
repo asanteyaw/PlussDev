@@ -43,7 +43,7 @@ Example 1. One summary over all the values: the box spans the middle half of the
 auto fig = studio("quartet_one");
 auto& pane = fig.pane2("p");
 pane.quartet(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 30});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/quartet-1-one.svg)
@@ -54,7 +54,7 @@ Example 2. A group series splits the values into groups, one box for each distin
 auto fig = studio("quartet_groups");
 auto& pane = fig.pane2("p");
 pane.quartet(std::vector<double>{1, 1, 1, 1, 1, 2, 2, 2, 2, 2}, std::vector<double>{3, 4, 5, 6, 7, 6, 7, 8, 9, 10});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/quartet-2-groups.svg)
@@ -72,7 +72,7 @@ for (int g = 0; g < 3; ++g) {
   }
 }
 pane.quartet(group, value);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/quartet-3-three.svg)
@@ -86,7 +86,7 @@ auto& with = fig.pane2("with an outlier");
 with.quartet(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 30});
 auto& without = fig.pane2("without");
 without.quartet(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/quartet-4-outlier.svg)
@@ -109,7 +109,7 @@ report("no values", [](Pane& pane) { pane.quartet(std::vector<double>{}); });
 auto fig = studio("quartet_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

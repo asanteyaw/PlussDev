@@ -37,7 +37,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.title("Daily totals");
 std::cout << "title_text: " << pane.title_text() << "\n";
 std::cout << "drawn: " << (fig.to_svg().find(">Daily totals<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -60,7 +60,7 @@ pane.title("second");
 std::cout << "after title(): " << pane.title_text() << "\n";
 const std::string svg = fig.to_svg();
 std::cout << "first drawn: " << (svg.find(">first<") != std::string::npos) << ", second drawn: " << (svg.find(">second<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -87,7 +87,7 @@ std::cout << "cleared == never titled: " << (build(true) == build(false)) << "\n
 auto fig = studio("title_clear_out");
 auto& pane = fig.pane2();
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -109,7 +109,7 @@ a.title("rising then falling");
 auto& b = fig.pane2();
 b.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});
 b.title("falling then rising");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/title-4-mosaic.svg)
@@ -121,7 +121,7 @@ auto fig = studio("title_math");
 auto& pane = fig.pane2("");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.title("Decay $e^{-t}$");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/title-5-math.svg)
@@ -136,7 +136,7 @@ pane.title("pane title").caption("pane caption");
 fig.headline("figure headline");
 const std::string svg = fig.to_svg();
 std::cout << "all three drawn: " << (svg.find(">pane title<") != std::string::npos && svg.find(">pane caption<") != std::string::npos && svg.find(">figure headline<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

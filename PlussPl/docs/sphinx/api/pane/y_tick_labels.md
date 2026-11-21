@@ -39,7 +39,7 @@ pane.y_tick_labels(false);
 std::cout << "after false: " << pane.y_axis().tick_labels_visible << "\n";
 pane.y_tick_labels();
 std::cout << "after the default argument: " << pane.y_axis().tick_labels_visible << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -78,7 +78,7 @@ auto fig = studio("y_labels_effect_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.y_tick_labels(false);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("y_labels_restore_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -136,7 +136,7 @@ pane.y_label("Axis label");
 std::cout << "shown: " << texts(fig.to_svg()) << "\n";
 pane.y_tick_labels(false);
 std::cout << "hidden: " << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

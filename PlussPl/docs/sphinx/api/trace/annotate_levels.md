@@ -50,7 +50,7 @@ auto fig = studio("annotate_contour");
 fig.mosaic(1, 2);
 fig.pane2("no labels").contour(coord, coord, z);
 fig.pane2("annotate_levels(true)").contour(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/annotate_levels-1-contour.svg)
@@ -77,7 +77,7 @@ std::cout << "after annotate_levels(true): " << t.annotate_levels() << "\n";
 t.annotate_levels(false);
 std::cout << "after annotate_levels(false): " << t.annotate_levels() << "\n";
 t.annotate_levels(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -107,7 +107,7 @@ auto fig = studio("annotate_isoband");
 fig.mosaic(1, 2);
 fig.pane2("isoband").isoband(coord, coord, z);
 fig.pane2("isoband, annotated").isoband(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/annotate_levels-3-bands.svg)
@@ -144,7 +144,7 @@ std::cout << "sheet:    " << changes([&](Pane& p) -> Trace& { return p.sheet(coo
 std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}); }, false) << "\n";
 auto fig = studio("annotate_kinds_out");
 fig.pane2("fieldmap, annotated").fieldmap(coord, coord, z).annotate_levels(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

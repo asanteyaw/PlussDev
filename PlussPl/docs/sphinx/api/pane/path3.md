@@ -41,7 +41,7 @@ for (int i = 0; i <= 40; ++i) {
   hz.push_back(0.1 * t);
 }
 pane.path3(hx, hy, hz);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/path3-1-helix.svg)
@@ -52,7 +52,7 @@ Example 2. A single value is repeated: this path stays in the plane z = 0.5.
 auto fig = studio("path3_broadcast");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 1, 0, 0}, std::vector<double>{0, 0, 1, 1, 0}, std::vector<double>{0.5});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/path3-2-broadcast.svg)
@@ -74,7 +74,7 @@ std::vector<double> sx, sy, sz;
 for (std::size_t i = 0; i < hx.size(); ++i) { sx.push_back(0.5 * hx[i]); sy.push_back(0.5 * hy[i]); sz.push_back(hz[i]); }
 pane.path3(sx, sy, sz).label("inner");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/path3-3-two.svg)
@@ -97,7 +97,7 @@ side.lens().look(0.0, 5.0);
 auto& above = fig.pane3("above");
 above.path3(hx, hy, hz);
 above.lens().look(0.0, 85.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/path3-4-view.svg)
@@ -119,7 +119,7 @@ report("lengths differ", [](Pane& pane) { pane.path3(std::vector<double>{1, 2, 3
 auto fig = studio("path3_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -141,7 +141,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

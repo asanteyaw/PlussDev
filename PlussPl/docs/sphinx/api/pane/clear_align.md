@@ -37,7 +37,7 @@ pane.align_xyz("g");
 std::cout << "before: '" << pane.x_align_group() << "' '" << pane.y_align_group() << "' '" << pane.z_align_group() << "'\n";
 pane.clear_align();
 std::cout << "after:  '" << pane.x_align_group() << "' '" << pane.y_align_group() << "' '" << pane.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -58,7 +58,7 @@ pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.align_x("columns").align_y("rows").align_z("depth");
 pane.clear_align();
 std::cout << "'" << pane.x_align_group() << "' '" << pane.y_align_group() << "' '" << pane.z_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -110,7 +110,7 @@ small.x_tick_labels(false);
 auto& large = fig.pane2("large");
 large.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 10, 20, 30});
 large.x_tick_labels(false);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -150,7 +150,7 @@ auto texts = [](const std::string& svg) {
   return out;
 };
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -169,7 +169,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.clear_align().clear_align();
 std::cout << "empty: " << (pane.x_align_group().empty() && pane.y_align_group().empty() && pane.z_align_group().empty()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

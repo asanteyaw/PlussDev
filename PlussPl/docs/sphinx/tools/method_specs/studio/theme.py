@@ -16,7 +16,7 @@ fig.theme(Theme::ocean());
 fig.headline("Ocean everywhere");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 std::cout << "figure: " << fig.theme_tokens().name() << ", pane: " << fig.panes()[0].theme_tokens().name() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="after", text="After the panes. The canvas changes to `ocean` but the pane created before the call keeps `paper`, so the figure mixes two themes; a pane created after the call is `ocean`.",
              code="""auto fig = studio("theme_after");
 fig.mosaic(1, 2);
@@ -24,7 +24,7 @@ fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.theme(Theme::ocean());
 fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "figure: " << fig.theme_tokens().name() << ", pane 0: " << fig.panes()[0].theme_tokens().name() << ", pane 1: " << fig.panes()[1].theme_tokens().name() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="built", text="A theme from its parts. A custom theme with its own name, two accent colours, background, foreground and a surface palette; the traces take the accents in turn.",
              code="""Theme custom("midnight",
              {Rgba::from_u8(240, 160, 60), Rgba::from_u8(120, 200, 255)},
@@ -36,7 +36,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).lab
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{5, 3, 4, 2}).label("second");
 pane.legend(KeyPlace::NorthWest);
 std::cout << "theme: " << fig.theme_tokens().name() << ", accents: " << fig.theme_tokens().accents().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="two", text="The two built-in themes differ. The same figure in `paper` and in `ocean` renders differently, and replacing the theme again replaces it entirely.",
              code="""auto build = [](Theme theme) {
   auto fig = studio("theme_two");
@@ -49,7 +49,7 @@ auto fig = studio("theme_two_out");
 fig.theme(Theme::ocean()).theme(Theme::paper());
 std::cout << "last call wins: " << fig.theme_tokens().name() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- The theme is copied into each pane at its creation. To restyle a pane afterwards, change the pane's own theme.
 - [`pane_style_defaults`](pane_style_defaults.md) can give new panes a different theme from the figure's.""",

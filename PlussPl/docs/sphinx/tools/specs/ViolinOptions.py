@@ -53,7 +53,7 @@ for (int i = 0; i < 5; ++i) {
   options.inner = inners[i];
   pane.violin(sample, options);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="side", text="`side`. The full mirrored violin, and the left and right halves. Half violins let two samples share one position, one on each side, which is how to compare two groups directly.",
              code="""const std::vector<double> a{1.2, 1.8, 2.1, 2.6, 2.9, 3.0, 3.4, 3.9, 4.1, 4.8};
 const std::vector<double> b{2.5, 3.1, 3.4, 3.8, 4.1, 4.4, 4.9, 5.3, 5.8, 6.6};
@@ -76,7 +76,7 @@ left.inner = right.inner = ViolinInner::None;
 paired.violin(a, left).label("a");
 paired.violin(b, right).label("b");
 paired.legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="bandwidth", text="`bw_adjust` and `cut`. The smoothing at 0.4, 1 and 2.5 times the automatic width: the small value shows the lumps of the sample as separate bumps, the large one a single smooth hill. The last pane has `cut = 0`, so the shape stops at the extreme data values instead of tailing off beyond them.",
              code="""const std::vector<double> sample{1.2, 1.8, 2.1, 2.2, 2.6, 4.9, 5.0, 5.1, 5.4, 5.8, 6.1, 6.3};
 const double adjust[] = {0.4, 1.0, 2.5};
@@ -94,7 +94,7 @@ ViolinOptions options;
 options.cut = 0.0;
 options.inner = ViolinInner::Point;
 tight.violin(sample, options);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="scale", text="`scale` for three groups of different sizes (6, 12 and 40 observations), drawn with the grouped form of `violin`. With `Area` the big group is not wider than the small ones; with `Count` its violin is much wider; with `Width` all three have the same maximum width.",
              code="""std::vector<double> group, values;
 const int counts[3] = {6, 12, 40};
@@ -114,7 +114,7 @@ for (int i = 0; i < 3; ++i) {
   options.inner = ViolinInner::Quartile;
   pane.violin(group, values, options);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="width", text="`width`. The widest violin fills 0.4, 0.8 (the default) and 1.0 of its allotted space. The data are the same; only the horizontal scale of the shape changes.",
              code="""const std::vector<double> sample{1.2, 1.8, 2.1, 2.2, 2.6, 2.9, 3.0, 3.1, 3.4, 3.9, 4.1, 4.8, 5.5, 6.9};
 const double widths[] = {0.4, 0.8, 1.0};
@@ -126,7 +126,7 @@ for (int i = 0; i < 3; ++i) {
   options.width = widths[i];
   pane.violin(sample, options);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="defaults", text="The defaults, read from a default-constructed value, and the form of `violin` with no options, which draws with them.",
              code="""const ViolinOptions d;
 std::cout << "width " << d.width << ", bw_adjust " << d.bw_adjust << ", cut " << d.cut << "\\n";
@@ -142,7 +142,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "violin(values) == violin(values, ViolinOptions{}): " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("violin_defaults_out");
 fig.pane2("default").violin(sample);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A violin of a very small sample is mostly the smoothing: for fewer than about ten observations prefer `Point` or `Stick` inside so the data are visible.
 - `cut` extends the shape past the data, where there is no data: a violin with a long tail beyond the last observation can suggest values that were never seen. `cut = 0` removes that.

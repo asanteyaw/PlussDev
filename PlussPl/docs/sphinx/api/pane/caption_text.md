@@ -34,7 +34,7 @@ auto fig = studio("caption_text_default");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "empty: " << pane.caption_text().empty() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -55,7 +55,7 @@ pane.caption("a note");
 std::cout << "'" << pane.caption_text() << "'\n";
 pane.caption("");
 std::cout << "'" << pane.caption_text() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -80,7 +80,7 @@ b.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
 for (const auto& pane : fig.panes()) {
   std::cout << pane.title_text() << ": " << (pane.caption_text().empty() ? "(none)" : pane.caption_text()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

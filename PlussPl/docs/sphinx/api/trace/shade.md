@@ -51,7 +51,7 @@ const char* names[] = {"Faceted", "Flat", "Smooth"};
 auto fig = studio("shade_gallery");
 fig.mosaic(1, 3);
 for (int i = 0; i < 3; ++i) fig.pane3(names[i]).sheet(coord, coord, z).shade(modes[i]);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/shade-1-gallery.svg)
@@ -77,7 +77,7 @@ t.shade(ShadeMode::Smooth).label("surface");
 std::cout << "after shade(Smooth): " << static_cast<int>(t.shade_mode()) << "\n";
 t.shade(ShadeMode::Flat);
 std::cout << "after shade(Flat):   " << static_cast<int>(t.shade_mode()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -125,7 +125,7 @@ std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(
 std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}); }, false) << "\n";
 auto fig = studio("shade_kinds_out");
 fig.pane3("spire3, Smooth").spire3(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -163,7 +163,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(modes[i]).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/shade-4-lit.svg)

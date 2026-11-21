@@ -45,7 +45,7 @@ std::cout << "after z_limits: "; show();
 pane.auto_z();
 std::cout << "after auto_z: "; show();
 pane.z_limits(Range1d{-2.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ auto fig = studio("z_limits_effect_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 pane.z_limits(Range1d{-2.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -104,7 +104,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1, 0, 1, 0, 1, 0}, std::vector<double>{0, 1, 0, 1, 0, 1, 0}, std::vector<double>{0, 1, 2, 3, 4, 5, 6});
 pane.z_limits(Range1d{1.0, 3.0});
 std::cout << "range: " << pane.z_axis().limits->low << " .. " << pane.z_axis().limits->high << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -129,7 +129,7 @@ std::cout << "equal: " << (build(true) == build(false)) << "\n";
 auto fig = studio("z_limits_auto_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -157,7 +157,7 @@ for (const Range1d& range : bad) {
   }
 }
 std::cout << "kept: " << pane.z_axis().limits->low << " .. " << pane.z_axis().limits->high << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -195,7 +195,7 @@ try {
 } catch (const pluss::Error& e) {
   std::cout << "limits first, then log10: " << e.message() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -22,7 +22,7 @@ fig.row_title(0, "2024").row_title(1, "2025");
 const char* names[] = {"north", "south", "north", "south"};
 for (const char* name : names) fig.pane2(name).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "titles stored: " << fig.row_titles().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="replace", text="One title per row. Setting the same row again replaces the text; the other rows are untouched.",
              code="""auto fig = studio("row_title_replace");
 fig.mosaic(2, 1);
@@ -30,7 +30,7 @@ fig.row_title(0, "draft").row_title(1, "keep");
 fig.row_title(0, "final");
 std::cout << "row 0: " << fig.row_titles().at(0) << ", row 1: " << fig.row_titles().at(1) << ", entries: " << fig.row_titles().size() << "\\n";
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_row", text="A row the grid does not have draws nothing and takes no room. With no mosaic, and with a row beyond the last, the figure is the figure without the call; the title is kept and appears when the grid grows.",
              code="""auto build = [](bool title, int rows) {
   auto fig = studio("row_title_norow");
@@ -45,7 +45,7 @@ auto fig = studio("row_title_norow_out");
 fig.mosaic(6, 1);
 fig.row_title(5, "far away");
 for (int i = 0; i < 6; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="empty", text="An empty title draws nothing. The figure equals the one that never set a title for the row, although the empty entry is stored.",
              code="""auto build = [](bool empty_title) {
   auto fig = studio("row_title_empty");
@@ -56,7 +56,7 @@ fig.save_svg("figure.svg");"""),
 };
 auto with = build(true), without = build(false);
 std::cout << "same figure: " << (with.to_svg() == without.to_svg()) << ", entries stored: " << with.row_titles().size() << "\\n";
-without.save_svg("figure.svg");"""),
+without.show();"""),
         dict(id="headline", text="Below a headline. A figure with a headline and row titles keeps the titles clear of the headline, including a headline that wraps onto several lines.",
              code="""auto fig = studio("row_title_headline");
 fig.size(700.0, 520.0);
@@ -64,7 +64,7 @@ fig.headline("A headline long enough that it has to wrap onto a second line of t
 fig.mosaic(2, 1);
 fig.row_title(0, "first row").row_title(1, "second row");
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="A negative row is refused. The call throws `pluss::Error`, and the titles already stored are left as they were.",
              code="""auto fig = studio("row_title_invalid");
 fig.mosaic(2, 1);
@@ -76,7 +76,7 @@ try {
 }
 std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\\n";
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`: it can throw for a negative row.
 - Titles belong to the figure, not to panes; moving panes between rows moves them under different titles.

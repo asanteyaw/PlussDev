@@ -19,7 +19,7 @@ std::cout << svg.substr(0, svg.find('\\n')) << "\\n";
 const auto at = svg.find("<svg");
 std::cout << svg.substr(at, svg.find('>', at) - at + 1) << "\\n";
 std::cout << "ends with </svg>: " << (svg.rfind("</svg>") + 7 >= svg.size()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="repeatable", text="Repeatable and side-effect free. Rendering twice gives the same text, and rendering does not change the figure: the pane count and size are the same before and after.",
              code="""auto fig = studio("to_svg_repeat");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series");
@@ -27,7 +27,7 @@ const std::string first = fig.to_svg();
 const std::string second = fig.to_svg();
 std::cout << "same text twice: " << (first == second) << "\\n";
 std::cout << "panes: " << fig.pane_count() << ", size: " << fig.extent().width << " x " << fig.extent().height << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="reads_now", text="The figure at the moment of the call. Adding a headline changes what `to_svg` returns, and the text rendered earlier is a snapshot that is not updated.",
              code="""auto fig = studio("to_svg_now");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -36,7 +36,7 @@ fig.headline("A headline");
 const std::string after = fig.to_svg();
 std::cout << "headline in the first string: " << (before.find("A headline") != std::string::npos) << "\\n";
 std::cout << "headline in the second string: " << (after.find("A headline") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="text", text="The text is real text. Titles, tick labels and legend entries are `<text>` elements in the document, so they can be found in the string; the path data of the traces are `<path>` elements.",
              code="""auto fig = studio("to_svg_text");
 fig.headline("Searchable");
@@ -47,7 +47,7 @@ std::cout << "headline: " << (svg.find(">Searchable<") != std::string::npos) << 
 std::cout << "pane title: " << (svg.find(">my pane<") != std::string::npos) << "\\n";
 std::cout << "legend entry: " << (svg.find("my series") != std::string::npos) << "\\n";
 std::cout << "has path data: " << (svg.find("<path") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="empty", text="A figure with no panes. It is not an error: the result is a valid document with the canvas and no text on it.",
              code="""auto fig = studio("to_svg_empty");
 const std::string svg = fig.to_svg();
@@ -56,7 +56,7 @@ std::cout << "valid document: " << (svg.find("<svg") != std::string::npos && svg
 std::cout << "has any text: " << (svg.find("<text") != std::string::npos) << "\\n";
 auto shown = studio("to_svg_empty_out");
 shown.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-shown.save_svg("figure.svg");"""),
+shown.show();"""),
     ],
     notes="""- Large figures produce large strings; for a file, [`save_svg`](save_svg.md) writes the same text without the caller holding it.
 - The string is independent of the figure: it keeps its content if the figure changes or is destroyed afterwards.

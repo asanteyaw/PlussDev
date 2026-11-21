@@ -54,7 +54,7 @@ fig.mosaic(1, 2);
   pane.legend(KeyPlace::NorthWest);
   std::cout << "still counted as a trace: " << pane.trace_count() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "hidden trace == never added: " << (svg[0] == svg[1]) << "\n";
 auto fig = studio("visible_absent_out");
 fig.pane2("pane").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("kept");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -109,7 +109,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "hide().show() == untouched: " << (svg[0] == svg[1]) << "\n";
 auto fig = studio("visible_restore_out");
 fig.pane2("pane").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5}).stroke(Rgba::from_u8(200, 30, 30)).width(3.0f);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -138,7 +138,7 @@ for (int step = 1; step <= 3; ++step) {
   pane.y_limits(Range1d{0.0, 7.0});
   pane.legend(KeyPlace::NorthWest);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/visible-4-layers.svg)

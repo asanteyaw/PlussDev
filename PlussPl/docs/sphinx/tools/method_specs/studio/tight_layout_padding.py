@@ -19,7 +19,7 @@ std::cout << "tight_layout(): " << fig.tight_layout_padding() << "\\n";
 fig.tight_layout(true, 0.0);
 std::cout << "zero is allowed: " << fig.tight_layout_padding() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text="The padding changes the picture once the layout is on. Three paddings give three different figures, and a larger padding leaves more room around the plot.",
              code="""auto build = [](double padding) {
   auto fig = studio("tight_padding_effect");
@@ -31,7 +31,7 @@ std::cout << "0 vs 6: " << (build(0.0) != build(6.0)) << ", 6 vs 24: " << (build
 auto fig = studio("tight_padding_effect_out");
 fig.tight_layout(true, 24.0);
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_effect_off", text="No effect while the layout is off. A padding stored with the layout off leaves the figure exactly as it was.",
              code="""auto build = [](bool store_padding) {
   auto fig = studio("tight_padding_off");
@@ -42,7 +42,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "padding stored, layout off == untouched figure: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("tight_padding_off_out");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid paddings are refused and the stored value is kept: a negative number, infinity and NaN each throw `pluss::Error`.",
              code="""auto fig = studio("tight_padding_invalid");
 fig.tight_layout(true, 9.0);
@@ -56,7 +56,7 @@ for (double bad : {-1.0, inf, std::numeric_limits<double>::quiet_NaN()}) {
 }
 std::cout << "still " << fig.tight_layout_padding() << ", enabled: " << fig.tight_layout_enabled() << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`, and has no effect on the figure.
 - Padding is in drawing units, the same units as [`size`](size.md).""",

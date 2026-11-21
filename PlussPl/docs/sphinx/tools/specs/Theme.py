@@ -58,7 +58,7 @@ for (int i = 0; i < 2; ++i) {
   lines.legend(KeyPlace::OutsideEast);
   auto& surface = fig.pane3(themes_to_show[i].name() + ": surface");
   surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }"""),
         dict(id="paper", text="The same figure with the default `paper` theme, to compare with Example 1. The figure is the one that example saves for `ocean`: five lines and a surface.",
              code=SURFACE + """
@@ -74,7 +74,7 @@ for (int k = 0; k < 5; ++k) {
 lines.legend(KeyPlace::OutsideEast);
 auto& surface = fig.pane3("paper: surface");
 surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="read", text="What a theme holds. For each preset the name, the number of accents, the background and foreground and the first accents; and `accent` wrapping: for a theme with N accents, index N is index 0 again.",
              code="""auto c = [](const Rgba& v) { return std::to_string(static_cast<int>(v.red * 255 + 0.5)) + "," + std::to_string(static_cast<int>(v.green * 255 + 0.5)) + "," + std::to_string(static_cast<int>(v.blue * 255 + 0.5)); };
 for (const Theme& t : {Theme::paper(), Theme::ocean()}) {
@@ -85,7 +85,7 @@ for (const Theme& t : {Theme::paper(), Theme::ocean()}) {
 std::cout << "themes::paper() has the same name: " << (themes::paper().name() == Theme::paper().name()) << "\\n";
 auto fig = studio("theme_read");
 fig.pane2("theme").trend(std::vector<double>{1, 2}, std::vector<double>{1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="custom", text="A theme built by hand: a dark one. Four accents, a near-black background, a light foreground and the `lagoon` palette. Passed to the studio constructor, it governs every pane created afterwards.",
              code=SURFACE + """
 
@@ -104,7 +104,7 @@ lines.legend(KeyPlace::OutsideEast);
 auto& surface = fig.pane3("dark: surface");
 surface.sheet(coord, coord, z).shade(ShadeMode::Smooth);
 std::cout << fig.theme_tokens().name() << " with " << fig.theme_tokens().accents().size() << " accents\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="after", text="A theme applies to panes created afterwards. The first pane is created under `paper`; the studio is switched to `ocean`; the second pane is created under `ocean`. The two panes report different themes, and the first keeps its own.",
              code="""auto fig = studio("theme_after");
 fig.mosaic(1, 2);
@@ -120,7 +120,7 @@ fig.theme(Theme::ocean());
   std::cout << "second pane: " << second.theme_tokens().name() << "\\n";
 }
 std::cout << "the studio:  " << fig.theme_tokens().name() << ", the first pane still: " << fig.panes()[0].theme_tokens().name() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Change the theme before creating panes. To restyle an existing pane, edit its `theme_tokens()`, or rebuild the figure.
 - A `Theme` is a value, so one can be built once and passed to many studios, which is how a house style is shared by every figure of a report.

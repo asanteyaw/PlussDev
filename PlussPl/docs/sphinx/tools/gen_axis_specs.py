@@ -102,7 +102,7 @@ std::cout << "replaced: " << (build("old", "new").find(">new<") != std::string::
 std::cout << "cleared == never set: " << (build("temporary", "") == build(nullptr, nullptr)) << "\\n";
 {plot(a, f"{A}_label_clear_out")}
 pane.{A}_label("Final label");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="distinct", text=f"Not the title and not a shared caption. The {pane_kind}'s title, its {A} label and a figure-level caption are three separate texts; each is set by its own call and each is drawn in its own place.",
              code=f"""{plot(a, f"{A}_label_distinct")}
 pane.title("Pane title");
@@ -111,20 +111,20 @@ pane.align_{A}("group");
 fig.{A}_caption("group", "Shared caption");
 const std::string svg = fig.to_svg();
 std::cout << "title: " << (svg.find(">Pane title<") != std::string::npos) << ", label: " << (svg.find(">Axis label<") != std::string::npos) << ", caption: " << (svg.find(">Shared caption<") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="independent", text=f"Per axis. Setting the {A} label leaves the labels of the other axes empty, and each axis keeps its own text.",
              code=f"""{plot(a, f"{A}_label_independent")}
 pane.{A}_label("this axis only");
 std::cout << "x: '" << pane.x_axis().label << "', y: '" << pane.y_axis().label << "', z: '" << pane.z_axis().label << "'\\n";
 pane.x_label("x text").y_label("y text").z_label("z text");
 std::cout << "all set: '" << pane.x_axis().label << "', '" << pane.y_axis().label << "', '" << pane.z_axis().label << "'\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="math", text="Math text. A label with `$...$` is typeset, so Greek letters and subscripts appear as symbols instead of the raw markup.",
              code=f"""{plot(a, f"{A}_label_math")}
 pane.{A}_label("$\\\\sigma_t$ (volatility)");
 const std::string svg = fig.to_svg();
 std::cout << "raw markup drawn: " << (svg.find("$\\\\sigma_t$") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_label", title=f"Pane::{A}_label", signature=f"Pane& Pane::{A}_label(std::string label)",
@@ -163,7 +163,7 @@ pane.{name}(24.0);
 std::cout << "after {name}(24): "; show();
 pane.{clear}();
 std::cout << "after {clear}(): "; show();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text=f"The effect. With a label set, a gap of 0, 14 and 60 gives three different figures; the saved figure uses 60, which pushes {where} well away from the axis.",
              code=f"""auto build = [&](double gap) {{
 {plot(a, f"{name}_effect", indent="  ")}
@@ -172,7 +172,7 @@ fig.save_svg("figure.svg");"""),
   return fig;
 }};
 std::cout << "0 vs 14: " << (build(0.0).to_svg() != build(14.0).to_svg()) << ", 14 vs 60: " << (build(14.0).to_svg() != build(60.0).to_svg()) << "\\n";
-build(60.0).save_svg("figure.svg");"""),
+build(60.0).show();"""),
         dict(id="clear_restores", text=f"Clearing restores the default exactly. After `{clear}()` the figure equals the one that never set a gap.",
              code=f"""auto build = [&](bool set_then_clear) {{
 {plot(a, f"{name}_clear", indent="  ")}
@@ -183,7 +183,7 @@ build(60.0).save_svg("figure.svg");"""),
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{name}_clear_out")}
 pane.{A}_label("Axis label");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text=f"Invalid gaps are refused and the stored value is kept. A negative number, infinity and NaN throw `pluss::Error`; zero is a valid gap.",
              code=f"""{plot(a, f"{name}_invalid")}
 pane.{A}_label("Axis label");
@@ -199,7 +199,7 @@ pane.{name}(0.0);
 std::cout << "zero accepted: " << *pane.{A}_axis().{field} << "\\n";
 pane.{name}(10.0);
 std::cout << "kept after errors: " << *pane.{A}_axis().{field} << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=name, title=f"Pane::{name}", signature=f"Pane& Pane::{name}(double points)\nPane& Pane::{clear}() noexcept",
@@ -239,7 +239,7 @@ pane.{name}(45.0);
 std::cout << "after {name}(45): "; show();
 pane.{clear}();
 std::cout << "after {clear}(): "; show();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="angles", text="Any finite angle. The values 0, 45, 90, -90 and 720 are all accepted and stored as given, with no normalisation; the saved figure is rotated 45 degrees.",
              code=f"""{plot(a, f"{name}_angles")}
 {label_line}
@@ -248,7 +248,7 @@ for (double degrees : {{0.0, 45.0, 90.0, -90.0, 720.0}}) {{
   std::cout << degrees << " stored as " << *pane.{A}_axis().{field} << "\\n";
 }}
 pane.{name}(45.0);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text=f"The effect. Rotating changes the figure, and the rotated text carries a rotation in the SVG; the angle 0 equals the figure with no override.",
              code=f"""auto build = [&](const char* mode) {{
 {plot(a, f"{name}_effect", indent="  ")}
@@ -262,7 +262,7 @@ std::cout << "explicit 0 equals none: " << (build("0") == build("none")) << "\\n
 {plot(a, f"{name}_effect_out")}
 {label_line}
 pane.{name}(60.0);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Only finite angles. Infinity and NaN are refused with `pluss::Error` and the stored angle is kept; every finite number is accepted.",
              code=f"""{plot(a, f"{name}_invalid")}
 {label_line}
@@ -275,7 +275,7 @@ for (double bad : {{std::numeric_limits<double>::infinity(), -std::numeric_limit
   }}
 }}
 std::cout << "kept: " << *pane.{A}_axis().{field} << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="clear_restores", text=f"Clearing restores the default. After `{clear}()` the figure equals the one that never set an angle.",
              code=f"""auto build = [&](bool set_then_clear) {{
 {plot(a, f"{name}_clear", indent="  ")}
@@ -286,7 +286,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{name}_clear_out")}
 {label_line}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=name, title=f"Pane::{name}", signature=f"Pane& Pane::{name}(double degrees)\nPane& Pane::{clear}() noexcept",
@@ -332,7 +332,7 @@ std::cout << "after {A}_limits: "; show();
 pane.auto_{A}();
 std::cout << "after auto_{A}: "; show();
 pane.{A}_limits(Range1d{{-2.0, 10.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text="The effect on the picture. The range {-2, 10} is much wider than the data, so the data occupies part of the axis and the ticks follow the range; the figure differs from the automatic one.",
              code=f"""auto build = [&](bool manual) {{
 {plot(a, f"{A}_limits_effect", indent="  ")}
@@ -345,12 +345,12 @@ std::cout << "automatic ticks: " << texts(build(false)) << "\\n";
 std::cout << "manual ticks:    " << texts(build(true)) << "\\n";
 {plot(a, f"{A}_limits_effect_out")}
 pane.{A}_limits(Range1d{{-2.0, 10.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="narrower", text="A range narrower than the data. Only the part of the data inside the range is shown; the rest is cut at the edge of the plot area and nothing is drawn outside it.",
              code=narrow_plot(a, f"{A}_limits_narrow") + f"""
 pane.{A}_limits(Range1d{{1.0, 3.0}});
 std::cout << "range: " << pane.{A}_axis().limits->low << " .. " << pane.{A}_axis().limits->high << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="auto", text=f"Back to automatic. After `auto_{A}()` the figure equals the one that never set a range, and the limit method (`{A}_limit_method`) applies again.",
              code=f"""auto build = [&](bool set_then_auto) {{
 {plot(a, f"{A}_limits_auto", indent="  ")}
@@ -359,7 +359,7 @@ fig.save_svg("figure.svg");"""),
 }};
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{A}_limits_auto_out")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid ranges are refused and the previous range is kept. The range must be finite and strictly increasing, so a reversed range, an empty one and a non-finite one each throw `pluss::Error`.",
              code=f"""{plot(a, f"{A}_limits_invalid")}
 pane.{A}_limits(Range1d{{0.0, 5.0}});
@@ -373,7 +373,7 @@ for (const Range1d& range : bad) {{
   }}
 }}
 std::cout << "kept: " << pane.{A}_axis().limits->low << " .. " << pane.{A}_axis().limits->high << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="log", text=f"With a log scale the range must be positive. After `scale_{A}(log10)` a range that includes zero throws, and switching to `log10` while such a range is set throws as well; the axis keeps its previous state in both cases.",
              code=f"""{plot(a, f"{A}_limits_log", vals="{1, 10, 100, 1000}")}
 pane.scale_{A}(ScalePolicy::log10());
@@ -393,7 +393,7 @@ try {{
 }} catch (const pluss::Error& e) {{
   std::cout << "limits first, then log10: " << e.message() << "\\n";
 }}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_limits", title=f"Pane::{A}_limits", signature=f"Pane& Pane::{A}_limits(Range1d limits)\nPane& Pane::auto_{A}() noexcept",
@@ -421,21 +421,21 @@ for (LimitMethod m : {{LimitMethod::Tight, LimitMethod::Padded, LimitMethod::Tic
   pane.{A}_limit_method(m);
   std::cout << "set " << static_cast<int>(m) << ", read " << static_cast<int>(pane.{A}_axis().limit_method) << "\\n";
 }}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="tick_aligned", text="`TickAligned`, the default. The range is widened to round tick values, so the axis starts and ends on clean numbers; the ticks of the data 2.3 to 6.2 run from 2 to 7.",
              code=f"""{plot(a, f"{A}_method_aligned", vals="{2.3, 4.7, 3.1, 6.2}")}
 {only_axis(a)}
 pane.{A}_limit_method(LimitMethod::TickAligned);
 {TEXTS}
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="tight", text="`Tight`. The range hugs the data, so the data touches the edges of the plot area and the end ticks sit inside it.",
              code=f"""{plot(a, f"{A}_method_tight", vals="{2.3, 4.7, 3.1, 6.2}")}
 {only_axis(a)}
 pane.{A}_limit_method(LimitMethod::Tight);
 {TEXTS}
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="padded", text="`Padded`. A margin is added around the data, so no point sits on the edge; the three methods give three different figures.",
              code=f"""auto build = [&](LimitMethod method) {{
 {plot(a, f"{A}_method_padded", vals="{2.3, 4.7, 3.1, 6.2}", indent="  ")}
@@ -443,7 +443,7 @@ fig.save_svg("figure.svg");"""),
   return fig;
 }};
 std::cout << "TickAligned vs Tight: " << (build(LimitMethod::TickAligned).to_svg() != build(LimitMethod::Tight).to_svg()) << ", Tight vs Padded: " << (build(LimitMethod::Tight).to_svg() != build(LimitMethod::Padded).to_svg()) << "\\n";
-build(LimitMethod::Padded).save_svg("figure.svg");"""),
+build(LimitMethod::Padded).show();"""),
         dict(id="manual", text="No effect with a manual range. Once `limits` sets a range the method is never consulted: the three methods give byte-identical figures.",
              code=f"""auto build = [&](LimitMethod method) {{
 {plot(a, f"{A}_method_manual", indent="  ")}
@@ -453,7 +453,7 @@ build(LimitMethod::Padded).save_svg("figure.svg");"""),
 }};
 std::cout << "all equal: " << (build(LimitMethod::TickAligned) == build(LimitMethod::Tight) && build(LimitMethod::Tight) == build(LimitMethod::Padded)) << "\\n";
 {plot(a, f"{A}_method_manual_out")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_limit_method", title=f"Pane::{A}_limit_method", signature=f"Pane& Pane::{A}_limit_method(LimitMethod method) noexcept",
@@ -492,7 +492,7 @@ pane.{A}_tick_format(TickFormat::Percent);
 std::cout << "after Percent: " << static_cast<int>(pane.{A}_axis().tick_format) << "\\n";
 pane.{A}_tick_format(TickFormat::Auto);
 std::cout << "back to Auto: " << static_cast<int>(pane.{A}_axis().tick_format) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="small", text="Every format on the same small values. The axis runs 0 to 1, and each format writes the ticks in its own way; `Percent` multiplies by 100.",
              code=f"""{TEXTS}
 const std::pair<const char*, TickFormat> formats[] = {{{{"Auto", TickFormat::Auto}}, {{"Plain", TickFormat::Plain}}, {{"Fixed3", TickFormat::Fixed3}}, {{"Fixed6", TickFormat::Fixed6}},
@@ -505,7 +505,7 @@ for (const auto& [name, format] : formats) {{
 }}
 {plot(a, f"{A}_format_small_out", vals="{0.0, 0.25, 0.5, 1.0}")}
 pane.{A}_tick_format(TickFormat::Percent);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="large", text="Every format on large values. The axis runs to about ten million; `Plain` and `Fixed3` write every digit, `Scientific` and `Engineering` keep the labels short, and `Auto` switches to scientific notation by itself.",
              code=f"""{TEXTS}
 const std::pair<const char*, TickFormat> formats[] = {{{{"Auto", TickFormat::Auto}}, {{"Plain", TickFormat::Plain}}, {{"Fixed3", TickFormat::Fixed3}}, {{"Scientific", TickFormat::Scientific}}, {{"Engineering", TickFormat::Engineering}}, {{"Integer", TickFormat::Integer}}}};
@@ -517,7 +517,7 @@ for (const auto& [name, format] : formats) {{
 }}
 {plot(a, f"{A}_format_large_out", vals="{1200, 34000, 560000, 7800000, 9000000}")}
 pane.{A}_tick_format(TickFormat::Scientific);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="distinct", text="Eight formats, eight figures. The formats that look alike on some data differ on others; here all pairs of neighbouring formats on the small values give different figures, and setting the same format twice changes nothing.",
              code=f"""auto build = [&](TickFormat format) {{
 {plot(a, f"{A}_format_distinct", vals="{0.0, 0.25, 0.5, 1.0}", indent="  ")}
@@ -527,7 +527,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "Plain vs Fixed3: " << (build(TickFormat::Plain) != build(TickFormat::Fixed3)) << ", Fixed3 vs Fixed6: " << (build(TickFormat::Fixed3) != build(TickFormat::Fixed6)) << ", Scientific vs Engineering: " << (build(TickFormat::Scientific) != build(TickFormat::Engineering)) << "\\n";
 std::cout << "same format twice: " << (build(TickFormat::Percent) == build(TickFormat::Percent)) << "\\n";
 {plot(a, f"{A}_format_distinct_out", vals="{0.0, 0.25, 0.5, 1.0}")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="explicit_ticks", text="Explicit tick labels keep their text. Labels given with `{A}_ticks` are drawn as written, whatever the format; the format applies to the automatic ticks.".replace("{A}", A),
              code=f"""{TEXTS}
 {plot(a, f"{A}_format_explicit", vals="{1, 2, 3, 4}")}
@@ -535,7 +535,7 @@ fig.save_svg("figure.svg");"""),
 pane.{A}_ticks(std::vector<double>{{1, 2, 3}}, {{"low", "mid", "high"}});
 pane.{A}_tick_format(TickFormat::Percent);
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_tick_format", title=f"Pane::{A}_tick_format", signature=f"Pane& Pane::{A}_tick_format(TickFormat format) noexcept",
@@ -568,7 +568,7 @@ pane.{A}_auto_tick_decimals(2);
 std::cout << "after {A}_auto_tick_decimals(2): "; show();
 pane.clear_{A}_auto_tick_decimals();
 std::cout << "after clear: "; show();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text="The effect. On an axis from 0 to 1 the automatic labels have one decimal by default; with 0, 1, 2 and 5 decimals they are written with that many.",
              code=f"""{TEXTS}
 for (int decimals : {{0, 1, 2, 5}}) {{
@@ -579,7 +579,7 @@ for (int decimals : {{0, 1, 2, 5}}) {{
 }}
 {plot(a, f"{A}_decimals_effect_out", vals="{0.0, 0.1234, 0.25, 0.5, 1.0}")}
 pane.{A}_auto_tick_decimals(2);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="scientific", text="Not when the axis is scientific. Values of millions are written in scientific notation by `Auto`, and a number of decimals does not change that; a plain-number format is the way to write them out.",
              code=f"""{TEXTS}
 auto build = [&](bool decimals) {{
@@ -591,7 +591,7 @@ auto build = [&](bool decimals) {{
 std::cout << "no setting: " << texts(build(false)) << "\\n";
 std::cout << "4 decimals: " << texts(build(true)) << "\\n";
 {plot(a, f"{A}_decimals_sci_out", vals="{1200, 34000, 560000, 7800000, 9000000}")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Only 0 to 8 decimals. A negative count and a count above 8 are refused with `pluss::Error`, and the stored count is kept; 0 and 8 are valid.",
              code=f"""{plot(a, f"{A}_decimals_invalid")}
 pane.{A}_auto_tick_decimals(3);
@@ -607,7 +607,7 @@ pane.{A}_auto_tick_decimals(8);
 std::cout << "0 and 8 accepted, stored: " << *pane.{A}_axis().auto_tick_decimals << "\\n";
 pane.{A}_auto_tick_decimals(3);
 std::cout << "kept after errors: " << *pane.{A}_axis().auto_tick_decimals << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="clear_restores", text="Clearing restores the default exactly. After `clear_{A}_auto_tick_decimals()` the figure equals the one that never set a count.".replace("{A}", A),
              code=f"""auto build = [&](bool set_then_clear) {{
 {plot(a, f"{A}_decimals_clear", vals="{0.0, 0.25, 0.5, 1.0}", indent="  ")}
@@ -616,7 +616,7 @@ fig.save_svg("figure.svg");"""),
 }};
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{A}_decimals_clear_out", vals="{0.0, 0.25, 0.5, 1.0}")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_auto_tick_decimals", title=f"Pane::{A}_auto_tick_decimals", signature=f"Pane& Pane::{A}_auto_tick_decimals(int decimals)\nPane& Pane::clear_{A}_auto_tick_decimals() noexcept",
@@ -643,7 +643,7 @@ pane.{A}_tick_labels(false);
 std::cout << "after false: " << pane.{A}_axis().tick_labels_visible << "\\n";
 pane.{A}_tick_labels();
 std::cout << "after the default argument: " << pane.{A}_axis().tick_labels_visible << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text="The effect. With the labels hidden the axis has no tick text; the texts of the figure show the ticks of this axis present and then absent.",
              code=f"""{TEXTS}
 auto build = [&](bool visible) {{
@@ -656,7 +656,7 @@ std::cout << "visible: " << texts(build(true)) << "\\n";
 std::cout << "hidden:  " << texts(build(false)) << "\\n";
 {plot(a, f"{A}_labels_effect_out")}
 pane.{A}_tick_labels(false);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="restore", text="Showing them again restores the figure exactly: hiding and then showing gives the figure that never changed the setting.",
              code=f"""auto build = [&](bool hide_then_show) {{
 {plot(a, f"{A}_labels_restore", indent="  ")}
@@ -665,7 +665,7 @@ fig.save_svg("figure.svg");"""),
 }};
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{A}_labels_restore_out")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="explicit", text="Explicit tick labels are hidden too. Labels set with `{A}_ticks` are tick labels like any other, so `{A}_tick_labels(false)` hides them while the label of the axis (`{A}_label`) stays.".replace("{A}", A),
              code=f"""{TEXTS}
 {plot(a, f"{A}_labels_explicit", vals="{1, 2, 3, 4}")}
@@ -675,7 +675,7 @@ pane.{A}_label("Axis label");
 std::cout << "shown: " << texts(fig.to_svg()) << "\\n";
 pane.{A}_tick_labels(false);
 std::cout << "hidden: " << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_tick_labels", title=f"Pane::{A}_tick_labels", signature=f"Pane& Pane::{A}_tick_labels(bool enable = true) noexcept",
@@ -705,7 +705,7 @@ def family_ticks(a):
 std::cout << "automatic: " << texts(fig.to_svg()) << "\\n";
 pane.{A}_ticks(std::vector<double>{{1, 2, 3}}, {{"low", "mid", "high"}});
 std::cout << "explicit:  " << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="labels_from_strings", text="Labels from a list of strings. A `std::vector<std::string_view>` of labels works as well as the braced list, and the positions can be any numeric vector.",
              code=f"""{TEXTS}
 {plot(a, f"{A}_ticks_strings", vals="{1, 2, 3, 4}")}
@@ -715,7 +715,7 @@ std::vector<double> positions;
 for (std::size_t i = 0; i < names.size(); ++i) positions.push_back(1.0 + static_cast<double>(i));
 pane.{A}_ticks(positions, pluss::msharp::RangeView::Of<std::string_view>(names));
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="series", text="Positions as a `Series`. The positions can be passed as a Series, which is what the library's numeric results are; the labels are drawn in order of the positions given.",
              code=f"""{TEXTS}
 {plot(a, f"{A}_ticks_series", vals="{1, 2, 3, 4}")}
@@ -723,7 +723,7 @@ fig.save_svg("figure.svg");"""),
 auto positions = pluss::make_series(std::vector<double>{{1.0, 4.0}}, {{2}});
 pane.{A}_ticks(positions, std::vector<std::string_view>{{"first", "last"}});
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="outside", text="Only ticks inside the range are drawn. The tick at 10 lies outside the axis range and the tick at 0 is below it, so only the middle one is shown; widening the range with `limits` brings them in.",
              code=f"""{TEXTS}
 auto build = [&](bool wide) {{
@@ -738,7 +738,7 @@ std::cout << "range 0 to 10:   " << texts(build(true)) << "\\n";
 {plot(a, f"{A}_ticks_outside_out", vals="{1, 2, 3, 4}")}
 pane.{A}_ticks(std::vector<double>{{0, 2, 10}}, {{"zero", "two", "ten"}});
 pane.{A}_limits(Range1d{{0.0, 10.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="clear", text=f"Clearing. `clear_{A}_ticks()` removes the explicit ticks and the automatic ones come back; the figure equals the one that never set any.",
              code=f"""auto build = [&](bool set_then_clear) {{
 {plot(a, f"{A}_ticks_clear", indent="  ")}
@@ -747,7 +747,7 @@ fig.save_svg("figure.svg");"""),
 }};
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{A}_ticks_clear_out")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid specifications are refused and the previous ticks are kept. Empty positions, positions and labels of different lengths, and positions that are not a vector each throw `pluss::Error`.",
              code=f"""{plot(a, f"{A}_ticks_invalid")}
 pane.{A}_ticks(std::vector<double>{{1, 2}}, {{"a", "b"}});
@@ -762,7 +762,7 @@ attempt("no positions", [&] {{ pane.{A}_ticks(std::vector<double>{{}}, {{}}); }}
 attempt("length mismatch", [&] {{ pane.{A}_ticks(std::vector<double>{{1, 2}}, {{"only one"}}); }});
 attempt("not a vector", [&] {{ pane.{A}_ticks(pluss::make_series(std::vector<double>{{1, 2, 3, 4}}, {{2, 2}}), {{"a", "b"}}); }});
 std::cout << "kept: " << pane.{A}_axis().ticks->labels.size() << " labels\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_ticks", title=f"Pane::{A}_ticks", signature=f"Pane& Pane::{A}_ticks(Series positions, RangeView::Of<std::string_view> labels)\nPane& Pane::{A}_ticks(Series positions, std::initializer_list<std::string_view> labels)\nPane& Pane::clear_{A}_ticks() noexcept",
@@ -792,21 +792,21 @@ def family_categories(a):
 {only_axis(a)}
 pane.{A}_categories({{"north", "south", "east", "west"}});
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="first_step", text="Another origin and spacing. `first = 10` and `step = 5` put three labels at 10, 15 and 20, which is where the data is.",
              code=f"""{TEXTS}
 {plot(a, f"{A}_categories_step", vals="{10, 15, 20}")}
 {only_axis(a)}
 pane.{A}_categories({{"low", "mid", "high"}}, 10.0, 5.0);
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="descending", text="A negative step runs the other way. The labels are placed at 3, 2 and 1, so the first name is at the highest position.",
              code=f"""{TEXTS}
 {plot(a, f"{A}_categories_desc", vals="{3, 2, 1}")}
 {only_axis(a)}
 pane.{A}_categories({{"c", "b", "a"}}, 3.0, -1.0);
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="same_as_ticks", text=f"The same as `{A}_ticks`. `{A}_categories` computes the positions and calls `{A}_ticks`, so the two give the same figure.",
              code=f"""auto build = [&](bool through_ticks) {{
 {plot(a, f"{A}_categories_same", vals="{1, 2, 3}", indent="  ")}
@@ -817,7 +817,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {plot(a, f"{A}_categories_same_out", vals="{1, 2, 3}")}
 pane.{A}_categories({{"a", "b", "c"}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid specifications are refused. No labels, a step of zero, and a non-finite first or step each throw `pluss::Error`, and the previous ticks are kept.",
              code=f"""{plot(a, f"{A}_categories_invalid")}
 pane.{A}_categories({{"a", "b"}});
@@ -833,7 +833,7 @@ attempt("step zero", [&] {{ pane.{A}_categories({{"a"}}, 1.0, 0.0); }});
 attempt("first not finite", [&] {{ pane.{A}_categories({{"a"}}, std::numeric_limits<double>::quiet_NaN(), 1.0); }});
 attempt("step infinite", [&] {{ pane.{A}_categories({{"a"}}, 1.0, std::numeric_limits<double>::infinity()); }});
 std::cout << "kept: " << pane.{A}_axis().ticks->labels.size() << " labels\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"{A}_categories", title=f"Pane::{A}_categories", signature=f"Pane& Pane::{A}_categories(RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0)\nPane& Pane::{A}_categories(std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0)",
@@ -870,7 +870,7 @@ std::cout << "after {name}(): " << pane.{A}_axis().{which}_grid << "\\n";
 pane.{name}(false);
 std::cout << "after {name}(false): " << pane.{A}_axis().{which}_grid << "\\n";
 pane.{name}(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="effect", text=f"The effect. Turning the {which} grid on adds grid lines to the figure, which can be counted as extra paths in the SVG; turning it off again restores the figure exactly.",
              code=f"""auto build = [&](bool on) {{
 {plot(a, f"{name}_effect", indent="  ")}
@@ -882,12 +882,12 @@ std::cout << "paths without: " << paths(build(false)) << ", with: " << paths(bui
 std::cout << "off again equals never set: " << (build(false) == build(false)) << "\\n";
 {plot(a, f"{name}_effect_out")}
 pane.{name}();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="per_axis", text=f"Per axis. The {A} grid does not turn on the grid of the other axes, and each axis has its own switches.",
              code=f"""{plot(a, f"{name}_axes")}
 pane.{name}();
 std::cout << "x: " << pane.x_axis().{which}_grid << ", y: " << pane.y_axis().{which}_grid << ", z: " << pane.z_axis().{which}_grid << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="summary", text=f"The pane's grid summary. `Pane::grid_style()` reports `None` (0), `Major` (1) or `MajorMinor` (2) from the axis switches; the {which} grid of this axis moves it as shown.",
              code=f"""{plot(a, f"{name}_summary")}
 std::cout << "no grid: " << static_cast<int>(pane.grid_style()) << "\\n";
@@ -896,7 +896,7 @@ std::cout << "major on: " << static_cast<int>(pane.grid_style()) << "\\n";
 pane.{A}_minor_grid();
 std::cout << "major and minor on: " << static_cast<int>(pane.grid_style()) << "\\n";
 pane.{name}(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="independent", text=f"Independent of the {other} grid. The {which} grid can be on while the {other} grid is off; the counts show how many paths each combination draws.",
              code=f"""auto paths = [](const std::string& svg) {{ std::size_t n = 0; for (auto at = svg.find("<path"); at != std::string::npos; at = svg.find("<path", at + 1)) ++n; return n; }};
 auto build = [&](bool major, bool minor) {{
@@ -907,7 +907,7 @@ auto build = [&](bool major, bool minor) {{
 std::cout << "none: " << paths(build(false, false)) << ", major only: " << paths(build(true, false)) << ", minor only: " << paths(build(false, true)) << ", both: " << paths(build(true, true)) << "\\n";
 {plot(a, f"{name}_independent_out")}
 pane.{A}_major_grid().{A}_minor_grid();
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     which_text = "major tick positions" if which == "major" else "positions between the major ticks"
     return dict(
@@ -949,7 +949,7 @@ pane.scale_{A}(ScalePolicy::symlog(10.0, 1.0));
 std::cout << "symlog: " << static_cast<int>(pane.{A}_axis().scale.kind) << ", base " << pane.{A}_axis().scale.base << ", threshold " << pane.{A}_axis().scale.linear_threshold << "\\n";
 pane.scale_{A}(ScalePolicy::linear());
 std::cout << "linear again: " << static_cast<int>(pane.{A}_axis().scale.kind) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="log", text="A logarithmic axis. Data spanning three decades is spread evenly on a log10 axis and the ticks are written as powers of ten; the same data on the default linear axis crowds the small values together.",
              code=f"""{TEXTS}
 auto build = [&](bool log) {{
@@ -962,14 +962,14 @@ std::cout << "linear ticks: " << texts(build(false)) << "\\n";
 std::cout << "log10 ticks:  " << texts(build(true)) << "\\n";
 {plot(a, f"scale_{A}_log_out", vals="{1, 10, 100, 1000}")}
 pane.scale_{A}(ScalePolicy::log10());
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="symlog", text="A symmetric-log axis. Values on both sides of zero, from -100 to 100, are shown logarithmically beyond the linear threshold and linearly inside it, so negative values, zero and large values share one axis.",
              code=f"""{TEXTS}
 {plot(a, f"scale_{A}_symlog", vals="{-100, -1, 0, 1, 100}")}
 {only_axis(a)}
 pane.scale_{A}(ScalePolicy::symlog());
 std::cout << texts(fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="symlog_parameters", text="The symmetric-log parameters. The base and the linear threshold shape the curve; changing either changes the figure, and the stored policy reads back what was given.",
              code=f"""auto build = [&](double base, double threshold) {{
 {plot(a, f"scale_{A}_symlog_params", vals="{-100, -10, 0, 10, 100}", indent="  ")}
@@ -980,7 +980,7 @@ std::cout << "base 10 vs 2: " << (build(10.0, 1.0) != build(2.0, 1.0)) << ", thr
 {plot(a, f"scale_{A}_symlog_params_out", vals="{-100, -10, 0, 10, 100}")}
 pane.scale_{A}(ScalePolicy::symlog(10.0, 10.0));
 std::cout << "stored: base " << pane.{A}_axis().scale.base << ", threshold " << pane.{A}_axis().scale.linear_threshold << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="same_as_default", text="Linear is the default. Setting `ScalePolicy::linear()` gives exactly the figure of an axis that never set a scale, and switching back from log restores it.",
              code=f"""auto build = [&](int mode) {{
 {plot(a, f"scale_{A}_default", vals="{1, 10, 100, 1000}", indent="  ")}
@@ -990,7 +990,7 @@ fig.save_svg("figure.svg");"""),
 }};
 std::cout << "linear() == default: " << (build(1) == build(0)) << ", log then linear == default: " << (build(2) == build(0)) << "\\n";
 {plot(a, f"scale_{A}_default_out", vals="{1, 10, 100, 1000}")}
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid policies are refused and the previous scale is kept. A symmetric-log base that is not greater than 1 (or not finite) and a threshold that is not positive throw `pluss::Error`; so does switching to log10 while a manual range that includes zero is set.",
              code=f"""{plot(a, f"scale_{A}_invalid", vals="{1, 10, 100, 1000}")}
 auto attempt = [&](const char* label, auto call) {{
@@ -1008,7 +1008,7 @@ attempt("base nan", [&] {{ pane.scale_{A}(ScalePolicy::symlog(std::numeric_limit
 pane.{A}_limits(Range1d{{0.0, 100.0}});
 attempt("log10 over a range that includes zero", [&] {{ pane.scale_{A}(ScalePolicy::log10()); }});
 std::cout << "scale kept: " << static_cast<int>(pane.{A}_axis().scale.kind) << " (Linear = 0)\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"scale_{A}", title=f"Pane::scale_{A}", signature=f"Pane& Pane::scale_{A}(ScalePolicy scale)",
@@ -1046,7 +1046,7 @@ pane.rule_{A}(2.0, "target");
 const auto& rule = pane.rules().front();
 std::cout << "stored: axis " << static_cast<int>(rule.axis) << ", value " << rule.value << ", label '" << rule.label << "', width " << rule.width << "\\n";
 std::cout << "label drawn: " << (fig.to_svg().find(">target<") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_label", text="Without a label. The label is optional: the line is drawn and no extra text appears, and the figure has one more path than the one without the rule.",
              code=f"""{PATHS}
 auto build = [&](bool with_rule) {{
@@ -1057,14 +1057,14 @@ auto build = [&](bool with_rule) {{
 std::cout << "paths without: " << paths(build(false)) << ", with: " << paths(build(true)) << "\\n";
 {plot(a, f"rule_{A}_nolabel_out")}
 pane.rule_{A}(2.0);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="several", text="Several rules. Each call adds a rule; they are kept in the order added and each is drawn, so a pane can carry a baseline and thresholds together.",
              code=f"""{plot(a, f"rule_{A}_several")}
 pane.rule_{A}(1.5, "low").rule_{A}(2.5, "mid").rule_{A}(3.5, "high");
 std::cout << "rules: " << pane.rules().size() << ":";
 for (const auto& r : pane.rules()) std::cout << " " << r.label << "@" << r.value;
 std::cout << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="range", text=f"Rules and the {A} range. A rule far outside the data widens an automatic range so it stays visible; with a manual range the axis stays where it was set, and a rule outside that range is not drawn at all.",
              code=f"""{TEXTS}
 auto build = [&](bool manual) {{
@@ -1078,7 +1078,7 @@ std::cout << "automatic range: " << texts(build(false)) << "\\n";
 std::cout << "manual 0 to 5:   " << texts(build(true)) << "\\n";
 {plot(a, f"rule_{A}_range_out")}
 pane.rule_{A}(40.0, "far");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Only finite values. A NaN or infinite position throws `pluss::Error` and no rule is added.",
              code=f"""{plot(a, f"rule_{A}_invalid")}
 for (double bad : {{std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()}}) {{
@@ -1089,7 +1089,7 @@ for (double bad : {{std::numeric_limits<double>::quiet_NaN(), std::numeric_limit
   }}
 }}
 std::cout << "rules added: " << pane.rules().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     extra = ""
     if a == "z":
@@ -1104,7 +1104,7 @@ fig.save_svg("figure.svg");"""),
 std::cout << "same figure: " << (build(true) == build(false)) << "\\n";
 auto fig = studio("rule_z_planar_out");
 fig.pane2("flat").trend(std::vector<double>{{1, 2, 3, 4}}, std::vector<double>{{2, 4, 3, 5}});
-fig.save_svg("figure.svg");"""))
+fig.show();"""))
         extra = " On a planar pane a z rule is stored but has no axis to be drawn on."
     return dict(
         slug=f"rule_{A}", title=f"Pane::rule_{A}", signature=f"Pane& Pane::rule_{A}(double value, std::string label = {{}})",
@@ -1135,7 +1135,7 @@ pane.band_{A}(Range1d{{2.0, 3.0}}, "target zone");
 const auto& band = pane.bands().front();
 std::cout << "stored: axis " << static_cast<int>(band.axis) << ", span " << band.span.low << " .. " << band.span.high << ", label '" << band.label << "'\\n";
 std::cout << "label drawn: " << (fig.to_svg().find(">target zone<") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="no_label", text="Without a label. The label is optional; the band is drawn without text and adds shapes to the figure.",
              code=f"""{PATHS}
 auto build = [&](bool with_band) {{
@@ -1146,14 +1146,14 @@ auto build = [&](bool with_band) {{
 std::cout << "paths without: " << paths(build(false)) << ", with: " << paths(build(true)) << "\\n";
 {plot(a, f"band_{A}_nolabel_out")}
 pane.band_{A}(Range1d{{2.0, 3.0}});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="several", text="Several bands. Bands are kept in the order added and each is drawn, so a pane can show a normal range and a warning range together.",
              code=f"""{plot(a, f"band_{A}_several")}
 pane.band_{A}(Range1d{{1.0, 2.0}}, "low").band_{A}(Range1d{{2.5, 3.5}}, "high");
 std::cout << "bands: " << pane.bands().size() << ":";
 for (const auto& b : pane.bands()) std::cout << " " << b.label << " [" << b.span.low << ", " << b.span.high << "]";
 std::cout << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="range", text=f"Bands and the {A} range. A band far outside the data widens an automatic range so it stays visible; with a manual range the axis stays where it was set, a band partly inside is trimmed to the range, and one entirely outside is not drawn.",
              code=f"""{TEXTS}
 auto build = [&](bool manual) {{
@@ -1167,7 +1167,7 @@ std::cout << "automatic range: " << texts(build(false)) << "\\n";
 std::cout << "manual 0 to 5:   " << texts(build(true)) << "\\n";
 {plot(a, f"band_{A}_range_out")}
 pane.band_{A}(Range1d{{30.0, 40.0}}, "far");
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="The span must be finite and strictly increasing. A reversed span, an empty one and a NaN end each throw `pluss::Error`, and no band is added.",
              code=f"""{plot(a, f"band_{A}_invalid")}
 const double nan = std::numeric_limits<double>::quiet_NaN();
@@ -1180,7 +1180,7 @@ for (const Range1d& span : bad) {{
   }}
 }}
 std::cout << "bands added: " << pane.bands().size() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ]
     return dict(
         slug=f"band_{A}", title=f"Pane::band_{A}", signature=f"Pane& Pane::band_{A}(Range1d span, std::string label = {{}})",

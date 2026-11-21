@@ -25,7 +25,7 @@ auto fig = studio("transparent_surface");
 fig.mosaic(1, 2);
 fig.pane3("opaque").sheet(coord, coord, z).shade(ShadeMode::Smooth);
 fig.pane3("transparent(true)").sheet(coord, coord, z).shade(ShadeMode::Smooth).transparent(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="two_surfaces", text="Seeing through to a second surface. A tall bump is drawn first and a smaller one behind it; with the first transparent the second can be seen through it, and with the first opaque it is hidden.",
              code=SURFACE + """
 
@@ -38,7 +38,7 @@ for (int i = 0; i < 2; ++i) {
   Trace& front = pane.sheet(coord, coord, z).shade(ShadeMode::Smooth);
   if (i == 1) front.transparent(true);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="Reading the setting back. It is false by default; the setter turns it on and returns the trace; the bare getter never changes the setting.",
              code=SURFACE + """
 
@@ -51,7 +51,7 @@ std::cout << "after transparent(true): " << t.transparent() << "\\n";
 t.transparent(false);
 std::cout << "after transparent(false): " << t.transparent() << "\\n";
 t.transparent(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="kinds", text="Which kinds become see-through. Each is drawn with and without `transparent(true)` and the SVG text compared: the surface, the pillars and the level surfaces change; a wireframe, a contour and a line do not.",
              code=SURFACE + """
 
@@ -76,7 +76,7 @@ std::cout << "lattice:  " << changes([&](Pane& p) -> Trace& { return p.lattice(c
 std::cout << "contour:  " << changes([&](Pane& p) -> Trace& { return p.contour(coord, coord, z); }, false) << "\\n";
 auto fig = studio("transparent_kinds_out");
 fig.pane3("spire3, transparent").spire3(coord, coord, z).transparent(true);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Transparency is a property of the trace's faces only; the pane's axes, grid and legend are never made transparent.
 - Opacity of a 2D stroke is set through the alpha channel of the colour ([`Trace::stroke`](stroke.md)), not through this call.

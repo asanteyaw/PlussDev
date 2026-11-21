@@ -39,7 +39,7 @@ Example 1. A new figure uses the relaxed layout.
 auto fig = studio("tight_default");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -73,7 +73,7 @@ std::cout << "tick '10' at " << at(build(false), "10") << " relaxed, " << at(bui
 auto fig = studio("tight_on_out");
 fig.tight_layout();
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -107,7 +107,7 @@ for (double padding : {0.0, 6.0, 24.0}) std::cout << "padding " << padding << ":
 auto fig = studio("tight_padding_out");
 fig.tight_layout(true, 24.0);
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -134,7 +134,7 @@ std::cout << "same figure: " << (build(true) == build(false)) << "\n";
 auto fig = studio("tight_no_args_out");
 fig.tight_layout();
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -157,7 +157,7 @@ auto build = [&](bool toggled) {
 std::cout << "same as never set: " << (build(true) == build(false)) << "\n";
 auto fig = studio("tight_off_again_out");
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -185,7 +185,7 @@ auto build = [&](bool tight) {
 auto relaxed = build(false);
 auto compact = build(true);
 std::cout << "figures differ: " << (relaxed.to_svg() != compact.to_svg()) << "\n";
-compact.save_svg("figure.svg");
+compact.show();
 ```
 
 ### Output
@@ -209,7 +209,7 @@ for (double bad : {-1.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_
 }
 std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\n";
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

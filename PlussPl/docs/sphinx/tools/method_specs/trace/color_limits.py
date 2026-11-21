@@ -31,7 +31,7 @@ auto fig = studio("color_limits_narrow");
 fig.mosaic(1, 2);
 fig.pane2("fitted to the data").fieldmap(coord, coord, z);
 fig.pane2("limits 0 to 0.3").fieldmap(coord, coord, z).color_limits(Range1d{0.0, 0.3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="Reading the limits. A new trace has none (the optional is empty); after the call the range is stored and returned; a second call replaces it.",
              code="""auto fig = studio("color_limits_readback");
 auto& pane = fig.pane2("Limits");
@@ -41,7 +41,7 @@ t.color_limits(Range1d{0.0, 10.0});
 std::cout << "after color_limits(0, 10): " << t.color_limits()->low << " to " << t.color_limits()->high << "\\n";
 t.color_limits(Range1d{1.0, 4.0});
 std::cout << "after color_limits(1, 4):  " << t.color_limits()->low << " to " << t.color_limits()->high << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid ranges are refused and the previous limits are kept. An empty range (`low == high`), a reversed one and one with an infinite end each throw `pluss::Error`.",
              code="""auto fig = studio("color_limits_invalid");
 auto& pane = fig.pane2("Limits");
@@ -55,7 +55,7 @@ for (const Range1d bad : {Range1d{2.0, 2.0}, Range1d{3.0, 1.0}, Range1d{0.0, std
   }
 }
 std::cout << "limits are still " << t.color_limits()->low << " to " << t.color_limits()->high << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shared", text="Comparable panes. Two fields with different ranges, one twice the other, are coloured with the same limits so that equal values have equal colours; without shared limits the two would look the same although their values differ by a factor of two.",
              code="""constexpr std::int64_t n = 20;
 auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
@@ -73,7 +73,7 @@ fig.pane2("values up to 1, own range").fieldmap(coord, coord, za);
 fig.pane2("values up to 2, own range").fieldmap(coord, coord, zb);
 fig.pane2("values up to 1, shared 0 to 2").fieldmap(coord, coord, za).color_limits(Range1d{0.0, 2.0});
 fig.pane2("values up to 2, shared 0 to 2").fieldmap(coord, coord, zb).color_limits(Range1d{0.0, 2.0});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="kinds", text="Which kinds use the limits. Each is drawn with and without `Range1d{-100, 100}` and the SVG text compared: a field map, a contour and a coloured cloud change; a plain line does not.",
              code="""constexpr std::int64_t n = 8;
 auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
@@ -97,7 +97,7 @@ std::cout << "cloud with colour: " << changes([&](Pane& p) -> Trace& { return p.
 std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(x, y); }) << "\\n";
 auto fig = studio("color_limits_kinds_out");
 fig.pane2("contour, limits -100 to 100").contour(coord, coord, z).color_limits(Range1d{-100.0, 100.0});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `color_limits` throws, so it is not `noexcept`; code that takes the range from data should check `low < high` first (a constant field has `low == high`).
 - Values outside the range are not dropped: they are drawn with the end colours of the ramp.

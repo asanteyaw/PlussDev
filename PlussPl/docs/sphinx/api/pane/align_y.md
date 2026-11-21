@@ -77,7 +77,7 @@ large.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 10, 20, 30})
 large.x_tick_labels(false);
 small.align_y("range");
 large.align_y("range");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -106,7 +106,7 @@ fig.y_caption("range", "Shared y axis");
 const std::string svg = fig.to_svg();
 std::cout << "members: " << small.y_align_group() << ", " << large.y_align_group() << "\n";
 std::cout << "caption drawn once: " << (svg.find(">Shared y axis<") == svg.rfind(">Shared y axis<")) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -156,7 +156,7 @@ large.x_tick_labels(false);
 small.align_y("range");
 large.align_y("range");
 small.y_limits(Range1d{0.0, 5.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -193,7 +193,7 @@ auto texts = [](const std::string& svg) {
   return out;
 };
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -240,7 +240,7 @@ small.align_y("range");
 std::cout << "group: '" << small.y_align_group() << "'\n";
 small.clear_y_align();
 std::cout << "group after clear: '" << small.y_align_group() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -279,7 +279,7 @@ auto& large = fig.pane2("large");
 large.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 10, 20, 30});
 large.x_tick_labels(false);
 small.align_y("only_me");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -46,7 +46,7 @@ Example 1. Ten values counted into 12 bins by default. The bins span the data's 
 auto fig = studio("bucket_default");
 auto& pane = fig.pane2("p");
 pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5, 9});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/bucket-1-default.svg)
@@ -74,7 +74,7 @@ std::cout << "12 bins: " << texts(build(12)) << "\n";
 auto fig = studio("bucket_bins_out");
 auto& pane = fig.pane2("p");
 pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}, 5);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -92,7 +92,7 @@ Example 3. An explicit range replaces the data's own: the bins divide the range 
 auto fig = studio("bucket_range");
 auto& pane = fig.pane2("p");
 pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}, 8, Range1d{0.0, 10.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/bucket-3-range.svg)
@@ -105,7 +105,7 @@ auto& pane = fig.pane2("p");
 pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}, 9, Range1d{0.0, 10.0}).label("sample a");
 pane.bucket(std::vector<double>{5, 6, 6, 7, 7, 7, 8, 8, 9, 2}, 9, Range1d{0.0, 10.0}).label("sample b");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/bucket-4-two_traces.svg)
@@ -116,7 +116,7 @@ Example 5. Integer data is accepted as it is.
 auto fig = studio("bucket_ints");
 auto& pane = fig.pane2("p");
 pane.bucket(std::vector<int>{1, 2, 2, 3, 3, 3, 4, 4, 5, 9}, 6);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/bucket-5-integers.svg)
@@ -141,7 +141,7 @@ report("no values", [](Pane& pane) { pane.bucket(std::vector<double>{}, 4); });
 auto fig = studio("bucket_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -166,7 +166,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

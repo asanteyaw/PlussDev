@@ -37,7 +37,7 @@ for (int i = 0; i < 6; ++i) {
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1.0 + i, 3, 2});
   std::cout << "pane " << i << ": row " << pane.placement().row << ", col " << pane.placement().col << ", explicit " << pane.placement().explicit_slot << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -77,7 +77,7 @@ fig.mosaic(2, 3);
   wide.place(1, 1, 1, 2);
   std::cout << "wide: row " << wide.placement().row << ", col " << wide.placement().col << ", spans " << wide.placement().row_span << " x " << wide.placement().col_span << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ for (int g = 0; g < 2; ++g) {
   for (int i = 0; i < 4; ++i)
     fig.pane2("pane " + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{1.0 + i, 3, 2});
   std::cout << "gutter " << fig.mosaic_layout().gutter_x << "\n";
-  if (g == 1) fig.save_svg("figure.svg");
+  if (g == 1) fig.show();
 }
 ```
 
@@ -129,7 +129,7 @@ for (int c = 0; c < 2; ++c) {
   const PanePlacement& p = sub.placement();
   std::cout << "sub-pane " << c << ": parent " << p.parent << ", cell (" << p.row << ", " << p.col << "), local grid " << p.local_rows << " x " << p.local_cols << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -150,7 +150,7 @@ std::cout << "layout active " << fig.mosaic_layout().active << ", rows " << fig.
 auto& a = fig.pane2("a");
 a.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "explicit " << a.placement().explicit_slot << ", spans " << a.placement().row_span << " x " << a.placement().col_span << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

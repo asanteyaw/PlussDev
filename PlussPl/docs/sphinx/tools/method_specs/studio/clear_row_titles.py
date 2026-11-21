@@ -17,7 +17,7 @@ PAGE = dict(
 };
 auto cleared = build(true), never = build(false);
 std::cout << "entries: " << cleared.row_titles().size() << ", equals the untitled figure: " << (cleared.to_svg() == never.to_svg()) << "\\n";
-cleared.save_svg("figure.svg");"""),
+cleared.show();"""),
         dict(id="nothing", text="On an untitled figure it does nothing. The call is harmless and can be used to reset a figure before titling it again.",
              code="""auto fig = studio("clear_row_titles_none");
 fig.clear_row_titles();
@@ -26,7 +26,7 @@ fig.mosaic(2, 1);
 fig.row_title(0, "fresh").row_title(1, "start");
 std::cout << "after titling again: " << fig.row_titles().size() << "\\n";
 for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="rest_untouched", text="Only the titles go. The grid, the panes and the headline are unchanged, so the figure keeps its layout.",
              code="""auto fig = studio("clear_row_titles_rest");
 fig.headline("Kept headline");
@@ -35,7 +35,7 @@ fig.row_title(0, "top").row_title(1, "bottom");
 for (int i = 0; i < 4; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.clear_row_titles();
 std::cout << "grid: " << fig.mosaic_layout().rows << " x " << fig.mosaic_layout().cols << ", panes: " << fig.pane_count() << ", headline: " << fig.headline_text() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `noexcept`. To remove one row's title use [`clear_row_title`](clear_row_title.md).""",
     see=["[`Studio::clear_row_title`](clear_row_title.md): removes one.", "[`Studio::row_title`](row_title.md): stores a title.", "[`Studio::row_titles`](row_titles.md): the stored titles."],

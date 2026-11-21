@@ -41,7 +41,7 @@ pane.scale_x(ScalePolicy::symlog(10.0, 1.0));
 std::cout << "symlog: " << static_cast<int>(pane.x_axis().scale.kind) << ", base " << pane.x_axis().scale.base << ", threshold " << pane.x_axis().scale.linear_threshold << "\n";
 pane.scale_x(ScalePolicy::linear());
 std::cout << "linear again: " << static_cast<int>(pane.x_axis().scale.kind) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -81,7 +81,7 @@ auto fig = studio("scale_x_log_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 10, 100, 1000}, std::vector<double>{2, 5, 4, 3});
 pane.scale_x(ScalePolicy::log10());
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -111,7 +111,7 @@ pane.y_tick_labels(false);
 pane.z_tick_labels(false);
 pane.scale_x(ScalePolicy::symlog());
 std::cout << texts(fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -138,7 +138,7 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{-100, -10, 0, 10, 100}, std::vector<double>{2, 5, 4, 3, 2});
 pane.scale_x(ScalePolicy::symlog(10.0, 10.0));
 std::cout << "stored: base " << pane.x_axis().scale.base << ", threshold " << pane.x_axis().scale.linear_threshold << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -165,7 +165,7 @@ std::cout << "linear() == default: " << (build(1) == build(0)) << ", log then li
 auto fig = studio("scale_x_default_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 10, 100, 1000}, std::vector<double>{2, 5, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -197,7 +197,7 @@ attempt("base nan", [&] { pane.scale_x(ScalePolicy::symlog(std::numeric_limits<d
 pane.x_limits(Range1d{0.0, 100.0});
 attempt("log10 over a range that includes zero", [&] { pane.scale_x(ScalePolicy::log10()); });
 std::cout << "scale kept: " << static_cast<int>(pane.x_axis().scale.kind) << " (Linear = 0)\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

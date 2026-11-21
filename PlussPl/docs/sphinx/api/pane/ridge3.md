@@ -60,7 +60,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.ridge3(axis, axis, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/ridge3-1-default.svg)
@@ -81,7 +81,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.ridge3(axis, axis, z, 3);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/ridge3-2-count.svg)
@@ -102,7 +102,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.ridge3(axis, axis, z, std::vector<double>{0.2, 0.6, 1.0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/ridge3-3-levels.svg)
@@ -124,7 +124,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(field, {n, n});
 pane.sheet(axis, axis, z).transparent(true);
 pane.ridge3(axis, axis, z, 6);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/ridge3-4-with_sheet.svg)
@@ -145,7 +145,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 }
 auto z = pluss::make_series(field, {n, n});
 pane.ridge3(axis, axis, z, 4).annotate_levels(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/ridge3-5-annotate.svg)
@@ -168,7 +168,7 @@ report("z is not a matrix", [](Pane& pane) { pane.ridge3(std::vector<double>{1, 
 auto fig = studio("ridge3_errors_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -191,7 +191,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

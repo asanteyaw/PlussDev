@@ -47,7 +47,7 @@ const auto& p = pane.placement();
 std::cout << "cell " << p.row << "," << p.col << " span " << p.row_span << "x" << p.col_span << ", explicit " << p.explicit_slot << "\n";
 std::cout << "parent " << p.parent << ", nested grid " << p.local_rows << "x" << p.local_cols << "\n";
 fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -72,7 +72,7 @@ auto& below = fig.pane2("below left");
 below.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 below.place(1, 0);
 std::cout << "below: cell " << below.placement().row << "," << below.placement().col << " span " << below.placement().row_span << "x" << below.placement().col_span << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -95,7 +95,7 @@ child.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const auto& p = child.placement();
 std::cout << "parent " << p.parent << ", nested grid " << p.local_rows << "x" << p.local_cols << ", cell " << p.row << "," << p.col << ", explicit " << p.explicit_slot << "\n";
 std::cout << "gutters " << p.local_gutter_x << ", " << p.local_gutter_y << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -129,7 +129,7 @@ try {
 auto ok = studio("placement_fit_ok");
 ok.mosaic(1, 2);
 ok.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-ok.save_svg("figure.svg");
+ok.show();
 ```
 
 ### Output

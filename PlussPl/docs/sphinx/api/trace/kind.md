@@ -53,7 +53,7 @@ fig.mosaic(1, 2);
   std::cout << "cloud3:  " << name(pane.cloud3(x, y, x).kind()) << "\n";
   std::cout << "path3:   " << name(pane.path3(x, y, x).kind()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ std::cout << "columns:   " << static_cast<int>(pane.columns(x, y).kind()) << "\n
 std::cout << "columns_h: " << static_cast<int>(pane.columns_h(x, y).kind()) << "\n";
 std::cout << "cloud:     " << static_cast<int>(pane.cloud(x, y).kind()) << "\n";
 std::cout << "cloud + colour: " << static_cast<int>(pane.cloud(x, y, std::vector<double>(4, 9.0), y).kind()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -138,7 +138,7 @@ fig.mosaic(1, 3);
   Trace& t = pane.sheet(coord, coord, z);
   std::cout << "sheet:    " << describe(t) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -162,7 +162,7 @@ t.hide().show();
 std::cout << "kind after styling: " << static_cast<int>(t.kind()) << " (Trend)\n";
 pane.spike(std::vector<double>{1, 2, 3}, std::vector<double>{1, 3, 2});
 for (const Trace& each : pane.traces()) std::cout << "trace of the pane: kind " << static_cast<int>(each.kind()) << ", label '" << each.label_text() << "'\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

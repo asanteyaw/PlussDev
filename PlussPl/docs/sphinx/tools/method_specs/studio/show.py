@@ -28,7 +28,7 @@ const std::string before = fig.to_svg();
 const bool ok = fig.show({}, 1280, 820, false);
 std::cout << "page written: " << ok << "\\n";
 std::cout << "figure unchanged: " << (fig.to_svg() == before) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="titles", text="Title and size. A title can be given, an empty one falls back to the figure's name, and sizes below the minimum are accepted (they are raised); each call returns `true`.",
              code="""auto fig = studio("show_titles");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -36,7 +36,7 @@ std::cout << "explicit title: " << fig.show("My window", 900, 600, false) << "\\
 std::cout << "title from the name: " << fig.show({}, 1280, 820, false) << "\\n";
 std::cout << "tiny window request: " << fig.show("tiny", 10, 10, false) << "\\n";
 std::cout << "zero and negative sizes: " << fig.show("odd", 0, -5, false) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="options", text="The options overload. A `HtmlWindowOptions` carries the title, size and snapshot names; the window is at least 640 by 420, and `launch = false` writes the page and returns `true`.",
              code="""auto fig = studio("show_options");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
@@ -46,13 +46,13 @@ options.width = 800;
 options.height = 500;
 options.snapshot_name = "show_options.png";
 std::cout << "written: " << fig.show(options, false) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="empty", text="Any figure can be shown. A figure with no panes renders as an empty canvas and the page is written; there is no error for an empty figure.",
              code="""auto fig = studio("show_empty");
 std::cout << "panes: " << fig.pane_count() << ", written: " << fig.show({}, 1280, 820, false) << "\\n";
 auto shown = studio("show_empty_out");
 shown.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-shown.save_svg("figure.svg");"""),
+shown.show();"""),
         dict(id="same_as_svg", text="It shows what `to_svg` renders. The page is made from the same SVG, so the figure seen in the window is the figure the file functions write.",
              code="""auto fig = studio("show_same");
 fig.headline("Same picture");
@@ -62,7 +62,7 @@ fig.save_svg("viewed.svg");
 std::ifstream in("viewed.svg", std::ios::binary);
 const std::string file((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 std::cout << "file equals to_svg(): " << (file == fig.to_svg()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Not `noexcept`: rendering and writing the page can fail with `pluss::Error`, for example when the temporary folder cannot be written.
 - A program in a session with no display still gets a page written to the temporary folder and handed to the default viewer; use `launch = false` in tests and servers.""",

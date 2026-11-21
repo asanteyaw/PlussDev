@@ -32,7 +32,7 @@ for (int i = 0; i < 3; ++i) {
   pane.legend(KeyPlace::NorthWest);
   pane.legend_frame(frames[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="readback", text="`legend_frame` returns the pane and the getter reads the value back. The library default of a new pane is printed first.",
              code="""auto fig = studio("key_frame_readback");
 auto& pane = fig.pane2("Frame");
@@ -42,7 +42,7 @@ for (KeyFrame f : {KeyFrame::Framed, KeyFrame::Soft, KeyFrame::None}) {
   pane.legend_frame(f);
   std::cout << static_cast<int>(f) << " -> " << static_cast<int>(pane.legend_frame()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="docked", text="The same three frames on a docked, figure-wide legend. `Studio::legend_frame` frames the one legend that `Studio::legend` docks to the east edge of the figure, whatever the panes' own settings are.",
              code="""const KeyFrame frames[] = {KeyFrame::Framed, KeyFrame::Soft, KeyFrame::None};
 for (int i = 0; i < 3; ++i) {
@@ -53,7 +53,7 @@ for (int i = 0; i < 3; ++i) {
   fig.legend(KeyDock::East);
   fig.legend_frame(frames[i]);
   std::cout << "Studio frame " << static_cast<int>(fig.legend_frame()) << "\\n";
-  if (i == 0) fig.save_svg("figure.svg");
+  if (i == 0) fig.show();
 }"""),
     ],
     notes="""- The default frame of a new pane is `Soft`.

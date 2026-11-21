@@ -20,7 +20,7 @@ pane.z_limits(Range1d{-5.0, 5.0});
 std::cout << "after z_limits: " << mode() << "\\n";
 pane.auto_z();
 std::cout << "after auto_z:  " << mode() << ", limits cleared: " << !pane.z_axis().limits.has_value() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="identical", text="After `auto_z()` the figure is the figure of a pane that never had a manual range: the SVG text of the two is identical.",
              code="""std::string svg[2];
 for (int i = 0; i < 2; ++i) {
@@ -37,7 +37,7 @@ std::cout << "never set == set and cleared: " << (svg[0] == svg[1]) << "\\n";
 auto fig = studio("auto_z_identical_out");
 auto& pane = fig.pane3("auto_z");
 pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0.2, 0.9, 0.4});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="method_kept", text="The fitting method survives the round trip. `Tight` is set, a manual range replaces it, and after `auto_z()` the axis is fitted `Tight` again, as the printed method shows.",
              code="""auto fig = studio("auto_z_method");
 auto& pane = fig.pane3("auto_z");
@@ -47,7 +47,7 @@ pane.z_limits(Range1d{-5.0, 5.0});
 std::cout << "while manual, method: " << static_cast<int>(pane.z_axis().limit_method) << " (TickAligned = 0, Tight = 1, Padded = 2)\\n";
 pane.auto_z();
 std::cout << "after auto_z, method: " << static_cast<int>(pane.z_axis().limit_method) << ", mode " << static_cast<int>(pane.z_axis().limit_mode) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `auto_z()` returns the pane, so it chains: `pane.auto_z().z_limit_method(LimitMethod::Padded)`.
 - A manual range set with `z_limits` is validated against the axis scale ([`ScalePolicy`](../types/ScalePolicy.md)); `auto_z()` has nothing to validate.

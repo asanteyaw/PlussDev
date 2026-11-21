@@ -43,7 +43,7 @@ for (int i = 0; i < 3; ++i) {
   auto& pane = fig.pane3(names[i]);
   pane.sheet(coord, coord, z).shade(modes[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/ShadeMode-1-gallery.svg)
@@ -69,7 +69,7 @@ for (ShadeMode m : {ShadeMode::Faceted, ShadeMode::Flat, ShadeMode::Smooth}) {
   trace.shade(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.shade_mode()) << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -108,7 +108,7 @@ std::cout << "Faceted == Smooth: " << (svg[0] == svg[2]) << "\n";
 std::cout << "Flat == Smooth:    " << (svg[1] == svg[2]) << "\n";
 auto fig = studio("shade_mode_distinct_out");
 fig.pane3("Smooth").sheet(coord, coord, z).shade(ShadeMode::Smooth);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -143,7 +143,7 @@ for (int i = 0; i < 2; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(modes[i]).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/ShadeMode-4-with_light.svg)

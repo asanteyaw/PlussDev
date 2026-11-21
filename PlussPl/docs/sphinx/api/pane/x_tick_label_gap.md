@@ -41,7 +41,7 @@ pane.x_tick_label_gap(24.0);
 std::cout << "after x_tick_label_gap(24): "; show();
 pane.clear_x_tick_label_gap();
 std::cout << "after clear_x_tick_label_gap(): "; show();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ auto build = [&](double gap) {
   return fig;
 };
 std::cout << "0 vs 14: " << (build(0.0).to_svg() != build(14.0).to_svg()) << ", 14 vs 60: " << (build(14.0).to_svg() != build(60.0).to_svg()) << "\n";
-build(60.0).save_svg("figure.svg");
+build(60.0).show();
 ```
 
 ### Output
@@ -93,7 +93,7 @@ auto fig = studio("x_tick_label_gap_clear_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
 pane.x_label("Axis label");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -123,7 +123,7 @@ pane.x_tick_label_gap(0.0);
 std::cout << "zero accepted: " << *pane.x_axis().tick_label_gap << "\n";
 pane.x_tick_label_gap(10.0);
 std::cout << "kept after errors: " << *pane.x_axis().tick_label_gap << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

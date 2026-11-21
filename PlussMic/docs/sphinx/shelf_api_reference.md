@@ -12,6 +12,11 @@ This page documents the full public `Shelf` surface with direct typed-column exa
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Static functions
+
+`Shelf::select` builds a shelf without needing one to start from, so it is called on the type: `Shelf::select({conditions...}, {choices...}, default)`.
+It has its own page, [`select`](api/shelf/select.md), in the method list below.
+
 ## Accessors
 
 `Shelf` exposes nested accessors, each with its own method pages and sidebar:

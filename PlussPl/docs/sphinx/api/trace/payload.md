@@ -39,7 +39,7 @@ const TrendData& data = std::get<TrendData>(t.payload());
 std::cout << "points: " << data.x.numel() << " and " << data.y.numel() << "\n";
 const auto ys = data.y.items<double>();
 std::cout << "y values: " << ys[0] << " " << ys[1] << " " << ys[2] << " " << ys[3] << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ auto& pane = fig.pane2("Columns");
   const ColumnsData& d = std::get<ColumnsData>(h.payload());
   std::cout << "columns_h: horizontal " << d.horizontal << ", base " << d.base << ", width " << d.width << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -95,7 +95,7 @@ auto& pane = fig.pane2("Visit");
 std::cout << "trend:  " << count(pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5})) << "\n";
 std::cout << "bucket: " << count(pane.bucket(std::vector<double>{1, 2, 2, 3, 3, 3})) << "\n";
 std::cout << "wedge:  " << count(pane.wedge(std::vector<double>{3, 2, 1})) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -132,7 +132,7 @@ auto& pane = fig.pane3("Surface");
   const SurfaceData& d = std::get<SurfaceData>(l.payload());
   std::cout << "lattice: SurfaceData " << std::holds_alternative<SurfaceData>(l.payload()) << ", kind " << static_cast<int>(l.kind()) << ", z elements " << d.z.numel() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -155,7 +155,7 @@ options.inner = ViolinInner::Point;
 Trace& v = pane.violin(std::vector<double>{1, 2, 2, 3, 3, 3, 4, 5}, options);
 const ViolinData& data = std::get<ViolinData>(v.payload());
 std::cout << "side Left: " << (data.options.side == ViolinSide::Left) << ", inner Point: " << (data.options.inner == ViolinInner::Point) << ", has groups: " << data.group.has_value() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -178,7 +178,7 @@ try {
 } catch (const std::bad_variant_access&) {
   std::cout << "std::get<CloudData> on a trend: std::bad_variant_access\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

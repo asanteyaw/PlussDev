@@ -42,7 +42,7 @@ for (int i = 0; i < 60; ++i) {
 }
 pane.path3(x, y, z);
 std::cout << "volumetric: " << (pane.kind() == PaneKind::Volumetric) << ", traces: " << pane.traces().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -61,7 +61,7 @@ fig.mosaic(1, 2);
 fig.pane2("flat").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
 fig.pane3("volume").path3(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Volumetric ? "volumetric" : "planar") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -88,7 +88,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(heights, {n, n});
 auto fig = studio("pane3_surface");
 fig.pane3("hill").sheet(axis, axis, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 3](img/pane3-3-surface.svg)
@@ -105,7 +105,7 @@ try {
 }
 std::cout << "traces on the flat pane: " << flat.traces().size() << "\n";
 fig.pane2("ok").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

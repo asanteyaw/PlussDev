@@ -68,7 +68,7 @@ for (int i = 0; i < 4; ++i) {
   if (i == 3) pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="contents", text="What each preset puts in the rig. Each is printed from a fresh rig, so the lights are exactly the preset's: direction, space and style.",
              code="""const char* names[] = {"headlight", "lamp_right", "lamp_left", "sun_key"};
 for (int i = 0; i < 4; ++i) {
@@ -86,7 +86,7 @@ for (int i = 0; i < 4; ++i) {
 auto fig = studio("light_rig_contents");
 fig.pane3("rig").lights().headlight();
 std::cout << "a new pane has no lights: " << studio("x").pane3("y").lights().empty() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="custom", text="A rig built by hand. `add` appends a `LightSpec`; here a key light from the upper left and a weaker fill from the right. A light is a direction: 30 degrees of azimuth and 30 of elevation is the default of `LightSpec`.",
              code=SURFACE + """
 
@@ -97,7 +97,7 @@ pane.lights().clear()
     .add(LightSpec{70.0, 15.0, LightSpace::Camera, LightStyle::Local});
 std::cout << "lights: " << pane.lights().lights().size() << "\\n";
 pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="space", text="`LightSpace`. Both panes have the same light and the same rotated view. With `Camera` the light stays with the viewer, so the lighting looks the same as it did from the default view; with `Data` the light stays with the scene, so rotating the view changes which side of the surface is lit.",
              code=SURFACE + """
 
@@ -111,7 +111,7 @@ for (int i = 0; i < 2; ++i) {
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
   pane.lens().look(120.0, 30.0);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="clear", text="`clear` empties the rig, and the presets add to what is there. Calling `sun_key()` twice gives four lights, and `clear().sun_key()` gives the two of one preset.",
              code="""auto fig = studio("light_rig_clear");
 auto& pane = fig.pane3("Rig");
@@ -123,7 +123,7 @@ pane.lights().clear();
 std::cout << "after clear():               " << pane.lights().lights().size() << " lights, empty " << pane.lights().empty() << "\\n";
 pane.lights().clear().sun_key();
 std::cout << "after clear().sun_key():     " << pane.lights().lights().size() << " lights\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="style", text="`LightStyle`. The same light direction as `Infinite` (parallel light, the same direction everywhere) and as `Local` (a point source near the scene, so the direction changes across the surface). The two figures differ (the comparison prints false): the parallel light gives highlights of the same shape across the surface, while the point source's changing direction makes the highlights larger and brighter in the lower right, where the surface faces it more directly.",
              code=SURFACE + """
 
@@ -143,7 +143,7 @@ for (int i = 0; i < 2; ++i) {
   svg[i] = alone.to_svg();
 }
 std::cout << "Infinite == Local: " << (svg[0] == svg[1]) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Several lights add: the brightness of each cell is the average over the lights, scaled by the material, so more lights do not make the surface brighter, only differently lit.
 - A pane without lights draws lit traces as if lighting were off. If a lit surface looks unlit, check that the rig is not empty.

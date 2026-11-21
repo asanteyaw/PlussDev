@@ -36,7 +36,7 @@ fig.mosaic(1, 2);
   std::cout << "cloud3:  " << name(pane.cloud3(x, y, x).kind()) << "\\n";
   std::cout << "path3:   " << name(pane.path3(x, y, x).kind()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="shared_kind", text="Different methods, one kind. `columns` and `columns_h` both make `Columns`, and a cloud with a colour series is still a `Cloud`: the kind does not tell them apart.",
              code="""const std::vector<double> x{1, 2, 3, 4}, y{2, 4, 3, 5};
 auto fig = studio("kind_shared");
@@ -45,7 +45,7 @@ std::cout << "columns:   " << static_cast<int>(pane.columns(x, y).kind()) << "\\
 std::cout << "columns_h: " << static_cast<int>(pane.columns_h(x, y).kind()) << "\\n";
 std::cout << "cloud:     " << static_cast<int>(pane.cloud(x, y).kind()) << "\\n";
 std::cout << "cloud + colour: " << static_cast<int>(pane.cloud(x, y, std::vector<double>(4, 9.0), y).kind()) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="dispatch", text="Dispatching on the kind. A helper that takes any trace and reports which of the style calls will show: it asks `kind()` and chooses among the line kinds, the value-coloured kinds and the surface kinds. The three traces of different kinds are described from the trace alone.",
              code=SURFACE + """
 
@@ -78,7 +78,7 @@ fig.mosaic(1, 3);
   Trace& t = pane.sheet(coord, coord, z);
   std::cout << "sheet:    " << describe(t) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="fixed", text="The kind never changes. Styling a trace in every way available leaves its kind as it was, and the traces of a pane can be listed with their kinds through `Pane::traces()`.",
              code="""auto fig = studio("kind_fixed");
 auto& pane = fig.pane2("Fixed");
@@ -88,7 +88,7 @@ t.hide().show();
 std::cout << "kind after styling: " << static_cast<int>(t.kind()) << " (Trend)\\n";
 pane.spike(std::vector<double>{1, 2, 3}, std::vector<double>{1, 3, 2});
 for (const Trace& each : pane.traces()) std::cout << "trace of the pane: kind " << static_cast<int>(each.kind()) << ", label '" << each.label_text() << "'\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `kind()` is `noexcept`.
 - `TraceKind::Band` is the kind of an internal shaded band and has no public creation method.

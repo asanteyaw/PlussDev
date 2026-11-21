@@ -23,7 +23,7 @@ fig.size(900.0, 420.0);
 std::cout << "after size(900, 420): " << fig.extent().width << " x " << fig.extent().height << "\\n";
 const std::string svg = fig.to_svg();
 std::cout << svg.substr(svg.find("<svg"), svg.find('>', svg.find("<svg")) - svg.find("<svg") + 1) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="gallery", text="Three sizes. The header of each SVG carries the size that was set, and the last figure, 480 by 640, shows how a tall narrow canvas lays out the same pane.",
              code="""const double sizes[][2] = {{1280, 820}, {900, 420}, {480, 640}};
 for (const auto& s : sizes) {
@@ -37,7 +37,7 @@ for (const auto& s : sizes) {
 auto fig = studio("size_tall");
 fig.size(480.0, 640.0);
 fig.pane2("480 x 640").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="order", text="The order of the calls does not matter. The size is read at render time, so `size` before the panes and `size` after them produce byte-identical SVG.",
              code="""auto build = [](bool size_first) {
   auto fig = studio("size_order");
@@ -54,7 +54,7 @@ fig.size(700.0, 400.0);
 fig.mosaic(1, 2);
 fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="invalid", text="Invalid sizes are refused and the figure keeps its size. Zero, a negative number, infinity and NaN each throw `pluss::Error`; either dimension can be the bad one.",
              code="""auto fig = studio("size_invalid");
 fig.size(800.0, 500.0);
@@ -70,7 +70,7 @@ for (const auto& b : bad) {
 }
 std::cout << "still " << fig.extent().width << " x " << fig.extent().height << "\\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="small", text="A figure that is smaller than its own margins. At 120 by 90 the margins and the headline already fill the figure, so the plot area is empty and the SVG is still well formed; nothing overlaps.",
              code="""auto fig = studio("size_small");
 fig.size(120.0, 90.0);
@@ -78,7 +78,7 @@ fig.headline("tiny");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 const std::string svg = fig.to_svg();
 std::cout << "svg bytes: " << svg.size() << ", closed: " << (svg.rfind("</svg>") != std::string::npos) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- `size` throws, so it is not `noexcept`; code that builds the size from user input should catch `pluss::Error` or check the numbers first.
 - The size is in drawing units. [`save_png`](save_png.md) turns it into pixels with its `dpi`, and [`save_pdf`](save_pdf.md) writes the same size as the page.

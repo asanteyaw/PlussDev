@@ -44,7 +44,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7}).label("series b");
 pane.legend(KeyPlace::NorthWest);
 std::cout << "Soft: " << (pane.legend_frame() == KeyFrame::Soft) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -65,7 +65,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7
 pane.legend(KeyPlace::NorthWest);
 pane.legend_frame(KeyFrame::Framed);
 std::cout << "reads back Framed: " << (pane.legend_frame() == KeyFrame::Framed) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -86,7 +86,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7
 pane.legend(KeyPlace::NorthWest);
 pane.legend_frame(KeyFrame::Soft);
 std::cout << "reads back Soft: " << (pane.legend_frame() == KeyFrame::Soft) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -107,7 +107,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7
 pane.legend(KeyPlace::NorthWest);
 pane.legend_frame(KeyFrame::None);
 std::cout << "reads back None: " << (pane.legend_frame() == KeyFrame::None) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -135,7 +135,7 @@ auto fig = studio("legend_frame_compare_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6}).label("series a");
 pane.legend(KeyPlace::NorthWest).legend_frame(KeyFrame::Framed);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -161,7 +161,7 @@ auto fig = studio("legend_frame_unused_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("a");
 pane.legend_frame(KeyFrame::Framed).legend(KeyPlace::NorthEast);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

@@ -49,7 +49,7 @@ fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0}
 StyleOptions options = fig.style_options();
 options.tick_font_pt = 16.0;
 fig.style(options);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -72,7 +72,7 @@ StyleOptions second;
 second.axis_label_font_pt = 15.0;
 fig.style(second);
 std::cout << "tick font " << fig.style_options().tick_font_pt << ", axis label font " << fig.style_options().axis_label_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -93,7 +93,7 @@ options.tick_font_pt = 14.0;
 fig.style(options);
 options.tick_font_pt = 30.0;
 std::cout << "figure uses " << fig.style_options().tick_font_pt << ", the variable holds " << options.tick_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -112,7 +112,7 @@ options.headline_font_pt = 24.0;
 auto fig = studio("style_chain");
 fig.style(options).headline("A larger headline").size(900.0, 500.0);
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/style-4-chain.svg)
@@ -130,7 +130,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "axis label font still " << fig.style_options().axis_label_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

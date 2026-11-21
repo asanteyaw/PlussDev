@@ -32,7 +32,7 @@ for (int i = 0; i < 4; ++i) {
   pane.lights().sun_key();
   pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(profiles[i]);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="unlit", text="Without light a material has nothing to respond to. With lighting off the four profiles render the same figure: all three comparisons print true.",
              code=SURFACE + """
 
@@ -72,7 +72,7 @@ for (MaterialProfile m : {MaterialProfile::Dull, MaterialProfile::Shiny, Materia
   trace.material(m);
   std::cout << static_cast<int>(m) << " -> " << static_cast<int>(trace.material_profile()) << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A surface you have not styled is already `Shiny`, so a bare `lighting(LightingMode::Gouraud)` gives a glossy surface; add `material(MaterialProfile::Dull)` for a matt one.
 - Choose the material last: the lights and the lighting mode decide whether it can show at all.

@@ -40,7 +40,7 @@ fig.pane3("volume").path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1
 for (const Pane& pane : fig.panes()) {
   std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Planar ? "planar" : "volumetric") << ", traces " << pane.traces().size() << "\n";
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -63,7 +63,7 @@ std::cout << "same address: " << (&fig.panes()[0] == &first) << "\n";
 first.title("renamed through the reference");
 std::cout << "seen through panes(): " << fig.panes()[0].title_text() << "\n";
 fig.mosaic(3, 7);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -84,7 +84,7 @@ const std::size_t parent_index = fig.pane_index(parent);
 fig.subpane2(parent_index, 1, 2, 0, 0, 1, 1, "left").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.subpane2(parent_index, 1, 2, 0, 1, 1, 1, "right").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 for (std::size_t i = 0; i < fig.panes().size(); ++i) std::cout << i << ": " << fig.panes()[i].title_text() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -107,7 +107,7 @@ auto& other = fig.pane2("hidden");
 other.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 other.hide();
 for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": visible " << pane.visible() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

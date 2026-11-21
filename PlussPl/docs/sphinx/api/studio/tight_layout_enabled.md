@@ -35,7 +35,7 @@ std::cout << "after tight_layout(): " << fig.tight_layout_enabled() << "\n";
 fig.tight_layout(false);
 std::cout << "after tight_layout(false): " << fig.tight_layout_enabled() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -60,7 +60,7 @@ fig.tight_layout(false);
 std::cout << "tight differs from relaxed: " << (tight != relaxed) << "\n";
 std::cout << "off again equals the original: " << (fig.to_svg() == relaxed) << "\n";
 fig.tight_layout();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -81,7 +81,7 @@ std::cout << "enabled: " << fig.tight_layout_enabled() << ", padding kept: " << 
 fig.tight_layout();
 std::cout << "tight_layout() again: enabled " << fig.tight_layout_enabled() << ", padding " << fig.tight_layout_padding() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

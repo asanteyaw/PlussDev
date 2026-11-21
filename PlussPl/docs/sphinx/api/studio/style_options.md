@@ -35,7 +35,7 @@ fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0}
 const StyleOptions& options = fig.style_options();
 const StyleOptions defaults;
 std::cout << "tick font " << options.tick_font_pt << " pt; equal to the defaults: " << (options.tick_font_pt == defaults.tick_font_pt && options.pane_left_inset.relaxed == defaults.pane_left_inset.relaxed) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -55,7 +55,7 @@ StyleOptions given;
 given.tick_font_pt = 13.0;
 fig.style(given);
 std::cout << "tick font " << fig.style_options().tick_font_pt << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -76,7 +76,7 @@ const double before_label = options.axis_label_font_pt;
 options.tick_font_pt = 15.0;
 fig.style(options);
 std::cout << "tick font " << fig.style_options().tick_font_pt << ", axis label font unchanged: " << (fig.style_options().axis_label_font_pt == before_label) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -98,7 +98,7 @@ styled.style(options);
 plain.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
 styled.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});
 std::cout << "styled " << styled.style_options().tick_font_pt << ", plain " << plain.style_options().tick_font_pt << "\n";
-styled.save_svg("figure.svg");
+styled.show();
 ```
 
 ### Output

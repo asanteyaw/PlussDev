@@ -44,7 +44,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).l
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).label("model");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 4, 3.5, 5});
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/label-1-legend.svg)
@@ -70,7 +70,7 @@ for (int i = 0; i < 2; ++i) {
 std::cout << "cleared label == never labelled: " << (svg[0] == svg[1]) << "\n";
 auto fig = studio("label_readback_out");
 fig.pane2("Label").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("named");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 5, 4}).label("ra
 pane.legend(KeyPlace::NorthWest);
 const std::string svg = fig.to_svg();
 std::cout << "escaped form present: " << (svg.find("a &lt; b &amp; c") != std::string::npos) << ", raw form present: " << (svg.find("a < b & c") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ auto& pane = fig.pane2("Long label");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).label("short");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).label("a much longer label that describes this series in full sentences");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/label-4-long.svg)
@@ -127,7 +127,7 @@ pane.columns(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4})
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1.5, 2.5, 2, 3.5}).label("line");
 pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2.5, 3.5, 3, 4.5}).label("points");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/label-5-other_kinds.svg)
@@ -140,7 +140,7 @@ fig.mosaic(1, 2);
 fig.pane2("Group A").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("signal");
 fig.pane2("Group B").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 2, 4}).label("signal");
 fig.legend(KeyDock::East);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 6](img/label-6-docked.svg)

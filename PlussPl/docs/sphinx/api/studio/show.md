@@ -49,7 +49,7 @@ const std::string before = fig.to_svg();
 const bool ok = fig.show({}, 1280, 820, false);
 std::cout << "page written: " << ok << "\n";
 std::cout << "figure unchanged: " << (fig.to_svg() == before) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -70,7 +70,7 @@ std::cout << "explicit title: " << fig.show("My window", 900, 600, false) << "\n
 std::cout << "title from the name: " << fig.show({}, 1280, 820, false) << "\n";
 std::cout << "tiny window request: " << fig.show("tiny", 10, 10, false) << "\n";
 std::cout << "zero and negative sizes: " << fig.show("odd", 0, -5, false) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -95,7 +95,7 @@ options.width = 800;
 options.height = 500;
 options.snapshot_name = "show_options.png";
 std::cout << "written: " << fig.show(options, false) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -113,7 +113,7 @@ auto fig = studio("show_empty");
 std::cout << "panes: " << fig.pane_count() << ", written: " << fig.show({}, 1280, 820, false) << "\n";
 auto shown = studio("show_empty_out");
 shown.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-shown.save_svg("figure.svg");
+shown.show();
 ```
 
 ### Output
@@ -131,11 +131,11 @@ auto fig = studio("show_same");
 fig.headline("Same picture");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.show({}, 1280, 820, false);
-fig.save_svg("viewed.svg");
+fig.show();
 std::ifstream in("viewed.svg", std::ios::binary);
 const std::string file((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 std::cout << "file equals to_svg(): " << (file == fig.to_svg()) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

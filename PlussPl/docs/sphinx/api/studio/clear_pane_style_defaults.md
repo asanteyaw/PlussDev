@@ -37,7 +37,7 @@ fig.pane2("styled").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4
 fig.clear_pane_style_defaults();
 fig.pane2("plain").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
 std::cout << "styled keeps its grid: " << fig.panes()[0].x_axis().major_grid << ", plain has none: " << !fig.panes()[1].x_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -60,7 +60,7 @@ auto build = [](bool clear) {
 std::cout << "same figure: " << (build(true) == build(false)) << "\n";
 auto fig = studio("clear_defaults_nothing_out");
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -85,7 +85,7 @@ fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1
 fig.pane_style_defaults(look);
 fig.pane2("third").trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 1, 2});
 std::cout << "grid on each: " << fig.panes()[0].x_axis().major_grid << fig.panes()[1].x_axis().major_grid << fig.panes()[2].x_axis().major_grid << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

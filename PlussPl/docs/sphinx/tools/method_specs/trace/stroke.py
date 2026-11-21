@@ -25,7 +25,7 @@ for (int i = 0; i < 7; ++i) {
   const Rgba c = t.stroke_color();
   std::cout << "trace " << i << ": (" << static_cast<int>(c.red * 255 + 0.5) << ", " << static_cast<int>(c.green * 255 + 0.5) << ", " << static_cast<int>(c.blue * 255 + 0.5) << ")\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="explicit", text="Explicit colours. Three lines coloured with `Rgba::from_u8`, the width raised so that the colour is clear, each named in the legend. The default accents are replaced.",
              code="""auto fig = studio("stroke_explicit");
 auto& pane = fig.pane2("Strokes");
@@ -33,7 +33,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 2, 1.5, 3}).s
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 3, 2.5, 4}).stroke(Rgba::from_u8(30, 150, 60)).width(3.0f).label("green");
 pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 4, 3.5, 5}).stroke(Rgba::from_u8(40, 70, 190)).width(3.0f).label("blue");
 pane.legend(KeyPlace::NorthWest);
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="alpha", text="Opacity. The channel `alpha` makes a stroke translucent: the same thick line at alpha 1, 0.5 and 0.2 over a dark line, the lower the alpha the more of the dark line shows through.",
              code="""auto fig = studio("stroke_alpha");
 auto& pane = fig.pane2("Alpha");
@@ -44,7 +44,7 @@ for (int i = 0; i < 3; ++i) {
   colour.alpha = alphas[i];
   pane.trend(std::vector<double>{1, 5}, std::vector<double>{3.0 - i, 1.0 + 1.2 * i}).stroke(colour).width(14.0f);
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="markers", text="Markers and stems. The stroke colours the points of a `cloud` and the stems and heads of a `spike`; the three panes show a cloud, a spike and a cloud with its marker colour set.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
 auto fig = studio("stroke_markers");
@@ -52,7 +52,7 @@ fig.mosaic(1, 3);
 fig.pane2("cloud, default").cloud(x, y);
 fig.pane2("spike").spike(x, y).stroke(Rgba::from_u8(180, 40, 120));
 fig.pane2("cloud, stroke set").cloud(x, y).stroke(Rgba::from_u8(180, 40, 120));
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="bars", text="Bars take their colour from the stroke once it is set. The first pane is a column trace with no call, filled from the palette as before; the second sets the stroke and the bars take that colour with a darker outline; the third also sets the width, which becomes the outline width.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
 auto fig = studio("stroke_bars");
@@ -61,7 +61,7 @@ fig.pane2("no call").columns(x, y);
 fig.pane2("stroke").columns(x, y).stroke(Rgba::from_u8(200, 30, 30));
 fig.pane2("stroke and width 3").columns(x, y).stroke(Rgba::from_u8(200, 30, 30)).width(3.0f);
 std::cout << "explicit before and after: " << fig.panes()[0].traces()[0].stroke_explicit() << " " << fig.panes()[1].traces()[0].stroke_explicit() << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="applies", text="Which kinds answer to the stroke. Each is drawn with the default colour and with a red stroke and the SVG text compared: the lines, the markers, the bars, the bins and the pie's outlines change; a field map, which is coloured by value, does not.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
 auto changes = [&](auto make) {
@@ -88,7 +88,7 @@ auto z = pluss::make_series(hills, {n, n});
 std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(coord, coord, z); }) << "\\n";
 auto fig = studio("stroke_applies_out");
 fig.pane2("columns with a red stroke").columns(x, y).stroke(Rgba::from_u8(200, 30, 30));
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- A trace has both a stroke and a palette. The stroke is the single colour of the trace; the palette is how values are mapped to colours. A filled kind uses the palette until the stroke is set, a value-coloured kind always uses the palette.
 - Reading `stroke_color()` straight after creating a trace is the way to see which accent it was given.

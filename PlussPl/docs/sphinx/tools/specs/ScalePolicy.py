@@ -47,7 +47,7 @@ linear.trend(x, y);
 auto& symlog = fig.pane2("SymLog (base 10, threshold 1)");
 symlog.trend(x, y);
 symlog.scale_y(ScalePolicy::symlog());
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="log10", text="`log10` on positive data that grows by a constant ratio. On a log axis that is a straight line, which is why a log axis is the right one for rates of growth. The same data on a linear axis is an ever-steeper curve.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5, 6};
 const std::vector<double> y{3, 9, 27, 81, 243, 729};
@@ -59,7 +59,7 @@ linear.trend(x, y);
 auto& logarithmic = fig.pane2("Log10");
 logarithmic.trend(x, y);
 logarithmic.scale_y(ScalePolicy::log10());
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="threshold", text="The `symlog` threshold sets how much of the axis around zero is linear. A threshold of 1 keeps the points between -1 and 1 linear; a threshold of 100 keeps everything within 100 of zero linear, so the small values are spread out and only the large ones are compressed.",
              code="""const std::vector<double> x{-4, -3, -2, -1, 0, 1, 2, 3, 4};
 const std::vector<double> y{-9000, -800, -70, -6, 0, 6, 70, 800, 9000};
@@ -72,7 +72,7 @@ for (int i = 0; i < 3; ++i) {
   pane.trend(x, y);
   pane.scale_y(ScalePolicy::symlog(10.0, thresholds[i]));
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="fields", text="The factories fill the fields in, and a policy can be read back. `symlog()` with no arguments is base 10 and threshold 1; `log10()` is `Log10` with base 10; a pane reports its policy through the axis it belongs to.",
              code="""const ScalePolicy a = ScalePolicy::linear();
 const ScalePolicy b = ScalePolicy::log10();
@@ -86,7 +86,7 @@ auto& pane = fig.pane2("Readback");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 10, 100});
 pane.scale_y(ScalePolicy::log10());
 std::cout << "y axis kind: " << static_cast<int>(pane.y_axis().scale.kind) << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="errors", text="The refusals. `symlog` arguments are checked when the policy is applied, not when it is built; `log10` is refused after limits that include zero, and limits that include zero are refused after `log10`.",
              code="""auto fig = studio("scale_policy_errors");
 auto& pane = fig.pane2("Errors");

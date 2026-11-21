@@ -43,7 +43,7 @@ for (int i = 0; i < 4; ++i) {
   auto& pane = fig.pane2("width " + std::to_string(widths[i]).substr(0, 3));
   pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 4}).width(widths[i]);
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/width-1-gallery.svg)
@@ -59,7 +59,7 @@ trace.width(0.25f);
 std::cout << "after width(0.25): " << trace.stroke_width() << "\n";
 trace.width(4.0f).label("thick");
 std::cout << "after width(4).label(...): " << trace.stroke_width() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -87,7 +87,7 @@ for (float bad : {0.0f, -1.0f, std::numeric_limits<float>::infinity(), std::nume
   }
 }
 std::cout << "width is still " << trace.stroke_width() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -129,7 +129,7 @@ std::cout << "cloud:   " << changes([&](Pane& p) -> Trace& { return p.cloud(x, y
 std::cout << "columns: " << changes([&](Pane& p) -> Trace& { return p.columns(x, y); }, false) << "\n";
 auto fig = studio("width_kinds_out");
 fig.pane2("spike, width 4").spike(x, y).width(4.0f);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -160,7 +160,7 @@ auto fig = studio("width_contour");
 fig.mosaic(1, 2);
 fig.pane2("default width").contour(coord, coord, z);
 fig.pane2("width 4").contour(coord, coord, z).width(4.0f);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/width-5-contour.svg)

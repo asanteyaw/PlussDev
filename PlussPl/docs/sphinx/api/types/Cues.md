@@ -42,7 +42,7 @@ pane.band_y(Range1d{4.0, 6.0}, "acceptable");
 pane.band_x(Range1d{2.5, 4.5}, "review window");
 pane.rule_y(5.0, "target");
 pane.rule_x(3.5, "deadline");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/Cues-1-rules.svg)
@@ -64,7 +64,7 @@ for (const BandCue& b : pane.bands())
 for (const PinCue& p : pane.pins())
   std::cout << "pin:  anchor (" << p.anchor.x << ", " << p.anchor.y << ", " << p.anchor.z << "), text '" << p.text << "', offset (" << p.offset_x << ", " << p.offset_y << ")\n";
 std::cout << "CueAxis: X = " << static_cast<int>(CueAxis::X) << ", Y = " << static_cast<int>(CueAxis::Y) << ", Z = " << static_cast<int>(CueAxis::Z) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ pane.pin("maximum", 4.0, 5.0);
 pane.pin("start", 1.0, 1.0, 20.0, -30.0);
 pane.pin("dip", 3.0, 2.0, -60.0, 30.0);
 std::cout << "pins: " << pane.pins().size() << ", default offsets (" << pane.pins()[0].offset_x << ", " << pane.pins()[0].offset_y << "), the third (" << pane.pins()[2].offset_x << ", " << pane.pins()[2].offset_y << ")\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -117,7 +117,7 @@ pane.sheet(coord, coord, pluss::make_series(peak, {n, n}));
 pane.rule_z(0.5, "half height");
 pane.pin("summit", Vec3d{0.0, 0.0, 1.0});
 std::cout << "z rule axis: " << static_cast<int>(pane.rules()[0].axis) << ", pin anchor z: " << pane.pins()[0].anchor.z << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -139,7 +139,7 @@ for (int i = 0; i < 2; ++i) {
   pane.rule_y(20.0, "far above");
   if (i == 1) pane.y_limits(Range1d{0.0, 8.0});
   svg[i] = fig.to_svg();
-  if (i == 1) fig.save_svg("figure.svg");
+  if (i == 1) fig.show();
 }
 std::cout << "automatic and explicit limits draw different figures: " << (svg[0] != svg[1]) << "\n";
 ```
@@ -162,7 +162,7 @@ try { pane.rule_y(std::numeric_limits<double>::quiet_NaN()); } catch (const plus
 try { pane.pin("bad", std::numeric_limits<double>::infinity(), 1.0); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 try { pane.band_y(Range1d{5.0, 1.0}, "reversed"); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
 std::cout << "cues added: " << pane.rules().size() + pane.bands().size() + pane.pins().size() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

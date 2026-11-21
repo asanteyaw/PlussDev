@@ -50,7 +50,7 @@ auto& pane = fig.pane2("p");
 auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 1](img/fieldmap-1-grid.svg)
@@ -72,7 +72,7 @@ for (std::int64_t i = 0; i < n; ++i) {
 auto z = pluss::make_series(field, {n, n});
 pane.fieldmap(axis, axis, z);
 pane.scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/fieldmap-2-smooth.svg)
@@ -93,7 +93,7 @@ auto build = [&](bool with_color) {
 };
 std::cout << "colour series changes the figure: " << (build(true) != build(false)) << "\n";
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z, c);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -111,7 +111,7 @@ auto fig = studio("fieldmap_uneven");
 auto& pane = fig.pane2("p");
 auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.fieldmap(std::vector<double>{0, 1, 4}, std::vector<double>{0, 2, 3}, z);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/fieldmap-4-uneven.svg)
@@ -133,7 +133,7 @@ auto& pane = fig.pane2("p");
 auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z);
 pane.color_limits(Range1d{0.0, 2.0}).scale_guide(true);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -162,7 +162,7 @@ report("colour has another shape", [](Pane& pane) { auto z = pluss::series::lins
 auto fig = studio("fieldmap_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -185,7 +185,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

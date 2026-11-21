@@ -41,7 +41,7 @@ pane.z_label_rotation(45.0);
 std::cout << "after z_label_rotation(45): "; show();
 pane.clear_z_label_rotation();
 std::cout << "after clear_z_label_rotation(): "; show();
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -66,7 +66,7 @@ for (double degrees : {0.0, 45.0, 90.0, -90.0, 720.0}) {
   std::cout << degrees << " stored as " << *pane.z_axis().label_rotation_deg << "\n";
 }
 pane.z_label_rotation(45.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -100,7 +100,7 @@ auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 pane.z_label("Axis label");
 pane.z_label_rotation(60.0);
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ for (double bad : {std::numeric_limits<double>::infinity(), -std::numeric_limits
   }
 }
 std::cout << "kept: " << *pane.z_axis().label_rotation_deg << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -158,7 +158,7 @@ auto fig = studio("z_label_rotation_clear_out");
 auto& pane = fig.pane3("p");
 pane.path3(std::vector<double>{1, 2, 3, 4}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
 pane.z_label("Axis label");
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

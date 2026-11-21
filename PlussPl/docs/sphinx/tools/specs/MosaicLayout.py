@@ -47,7 +47,7 @@ for (int i = 0; i < 6; ++i) {
   pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1.0 + i, 3, 2});
   std::cout << "pane " << i << ": row " << pane.placement().row << ", col " << pane.placement().col << ", explicit " << pane.placement().explicit_slot << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="place", text="`place` puts a pane in a chosen cell, and with spans it covers several. In a 2 by 3 mosaic the first pane spans the whole top row, the second takes the bottom left, and the third spans the two bottom right cells.",
              code="""auto fig = studio("mosaic_place");
 fig.mosaic(2, 3);
@@ -69,7 +69,7 @@ fig.mosaic(2, 3);
   wide.place(1, 1, 1, 2);
   std::cout << "wide: row " << wide.placement().row << ", col " << wide.placement().col << ", spans " << wide.placement().row_span << " x " << wide.placement().col_span << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="gutters", text="The gutters. The same 2 by 2 mosaic with gutters of 0 and of 80: the cells keep their shape but the space between them changes, so the panes are drawn smaller with the larger gutter.",
              code="""const double gutters[2] = {0.0, 80.0};
 for (int g = 0; g < 2; ++g) {
@@ -78,7 +78,7 @@ for (int g = 0; g < 2; ++g) {
   for (int i = 0; i < 4; ++i)
     fig.pane2("pane " + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{1.0 + i, 3, 2});
   std::cout << "gutter " << fig.mosaic_layout().gutter_x << "\\n";
-  if (g == 1) fig.save_svg("figure.svg");
+  if (g == 1) fig.show();
 }"""),
         dict(id="subpane", text="Sub-panes. A container pane is created first and its area divided into a local 1 by 2 grid with `subpane2(parent_index, rows, cols, row, col, ...)`; each sub-pane records its parent and the local grid in its placement. The container is a pane of its own, here with its axes hidden so that only the two sub-panes show.",
              code="""auto fig = studio("mosaic_subpane");
@@ -94,14 +94,14 @@ for (int c = 0; c < 2; ++c) {
   const PanePlacement& p = sub.placement();
   std::cout << "sub-pane " << c << ": parent " << p.parent << ", cell (" << p.row << ", " << p.col << "), local grid " << p.local_rows << " x " << p.local_cols << "\\n";
 }
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
         dict(id="default", text="With no `mosaic` call the layout is inactive and the panes are arranged automatically. The default layout reports zero rows and columns, and the placement of a pane that never called `place` is not explicit.",
              code="""auto fig = studio("mosaic_default");
 std::cout << "layout active " << fig.mosaic_layout().active << ", rows " << fig.mosaic_layout().rows << ", cols " << fig.mosaic_layout().cols << "\\n";
 auto& a = fig.pane2("a");
 a.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 std::cout << "explicit " << a.placement().explicit_slot << ", spans " << a.placement().row_span << " x " << a.placement().col_span << "\\n";
-fig.save_svg("figure.svg");"""),
+fig.show();"""),
     ],
     notes="""- Cells are numbered from 0, row first. A pane that spans more cells than remain in the grid is refused.
 - `mosaic` sets the layout once for the figure; panes created before or after take cells in order, so call `mosaic` first.

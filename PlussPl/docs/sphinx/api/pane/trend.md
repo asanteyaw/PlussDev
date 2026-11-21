@@ -37,7 +37,7 @@ auto fig = studio("trend_basic");
 auto& pane = fig.pane2("p");
 Trace& line = pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -57,7 +57,7 @@ auto& sorted = fig.pane2("sorted by x");
 sorted.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{1, 3, 2, 5, 4});
 auto& shuffled = fig.pane2("as given");
 shuffled.trend(std::vector<double>{3, 1, 5, 2, 4}, std::vector<double>{2, 1, 4, 3, 5});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 2](img/trend-2-order.svg)
@@ -71,7 +71,7 @@ pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{3, 5, 4, 6, 7}).label("second");
 pane.legend(KeyPlace::NorthWest);
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -89,7 +89,7 @@ auto fig = studio("trend_broadcast");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, pluss::series::linspace(3.0, 3.0, 1, pluss::ScalarType::Float64));
 pane.trend(std::vector<double>{1, 2, 3, 4, 5}, std::vector<double>{2, 4, 3, 5, 6});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 4](img/trend-4-broadcast.svg)
@@ -109,7 +109,7 @@ std::cout << "vector<int>/<float> == vector<double>: " << (build(1) == build(0))
 auto fig = studio("trend_types_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -127,7 +127,7 @@ auto fig = studio("trend_single");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{2.0}, std::vector<double>{3.0});
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -156,7 +156,7 @@ report("empty", [](Pane& pane) { pane.trend(std::vector<double>{}, std::vector<d
 auto fig = studio("trend_errors_out");
 auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -179,7 +179,7 @@ try {
   std::cout << e.message() << "\n";
 }
 std::cout << "traces: " << pane.trace_count() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

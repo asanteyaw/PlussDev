@@ -36,7 +36,7 @@ fig.x_caption("zeta", "last group").x_caption("alpha", "first group");
 fig.x_caption("alpha", "first group, revised");
 for (const auto& [group, text] : fig.x_captions()) std::cout << group << " => " << text << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -63,7 +63,7 @@ auto build = [](bool join) {
 auto alone = build(false), joined = build(true);
 std::cout << "registered either way: " << alone.x_captions().size() << " and " << joined.x_captions().size() << "\n";
 std::cout << "drawn without the group: " << (alone.to_svg().find("caption text") != std::string::npos) << ", with it: " << (joined.to_svg().find("caption text") != std::string::npos) << "\n";
-joined.save_svg("figure.svg");
+joined.show();
 ```
 
 ### Output
@@ -82,7 +82,7 @@ auto fig = studio("x_captions_axes");
 fig.x_caption("g", "x only");
 std::cout << "x: " << fig.x_captions().size() << ", y: " << fig.y_captions().size() << ", z: " << fig.z_captions().size() << "\n";
 fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

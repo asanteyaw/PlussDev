@@ -50,7 +50,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 const std::string svg = fig.to_svg();
 std::cout << "figure: " << fig.default_tick_font_scale() << " / " << fig.default_axis_label_font_scale() << "; pane: " << pane.tick_font_scale() << " / " << pane.axis_label_font_scale() << "\n";
 std::cout << "tick size " << size_of(svg, "1.0") << ", axis label size " << size_of(svg, "time") << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -83,7 +83,7 @@ auto size_of = [](const std::string& svg, const std::string& text) {
 const std::string svg = fig.to_svg();
 std::cout << "tick size " << size_of(svg, "1.0") << ", axis label size " << size_of(svg, "time") << "\n";
 std::cout << "panes: " << fig.panes()[0].tick_font_scale() << ", " << fig.panes()[1].tick_font_scale() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -105,7 +105,7 @@ fig.context_scales(2.0, 2.0);
 auto& after = fig.pane2("after");
 after.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 std::cout << "before: " << before.tick_font_scale() << ", after: " << after.tick_font_scale() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -128,7 +128,7 @@ auto& own = fig.pane2("own scale");
 own.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 own.tick_font_scale(0.8);
 std::cout << "plain: " << plain.tick_font_scale() << ", own: " << own.tick_font_scale() << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
@@ -151,7 +151,7 @@ for (int i = 0; i < 4; ++i) {
   pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
   pane.x_label("x");
 }
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ![Output of Example 5](img/context_scales-5-smaller.svg)
@@ -174,7 +174,7 @@ report("label zero", [&] { fig.context_scales(1.0, 0.0); });
 report("label infinite", [&] { fig.context_scales(1.0, std::numeric_limits<double>::infinity()); });
 std::cout << "unchanged: " << fig.default_tick_font_scale() << " / " << fig.default_axis_label_font_scale() << "\n";
 fig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output
