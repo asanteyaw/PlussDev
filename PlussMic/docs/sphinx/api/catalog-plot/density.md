@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 19729b57d3e6 -->
+<!-- pluss-signature-hash: 1b59896164c4 -->
 
 # CatalogPlotAccessor::density
 
@@ -16,13 +16,13 @@ pluss::pl::Studio CatalogPlotAccessor::density(pluss::RangeView<std::string_view
 pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
                                                 std::int64_t points = 128) const
 
-pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, const DensityPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, const CatalogDensityPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::density(pluss::RangeView<std::string_view> keys,
-                                                const DensityPlotOptions& options) const
+                                                const CatalogDensityPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
-                                                const DensityPlotOptions& options) const
+                                                const CatalogDensityPlotOptions& options) const
 ```
 
 ## What It Does
@@ -42,18 +42,19 @@ overlaid on a shared `"value"`/`"density"` axis pair.
 
 **points** (`std::int64_t`, default `128`)
     The number of points the density curve is evaluated at, forwarded into a
-    `DensityPlotOptions{.points = points}`. Internally clamped to a minimum of `16`
+    `CatalogDensityPlotOptions{.points = points}`. Internally clamped to a minimum of `16`
     regardless of what's passed.
 
-**options** (`DensityPlotOptions`)
+**options** (`CatalogDensityPlotOptions`)
 
-### `DensityPlotOptions` fields
+### `CatalogDensityPlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
 | `points` | `std::int64_t` | `128` |
 | `alpha` | `double` | `1.0` |
 | `line_width` | `double` | `1.5` |
+| `keys` | `KeySelection` | no knob set |
 
 ## Returns
 
@@ -109,7 +110,7 @@ chart.show();
 
 ![Output of Example 3](img/density-3.svg)
 
-Example 4. An explicit `DensityPlotOptions`, tuning point count and opacity.
+Example 4. An explicit `CatalogDensityPlotOptions`, tuning point count and opacity.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -118,7 +119,7 @@ auto weather = pluss::kindle::Catalog({
     "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5, 17.5, 23.0, 19.0})),
 });
 
-pluss::table::DensityPlotOptions density_options;
+pluss::kindle::CatalogDensityPlotOptions density_options;
 density_options.points = 64;
 density_options.alpha = 0.5;
 

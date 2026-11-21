@@ -118,6 +118,7 @@ struct ColumnWords {
   std::string all{"all_columns"};
   std::string include{"include_columns"};
   std::string exclude{"exclude_columns"};
+  std::string container{"frame"};
 };
 
 [[nodiscard]] inline std::size_t name_distance(const std::string& a, const std::string& b) {
@@ -216,12 +217,12 @@ struct ColumnWords {
     out.push_back(name);
   }
   PLUSS_CHECK(!numeric_names.empty(),
-              head + "the frame has no numeric " + w.noun + " to draw (" + w.nouns + " = " + column_name_list(all_names) +
+              head + "the " + w.container + " has no numeric " + w.noun + " to draw (" + w.nouns + " = " + column_name_list(all_names) +
                   "). Add a numeric " + w.noun + ", or convert one of these " + w.nouns + " to numbers first.");
   PLUSS_CHECK(!out.empty(),
               head + "the selection leaves no numeric " + w.noun + " to draw (numeric " + w.nouns + " = " +
                   column_name_list(numeric_names) + "). Remove some of " + w.exclude + ", or use " + w.all +
-                  " on a frame that has numeric " + w.nouns + ".");
+                  " on a " + w.container + " that has numeric " + w.nouns + ".");
   return out;
 }
 

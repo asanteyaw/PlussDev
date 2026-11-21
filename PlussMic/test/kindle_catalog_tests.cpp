@@ -338,14 +338,14 @@ void test_catalog_plot_accessor() {
       },
       "Catalog::plot().line(shared x) should reject y streams whose lengths do not match the shared x stream");
 
-  pluss::table::LinePlotOptions line_inner;
+  pluss::kindle::CatalogLinePlotOptions line_inner;
   line_inner.align.mode = pluss::table::XYAlignMode::Inner;
   expect_no_throw([&]() {
     auto fig = ragged.plot().line("long", "short", line_inner);
     (void)fig;
   }, "Catalog::plot().line(shared x, Inner) should trim y to the shared overlap");
 
-  pluss::table::LinePlotOptions line_pad;
+  pluss::kindle::CatalogLinePlotOptions line_pad;
   line_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   line_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
@@ -353,14 +353,14 @@ void test_catalog_plot_accessor() {
     (void)fig;
   }, "Catalog::plot().line(shared x, PadScalar) should pad missing y values against the x anchor");
 
-  pluss::table::StepPlotOptions step_inner;
+  pluss::kindle::CatalogStepPlotOptions step_inner;
   step_inner.align.mode = pluss::table::XYAlignMode::Inner;
   expect_no_throw([&]() {
     auto fig = ragged.plot().step("long", "short", step_inner);
     (void)fig;
   }, "Catalog::plot().step(shared x, Inner) should trim ragged y values to the overlap");
 
-  pluss::table::AreaPlotOptions area_pad;
+  pluss::kindle::CatalogAreaPlotOptions area_pad;
   area_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   area_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
@@ -368,7 +368,7 @@ void test_catalog_plot_accessor() {
     (void)fig;
   }, "Catalog::plot().area(shared x, PadScalar) should pad ragged y values against the x anchor");
 
-  pluss::table::BarPlotOptions bar_pad;
+  pluss::kindle::CatalogBarPlotOptions bar_pad;
   bar_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
   bar_pad.align.pad_scalar = 0.0;
   expect_no_throw([&]() {
@@ -401,21 +401,39 @@ void test_catalog_plot_feature_selection() {
   expect(cat.plot().line().panes().size() == 1 && traces(cat.plot().line()) == 3, "Catalog line() draws every numeric stream");
   expect(traces(cat.plot().step()) == 3 && traces(cat.plot().area()) == 3 && traces(cat.plot().bar()) == 3, "Catalog shortcut for step/area/bar");
   // Knobs.
-  expect(traces(cat.plot().line({.features = {.all_features = true}})) == 3, "Catalog all_features");
-  expect(traces(cat.plot().line({.features = {.include_features = {"c", "a"}}})) == 2, "Catalog include_features");
-  expect(traces(cat.plot().line({.features = {.exclude_features = {"b"}}})) == 2, "Catalog exclude_features");
-  expect(traces(cat.plot().line("a", {.features = {.all_features = true}})) == 2, "Catalog all_features leaves x out");
+  expect(traces(cat.plot().line({.keys = {.all_keys = true}})) == 3, "Catalog all_keys");
+  expect(traces(cat.plot().line({.keys = {.include_keys = {"c", "a"}}})) == 2, "Catalog include_keys");
+  expect(traces(cat.plot().line({.keys = {.exclude_keys = {"b"}}})) == 2, "Catalog exclude_keys");
+  expect(traces(cat.plot().line("a", {.keys = {.all_keys = true}})) == 2, "Catalog all_keys leaves x out");
+  expect(traces(cat.plot().step({.keys = {.include_keys = {"b"}}})) == 1 && traces(cat.plot().area({.keys = {.include_keys = {"b", "c"}}})) == 2 &&
+             traces(cat.plot().bar({.keys = {.exclude_keys = {"a", "b"}}})) == 1,
+         "Catalog keys on step/area/bar");
   // Accessor-level selection, per-plot override, names override both.
-  const auto acc = cat.plot({.include_features = {"a", "b"}});
-  expect(traces(acc.line()) == 2 && traces(acc.bar()) == 2, "Catalog accessor-level include_features");
-  expect(traces(acc.line({.features = {.include_features = {"c"}}})) == 1, "Catalog per-plot selection overrides the accessor");
-  expect(traces(acc.line("a", {"c"}, {.features = {.include_features = {"b"}}})) == 1, "Catalog names override both");
+  const auto acc = cat.plot({.include_keys = {"a", "b"}});
+  expect(traces(acc.line()) == 2 && traces(acc.bar()) == 2, "Catalog accessor-level include_keys");
+  expect(traces(acc.line({.keys = {.include_keys = {"c"}}})) == 1, "Catalog per-plot selection overrides the accessor");
+  expect(traces(acc.line("a", {"c"}, {.keys = {.include_keys = {"b"}}})) == 1, "Catalog names override both");
   expect(acc.hist().panes().front().trace_count() == 2, "Catalog accessor-level selection applies to hist");
-  // Misuse.
-  const auto both = message([&] { (void)cat.plot().line({.features = {.all_features = true, .exclude_features = {"a"}}}); });
-  expect(has(both, "all_features and exclude_features cannot be combined") && has(both, "set exclude_features instead"), "Catalog: " + both);
-  const auto unknown = message([&] { (void)cat.plot().line({.features = {.include_features = {"zz"}}}); });
-  expect(has(unknown, "unknown feature 'zz'") && has(unknown, "Available features = [a, b, c]"), "Catalog: " + unknown);
+  expect(cat.plot({.exclude_keys = {"c"}}, {.width = 640.0}).line().panes().size() == 1, "Catalog accessor keys with style options");
+  // Misuse: every message speaks of keys, never features.
+  const auto both = message([&] { (void)cat.plot().line({.keys = {.all_keys = true, .exclude_keys = {"a"}}}); });
+  expect(has(both, "Catalog::plot().line: all_keys and exclude_keys cannot be combined") && has(both, "set exclude_keys instead"), "Catalog: " + both);
+  expect(!has(both, "feature") && !has(both, "column"), "Catalog error must not say feature or column: " + both);
+  const auto inc_exc = message([&] { (void)cat.plot().line({.keys = {.include_keys = {"a"}, .exclude_keys = {"b"}}}); });
+  expect(has(inc_exc, "include_keys and exclude_keys cannot both be set") && !has(inc_exc, "feature"), "Catalog: " + inc_exc);
+  const auto unknown = message([&] { (void)cat.plot().line({.keys = {.include_keys = {"zz"}}}); });
+  expect(has(unknown, "unknown key 'zz'") && has(unknown, "Available keys = [a, b, c]") && !has(unknown, "feature"), "Catalog: " + unknown);
+  const auto typo = message([&] { (void)cat.plot().line({.keys = {.exclude_keys = {"bb"}}}); });
+  expect(has(typo, "Did you mean 'b'?") && has(typo, "Available keys = [a, b, c]"), "Catalog: " + typo);
+  const auto as_x = message([&] { (void)cat.plot().line("a", {.keys = {.include_keys = {"a"}}}); });
+  expect(has(as_x, "also the x key") && !has(as_x, "feature"), "Catalog: " + as_x);
+  const auto empty = message([&] { (void)cat.plot().line({.keys = {.exclude_keys = {"a", "b", "c"}}}); });
+  expect(has(empty, "leaves no numeric key to draw") && !has(empty, "feature") && !has(empty, "frame"), "Catalog: " + empty);
+  // The frame wording handed to a Catalog is rejected with the key wording.
+  const auto wrong = message([&] { (void)cat.plot({.include_features = {"a"}}); });
+  expect(has(wrong, "a Catalog selects keys, not features") && has(wrong, "include_keys"), "Catalog: " + wrong);
+  const auto hist_misuse = message([&] { (void)cat.plot().hist(std::initializer_list<std::string_view>{}, {.keys = {.all_keys = true, .include_keys = {"a"}}}); });
+  expect(has(hist_misuse, "Catalog::plot().hist: all_keys and include_keys cannot be combined"), "Catalog: " + hist_misuse);
 }
 
 void test_catalog_plot3d_accessor() {

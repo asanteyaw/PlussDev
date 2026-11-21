@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 9e2e04b5507d -->
+<!-- pluss-signature-hash: 5e0ae483aa26 -->
 
 # Catalog::plot
 
@@ -9,21 +9,30 @@
 
 ```cpp
 CatalogPlotAccessor Catalog::plot() const
+CatalogPlotAccessor Catalog::plot(const KeySelection& keys) const
 CatalogPlotAccessor Catalog::plot(const pluss::table::DataFramePlotOptions& options) const
+CatalogPlotAccessor Catalog::plot(const KeySelection& keys, const pluss::table::DataFramePlotOptions& options) const
 ```
 
 ## What It Does
 
 The entry point into the catalog-level 2D plotting accessor — key-based line/step/area/
 scatter/bar/hist/density/corr_heatmap/scatter_matrix/auto_plot charts, returning
-`pluss::pl::Studio` figures. There is no separate `CatalogPlotOptions` type — the accessor
-reuses `pluss::table::DataFramePlotOptions` as-is, the same struct
+`pluss::pl::Studio` figures. The accessor
+takes its style from `pluss::table::DataFramePlotOptions`, the same struct
 [`DataFrame::plot`](../dataframe/plot.md) takes, so fields like `default_x_feature` still
 apply even though what they resolve is a catalog key rather than a frame feature. Every
 method on the returned `CatalogPlotAccessor` has its own page, with real rendered charts,
 under [`CatalogPlotAccessor` API Reference](../../catalog_plot_accessor_api_reference).
 
 ## Parameters
+
+**keys** (`const KeySelection&`, optional)
+    Which keys every plot of the accessor draws when a call names none: `all_keys`,
+    `include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in the call
+    override both. See [Selecting keys](../catalog-plot/line.md#selecting-keys). Passing the frame
+    fields `all_features`, `include_features` or `exclude_features` in `options` throws an error
+    that names the key knobs to use instead.
 
 **options** (`const pluss::table::DataFramePlotOptions&`, optional)
     Shared defaults (`default_x_feature`, `default_hue_feature`, tick/label formatting,
@@ -54,7 +63,7 @@ auto chart = ct.plot().line("sales", "day");
 
 - `plot()` alone does no work — it only binds the catalog; call one of the returned
   accessor's methods to actually build a chart.
-- Reuses `pluss::table::DataFramePlotOptions` directly — there is no `CatalogPlotOptions`.
+- Style comes from `pluss::table::DataFramePlotOptions`; the selection of keys is the separate `KeySelection`.
 - For 3D charts (scatter3d/line3d/hist3d/surface/wireframe), see
   [`Catalog::plot3d`](plot3d.md) instead.
 

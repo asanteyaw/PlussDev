@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 6fbe1aeea9e3 -->
+<!-- pluss-signature-hash: 80763bbd9c96 -->
 
 # CatalogPlotAccessor::auto_plot
 
@@ -10,13 +10,13 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::auto_plot() const
 
-pluss::pl::Studio CatalogPlotAccessor::auto_plot(const AutoPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::auto_plot(const CatalogAutoPlotOptions& options) const
 ```
 
 ## What It Does
 
-Picks a chart automatically from the catalog's own shape, with no feature/key selection
-required from the caller — useful for a quick first look at an unfamiliar catalog. Unlike
+Picks a chart automatically from the catalog's own shape, with no key selection
+required from the caller (an optional `keys` selection narrows the keys it considers) — useful for a quick first look at an unfamiliar catalog. Unlike
 `DataFrame::plot().auto_plot()`'s multi-rule decision tree (row count, feature count,
 feature kinds all feed into the choice), `Catalog::plot().auto_plot()` only has **two**
 outcomes, both of which delegate rather than drawing anything themselves:
@@ -25,19 +25,17 @@ outcomes, both of which delegate rather than drawing anything themselves:
   single key's own `Stream::plot().auto_plot()` (`StreamPlotAccessor::auto_plot()`), passing
   the accessor's own `options_` through.
 - **Zero, or two-or-more, plottable keys** — delegates to
-  `line(pluss::RangeView<std::string_view>{}, std::nullopt,
-  pluss::table::LinePlotOptions{})` — i.e. exactly [`line()`](line.md)'s no-arguments,
+  `line()` over the selected keys — i.e. exactly [`line()`](line.md)'s no-arguments,
   empty-selection form: every plottable key in the catalog, each its own trace, no shared
   `x_key` (so each key falls back to its own [self-axis](line.md)).
 
-`options` is accepted for shape-compatibility with the wider plotting-option story but is
-otherwise unused — `AutoPlotOptions` is an empty struct (`struct AutoPlotOptions {};`), so
-the two overloads always behave identically.
+`options.keys` (`all_keys`, `include_keys` or `exclude_keys`) narrows which keys are considered, with the same rules and
+errors as [`line()`](line.md#selecting-keys); with none set, every plottable key is considered.
 
 ## Parameters
 
-**options** (`const AutoPlotOptions&`, optional)
-    Accepted but unused — `AutoPlotOptions` has no fields.
+**options** (`const CatalogAutoPlotOptions&`, optional)
+    Its single field `keys` (`KeySelection`, default: no knob set) selects the keys to consider.
 
 ## Returns
 
@@ -111,7 +109,7 @@ A default-constructed `Catalog` is not just empty — `defined()` itself is `fal
   `Stream::plot().auto_plot()`; anything else (zero or several) delegates to `line()`'s
   empty-selection form. There is no row-count- or dtype-based branching the way
   `DataFrame::plot().auto_plot()` has.
-- `options` is accepted but has no effect — `AutoPlotOptions` is an empty struct.
+- `options` is accepted but has no effect — `CatalogAutoPlotOptions` is an empty struct.
 - An undefined handle throws before an empty-but-defined one would even be checked — see
   Example 3.
 - Note keys are never counted as "plottable" here, the same exclusion every other method on

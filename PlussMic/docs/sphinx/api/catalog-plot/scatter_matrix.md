@@ -81,6 +81,7 @@ defaults to `{}`)
 |---|---|---|
 | `align` | `CatalogPairAlignOptions` | default constructed |
 | `matrix` | `pluss::table::ScatterMatrixPlotOptions` | default constructed |
+| `keys` | `KeySelection` | no knob set |
 
 `matrix.corner = true` additionally forces `pair.triangle` from `Full` to `Lower` (a
 no-op if `triangle` was already `Lower` or `Upper`). `pair.kind = Reg` draws a fitted

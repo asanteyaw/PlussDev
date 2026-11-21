@@ -67,6 +67,7 @@ defaults to `{}`)
 |---|---|---|
 | `align` | `CatalogPairAlignOptions` | default constructed |
 | `heatmap` | `pluss::table::CorrHeatmapPlotOptions` | empty |
+| `keys` | `KeySelection` | no knob set |
 | `method` | `pluss::table::DataFrame::CorrMethod` | `pluss::table::DataFrame::CorrMethod::Pearson` |
 
 `align`/`align_by` control cross-key alignment (see the important callout above).

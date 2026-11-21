@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 277f8fd4a73c -->
+<!-- pluss-signature-hash: 19ffbff05d9d -->
 
 # CatalogPlotAccessor::bar
 
@@ -10,9 +10,9 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::bar() const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(const CatalogBarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, const CatalogBarPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key) const
 
@@ -26,21 +26,21 @@ pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, pluss::RangeV
 
 pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::string_view y_key, const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::string_view y_key, const CatalogBarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const CatalogBarPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const BarPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const CatalogBarPlotOptions& options) const
 ```
 
 ## What It Does
 
 The same y-keys-over-shared-x-axis shape as [`line()`](line.md), drawn as bars instead of a
 connected line or filled area. See `line()` for the full x-axis resolution and multi-key
-mechanics; this page covers what's specific to `bar()` — mainly `BarPlotOptions::horizontal`.
+mechanics; this page covers what's specific to `bar()` — mainly `CatalogBarPlotOptions::horizontal`.
 
 ```{important} horizontal swaps which values feed which axis, not just the drawing direction
-`BarPlotOptions::horizontal = true` doesn't just rotate the same bars 90 degrees — it draws
+`CatalogBarPlotOptions::horizontal = true` doesn't just rotate the same bars 90 degrees — it draws
 `flash::barplot(pane, y_values, x_values, ...)` (arguments swapped) instead of
 `flash::barplot(pane, x_values, y_values, ...)`, so the resolved x-axis values become the
 bars' *lengths* and the resolved y-key's values become the *category positions*. See
@@ -51,12 +51,10 @@ Example 2.
 
 The order is **x first, then y**: `bar("day", "temp_c")` puts `day` on the x-axis; `bar("day", {"temp_c",
 "humidity"})` draws two traces against `day`; a single key, `bar("temp_c")`, is a y key drawn against the
-record labels. With no y key named, the keys come from a feature selection: the `features` field of
-`BarPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
-`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
-over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
-with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
-[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
+record labels. With no y key named, the keys come from a key selection (`all_keys`, `include_keys` or `exclude_keys`) in the `keys` field of
+`CatalogBarPlotOptions`, else the accessor-level selection passed to `Catalog::plot(keys)`, else every numeric key. Names in
+the call win over both, and a plot's own selection wins over the accessor's. See [Selecting keys](line.md#selecting-keys)
+for the knobs, the precedence, the examples and the errors.
 
 ## Parameters
 
@@ -67,9 +65,9 @@ with `exclude_features`) throws a `pluss::Error` that says what was combined and
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
     Same three-step resolution as [`line()`](line.md).
 
-**options** (`BarPlotOptions`)
+**options** (`CatalogBarPlotOptions`)
 
-### `BarPlotOptions` fields
+### `CatalogBarPlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
@@ -77,6 +75,7 @@ with `exclude_features`) throws a `pluss::Error` that says what was combined and
 | `ci_level` | `double` | `0.95` |
 | `horizontal` | `bool` | `false` |
 | `align` | `XYAlignOptions` | default constructed |
+| `keys` | `KeySelection` | no knob set |
 
 `ci_enabled`/`ci_level` are accepted for shape-compatibility with `DataFramePlotAccessor`
 but are not read by `Catalog::plot().bar()` — it always draws plain bars with a fixed
@@ -120,7 +119,7 @@ auto weather = pluss::kindle::Catalog({
     "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5})),
 });
 
-pluss::table::BarPlotOptions bar_options;
+pluss::kindle::CatalogBarPlotOptions bar_options;
 bar_options.horizontal = true;
 
 auto chart = weather.plot().bar("day", "temp_c", bar_options);
@@ -172,7 +171,7 @@ Catalog::plot().bar: unknown key 'nonexistent'
 ## Notes
 
 - `ci_enabled`/`ci_level` are unused by this method despite being present on
-  `BarPlotOptions` — they exist for shape-compatibility across the plotting option structs.
+  `CatalogBarPlotOptions` — they exist for shape-compatibility across the plotting option structs.
 - `horizontal = true` swaps which values feed which axis, not just the render direction —
   see the important callout above.
 - Every other mechanic is shared with [`line()`](line.md) — see that page for the full

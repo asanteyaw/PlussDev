@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 899c4348e43d -->
+<!-- pluss-signature-hash: 803cbe0f1bd3 -->
 
 # CatalogPlotAccessor::area
 
@@ -10,9 +10,9 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::area() const
 
-pluss::pl::Studio CatalogPlotAccessor::area(const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(const CatalogAreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, const CatalogAreaPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::area(std::string_view y_key) const
 
@@ -26,11 +26,11 @@ pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, pluss::Range
 
 pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::string_view y_key, const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::string_view y_key, const CatalogAreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const CatalogAreaPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const AreaPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::area(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const CatalogAreaPlotOptions& options) const
 ```
 
 ## What It Does
@@ -45,12 +45,10 @@ the full explanation; only what's specific to `area()` is repeated here.
 
 The order is **x first, then y**: `area("day", "temp_c")` puts `day` on the x-axis; `area("day", {"temp_c",
 "humidity"})` draws two traces against `day`; a single key, `area("temp_c")`, is a y key drawn against the
-record labels. With no y key named, the keys come from a feature selection: the `features` field of
-`AreaPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
-`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
-over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
-with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
-[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
+record labels. With no y key named, the keys come from a key selection (`all_keys`, `include_keys` or `exclude_keys`) in the `keys` field of
+`CatalogAreaPlotOptions`, else the accessor-level selection passed to `Catalog::plot(keys)`, else every numeric key. Names in
+the call win over both, and a plot's own selection wins over the accessor's. See [Selecting keys](line.md#selecting-keys)
+for the knobs, the precedence, the examples and the errors.
 
 ## Parameters
 
@@ -61,15 +59,16 @@ with `exclude_features`) throws a `pluss::Error` that says what was combined and
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
     Same three-step resolution as [`line()`](line.md).
 
-**options** (`AreaPlotOptions`)
+**options** (`CatalogAreaPlotOptions`)
 
-### `AreaPlotOptions` fields
+### `CatalogAreaPlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
 | `alpha` | `double` | `0.88` |
 | `line_width` | `double` | `1.3` |
 | `align` | `XYAlignOptions` | default constructed |
+| `keys` | `KeySelection` | no knob set |
 
 Note the higher default `alpha` (`0.88` vs. `line()`'s `1.0`) — a filled area reads
 better slightly translucent than fully opaque. `align` controls how a mismatched-length
@@ -118,7 +117,7 @@ chart.show();
 
 ![Output of Example 2](img/area-2.svg)
 
-Example 3. An explicit `AreaPlotOptions`, lowering opacity further.
+Example 3. An explicit `CatalogAreaPlotOptions`, lowering opacity further.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -128,7 +127,7 @@ auto weather = pluss::kindle::Catalog({
     "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5})),
 });
 
-pluss::table::AreaPlotOptions area_options;
+pluss::kindle::CatalogAreaPlotOptions area_options;
 area_options.alpha = 0.4;
 area_options.line_width = 2.0;
 

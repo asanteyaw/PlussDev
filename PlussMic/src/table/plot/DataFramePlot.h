@@ -30,8 +30,53 @@ struct FeatureSelection {
 };
 
 namespace detail {
-// Translates the PlussMic feature vocabulary to flash's column selection and resolves it there.
-// With no knob set and `shortcut_all`, every numeric feature is selected (flash's all_columns).
+// The words a selection error uses: the container's own noun ("feature" for a DataFrame, "key" for a
+// Catalog), the three knob names and where the selection lives, so every container shares one resolver
+// and one set of directive messages.
+struct SelectionWords {
+  std::string_view noun;
+  std::string_view nouns;
+  std::string_view all;
+  std::string_view include;
+  std::string_view exclude;
+  std::string_view home;
+  std::string_view container{"frame"};
+};
+
+inline constexpr SelectionWords feature_selection_words{
+    "feature", "features", "all_features", "include_features", "exclude_features", "options.features"};
+
+// Translates a container's selection vocabulary to flash's column selection and resolves it there.
+// With no knob set and `shortcut_all`, every numeric name is selected (flash's all_columns).
+[[nodiscard]] inline std::vector<std::string> resolve_plot_selection(
+    bool all,
+    const std::vector<std::string>& include,
+    const std::vector<std::string>& exclude,
+    const SelectionWords& words,
+    const std::vector<std::string>& all_names,
+    const std::vector<std::string>& numeric_names,
+    std::string_view where,
+    const std::optional<std::string>& x_name = std::nullopt,
+    bool shortcut_all = true) {
+  const bool any = all || !include.empty() || !exclude.empty();
+  pluss::pl::flash::ColumnSelection flash_selection;
+  flash_selection.all_columns = all || (!any && shortcut_all);
+  flash_selection.include_columns = include;
+  flash_selection.exclude_columns = exclude;
+  pluss::pl::flash::detail::ColumnWords flash_words;
+  flash_words.noun = std::string(words.noun);
+  flash_words.nouns = std::string(words.nouns);
+  flash_words.all = std::string(words.all);
+  flash_words.include = std::string(words.include);
+  flash_words.exclude = std::string(words.exclude);
+  flash_words.container = std::string(words.container);
+  const auto picked = pluss::pl::flash::detail::resolve_column_selection(
+      flash_selection, all_names, numeric_names, where, x_name, flash_words);
+  PLUSS_CHECK(picked.has_value(), std::string(where) + ": no " + std::string(words.nouns) +
+                                      " named; name them or set " + std::string(words.home));
+  return *picked;
+}
+
 [[nodiscard]] inline std::vector<std::string> resolve_feature_selection(
     const FeatureSelection& selection,
     const std::vector<std::string>& all_names,
@@ -39,20 +84,8 @@ namespace detail {
     std::string_view where,
     const std::optional<std::string>& x_name = std::nullopt,
     bool shortcut_all = true) {
-  pluss::pl::flash::ColumnSelection flash_selection;
-  flash_selection.all_columns = selection.all_features || (!selection.any() && shortcut_all);
-  flash_selection.include_columns = selection.include_features;
-  flash_selection.exclude_columns = selection.exclude_features;
-  pluss::pl::flash::detail::ColumnWords words;
-  words.noun = "feature";
-  words.nouns = "features";
-  words.all = "all_features";
-  words.include = "include_features";
-  words.exclude = "exclude_features";
-  const auto picked = pluss::pl::flash::detail::resolve_column_selection(
-      flash_selection, all_names, numeric_names, where, x_name, words);
-  PLUSS_CHECK(picked.has_value(), std::string(where) + ": no features named; name them or set options.features");
-  return *picked;
+  return resolve_plot_selection(selection.all_features, selection.include_features, selection.exclude_features,
+                                feature_selection_words, all_names, numeric_names, where, x_name, shortcut_all);
 }
 } // namespace detail
 

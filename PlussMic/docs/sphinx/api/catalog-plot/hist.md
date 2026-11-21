@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 6760225de816 -->
+<!-- pluss-signature-hash: de579a498d7f -->
 
 # CatalogPlotAccessor::hist
 
@@ -16,13 +16,13 @@ pluss::pl::Studio CatalogPlotAccessor::hist(pluss::RangeView<std::string_view> k
 pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
                                              std::int64_t bins = 20) const
 
-pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, const HistPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, const CatalogHistPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::hist(pluss::RangeView<std::string_view> keys,
-                                             const HistPlotOptions& options) const
+                                             const CatalogHistPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
-                                             const HistPlotOptions& options) const
+                                             const CatalogHistPlotOptions& options) const
 ```
 
 ## What It Does
@@ -36,25 +36,26 @@ y-axis meaning ("count"), regardless of key count.
 
 **key** / **keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `keys` defaults to `{}`)
-    Same resolution as [`line()`](line.md): an empty `keys` selects every
+    Same resolution as [`line()`](line.md): an empty `keys` takes the keys of the selection (`options.keys`, else the accessor's), or, with none set, every
     plottable (Series/Timeline/TimeIndex) key in the catalog; an explicitly named unknown
     key throws `"Catalog::plot().hist: unknown key '<name>'"`.
 
 **bins** (`std::int64_t`, default `20`)
-    Bin count, forwarded straight into a `HistPlotOptions{.bins = bins}`. Unlike
+    Bin count, forwarded straight into a `CatalogHistPlotOptions{.bins = bins}`. Unlike
     `DataFrame::plot().hist()`, there is no ambiguity between "explicit 20" and "the
     accessor's own default" here — `Catalog::plot().hist()` never reads
     `options().default_bins` at all; `20` is simply this parameter's own default value.
 
-**options** (`HistPlotOptions`)
+**options** (`CatalogHistPlotOptions`)
 
-### `HistPlotOptions` fields
+### `CatalogHistPlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
 | `bins` | `std::int64_t` | `20` |
 | `alpha` | `double` | `0.95` |
 | `line_width` | `double` | `1.0` |
+| `keys` | `KeySelection` | no knob set |
 
 ## Returns
 
@@ -113,7 +114,7 @@ chart.show();
 
 ![Output of Example 3](img/hist-3.svg)
 
-Example 4. An explicit `HistPlotOptions`, tuning bin count, opacity, and stroke width, on a
+Example 4. An explicit `CatalogHistPlotOptions`, tuning bin count, opacity, and stroke width, on a
 `RangeView`-supplied key list.
 
 ```cpp
@@ -125,7 +126,7 @@ auto weather = pluss::kindle::Catalog({
 });
 
 std::vector<std::string_view> keys{"temp_c", "humidity"};
-pluss::table::HistPlotOptions hist_options;
+pluss::kindle::CatalogHistPlotOptions hist_options;
 hist_options.bins = 8;
 hist_options.alpha = 0.7;
 hist_options.line_width = 1.5;

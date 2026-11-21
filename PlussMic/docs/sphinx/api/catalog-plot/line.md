@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: bc2cc172b4d6 -->
+<!-- pluss-signature-hash: 1aed04b9aad8 -->
 
 # CatalogPlotAccessor::line
 
@@ -10,9 +10,9 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::line() const
 
-pluss::pl::Studio CatalogPlotAccessor::line(const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(const CatalogLinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, const CatalogLinePlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::line(std::string_view y_key) const
 
@@ -26,11 +26,11 @@ pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, pluss::Range
 
 pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::string_view y_key, const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::string_view y_key, const CatalogLinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const CatalogLinePlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const LinePlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::line(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const CatalogLinePlotOptions& options) const
 ```
 
 ## What It Does
@@ -70,9 +70,9 @@ Every 2D chart method that takes an `x_key` argument resolves it the same way:
 2. **Set a shared default on the accessor** — `ct.plot(options)` where
    `options.default_x_feature = "month"` lets every subsequent chart method omit `x_key`
    and still use `"month"`. An explicit `x_key` argument on a given call still takes
-   precedence over this default. (`DataFramePlotOptions` is reused as-is for
-   `Catalog::plot()` — there is no separate `CatalogPlotOptions` type, so the field is still
-   named `default_x_feature` even though the value being resolved is a key.)
+   precedence over this default. (`Catalog::plot()` takes the shared `DataFramePlotOptions` for its
+   style fields, so the field is still named `default_x_feature` even though the value being
+   resolved is a key.)
 3. **Omit it entirely, with no default set** — falls back to the y-key's **own stream
    label** (`Stream::label()`, attached via `Stream::with_label()`), if it has one: the
    x-axis becomes that label's values, rendered as evenly spaced categorical positions if
@@ -99,12 +99,186 @@ against each other on such a chart even though they share one pane — pass an e
 
 The order is **x first, then y**: `line("day", "temp_c")` puts `day` on the x-axis; `line("day", {"temp_c",
 "humidity"})` draws two traces against `day`; a single key, `line("temp_c")`, is a y key drawn against the
-record labels. With no y key named, the keys come from a feature selection: the `features` field of
-`LinePlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
-`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
-over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
-with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
-[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
+record labels. With no y key named, the keys come from a key selection (`all_keys`, `include_keys` or
+`exclude_keys`), or, with none set, every numeric key. See [Selecting keys](#selecting-keys) below for the knobs,
+the precedence and the errors.
+
+## Selecting keys
+
+A Catalog has keys, so its plots select **keys**. When a call names no y key, the keys it draws come from one of
+three alternative knobs, each a field of `KeySelection`:
+
+| Knob | Type | Draws |
+|---|---|---|
+| `all_keys` | `bool` | every numeric key (never the x key) |
+| `include_keys` | `std::vector<std::string>` | exactly these keys, in this order |
+| `exclude_keys` | `std::vector<std::string>` | every numeric key except these (never the x key) |
+
+The knobs are set in two places: per plot, in the `keys` field of `CatalogLinePlotOptions` (and of the step, area,
+bar, hist, density, auto_plot, corr_heatmap and scatter_matrix option types), and for a whole accessor with
+`Catalog::plot(const KeySelection& keys)` or `Catalog::plot(const KeySelection& keys, const pluss::table::DataFramePlotOptions& options)`.
+The first source that applies wins:
+
+1. keys named in the call, such as `line("day", {"temp_c"})`;
+2. the plot's own `keys`;
+3. the accessor-level selection;
+4. with none of these, every numeric key, as if `all_keys` were set.
+
+Only Series, Timeline and TimeIndex keys are numeric; a Note key such as `day` is never drawn as a trace. The three
+knobs are alternatives, and a misuse throws a `pluss::Error` that says what was combined, why it is invalid, and what
+to do; an unknown key is reported with the closest name and the available keys.
+
+Example S1. No key named and no selection: every numeric key is drawn on one axes.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto weather = pluss::kindle::Catalog({
+    "day"_k = pluss::kindle::Stream(pluss::make_note({"Mon", "Tue", "Wed", "Thu", "Fri"})),
+    "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5})),
+    "humidity"_k = pluss::kindle::Stream(pluss::make_series({55.0, 60.0, 65.0, 62.0, 58.0})),
+    "pressure"_k = pluss::kindle::Stream(pluss::make_series({1005.0, 1008.0, 1010.0, 1009.0, 1012.0})),
+});
+
+auto chart = weather.plot().line();
+```
+
+Three traces: `temp_c`, `humidity` and `pressure`.
+
+![Output of Example S1](img/keys-1.svg)
+
+Example S2. `all_keys`: the same selection, written out. It also leaves a named x key out of the traces.
+
+```cpp
+auto all = weather.plot().line({.keys = {.all_keys = true}});
+auto against_day = weather.plot().line("day", {.keys = {.all_keys = true}});
+```
+
+`all` draws three traces; `against_day` draws the same three against `day`.
+
+![Output of Example S2](img/keys-2.svg)
+
+Example S3. `include_keys`: exactly these keys, in the order given.
+
+```cpp
+auto chart = weather.plot().line({.keys = {.include_keys = {"pressure", "temp_c"}}});
+```
+
+Two traces, `pressure` first, then `temp_c`.
+
+![Output of Example S3](img/keys-3.svg)
+
+Example S4. `exclude_keys`: every numeric key except these.
+
+```cpp
+auto chart = weather.plot().line({.keys = {.exclude_keys = {"pressure"}}});
+```
+
+Two traces: `temp_c` and `humidity`.
+
+![Output of Example S4](img/keys-4.svg)
+
+Example S5. A selection for the whole accessor, a plot's own selection that overrides it, and names in the call that
+override both.
+
+```cpp
+const auto shared = weather.plot({.include_keys = {"temp_c", "humidity"}});
+
+auto a = shared.line();                                          // accessor: temp_c, humidity
+auto b = shared.bar();                                           // every plot of the accessor
+auto c = shared.line({.keys = {.include_keys = {"pressure"}}});  // the plot's own selection wins
+auto d = shared.line("day", {"pressure"});                       // names in the call win over both
+```
+
+`a` and `b` draw two traces each; `c` and `d` draw one, `pressure`.
+
+![Output of Example S5, a](img/keys-6-a.svg)
+
+![Output of Example S5, c](img/keys-6-c.svg)
+
+Example S6. The selection applies to every plot that works on a set of keys, such as `hist`.
+
+```cpp
+auto chart = weather.plot().hist(std::initializer_list<std::string_view>{},
+                                 {.keys = {.exclude_keys = {"pressure"}}});
+```
+
+Two overlaid histograms: `temp_c` and `humidity`.
+
+![Output of Example S6](img/keys-7.svg)
+
+The following calls misuse the knobs. Each throws a `pluss::Error`; the messages, printed with `e.message()`, are shown
+verbatim.
+
+Example S7. `all_keys` with `exclude_keys`.
+
+```cpp
+weather.plot().line({.keys = {.all_keys = true, .exclude_keys = {"pressure"}}});
+```
+
+```text
+Catalog::plot().line: all_keys and exclude_keys cannot be combined: all_keys already means every numeric key. To drop some keys set exclude_keys instead (and leave all_keys false), or to plot everything remove exclude_keys.
+```
+
+Example S8. `include_keys` with `exclude_keys`.
+
+```cpp
+weather.plot().line({.keys = {.include_keys = {"temp_c"}, .exclude_keys = {"pressure"}}});
+```
+
+```text
+Catalog::plot().line: include_keys and exclude_keys cannot both be set: include_keys lists exactly the keys to draw, while exclude_keys drops keys from every numeric key. Use include_keys to name the keys you want, or exclude_keys to remove the ones you do not, but not both.
+```
+
+Example S9. An unknown key, with the closest name suggested.
+
+```cpp
+weather.plot().line({.keys = {.include_keys = {"humidty"}}});
+```
+
+```text
+Catalog::plot().line: include_keys names unknown key 'humidty'. Did you mean 'humidity'? Available keys = [day, temp_c, humidity, pressure]. Fix the spelling or remove 'humidty' from include_keys.
+```
+
+Example S10. A key that is not numeric.
+
+```cpp
+weather.plot().line({.keys = {.include_keys = {"day"}}});
+```
+
+```text
+Catalog::plot().line: include_keys names key 'day', which is not numeric; only numeric keys (Series) can be drawn here. Numeric keys = [temp_c, humidity, pressure]. Remove 'day' from include_keys or convert it to a numeric key first.
+```
+
+Example S11. The x key listed as a key to draw.
+
+```cpp
+weather.plot().line("temp_c", {.keys = {.include_keys = {"temp_c"}}});
+```
+
+```text
+Catalog::plot().line: include_keys lists 'temp_c', which is also the x key; an x key cannot be drawn as its own trace. Remove 'temp_c' from include_keys, or choose a different x.
+```
+
+Example S12. A selection that leaves nothing to draw.
+
+```cpp
+weather.plot().line({.keys = {.exclude_keys = {"temp_c", "humidity", "pressure"}}});
+```
+
+```text
+Catalog::plot().line: the selection leaves no numeric key to draw (numeric keys = [temp_c, humidity, pressure]). Remove some of exclude_keys, or use all_keys on a catalog that has numeric keys.
+```
+
+Example S13. The frame vocabulary handed to a Catalog.
+
+```cpp
+weather.plot({.include_features = {"temp_c"}});
+```
+
+```text
+Catalog::plot: a Catalog selects keys, not features. Use all_keys, include_keys or exclude_keys (options.keys) instead of all_features, include_features or exclude_features.
+```
 
 ## Parameters
 
@@ -123,7 +297,7 @@ defaults to `{}`)
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
     The key to use as the shared x-axis. See "Choosing the x-axis" above.
 
-**options** (`LinePlotOptions`)
+**options** (`CatalogLinePlotOptions`)
 
 ### `XYAlignMode` values
 
@@ -149,7 +323,15 @@ defaults to `{}`)
 | `align_by` | `XYAlignBy` | `XYAlignBy::Auto` |
 | `pad_scalar` | `double` | `0.0` |
 
-### `LinePlotOptions` fields
+### `KeySelection` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `all_keys` | `bool` | `false` |
+| `include_keys` | `std::vector<std::string>` | empty |
+| `exclude_keys` | `std::vector<std::string>` | empty |
+
+### `CatalogLinePlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
@@ -157,6 +339,7 @@ defaults to `{}`)
 | `line_width` | `double` | `1.6` |
 | `y_limit_method` | `std::optional<pluss::pl::LimitMethod>` | `pluss::pl::LimitMethod::Padded` |
 | `align` | `XYAlignOptions` | default constructed |
+| `keys` | `KeySelection` | no knob set |
 
 `alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
 how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
@@ -340,7 +523,7 @@ overload are the same underlying call, just accepting the y-key list in differen
 
 ![Output of Example 6](img/line-6.svg)
 
-Example 7. An explicit `LinePlotOptions`, tuning opacity, stroke width, and y-axis fit.
+Example 7. An explicit `CatalogLinePlotOptions`, tuning opacity, stroke width, and y-axis fit.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -350,7 +533,7 @@ auto weather = pluss::kindle::Catalog({
     "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5})),
 });
 
-pluss::table::LinePlotOptions line_options;
+pluss::kindle::CatalogLinePlotOptions line_options;
 line_options.alpha = 0.85;
 line_options.line_width = 2.5;
 
@@ -375,12 +558,12 @@ auto short_metric = pluss::kindle::Catalog({
     "sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 12.0, 9.0})),
 });
 
-pluss::table::LinePlotOptions inner_options;
+pluss::kindle::CatalogLinePlotOptions inner_options;
 inner_options.align.mode = pluss::table::XYAlignMode::Inner;
 auto chart_inner = short_metric.plot().line("day", "sales", inner_options);
 chart_inner.show();
 
-pluss::table::LinePlotOptions pad_options;
+pluss::kindle::CatalogLinePlotOptions pad_options;
 pad_options.align.mode = pluss::table::XYAlignMode::PadScalar;
 pad_options.align.pad_scalar = 0.0;
 auto chart_pad = short_metric.plot().line("day", "sales", pad_options);

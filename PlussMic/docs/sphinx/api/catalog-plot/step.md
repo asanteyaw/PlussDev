@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 71eaf5a5372f -->
+<!-- pluss-signature-hash: d05e8a17ff63 -->
 
 # CatalogPlotAccessor::step
 
@@ -10,9 +10,9 @@
 ```cpp
 pluss::pl::Studio CatalogPlotAccessor::step() const
 
-pluss::pl::Studio CatalogPlotAccessor::step(const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(const CatalogStepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, const CatalogStepPlotOptions& options) const
 
 pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key) const
 
@@ -26,11 +26,11 @@ pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, pluss::Range
 
 pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::initializer_list<std::string_view> y_keys) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::string_view y_key, const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::string_view y_key, const CatalogStepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, pluss::RangeView<std::string_view> y_keys, const CatalogStepPlotOptions& options) const
 
-pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const StepPlotOptions& options) const
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view x_key, std::initializer_list<std::string_view> y_keys, const CatalogStepPlotOptions& options) const
 ```
 
 ## What It Does
@@ -46,12 +46,10 @@ explanation; only what's specific to `step()` is repeated here.
 
 The order is **x first, then y**: `step("day", "temp_c")` puts `day` on the x-axis; `step("day", {"temp_c",
 "humidity"})` draws two traces against `day`; a single key, `step("temp_c")`, is a y key drawn against the
-record labels. With no y key named, the keys come from a feature selection: the `features` field of
-`StepPlotOptions` (`all_features`, `include_features`, `exclude_features`), else the accessor-level selection in
-`DataFramePlotOptions` passed to `Catalog::plot(options)`, else every numeric key. Names in the call win
-over both, and a plot's own selection wins over the accessor's. Misuse (for example `all_features` together
-with `exclude_features`) throws a `pluss::Error` that says what was combined and what to do. See
-[`DataFramePlotAccessor::line`](../dataframe-plot/line.md) for the full rules and examples.
+record labels. With no y key named, the keys come from a key selection (`all_keys`, `include_keys` or `exclude_keys`) in the `keys` field of
+`CatalogStepPlotOptions`, else the accessor-level selection passed to `Catalog::plot(keys)`, else every numeric key. Names in
+the call win over both, and a plot's own selection wins over the accessor's. See [Selecting keys](line.md#selecting-keys)
+for the knobs, the precedence, the examples and the errors.
 
 ## Parameters
 
@@ -63,15 +61,16 @@ with `exclude_features`) throws a `pluss::Error` that says what was combined and
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
     Same three-step resolution as [`line()`](line.md).
 
-**options** (`StepPlotOptions`)
+**options** (`CatalogStepPlotOptions`)
 
-### `StepPlotOptions` fields
+### `CatalogStepPlotOptions` fields
 
 | Field | Type | Default |
 |---|---|---|
 | `alpha` | `double` | `1.0` |
 | `line_width` | `double` | `1.5` |
 | `align` | `XYAlignOptions` | default constructed |
+| `keys` | `KeySelection` | no knob set |
 
 `align` controls how a mismatched-length explicit `x_key`/y-key pair is reconciled
 (`Strict` throws, the default; `Inner` truncates; `PadScalar` pads) — see
@@ -119,7 +118,7 @@ chart.show();
 
 ![Output of Example 2](img/step-2.svg)
 
-Example 3. An explicit `StepPlotOptions`.
+Example 3. An explicit `CatalogStepPlotOptions`.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -129,7 +128,7 @@ auto weather = pluss::kindle::Catalog({
     "temp_c"_k = pluss::kindle::Stream(pluss::make_series({18.0, 19.5, 21.0, 20.0, 22.5})),
 });
 
-pluss::table::StepPlotOptions step_options;
+pluss::kindle::CatalogStepPlotOptions step_options;
 step_options.alpha = 0.7;
 step_options.line_width = 3.0;
 

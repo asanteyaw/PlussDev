@@ -350,13 +350,17 @@ std::vector<std::string> catalog_plottable_keys(const Catalog& base) {
   return out;
 }
 
-// The keys a plot draws: the named keys, or the keys of a feature selection, or (with neither)
-// every numeric key. The selection is resolved by the shared flash rules.
+// The words a Catalog selection error uses: a Catalog has keys, not features.
+inline constexpr pluss::table::detail::SelectionWords catalog_selection_words{
+    "key", "keys", "all_keys", "include_keys", "exclude_keys", "options.keys", "catalog"};
+
+// The keys a plot draws: the named keys, or the keys of a key selection, or (with neither)
+// every numeric key. The selection is resolved by the one shared selection resolver, worded for keys.
 std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
                                                    pluss::msharp::RangeView::Of<std::string_view> keys,
                                                    std::string_view where,
-                                                   const pluss::table::FeatureSelection& per_plot = {},
-                                                   const pluss::table::FeatureSelection& accessor = {},
+                                                   const KeySelection& per_plot = {},
+                                                   const KeySelection& accessor = {},
                                                    bool names_required = false,
                                                    std::optional<std::string_view> x_key = std::nullopt) {
   (void)names_required;
@@ -365,8 +369,9 @@ std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
     const auto all = base.keys();
     std::optional<std::string> x;
     if (x_key.has_value()) x = std::string(*x_key);
-    const auto picked = pluss::table::detail::resolve_feature_selection(
-        per_plot.any() ? per_plot : accessor,
+    const auto& chosen = per_plot.any() ? per_plot : accessor;
+    const auto picked = pluss::table::detail::resolve_plot_selection(
+        chosen.all_keys, chosen.include_keys, chosen.exclude_keys, catalog_selection_words,
         std::vector<std::string>(all.begin(), all.end()), catalog_plottable_keys(base), where, x);
     PLUSS_CHECK(!picked.empty(), std::string(where) + ": no plottable streams found");
     return picked;
@@ -377,6 +382,13 @@ std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
     out.emplace_back(key);
   }
   return out;
+}
+
+// A frame-style selection handed to a Catalog is a wording mistake, not a silent no-op.
+void catalog_reject_feature_selection(const pluss::table::FeatureSelection& features, std::string_view where) {
+  PLUSS_CHECK(!features.any(),
+              std::string(where) + ": a Catalog selects keys, not features. Use all_keys, include_keys or exclude_keys "
+              "(options.keys) instead of all_features, include_features or exclude_features.");
 }
 
 bool catalog_shelf_supports_hue(const pluss::table::Shelf& shelf) {
@@ -531,11 +543,12 @@ Studio catalog_make_xy_figure_aligned(const Catalog& base,
                                       pluss::msharp::RangeView::Of<std::string_view> y_keys,
                                       std::optional<std::string_view> x_key,
                                       const pluss::table::DataFramePlotOptions& plot_options,
+                                      const KeySelection& accessor_keys,
                                       const PlotOptions& style_options,
                                       std::string_view where,
                                       DrawFn&& draw) {
   const auto resolved_x = catalog_resolve_x_key(x_key, plot_options);
-  const auto names = catalog_resolve_plot_keys(base, y_keys, where, style_options.features, plot_options.selection(), true, resolved_x);
+  const auto names = catalog_resolve_plot_keys(base, y_keys, where, style_options.keys, accessor_keys, true, resolved_x);
   if (resolved_x.has_value()) {
     PLUSS_CHECK(base.has(*resolved_x), std::string(where) + ": unknown x key '" + std::string(*resolved_x) + "'");
   }
@@ -1068,8 +1081,18 @@ CatalogPlotAccessor Catalog::plot() const {
   return CatalogPlotAccessor(*this);
 }
 
+CatalogPlotAccessor Catalog::plot(const KeySelection& keys) const {
+  return CatalogPlotAccessor(*this, keys);
+}
+
 CatalogPlotAccessor Catalog::plot(const pluss::table::DataFramePlotOptions& options) const {
-  return CatalogPlotAccessor(*this, options);
+  catalog_reject_feature_selection(options.selection(), "Catalog::plot");
+  return CatalogPlotAccessor(*this, KeySelection{}, options);
+}
+
+CatalogPlotAccessor Catalog::plot(const KeySelection& keys, const pluss::table::DataFramePlotOptions& options) const {
+  catalog_reject_feature_selection(options.selection(), "Catalog::plot");
+  return CatalogPlotAccessor(*this, keys, options);
 }
 
 CatalogPlot3DAccessor Catalog::plot3d() const {
@@ -1080,20 +1103,20 @@ CatalogPlot3DAccessor Catalog::plot3d(const pluss::table::DataFramePlotOptions& 
   return CatalogPlot3DAccessor(*this, options);
 }
 
-CatalogPlotAccessor::CatalogPlotAccessor(Catalog base, pluss::table::DataFramePlotOptions options)
-    : base_(std::move(base)), options_(std::move(options)) {}
+CatalogPlotAccessor::CatalogPlotAccessor(Catalog base, KeySelection keys, pluss::table::DataFramePlotOptions options)
+    : base_(std::move(base)), keys_(std::move(keys)), options_(std::move(options)) {}
 
 pluss::pl::Studio CatalogPlotAccessor::line_y(pluss::msharp::RangeView::Of<std::string_view> y_keys,
                                             std::optional<std::string_view> x_key,
-                                            const pluss::table::LinePlotOptions& options) const {
+                                            const CatalogLinePlotOptions& options) const {
   return catalog_make_xy_figure_aligned(
-      base_, y_keys, x_key, options_, options, "Catalog::plot().line",
+      base_, y_keys, x_key, options_, keys_, options, "Catalog::plot().line",
       [](Pane& pane,
          const std::vector<double>& x_values,
          const std::vector<double>& y_values,
          const std::string& name,
          std::size_t index,
-         const pluss::table::LinePlotOptions& line_options) {
+         const CatalogLinePlotOptions& line_options) {
         auto& trace = flash::lineplot(pane, x_values, y_values);
         trace.label(name);
         catalog_style_trace(trace, index, line_options.alpha, line_options.line_width);
@@ -1102,15 +1125,15 @@ pluss::pl::Studio CatalogPlotAccessor::line_y(pluss::msharp::RangeView::Of<std::
 
 pluss::pl::Studio CatalogPlotAccessor::step_y(pluss::msharp::RangeView::Of<std::string_view> y_keys,
                                             std::optional<std::string_view> x_key,
-                                            const pluss::table::StepPlotOptions& options) const {
+                                            const CatalogStepPlotOptions& options) const {
   return catalog_make_xy_figure_aligned(
-      base_, y_keys, x_key, options_, options, "Catalog::plot().step",
+      base_, y_keys, x_key, options_, keys_, options, "Catalog::plot().step",
       [](Pane& pane,
          const std::vector<double>& x_values,
          const std::vector<double>& y_values,
          const std::string& name,
          std::size_t index,
-         const pluss::table::StepPlotOptions& step_options) {
+         const CatalogStepPlotOptions& step_options) {
         auto& trace = flash::stepplot(pane, x_values, y_values);
         trace.label(name);
         catalog_style_trace(trace, index, step_options.alpha, step_options.line_width);
@@ -1119,15 +1142,15 @@ pluss::pl::Studio CatalogPlotAccessor::step_y(pluss::msharp::RangeView::Of<std::
 
 pluss::pl::Studio CatalogPlotAccessor::area_y(pluss::msharp::RangeView::Of<std::string_view> y_keys,
                                             std::optional<std::string_view> x_key,
-                                            const pluss::table::AreaPlotOptions& options) const {
+                                            const CatalogAreaPlotOptions& options) const {
   return catalog_make_xy_figure_aligned(
-      base_, y_keys, x_key, options_, options, "Catalog::plot().area",
+      base_, y_keys, x_key, options_, keys_, options, "Catalog::plot().area",
       [](Pane& pane,
          const std::vector<double>& x_values,
          const std::vector<double>& y_values,
          const std::string& name,
          std::size_t index,
-         const pluss::table::AreaPlotOptions& area_options) {
+         const CatalogAreaPlotOptions& area_options) {
         auto& trace = flash::areaplot(pane, x_values, y_values, 0.0);
         trace.label(name);
         catalog_style_trace(trace, index, area_options.alpha, area_options.line_width);
@@ -1298,15 +1321,15 @@ pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
 
 pluss::pl::Studio CatalogPlotAccessor::bar_y(pluss::msharp::RangeView::Of<std::string_view> y_keys,
                                            std::optional<std::string_view> x_key,
-                                           const pluss::table::BarPlotOptions& options) const {
+                                           const CatalogBarPlotOptions& options) const {
   return catalog_make_xy_figure_aligned(
-      base_, y_keys, x_key, options_, options, "Catalog::plot().bar",
+      base_, y_keys, x_key, options_, keys_, options, "Catalog::plot().bar",
       [](Pane& pane,
          const std::vector<double>& x_values,
          const std::vector<double>& y_values,
          const std::string& name,
          std::size_t index,
-         const pluss::table::BarPlotOptions& bar_options) {
+         const CatalogBarPlotOptions& bar_options) {
         flash::BarPlotOptions core_options;
         core_options.horizontal = bar_options.horizontal;
         auto& trace = bar_options.horizontal ? flash::barplot(pane, y_values, x_values, core_options)
@@ -1317,26 +1340,26 @@ pluss::pl::Studio CatalogPlotAccessor::bar_y(pluss::msharp::RangeView::Of<std::s
 }
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, std::int64_t bins) const {
-  pluss::table::HistPlotOptions options;
+  CatalogHistPlotOptions options;
   options.bins = bins;
   return hist(key, options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
                                             std::int64_t bins) const {
-  pluss::table::HistPlotOptions options;
+  CatalogHistPlotOptions options;
   options.bins = bins;
   return hist(keys, options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key,
-                                            const pluss::table::HistPlotOptions& options) const {
+                                            const CatalogHistPlotOptions& options) const {
   return hist(pluss::msharp::RangeView::Of<std::string_view>({key}), options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                            const pluss::table::HistPlotOptions& options) const {
-  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().hist", options.features, options_.selection());
+                                            const CatalogHistPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().hist", options.keys, keys_);
   auto fig = make_catalog_studio();
   catalog_apply_figure_options(fig, options_);
   auto& pane = fig.pane2();
@@ -1354,26 +1377,26 @@ pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::st
 }
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, std::int64_t points) const {
-  pluss::table::DensityPlotOptions options;
+  CatalogDensityPlotOptions options;
   options.points = points;
   return density(key, options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
                                                std::int64_t points) const {
-  pluss::table::DensityPlotOptions options;
+  CatalogDensityPlotOptions options;
   options.points = points;
   return density(keys, options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key,
-                                               const pluss::table::DensityPlotOptions& options) const {
+                                               const CatalogDensityPlotOptions& options) const {
   return density(pluss::msharp::RangeView::Of<std::string_view>({key}), options);
 }
 
 pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                               const pluss::table::DensityPlotOptions& options) const {
-  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().density", options.features, options_.selection());
+                                               const CatalogDensityPlotOptions& options) const {
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().density", options.keys, keys_);
   auto fig = make_catalog_studio();
   catalog_apply_figure_options(fig, options_);
   auto& pane = fig.pane2();
@@ -1396,7 +1419,8 @@ pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of
 
 pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
                                                     const CatalogCorrHeatmapPlotOptions& options) const {
-  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().corr_heatmap", options.heatmap.features, options_.selection());
+  catalog_reject_feature_selection(options.heatmap.features, "Catalog::plot().corr_heatmap");
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().corr_heatmap", options.keys, keys_);
   PLUSS_CHECK(names.size() >= 2, "Catalog::plot().corr_heatmap: need at least two plottable streams");
 
   const auto global = catalog_build_global_pair_context(
@@ -1467,7 +1491,8 @@ pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::
 
 pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
                                                       const CatalogScatterMatrixPlotOptions& options) const {
-  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().scatter_matrix", options.matrix.features, options_.selection());
+  catalog_reject_feature_selection(options.matrix.features, "Catalog::plot().scatter_matrix");
+  const auto names = catalog_resolve_plot_keys(base_, keys, "Catalog::plot().scatter_matrix", options.keys, keys_);
   PLUSS_CHECK(names.size() >= 2, "Catalog::plot().scatter_matrix: need at least two plottable streams");
 
   const auto global = catalog_build_global_pair_context(
@@ -1565,18 +1590,18 @@ pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::
 }
 
 pluss::pl::Studio CatalogPlotAccessor::auto_plot() const {
-  return auto_plot(pluss::table::AutoPlotOptions{});
+  return auto_plot(CatalogAutoPlotOptions{});
 }
 
-pluss::pl::Studio CatalogPlotAccessor::auto_plot(const pluss::table::AutoPlotOptions& options) const {
+pluss::pl::Studio CatalogPlotAccessor::auto_plot(const CatalogAutoPlotOptions& options) const {
   PLUSS_CHECK(base_.defined(), "Catalog::plot().auto_plot: undefined handle");
   PLUSS_CHECK(!base_.empty(), "Catalog::plot().auto_plot: empty catalog");
-  const auto numeric_keys = catalog_resolve_plot_keys(base_, {}, "Catalog::plot().auto_plot", options.features, options_.selection());
+  const auto numeric_keys = catalog_resolve_plot_keys(base_, {}, "Catalog::plot().auto_plot", options.keys, keys_);
   if (numeric_keys.size() == 1) {
     return base_.keys(numeric_keys.front()).plot(options_).auto_plot();
   }
-  pluss::table::LinePlotOptions line_options;
-  line_options.features.include_features = numeric_keys;
+  CatalogLinePlotOptions line_options;
+  line_options.keys.include_keys = numeric_keys;
   return line(line_options);
 }
 
