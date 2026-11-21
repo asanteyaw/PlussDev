@@ -1,0 +1,77 @@
+name: Install static native dependencies
+description: >
+  Builds static libzip, Apache Arrow and Parquet (and SQLite3 and curl on Windows)
+  with a pinned vcpkg, so the PlussII archives carry Excel and Parquet support and
+  consumers install nothing. Exports VCPKG_ROOT, PLUSSII_VCPKG_TRIPLET and
+  PLUSSII_VCPKG_TOOLCHAIN for later steps.
+
+runs:
+  using: composite
+  steps:
+    - name: Select triplet
+      shell: bash
+      run: |
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          macOS-ARM64) triplet=arm64-osx-release ;;
+          macOS-X64) triplet=x64-osx-release ;;
+          Linux-X64) triplet=x64-linux-release ;;
+          Linux-ARM64) triplet=arm64-linux-release ;;
+          Windows-X64) triplet=x64-windows-static-release ;;
+          *) echo "Unsupported runner ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        temp="${RUNNER_TEMP}"
+        if [[ "${RUNNER_OS}" == "Windows" ]]; then temp="$(cygpath -m "${RUNNER_TEMP}")"; fi
+        root="${temp}/vcpkg"
+        echo "PLUSSII_VCPKG_TRIPLET=${triplet}" >> "$GITHUB_ENV"
+        echo "VCPKG_ROOT=${root}" >> "$GITHUB_ENV"
+        echo "PLUSSII_VCPKG_TOOLCHAIN=${root}/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${temp}/vcpkg-binary-cache" >> "$GITHUB_ENV"
+        echo "VCPKG_DISABLE_METRICS=1" >> "$GITHUB_ENV"
+        mkdir -p "${RUNNER_TEMP}/vcpkg-binary-cache"
+
+    - name: Restore vcpkg binary cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/vcpkg-binary-cache
+        key: vcpkg-native-${{ runner.os }}-${{ runner.arch }}-93ad765c7b66-${{ hashFiles('.github/actions/native-deps/action.yml') }}
+
+    - name: Install Linux build tools
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build pkg-config bison flex zip unzip curl tar
+
+    - name: Use system tools for vcpkg on Linux arm64
+      if: runner.os == 'Linux' && runner.arch == 'ARM64'
+      shell: bash
+      run: |
+        # vcpkg cannot download its own CMake and Ninja for Linux arm64.
+        echo "VCPKG_FORCE_SYSTEM_BINARIES=1" >> "$GITHUB_ENV"
+        python3 -m venv "${RUNNER_TEMP}/vcpkg-tools"
+        "${RUNNER_TEMP}/vcpkg-tools/bin/pip" install --quiet cmake ninja
+        echo "${RUNNER_TEMP}/vcpkg-tools/bin" >> "$GITHUB_PATH"
+
+    - name: Install macOS build tools
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        # Thrift (a Parquet dependency) needs a current bison; Apple's is too old.
+        brew install pkgconf bison flex
+        echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+        echo "$(brew --prefix flex)/bin" >> "$GITHUB_PATH"
+
+    - name: Fetch pinned vcpkg
+      shell: bash
+      run: |
+        mkdir -p "${VCPKG_ROOT}"
+        cd "${VCPKG_ROOT}"
+        git init -q
+        git fetch -q --depth 1 https://github.com/microsoft/vcpkg.git 93ad765c7b66ab9ce97469ec23a90b15c3a14ee5
+        git checkout -q FETCH_HEAD
+        if [[ "${RUNNER_OS}" == "Windows" ]]; then ./bootstrap-vcpkg.bat -disableMetrics; else ./bootstrap-vcpkg.sh -disableMetrics; fi
+
+    - name: Build static native libraries
+      shell: bash
+      run: |
+        packages=("arrow[parquet]" libzip)
+        if [[ "${RUNNER_OS}" == "Windows" ]]; then packages+=(sqlite3 curl); fi
+        "${VCPKG_ROOT}/vcpkg" install "${packages[@]}" --triplet "${PLUSSII_VCPKG_TRIPLET}" --clean-after-build

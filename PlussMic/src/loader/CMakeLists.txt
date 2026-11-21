@@ -18,10 +18,28 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ExcelLoader.cpp
 )
 
+# Release builds set these so a missing Excel or Parquet backend stops the
+# configuration instead of silently producing a library without that support.
+option(PLUSSMIC_REQUIRE_EXCEL "Fail configuration if Excel (libzip) support cannot be built" OFF)
+option(PLUSSMIC_REQUIRE_PARQUET "Fail configuration if Parquet (Arrow + Parquet C++) support cannot be built" OFF)
+# Link libzip, Arrow and Parquet statically and carry them inside the installed
+# distribution, so consumers install nothing for Excel or Parquet.
+option(PLUSSMIC_BUNDLE_NATIVE_DEPS "Bundle static libzip/Arrow/Parquet into the installed distribution" OFF)
+
+set(PLUSSMIC_NATIVE_BUNDLE_TARGETS "")
+
 # Prefer libzip discovered at the top-level via pkg-config, then fall back to
 # direct lookup with conda-friendly hints.
 set(PLUSSMIC_LIBZIP_INCLUDE_DIR "")
 set(PLUSSMIC_LIBZIP_LIBRARY "")
+set(PLUSSMIC_LIBZIP_TARGET "")
+
+if(PLUSSMIC_BUNDLE_NATIVE_DEPS)
+  find_package(libzip CONFIG QUIET)
+  if(TARGET libzip::zip)
+    set(PLUSSMIC_LIBZIP_TARGET libzip::zip)
+  endif()
+endif()
 
 if(DEFINED LIBZIP_INCLUDE_DIRS AND LIBZIP_INCLUDE_DIRS)
   list(GET LIBZIP_INCLUDE_DIRS 0 PLUSSMIC_LIBZIP_INCLUDE_DIR)
@@ -47,7 +65,14 @@ if(NOT PLUSSMIC_LIBZIP_LIBRARY)
       $ENV{CONDA_PREFIX}/lib
   )
 endif()
-if(PLUSSMIC_LIBZIP_INCLUDE_DIR AND PLUSSMIC_LIBZIP_LIBRARY)
+if(PLUSSMIC_LIBZIP_TARGET)
+  # Linked through plussmic_native_link below so the export carries the bundle.
+  list(APPEND PLUSSMIC_NATIVE_BUNDLE_TARGETS ${PLUSSMIC_LIBZIP_TARGET})
+  target_link_libraries(PlussMic PRIVATE $<BUILD_INTERFACE:${PLUSSMIC_LIBZIP_TARGET}>)
+  target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_LIBZIP=1)
+elseif(PLUSSMIC_BUNDLE_NATIVE_DEPS)
+  target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_LIBZIP=0)
+elseif(PLUSSMIC_LIBZIP_INCLUDE_DIR AND PLUSSMIC_LIBZIP_LIBRARY)
   target_include_directories(PlussMic PRIVATE ${PLUSSMIC_LIBZIP_INCLUDE_DIR})
   pluss_register_sdk_zip_link("${PLUSSMIC_LIBZIP_LIBRARY}")
   if(TARGET pluss_sdk_zip_link)
@@ -59,6 +84,10 @@ if(PLUSSMIC_LIBZIP_INCLUDE_DIR AND PLUSSMIC_LIBZIP_LIBRARY)
 else()
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_LIBZIP=0)
 endif()
+if(PLUSSMIC_REQUIRE_EXCEL AND NOT PLUSSMIC_LIBZIP_TARGET
+   AND NOT (PLUSSMIC_LIBZIP_INCLUDE_DIR AND PLUSSMIC_LIBZIP_LIBRARY))
+  message(FATAL_ERROR "PlussMic Excel support requires libzip, but it was not found")
+endif()
 
 # Optional native parquet-cpp support (Apache Arrow + Parquet C++).
 set(PLUSSMIC_PARQUET_TARGET "")
@@ -67,23 +96,58 @@ set(PLUSSMIC_ARROW_TARGET "")
 find_package(Arrow CONFIG QUIET)
 find_package(Parquet CONFIG QUIET)
 
-if(TARGET Arrow::arrow)
+if(PLUSSMIC_BUNDLE_NATIVE_DEPS)
+  # A bundled distribution links Arrow and Parquet statically.
+  if(TARGET Arrow::arrow_static)
+    set(PLUSSMIC_ARROW_TARGET Arrow::arrow_static)
+  endif()
+  if(TARGET Parquet::parquet_static)
+    set(PLUSSMIC_PARQUET_TARGET Parquet::parquet_static)
+  endif()
+  if(NOT PLUSSMIC_ARROW_TARGET AND TARGET Arrow::arrow)
+    set(PLUSSMIC_ARROW_TARGET Arrow::arrow)
+  endif()
+  if(NOT PLUSSMIC_PARQUET_TARGET AND TARGET Parquet::parquet)
+    set(PLUSSMIC_PARQUET_TARGET Parquet::parquet)
+  endif()
+elseif(TARGET Arrow::arrow)
   set(PLUSSMIC_ARROW_TARGET Arrow::arrow)
 elseif(TARGET Arrow::arrow_shared)
   set(PLUSSMIC_ARROW_TARGET Arrow::arrow_shared)
 endif()
 
-if(TARGET Parquet::parquet)
-  set(PLUSSMIC_PARQUET_TARGET Parquet::parquet)
-elseif(TARGET Parquet::parquet_shared)
-  set(PLUSSMIC_PARQUET_TARGET Parquet::parquet_shared)
+if(NOT PLUSSMIC_BUNDLE_NATIVE_DEPS)
+  if(TARGET Parquet::parquet)
+    set(PLUSSMIC_PARQUET_TARGET Parquet::parquet)
+  elseif(TARGET Parquet::parquet_shared)
+    set(PLUSSMIC_PARQUET_TARGET Parquet::parquet_shared)
+  endif()
 endif()
 
 if(PLUSSMIC_ARROW_TARGET AND PLUSSMIC_PARQUET_TARGET)
-  target_link_libraries(PlussMic PRIVATE ${PLUSSMIC_ARROW_TARGET} ${PLUSSMIC_PARQUET_TARGET})
+  if(PLUSSMIC_BUNDLE_NATIVE_DEPS)
+    target_link_libraries(PlussMic PRIVATE
+      $<BUILD_INTERFACE:${PLUSSMIC_PARQUET_TARGET}> $<BUILD_INTERFACE:${PLUSSMIC_ARROW_TARGET}>)
+    list(APPEND PLUSSMIC_NATIVE_BUNDLE_TARGETS ${PLUSSMIC_PARQUET_TARGET} ${PLUSSMIC_ARROW_TARGET})
+  else()
+    target_link_libraries(PlussMic PRIVATE ${PLUSSMIC_ARROW_TARGET} ${PLUSSMIC_PARQUET_TARGET})
+  endif()
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_PARQUET_CPP=1)
 else()
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_PARQUET_CPP=0)
+endif()
+if(PLUSSMIC_REQUIRE_PARQUET AND NOT (PLUSSMIC_ARROW_TARGET AND PLUSSMIC_PARQUET_TARGET))
+  message(FATAL_ERROR "PlussMic Parquet support requires Arrow and Parquet C++, but their CMake targets were not found")
+endif()
+
+# Carry the static native libraries inside the distribution.
+if(PLUSSMIC_BUNDLE_NATIVE_DEPS AND PLUSSMIC_NATIVE_BUNDLE_TARGETS)
+  include("${CMAKE_SOURCE_DIR}/cmake/PlussNativeBundle.cmake")
+  pluss_native_bundle(NativeBundle TARGETS ${PLUSSMIC_NATIVE_BUNDLE_TARGETS})
+  add_library(plussmic_native_link INTERFACE)
+  target_link_libraries(plussmic_native_link INTERFACE $<INSTALL_INTERFACE:Pluss::NativeBundle>)
+  install(TARGETS plussmic_native_link EXPORT PlussTargets)
+  target_link_libraries(PlussMic PUBLIC plussmic_native_link)
 endif()
 
 # Optional URL loading support for CSV/TXT/Excel loaders.

@@ -50,6 +50,7 @@ jobs:
             PlussPl
             PlussQit
             PlussTils
+            .github/actions
             ExLibs
             cmake
             docs
@@ -67,18 +68,18 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
 
-      - name: Install Windows native dependencies
-        if: runner.os == 'Windows'
-        run: vcpkg install sqlite3:x64-windows-static curl:x64-windows-static
+      # Static libzip, Arrow and Parquet go inside the archive; users install nothing.
+      - name: Build static native dependencies
+        uses: ./.github/actions/native-deps
 
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
@@ -95,6 +96,9 @@ jobs:
 
   publish:
     needs: build-archive
+    # Only main (Transient) and version tags (Steady) publish; a run from any
+    # other branch builds and validates the archives but never touches a release.
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout version
