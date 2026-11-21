@@ -17,9 +17,11 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 `Shelf` exposes nested accessors, each with its own method pages and sidebar:
 
 - `cast()` -> [`cast`](shelf_cast_accessor_api_reference.md)
+- `group()` -> [`group`](shelf_group_accessor_api_reference.md)
 - `label()` -> [`label`](shelf_label_accessor_api_reference.md)
 - `nt()` -> [`nt`](shelf_note_accessor_api_reference.md)
 - `tl()` -> [`tl`](shelf_timeline_accessor_api_reference.md)
+- `sort()` -> [`sort`](shelf_sort_accessor_api_reference.md)
 - `ts()` -> [`ts`](shelf_ts_accessor_api_reference.md)
 - `plot()` -> [`plot`](shelf_plot_api_reference.md)
 
@@ -28,8 +30,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :maxdepth: 1
 
 shelf_cast_accessor_api_reference
+shelf_group_accessor_api_reference
 shelf_label_accessor_api_reference
 shelf_note_accessor_api_reference
+shelf_sort_accessor_api_reference
 shelf_timeline_accessor_api_reference
 shelf_ts_accessor_api_reference
 shelf_plot_api_reference

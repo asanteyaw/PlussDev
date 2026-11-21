@@ -44,8 +44,7 @@ supplies the actual grouping key(s) and produces a `ShelfGrouped`:
 | `filter` | Method | `Shelf filter(const Shelf& keep) const` |
 
 The full chain reads `shelf.group(options).by(key).agg({...})` (one row per group) or
-`.transform(op)` (one row per *input* row, broadcasting each group's aggregate back out) —
-the same split `pandas`' `groupby().agg()` vs. `groupby().transform()` draws.
+`.transform(op)` (one row per *input* row, broadcasting each group's aggregate back out).
 
 ## Parameters
 

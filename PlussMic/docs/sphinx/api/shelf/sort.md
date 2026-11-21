@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Shelf::sort
 
 [Back to Shelf API Reference](../../shelf_api_reference)
@@ -5,50 +7,66 @@
 ## Signature
 
 ```cpp
-ShelfSortBuilder Shelf::sort(bool ascending = true, bool nulls_last = true)
+ShelfSortBuilder Shelf::sort(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Starts sorting the values of the shelf. `sort` itself does not reorder anything: it binds the shelf, the direction and the
+`NULL` placement, and returns a [`ShelfSortBuilder`](../../shelf_sort_accessor_api_reference) whose
+[`asc`](../shelf-sort/asc.md), [`desc`](../shelf-sort/desc.md) or [`done`](../shelf-sort/done.md) produces the sorted shelf.
+The builder also converts to `Shelf` on its own.
 
 ## Parameters
 
-**ascending**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+**ascending** (`bool`, default `true`)
 
-**nulls_last**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+The direction used by [`done`](../shelf-sort/done.md) and by the implicit conversion. `asc()` and `desc()` ignore it.
+
+**nulls_last** (`bool`, default `true`)
+
+Where `NULL` values go: at the end when `true`, at the start when `false`.
 
 ## Returns
 
 `ShelfSortBuilder`
-    Value produced by this call.
+    The binder. Call [`asc`](../shelf-sort/asc.md), [`desc`](../shelf-sort/desc.md) or [`done`](../shelf-sort/done.md) on it.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Sort ascending, descending and with the builder's own direction.
 
 ```cpp
-auto shelf = pluss::table::Shelf(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = shelf.sort(true, true);
+auto values = Shelf(pluss::make_series({30.0, 10.0, 20.0}));
+
+std::cout << values.sort().asc();
+std::cout << values.sort().desc();
+std::cout << values.sort(false).done();
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+0  10
+1  20
+2  30
+ptype: Series
+0  30
+1  20
+2  10
+ptype: Series
+0  30
+1  20
+2  10
+ptype: Series
 ```
 
+## Notes
 
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
-    <span class="label">Previous</span>
-    <span class="title">slice</span>
-  </a>
-  <a class="next-link" href="split.html">
-    <span class="label">Next</span>
-    <span class="title">split</span>
-  </a>
-</div>
+- Every method of the builder has its own page in the [`ShelfSortBuilder` reference](../../shelf_sort_accessor_api_reference).
+
+## See Also
+
+- [`TimeSeriesAccessor::sort`](../shelf-ts/sort.md): order values by a separate time axis.
