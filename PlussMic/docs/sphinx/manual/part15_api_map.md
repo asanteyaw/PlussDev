@@ -54,8 +54,6 @@ See [Shelf API Reference](../shelf_api_reference.md).
 | --- | --- |
 | CSV options | `ReadCsvOptions`, `WriteCsvOptions` |
 | Excel options | `ReadExcelOptions`, `WriteExcelOptions` |
-| Raw ingest | `read_csv_raw_batch`, `read_excel_raw_batch`, `read_json_raw_text` |
-| Neutral ingest | `read_csv_batch`, `read_excel_batch` |
 | DataFrame load | `load_csv`, `load_txt`, `load_excel`, `load_json`, `load_parquet`, `load` |
 | Save | `save_csv`, `save_txt`, `save_excel`, `save_json`, `save_parquet`, `save_as` |
 | Workbook | `LoadResult`, `Workbook`, `SheetNames` |

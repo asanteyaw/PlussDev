@@ -448,19 +448,6 @@ auto loaded = pluss::table::DataFrame::load("csv", "data.csv");
 auto parquet = pluss::table::DataFrame::load("parquet", "flights.parquet");
 ```
 
-## Raw batches
-
-Use raw or neutral batch APIs when you need to inspect parsed input before it
-becomes a `DataFrame`:
-
-```cpp
-auto raw = pluss::loader::read_csv_raw_batch("data.csv", {{"ncases", 100}});
-auto batch = pluss::loader::read_csv_batch("data.csv", {{"ncases", 100}});
-```
-
-Raw batches keep strings/notes close to file contents. Neutral batches carry
-`Shelf` values but do not own a frame.
-
 ## `CsvCaseReader::next`
 
 ### API Signature
