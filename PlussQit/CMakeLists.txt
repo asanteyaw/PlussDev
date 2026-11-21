@@ -85,6 +85,7 @@ option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (Catch2)" O
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
 option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimelineIndexAccessor)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
+option(PLUSSQIT_ENABLE_MPS "Build the Apple GPU (MPS) backend on Apple platforms. OFF builds CPU-only with the MPS stubs, a lighter archive." ON)
 option(PLUSSQIT_ENABLE_CUDA "Enable CUDA runtime probing for CodeM (kernels still WIP)" OFF)
 option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
 set(PLUSSQIT_CPU_BLAS_BACKEND "AUTO" CACHE STRING
@@ -255,7 +256,7 @@ list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/
 # Arithmetic.cpp owns the add kernel; BinaryOps.cpp still defines a legacy copy.
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/cpu/BinaryOps.cpp")
 
-if(APPLE)
+if(APPLE AND PLUSSQIT_ENABLE_MPS)
   set(PLUSSQIT_CODEM_MPS_SRC
     src/CodeM/native/mps/BufferCache.mm
     src/CodeM/native/mps/MPSAllocator.mm
@@ -1584,7 +1585,7 @@ if(PLUSSQIT_BUILD_CODEM)
       set(_pluss_has_accelerate 1)
       set(_pluss_has_accelerate_new_lapack 1)
     endif()
-    if(PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
+    if(PLUSSQIT_ENABLE_MPS AND PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
       target_link_libraries(plussqit_codem PUBLIC
         "-framework Metal"
         "-framework MetalPerformanceShaders"

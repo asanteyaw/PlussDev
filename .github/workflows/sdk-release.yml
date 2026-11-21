@@ -23,7 +23,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, macos-15-intel, ubuntu-24.04, ubuntu-24.04-arm, windows-2022]
+        include:
+          # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
+          - { name: macos-15, os: macos-15, mps: 'off' }
+          - { name: macos-15-mps, os: macos-15, mps: 'on' }
+          - { name: macos-15-intel, os: macos-15-intel, mps: 'off' }
+          - { name: ubuntu-24.04, os: ubuntu-24.04, mps: 'off' }
+          - { name: ubuntu-24.04-arm, os: ubuntu-24.04-arm, mps: 'off' }
+          - { name: windows-2022, os: windows-2022, mps: 'off' }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
@@ -71,7 +78,7 @@ jobs:
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
@@ -82,7 +89,7 @@ jobs:
       - name: Upload validated ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: plussii-cpp-${{ matrix.os }}
+          name: plussii-cpp-${{ matrix.name }}
           path: build/plussii-cpp-*.zip
           if-no-files-found: error
 

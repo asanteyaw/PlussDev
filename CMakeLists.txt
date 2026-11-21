@@ -559,7 +559,14 @@ install(FILES
 set(CPACK_PACKAGE_NAME "plussii-cpp")
 set(CPACK_PACKAGE_VENDOR "PlussII")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+# An Apple Silicon build with the Apple GPU (MPS) backend carries an "-mps" suffix; the CPU-only build keeps the plain name.
+set(PLUSSII_DISTRIBUTION_SUFFIX "" CACHE STRING "Optional suffix for the distribution name, such as mps or cuda")
+if(PLUSSII_DISTRIBUTION_SUFFIX)
+  set(_plussii_suffix "-${PLUSSII_DISTRIBUTION_SUFFIX}")
+else()
+  set(_plussii_suffix "")
+endif()
+set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}${_plussii_suffix}")
 set(CPACK_GENERATOR "TGZ;ZIP")
 
 set(PLUSS_SDK_STAGING_DIR
