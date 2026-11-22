@@ -2,6 +2,11 @@
 
 include(CMakeFindDependencyMacro)
 
+# Static libzip/Arrow/Parquet shipped inside the archive (no install needed).
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/PlussNativeBundle.cmake")
+  include("${CMAKE_CURRENT_LIST_DIR}/PlussNativeBundle.cmake")
+endif()
+
 set(_pluss_targets_file "${CMAKE_CURRENT_LIST_DIR}/PlussTargets.cmake")
 set(_pluss_targets_content "")
 if(EXISTS "${_pluss_targets_file}")

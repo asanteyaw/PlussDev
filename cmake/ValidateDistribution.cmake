@@ -76,16 +76,25 @@ endif()
 
 if(WIN32)
   set(consumer_binary "${consumer_build_dir}/Release/pluss_sdk_consumer.exe")
+  set(native_io_binary "${consumer_build_dir}/Release/pluss_sdk_native_io.exe")
   if(NOT EXISTS "${consumer_binary}")
     set(consumer_binary "${consumer_build_dir}/pluss_sdk_consumer.exe")
+    set(native_io_binary "${consumer_build_dir}/pluss_sdk_native_io.exe")
   endif()
 else()
   set(consumer_binary "${consumer_build_dir}/pluss_sdk_consumer")
+  set(native_io_binary "${consumer_build_dir}/pluss_sdk_native_io")
 endif()
 
 execute_process(COMMAND "${consumer_binary}" RESULT_VARIABLE run_result)
 if(NOT run_result EQUAL 0)
   message(FATAL_ERROR "Consumer failed after linking the distribution archive")
+endif()
+
+# Excel and Parquet must work from the archive alone.
+execute_process(COMMAND "${native_io_binary}" RESULT_VARIABLE native_io_result)
+if(NOT native_io_result EQUAL 0)
+  message(FATAL_ERROR "Excel/Parquet round trip failed after linking the distribution archive")
 endif()
 
 message(STATUS "Validated PlussII C++ distribution: ${DISTRIBUTION_ARCHIVE}")

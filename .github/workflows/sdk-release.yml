@@ -9,6 +9,10 @@ on:
         default: transient
         options:
           - transient
+      only:
+        description: Build only the matrix entry with this name (empty builds all)
+        type: string
+        default: ''
   schedule:
     - cron: "23 4 * * *"
   push:
@@ -19,18 +23,38 @@ permissions:
   contents: write
 
 jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - id: select
+        shell: python
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          import json, os
+          # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
+          entries = [
+              {"name": "macos-15", "os": "macos-15", "mps": "off"},
+              {"name": "macos-15-mps", "os": "macos-15", "mps": "on"},
+              {"name": "macos-15-intel", "os": "macos-15-intel", "mps": "off"},
+              {"name": "ubuntu-24.04", "os": "ubuntu-24.04", "mps": "off"},
+              {"name": "ubuntu-24.04-arm", "os": "ubuntu-24.04-arm", "mps": "off"},
+              {"name": "windows-2022", "os": "windows-2022", "mps": "off"},
+          ]
+          only = os.environ.get("ONLY", "")
+          if only:
+              entries = [e for e in entries if e["name"] == only]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("matrix=" + json.dumps(entries) + "\n")
+
   build-archive:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
-          - { name: macos-15, os: macos-15, mps: 'off' }
-          - { name: macos-15-mps, os: macos-15, mps: 'on' }
-          - { name: macos-15-intel, os: macos-15-intel, mps: 'off' }
-          - { name: ubuntu-24.04, os: ubuntu-24.04, mps: 'off' }
-          - { name: ubuntu-24.04-arm, os: ubuntu-24.04-arm, mps: 'off' }
-          - { name: windows-2022, os: windows-2022, mps: 'off' }
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
@@ -50,6 +74,7 @@ jobs:
             PlussPl
             PlussQit
             PlussTils
+            .github/actions
             ExLibs
             cmake
             docs
@@ -67,18 +92,47 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
 
-      - name: Install Windows native dependencies
+      # Static libzip, Arrow and Parquet go inside the archive; users install nothing.
+      - name: Build static native dependencies
+        uses: ./.github/actions/native-deps
+
+      - name: Diagnose Windows native dependencies
         if: runner.os == 'Windows'
-        run: vcpkg install sqlite3:x64-windows-static curl:x64-windows-static
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $inst = "$env:VCPKG_ROOT/installed/$env:PLUSSII_VCPKG_TRIPLET"
+          Write-Host "triplet=$env:PLUSSII_VCPKG_TRIPLET root=$env:VCPKG_ROOT"
+          Get-ChildItem "$env:VCPKG_ROOT/installed" | Format-Table Name
+          Get-ChildItem "$inst/include/sqlite3*.h" | Format-Table FullName
+          Get-ChildItem "$inst/lib" -Filter "sqlite3*" | Format-Table FullName
+          & "$env:VCPKG_ROOT/vcpkg" list | Select-String "sqlite3|libzip|arrow|curl"
+          Write-Host "CMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
+          New-Item -ItemType Directory -Force probe | Out-Null
+          $probe = @(
+            'cmake_minimum_required(VERSION 3.28)',
+            'project(probe LANGUAGES CXX)',
+            'message(STATUS "PREFIX=${CMAKE_PREFIX_PATH}")',
+            'foreach(pkg libzip Arrow Parquet CURL)',
+            '  find_package(${pkg} CONFIG)',
+            '  message(STATUS "PROBE ${pkg} found=${${pkg}_FOUND} dir=${${pkg}_DIR}")',
+            'endforeach()',
+            'find_package(SQLite3)',
+            'message(STATUS "PROBE SQLite3 found=${SQLite3_FOUND} ${SQLite3_INCLUDE_DIR} ${SQLite3_LIBRARY}")'
+          )
+          Set-Content probe/CMakeLists.txt $probe
+          cmake -S probe -B probe/build -T ClangCL -DCMAKE_BUILD_TYPE=Release "-DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET" "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
 
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+        run: |
+          # Quote every -D value: an unquoted -DX=$env:Y reaches CMake as the literal text "$env:Y".
+          cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON "-DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET" "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
@@ -95,6 +149,9 @@ jobs:
 
   publish:
     needs: build-archive
+    # Only main (Transient) and version tags (Steady) publish; a run from any
+    # other branch builds and validates the archives but never touches a release.
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout version

@@ -2023,7 +2023,11 @@ CsvRawBatch read_parquet_raw_batch_cpp(std::string_view filepath, const Config& 
   auto infile = *maybe_file;
 
   std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto st = parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader);
+  auto reader_result = parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  auto st = reader_result.status();
+  if (st.ok()) {
+    reader = std::move(*reader_result);
+  }
   PLUSS_CHECK(st.ok(), "loader::read_parquet_raw_batch: failed to open parquet reader: " + st.ToString());
 
   std::shared_ptr<arrow::Schema> schema;
@@ -2108,7 +2112,11 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
   auto infile = *maybe_file;
 
   std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto st = parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader);
+  auto reader_result = parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  auto st = reader_result.status();
+  if (st.ok()) {
+    reader = std::move(*reader_result);
+  }
   PLUSS_CHECK(st.ok(), "loader::load_parquet: failed to open parquet reader: " + st.ToString());
 
   std::shared_ptr<arrow::Schema> schema;
