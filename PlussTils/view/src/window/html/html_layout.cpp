@@ -786,8 +786,8 @@ constexpr int kSortGutterPx = kSortArrowPx + kSortGutterPad;
 // 2 * kSortTriangleHeightPx tall, centred on the header row.
 constexpr int kSortTriangleHeightPx = 5;
 constexpr int kSortTriangleBasePx = 10;
-// Air between the two triangles (0 = they touch).
-constexpr int kSortTriangleGapPx = 0;
+// Air between the two triangles, so they read as two controls (0 = they touch).
+constexpr int kSortTriangleGapPx = 2;
 // A header alone never makes a column wider than this much text; longer names wrap onto a
 // second line (and end in "...") so the sort arrows always stay on screen.
 constexpr int kHeaderTextBudgetPx = 200;
