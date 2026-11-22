@@ -30,11 +30,11 @@ dependencies (SQLite, libzip, Arrow and Parquet), then configure with the matchi
 toolset and triplet in PowerShell:
 
 ```powershell
-& "$env:VCPKG_ROOT\vcpkg.exe" install sqlite3 libzip "arrow[parquet]" --triplet x64-windows-static-release
+& "$env:VCPKG_ROOT\vcpkg.exe" install sqlite3 libzip "arrow[parquet]" --triplet x64-windows-static-md
 cmake -S . -B build -G "Visual Studio 17 2022" -T ClangCL `
   -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF `
   -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON `
-  -DVCPKG_TARGET_TRIPLET=x64-windows-static-release `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static-md `
   "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 cmake --build build --config Release --target plussii_distribution_stage --parallel 4
 ```
@@ -209,7 +209,7 @@ nothing else to install for them.
 
 Release archives are built with `-DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON`, which links
 static libzip, Arrow and Parquet (from a static vcpkg triplet such as
-`arm64-osx-release`, `x64-linux-release` or `x64-windows-static-release`) and
+`arm64-osx-release`, `x64-linux-release` or `x64-windows-static-md`) and
 copies them into the archive under `lib/pluss-native`. With
 `-DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON` the configuration
 fails when either backend is missing instead of building without it.
