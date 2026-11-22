@@ -442,6 +442,11 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_SOURCE_DIR}/test/window_smoke.cpp
     )
     target_link_libraries(plussview_window_smoke PRIVATE PlussTilsView)
+    # The viewer's Excel export pulls in libzip, which needs zlib; a test that opens the window links it too.
+    find_package(ZLIB QUIET)
+    if(ZLIB_FOUND)
+        target_link_libraries(plussview_window_smoke PRIVATE ZLIB::ZLIB)
+    endif()
     set_target_properties(plussview_window_smoke PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON

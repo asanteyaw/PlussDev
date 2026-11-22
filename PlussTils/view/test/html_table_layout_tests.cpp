@@ -185,6 +185,37 @@ void test_user_sized_columns_leave_no_gap() {
   expect(restored.widths == initial.widths, "removing the override restores the original widths");
 }
 
+void test_other_columns_absorb_a_resize_in_a_wide_table() {
+  // With many columns, resizing one must keep the table the width it was: the columns that were
+  // not touched share the difference, as long as they stay above the squeeze floor.
+  const std::string html = table_html(5, 3);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  const int total = sum(initial.widths);
+  const auto geo = resolve_table_geometry(initial.stats.table_font_px);
+  for (const int column : {0, 2, 4}) {
+    for (const int target : {geo.min_resize * 2, initial.widths[static_cast<std::size_t>(column)] + 60}) {
+      std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+      widths["grid"][column] = target;
+      HtmlRenderConfig config{};
+      config.table_column_widths = &widths;
+      const auto resized = render(html, viewport, config);
+      expect(resized.widths[static_cast<std::size_t>(column)] == target, "the resized column keeps its width");
+      expect(std::abs(sum(resized.widths) - total) <= 5,
+             "the table keeps its width when column " + std::to_string(column) + " becomes " + std::to_string(target) +
+                 " (" + std::to_string(sum(resized.widths)) + " vs " + std::to_string(total) + ")");
+    }
+  }
+  // Two columns sized by the user: the other three still make up the difference.
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths["grid"][1] = geo.min_resize * 3;
+  widths["grid"][3] = geo.min_resize * 2;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  const auto two = render(html, viewport, config);
+  expect(std::abs(sum(two.widths) - total) <= 5, "two sized columns still leave the table at its width");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -211,6 +242,7 @@ int main() {
     test_export_leaves_out_sort_arrows();
     test_resize_matches_a_fresh_layout();
     test_user_sized_columns_leave_no_gap();
+    test_other_columns_absorb_a_resize_in_a_wide_table();
     test_pdf_export_writes_a_valid_file();
     std::cout << "[PASS] html_table_layout_tests\n";
     return 0;

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -17,6 +18,11 @@ using pluss::view::window::HtmlScrollModel;
 using pluss::view::window::PointI;
 using pluss::view::window::RectI;
 using pluss::view::window::SizeI;
+
+// A writable scratch file on any platform (the tests used a hardcoded /tmp, which Windows lacks).
+[[nodiscard]] std::string scratch_path(const std::string& name) {
+  return (std::filesystem::temp_directory_path() / name).string();
+}
 
 [[noreturn]] void fail(const std::string& message) {
   throw std::runtime_error(message);
@@ -148,7 +154,7 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
   expect(runtime.submit(scene), "initial scroll validation frame should render");
   const std::vector<std::uint8_t> initial_pixels(
       runtime.canvas().bytes().begin(), runtime.canvas().bytes().end());
-  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_initial.png"),
+  expect(save_canvas(runtime.canvas(), scratch_path("plussview_scroll_initial.png")),
          "initial scroll validation frame should save");
 
   model.update_metrics(stats);
@@ -172,7 +178,7 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
                      runtime.canvas().bytes().begin(),
                      runtime.canvas().bytes().end()),
          "scrolling should produce a visibly different rendered frame");
-  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_scrolled.png"),
+  expect(save_canvas(runtime.canvas(), scratch_path("plussview_scroll_scrolled.png")),
          "scrolled validation frame should save");
 
   const std::vector<std::uint8_t> table_scrolled_pixels(
@@ -217,7 +223,7 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
                      runtime.canvas().bytes().begin(),
                      runtime.canvas().bytes().end()),
          "document scrolling should visibly differ from nested table scrolling");
-  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_document.png"),
+  expect(save_canvas(runtime.canvas(), scratch_path("plussview_scroll_document.png")),
          "document-scrolled validation frame should save");
 }
 
