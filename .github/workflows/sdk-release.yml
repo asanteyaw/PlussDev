@@ -23,19 +23,38 @@ permissions:
   contents: write
 
 jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - id: select
+        shell: python
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          import json, os
+          # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
+          entries = [
+              {"name": "macos-15", "os": "macos-15", "mps": "off"},
+              {"name": "macos-15-mps", "os": "macos-15", "mps": "on"},
+              {"name": "macos-15-intel", "os": "macos-15-intel", "mps": "off"},
+              {"name": "ubuntu-24.04", "os": "ubuntu-24.04", "mps": "off"},
+              {"name": "ubuntu-24.04-arm", "os": "ubuntu-24.04-arm", "mps": "off"},
+              {"name": "windows-2022", "os": "windows-2022", "mps": "off"},
+          ]
+          only = os.environ.get("ONLY", "")
+          if only:
+              entries = [e for e in entries if e["name"] == only]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("matrix=" + json.dumps(entries) + "\n")
+
   build-archive:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
-          - { name: macos-15, os: macos-15, mps: 'off' }
-          - { name: macos-15-mps, os: macos-15, mps: 'on' }
-          - { name: macos-15-intel, os: macos-15-intel, mps: 'off' }
-          - { name: ubuntu-24.04, os: ubuntu-24.04, mps: 'off' }
-          - { name: ubuntu-24.04-arm, os: ubuntu-24.04-arm, mps: 'off' }
-          - { name: windows-2022, os: windows-2022, mps: 'off' }
-    if: github.event_name != 'workflow_dispatch' || inputs.only == '' || inputs.only == matrix.name
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
