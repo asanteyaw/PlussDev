@@ -2211,6 +2211,10 @@ struct TableLayout {
         if (column < 0 || static_cast<std::size_t>(column) >= plan.widths.size()) {
           continue;
         }
+        if (geometry_px.slack == HtmlTableSlack::LastColumn && plan.widths.size() > 1 &&
+            static_cast<std::size_t>(column) + 1 == plan.widths.size()) {
+          continue;  // the automatic column is never sized by hand
+        }
         int target = width;
         if (width <= 0) {
           // Double-click on a border: fit the header and every displayed value.
@@ -2224,17 +2228,14 @@ struct TableLayout {
       }
       if (geometry_px.slack == HtmlTableSlack::LastColumn && plan.widths.size() > 1) {
         // The last column keeps the table at the panel's width: it takes whatever the other columns
-        // leave, and the width the user gave it (or its natural width) is the least it will shrink to,
-        // after which the table scrolls instead.
+        // leave, down to the squeeze floor, after which the table scrolls instead.
         const std::size_t last = plan.widths.size() - 1;
         int others = 0;
         for (std::size_t c = 0; c < last; ++c) {
           others += plan.widths[c];
         }
-        const auto sized = width_overrides->find(static_cast<int>(last));
-        const int least = sized != width_overrides->end() ? plan.widths[last] : geometry_px.squeeze_floor;
         const int remainder = content_w - others;
-        plan.widths[last] = std::max(least, remainder);
+        plan.widths[last] = std::max(geometry_px.squeeze_floor, remainder);
         plan.single_line[last] = plan.widths[last] < base_widths[last];  // squeezed below its first-layout width
       }
     }
@@ -4164,7 +4165,11 @@ int render_table(Scene& scene,
         const int edge = cell_x + cell_w;
         const int hx0 = std::max(edge - kResizeHandlePx / 2, scrollable_left);
         const int hx1 = std::min(edge + kResizeHandlePx / 2, scrollable_right);
-        if (hx1 > hx0) {
+        // When the last column takes the slack it is the table's automatic column: it has no divider
+        // to drag or double-click, because its width is whatever the other columns leave.
+        const bool automatic_column =
+            table_geo.slack == HtmlTableSlack::LastColumn && plan.widths.size() > 1 && c + 1 == plan.widths.size();
+        if (hx1 > hx0 && !automatic_column) {
           resize_handles.push_back(HtmlHitRegion{.rect = RectI{hx0, row_y, hx1 - hx0, row_h},
                                                  .action = "table.resize.column",
                                                  .target = table_target,

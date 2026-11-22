@@ -22,7 +22,8 @@ namespace pluss::view::window {
 // What happens to the room a table's columns leave over (or lack) when the user sizes a column.
 enum class HtmlTableSlack : unsigned char {
   Continuation = 0,  // the grid carries on past the last column as blank columns, as in a spreadsheet
-  LastColumn = 1,    // the last column stretches or shrinks to keep the table at the panel's width
+  LastColumn = 1,    // (default) the last column is the table's automatic column: it stretches or shrinks to keep
+                     // the table at the panel's width, and has no divider of its own
 };
 
 // Every size a table is laid out with, in em: multiples of the table's own font size, so the

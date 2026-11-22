@@ -48,6 +48,15 @@ void expect(const bool condition, const std::string& message) {
   return html;
 }
 
+// Sets how a table treats leftover room for the length of a test, then puts the setting back.
+struct ScopedSlack {
+  explicit ScopedSlack(const HtmlTableSlack policy) : previous(html_table_geometry().slack) {
+    html_table_geometry().slack = policy;
+  }
+  ~ScopedSlack() { html_table_geometry().slack = previous; }
+  HtmlTableSlack previous;
+};
+
 struct Rendered {
   HtmlRenderStats stats{};
   std::vector<HtmlHitRegion> hits{};
@@ -165,6 +174,7 @@ void test_resize_matches_a_fresh_layout() {
 }
 
 void test_resizing_changes_only_that_column() {
+  const ScopedSlack slack(HtmlTableSlack::Continuation);  // this test is about sized columns keeping their width
   // Like a spreadsheet: the column you size changes alone, and every other column keeps its width.
   const std::string html = table_html(5, 3);
   const SizeI viewport{1400, 600};
@@ -192,6 +202,7 @@ void test_resizing_changes_only_that_column() {
 }
 
 void test_a_narrow_table_ends_in_a_continuation_not_a_hole() {
+  const ScopedSlack slack(HtmlTableSlack::Continuation);  // this test is about sized columns keeping their width
   const std::string html = table_html(3, 3);
   const SizeI viewport{1400, 600};
   const auto initial = render(html, viewport);
@@ -235,6 +246,7 @@ void test_a_narrow_table_ends_in_a_continuation_not_a_hole() {
 }
 
 void test_double_click_fit_and_restore() {
+  const ScopedSlack slack(HtmlTableSlack::Continuation);  // this test is about sized columns keeping their width
   const std::string html = table_html(3, 3);
   const SizeI viewport{1400, 600};
   const auto initial = render(html, viewport);
@@ -308,6 +320,7 @@ void test_resizing_a_column_never_changes_a_row() {
 }
 
 void test_a_number_that_does_not_fit_is_marked_and_never_cut() {
+  const ScopedSlack slack(HtmlTableSlack::Continuation);  // this test is about sized columns keeping their width
   const std::string html =
       "<html><head><style>table{width:100%;max-height:28.6em;} th,td{padding:8px;}</style></head><body><table "
       "id=\"grid\"><thead><tr><th>name</th><th>amount</th></tr></thead><tbody><tr><td>a long text value that will "
@@ -343,20 +356,21 @@ void test_last_column_can_take_the_slack() {
   const SizeI viewport{1400, 600};
   const auto initial = render(html, viewport);
   const int total = sum(initial.widths);
-  html_table_geometry().slack = HtmlTableSlack::LastColumn;
+  const ScopedSlack slack(HtmlTableSlack::LastColumn);
   const auto geo = resolve_table_geometry(initial.stats.table_font_px);
   std::unordered_map<std::string, std::unordered_map<int, int>> widths;
   widths["grid"][1] = geo.min_resize * 2;
   HtmlRenderConfig config{};
   config.table_column_widths = &widths;
   const auto narrowed = render(html, viewport, config);
-  html_table_geometry().slack = HtmlTableSlack::Continuation;
   expect(narrowed.widths[1] == widths["grid"][1], "the dragged column keeps its width");
   expect(narrowed.widths[0] == initial.widths[0] && narrowed.widths[2] == initial.widths[2] &&
              narrowed.widths[3] == initial.widths[3],
          "the columns in between do not move");
-  expect(std::abs(sum(narrowed.widths) - total) <= 3, "the last column keeps the table at its width");
-  expect(narrowed.widths[4] > initial.widths[4], "the last column grew into the freed space");
+  expect(narrowed.stats.table_content_rect.width >= narrowed.stats.table_viewport_rect.width - 3,
+         "the last column keeps the table at the panel's width");
+  expect(narrowed.widths.size() == 4 || narrowed.widths[4] <= 0,
+         "the automatic last column has no divider to drag or double-click");
 }
 
 void test_pdf_export_writes_a_valid_file() {
