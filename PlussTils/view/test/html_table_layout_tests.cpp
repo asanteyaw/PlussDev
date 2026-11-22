@@ -337,6 +337,28 @@ void test_a_number_that_does_not_fit_is_marked_and_never_cut() {
          "text that does not fit ends in an ellipsis");
 }
 
+void test_last_column_can_take_the_slack() {
+  // The alternative policy: the last column keeps the table at the panel's width, and nothing else moves.
+  const std::string html = table_html(5, 3);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  const int total = sum(initial.widths);
+  html_table_geometry().slack = HtmlTableSlack::LastColumn;
+  const auto geo = resolve_table_geometry(initial.stats.table_font_px);
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths["grid"][1] = geo.min_resize * 2;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  const auto narrowed = render(html, viewport, config);
+  html_table_geometry().slack = HtmlTableSlack::Continuation;
+  expect(narrowed.widths[1] == widths["grid"][1], "the dragged column keeps its width");
+  expect(narrowed.widths[0] == initial.widths[0] && narrowed.widths[2] == initial.widths[2] &&
+             narrowed.widths[3] == initial.widths[3],
+         "the columns in between do not move");
+  expect(std::abs(sum(narrowed.widths) - total) <= 3, "the last column keeps the table at its width");
+  expect(narrowed.widths[4] > initial.widths[4], "the last column grew into the freed space");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -365,6 +387,7 @@ int main() {
     test_resizing_changes_only_that_column();
     test_a_narrow_table_ends_in_a_continuation_not_a_hole();
     test_double_click_fit_and_restore();
+    test_last_column_can_take_the_slack();
     test_header_never_gets_taller_when_a_column_shrinks();
     test_resizing_a_column_never_changes_a_row();
     test_a_number_that_does_not_fit_is_marked_and_never_cut();

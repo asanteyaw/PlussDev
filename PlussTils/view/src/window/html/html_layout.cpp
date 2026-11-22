@@ -2222,6 +2222,21 @@ struct TableLayout {
         plan.widths[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
         plan.single_line[static_cast<std::size_t>(column)] = false;  // a column the user sized is not squeezed
       }
+      if (geometry_px.slack == HtmlTableSlack::LastColumn && plan.widths.size() > 1) {
+        // The last column keeps the table at the panel's width: it takes whatever the other columns
+        // leave, and the width the user gave it (or its natural width) is the least it will shrink to,
+        // after which the table scrolls instead.
+        const std::size_t last = plan.widths.size() - 1;
+        int others = 0;
+        for (std::size_t c = 0; c < last; ++c) {
+          others += plan.widths[c];
+        }
+        const auto sized = width_overrides->find(static_cast<int>(last));
+        const int least = sized != width_overrides->end() ? plan.widths[last] : geometry_px.squeeze_floor;
+        const int remainder = content_w - others;
+        plan.widths[last] = std::max(least, remainder);
+        plan.single_line[last] = plan.widths[last] < base_widths[last];  // squeezed below its first-layout width
+      }
     }
     const std::size_t visible_columns = plan.widths.size();
     // Which columns need their cells measured again: all of them for a fresh layout, otherwise

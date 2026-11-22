@@ -19,6 +19,12 @@ class VirtualTableModel;
 
 namespace pluss::view::window {
 
+// What happens to the room a table's columns leave over (or lack) when the user sizes a column.
+enum class HtmlTableSlack : unsigned char {
+  Continuation = 0,  // the grid carries on past the last column as blank columns, as in a spreadsheet
+  LastColumn = 1,    // the last column stretches or shrinks to keep the table at the panel's width
+};
+
 // Every size a table is laid out with, in em: multiples of the table's own font size, so the
 // geometry scales with the theme and font instead of being tied to a pixel count. This is the one
 // place to change a table's proportions; the layout, the drag limits and the exports all read it
@@ -32,6 +38,7 @@ struct HtmlTableGeometry {
   // Past the last column the grid carries on as blank columns this wide (a spreadsheet's empty cells),
   // so a table narrower than its panel never ends in a hole.
   double continuation_column_em{8.0};
+  HtmlTableSlack slack{HtmlTableSlack::Continuation};
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
   // Lines of text a cell may use before it ends in an ellipsis. Like a spreadsheet, text does not wrap
@@ -68,6 +75,7 @@ struct HtmlTableGeometryPx {
   int squeeze_floor{0};
   int min_resize{0};
   int continuation_column{0};
+  HtmlTableSlack slack{HtmlTableSlack::Continuation};
   std::size_t fit_sample_rows{0};
   int header_max_lines{1};
   int value_max_lines{1};
@@ -105,6 +113,7 @@ struct HtmlTableGeometryPx {
   out.squeeze_floor = px(g.squeeze_floor_em);
   out.min_resize = px(g.min_resize_em);
   out.continuation_column = px(g.continuation_column_em);
+  out.slack = g.slack;
   out.fit_sample_rows = g.fit_sample_rows;
   out.header_max_lines = std::max(1, g.header_max_lines);
   out.value_max_lines = std::max(1, g.value_max_lines);
