@@ -271,7 +271,7 @@ max abs diff between Shelf and FeatureBatch forms = 0
 ## See Also
 
 - [`FrequencyEncoderOptions`](FrequencyEncoderOptions.md) — the options
-  struct.
+  value.
 - [`OneHotEncoder`](OneHotEncoder.md) — the wider-output alternative that
   preserves category identity, not just popularity.
 - [`encoding/Introduction`](Introduction.md) — the contract shared across

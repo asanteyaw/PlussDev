@@ -34,12 +34,10 @@ general call themselves.
   are required.
 
 `options` (`ScoreRankOptions`, default `{}`)
-: ```cpp
-  struct classic::ScoreRankOptions {
-    std::int64_t top_k = 10;
-    bool absolute_score = true;
-  };
-  ```
+: | Field | Type | Default | Meaning |
+  |---|---|---|---|
+  | `top_k` | `std::int64_t` | `10` | How many top-ranked feature indices to return. |
+  | `absolute_score` | `bool` | `true` | Rank by the absolute score. |
 
   `top_k` (default `10`) — how many top-ranked feature indices to return,
   capped at `feature_count()` (never an error to ask for more than

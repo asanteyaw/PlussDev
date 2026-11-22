@@ -108,7 +108,7 @@ Reach for these when a transformer is a first-class object in its own right — 
 need to inspect its learned parameters, reuse it across several frames, or wire
 it into something that is not a `lymph` model.
 
-The two surfaces share the same option structs and the same underlying
+The two surfaces share the same options and the same underlying
 transforms, so `prep::stage::standard_scaler(opts)` and
 `prep::StandardScaler{opts}` do exactly the same arithmetic; only the return type
 and the ownership differ.

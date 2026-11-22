@@ -64,7 +64,7 @@ reference already documents.
 
 ## See Also
 
-- [`GRUOptions`](GRUOptions.md) -- the options struct.
+- [`GRUOptions`](GRUOptions.md) -- the options.
 - [`RNN`](RNN.md) -- the cheaper, ungated alternative.
 - [`LSTM`](LSTM.md) -- the other gated alternative, with a separate cell
   state.

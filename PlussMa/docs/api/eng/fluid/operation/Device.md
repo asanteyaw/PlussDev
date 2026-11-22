@@ -23,7 +23,7 @@ Names the family of the link that an `Action` changes. The index of the action c
 
 ## Returns
 
-An enumeration; `Action::device`.
+Used by `Action::device`.
 
 ## Errors
 

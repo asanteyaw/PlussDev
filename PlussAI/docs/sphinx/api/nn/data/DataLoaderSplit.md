@@ -1,6 +1,6 @@
 # `pluss::loader::DataLoaderSplit`
 
-A plain result struct: the train/val/test [`DataLoader`](DataLoader.md)
+A plain result: the train/val/test [`DataLoader`](DataLoader.md)
 trio produced by one [`split_loaders`](split_loaders.md) call -- exactly
 [`split_fields`](split_fields.md)'s own three parts, each already
 wrapped in its own `DataLoader`. Never constructed directly by calling

@@ -175,7 +175,7 @@ softmax on MPS: OK, platform=2
 
 ## See Also
 
-- [`SoftmaxOptions`](SoftmaxOptions.md) -- the options struct.
+- [`SoftmaxOptions`](SoftmaxOptions.md) -- the options.
 - [`LogSoftmax`](LogSoftmax.md) -- the numerically stabler log-domain form,
   usually preferred right before a loss like cross-entropy.
 

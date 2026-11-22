@@ -215,7 +215,7 @@ MultiheadAttention (1 head, identity projections) == scaled_attention directly: 
 
 ## See Also
 
-- [`AttentionOptions`](AttentionOptions.md) -- the options struct.
+- [`AttentionOptions`](AttentionOptions.md) -- the options.
 - [`multihead_attention`](multihead_attention.md) -- runs this once per
   head, with learned projections around it.
 - [`MultiheadAttention`](../attention/MultiheadAttention.md) -- the

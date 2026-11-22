@@ -19,7 +19,7 @@ It is the exact-match alternative to [`join_asof`](join_asof.md). Nothing is
 matched approximately here. The union clock contains only real timestamps that
 appear on at least one side.
 
-The returned `AlignUnion` struct contains:
+The returned `AlignUnion` contains:
 
 - `index`
   The union time axis as a `Timeline`.
@@ -45,7 +45,7 @@ The other `Timeline::TimelineIndexAccessor` to align against.
 ## Returns
 
 `AlignUnion`
-    A struct containing the union axis and both side indexers.
+    A value containing the union axis and both side indexers.
 
 ## Examples
 

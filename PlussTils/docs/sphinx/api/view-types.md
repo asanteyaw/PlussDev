@@ -2,7 +2,7 @@
 
 [Back to PlussView](view.md) · [PlussView API Reference](../api_reference.md)
 
-These four plain structs are the vocabulary every other PlussView type is built from. `PointI` is a pixel position, `SizeI` a width and a height, and `RectI` a rectangle with both. `RectI::empty()` is true when the width or the height is not positive, which is how a canvas and the renderer decide a rectangle has nothing to draw. `Color` holds four 8-bit channels, defaulting to opaque black; `Color::rgba` is the usual way to build one, with alpha defaulting to fully opaque.
+These four plain values are the vocabulary every other PlussView type is built from. `PointI` is a pixel position, `SizeI` a width and a height, and `RectI` a rectangle with both. `RectI::empty()` is true when the width or the height is not positive, which is how a canvas and the renderer decide a rectangle has nothing to draw. `Color` holds four 8-bit channels, defaulting to opaque black; `Color::rgba` is the usual way to build one, with alpha defaulting to fully opaque.
 
 ## Fields
 

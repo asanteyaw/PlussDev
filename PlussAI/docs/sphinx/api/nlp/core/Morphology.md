@@ -155,11 +155,11 @@ logic.
 ## Guidance
 
 Read `kind` and `casing` first; they summarize the rest. The boolean
-flags are cheaper to test in a branch than comparing enums, and both
+flags are cheaper to test in a branch than comparing categorical values, and both
 answer the same questions. `shape` and `prefix`/`suffix` are the features
 to reach for when building a classical model over tokens.
 
-The two enumerations this struct uses are:
+The two enumerations this value uses are:
 
 - `CaseKind`: `None`, `Lower`, `Upper`, `Title`, `Mixed`. `Title` means
   the first letter is uppercase and the rest lowercase (`Laurel`);
@@ -178,7 +178,7 @@ The two enumerations this struct uses are:
 ## Practical Examples
 
 These examples read morphology from a tokenized document, so the values
-come from a real analysis rather than hand-built structs.
+come from a real analysis rather than hand-built values.
 
 ### Example 1
 
@@ -249,7 +249,7 @@ number is_number_like=1 has_digit=1
 
 ### Example 3
 
-Reading the casing enum and the length of a word, to show that the enum
+Reading the casing value and the length of a word, to show that the value
 is a plain integral value a caller can branch on.
 
 ```cpp

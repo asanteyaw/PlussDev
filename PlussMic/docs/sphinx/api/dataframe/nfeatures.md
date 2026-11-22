@@ -62,7 +62,7 @@ length of [`features()`](features.md)'s returned name list.
 ## See Also
 
 - [`DataFrame::ncases`](ncases.md): the companion count for rows instead of columns.
-- [`DataFrame::shape`](shape.md): both counts together as one struct.
+- [`DataFrame::shape`](shape.md): both counts together as one value.
 - [`DataFrame::features`](features.md): the actual ordered name list this count
   matches the length of.
 

@@ -69,8 +69,8 @@ ended.
 
 - [`TrainOptions`](TrainOptions.md) -- the field this nests under.
 - [`ValidationPolicy`](ValidationPolicy.md) -- `monitor`/`direction`,
-  read together with this struct.
+  read together with this value.
 - [`EarlyStopCallback`](../callback/EarlyStopCallback.md) -- the
   consumer; its own accessors (`best_value`, `best_epoch`,
-  `stopped_epoch`, `wait_count`) expose what this struct's fields
+  `stopped_epoch`, `wait_count`) expose what this value's fields
   produced during the most recent run.

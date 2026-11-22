@@ -20,7 +20,7 @@ a caller having to remember the restore call itself — see
 static void nn::GradMode::set_enabled(bool enabled) noexcept;
 ```
 
-`GradMode` has no constructor of its own to call — it is a plain struct of
+`GradMode` has no constructor of its own to call — it is a plain value of
 two static methods, never instantiated.
 
 ## Construction

@@ -335,8 +335,8 @@ max abs diff between Shelf and FeatureBatch forms = 0
 
 ## See Also
 
-- [`OneHotEncoderOptions`](OneHotEncoderOptions.md) — the options struct,
-  including the shared `CategoryOverflowPolicy` enum.
+- [`OneHotEncoderOptions`](OneHotEncoderOptions.md) — the options,
+  including the shared `CategoryOverflowPolicy`.
 - [`OrdinalEncoder`](OrdinalEncoder.md) / [`BaseNEncoder`](BaseNEncoder.md) —
   narrower-output alternatives for ordered or high-cardinality categories.
 - [`encoding/Introduction`](Introduction.md) — the contract shared across

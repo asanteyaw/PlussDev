@@ -186,7 +186,7 @@ pieces meet continuously at |error| = beta, with no discontinuity
 
 ## See Also
 
-- [`SmoothL1Options`](SmoothL1Options.md) -- the options struct.
+- [`SmoothL1Options`](SmoothL1Options.md) -- the options.
 - [`L1`](L1.md) -- what this reduces to exactly at `beta = 0`.
 - [`Huber`](Huber.md) -- a related but numerically different
   quadratic/linear loss.

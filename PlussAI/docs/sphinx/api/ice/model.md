@@ -1,6 +1,6 @@
 # `pluss::ai::ice::model`
 
-`model` owns [`Model`](model/Model.md), the base class every trainable
+`model` owns [`Model`](model/Model.md), the base type every trainable
 `ice` model derives from -- directly, or through
 [`Outline`](outline/Outline.md) for the common case of a plain chain of
 layers. Define `forward`/`compute_loss`, get `learn`/`infer`/`assess`/

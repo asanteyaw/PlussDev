@@ -1,12 +1,12 @@
 # Models
 
-The model a [`Field`](field/Field.md) prices: a [`Model`](model/Model.md) holds one of six families, each a plain struct of `Series` parameters, and exposes them as a flat vector so that an optimiser can move them. [`Kind`](model/Kind.md) names the families and fixes the parameter order. The structs ([`BlackScholes`](model/BlackScholes.md), [`Heston`](model/Heston.md), [`Bates`](model/Bates.md), [`Sabr`](model/Sabr.md), [`RoughHeston`](model/RoughHeston.md), [`RoughBergomi`](model/RoughBergomi.md)) document each parameter and its domain.
+The model a [`Field`](field/Field.md) prices: a [`Model`](model/Model.md) holds one of six families, each a plain value of `Series` parameters, and exposes them as a flat vector so that an optimiser can move them. [`Kind`](model/Kind.md) names the families and fixes the parameter order. The values ([`BlackScholes`](model/BlackScholes.md), [`Heston`](model/Heston.md), [`Bates`](model/Bates.md), [`Sabr`](model/Sabr.md), [`RoughHeston`](model/RoughHeston.md), [`RoughBergomi`](model/RoughBergomi.md)) document each parameter and its domain.
 
 | You want | Use |
 |---|---|
 | A model from plain numbers | [`Model::make`](model/Model/make.md) |
 | The parameters as a vector, or to set them from one | [`Model::parameters`](model/Model/parameters.md) |
-| The concrete struct inside a `Model` | [`holds`](model/Model/holds.md), [`as`](model/Model/as.md), [`visit`](model/Model/visit.md) |
+| The concrete value inside a `Model` | [`holds`](model/Model/holds.md), [`as`](model/Model/as.md), [`visit`](model/Model/visit.md) |
 | Domains and the Feller warning | [`validate`](model/Model/validate.md) |
 
 ## The Surface

@@ -46,7 +46,7 @@ tokens and the alignment fields, so the gold documents may carry other annotatio
 
 A `TagScore` with `doc_count` set to the number of pairs, `token_count` to the total
 number of tokens, `correct_count` to the number of matching tags, and `accuracy` to the
-ratio of the last two. The struct is described on its own page.
+ratio of the last two. The value is described on its own page.
 
 ## Errors
 

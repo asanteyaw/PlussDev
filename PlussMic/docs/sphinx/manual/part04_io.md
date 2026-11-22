@@ -3,7 +3,7 @@
 PlussMic has two public I/O styles:
 
 - `DataFrame::load_*` and `df.save_*` convenience methods.
-- `pluss::loader::*` functions and option structs for lower-level control.
+- `pluss::loader::*` functions and options for lower-level control.
 
 Most users should start with `DataFrame` convenience methods.
 
@@ -22,7 +22,7 @@ default numeric case labels, and returns a `DataFrame`.
 The loader has two public configuration styles:
 
 - initializer-list config entries, which are compact and convenient;
-- typed option structs, which are explicit and better for production code.
+- typed options, which are explicit and better for production code.
 
 Limit cases and select features with config entries:
 

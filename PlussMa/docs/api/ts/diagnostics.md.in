@@ -2,7 +2,7 @@
 
 `diagnostics` describes a series before a model is chosen: its autocorrelation and partial autocorrelation functions, and the tests that read them — the Ljung–Box test for white noise, the augmented Dickey–Fuller and KPSS tests for a unit root and for stationarity, and the ARCH-LM test for volatility clustering.
 
-The tests return a result struct holding the statistic, its p-value, the critical value at the requested level and a `reject` flag; `ljung_box` returns one entry per requested lag set. The two unit-root tests have opposite null hypotheses (ADF: a unit root; KPSS: stationarity), so use them together.
+The tests return a result holding the statistic, its p-value, the critical value at the requested level and a `reject` flag; `ljung_box` returns one entry per requested lag set. The two unit-root tests have opposite null hypotheses (ADF: a unit root; KPSS: stationarity), so use them together.
 
 ## The Surface
 

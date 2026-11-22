@@ -96,7 +96,7 @@ benefit to projecting when `hidden_size` alone is already the right width.
 
 ## See Also
 
-- [`LSTM`](LSTM.md) -- the only consumer of this options struct.
+- [`LSTM`](LSTM.md) -- the only consumer of these options.
 - [`RNNOptions`](RNNOptions.md) / [`GRUOptions`](GRUOptions.md) -- the
   same shared fields on the other two recurrent architectures, neither of
   which has a projection.

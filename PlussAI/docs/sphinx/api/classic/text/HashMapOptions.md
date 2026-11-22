@@ -93,4 +93,4 @@ biasing column magnitudes upward.
 
 - [`HashMapper`](HashMapper.md) — the sole consumer.
 - [`LexiconMapOptions`](LexiconMapOptions.md) — the vocabulary-backed
-  counterpart, sharing this struct's tokenization fields exactly.
+  counterpart, sharing this value's tokenization fields exactly.

@@ -36,7 +36,7 @@ The file to read.
 **config** (`const pluss::loader::Config&`, optional)
 
 A generic, format-agnostic configuration scribble, translated internally into the
-format-specific options struct.
+format-specific options.
 
 ## Returns
 

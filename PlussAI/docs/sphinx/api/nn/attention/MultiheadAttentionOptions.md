@@ -135,7 +135,7 @@ weight matrix per example or the full per-head detail.
 ## See Also
 
 - [`MultiheadAttention`](MultiheadAttention.md) -- the only consumer of
-  this options struct.
+  these options.
 - [`TransformerEncoderLayerOptions`](TransformerEncoderLayerOptions.md) --
   builds its internal `self_attn` from a `MultiheadAttentionOptions`
   derived from its own `d_model`/`nhead`/`dropout`/`bias`.

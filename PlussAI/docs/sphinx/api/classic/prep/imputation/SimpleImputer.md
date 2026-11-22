@@ -223,8 +223,8 @@ data=[[42]]
 
 ## See Also
 
-- [`SimpleImputerOptions`](SimpleImputerOptions.md) — the options struct,
-  including the `SimpleImputerStrategy` enum.
+- [`SimpleImputerOptions`](SimpleImputerOptions.md) — the options,
+  including the `SimpleImputerStrategy`.
 - [`NeighborImputer`](NeighborImputer.md) / [`IterativeImputer`](IterativeImputer.md) —
   the two imputers that use *other* feature values, not just a feature's own
   statistic.

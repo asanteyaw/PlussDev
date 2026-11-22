@@ -7,7 +7,7 @@
 
 [Back to `module::Model`](../Model.md)
 
-Whether the model currently holds a given family struct.
+Whether the model currently holds a given family.
 
 ## Signature
 
@@ -17,11 +17,11 @@ template <SupportedModel M> [[nodiscard]] bool module::Model::holds() const;
 
 ## What It Does
 
-`holds<model::Heston>()` is true when the held struct is a `Heston`. Test before [`as`](as.md), which throws if the family is wrong.
+`holds<model::Heston>()` is true when the held model is a `Heston`. Test before [`as`](as.md), which throws if the family is wrong.
 
 ## Returns
 
-`true` if the held struct is an `M`.
+`true` if the held model is an `M`.
 
 ## Practical Examples
 
@@ -111,7 +111,7 @@ true
 ## See Also
 
 - [`Model`](../Model.md): the class
-- [`as`](as.md): access the struct
+- [`as`](as.md): access the value
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

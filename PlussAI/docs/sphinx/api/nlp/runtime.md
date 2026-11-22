@@ -11,7 +11,7 @@ vectors. A [`TransformerTextEncoder`](runtime/TransformerTextEncoder.md) or an
 [`LstmTextEncoder`](runtime/LstmTextEncoder.md) contextualizes them. [`mean_pool`](runtime/mean_pool.md) or
 [`last_pool`](runtime/last_pool.md) reduces each sequence to one vector.
 
-Configuration lives in three option structs: [`SequenceOptions`](runtime/SequenceOptions.md) for how text becomes
+Configuration lives in three options: [`SequenceOptions`](runtime/SequenceOptions.md) for how text becomes
 ids, [`EmbeddingOptions`](runtime/EmbeddingOptions.md) for the vectors, and the neural options of the encoder.
 Every stage that reads a batch checks that the batch's layout matches its own, so a mismatch fails where it
 happens rather than producing silently wrong results.

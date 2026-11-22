@@ -696,7 +696,7 @@ Use direct calls when you already know the solver family you want.
 
 ### Inputs
 
-- solver-specific config structs and callbacks
+- solver-specific config values and callbacks
 
 ### Output
 
@@ -704,7 +704,7 @@ Use direct calls when you already know the solver family you want.
 
 ### Options
 
-- all solver configs are strongly typed structs, no string configs
+- all solver configs are strongly typed values, no string configs
 
 ### Examples
 
@@ -722,7 +722,7 @@ const auto out = dfo::nelder_mead_minimizer(
 
 ### Expected output
 
-- solver returns minimizer, scalar minimum, status enum, and iteration/evaluation diagnostics.
+- solver returns minimizer, scalar minimum, status value, and iteration/evaluation diagnostics.
 
 ## Choosing The Right Solver Quickly
 

@@ -854,7 +854,7 @@ This section enumerates all user-facing option fields for constrained smooth sol
 
 ### Inputs
 
-- typed option structs
+- typed options
 
 ### Output
 
@@ -995,7 +995,7 @@ This section lists all DFO family option dimensions that users can tune directly
 
 ### Inputs
 
-- DFO options structs
+- DFO options
 
 ### Output
 
@@ -1022,7 +1022,7 @@ This section lists all DFO family option dimensions that users can tune directly
 - stopping tolerances (`mesh_tolerance`, `step_tolerance`, `value_tolerance`, constraint tolerances)
 - budgets (`max_iterations`, `max_evaluations`, `time_limit_seconds`)
 - mesh geometry (`initial_mesh_size`, `max_mesh_size`, expansion/contraction)
-- polling/search enums (`poll_pattern`, `polling_order`, `search_strategy`)
+- polling/search choices (`poll_pattern`, `polling_order`, `search_strategy`)
 - constraint policy (`constraint_policy`)
 - scaling (`mesh_scaling`, NUPS parameters)
 - caching, bounds, linear constraints, nonlinear callback

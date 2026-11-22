@@ -15,7 +15,7 @@ template <class... Layers>
 explicit pluss::ai::ice::Outline::Outline(Layers&&... layers);
 ```
 
-`final` -- not intended as a further base class. Every argument is
+`final` -- not intended as a further base type. Every argument is
 forwarded straight into the owned `Schedule`'s own constructor; see
 [`Outline`'s own Introduction](Outline/Introduction.md) for the
 registration step that follows.

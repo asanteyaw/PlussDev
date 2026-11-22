@@ -29,7 +29,7 @@ Same as [`line()`](line.md)'s `x`.
 
 **options** (`BarPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::bar`](../../api/dataframe-plot/bar.md)
 (`ci_enabled`, `ci_level`, `horizontal`, `align`). `ci_enabled = true` still aggregates
 rows sharing the same `x` position into a mean-plus-confidence-interval bar, exactly as

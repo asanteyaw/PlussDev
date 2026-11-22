@@ -257,7 +257,7 @@ folds.size() = 6 (expected 2 * 3 = 6)
 
 - [`SplitPlan`](SplitPlan.md) / [`IndexSplit`](IndexSplit.md) — the
   returned types.
-- [`SplitOptions`](SplitOptions.md) — the options struct.
+- [`SplitOptions`](SplitOptions.md) — the options.
 - [`holdout`](holdout.md) — the single-partition counterpart.
 - [`ts_crossval_plan`](ts_crossval_plan.md) — the chronological-order
   variant, for time-ordered data.

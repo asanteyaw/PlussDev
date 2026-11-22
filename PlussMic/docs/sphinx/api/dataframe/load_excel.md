@@ -73,7 +73,7 @@ behavior as `sheet_names`.
 (`const pluss::loader::ReadExcelOptions&`)
 
 Equivalent settings expressed as a reusable config object, inline entries, or a typed
-options struct — covering sheet selection, header row handling, and multi-row header
+options — covering sheet selection, header row handling, and multi-row header
 merging, for callers who want to configure everything in one object rather than a
 chain of positional parameters.
 

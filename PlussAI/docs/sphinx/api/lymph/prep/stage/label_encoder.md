@@ -101,7 +101,7 @@ stage_count = 1, trained = true
 
 ### Example 2
 
-Standalone, showing the 0-based codes. `label_encoder` and `ordinal_encoder` share their option struct; only the `one_based` default differs.
+Standalone, showing the 0-based codes. `label_encoder` and `ordinal_encoder` share their options; only the `one_based` default differs.
 
 ```cpp
 #include <pluss/pluss.h>

@@ -113,7 +113,7 @@ copy or store it freely.
   `encoded_params` — `pluss::Series`
   : `[trials.size(), 6]` — every candidate's six fields encoded to
     `double`: `objective`/`regularization`/`fit_intercept` as their raw
-    enum/bool values; `regularization_strength`/`robust_transition` through
+    categorical/bool values; `regularization_strength`/`robust_transition` through
     a signed `log1p` (so `0` encodes to `0` and large magnitudes compress),
     named with the `_slog` suffix above; `elastic_l1_ratio` verbatim.
 

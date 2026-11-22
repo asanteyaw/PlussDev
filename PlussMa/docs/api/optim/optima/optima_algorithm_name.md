@@ -114,7 +114,7 @@ default algorithm: SequentialQP
 
 ## See Also
 
-- [`OptimaAlgorithm`](OptimaAlgorithm.md): the enumeration
+- [`OptimaAlgorithm`](OptimaAlgorithm.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -89,7 +89,7 @@ such as operational days, shifted session boundaries, or reporting cutovers.
 ## Returns
 
 `ResampleBins`
-    A small struct containing:
+    A small value containing:
 
 - `labels`
   The output bin labels as a `Timeline`.

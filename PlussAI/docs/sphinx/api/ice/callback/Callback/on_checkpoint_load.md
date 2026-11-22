@@ -40,7 +40,7 @@ event, or to react to state this callback itself persisted via
 
 ## Errors
 
-None from the base class; whatever an override throws propagates out
+None from the base type; whatever an override throws propagates out
 of the run and triggers [`on_exception`](on_exception.md) instead.
 
 ## Practical Examples

@@ -254,7 +254,7 @@ MPS like the rest of this family.
 
 ## See Also
 
-- [`PReLUOptions`](PReLUOptions.md) -- the options struct.
+- [`PReLUOptions`](PReLUOptions.md) -- the options.
 - [`LeakyReLU`](LeakyReLU.md) -- the same piecewise-linear shape with a
   fixed, non-learnable negative slope instead.
 

@@ -17,7 +17,7 @@ choosing between three schemes via the `encoding` argument: `"base64"` (the
 default), `"hex"`, or `"url"` — a direct forward to
 [`Shelf::encode()`](../shelf/encode.md). Requires the bound shelf to be
 `Note`-kind. Unlike most methods in this family, `encode()` doesn't validate its
-argument against an enum — any other string throws.
+argument against a fixed list — any other string throws.
 
 - **`"base64"`**: standard Base64 (RFC 4648), using the classic alphabet (`A`-`Z`,
   `a`-`z`, `0`-`9`, `+`, `/`) with `=` padding to a multiple of 4 output characters.

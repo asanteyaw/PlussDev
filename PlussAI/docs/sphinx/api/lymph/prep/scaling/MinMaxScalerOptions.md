@@ -2,7 +2,7 @@
 
 `options::MinMaxScaler` configures `prep::MinMaxScaler` and the
 [`prep::stage::minmax_scaler`](../stage/minmax_scaler.md) stage — the two share
-this struct. `lymph::prep::MinMaxScalerOptions` is the family-scoped alias for the
+this value. `lymph::prep::MinMaxScalerOptions` is the family-scoped alias for the
 same type.
 
 ## Fields

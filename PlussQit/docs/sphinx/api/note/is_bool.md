@@ -72,7 +72,7 @@ bool=true shape=[2, 2]
 
 ## See Also
 
-- [`Note::dtype`](dtype.md): obtain the complete dtype enum.
+- [`Note::dtype`](dtype.md): obtain the complete dtype value.
 - [`Note::any`](any.md) and [`Note::all`](all.md): reduce Bool lanes to a
   scalar Bool Note.
 - `Note::bools()`: borrow the contiguous `std::uint8_t` lanes.

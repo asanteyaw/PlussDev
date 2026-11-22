@@ -75,7 +75,7 @@ behind this shared interface.
 ## Related Pages
 
 - [`families`](families.md) — `ModelSpec` and the nine `*FamilyOptions`
-  structs `make_*` consumes.
+  values `make_*` consumes.
 - [`core`](core.md) — `TrainOptions` / `InferOptions` / `AssessOptions`, the
   configuration every `learn` / `infer` / `assess` call takes.
 - [`data`](data.md) — `FeatureBatch` / `LabeledBatch`, the values these

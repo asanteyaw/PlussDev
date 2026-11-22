@@ -19,7 +19,7 @@ module::Field field{.instrument = instrument::Vanilla{}, .market = market::State
 | Method | What it does |
 |---|---|
 | [`bind_objective`](Field/bind_objective.md) | A function from a `Model` to the loss, with the field and the quotes frozen inside it. |
-| [`bind_objective_typed`](Field/bind_objective_typed.md) | Like `bind_objective`, taking the concrete model struct instead of a `Model`. |
+| [`bind_objective_typed`](Field/bind_objective_typed.md) | Like `bind_objective`, taking the concrete model instead of a `Model`. |
 | [`clear_paths`](Field/clear_paths.md) | Empties `field.paths`. |
 | [`engine_name`](Field/engine_name.md) | The name of the engine the field is set to use, as text. |
 | [`exercise_boundary`](Field/exercise_boundary.md) | The early-exercise boundary of an American option under Black-Scholes: the asset price at which exercise becomes optimal, at given times to maturity. |

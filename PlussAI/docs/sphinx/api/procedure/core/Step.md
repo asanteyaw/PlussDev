@@ -38,7 +38,7 @@ joins, gates, watchers, or other graph nodes whose runner consumes the complete
 
 `name()` plus everything `StepOptions`/`StepPersistSpec` declare, each
 exposed through its own narrow accessor rather than requiring callers to
-reach into the options struct directly: capability/port queries
+reach into the options directly: capability/port queries
 (`inputs`/`outputs`/`capability_mask`/`has`), persistence queries
 (`persistable`/`reloadable`/`frozen`/`custom`/`persist_key`/
 `persist_schema_version`/`component_schema_version`/`persist_fields`/

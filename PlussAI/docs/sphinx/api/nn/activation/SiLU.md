@@ -145,9 +145,9 @@ Output
 silu on MPS: OK, platform=2
 ```
 
-(`platform=2` is `pluss::pMPS`'s raw enum value -- there is no public
+(`platform=2` is `pluss::pMPS`'s raw value -- there is no public
 `operator<<` for `Platform` in this reference, so examples that need to show
-*which* platform a result landed on print the enum value directly.)
+*which* platform a result landed on print the value directly.)
 
 ## Changelog
 

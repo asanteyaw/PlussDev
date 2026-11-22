@@ -59,7 +59,7 @@ only when exact reproducibility across runs matters.
 
 ## See Also
 
-- [`Fusion`](Fusion.md) -- the only consumer of this options struct.
+- [`Fusion`](Fusion.md) -- the only consumer of these options.
 - [`EmbeddingOptions`](../embedding/EmbeddingOptions.md) -- another
-  options struct with a `seed` field driving the same kind of
+  options with a `seed` field driving the same kind of
   uniform-bound initialization.

@@ -31,7 +31,7 @@ resulting `Shelf`'s row labels (see [`line()`](line.md)'s important callout), "h
 label" here means exactly `Stream::has_label()`.
 ```
 
-The two-argument overload's `AutoPlotOptions` is the same currently-empty struct documented
+The two-argument overload's `AutoPlotOptions` is the same currently-empty value documented
 on [`CatalogPlotAccessor::auto_plot`](../catalog-plot/auto_plot.md); it has no effect on
 routing or rendering today.
 
@@ -105,7 +105,7 @@ calls `bar()`.
 
 - Only two routing rules, both inherited from `ShelfPlotAccessor::auto_plot` unchanged —
   see the important callout above. There is no `Stream`-specific routing logic.
-- `options` is accepted but has no effect — `AutoPlotOptions` is an empty struct.
+- `options` is accepted but has no effect — `AutoPlotOptions` is an empty value.
 - Both routed-to calls always use their zero-argument form, never passing a companion `x`.
 
 ## See Also

@@ -23,7 +23,7 @@ Names the physical quantity of each measurement: `FromP` and `ToP` (active power
 
 ## Returns
 
-An enumeration used in `Measurements::kind`.
+Used in `Measurements::kind`.
 
 ## Errors
 

@@ -28,4 +28,4 @@ higher without switching to a different activation entirely (see
 
 ## See Also
 
-- [`LeakyReLU`](LeakyReLU.md) -- the only consumer of this options struct.
+- [`LeakyReLU`](LeakyReLU.md) -- the only consumer of these options.

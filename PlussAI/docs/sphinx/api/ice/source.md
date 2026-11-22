@@ -2,7 +2,7 @@
 
 `source` owns the pluggable batch-feeding abstraction
 [`Model`](model.md)/[`Coach`](coach.md) iterate over:
-[`Source`](source/Source.md) (the base class), two built-in
+[`Source`](source/Source.md) (the base type), two built-in
 implementations ([`TensorSource`](source/TensorSource.md) over raw
 `Series` pairs, [`DataSetSource`](source/DataSetSource.md) over
 [`data::DataSet`](data/DataSet.md) parts), and the two context types

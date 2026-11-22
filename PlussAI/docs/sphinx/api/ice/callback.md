@@ -1,7 +1,7 @@
 # `pluss::ai::ice::callback`
 
 `callback` owns the training-loop observer surface:
-[`Callback`](callback/Callback.md) (the hook base class),
+[`Callback`](callback/Callback.md) (the hook base type),
 [`RunState`](callback/RunState.md) (the shared state every hook reads
 and writes), [`CallbackChain`](callback/CallbackChain.md) (fans one
 hook out to several callbacks),
@@ -14,7 +14,7 @@ and terminal progress bars).
 
 | Entity | What it gives you |
 | --- | --- |
-| [`Callback`](callback/Callback.md) | the hook base class -- 12 lifecycle hooks plus 3 checkpoint-persistence methods, every one a no-op by default |
+| [`Callback`](callback/Callback.md) | the hook base type -- 12 lifecycle hooks plus 3 checkpoint-persistence methods, every one a no-op by default |
 | [`RunState`](callback/RunState.md) | the one mutable object every hook call shares -- model/stage/epoch/metrics/stop-request bookkeeping |
 | [`CallbackChain`](callback/CallbackChain.md) | a `Callback` that fans every hook out to an ordered list of other callbacks |
 | [`EarlyStopCallback`](callback/EarlyStopCallback.md) | the built-in early-stopping/best-weight-restoration callback, added automatically under common conditions |

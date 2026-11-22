@@ -237,7 +237,7 @@ NLL with class_dim=1: 0.2 -- (0.1+0.3)/2 = 0.2, same values as the last-axis lay
 
 ## See Also
 
-- [`NLLOptions`](NLLOptions.md) -- the options struct.
+- [`NLLOptions`](NLLOptions.md) -- the options.
 - [`CrossEntropy`](CrossEntropy.md) -- computes `log_softmax` internally
   first (so raw logits, not pre-computed log-probabilities, are the
   input), then delegates directly to this function for the

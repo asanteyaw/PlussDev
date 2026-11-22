@@ -39,7 +39,7 @@ throughout is preferred.
 
 ## See Also
 
-- [`Huber`](Huber.md) -- the only consumer of this options struct.
+- [`Huber`](Huber.md) -- the only consumer of these options.
 - [`SmoothL1Options`](SmoothL1Options.md) -- a related but numerically
   different quadratic/linear loss, using `beta` in place of `delta`.
 - [`MSEOptions`](MSEOptions.md) -- the purely quadratic counterpart,

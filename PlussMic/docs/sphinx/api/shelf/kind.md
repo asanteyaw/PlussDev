@@ -13,9 +13,9 @@ ShelfKind Shelf::kind() const
 
 ## What It Does
 
-Returns the `ShelfKind` enum value identifying which payload family a shelf
+Returns the `ShelfKind` value identifying which payload family a shelf
 currently stores: `Series` (numeric/bool), `Note` (text), `Timeline`, or
-`TimeIndex`. This is the typed enum form; [`ptype()`](ptype.md) returns the same
+`TimeIndex`. This is the typed form; [`ptype()`](ptype.md) returns the same
 information as a human-readable string (`"Series"`, `"Note"`, `"Timeline"`,
 `"TimeIndex"`) — use `kind()` for `switch`/comparison logic in C++ and `ptype()` when
 you just want to display or print the family name.

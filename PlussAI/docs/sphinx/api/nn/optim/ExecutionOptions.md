@@ -3,11 +3,11 @@
 Controls how a parameter group's update is actually computed -- as a plain
 per-parameter scalar loop, or as one vectorized op over the whole group
 packed along a new batch axis -- plus strictness and CUDA-graph-capture
-safety. Every concrete optimizer's own `Options` struct ends with an
+safety. Every concrete optimizer's own `Options` ends with an
 `execution` field of this type, shared across all seven exactly like
 [`GradientClipOptions`](GradientClipOptions.md).
 
-Passed as part of an optimizer's own `Options` struct; the default,
+Passed as part of an optimizer's own `Options`; the default,
 `ExecutionOptions{}` (`lane = Auto`), lets the optimizer pick the fastest
 lane its parameters actually support.
 

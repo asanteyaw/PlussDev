@@ -176,7 +176,7 @@ auto chart = rates.plot().step("tier", {"price", "limit"}, step_options);
 ## Notes
 
 - Shares every mechanic described on [`line()`](line.md)'s page except the step-vs-line
-  trace shape and the smaller `StepPlotOptions` struct (no `y_limit_method`).
+  trace shape and the smaller `StepPlotOptions` (no `y_limit_method`).
 - At least one y-feature is required.
 - Returns a `pluss::pl::Studio` — nothing is printed; see [`line()`](line.md)'s important
   callout for how to view or save the result.

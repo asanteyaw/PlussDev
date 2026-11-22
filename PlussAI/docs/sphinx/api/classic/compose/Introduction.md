@@ -33,10 +33,10 @@ it should.
 - The **typed convenience methods** — `add_standard_scaler`,
   `add_one_hot_encoder`, and eighteen more, one per
   [`prep`](../prep.md) kernel — covered together on [`add_stage`](Flow/add_stage.md)
-  since they are all the same shape: options struct in, routed stage out.
+  since they are all the same shape: options in, routed stage out.
 - The **kind + options form** — [`add_named_transform`](Flow/add_named_transform.md) /
   [`add_column_stage`](Flow/add_column_stage.md) — for building a stage from a
-  `TransformKind` enum value and a `TransformOptions` variant dynamically
+  `TransformKind` value and a `TransformOptions` variant dynamically
   (reading a kind from configuration, building stages in a loop), rather than
   naming the typed method directly.
 

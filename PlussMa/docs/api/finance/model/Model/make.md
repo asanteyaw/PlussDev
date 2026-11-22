@@ -139,7 +139,7 @@ subsp::math::finance::module::Model (2 problems):
 
 ### Example 4
 
-The stored type. The parameters of the held struct are Float64 by default; a `Config` chooses the type they are stored in (the vector read back by `parameters()` is Float64 unless asked otherwise).
+The stored type. The parameters of the held model are Float64 by default; a `Config` chooses the type they are stored in (the vector read back by `parameters()` is Float64 unless asked otherwise).
 
 ```cpp
 #include <pluss/ma.h>

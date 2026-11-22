@@ -1,6 +1,6 @@
 # `pluss::ai::nn::optim::Optimizer`
 
-`Optimizer` is the base class every concrete optimizer in this reference
+`Optimizer` is the base type every concrete optimizer in this reference
 ([`SGD`](SGD.md), [`Adagrad`](Adagrad.md), [`Adam`](Adam.md),
 [`AdamW`](AdamW.md), [`NAdam`](NAdam.md), [`RMSprop`](RMSprop.md),
 [`Minimax`](Minimax.md)) derives from. It owns the parameter list an
@@ -98,7 +98,7 @@ useless.
 - [`GradientClipOptions`](GradientClipOptions.md) /
   [`ExecutionOptions`](ExecutionOptions.md) /
   [`StepDiagnosticsOptions`](StepDiagnosticsOptions.md) -- the three
-  options structs `step()`'s behavior is configured through.
+  options `step()`'s behavior is configured through.
 - [`SGD`](SGD.md), [`Adam`](Adam.md), and the other five concrete
   algorithms -- each adds its own `Options`, its own `apply_step_`
   formula, and its own per-parameter state on top of this contract.

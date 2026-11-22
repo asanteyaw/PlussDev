@@ -9,7 +9,7 @@ encoder, or an imputer. Five of its seven types
 [`PowerMap`](PowerMap.md), [`ThresholdBinarizer`](ThresholdBinarizer.md),
 [`PolynomialLift`](PolynomialLift.md)) are ordinary
 [`TransformerBase`](../../estimators/TransformerBase.md) kernels with their
-own options struct, fit the usual way. The remaining two
+own options, fit the usual way. The remaining two
 ([`FunctionTransformer`](FunctionTransformer.md),
 [`FeatureTransformer`](FeatureTransformer.md)) are structurally different —
 one wraps your own callable, the other is a routed sub-pipeline of other

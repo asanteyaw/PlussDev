@@ -25,6 +25,6 @@ guidance, which applies identically here.
 
 ## See Also
 
-- [`LogSoftmax`](LogSoftmax.md) -- the only consumer of this options struct.
-- [`SoftmaxOptions`](SoftmaxOptions.md) -- the equivalent options struct for
+- [`LogSoftmax`](LogSoftmax.md) -- the only consumer of these options.
+- [`SoftmaxOptions`](SoftmaxOptions.md) -- the equivalent options for
   `softmax`.

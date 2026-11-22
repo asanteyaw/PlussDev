@@ -115,7 +115,7 @@ Text encoding used when writing the file.
 (`const pluss::loader::WriteCsvOptions&`)
 
 Equivalent settings expressed as a reusable config object, inline entries, or a typed
-options struct, for callers who prefer not to spell out every positional parameter at
+options, for callers who prefer not to spell out every positional parameter at
 the call site.
 
 ## Returns

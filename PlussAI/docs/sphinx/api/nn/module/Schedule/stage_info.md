@@ -15,14 +15,14 @@ Schedule::Impl::StageInfo nn::Schedule::Impl::stage_info(std::size_t index) cons
 Schedule::Impl::StageInfo nn::Schedule::Impl::at(std::size_t index) const;  // alias
 ```
 
-`StageInfo` is a plain data struct with four fields (`name`, `input_type`,
+`StageInfo` is a plain data value with four fields (`name`, `input_type`,
 `output_type`, `module_stage`) -- taught field by field under `## Returns`
 below, not pasted here.
 
 ## What It Does
 
 Bundles one stage's name, declared input/output types, and whether it is
-an `nn::Module`, into a single struct -- everything
+an `nn::Module`, into a single value -- everything
 [`name_at`](name_at.md)/[`input_type_at`](input_type_at.md)/[`output_type_at`](output_type_at.md)
 report individually, gathered in one call. Reach for `stage_info` when
 inspecting or logging a stage's full description at once rather than

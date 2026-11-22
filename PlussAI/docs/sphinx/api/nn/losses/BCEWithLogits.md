@@ -202,6 +202,6 @@ only the target=1 (positive) element scales by 5x -- the target=0 element is unt
 ## See Also
 
 - [`BCEWithLogitsOptions`](BCEWithLogitsOptions.md) -- the options
-  struct.
+  value.
 - [`CrossEntropy`](CrossEntropy.md) -- the multi-class generalization
   (softmax cross-entropy) of the binary case this function covers.

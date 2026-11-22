@@ -32,7 +32,7 @@ The solver lands on the circle at the direction of the target, matching `(1, 2) 
 
 ### Watching the iterations
 
-Every option struct has a `progress_hook`, a function the solver calls after each iteration. `reports::iter(std::cout, 4)` is a ready-made hook that prints one line per iteration, with four decimals. The same disc problem is solved again with it switched on.
+Every set of options has a `progress_hook`, a function the solver calls after each iteration. `reports::iter(std::cout, 4)` is a ready-made hook that prints one line per iteration, with four decimals. The same disc problem is solved again with it switched on.
 
 @@example Numerical/optimization/guide/optima/03a_watch_iterations.cpp@@
 

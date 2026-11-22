@@ -4,7 +4,7 @@
 
 The record of properties an operator promises: structural, linear, savable, with a known adjoint.
 
-`Capabilities` is what [`Operator::capabilities`](Operator/capabilities.md) returns. It is a plain struct of booleans. The library consults it when it combines operators and when it saves them, and your own code can consult it to decide what is safe to do with an operator it was handed.
+`Capabilities` is what [`Operator::capabilities`](Operator/capabilities.md) returns. It is a plain set of booleans. The library consults it when it combines operators and when it saves them, and your own code can consult it to decide what is safe to do with an operator it was handed.
 
 For the built-in operators the flags are fixed facts: differentiation is linear and has a known adjoint, the magnitude of a derivative is not linear, and so on. For operators you define, the flags are exactly what you declared in [`Options`](Options.md). They are promises, not checks: the library does not test that an operator you declared `linear` really is.
 

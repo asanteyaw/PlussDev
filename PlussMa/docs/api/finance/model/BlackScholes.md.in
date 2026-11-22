@@ -50,7 +50,7 @@ int main() {
 
 ### Example 2
 
-A model built directly from the struct, then priced.
+A model built directly from the value, then priced.
 
 @@run@@
 ```cpp

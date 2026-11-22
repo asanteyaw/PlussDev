@@ -339,17 +339,16 @@ Builds full Jacobians by repeated forward pushforwards.
 
 ### `HvpOptions`
 
-#### Signature
+#### Options
 
-```cpp
-struct HvpOptions {
-  double epsilon{1e-6};
-};
-```
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `epsilon` | `double` | `1e-6` | Finite-difference step used by the fallback `hvp` path. |
+| `mode` | `HvpOptions::Mode` | `Auto` | Which path computes the product: `Auto`, `ExactOnly` or `FiniteDifferenceOnly`. |
 
 #### Explanation
 
-Controls the finite-difference step used by the fallback `hvp` path.
+Controls the finite-difference step and the path selection used by `hvp`.
 
 ### `hvp`
 
@@ -388,18 +387,16 @@ auto [value, hv] = hvp(
 
 ### `DerivativeAuditOptions`
 
-#### Signature
+#### Options
 
-```cpp
-struct DerivativeAuditOptions {
-  double epsilon{1e-6};
-  double atol{1e-6};
-  double rtol{1e-4};
-  bool include_axis_lanes{true};
-  HvpOptions hvp{};
-  DerivativePolicy policy{};
-};
-```
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `epsilon` | `double` | `1e-6` | Central-difference step size. |
+| `atol` | `double` | `1e-6` | Absolute tolerance for the analytic-versus-numeric directional checks. |
+| `rtol` | `double` | `1e-4` | Relative tolerance for the same checks. |
+| `include_axis_lanes` | `bool` | `true` | Use extra axis-aligned lanes in addition to the global lane. |
+| `hvp` | `HvpOptions` | `{}` | Hessian-vector product mode used by curvature audits. |
+| `policy` | `DerivativePolicy` | `{}` | Dependency and graph policy propagated to the derivative transforms. |
 
 ### `gradient_audit` and `curvature_audit`
 

@@ -187,5 +187,5 @@ element 1: divisor=5 (unaffected), ordinary (5-5)^2/5 = 0
 
 ## See Also
 
-- [`RelativeMSEOptions`](RelativeMSEOptions.md) -- the options struct.
+- [`RelativeMSEOptions`](RelativeMSEOptions.md) -- the options.
 - [`MSE`](MSE.md) -- the unscaled counterpart this generalizes.

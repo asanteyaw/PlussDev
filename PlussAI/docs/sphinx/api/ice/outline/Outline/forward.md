@@ -175,7 +175,7 @@ data=[[3.0000358]]
 
 ## See Also
 
-- [`Model::forward`](../../model/Model/forward.md) -- the base class
+- [`Model::forward`](../../model/Model/forward.md) -- the base type
   method this overrides, including the general name-hiding gotcha.
 - [`schedule`](schedule.md) -- the composed object this delegates to.
 - [`Schedule::run`](../../../nn/module/Schedule/run.md) -- what actually

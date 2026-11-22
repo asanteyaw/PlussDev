@@ -12,7 +12,7 @@ Read it to find out what a trace is when the code that holds it did not make it,
     returns="""`TraceKind`
     The kind of the trace.""",
     examples=[
-        dict(id="every_method", text="The kind each creation method makes, read back. Seven 2D methods go on a planar pane and two 3D methods on a volumetric one; the integer is the position of the kind in the enumeration.",
+        dict(id="every_method", text="The kind each creation method makes, read back. Seven 2D methods go on a planar pane and two 3D methods on a volumetric one; the integer is the position of the kind in the list of kinds.",
              code="""const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
 auto name = [](TraceKind k) {
   const char* names[] = {"Trend", "Cloud", "Cloud3", "Fieldmap", "Ribbon", "Spike", "Wedge", "Whisk", "Band", "Columns", "Bucket", "Quartet",

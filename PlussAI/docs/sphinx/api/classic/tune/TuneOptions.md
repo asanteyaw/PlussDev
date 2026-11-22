@@ -5,7 +5,7 @@ which strategy runs, how many trials it costs, how much of it runs
 concurrently, which split plan every trial shares, and the RNG behind any
 sampling the strategy itself does. [`sweep`](sweep.md) and
 [`probe`](probe.md) take their own parameters directly instead of a
-`TuneOptions`; this struct exists so [`tune`](tune.md) can expose every
+`TuneOptions`; this value exists so [`tune`](tune.md) can expose every
 strategy through one options bag rather than one overload per strategy.
 
 ## Fields

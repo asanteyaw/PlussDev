@@ -32,7 +32,7 @@ and use its left sidebar to jump straight to any method (`scatter`, `line`, `his
 **options** (`const DataFramePlotOptions&`, optional)
 
 Chart-wide defaults shared across every 3D chart drawn from the returned accessor —
-the same options struct [`plot()`](plot.md) accepts. Omit it to use the accessor's
+the same options [`plot()`](plot.md) accepts. Omit it to use the accessor's
 built-in defaults.
 
 ## Returns

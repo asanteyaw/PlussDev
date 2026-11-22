@@ -23,7 +23,7 @@ Chooses the end of a trace: `Target` follows the curve until the loading factor 
 
 ## Returns
 
-An enumeration used in `TraceOptions::stop`.
+Used in `TraceOptions::stop`.
 
 ## Errors
 

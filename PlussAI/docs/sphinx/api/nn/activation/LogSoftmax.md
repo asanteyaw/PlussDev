@@ -174,7 +174,7 @@ log_softmax on MPS: OK, platform=2
 
 ## See Also
 
-- [`LogSoftmaxOptions`](LogSoftmaxOptions.md) -- the options struct.
+- [`LogSoftmaxOptions`](LogSoftmaxOptions.md) -- the options.
 - [`Softmax`](Softmax.md) -- the plain-probability form this is built from.
 
 <!-- apiref:toctree:start -->

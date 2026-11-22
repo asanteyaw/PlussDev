@@ -18,34 +18,34 @@ auto x_loaded = pluss::load<pluss::Series>("tensor.plio");
 Core API (`<pluss/io.h>`, also re-exported by `<pluss/core.h>` / `<pluss/pluss.h>`):
 
 ```cpp
-namespace pluss::io {
-  enum class Compression : std::uint8_t { None, Zstd, Lz4 };
+template <class T> void pluss::io::save(const T& value, std::string_view path, const SaveOptions& = {});
+template <class T> void pluss::io::save(const T& value, std::ostream& out, const SaveOptions& = {});
 
-  struct SaveOptions {
-    Compression compression = Compression::None;
-    int32_t compression_level = 0;
-    bool create_parent_dirs = false;
-    bool include_platform_hint = true;
-    bool canonicalize_series_storage = true;
-    bool warn_on_platform_downgrade = true;
-  };
+template <class T> T pluss::io::load(std::string_view path, const LoadOptions& = {});
+template <class T> T pluss::io::load(std::istream& in, const LoadOptions& = {});
 
-  struct LoadOptions {
-    bool preserve_saved_platform = false;
-    std::optional<pluss::codem::Platform> target_platform{};
-    bool strict_platform = false;
-  };
-
-  template <class T> void save(const T& value, std::string_view path, const SaveOptions& = {});
-  template <class T> void save(const T& value, std::ostream& out, const SaveOptions& = {});
-
-  template <class T> T load(std::string_view path, const LoadOptions& = {});
-  template <class T> T load(std::istream& in, const LoadOptions& = {});
-
-  template <class T> void load(T& out, std::string_view path, const LoadOptions& = {});
-  template <class T> void load(T& out, std::istream& in, const LoadOptions& = {});
-}
+template <class T> void pluss::io::load(T& out, std::string_view path, const LoadOptions& = {});
+template <class T> void pluss::io::load(T& out, std::istream& in, const LoadOptions& = {});
 ```
+
+`SaveOptions`:
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `compression` | `pluss::io::Compression` | `None` | Payload compression: `None`, `Zstd` or `Lz4`. |
+| `compression_level` | `std::int32_t` | `0` | Compression level passed to the codec. |
+| `create_parent_dirs` | `bool` | `false` | Create missing parent directories of the path. |
+| `include_platform_hint` | `bool` | `true` | Record the platform the data was saved from in the file. |
+| `canonicalize_series_storage` | `bool` | `true` | Request canonical storage for a `Series`; `false` is not yet implemented, so storage is always written as contiguous CPU data. |
+| `warn_on_platform_downgrade` | `bool` | `true` | Warn when a non-CPU `Series` is written as a CPU payload. |
+
+`LoadOptions`:
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `preserve_saved_platform` | `bool` | `false` | Load onto the platform recorded in the file. |
+| `target_platform` | `std::optional<pluss::codem::Platform>` | empty | Load onto this platform instead. |
+| `strict_platform` | `bool` | `false` | Fail when the requested platform is unavailable; otherwise the data stays on the CPU with a warning. |
 
 Aliases:
 

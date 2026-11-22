@@ -14,7 +14,7 @@ internally to materialize their own reduced result. Unlike every family
 with a class hub (`estimators`, `sparse`, `text`), there is no persistent
 object here at all — every function takes a
 [`FeatureBatch`](../data/FeatureBatch.md)/[`LabeledBatch`](../data/LabeledBatch.md)
-and a plain options struct, and returns a plain result struct. Nothing is
+and an plain options value, and returns a plain result. Nothing is
 fitted, nothing is stored, nothing needs a second call.
 
 ## Four Functions, One Score

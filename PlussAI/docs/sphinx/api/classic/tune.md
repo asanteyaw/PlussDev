@@ -15,7 +15,7 @@ on [`metrics::cross_assess`](metrics.md): a "trial" is one
 | --- | --- | --- |
 | [`sweep`](tune/sweep.md) | cross-assess every candidate in an explicit list, rank them | you already have a finite list of configurations to compare (a hand-picked grid) |
 | [`probe`](tune/probe.md) | cross-assess `trials` candidates drawn one at a time from a sampler callback | the space of configurations is generated, not enumerated (random search over a distribution) |
-| [`tune`](tune/tune.md) | run `sweep` or `probe` under a [`TuneOptions`](tune/TuneOptions.md) budget — the one entry point that also unlocks successive-halving and Bayesian search | you want to pick a search *strategy* (grid, random, halving, Bayesian) through one shared options struct rather than choosing between `sweep`/`probe` yourself |
+| [`tune`](tune/tune.md) | run `sweep` or `probe` under a [`TuneOptions`](tune/TuneOptions.md) budget — the one entry point that also unlocks successive-halving and Bayesian search | you want to pick a search *strategy* (grid, random, halving, Bayesian) through one shared options rather than choosing between `sweep`/`probe` yourself |
 | [`TuneReport`](tune/TuneReport.md) | every trial's outcome, the best index, objective ranks, and a columnar ledger | reading the results of any call above |
 | [`TuneLedger`](tune/TuneLedger.md) | `TuneReport.trials`, restated as parallel `pluss::Series` columns | feeding trial results into further `Series`-based analysis instead of looping over `std::vector<TuneTrialResult>` by hand |
 | [`TuneOptions`](tune/TuneOptions.md) | search kind, trial budget, parallelism, inner split, RNG | driving the `tune(...)` entry point |
@@ -90,7 +90,7 @@ Errors`.
 - [`split`](split.md) — `SplitOptions`, forwarded unchanged to every trial's
   `cross_assess` call.
 - [`families`](families.md) — `ModelSpec` and the nine `*FamilyOptions`
-  structs a candidate is built from.
+  values a candidate is built from.
 - [`core`](core.md) — `MetricKind`, the full list `objective_metric` accepts.
 
 <!-- apiref:toctree:start -->

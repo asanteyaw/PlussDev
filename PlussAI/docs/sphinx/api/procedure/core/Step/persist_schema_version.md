@@ -92,7 +92,7 @@ schema_version=5
 ### Example 3
 
 A different explicit value, to show it is an ordinary integer field, not
-a fixed enum.
+a fixed set of values.
 
 ```cpp
 #include <pluss/ai/procedure.h>

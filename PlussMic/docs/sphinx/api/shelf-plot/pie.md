@@ -39,7 +39,7 @@ wrapped frame's own row labels — see [`line()`](line.md)'s row-label inheritan
 
 **options** (`PiePlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::pie`](../../api/dataframe-plot/pie.md)
 (`show_label`, `show_percent`, `show_value`, `precision`, `separator`).
 

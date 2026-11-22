@@ -15,7 +15,7 @@ lymph::prep::Stage lymph::prep::stage::standard_scaler(
     lymph::options::StandardScaler options = {});
 ```
 
-`lymph::options::StandardScaler` is the canonical spelling of the option struct;
+`lymph::options::StandardScaler` is the canonical spelling of the options;
 `lymph::prep::StandardScalerOptions` is the family-scoped alias for the same type.
 
 ## What It Does
@@ -54,7 +54,7 @@ With both toggles off the transform is the identity map (Example 3).
 
 The full field reference lives on the
 [`options::StandardScaler` page](../scaling/StandardScalerOptions.md); it is the
-same struct the standalone `prep::StandardScaler` takes.
+same value the standalone `prep::StandardScaler` takes.
 
 ## Parameters
 
@@ -148,7 +148,7 @@ trained     = true
 ### Example 2
 
 `with_centering`. The stage factory and the standalone `prep::StandardScaler`
-take the same option struct; the standalone object shows the arithmetic
+take the same options; the standalone object shows the arithmetic
 directly. With centering off, the scaled column keeps its sign and location.
 
 ```cpp
@@ -221,7 +221,7 @@ with_centering = false (mean kept, values stay positive):
 
 ### Example 3
 
-`with_scaling`, and both toggles off. Family-alias spelling of the option struct
+`with_scaling`, and both toggles off. Family-alias spelling of the options
 this time. Centering without scaling shifts the column to zero mean and keeps its
 original units; both off is a pass-through.
 

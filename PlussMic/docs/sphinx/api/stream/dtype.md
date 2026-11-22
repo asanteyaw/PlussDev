@@ -73,7 +73,7 @@ ptype: Note
 ## See Also
 
 - [`Stream::ptype`](ptype.md): the coarser payload-kind string, without numeric sub-type.
-- [`Stream::kind`](kind.md): the enum this string ultimately describes.
+- [`Stream::kind`](kind.md): the typed value this string ultimately describes.
 - [`Stream::astype`](astype.md): change a `Series` stream's numeric sub-type, which changes
   what this method reports.
 

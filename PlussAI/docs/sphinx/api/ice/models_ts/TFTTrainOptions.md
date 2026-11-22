@@ -93,7 +93,7 @@ narrow or wide after training, raise `execution.max_epochs` and
 modeling problem. Set `validation.split_ratio > 0` together with
 `loop_regularization` for early stopping, exactly as
 [`TrainOptions`](../options/TrainOptions.md) describes -- every
-nested policy struct here is the identical shared type.
+nested policy value here is the identical shared type.
 
 ## See Also
 

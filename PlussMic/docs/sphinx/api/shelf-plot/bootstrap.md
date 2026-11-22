@@ -28,7 +28,7 @@ Same as the 2D accessor: a shelf with fewer than two rows throws
 
 **options** (`BootstrapPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::bootstrap`](../../api/dataframe-plot/bootstrap.md)
 (`samples`, `sample_size`, `seed`, `bins`, `statistic`, `trace_width`).
 

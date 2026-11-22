@@ -162,7 +162,7 @@ auto chart = sales.plot().area("month", {"amount", "cost"}, area_options);
 ## Notes
 
 - Shares every mechanic described on [`line()`](line.md)'s page except the filled trace
-  shape and the `AreaPlotOptions` struct's lower default `alpha`.
+  shape and the `AreaPlotOptions`'s lower default `alpha`.
 - Multiple y-features overlap rather than stack — see [`area_stacked()`](area_stacked.md)
   for the composition (accumulating) variant.
 - At least one y-feature is required.

@@ -8,7 +8,7 @@ Every program is complete and its output is the output of that program. The data
 
 ## The result
 
-Every test returns a struct that extends `TestDecision`:
+Every test returns a value that extends `TestDecision`:
 
 | Field | Meaning |
 |---|---|

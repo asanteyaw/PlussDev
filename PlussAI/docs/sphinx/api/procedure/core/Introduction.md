@@ -6,7 +6,7 @@
 [`Procedure`](Procedure.md) (the validated DAG), [`Step`](Step.md) (one
 node in it), [`Link`](Link.md) (one edge), [`Artifact`](Artifact.md) (the
 typed value flowing along an edge), and [`ProcedureResult`](ProcedureResult.md)
-(what a run produces) -- plus the plain option/record structs that
+(what a run produces) -- plus the plain option/record values that
 configure and describe them
 ([`ProcedureOptions`](ProcedureOptions.md), [`RunOptions`](RunOptions.md),
 [`StepOptions`](StepOptions.md), [`StepPersistSpec`](StepPersistSpec.md),
@@ -15,9 +15,9 @@ configure and describe them
 `build`, `callable`, `lymph`, `ice`, `nlp`, `module`, and `registry` all
 produce and consume exactly these five.
 
-## The Four Small Enums
+## The Four Small Sets Of Values
 
-Four scoped enums appear across `core`'s structs. None gets its own page --
+Four sets of values appear across `core`'s values. None gets its own page --
 each is small enough, and tied closely enough to one field, to read in
 place:
 
@@ -49,13 +49,13 @@ place:
    list, and `run()`.
 2. [`Step`](Step.md) -- what one node actually is underneath `procedure::step`'s
    many convenience overloads (see [`build`](../build.md)).
-3. [`Link`](Link.md) -- the plain edge struct `procedure::link` builds.
+3. [`Link`](Link.md) -- the plain edge value `procedure::link` builds.
 4. [`Artifact`](Artifact.md) -- the type-erased value every step
    consumes and produces.
 5. [`ProcedureResult`](ProcedureResult.md) -- `run()`'s return value: every
    artifact plus the trace/audit/warnings describing how it was produced.
 6. [`ProcedureOptions`](ProcedureOptions.md) / [`RunOptions`](RunOptions.md) /
-   [`StepOptions`](StepOptions.md) -- the three option structs a caller
+   [`StepOptions`](StepOptions.md) -- the three options a caller
    fills in directly.
 7. [`StepPersistSpec`](StepPersistSpec.md) / [`SinkSpec`](SinkSpec.md) /
    [`ArtifactTrace`](ArtifactTrace.md) / [`StepTrace`](StepTrace.md) --

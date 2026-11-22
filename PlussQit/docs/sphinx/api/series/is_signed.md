@@ -177,7 +177,7 @@ value negative" (and it catches `-0.0`, which compares equal to `0`).
 ## See Also
 
 - [`Series::dtype`](dtype.md): the exact representation and the same category
-  queries on the `DType` struct.
+  queries on the `DType`.
 - [`Series::is_complex`](is_complex.md) /
   [`Series::is_floating_point`](is_floating_point.md): the other two category
   predicates.

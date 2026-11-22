@@ -53,7 +53,7 @@ takes a fixed `ModelSpec` at construction) or
 `OnlineLinearOptions` at construction), all three sparse estimators take
 **no** constructor arguments at all — a fresh
 [`LinearFamilyOptions`](../families/LinearFamilyOptions.md) is passed to
-each `learn` call instead. Only three of that struct's six fields are
+each `learn` call instead. Only three of that value's six fields are
 actually read anywhere in this family, and which three differs by class:
 
 | Field | `SparseLinearBinaryClassifier` / `SparseLinearMultiClassifier` | `SparseLinearRegressor` |
@@ -114,7 +114,7 @@ it and get only the test-side metrics.
 
 ## Related Pages
 
-- [`families`](../families.md) — `LinearFamilyOptions`, the struct every
+- [`families`](../families.md) — `LinearFamilyOptions`, the value every
   `learn` call here takes fresh.
 - [`online`](../online/Introduction.md) — the other family outside the
   `estimators`/`compose`/`tune`/`io` ecosystem, for a different reason

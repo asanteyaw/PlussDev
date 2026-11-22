@@ -183,7 +183,7 @@ Compose preprocessing and model in one flow. Learn runs them in sequence.
 
 ### Inputs
 
-- flow and transform option structs
+- flow and transform options
 
 ### Output
 
@@ -760,5 +760,5 @@ Series pred = out.value();
 
 ## Option Coverage Reminder
 
-- For exhaustive enum/bool branch coverage in Lymph wrappers, see `lymph_combination_atlas`.
-- NodeJ uses the same underlying option structs, so the same branch-space applies at core level.
+- For exhaustive categorical/bool branch coverage in Lymph wrappers, see `lymph_combination_atlas`.
+- NodeJ uses the same underlying options, so the same branch-space applies at core level.

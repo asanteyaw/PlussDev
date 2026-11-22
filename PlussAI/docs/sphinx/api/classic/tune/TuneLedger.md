@@ -102,7 +102,7 @@ same order as `TuneReport.trials`.
   several orders of magnitude (a learner count, a tolerance, a
   regularization strength) onto a comparable numeric scale while
   preserving its sign and its distance from `0`. `task`/`family` and every
-  boolean/enum field are stored as a plain cast to `double` (an enum's
+  boolean/categorical field are stored as a plain cast to `double` (a categorical value's
   numeric ordinal, or `1.0`/`0.0` for a `bool`). `family = Detect` is
   never actually reachable through `sweep`/`probe`/`tune` (they require
   `TaskKind::Classification`/`Regression`, and no `Detect`-family spec

@@ -99,6 +99,6 @@ convolution being the extreme case). Leave `cfg` at its default and use
 
 ## See Also
 
-- [`Conv1d`](Conv1d.md) -- the only consumer of this options struct.
+- [`Conv1d`](Conv1d.md) -- the only consumer of these options.
 - [`ConvOptions`](ConvOptions.md) / [`Conv3dOptions`](Conv3dOptions.md) --
   the same fields generalized to 2 and 3 spatial axes.

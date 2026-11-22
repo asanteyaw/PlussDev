@@ -17,7 +17,7 @@ Computes `input @ weight.t() + bias` (the addition skipped entirely when
 trailing axis mapped from `weight`'s column count to its row count --
 exactly the computation [`Fusion::forward`](../fusion/Fusion.md#methods)
 performs, minus the surrounding `Module` machinery (no construction, no
-registered parameters, no `Options` struct). Reach for this directly when
+registered parameters, no `Options`). Reach for this directly when
 `weight`/`bias` already exist as plain `Series` values from some other
 source and a full `Fusion` instance would be unnecessary ceremony;
 reach for [`Fusion`](../fusion/Fusion.md) itself when the weights need to

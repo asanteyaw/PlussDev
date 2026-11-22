@@ -19,7 +19,7 @@ Reports which task this estimator was built to solve --
 `Classification` for anything deriving from `ClassifierBase`,
 `Regression` for anything deriving from `RegressorBase` -- as a plain
 compile-time fact rather than a computed property; the answer is fixed by
-which base class the concrete estimator derives from and never changes,
+which base type the concrete estimator derives from and never changes,
 trained or not.
 
 ## Parameters
@@ -28,7 +28,7 @@ None.
 
 ## Returns
 
-The `TaskKind` (`Classification` or `Regression`) fixed by which base class
+The `TaskKind` (`Classification` or `Regression`) fixed by which base type
 the concrete estimator derives from — independent of whether the estimator is
 trained.
 

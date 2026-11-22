@@ -37,7 +37,7 @@ and it predicts identically to the estimator `dump_state` was called on.
 
 ## Errors
 
-- `Status::not_implemented` — the base class default, for any family that has
+- `Status::not_implemented` — the base type default, for any family that has
   not overridden it (see [`dump_state`](dump_state.md)'s Errors section — the
   same caveat applies here).
 - `Status::invalid_argument` — the state list has the wrong tensor count or
@@ -141,7 +141,7 @@ trained() after the failed load = false
 A second family's own shape validation — every concrete family checked for
 this reference (including `TransformerBase` families like the k-means
 transformer here) overrides `load_state` with a real implementation rather
-than falling back to the base class's `Status::not_implemented`, and each
+than falling back to the base type's `Status::not_implemented`, and each
 validates its own expected tensor count independently.
 
 ```cpp

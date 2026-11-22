@@ -261,7 +261,7 @@ two figures written
 
 ![scene3d and trace3d in one call each](assets/camera_scene_options.svg)
 
-The surface is `40 x 40` with heights from `-0.217` to `0.986`. The six panes change one thing each: the camera angles, a top-down view, a perspective projection with a wider angle, three lamps instead of the headlight, a slate theme, and a scene preset together with a trace preset that turns the sheet into a wireframe. `scene3d` and `trace3d` take the same choices as option structs when you want to set them in one call.
+The surface is `40 x 40` with heights from `-0.217` to `0.986`. The six panes change one thing each: the camera angles, a top-down view, a perspective projection with a wider angle, three lamps instead of the headlight, a slate theme, and a scene preset together with a trace preset that turns the sheet into a wireframe. `scene3d` and `trace3d` take the same choices as options when you want to set them in one call.
 
 ## Decisions
 

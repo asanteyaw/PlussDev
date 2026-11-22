@@ -29,7 +29,7 @@ minimum of `16`, same as the 2D accessor.
 
 **options** (`DensityPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::density`](../../api/dataframe-plot/density.md)
 (`points`, `alpha`, `line_width`).
 

@@ -16,7 +16,7 @@ For each fitted column `map` computes `x / max(|x|)`. Sign is preserved, a zero 
 
 ## `summary()`
 
-`MaxAbsScaler` returns a `TransformerSummary`, not a named struct:
+`MaxAbsScaler` returns a `TransformerSummary`, not a named value:
 
 ### `TransformerSummary` fields
 

@@ -31,7 +31,7 @@ the packed matrix payload itself.
 ## Returns
 
 `MatrixValues`
-    A struct of four vectors (`Series`, `Note`, `Timeline`, `Duration`), each holding
+    A value of four vectors (`Series`, `Note`, `Timeline`, `Duration`), each holding
     zero or one packed matrix — never more than one per kind, since every feature of
     a given kind is packed together into a single block. `.series_span()` /
     `.note_span()` / `.timeline_span()` / `.duration_span()` expose each vector

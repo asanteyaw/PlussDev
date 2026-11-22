@@ -229,7 +229,7 @@ group 1: active_parameters = 1
 
 - [`StepLaneTelemetry`](../StepLaneTelemetry.md) -- the full field list
   each entry carries.
-- [`ExecutionOptions`](../ExecutionOptions.md) -- the options struct
+- [`ExecutionOptions`](../ExecutionOptions.md) -- the options
   `requested`/`resolved` reflect.
 - [`step`](step.md) -- populates this telemetry as part of every call.
 

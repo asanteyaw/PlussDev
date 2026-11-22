@@ -4,7 +4,7 @@ The normalized width, the variance-floor epsilon, and where the learned
 `weight`/`bias` are allocated.
 
 Passed to [`LayerNorm`](LayerNorm.md)'s constructor. Unlike every options
-struct in [`activation`](../activation.md), `normalized_size` has no
+value in [`activation`](../activation.md), `normalized_size` has no
 sensible default (`0` is not a usable width) -- `LayerNorm` has no
 no-argument constructor, so a `LayerNormOptions` with at least
 `normalized_size` set must always be passed explicitly.
@@ -49,4 +49,4 @@ as every other parameterized layer in this reference.
 
 ## See Also
 
-- [`LayerNorm`](LayerNorm.md) -- the only consumer of this options struct.
+- [`LayerNorm`](LayerNorm.md) -- the only consumer of these options.

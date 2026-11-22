@@ -4,7 +4,7 @@
 
 `module` owns the raw-module escape hatch: wrapping any object with a
 `.forward(const Series&) -> Series` method -- an `nn` layer, or any
-plain struct of the caller's own -- as a `Map`+`Infer`-capability
+plain value of the caller's own -- as a `Map`+`Infer`-capability
 [`Step`](../core/Step.md) with no persistence of its own. This is the
 least-guided of the four adapter families (alongside
 [`lymph`](../lymph.md)/[`ice`](../ice.md)/[`nlp`](../nlp.md)): the
@@ -27,7 +27,7 @@ a persistable raw module should wrap it as an `ice::Model` subclass (see
 
 Anything with a method matching `Series forward(const Series&)` (or
 convertible to `Series`) -- an actual `nn` layer object (`nn::ReLU{}`,
-`nn::Linear{...}`, a hand-composed `nn::Sequential`), or a plain struct
+`nn::Linear{...}`, a hand-composed `nn::Sequential`), or a plain value
 with nothing but that one method, as this family's own example shows.
 
 ## Related Pages

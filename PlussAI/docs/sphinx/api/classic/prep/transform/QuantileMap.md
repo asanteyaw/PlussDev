@@ -202,7 +202,7 @@ data=[[0.9]]
 
 ## See Also
 
-- [`QuantileMapOptions`](QuantileMapOptions.md) — the options struct.
+- [`QuantileMapOptions`](QuantileMapOptions.md) — the options.
 - [`PowerMap`](PowerMap.md) — a smooth analytic alternative for the same
   "reshape a skewed distribution" problem.
 - [`transform/Introduction`](Introduction.md) — the parent sub-family.

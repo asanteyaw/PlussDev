@@ -20,7 +20,7 @@ points that take fewer random splits to isolate) is the only value today.
 The full isolation-forest configuration — tree count, sampling, contamination
 threshold, RNG. See
 [`prep::outlier::OutlierIsolatorOptions`](../prep/outlier/OutlierIsolatorOptions.md)
-for every field; this struct just carries it so it can sit inside a
+for every field; this value just carries it so it can sit inside a
 [`ModelSpec`](ModelSpec.md)'s `FamilyOptions` variant alongside the other
 eight families.
 

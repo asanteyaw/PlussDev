@@ -308,7 +308,7 @@ conv1d on MPS: OK, platform=2
 
 ## See Also
 
-- [`Conv1dOptions`](Conv1dOptions.md) -- the options struct.
+- [`Conv1dOptions`](Conv1dOptions.md) -- the options.
 - [`Conv`](Conv.md) -- the 2-D generalization (also aliased `Conv2d`,
   `ConvNd`); `Conv1d` is implemented on top of it internally.
 - [`Conv3d`](Conv3d.md) -- the 3-D generalization.

@@ -55,7 +55,7 @@ Column name for the exported case-axis column when `add_cases=true`.
 (`const pluss::loader::WriteExcelOptions&`)
 
 Equivalent settings expressed as a reusable config object, inline entries, or the typed
-`WriteExcelOptions` struct — recognizing the same `sheet_name`/`add_cases` (also
+`WriteExcelOptions` — recognizing the same `sheet_name`/`add_cases` (also
 accepted under the legacy alias `cases`)/`header`/`case_label`/`null_rep` fields as the
 positional overload.
 
@@ -111,7 +111,7 @@ Loading this back with
 restores the original case labels, the same way `save_csv()`/`load_csv()`'s
 `case_label`/`case_col` pair does.
 
-Example 3. Save with a typed `WriteExcelOptions` struct.
+Example 3. Save with a typed `WriteExcelOptions`.
 
 ```cpp
 pluss::loader::WriteExcelOptions options;

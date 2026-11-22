@@ -138,7 +138,7 @@ This layer is best for compact pricing kernels and direct research loops.
 
 - `OptionType`
 - market scalars or `Series`
-- model parameter structs (`HestonParams`, `BatesParams`, etc)
+- model parameter sets (`HestonParams`, `BatesParams`, etc)
 - method-specific options (`ImpliedVolOptions`, `HestonFftOptions`, `CosOptions`, `MonteCarloOptions`)
 
 ### Output
@@ -148,7 +148,7 @@ This layer is best for compact pricing kernels and direct research loops.
 
 ### Options
 
-Key option structs:
+Key options:
 - `ImpliedVolOptions`: method/bounds/tolerance/iterations
 - `HestonIntegrationOptions`: integration steps and mode
 - `HestonFftOptions`: FFT grid, damping, quadrature
@@ -343,7 +343,7 @@ Use this surface for simulation-driven research, stress testing, and Monte Carlo
 ### Inputs
 
 - `steps`, `paths`, `spot0`, `dt`
-- model params struct
+- model params value
 - optional `vol::SimOptions`
 
 ### Output
@@ -390,12 +390,12 @@ Rates APIs cover short-rate simulations and bond pricing under multiple classic 
 ### Inputs
 
 - `steps`, `paths`, `dt`
-- params struct (`VasicekParams`, `CirParams`, `HullWhiteParams`, `HjmParams`)
+- params value (`VasicekParams`, `CirParams`, `HullWhiteParams`, `HjmParams`)
 - optional `rate::SimOptions`
 
 ### Output
 
-- path structs (`RatePaths`, `HjmPaths`)
+- path values (`RatePaths`, `HjmPaths`)
 - ZCB prices
 
 ### Options
@@ -749,7 +749,7 @@ double joint = fin::cal::weighted_joint_nll(-1250.0, -430.0, w);
 
 ### API Signature
 
-- deterministic seeds via option structs (`seed`, `offset`, `resample_seed`)
+- deterministic seeds via options (`seed`, `offset`, `resample_seed`)
 
 ### Notes
 

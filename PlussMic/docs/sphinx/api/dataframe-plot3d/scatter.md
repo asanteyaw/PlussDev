@@ -72,8 +72,8 @@ accessor's `hue_feature`).
 | `align` | Inner, Auto, pad value 0 | Shared with Catalog plotting; this DataFrame method does not use it. |
 
 `default_marker_size` is only consulted when `size_feature` is omitted; `scene`/`trace`
-are the same shared structs documented in full on [`line()`](line.md). `align` exists so
-`Catalog::plot3d().scatter()` can reuse this struct type for its own multi-key
+are the same shared options documented in full on [`line()`](line.md). `align` exists so
+`Catalog::plot3d().scatter()` can reuse this value type for its own multi-key
 reconciliation (see
 [`CatalogPlot3DAccessor::scatter`](../catalog-plot3d/scatter.md)) — `DataFramePlot3DAccessor::scatter()`
 itself never reads it: every feature named here is already a column of the same,

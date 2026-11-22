@@ -26,6 +26,6 @@ explicitly when class logits live on a different axis, e.g. `dim=1` for a
 
 ## See Also
 
-- [`Softmax`](Softmax.md) -- the only consumer of this options struct.
+- [`Softmax`](Softmax.md) -- the only consumer of these options.
 - [`LogSoftmaxOptions`](LogSoftmaxOptions.md) -- the equivalent options
-  struct for `log_softmax`.
+  value for `log_softmax`.

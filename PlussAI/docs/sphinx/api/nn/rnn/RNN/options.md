@@ -46,7 +46,7 @@ None.
 Three examples: reading back the options a positional-constructor call
 produced, confirming that mutating a geometry field through the mutable
 overload does not retroactively resize `params()`, and confirming the
-`RNNOptions`-struct and positional constructor forms produce identical
+`RNNOptions`-value and positional constructor forms produce identical
 options.
 
 ### Example 1
@@ -128,7 +128,7 @@ after reset_parameters(): params()[0].weight_hh cols=16
 
 ### Example 3
 
-The `RNNOptions`-struct constructor and the positional-argument
+The `RNNOptions`-value constructor and the positional-argument
 constructor are just two ways to reach the same state -- `options()`
 reports identical values either way.
 

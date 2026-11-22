@@ -16,7 +16,7 @@ lymph::prep::Stage lymph::prep::stage::robust_scaler(
     lymph::options::RobustScaler options = {});
 ```
 
-`lymph::options::RobustScaler` is the canonical spelling of the option struct;
+`lymph::options::RobustScaler` is the canonical spelling of the options;
 `lymph::prep::RobustScalerOptions` is the family-scoped alias for the same type.
 
 ## What It Does
@@ -226,7 +226,7 @@ standard_scaler, same outlier (first five rows squashed):
 ### Example 3
 
 `with_scaling` off, and a wider quantile band. Family-alias spelling of the
-option struct.
+options.
 
 ```cpp
 #include <pluss/pluss.h>

@@ -8,14 +8,14 @@
 [`prep::LabelEncoder`](LabelEncoder.md),
 [`prep::FrequencyEncoder`](FrequencyEncoder.md),
 [`prep::BaseNEncoder`](BaseNEncoder.md),
-[`prep::HashingEncoder`](HashingEncoder.md) — and the option structs that
+[`prep::HashingEncoder`](HashingEncoder.md) — and the options that
 configure them ([`options::OneHotEncoder`](OneHotEncoderOptions.md) and its
 siblings).
 
 ## Object, Not Stage
 
 Every encoder here has a twin among the [`prep::stage`](../stage.md)
-factories that does identical arithmetic from the identical option struct. The
+factories that does identical arithmetic from the identical options. The
 subfamily exists for the cases where you want the encoder as a *value you hold*
 rather than a step folded into a model:
 

@@ -111,7 +111,7 @@ This reference covers the canonical public surface:
 
 - construction: four constructors, one per payload type, each with a copy
   and a move overload -- [`construction`](api/queue/construction.md)
-- identifying the payload: the `Kind` enum, [`kind`](api/queue/kind.md)
+- identifying the payload: the `Kind`, [`kind`](api/queue/kind.md)
 - typed access back to the payload: [`accessors`](api/queue/accessors.md)
   (`series()`, `note()`, `timeline()`, `duration()`)
 - structural introspection: [`state`](api/queue/state.md) (`defined()`,

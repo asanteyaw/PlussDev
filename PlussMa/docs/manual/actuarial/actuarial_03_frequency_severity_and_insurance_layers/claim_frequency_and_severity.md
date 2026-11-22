@@ -60,7 +60,7 @@ pluss::Series losses::negbin_pmf(double r, double p, std::int64_t max_count, plu
 | `poisson_pmf(lambda, max_count)` | the masses at `0..max_count` | `max_count` ≥ 0 |
 | `negbin_pmf(r, p, max_count)` | the masses at `0..max_count` | `p` in (0, 1) |
 
-The moment functions return an `AggregateMoments`, a struct of two rank-zero `Series`, `mean` and `variance`. The same struct carries the aggregate moments of the next page.
+The moment functions return an `AggregateMoments`, a value of two rank-zero `Series`, `mean` and `variance`. The same value carries the aggregate moments of the next page.
 
 ## The moments of the four laws
 

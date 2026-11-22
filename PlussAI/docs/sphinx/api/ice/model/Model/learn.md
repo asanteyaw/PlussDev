@@ -67,7 +67,7 @@ subclass changes `learn`'s actual behavior by overriding `forward`/
 
 ## Errors
 
-Throws on malformed options (see each nested policy struct's own page)
+Throws on malformed options (see each nested policy value's own page)
 or a numerically unstable step, when
 [`ExecutionPolicy::fail_on_non_finite`](../../options/ExecutionPolicy.md)
 is set (the default).

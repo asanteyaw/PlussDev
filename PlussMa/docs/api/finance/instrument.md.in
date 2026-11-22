@@ -1,6 +1,6 @@
 # Instruments and market
 
-What is priced and the market it is priced in. A [`Vanilla`](instrument/Vanilla.md) is a strip of European, Bermudan or American calls and puts, one strike and one maturity per option; a [`State`](instrument/State.md) holds the spot, interest rate and dividend yield. Both are plain structs of `Series`, and the factories ([`instrument::make`](instrument/make.md), [`american`](instrument/american.md), [`bermudan`](instrument/bermudan.md), [`market::make`](instrument/market_make.md)) build them from numbers.
+What is priced and the market it is priced in. A [`Vanilla`](instrument/Vanilla.md) is a strip of European, Bermudan or American calls and puts, one strike and one maturity per option; a [`State`](instrument/State.md) holds the spot, interest rate and dividend yield. Both are plain values of `Series`, and the factories ([`instrument::make`](instrument/make.md), [`american`](instrument/american.md), [`bermudan`](instrument/bermudan.md), [`market::make`](instrument/market_make.md)) build them from numbers.
 
 | You want | Use |
 |---|---|

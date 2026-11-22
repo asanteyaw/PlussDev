@@ -37,4 +37,4 @@ range.
 
 ## See Also
 
-- [`Softplus`](Softplus.md) -- the only consumer of this options struct.
+- [`Softplus`](Softplus.md) -- the only consumer of these options.

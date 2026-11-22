@@ -22,7 +22,7 @@ without constructing a `Module`. Also reachable via the short
 | [`causal_attention_mask`](functional/causal_attention_mask.md) / [`square_subsequent_mask`](functional/square_subsequent_mask.md) | build attention masks that block future positions |
 | [`NetWeight`](functional/NetWeight.md) / [`NetConfig`](functional/NetConfig.md) | the explicit weight/configuration types `rnn`/`gru`/`lstm` take |
 | [`MultiheadWeights`](functional/MultiheadWeights.md) | the explicit projection weight/bias bundle `multihead_attention` takes |
-| [`AttentionOptions`](functional/AttentionOptions.md) / [`MultiheadOptions`](functional/MultiheadOptions.md) | the options structs for the two attention functions |
+| [`AttentionOptions`](functional/AttentionOptions.md) / [`MultiheadOptions`](functional/MultiheadOptions.md) | the options for the two attention functions |
 
 ## How To Call It
 

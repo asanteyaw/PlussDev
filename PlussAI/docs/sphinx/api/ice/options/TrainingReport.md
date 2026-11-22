@@ -2,7 +2,7 @@
 
 The record of the most recent [`learn`](../model/Model/learn.md) call on a
 model, returned by [`Model::training_report`](../model/Model/training_report.md).
-It is a plain data struct: calling code reads its fields and never constructs one.
+It is a plain data value: calling code reads its fields and never constructs one.
 Each `learn` call replaces the previous record, and a fresh model has an empty one.
 
 ## Signature

@@ -124,7 +124,7 @@ converged in 4 iterations
 
 ## See Also
 
-- [`OptimaExitFlag`](OptimaExitFlag.md): the enumeration
+- [`OptimaExitFlag`](OptimaExitFlag.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

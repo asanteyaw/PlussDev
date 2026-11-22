@@ -159,7 +159,7 @@ data=[30] -- above threshold, falls back to x itself
 
 ## See Also
 
-- [`SoftplusOptions`](SoftplusOptions.md) -- the options struct.
+- [`SoftplusOptions`](SoftplusOptions.md) -- the options.
 - [`ReLU`](ReLU.md) -- the sharp-cornered function `Softplus` approximates.
 
 <!-- apiref:toctree:start -->

@@ -50,7 +50,7 @@ std::cout << pluss::coden::dtype_name(text.dtype()) << ' '
 Text Bytes Bool Int64 Float64
 ```
 
-`dtype_name()` is useful for diagnostics; control flow should compare the enum
+`dtype_name()` is useful for diagnostics; control flow should compare the typed value
 values directly rather than comparing these names.
 
 ## Example 2: Shape Does Not Affect Dtype

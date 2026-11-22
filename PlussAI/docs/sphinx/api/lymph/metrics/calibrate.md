@@ -72,7 +72,7 @@ A `lymph::TrainOptions` — pass it straight to `Model::learn` /
 
 ## Errors
 
-- None at call time; these are pure struct edits. A calibration fit that cannot
+- None at call time; these are pure value edits. A calibration fit that cannot
   converge surfaces later, during `learn`.
 
 ## Practical Examples

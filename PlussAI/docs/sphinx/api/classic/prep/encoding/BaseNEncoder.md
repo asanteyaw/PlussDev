@@ -263,7 +263,7 @@ max abs diff between Shelf and FeatureBatch forms = 0
 
 ## See Also
 
-- [`BaseNEncoderOptions`](BaseNEncoderOptions.md) — the options struct.
+- [`BaseNEncoderOptions`](BaseNEncoderOptions.md) — the options.
 - [`HashingEncoder`](HashingEncoder.md) — the unbounded-cardinality
   alternative, no vocabulary at all.
 - [`OneHotEncoder`](OneHotEncoder.md) — the wider-output alternative with

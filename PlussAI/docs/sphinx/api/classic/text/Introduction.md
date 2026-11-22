@@ -11,7 +11,7 @@ every n-gram directly into a fixed-width output. Both can emit dense
 ([`SparseTripletMatrix`](../sparse/SparseTripletMatrix.md)) output from
 the same plain `std::string` documents, and both share the exact same
 tokenization mechanics (`lowercase`, `min_ngram`/`max_ngram`) even though
-their options structs are separate.
+their options are separate.
 
 Like [`online`](../online/Introduction.md) and [`sparse`](../sparse/Introduction.md),
 `text` is deliberately **not** part of the
@@ -74,12 +74,12 @@ therefore reaches all the way through TF-IDF too: every document's term
 frequency collapses to `0`/`1` before
 [`TfIdfMapOptions::sublinear_tf`](TfIdfMapOptions.md#sublinear_tf) or the
 IDF multiply ever run. There is no separate "binary" toggle on
-`TfIdfMapOptions` itself — the two structs are not independent.
+`TfIdfMapOptions` itself — the two values are not independent.
 
 ## Reading Order
 
 1. [`LexiconMapOptions`](LexiconMapOptions.md) /
-   [`TfIdfMapOptions`](TfIdfMapOptions.md) — the two structs
+   [`TfIdfMapOptions`](TfIdfMapOptions.md) — the two values
    [`LexiconMapper`](LexiconMapper.md) reads, at construction and per call
    respectively.
 2. [`LexiconMapper`](LexiconMapper.md) — the richer of the two classes

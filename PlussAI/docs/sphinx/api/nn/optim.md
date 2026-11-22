@@ -19,7 +19,7 @@ the graph an optimizer's `step()` would otherwise have nothing to read.
 
 | Entity | What it gives you |
 | --- | --- |
-| [`Optimizer`](optim/Optimizer.md) | the base class: `step()` (four overloads), `parameters()`, `size()`, `clear()`, per-group lane telemetry |
+| [`Optimizer`](optim/Optimizer.md) | the base type: `step()` (four overloads), `parameters()`, `size()`, `clear()`, per-group lane telemetry |
 | [`GradientClipOptions`](optim/GradientClipOptions.md) | shared by every optimizer: clip-by-value or clip-by-norm gradient clipping |
 | [`ExecutionOptions`](optim/ExecutionOptions.md) | shared by every optimizer: which update lane to run, strictness, capturable mode |
 | [`StepDiagnosticsOptions`](optim/StepDiagnosticsOptions.md) | shared by every optimizer: opt-in fail-fast checks for a bad `step()` |
@@ -69,8 +69,8 @@ arguments at all.
 
 `SGD`/`Adagrad`/`Adam`/`AdamW`/`NAdam`/`RMSprop` all share the same public
 shape: three constructor overloads (parameters + options, per-group
-options, or a `Module&`), an `Options` struct ending in the same two
-cross-cutting fields (`clip`, `execution`), a `Group` struct for per-group
+options, or a `Module&`), an `Options` ending in the same two
+cross-cutting fields (`clip`, `execution`), a `Group` for per-group
 option overrides, and `options()`/`set_options()`/`set_group_options()`/
 `capture_state()`/`restore_state()`. Once you know one, reading another is
 mostly a matter of its own update formula and its own options fields --

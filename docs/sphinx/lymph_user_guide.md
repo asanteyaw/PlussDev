@@ -28,7 +28,7 @@ Use NodeJ directly when you need low-level batch shaping or custom orchestration
 
 ### Notes
 
-Lymph reuses NodeJ option structs and enums, so your option tuning transfers directly.
+Lymph reuses NodeJ options and their values, so your option tuning transfers directly.
 
 ### Inputs
 
@@ -42,7 +42,7 @@ Lymph reuses NodeJ option structs and enums, so your option tuning transfers dir
 ### Options
 
 - no runtime flags required for basic CPU usage
-- deterministic behavior is controlled through option structs (`random_state`, `deterministic`)
+- deterministic behavior is controlled through options (`random_state`, `deterministic`)
 
 ### Examples
 
@@ -83,8 +83,8 @@ A `Workflow` is an ordered sequence of preprocessing stages followed by one mode
 
 ### Options
 
-- stage options are typed structs (no string configs)
-- model options are family-specific typed structs
+- stage options are typed values (no string configs)
+- model options are family-specific typed values
 
 ### Examples
 
@@ -288,7 +288,7 @@ Preprocessors operate on DataFrame and return transformed DataFrame. If `feature
 
 #### Options
 
-- each preprocessor has its typed options struct (see cookbook section for recommendations)
+- each preprocessor has its typed options (see cookbook section for recommendations)
 
 #### Examples
 
@@ -415,7 +415,7 @@ Bernoulli, Multinomial, and Complement Bayes factories set the Bayes likelihood 
 
 ### Inputs
 
-- one options struct per family
+- one set of options per family
 
 ### Output
 
@@ -752,4 +752,4 @@ Expected output behavior:
 - `train_test_split` -> `hold_out_split`
 - `GridSearchCV` workflow selection -> `selection::tune` / `selection::tune_specs`
 
-For option recipes, see **Lymph Cookbook**. For exhaustive enum/bool combinations, see **Lymph Combination Atlas**. For failure diagnostics, see **Lymph Troubleshooting**.
+For option recipes, see **Lymph Cookbook**. For exhaustive categorical/bool combinations, see **Lymph Combination Atlas**. For failure diagnostics, see **Lymph Troubleshooting**.

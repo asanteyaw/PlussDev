@@ -54,7 +54,7 @@ heuristics alone.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::NerOptions`. Its defaults give heuristic
+The options is `pluss::ai::nlp::NerOptions`. Its defaults give heuristic
 entities, learned phrases when available, no overlap, and the classic backend.
 
 ### `lowercase`

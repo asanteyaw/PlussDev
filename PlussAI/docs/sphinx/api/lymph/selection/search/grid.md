@@ -52,7 +52,7 @@ policy. Nothing runs until [`Search::run`](Search/run.md).
   `cv.deterministic` in the `CrossValOptions` overload.
 - **`build`** — reads `options.search` (`Grid` or `Random`), `options.trials`,
   `options.random`, `options.split`, and `options.max_parallel` from one
-  struct. Use it when the search configuration is already assembled as a value.
+  value. Use it when the search configuration is already assembled as a value.
 
 The `SplitOptions` overloads take a raw split; the `CrossValOptions` overloads
 translate a validation plan into one and turn on its reliability defaults
@@ -67,7 +67,7 @@ translate a validation plan into one and turn on its reliability defaults
 | `name` | `std::string` | — |
 | `values` | `std::vector<double>` | — |
 
-Values are always `double`. For a boolean or enum hyperparameter, sweep `{0.0,
+Values are always `double`. For a boolean or categorical hyperparameter, sweep `{0.0,
 1.0}` (or `{0, 1, 2}`) and convert inside `make_model`:
 `point.at("fit_intercept") != 0.0`.
 
@@ -87,7 +87,7 @@ Values are always `double`. For a boolean or enum hyperparameter, sweep `{0.0,
 : `{seed, deterministic}` for the sampler.
 
 `options` — `lymph::TuneOptions` *(`build` only)*
-: `{search, trials, max_parallel, split, random}` in one struct.
+: `{search, trials, max_parallel, split, random}` in one value.
 
 ## Returns
 
@@ -327,7 +327,7 @@ trials run = 3, best = regularization_strength=0.100000, fit_intercept=0.000000
 
 ### Example 4
 
-`build(axes, TuneOptions)` — the search config comes in as one struct.
+`build(axes, TuneOptions)` — the search config comes in as one value.
 
 ```cpp
 #include <pluss/pluss.h>

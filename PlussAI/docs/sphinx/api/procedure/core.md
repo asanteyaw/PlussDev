@@ -5,7 +5,7 @@
 [`Step`](core/Step.md) (one node), [`Link`](core/Link.md) (one edge),
 [`Artifact`](core/Artifact.md) (the typed value flowing between steps), and
 [`ProcedureResult`](core/ProcedureResult.md) (what `Procedure::run` returns)
--- plus the plain structs that configure and describe them.
+-- plus the plain values that configure and describe them.
 
 ## The Surface
 

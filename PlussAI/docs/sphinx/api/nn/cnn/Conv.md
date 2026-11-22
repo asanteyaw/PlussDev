@@ -312,7 +312,7 @@ conv2d on MPS: OK, platform=2
 
 ## See Also
 
-- [`ConvOptions`](ConvOptions.md) -- the options struct (also
+- [`ConvOptions`](ConvOptions.md) -- the options (also
   `Conv2dOptions`/`ConvNdOptions`).
 - [`Conv1d`](Conv1d.md) -- the 1-D specialization; `Conv1d` is implemented
   on top of this class internally.

@@ -1,6 +1,6 @@
 # `pluss::ai::nn::optim::StepLaneTelemetry`
 
-A plain report struct: one instance per parameter group, describing which
+A plain report value: one instance per parameter group, describing which
 update lane that group's most recent [`step()`](Optimizer/step.md) call
 requested versus what it actually resolved to and ran, plus enough
 platform/dtype/support context to explain why. Never constructed directly
@@ -166,7 +166,7 @@ capturable_supported = true
 - [`Optimizer::last_step_lane_telemetry`](Optimizer/last_step_lane_telemetry.md)
   -- how this telemetry is retrieved, with `requested`-versus-`resolved`
   examples across `Auto`, an explicit lane, and multiple groups.
-- [`ExecutionOptions`](ExecutionOptions.md) -- the options struct
+- [`ExecutionOptions`](ExecutionOptions.md) -- the options
   `requested` reflects.
 
 <!-- apiref:toctree:start -->

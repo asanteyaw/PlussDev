@@ -153,7 +153,7 @@ best theta = 0.04000000 , objective = 0.00000000
 ## See Also
 
 - [`Field`](../Field.md): the class
-- [`bind_objective_typed`](bind_objective_typed.md): taking the concrete struct
+- [`bind_objective_typed`](bind_objective_typed.md): taking the concrete value
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

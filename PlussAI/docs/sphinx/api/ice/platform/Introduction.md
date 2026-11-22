@@ -8,7 +8,7 @@ surface accepts, and [`resolve_platform`](resolve_platform.md), the
 function that turns a request into a concrete `pluss::Platform` by
 querying this machine's real device availability.
 
-## Why An Enum, Not A Bool
+## Why A Choice Of Values, Not A Bool
 
 A plain `use_gpu` flag can't distinguish "let ice pick the best available
 device" from "I explicitly want acceleration, tell me if you can't give

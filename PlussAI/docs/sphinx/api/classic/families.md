@@ -2,7 +2,7 @@
 
 `families` owns the estimator taxonomy: [`ModelSpec`](families/ModelSpec.md) —
 the `{task, family, options}` triple that *describes* an estimator without
-building one — and the nine `*FamilyOptions` structs, one per estimator
+building one — and the nine `*FamilyOptions`, one per estimator
 family, that fill its `options` slot.
 
 Nothing here trains or predicts. [`estimators`](estimators.md) is where a

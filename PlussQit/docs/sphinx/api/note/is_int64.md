@@ -73,7 +73,7 @@ true dim=2
 
 ## See Also
 
-- [`Note::dtype`](dtype.md): retrieve the full dtype enum.
+- [`Note::dtype`](dtype.md): retrieve the full dtype value.
 - `Note::integers()`: borrow all Int64 lanes without copying.
 - [`Note::is_float64`](is_float64.md): distinguish continuous numeric storage.
 

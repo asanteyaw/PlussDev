@@ -210,9 +210,9 @@ Help note:
 - ADF null is unit root; KPSS null is stationarity. Interpret jointly.
 - DM null is equal predictive accuracy for the selected loss.
 
-## 9) Reading Result Structs Properly
+## 9) Reading Results Properly
 
-All result structs include at least:
+All results include at least:
 - `stat`
 - `pvalue`
 - `critical`

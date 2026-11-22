@@ -3,7 +3,7 @@
 ## What This Category Owns
 
 `callback` owns the full training-loop observer surface:
-[`Callback`](Callback.md) (the hook base class every observer derives
+[`Callback`](Callback.md) (the hook base type every observer derives
 from), [`RunState`](RunState.md) (the one mutable object every hook
 call shares), [`CallbackChain`](CallbackChain.md) (a `Callback` that
 fans out to several others), and

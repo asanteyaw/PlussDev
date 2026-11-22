@@ -76,7 +76,7 @@ sink step, for instance).
 
 ## Guidance
 
-Every built-in engine adapter fills this struct in automatically with
+Every built-in engine adapter fills this value in automatically with
 values appropriate to what it wraps; fill it in by hand only for a
 [`callable`](../callable.md) step that needs persistence outside the
 [`registry`](../registry.md)'s key-based mechanism. `key` is the one
@@ -87,8 +87,8 @@ somewhere (built-in, or bound via the [`registry`](../registry.md)).
 
 ## See Also
 
-- [`Step`](Step.md) -- every accessor this struct backs.
+- [`Step`](Step.md) -- every accessor this value backs.
 - [`registry`](../registry.md) -- `CustomContract`/`CustomPersist`, the
-  caller-facing mechanism this struct's `custom` flag connects to.
-- [`persist`](../persist.md) -- the bundle format this struct's fields
+  caller-facing mechanism this value's `custom` flag connects to.
+- [`persist`](../persist.md) -- the bundle format this value's fields
   end up written into.

@@ -4,13 +4,13 @@
 
 [Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
 
-Sixty families are implemented, and only the common ones are structs with their own names. All of them, the less common ones included, are reached through one set of free functions that take the family as a value of the enumeration `dst::Kind`:
+Sixty families are implemented, and only the common ones are values with their own names. All of them, the less common ones included, are reached through one set of free functions that take the family as a `dst::Kind` value:
 
 - `distr::pdf(kind, x, params)`, `distr::logpdf(...)`, `distr::cdf(...)`, `distr::logcdf(...)`,
 - `distr::sample(kind, params, sizes, cfg, seed)` and `distr::sample_like(kind, params, like, seed)`,
 - `distr::supports(kind)`, which tells whether a kind is implemented.
 
-`params` is a list of the parameters in the order of the table in the [chapter overview](../dist_01_evaluating_and_sampling.md); a list with fewer entries selects the family's default parameters where it has a short form (`{nu}` for the Student t means location 0 and scale 1). The kind-based functions give the same numbers as the structs, so the two routes can be mixed freely. The programs use `namespace distr = pluss::subsp::stats::distr;` and `namespace dst = distr::dst;`.
+`params` is a list of the parameters in the order of the table in the [chapter overview](../dist_01_evaluating_and_sampling.md); a list with fewer entries selects the family's default parameters where it has a short form (`{nu}` for the Student t means location 0 and scale 1). The kind-based functions give the same numbers as the values, so the two routes can be mixed freely. The programs use `namespace distr = pluss::subsp::stats::distr;` and `namespace dst = distr::dst;`.
 
 The value of a common interface is that families can be compared, swapped and *checked against each other*, which is what the programs below do.
 

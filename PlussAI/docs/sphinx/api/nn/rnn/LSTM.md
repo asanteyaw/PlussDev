@@ -66,7 +66,7 @@ parameterized layer in this reference already documents.
 
 ## See Also
 
-- [`LSTMOptions`](LSTMOptions.md) -- the options struct.
+- [`LSTMOptions`](LSTMOptions.md) -- the options.
 - [`RNN`](RNN.md) -- the cheaper, ungated alternative.
 - [`GRU`](GRU.md) -- the other gated alternative, without a separate cell
   state or projection.

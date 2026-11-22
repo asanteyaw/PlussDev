@@ -6,7 +6,7 @@ Many `flash` functions take a whole `Dataset` and the names of its columns, so t
 
 ## How it works
 
-`flash::load_dataset(name)` returns one of thirteen bundled datasets. A `Dataset` keeps numeric, text and temporal columns separately, with `numeric_names`, `text_names` and `temporal_names` listing them, and reports `nrows()` and `ncols()`. `jointplot(studio, data, x_name, y_name, kind)` plots two named columns, with `kind` one of `"scatter"`, `"reg"`, `"hex"` or `"kde"`, or a `JointPlotOptions` struct for finer control. `pairplot(studio, data, PairPlotOptions)` and `triplot(studio, data, TriplotOptions)` use every numeric column, restricted by the options. Your own data enters through `Dataset::from_table(frame)` for a `DataFrame`, or through a `MatrixFrameOptions` that names the feature axis and the features of a matrix.
+`flash::load_dataset(name)` returns one of thirteen bundled datasets. A `Dataset` keeps numeric, text and temporal columns separately, with `numeric_names`, `text_names` and `temporal_names` listing them, and reports `nrows()` and `ncols()`. `jointplot(studio, data, x_name, y_name, kind)` plots two named columns, with `kind` one of `"scatter"`, `"reg"`, `"hex"` or `"kde"`, or a `JointPlotOptions` for finer control. `pairplot(studio, data, PairPlotOptions)` and `triplot(studio, data, TriplotOptions)` use every numeric column, restricted by the options. Your own data enters through `Dataset::from_table(frame)` for a `DataFrame`, or through a `MatrixFrameOptions` that names the feature axis and the features of a matrix.
 
 ## Exploring a dataset
 
@@ -24,7 +24,7 @@ Four kinds of joint view of the same two columns:
 
 ![kde](assets/flash_joint_kde.svg)
 
-The options struct with density margins:
+The options with density margins:
 
 ![kde with density margins](assets/flash_joint_kde_margins.svg)
 
@@ -63,7 +63,7 @@ The listing shows 150 rows and eight columns, five numeric and three text. The p
 ## Decisions
 
 - **Series or dataset:** use series for one plot, a dataset when you will draw several views of the same columns.
-- **Kind string or options:** a kind string for the default look, an options struct for bins, levels, triangles and sizes.
+- **Kind string or options:** a kind string for the default look, an options value for bins, levels, triangles and sizes.
 - **Your own table:** wrap it with `Dataset::from_table` once and reuse it.
 - **A matrix:** give `MatrixFrameOptions` a feature axis and names; without names the features are numbered.
 

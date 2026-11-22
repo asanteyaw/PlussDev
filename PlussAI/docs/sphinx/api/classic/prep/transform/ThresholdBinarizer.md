@@ -179,7 +179,7 @@ data=[[-1],
 ## See Also
 
 - [`ThresholdBinarizerOptions`](ThresholdBinarizerOptions.md) — the options
-  struct.
+  value.
 - [`QuantileMap`](QuantileMap.md) — a data-driven alternative when the
   right threshold is a percentile rather than a value you already know.
 - [`transform/Introduction`](Introduction.md) — the parent sub-family.

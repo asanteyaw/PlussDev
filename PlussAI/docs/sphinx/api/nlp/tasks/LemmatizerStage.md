@@ -42,7 +42,7 @@ to surface forms.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::LemmatizerOptions`. All three fields
+The options is `pluss::ai::nlp::LemmatizerOptions`. All three fields
 default to `true`.
 
 ### `lowercase`

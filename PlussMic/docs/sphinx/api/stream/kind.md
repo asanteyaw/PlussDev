@@ -13,7 +13,7 @@ StreamKind Stream::kind() const
 
 ## What It Does
 
-Returns which payload kind the stream currently stores, as a `StreamKind` enum value:
+Returns which payload kind the stream currently stores, as a `StreamKind` value:
 
 ### `StreamKind` values
 
@@ -25,7 +25,7 @@ Returns which payload kind the stream currently stores, as a `StreamKind` enum v
 | `TimeIndex` | `3` | — |
 
 ```{important} StreamKind has no operator<< — cast to int or use ptype() for text
-`StreamKind` is a plain `enum class` with no stream-insertion operator defined.
+`StreamKind` is a plain set of values with no stream-insertion operator defined.
 `std::cout << stream.kind()` does not compile. Use `static_cast<int>(stream.kind())` for
 the numeric value, or [`ptype()`](ptype.md) for a human-readable string ("Series", "Note",
 "Timeline", "TimeIndex").
@@ -87,7 +87,7 @@ ptype: Note
 
 ## See Also
 
-- [`Stream::ptype`](ptype.md): the human-readable string counterpart to this enum.
+- [`Stream::ptype`](ptype.md): the human-readable string counterpart to this value.
 - [`Stream::dtype`](dtype.md): a more specific string, including numeric sub-type for
   `Series` (e.g. `"Series[float64]"`).
 - [`Stream::cast`](cast.md) / [`Stream::astype`](astype.md): convert between kinds.

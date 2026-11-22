@@ -45,7 +45,7 @@ parameter.
 `StepStage stage = StepStage::Infer`
 : Which phase is active right now: `Learn`, `Valid`, `Test`, or
   `Infer` -- see [`StepContext::stage`](../step/StepContext.md) for the
-  same enum's full meaning. During `Coach::learn`, this toggles
+  same values' full meaning. During `Coach::learn`, this toggles
   between `Learn` and `Valid` batch-by-batch as the validation pass
   runs inside the same epoch; `on_epoch_end` always sees it back at
   `Learn`.

@@ -12,7 +12,7 @@ where {math}`L` is one of the losses of page 4 and {math}`\Theta` is the set of 
 
 1. **Build the `Field`** with the instruments of the quotes (a strike and a maturity for each quote, in the same order), the market, a starting model, and `risk = PriceOnly`.
 2. **Choose the loss** in `controls.loss`.
-3. **Write the objective**: a function from a real vector {math}`x` to a number, which turns {math}`x` into a model, prices, and returns the loss. Either set the parameters in place with `field.model.parameters(x)` and call `loss_value(quotes)`, or bind the `Field` once with `bind_objective_typed<M>(quotes)` and call the bound function on a model struct.
+3. **Write the objective**: a function from a real vector {math}`x` to a number, which turns {math}`x` into a model, prices, and returns the loss. Either set the parameters in place with `field.model.parameters(x)` and call `loss_value(quotes)`, or bind the `Field` once with `bind_objective_typed<M>(quotes)` and call the bound function on a model.
 4. **Minimise** it with a derivative-free method such as Nelder-Mead ([Derivative-Free Optimization](../../../optim/dfo.md)). The objective is a price computed by a transform or a formula, smooth in the parameters but with no gradient supplied.
 5. **Write the result back** with `field.model.parameters(best)`.
 

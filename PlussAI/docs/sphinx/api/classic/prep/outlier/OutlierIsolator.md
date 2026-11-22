@@ -225,7 +225,7 @@ contamination=0.5: offset = -0.399713
 ## See Also
 
 - [`OutlierIsolatorOptions`](OutlierIsolatorOptions.md) — the options
-  struct.
+  value.
 - [`RandomState`](../../core/RandomState.md) — the seed/determinism pair
   `random` takes.
 - [`RobustScaler`](../scaling/RobustScaler.md) — de-emphasizing outliers in

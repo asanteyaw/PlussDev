@@ -248,7 +248,7 @@ data=[[0],
 
 ## See Also
 
-- [`RobustScalerOptions`](RobustScalerOptions.md) — the options struct.
+- [`RobustScalerOptions`](RobustScalerOptions.md) — the options.
 - [`StandardScaler`](StandardScaler.md) / [`MinMaxScaler`](MinMaxScaler.md) /
   [`MaxAbsScaler`](MaxAbsScaler.md) — the other three scalers.
 - [`OutlierIsolator`](../outlier/OutlierIsolator.md) — flags or scores

@@ -712,7 +712,7 @@ data=[1]
 
 ## See Also
 
-- [`OnlineLinearOptions`](OnlineLinearOptions.md) — the options struct.
+- [`OnlineLinearOptions`](OnlineLinearOptions.md) — the options.
 - [`make_online_linear_classifier`](make_online_linear_classifier.md) —
   the eager-validation entry point.
 - [`OnlineLinearRegressor`](OnlineLinearRegressor.md) — the regression

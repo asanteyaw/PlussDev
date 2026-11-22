@@ -17,7 +17,7 @@ ShelfPlotAccessor Shelf::plot(const DataFramePlotOptions& options) const
 Enters the single-series charting accessor bound to the current `Shelf` — line, step,
 area, scatter, bar, histogram, box, violin, pie, and a handful of diagnostic plots, one
 chart kind per method. `plot()` itself draws nothing; it just binds the shelf (and,
-optionally, shared chart-wide defaults, the same `DataFramePlotOptions` struct
+optionally, shared chart-wide defaults, the same `DataFramePlotOptions`
 [`DataFrame::plot`](../dataframe/plot.md) takes) and hands back an accessor whose methods
 each return a `pluss::pl::Studio` — the same figure type every 2D and 3D `DataFrame` chart
 method returns.
@@ -36,7 +36,7 @@ that wrapping follows.
 
 Chart-wide defaults shared across every plot drawn from the returned accessor — tick/label
 rotation, figure size, tight layout, and more. `default_x_feature` and `default_hue_feature`
-are still accepted (the same struct is reused from the `DataFrame` accessor) but have no
+are still accepted (the same value is reused from the `DataFrame` accessor) but have no
 effect here, since every `ShelfPlotAccessor` method resolves its own x-axis or hue
 explicitly via a second `Shelf` argument rather than a named feature string.
 

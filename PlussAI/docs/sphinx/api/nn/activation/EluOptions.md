@@ -29,6 +29,6 @@ inputs); there is rarely a reason to raise it much above `1.0`.
 
 ## See Also
 
-- [`Elu`](Elu.md) -- the only consumer of this options struct.
+- [`Elu`](Elu.md) -- the only consumer of these options.
 - [`elu`](../functional/elu.md) -- the stateless functional form, which
-  takes `alpha` as a plain function argument instead of this struct.
+  takes `alpha` as a plain function argument instead of this value.

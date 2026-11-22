@@ -16,7 +16,7 @@ For each fitted column `map` computes `lower + (x - min) / (max - min) * (upper 
 
 ## `summary()`
 
-`MinMaxScaler` returns a `TransformerSummary`, not a named struct:
+`MinMaxScaler` returns a `TransformerSummary`, not a named value:
 
 ### `TransformerSummary` fields
 

@@ -167,7 +167,7 @@ MSE (sum, via brace-init options): 20
 
 ## See Also
 
-- [`MSEOptions`](MSEOptions.md) -- the options struct.
+- [`MSEOptions`](MSEOptions.md) -- the options.
 - [`RelativeMSE`](RelativeMSE.md) -- the same squared-error formula,
   additionally scaled by a caller-supplied divisor.
 - [`Huber`](Huber.md) / [`SmoothL1`](SmoothL1.md) -- regression losses

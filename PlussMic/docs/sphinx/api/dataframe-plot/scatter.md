@@ -268,7 +268,7 @@ linear fit (`RegPlotOptions::order = 1` by default) through them on the same pan
 separate traces — this is exactly what `fit_line = true` does internally (see Example 6).
 The difference is `RegPlotOptions`'s extra fields `fit_line` doesn't expose: `robust`,
 `lowess`, and bootstrap-based `show_ci` (via `n_boot`) — see `PlussPl`'s own reference for
-the full struct. `flash::lmplot(studio, x, y, options, title)` is the equivalent one-liner
+the full value. `flash::lmplot(studio, x, y, options, title)` is the equivalent one-liner
 when you don't need to touch the pane yourself first.
 
 ## Notes

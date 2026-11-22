@@ -1,6 +1,6 @@
 # `pluss::loader::TemporalLoaderSplit`
 
-A plain result struct: the forward-chaining train/test
+A plain result: the forward-chaining train/test
 [`DataLoader`](DataLoader.md) folds produced by one
 [`temporal_split_loaders`](temporal_split_loaders.md) call --
 [`temporal_split_fields`](temporal_split_fields.md)'s own per-fold
@@ -27,7 +27,7 @@ itself) `TemporalLoaderSplit` is move-only.
 
 `std::vector<TemporalLoaderFold> folds`
 : One entry per fold, in ascending time order (earliest test window
-  first). Each `TemporalLoaderFold` is itself a plain struct with two
+  first). Each `TemporalLoaderFold` is itself a plain value with two
   fields:
   - `train` (`DataLoader`) -- a `DataLoader` over that fold's
     `TemporalFieldFold::train_fields`, constructed with whichever

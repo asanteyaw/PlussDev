@@ -39,6 +39,6 @@ weaker, save/load-only version.
 
 - [`models_ts`](../models_ts.md) / [`models_nlp`](../models_nlp.md)
   -- the other two `models_*` families.
-- [`options`](../options.md) -- the nested policy structs
+- [`options`](../options.md) -- the nested policy values
   `ActionValueTrainOptions` shares with
   [`TrainOptions`](../options/TrainOptions.md).

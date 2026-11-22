@@ -2,7 +2,7 @@
 
 ## What `Callback` Is
 
-`Callback` is `ice`'s training-loop observer: a base class with one
+`Callback` is `ice`'s training-loop observer: a base type with one
 no-op virtual method per point in [`Coach`](../../coach/Coach.md)'s
 `learn`/`infer`/`assess` loop where something might want to react --
 log a metric, checkpoint, stop early, inspect a gradient. A subclass

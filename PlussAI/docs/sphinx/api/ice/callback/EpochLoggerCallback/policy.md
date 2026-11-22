@@ -14,7 +14,7 @@ const pluss::ai::ice::ProgressPolicy& pluss::ai::ice::EpochLoggerCallback::polic
 
 Returns the [`ProgressPolicy`](../../options/ProgressPolicy.md) the logger was constructed
 with. The logger copies the policy at construction, so the value returned here is the
-logger's own copy: changing the caller's policy struct afterward does not change what the
+logger's own copy: changing the caller's policy value afterward does not change what the
 logger reports.
 
 ## Parameters

@@ -60,7 +60,7 @@ volatility 0.40000 : price = 16.70442
 
 ### Example 2
 
-A model built directly from the struct, then priced.
+A model built directly from the value, then priced.
 
 ```cpp
 #include <pluss/ma.h>

@@ -1,6 +1,6 @@
 # `pluss::ai::ice::SourceContext`
 
-A plain, read-only context struct: what
+A plain, read-only context value: what
 [`Source::transfer_batch`](Source/transfer_batch.md) (and the
 `do_transfer_batch` extension point it calls) receives alongside a raw
 `data::Batch`, telling it which stage is running and where the
@@ -36,7 +36,7 @@ setting the fields a direct `transfer_batch` call needs.
 
 `StepStage stage = StepStage::Infer`
 : Which phase this batch belongs to -- see
-  [`StepContext::stage`](../step/StepContext.md) for the same enum's
+  [`StepContext::stage`](../step/StepContext.md) for the same values'
   full meaning.
 
 ### `target_platform`

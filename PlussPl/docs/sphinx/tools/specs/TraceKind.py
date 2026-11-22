@@ -34,7 +34,7 @@ PAGE = dict(
 | `Sheet` | `sheet` | A surface over an x-y grid. |
 | `Lattice` | `lattice` | A wireframe surface. |""",
     examples=[
-        dict(id="kinds", text="One trace of each simple kind, created and read back with `kind()`. The integer is the position of the kind in the enumeration, which is what a stored value would hold. The 2D kinds go on a planar pane and the 3D kinds on a volumetric one, in the same figure.",
+        dict(id="kinds", text="One trace of each simple kind, created and read back with `kind()`. The integer is the position of the kind in the list of kinds, which is what a stored value would hold. The 2D kinds go on a planar pane and the 3D kinds on a volumetric one, in the same figure.",
              code="""auto fig = studio("trace_kind_kinds");
 fig.mosaic(2, 1);
 const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};

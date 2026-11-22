@@ -18,7 +18,7 @@ It separates three concerns that otherwise get tangled at every stage call:
 ## Why It Stays A Value
 
 `Route` holds no frame reference and no fitted state — just a kind tag, a name
-list or predicate, and the [`remainder`](with_remainder.md) enum. So it copies
+list or predicate, and the [`remainder`](with_remainder.md) policy. So it copies
 freely, can be built once and stored, and resolving it is a cheap host-side
 lookup. Build the intent once; apply it everywhere.
 

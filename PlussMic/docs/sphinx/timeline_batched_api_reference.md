@@ -32,7 +32,7 @@ alignment.
 - `periods`: signed number of frequency steps to shift.
 - `freq`: shift/period frequency such as `"D"`, `"H"`, `"month"`, or
   `"year"`.
-- `TimelineLocalizeOptions`: option struct with `.tz`, `.fold`, and
+- `TimelineLocalizeOptions`: options with `.tz`, `.fold`, and
   `.nonexistent` fields.
 
 ## Output
@@ -105,7 +105,7 @@ Expected output:
 - `monthly` keeps `event_time` as a Timeline/TimeIndex feature bucketed to the
   start of its calendar month.
 
-### Example 4: Option-struct localization
+### Example 4: Options-based localization
 
 ```cpp
 auto localized = df.features({"event_time"}).tl().localize(

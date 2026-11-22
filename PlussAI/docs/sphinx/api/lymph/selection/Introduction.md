@@ -47,7 +47,7 @@ Everything canonical lives under `lymph::selection`. The
 `selection::validate` / `selection::search` / `selection::spotcheck`
 sub-namespaces hold the definitions and are re-exported to `selection::`, so
 both `lymph::selection::validate::cross(...)` and the shorter
-`lymph::selection::cross(...)` name the same function. Option structs also carry
+`lymph::selection::cross(...)` name the same function. Option values also carry
 the umbrella spelling `lymph::options::CrossVal`.
 
 ## Related Pages

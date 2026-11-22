@@ -58,12 +58,12 @@ conversion). Both forms of a given call produce identical results — see
 ## Construction
 
 `SparseLinearBinaryClassifier()` takes no arguments and never fails —
-there is no options struct fixed at construction the way
+there are no options fixed at construction the way
 [`online::OnlineLinearClassifier`](../online/OnlineLinearClassifier.md)'s
 constructor takes an
 [`OnlineLinearOptions`](../online/OnlineLinearOptions.md). Every `learn`
 call supplies its own `LinearFamilyOptions` instead, and only **three**
-of that struct's fields are actually read here:
+of that value's fields are actually read here:
 
 - `regularization` / `regularization_strength` — an L2 penalty (see
   [Example 5](#example-5)); any other `RegularizationKind` is silently

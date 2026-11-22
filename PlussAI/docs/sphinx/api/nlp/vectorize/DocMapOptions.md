@@ -2,7 +2,7 @@
 
 The two choices that decide what a document contributes to a feature matrix. Every
 vectorizer in the family takes one of these, and so does [`describe`](describe.md), so
-the same corpus described and then vectorized produces matching counts. The struct is
+the same corpus described and then vectorized produces matching counts. The value is
 plain data built with designated initializers.
 
 ## Fields at a glance

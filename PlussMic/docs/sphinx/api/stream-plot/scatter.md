@@ -53,7 +53,7 @@ be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
 
 **options** (`ScatterPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`CatalogPlotAccessor::scatter`](../catalog-plot/scatter.md) (`alpha`, `line_width`,
 `fit_line`, `fit_order`, `fit_ci`, `fit_confidence_level`).
 

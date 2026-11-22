@@ -123,7 +123,7 @@ exit = MaxIterations
 
 ## See Also
 
-- [`Lsr1ExitFlag`](Lsr1ExitFlag.md): the enumeration
+- [`Lsr1ExitFlag`](Lsr1ExitFlag.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

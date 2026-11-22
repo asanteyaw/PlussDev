@@ -58,7 +58,7 @@ instead.
 
 ## `NotePrintOptions` Fields
 
-All fields have defaults; construct the struct and set only what you need.
+All fields have defaults; construct the value and set only what you need.
 
 ### Layout
 
@@ -87,7 +87,7 @@ All fields have defaults; construct the struct and set only what you need.
 | `quote_strings` | `bool` | `true` | Wrap each cell in quotes. `false` prints the bare cell text. |
 | `escape_controls` | `bool` | `true` | Render control and `DEL` bytes as `\xNN` (plus `\n`, `\t`, …); in bytes mode this also escapes every byte `>= 0x80`. `false` emits all of them literally. |
 
-### Related enums
+### Related value sets
 
 ### `NotePrintMetadataMode` values
 

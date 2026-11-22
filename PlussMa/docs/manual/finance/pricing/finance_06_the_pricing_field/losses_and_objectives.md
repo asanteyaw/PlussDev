@@ -43,7 +43,7 @@ template <SupportedModel M> std::function<double(const M &)> module::Field::bind
 | `loss` | the loss selected by `controls.loss`, as a rank-zero `Series` |
 | `loss_value`, `objective` | the same number as a `double`; two names for one computation |
 | `bind_objective` | a function from a `Model` to the loss, with the `Field` and the quotes frozen inside it |
-| `bind_objective_typed` | the same, taking the model struct `M` directly |
+| `bind_objective_typed` | the same, taking the model `M` directly |
 
 `loss_value` and `objective` are the same computation under two names: use `objective` where a minimiser is meant to be the reader. `controls.loss` selects the loss, and `controls.huber_delta` is {math}`\delta` (default 0.05, used only by `Huber`).
 
@@ -228,7 +228,7 @@ The choice of loss is a statement about the data. MSE is the maximum-likelihood 
 
 ## Program 4: binding an objective to a Field
 
-An optimizer wants a function from parameters to a number. `bind_objective(quotes)` returns a `std::function<double(const Model &)>` that prices *the `Field` as it is now* with the candidate model and returns the loss. `bind_objective_typed<M>(quotes)` returns a `std::function<double(const M &)>` that takes the model struct itself, so the call site needs no `Model` wrapper. In both the `Field` and the quotes are *copied* into the function: the instrument, market, controls and loss are frozen at the moment of binding, and each call replaces only the model. The returned function owns its copy and writes the candidate into it on every call, so one bound function must not be called from two threads at once; bind one per thread.
+An optimizer wants a function from parameters to a number. `bind_objective(quotes)` returns a `std::function<double(const Model &)>` that prices *the `Field` as it is now* with the candidate model and returns the loss. `bind_objective_typed<M>(quotes)` returns a `std::function<double(const M &)>` that takes the model itself, so the call site needs no `Model` wrapper. In both the `Field` and the quotes are *copied* into the function: the instrument, market, controls and loss are frozen at the moment of binding, and each call replaces only the model. The returned function owns its copy and writes the candidate into it on every call, so one bound function must not be called from two threads at once; bind one per thread.
 
 The program fits no parameter. It evaluates both bound functions on a ladder of initial variances {math}`v_0` around the true value 0.04 (the profile of the objective along one parameter), and then changes the `Field` to show that the bound objective does not follow.
 

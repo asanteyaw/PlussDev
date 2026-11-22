@@ -273,7 +273,7 @@ Without intercept:
 Expected output:
 - Consistent behavior across `ols_predict`, `glm_predict`, `quantile_predict`, `poly_predict`.
 
-## 9) Reading Result Structs Correctly
+## 9) Reading Results Correctly
 
 ### 9.1 OLS fit result
 

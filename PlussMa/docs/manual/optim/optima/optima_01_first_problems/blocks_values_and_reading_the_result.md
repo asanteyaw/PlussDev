@@ -58,7 +58,7 @@ The slope `1.9601` and intercept `1.0999` match the closed-form least-squares li
 
 ## Program 8: A problem as a value
 
-When the same problem is solved from several starting points, or handed to another function, bundle it into a `ConstrainedProblem`. You can fill the struct directly or use the `problem()` builder, which accepts the same callables as the struct and picks the right slot. Either value is passed to `optima` with a start given as a plain vector or as a pack.
+When the same problem is solved from several starting points, or handed to another function, bundle it into a `ConstrainedProblem`. You can fill the value directly or use the `problem()` builder, which accepts the same callables as the value and picks the right slot. Either value is passed to `optima` with a start given as a plain vector or as a pack.
 
 ```cpp
 #include <pluss/ma.h>

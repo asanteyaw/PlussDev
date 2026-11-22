@@ -116,7 +116,7 @@ frozen=0
 
 ## See Also
 
-- [`StepPersistSpec`](../StepPersistSpec.md) -- the full struct.
+- [`StepPersistSpec`](../StepPersistSpec.md) -- the full value.
 - [`registry`](../../registry.md) -- `CustomContract`/`CustomPersist`'s
   own `frozen` fields.
 

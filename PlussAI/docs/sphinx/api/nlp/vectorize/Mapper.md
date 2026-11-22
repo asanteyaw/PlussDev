@@ -16,7 +16,7 @@ pluss::ai::nlp::vectorize::Mapper::Mapper(
 
 ## Construction
 
-The constructor takes two option structs. `map_options` is the classic vectorizer's configuration
+The constructor takes two options. `map_options` is the classic vectorizer's configuration
 ([`LexiconMapOptions`](../../classic/text/LexiconMapOptions.md)): lowercasing, the vocabulary cap,
 the minimum document frequency, binary counts, and the n-gram range. `doc_options` is the
 [`DocMapOptions`](DocMapOptions.md) that decides which tokens become terms. The two are combined

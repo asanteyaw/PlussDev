@@ -21,7 +21,7 @@ no `->` indirection, no `parameters()`. Each is called directly:
 ## The Shared Reduction Mode
 
 Every loss in this family takes a `reduction` field (part of that loss's
-own `Options` struct) of type `nn::LossReduction`, with the same three
+own `Options`) of type `nn::LossReduction`, with the same three
 values and the same meaning everywhere:
 
 - `LossReduction::Mean` (the default for every loss here) -- divide the

@@ -45,7 +45,7 @@ express.
 
 ## Related Pages
 
-- [`model`](model.md) -- `Model`, the base class `Outline` derives
+- [`model`](model.md) -- `Model`, the base type `Outline` derives
   from; every method not on `Outline`'s own page lives there.
 - [`coach`](coach.md) -- the orchestration `learn`/`infer`/`assess`
   delegate to, for `Outline` exactly as for any other `Model`.

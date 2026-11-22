@@ -33,7 +33,7 @@ An existing figure to append the table pane into.
 
 **options** (`BriefPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::brief`](../../api/dataframe-plot/brief.md)
 (`title`, `precision`, `include_header`, `max_cases`, `transpose`,
 `include_case_index`, `features_per_table`, `tables_per_row`, `table_gap_spaces`).

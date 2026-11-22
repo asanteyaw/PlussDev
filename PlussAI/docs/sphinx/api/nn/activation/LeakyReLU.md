@@ -160,7 +160,7 @@ data=[-0.04] -- small but nonzero, so gradient still flows
 
 ## See Also
 
-- [`LeakyReLUOptions`](LeakyReLUOptions.md) -- the options struct.
+- [`LeakyReLUOptions`](LeakyReLUOptions.md) -- the options.
 - [`ReLU`](ReLU.md) -- the `negative_slope = 0` limiting case.
 - [`Elu`](Elu.md) -- a smooth (not piecewise-linear) alternative with the
   same "keep negative inputs alive" motivation.

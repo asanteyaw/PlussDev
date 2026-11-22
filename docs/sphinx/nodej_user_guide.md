@@ -23,7 +23,7 @@ Use NodeJ when you need explicit control over:
 
 ### Inputs
 
-- typed option structs and explicit data contracts
+- typed options and explicit data contracts
 
 ### Output
 
@@ -31,7 +31,7 @@ Use NodeJ when you need explicit control over:
 
 ### Options
 
-- all options are enum/struct typed, no string-based configuration
+- all options are typed, no string-based configuration
 
 ### Examples
 
@@ -279,7 +279,7 @@ if (!complement_status.ok()) return complement_status;
 
 ### Notes
 
-Use DataFrame bridge when your data lives in PlussMic tables. Use explicit batch structs when already numeric.
+Use DataFrame bridge when your data lives in PlussMic tables. Use explicit batch values when already numeric.
 
 ### Inputs
 
@@ -465,7 +465,7 @@ These calls build the full pipeline directly in core NodeJ.
 
 ### Inputs
 
-- options structs and optional feature routing indices
+- options and optional feature routing indices
 
 ### Output
 
@@ -540,7 +540,7 @@ Practical guidance:
 
 ### Options
 
-- each preprocessor option struct in `nodej::prep`
+- each preprocessor options in `nodej::prep`
 
 ### Examples
 

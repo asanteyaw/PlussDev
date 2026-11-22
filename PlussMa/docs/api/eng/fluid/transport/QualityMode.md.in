@@ -21,7 +21,7 @@ Chooses what `transport` follows. `Constituent` is a non-negative concentration 
 
 ## Returns
 
-An enumeration; `Quality::mode`.
+Used by `Quality::mode`.
 
 ## Errors
 

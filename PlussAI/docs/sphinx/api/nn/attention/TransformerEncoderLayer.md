@@ -41,7 +41,7 @@ Two equivalent forms: pass a
 directly, or spell out the most-used fields as positional arguments. The
 positional form has no parameters for `layer_norm_eps` or
 `average_attn_weights` -- both stay at their defaults (`1e-5`, `true`)
-unless the options-struct form is used:
+unless the options form is used:
 
 ```cpp
 nn::TransformerEncoderLayer a(nn::TransformerEncoderLayerOptions{512, 8});  // d_model=512, nhead=8, everything else defaulted
@@ -99,7 +99,7 @@ this instance was constructed with.
 Five examples: a shape/layer-norm-invariant check on a small block, the
 same weights run through post-norm and pre-norm showing the outputs
 genuinely differ, `activation=GELU` alongside the positional-vs-options-
-struct construction equivalence, inspecting the three internal
+value construction equivalence, inspecting the three internal
 sub-modules directly, and confirming the block runs on the MPS backend.
 
 ### Example 1
@@ -212,7 +212,7 @@ identical weights, different placement -- outputs differ: true
 ### Example 3
 
 `activation=GELU` (the positional form's fifth argument), alongside the
-`TransformerEncoderLayerOptions`-struct and positional constructor forms
+`TransformerEncoderLayerOptions`-value and positional constructor forms
 producing identical options and, with the same default `seed`, identical
 output.
 
@@ -359,7 +359,7 @@ transformer encoder layer on MPS: OK, output platform=2
 ## See Also
 
 - [`TransformerEncoderLayerOptions`](TransformerEncoderLayerOptions.md)
-  -- the options struct.
+  -- the options.
 - [`TransformerEncoder`](TransformerEncoder.md) -- stacks `num_layers` of
   these blocks.
 - [`MultiheadAttention`](MultiheadAttention.md) -- the internal

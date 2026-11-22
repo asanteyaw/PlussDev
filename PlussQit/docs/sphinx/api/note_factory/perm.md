@@ -12,7 +12,7 @@ Note pluss::note::perm(string_view word, std::int64_t pick,
                        bool unique_results = true)
 ```
 
-`WordSelectMode` is `pluss::note::WordSelectMode`, an enum with values
+`WordSelectMode` is `pluss::note::WordSelectMode`, a set of values with
 `Combination` and `Permutation`.
 
 ## Combinations And Permutations Of A Word's Characters
@@ -49,7 +49,7 @@ surfaces as duplicate output strings depends on `unique_results`.
   enumeration produces is kept, including duplicates that arise from
   repeated letters in `word`.
 
-The result is rank `1` and **UTF-8 mode**, in the order the enumeration
+The result is rank `1` and **UTF-8 mode**, in the order the sequence
 visits selections (depth-first over `word`'s positions). `perm` is
 deterministic — there is no seed.
 

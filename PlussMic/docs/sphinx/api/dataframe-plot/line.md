@@ -147,9 +147,9 @@ how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin
 the data's min/max, `Tight` fits exactly to the data range with no margin, and
 `TickAligned` snaps the limits outward to the nearest tick boundaries.
 
-    ```{note} align is present on the struct but has no effect at this layer
+    ```{note} align is present in the options but has no effect at this layer
     `align` (`XYAlignOptions`) exists so `Catalog::plot().line()` can reuse this exact
-    struct type for its own key-to-key alignment — see
+    options type for its own key-to-key alignment — see
     [`CatalogPlotAccessor::line`](../catalog-plot/line.md)
     for where it actually does something. `DataFramePlotAccessor::line()` itself never reads
     `align`: every column in an already-constructed `DataFrame` shares one row count by

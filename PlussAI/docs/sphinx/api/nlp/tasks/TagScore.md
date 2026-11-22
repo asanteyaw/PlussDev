@@ -45,7 +45,7 @@ different and less accurate figure.
 
 ## See Also
 
-- [`assess::tagger`](assess_tagger.md) -- produces this struct.
+- [`assess::tagger`](assess_tagger.md) -- produces this value.
 - [`EntityScore`](EntityScore.md) -- the entity-level counterpart.
 
 ## Practical Examples

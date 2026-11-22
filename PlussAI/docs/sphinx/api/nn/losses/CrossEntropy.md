@@ -265,7 +265,7 @@ ignore_index with a soft-probability target throws: pluss::nn::losses::CrossEntr
 
 ## See Also
 
-- [`CrossEntropyOptions`](CrossEntropyOptions.md) -- the options struct.
+- [`CrossEntropyOptions`](CrossEntropyOptions.md) -- the options.
 - [`NLL`](NLL.md) -- what this function delegates to directly for
   class-index targets with no label smoothing.
 - [`BCEWithLogits`](BCEWithLogits.md) -- the two-class specialization.

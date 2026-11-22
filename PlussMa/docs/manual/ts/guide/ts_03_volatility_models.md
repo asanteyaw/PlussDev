@@ -28,7 +28,7 @@ Because the GJR leverage `γ` is constrained to be non-negative, a series whose 
 | `Egarch::fit_mle(y, EgarchOptions)` | EGARCH, fields `arch`, `asym`, `garch` |
 | `MvGarch`, `MvGjr`, `MvEgarch` `::fit_mle(Y, options)` | several series with a constant conditional correlation (Program 4) |
 
-Every options struct also has `demean`, `omega0`, `variance_floor`, `stationarity_margin`, `max_iterations`, `max_evaluations`, `simplex_delta` and `nm_restarts` (the search restarts from perturbed starting points and keeps the best). Every fit offers `loglik(y)`, `loglik_per_obs(y)`, `infer(y)` (the fitted conditional variances `h_t`), `forecast(h, y)` (the expected variance `h` steps ahead), `simulate(n, cfg, seed)`, `score(y)` and `observed_inf(y)` (the numerical gradient and information matrix), `persistence()` and, where it exists, `unconditional_var()`.
+Every set of options also has `demean`, `omega0`, `variance_floor`, `stationarity_margin`, `max_iterations`, `max_evaluations`, `simplex_delta` and `nm_restarts` (the search restarts from perturbed starting points and keeps the best). Every fit offers `loglik(y)`, `loglik_per_obs(y)`, `infer(y)` (the fitted conditional variances `h_t`), `forecast(h, y)` (the expected variance `h` steps ahead), `simulate(n, cfg, seed)`, `score(y)` and `observed_inf(y)` (the numerical gradient and information matrix), `persistence()` and, where it exists, `unconditional_var()`.
 
 ## Forecasts
 

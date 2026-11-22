@@ -4,7 +4,7 @@
 
 [Back to PlussPl by example](../guide.md)
 
-The `flash` layer styles a figure with three independent choices: a **style** (the background and grid), a **palette** (the colours successive traces take) and a **context** (the size of the canvas and the text). This page draws the same chart under every choice, then sets a whole look from one options struct.
+The `flash` layer styles a figure with three independent choices: a **style** (the background and grid), a **palette** (the colours successive traces take) and a **context** (the size of the canvas and the text). This page draws the same chart under every choice, then sets a whole look from one options.
 
 ## How it works
 
@@ -126,14 +126,14 @@ The same chart in each context:
 
 ![Poster context](assets/flash_context_poster.svg)
 
-The first colour of each palette shows how they differ: `Deep` and `Muted` are saturated blues, `Pastel` is light, `Bright` is vivid and `Dark` is deep; `Colorblind` is a different set again, and the palette figure shows all six side by side. The canvas sizes show what a context does: `Paper` is 920 by 640, `Notebook` 1200 by 780, `Talk` 1440 by 900 and `Poster` 1840 by 1160, with text scaled to match. The options struct gathers every choice, so a report can define one `FlashThemeOptions` and apply it to every figure.
+The first colour of each palette shows how they differ: `Deep` and `Muted` are saturated blues, `Pastel` is light, `Bright` is vivid and `Dark` is deep; `Colorblind` is a different set again, and the palette figure shows all six side by side. The canvas sizes show what a context does: `Paper` is 920 by 640, `Notebook` 1200 by 780, `Talk` 1440 by 900 and `Poster` 1840 by 1160, with text scaled to match. The options gathers every choice, so a report can define one `FlashThemeOptions` and apply it to every figure.
 
 ## Decisions
 
 - **Style:** the grid styles for reading values, the plain ones when the picture carries the message.
 - **Palette:** `Colorblind` for anything shared widely, `Pastel` for filled areas, `Deep` otherwise.
 - **Context:** pick the medium once at the top of the program, then draw.
-- **One struct:** use `FlashThemeOptions` when the same look has to apply to many figures.
+- **One value:** use `FlashThemeOptions` when the same look has to apply to many figures.
 
 ## Pitfalls
 

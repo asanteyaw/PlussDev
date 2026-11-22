@@ -349,7 +349,7 @@ const auto ci_view = nfit.confint_view(x, 0.95); // pluss::RangeView<double>
 
 ### API Signature
 
-- `dst::Kind` enum family selector
+- `dst::Kind` family selector
 
 ### Notes
 
@@ -378,7 +378,7 @@ const bool ok_zeta = pdt::supports(dst::Zeta);
 
 ### Expected output
 
-- `supports(...)` returns `true` for implemented enum values.
+- `supports(...)` returns `true` for implemented values.
 
 ## Reproducibility, Dtype, And Platform
 

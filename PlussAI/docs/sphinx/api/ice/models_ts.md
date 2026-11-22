@@ -122,7 +122,7 @@ flexibility.
   back, behind [`data::DataSet::source`](data/DataSet/source.md).
 - [`options`](options.md) -- `ValidationPolicy`/`ObjectiveRegularization`/
   `LoopRegularization`/`CheckpointPolicy`/`ExecutionPolicy`, the
-  nested policy structs both `*TrainOptions` types share.
+  nested policy values both `*TrainOptions` types share.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

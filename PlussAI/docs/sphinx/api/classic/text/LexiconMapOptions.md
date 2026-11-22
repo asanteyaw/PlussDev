@@ -96,7 +96,7 @@ the result usable.
 
 - [`LexiconMapper`](LexiconMapper.md) — the sole consumer.
 - [`TfIdfMapOptions`](TfIdfMapOptions.md) — the separate, per-call options
-  struct for `map_tfidf_dense`/`map_tfidf_sparse`'s IDF weighting, layered
+  value for `map_tfidf_dense`/`map_tfidf_sparse`'s IDF weighting, layered
   on top of the raw counts these fields shape.
 - [`HashMapOptions`](HashMapOptions.md) — the stateless counterpart's own
   tokenization options, sharing `lowercase`/`min_ngram`/`max_ngram`'s exact

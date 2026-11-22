@@ -33,7 +33,7 @@
 #     converts from). Every page reachable from one is cross-linked to the
 #     other, and prose always says "core Batch" vs "data::Batch" rather than
 #     just "Batch" wherever the two could be confused.
-#   - Several `*TrainOptions` structs across `options` and every models_*
+#   - Several `*TrainOptions` across `options` and every models_*
 #     family reuse the SAME shared sub-options (ValidationPolicy,
 #     ArchitectureRegularization, ObjectiveRegularization, LoopRegularization,
 #     CheckpointPolicy, ExecutionPolicy) -- exactly like nn/optim's
@@ -185,7 +185,7 @@ qualname = "pluss::ai::ice::TrainOptions"
 kind = "options"
 family = "ice/options"
 page = "api/ice/options/TrainOptions.md"
-summary = "Central training configuration: batch size, learning rate, optimizer/loss kind, shuffle/seed, standardize, and the five nested policy structs (validation, regularization x3, checkpoint, execution)."
+summary = "Central training configuration: batch size, learning rate, optimizer/loss kind, shuffle/seed, standardize, and the five nested policy values (validation, regularization x3, checkpoint, execution)."
 fields = ["batch_size", "learning_rate", "optimizer", "loss", "shuffle", "seed", "standardize", "validation", "architecture_regularization", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
 
 [[symbol]]
@@ -343,7 +343,7 @@ qualname = "pluss::ai::ice::Callback"
 kind = "class"
 family = "ice/callback"
 page = "api/ice/callback/Callback.md"
-summary = "The training-loop observer/hook base class -- run/epoch/batch/backward/step/checkpoint/exception hooks, plus opt-in state persistence."
+summary = "The training-loop observer/hook base type -- run/epoch/batch/backward/step/checkpoint/exception hooks, plus opt-in state persistence."
 methods = ["on_run_begin", "on_run_end", "on_epoch_begin", "on_epoch_end", "on_batch_begin", "on_batch_end", "on_before_backward", "on_after_backward", "on_before_step", "on_checkpoint_save", "on_checkpoint_load", "on_exception", "state_key", "save_state", "load_state"]
 
 [[symbol]]

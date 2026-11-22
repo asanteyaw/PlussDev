@@ -79,7 +79,7 @@ elements=3
 
 ### Example 2
 
-A plain, caller-defined struct satisfies the same concept -- nothing
+A plain, caller-defined value satisfies the same concept -- nothing
 beyond a matching `forward` method is required.
 
 ```cpp

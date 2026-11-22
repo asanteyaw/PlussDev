@@ -103,7 +103,7 @@ callout above.
 Passing a bare `ScatterPlotOptions` (the second overload) is equivalent to passing a
 `CatalogScatterPlotOptions` with default-constructed `align` and that `scatter` value —
 it exists purely so a caller who doesn't care about alignment doesn't have to spell out
-the wrapper struct. `fit_line`/`fit_order`/`fit_ci`/`fit_confidence_level` are accepted
+the wrapper value. `fit_line`/`fit_order`/`fit_ci`/`fit_confidence_level` are accepted
 for shape-compatibility with `DataFramePlotAccessor::scatter` but are **not** read by
 `Catalog::plot().scatter()` — no fit line is ever drawn here, regardless of these fields.
 `align`/`align_by` only affect the numeric-pair branch (plain `Series` `x_key`) — they

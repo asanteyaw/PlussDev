@@ -23,7 +23,7 @@ Chooses the law that gives the head a pipe loses at a flow. It is one setting fo
 
 ## Returns
 
-An enumeration; `Options::loss`.
+Used by `Options::loss`.
 
 ## Errors
 

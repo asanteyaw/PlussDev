@@ -67,7 +67,7 @@ agree on the result for the same underlying texts.
   [`TextJudge`'s own Introduction](models_nlp/TextJudge/Introduction.md#to-is-weaker-here-than-in-models_ts)).
 - [`options`](options.md) -- `ValidationPolicy`/
   `ArchitectureRegularization`/`ObjectiveRegularization`/
-  `LoopRegularization`/`ExecutionPolicy`, the nested policy structs
+  `LoopRegularization`/`ExecutionPolicy`, the nested policy values
   `TextJudgeTrainOptions` shares with
   [`TrainOptions`](options/TrainOptions.md).
 

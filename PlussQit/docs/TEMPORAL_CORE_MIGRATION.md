@@ -124,7 +124,7 @@ merely adding it to a variant:
 | Casting | Keep elapsed quantities distinct from epoch timestamps |
 
 Legacy TimeIndex serialization tags remain readable during the transition but
-are promoted to Timeline immediately after decoding. Enum values and persisted
+are promoted to Timeline immediately after decoding. Values and persisted
 tags must not be silently reused for Duration.
 
 ## Completion Criteria
@@ -177,7 +177,7 @@ boundary:
 Public TimeIndex remains available at this checkpoint. The remaining work is
 to finish Duration arithmetic and the remaining reduction policies across
 PlussMic, verify the Arrow branch in an Arrow-enabled build, remove the
-transitional TimeIndex names from exported variants and enums, read legacy
+transitional TimeIndex names from exported variants and values, read legacy
 TimeIndex serialization as Timeline, and only then remove the compatibility
 type, factories, and old landing page.
 

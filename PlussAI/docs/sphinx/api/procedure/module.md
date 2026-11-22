@@ -49,7 +49,7 @@ positive sum = 6
 ```
 
 Any object with a matching `.forward` method works, not only real `nn`
-layers -- a plain struct with nothing else on it satisfies the concept
+layers -- a plain value with nothing else on it satisfies the concept
 just as well. Reach for [`ice`](ice.md) instead when the thing being
 wrapped is, or could be, a full `ice::Model`; `module` never persists.
 

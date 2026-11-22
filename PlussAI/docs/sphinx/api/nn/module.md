@@ -14,7 +14,7 @@ first category to read, before any of the layer catalog.
 
 | Entity | What it gives you |
 | --- | --- |
-| [`Module`](module/Module.md) | the base class: registration, `train`/`eval`, `to`, `parameters`/`buffers`/`modules` (flat and named), `snapshot`/`restore` |
+| [`Module`](module/Module.md) | the base type: registration, `train`/`eval`, `to`, `parameters`/`buffers`/`modules` (flat and named), `snapshot`/`restore` |
 | [`Schedule`](module/Schedule.md) | a named, ordered composition of modules and callables run in sequence — the container every multi-layer network is built from |
 
 ## How Modules Become Values

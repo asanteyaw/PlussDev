@@ -36,7 +36,7 @@ during `Coach::learn`; `Coach::infer`/`assess` have no epochs.
 
 ## Errors
 
-None from the base class; whatever an override throws propagates out of
+None from the base type; whatever an override throws propagates out of
 `Coach::learn` and triggers [`on_exception`](on_exception.md) instead.
 
 ## Practical Examples

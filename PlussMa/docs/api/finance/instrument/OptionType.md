@@ -167,7 +167,7 @@ vol 0.600000 : C - P = 2.896925 , S e^(-qT) - K e^(-rT) = 2.896925
 
 ### Example 3
 
-The enum and the constants are the same values.
+The values and the constants are the same.
 
 ```cpp
 #include <pluss/ma.h>

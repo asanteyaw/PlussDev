@@ -2,12 +2,12 @@
 
 Optional gradient clipping, applied to every parameter's gradient
 independently, right after it is collected and before any optimizer-specific
-formula sees it. Every concrete optimizer's own `Options` struct (
+formula sees it. Every concrete optimizer's own `Options` (
 [`SGDOptions`](SGDOptions.md), [`AdamOptions`](AdamOptions.md), ...) ends
 with a `clip` field of this type -- shared across all seven, so clipping is
 configured identically no matter which algorithm is stepping.
 
-Passed as part of an optimizer's own `Options` struct; the default,
+Passed as part of an optimizer's own `Options`; the default,
 `GradientClipOptions{}` (`mode = None`), disables clipping entirely.
 
 ## Fields

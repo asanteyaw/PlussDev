@@ -4,12 +4,6 @@
 
 Which part of the spectrum a designed filter passes.
 
-## Signature
-
-```cpp
-enum class signal::Band { Low, High, Pass, Stop };
-```
-
 ## What It Does
 
 The prototypes `butter`, `cheby1` and `cheby2` are low-pass filters. `Band` selects the transformation applied to the prototype: `Low` keeps it, `High` mirrors it to pass the highs, `Pass` keeps a band between two cutoffs and `Stop` removes one. The transformations that need two edges double the order.

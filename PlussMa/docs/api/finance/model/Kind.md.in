@@ -13,7 +13,7 @@ The six model families, in the order that fixes each family's parameter vector.
 | `RoughHeston` | `kappa, theta, sigma, alpha, rho, v0` | 6 |
 | `RoughBergomi` | `xi, eta, alpha, rho` | 4 |
 
-Only these parameters are in the vector; the optional extras of each struct (`mu`, the variance floors, SABR's volatility type) are set on the struct itself.
+Only these parameters are in the vector; the optional extras of each value (`mu`, the variance floors, SABR's volatility type) are set on the value itself.
 
 ## Fields
 

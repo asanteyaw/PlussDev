@@ -1,7 +1,7 @@
 # `lymph::options::HoldoutSplit`
 
 `options::HoldoutSplit` (family alias `selection::HoldoutOptions`; it is
-`prep::HoldoutSplitOptions` underneath) is the option struct behind every
+`prep::HoldoutSplitOptions` underneath) is the options behind every
 [`HoldoutPlan`](HoldoutPlan.md). [`holdout(options = {})`](holdout.md) hands it
 to `HoldoutPlan`, whose chained setters refine it; `HoldoutPlan::options()`
 reads it back.

@@ -15,7 +15,7 @@ std::string Stream::ptype() const
 
 Returns the stream's payload kind as a human-readable string — the same information as
 [`kind()`](kind.md), but rendered as text (`"Series"`, `"Note"`, `"Timeline"`,
-`"TimeIndex"`) instead of an enum value. Unlike `dtype()`, it never includes a numeric
+`"TimeIndex"`) instead of an value. Unlike `dtype()`, it never includes a numeric
 sub-type: `"Series"`, not `"Series[float64]"`.
 
 ## Parameters
@@ -73,7 +73,7 @@ timeline: Timeline
 
 ## See Also
 
-- [`Stream::kind`](kind.md): the enum counterpart to this string, with no `operator<<`.
+- [`Stream::kind`](kind.md): the typed counterpart to this string, with no `operator<<`.
 - [`Stream::dtype`](dtype.md): a more specific string, including numeric sub-type for
   `Series` streams.
 

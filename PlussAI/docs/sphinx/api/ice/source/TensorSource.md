@@ -170,7 +170,7 @@ infer_batches().size() = 0
 
 ## See Also
 
-- [`Source`](Source.md) -- the base class, with the full method
+- [`Source`](Source.md) -- the base type, with the full method
   surface.
 - [`DataSetSource`](DataSetSource.md) -- the panel/windowed-data
   counterpart.

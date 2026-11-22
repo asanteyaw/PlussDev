@@ -82,6 +82,6 @@ temporal meaning, not just an extra batch-like dimension.
 
 ## See Also
 
-- [`Conv3d`](Conv3d.md) -- the only consumer of this options struct.
+- [`Conv3d`](Conv3d.md) -- the only consumer of these options.
 - [`Conv1dOptions`](Conv1dOptions.md) / [`ConvOptions`](ConvOptions.md) --
   the same fields specialized to 1 and 2 spatial axes.

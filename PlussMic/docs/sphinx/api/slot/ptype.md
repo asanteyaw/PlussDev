@@ -70,14 +70,14 @@ Mixed
 ## Notes
 
 - A string counterpart to [`kind()`](kind.md), which returns the
-  `SlotKind` enum instead — `ptype()` is more convenient for logging or
+  `SlotKind` instead — `ptype()` is more convenient for logging or
   display, `kind()` for branching in code.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.
 
 ## See Also
 
-- [`Slot::kind`](kind.md): the enum form of this same classification.
+- [`Slot::kind`](kind.md): the typed form of this same classification.
 - [`Slot::type_counts`](type_counts.md): a full per-value type tally.
 
 <div class="pluss-inline-prev-next">

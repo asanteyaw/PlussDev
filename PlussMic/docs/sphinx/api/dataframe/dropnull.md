@@ -32,7 +32,7 @@ Two overloads cover the same underlying policy at different levels of explicitne
   of them being missing should trigger a drop.
 - **`DropOptions` overload**: the fully explicit route, spelling out `features`, `axis`,
   `all`, and additionally `threshold` (a minimum count of non-missing values a row must
-  have to survive) as named struct fields — reach for this once the short overload's two
+  have to survive) as named value fields — reach for this once the short overload's two
   positional arguments stop being expressive enough.
 
 ## Parameters
@@ -134,7 +134,7 @@ std::cout << out;
 ```
 
 Identical result to Example 1 — `DropOptions` states the same `any-missing-among-{quiz,
-final}` rule explicitly as struct fields instead of positional arguments. This is the
+final}` rule explicitly as value fields instead of positional arguments. This is the
 overload to reach for once a call site also needs `threshold` (say, "keep a row if at
 least 2 of 3 inspected columns are present" rather than an all-or-nothing rule), which
 has no positional-argument equivalent in the short overload.

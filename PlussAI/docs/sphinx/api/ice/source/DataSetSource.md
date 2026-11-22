@@ -3,7 +3,7 @@
 A [`Source`](Source.md) over [`data::DataSet`](../data/DataSet.md)
 train/valid/test/infer parts, with separate
 [`BatchPlan`](BatchPlan.md)s for the learn loop and evaluation. `final`,
-not intended as a further base class. What
+not intended as a further base type. What
 [`data::DataSet::source()`](../data/DataSet/source.md)/
 [`data::TimeSeriesDataSet::source()`](../data/TimeSeriesDataSet/source.md)
 construct internally; construct one directly for explicit control over
@@ -172,7 +172,7 @@ test_batches().size() = 1
 
 ## See Also
 
-- [`Source`](Source.md) -- the base class, with the full method
+- [`Source`](Source.md) -- the base type, with the full method
   surface.
 - [`TensorSource`](TensorSource.md) -- the raw-`Series` counterpart.
 - [`data::DataSet::source`](../data/DataSet/source.md) -- builds one

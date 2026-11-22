@@ -109,7 +109,7 @@ its own batching, device placement, and training execution policy.
 
 ## Related Pages
 
-- [`ice::Model`](../ice/model/Model.md) -- the base class every wrapped
+- [`ice::Model`](../ice/model/Model.md) -- the base type every wrapped
   model derives from.
 - [`registry`](registry.md) -- `bind_ice`, the factory registry the
   owning overload's `restore_key` depends on.

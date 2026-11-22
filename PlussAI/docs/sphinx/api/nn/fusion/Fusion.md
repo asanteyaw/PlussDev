@@ -303,7 +303,7 @@ fusion on MPS: OK, platform=2
 
 ## See Also
 
-- [`FusionOptions`](FusionOptions.md) -- the options struct.
+- [`FusionOptions`](FusionOptions.md) -- the options.
 - [`Embedding`](../embedding/Embedding.md) -- another parameterized layer
   with the same uniform-bound initialization strategy.
 

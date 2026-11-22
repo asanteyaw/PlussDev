@@ -184,7 +184,7 @@ Also avoid loading columns you will drop immediately.
 
 ## Production checklist
 
-- Use typed option structs for non-trivial I/O.
+- Use typed options for non-trivial I/O.
 - Validate schema with `info()` after loading.
 - Keep feature names stable and documented.
 - Decide case-axis semantics early.

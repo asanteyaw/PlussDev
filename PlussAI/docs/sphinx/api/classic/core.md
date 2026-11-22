@@ -87,7 +87,7 @@ classifier->learn(batch, train);
 - [`estimators`](estimators.md) — the `learn` / `infer` / `assess` contract
   that consumes `TrainOptions` / `InferOptions` / `AssessOptions`.
 - [`metrics`](metrics.md) — `AssessOptions::metrics` names entries from the
-  same `MetricKind` enum this family's pages reference.
+  same `MetricKind` this family's pages reference.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

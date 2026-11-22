@@ -1,6 +1,6 @@
 # `pluss::loader::TemporalFieldSplit`
 
-A plain result struct: the forward-chaining train/test field `Series`
+A plain result: the forward-chaining train/test field `Series`
 produced by one [`temporal_split_fields`](temporal_split_fields.md)
 call -- [`temporal_split_indices`](temporal_split_indices.md)'s own
 index folds, applied directly to field `Series`. Never constructed
@@ -24,7 +24,7 @@ instance comes from
 
 `std::vector<TemporalFieldFold> folds`
 : One entry per fold, in ascending time order (earliest test window
-  first). Each `TemporalFieldFold` is itself a plain struct with two
+  first). Each `TemporalFieldFold` is itself a plain value with two
   fields:
   - `train_fields` (`std::vector<Series>`) -- this fold's training-part
     field `Series`, one per input field, in the same order as the

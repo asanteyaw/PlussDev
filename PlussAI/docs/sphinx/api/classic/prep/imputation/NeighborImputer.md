@@ -221,7 +221,7 @@ data=[[20]]
 ## See Also
 
 - [`NeighborImputerOptions`](NeighborImputerOptions.md) — the options
-  struct.
+  value.
 - [`SimpleImputer`](SimpleImputer.md) — the cheaper, feature-independent
   alternative.
 - [`imputation/Introduction`](Introduction.md) — the contract shared across

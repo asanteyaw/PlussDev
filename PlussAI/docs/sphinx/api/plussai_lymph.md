@@ -133,8 +133,8 @@ If you are learning `lymph` for the first time, this is the most effective order
 4. [metrics](lymph/metrics.md) and [reports](lymph/reports.md) when the workflow
    is real enough to assess, then [io](lymph/io.md) to persist it
 5. [options](lymph/options.md) is a reference you come back to, not a step —
-   the short `options::X` spelling for whatever option struct a signature asks
-   for, wherever that struct actually lives
+   the short `options::X` spelling for whatever options a signature asks
+   for, wherever that value actually lives
 
 That sequence mirrors how real projects usually mature.
 

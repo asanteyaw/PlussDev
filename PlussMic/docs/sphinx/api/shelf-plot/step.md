@@ -33,7 +33,7 @@ Omitted falls back to the wrapped frame's own row labels.
 
 **options** (`StepPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::step`](../../api/dataframe-plot/step.md) (`alpha`,
 `line_width`, `align`). `align` is inert here — a mismatched-size `x` throws
 unconditionally before it could ever apply, same as [`line()`](line.md).

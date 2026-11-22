@@ -102,7 +102,7 @@ std::cout << preview;
 - `load_txt()` shares its type-inference engine with [`load_csv()`](load_csv.md) —
   numeric-looking columns become `Series`, everything else becomes `Note`, and empty
   cells become missing values, exactly as documented there.
-- There is no dedicated `ReadTxtOptions` struct or positional overload the way
+- There is no dedicated `ReadTxtOptions` or positional overload the way
   [`load_csv()`](load_csv.md) has — the `Config`/`ConfigEntry` overloads are the only
   way to customize parsing.
 - The corresponding writer, [`save_txt()`](save_txt.md), *does* default to a tab

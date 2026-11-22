@@ -84,7 +84,7 @@ Figure(...)
 
 ## Method-Level Options Reference
 
-All method options are regular C++ structs. Create, edit fields, then pass into the corresponding `plot.*(...)` call.
+All method options are regular C++ values. Create, edit fields, then pass into the corresponding `plot.*(...)` call.
 
 ```cpp
 pluss::table::ActPlotOptions o{};
@@ -286,7 +286,7 @@ auto fig = df.plot().act("returns", o);
 
 - No fields currently. Use default automatic chart selection.
 
-### 3D Shared Option Structs
+### 3D Shared Options
 
 #### `Plot3DSceneOptions`
 

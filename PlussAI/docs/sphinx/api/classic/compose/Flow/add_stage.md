@@ -6,7 +6,7 @@ The twenty typed convenience methods — `add_standard_scaler`,
 `add_one_hot_encoder`, and eighteen more, one per [`prep`](../../prep.md)
 kernel — are how you add a transform stage to a [`Flow`](../Flow.md) in the
 common case: you already know which stage you want. Each is the same shape:
-an options struct in, an optional feature route, a `Status` out. They are
+an options value in, an optional feature route, a `Status` out. They are
 covered together on one page because they are, structurally, one operation
 with twenty spellings — see [`add_named_transform`](add_named_transform.md)
 for the single dynamic form these all forward to internally.
@@ -70,10 +70,10 @@ to the dynamic form when it is not.
 ## Parameters
 
 `options`
-: The stage's own options struct — see that struct's own page under
+: The stage's own options — see that value's own page under
   [`prep`](../../prep.md) (for example
   [`StandardScalerOptions`](../../prep/scaling/StandardScalerOptions.md)) for
-  every field. Defaults to that struct's own defaults.
+  every field. Defaults to that value's own defaults.
 
 `feature_route`
 : The 0-based column indices this stage should see — pass a braced list
@@ -102,7 +102,7 @@ A `Status`. `.ok()` on success — the stage is appended and
 
 ## Practical Examples
 
-A pair of routed stages added in sequence, a non-default options struct
+A pair of routed stages added in sequence, a non-default options
 paired with an unrouted stage, a realistic mixed-type pipeline, and every
 one of the twenty typed methods called on the same `Flow` — the "twenty
 spellings, one operation" claim above, exercised for real rather than
@@ -144,7 +144,7 @@ stage_count() = 2
 
 ### Example 2
 
-Passing a non-default options struct — `SimpleImputer` with an explicit
+Passing a non-default options — `SimpleImputer` with an explicit
 strategy — and an unrouted stage (every column).
 
 ```cpp
@@ -277,7 +277,7 @@ stage_count()  = 20
 - [`add_column_stage`](add_column_stage.md) — the same, plus naming the
   stage at construction.
 - [`TransformSpec`](../TransformSpec.md) — what each call appends.
-- [`prep`](../../prep.md) — every options struct these methods accept.
+- [`prep`](../../prep.md) — every set of options these methods accept.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

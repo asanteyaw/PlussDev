@@ -51,7 +51,7 @@ The `.xlsx` file to read.
 
 **options** (`const pluss::loader::ReadExcelOptions&`, optional)
 
-Sheet selection and header-parsing controls — see the struct above.
+Sheet selection and header-parsing controls — see the value above.
 
 ## Returns
 

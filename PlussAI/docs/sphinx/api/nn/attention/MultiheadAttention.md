@@ -102,7 +102,7 @@ overloads) -- `Series&` / `const Series&`
 
 Five examples: a hand-verified output and per-head weight averaging with
 every projection set to identity, `average_weights=false` alongside the
-positional-vs-options-struct construction equivalence, `causal=true`
+positional-vs-options construction equivalence, `causal=true`
 masking future positions, a `key_padding_mask` blocking a specific key
 position, and confirming `MultiheadAttention` runs on the MPS backend.
 
@@ -191,7 +191,7 @@ Head 0 sees `x`'s first two columns (`[[1,0],[0,1]]` for both `q` and
 `average_weights=false` keeps every head's weights separate instead of
 averaging them, changing `weights`'s shape from `[target_len,
 source_len]` to `[num_heads, target_len, source_len]`. Shown alongside
-the `MultiheadAttentionOptions`-struct and positional constructor forms
+the `MultiheadAttentionOptions`-value and positional constructor forms
 producing identical options.
 
 ```cpp
@@ -413,7 +413,7 @@ multihead attention on MPS: OK, output platform=2
 ## See Also
 
 - [`MultiheadAttentionOptions`](MultiheadAttentionOptions.md) -- the
-  options struct.
+  options.
 - [`TransformerEncoderLayer`](TransformerEncoderLayer.md) /
   [`TransformerDecoderLayer`](TransformerDecoderLayer.md) -- build and own
   one (or two) `MultiheadAttention` instances internally, reachable

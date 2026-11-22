@@ -31,7 +31,7 @@ delimiter semantics:
 - **`split(pattern, options)`**: `pattern` is literal or regex depending on
   `options.regex`; `options.limit` caps the split count and
   `options.prefix` names the columns (both fields of the same
-  `TextOptions` struct used throughout this accessor).
+  `TextOptions` used throughout this accessor).
 
 ```{important} split() requires exactly one selected feature
 Like [`findall()`](findall.md), [`extract()`](extract.md), [`partition()`](partition.md),

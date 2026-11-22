@@ -136,7 +136,7 @@ iteration 4 stall: none
 
 ## See Also
 
-- [`OptimaStallCategory`](OptimaStallCategory.md): the enumeration
+- [`OptimaStallCategory`](OptimaStallCategory.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

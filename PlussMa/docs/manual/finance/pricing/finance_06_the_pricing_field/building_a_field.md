@@ -41,7 +41,7 @@ and the expectation is computed by a transform method (Fourier inversion or the 
 | `controls` | `module::Controls` | the `engine`, the `risk` request, the `loss`, and the settings of each engine (`fft`, `cos`, `mc`, `analytic`) |
 | `paths` | `module::Paths` | the simulated `asset`, `vol`, `variance` and the shocks; empty until `simulate()` is called |
 
-Every numeric member is a `Series`, so a whole strip of strikes, maturities or spots is one `Field` and one call to `price()`. The members are plain data: read and assign them at any time, and a `Field` copies like any other struct.
+Every numeric member is a `Series`, so a whole strip of strikes, maturities or spots is one `Field` and one call to `price()`. The members are plain data: read and assign them at any time, and a `Field` copies like any other value.
 
 ```cpp
 module::Field::Result module::Field::price(Config cfg = {}) const;
@@ -55,7 +55,7 @@ std::string module::Field::engine_name() const;
 | Call | Meaning |
 |---|---|
 | `price(cfg)` | prices the model the `Field` holds with the engine in `controls` |
-| `price(candidate, cfg)`, `price(model, cfg)` | prices another model, given as a `Model` or as a bare model struct; the `Field` is not changed |
+| `price(candidate, cfg)`, `price(model, cfg)` | prices another model, given as a `Model` or as a bare model; the `Field` is not changed |
 | `validate()` | checks the members and the engine against the model, and throws if something is missing or unsupported; `price` calls it first |
 | `model_name()`, `engine_name()` | the names of the held model and of the chosen engine, as strings |
 
@@ -217,7 +217,7 @@ An `Auto` field without `is_call` is an error, as is a mask whose length cannot 
 
 ## Program 4: price another model without changing the Field
 
-`price(candidate)` prices a model that is not the one the `Field` holds, and leaves the `Field` untouched. That is exactly what an optimizer needs: it tries many candidate parameter sets against one fixed instrument, market and set of controls. The candidate can be a `module::Model`, which holds any of the six models, or a model struct passed directly through the template overload. The program shifts the initial variance {math}`v_0` from 0.04 to 0.01 on a copy of the model, prices the copy, then prices a Bates model and a Black-Scholes model against the same instrument and market, and finally assigns a model to the `Field`, which does change it.
+`price(candidate)` prices a model that is not the one the `Field` holds, and leaves the `Field` untouched. That is exactly what an optimizer needs: it tries many candidate parameter sets against one fixed instrument, market and set of controls. The candidate can be a `module::Model`, which holds any of the six models, or a model passed directly through the template overload. The program shifts the initial variance {math}`v_0` from 0.04 to 0.01 on a copy of the model, prices the copy, then prices a Bates model and a Black-Scholes model against the same instrument and market, and finally assigns a model to the `Field`, which does change it.
 
 ```cpp
 #include <pluss/ma.h>

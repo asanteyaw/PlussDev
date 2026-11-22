@@ -1,6 +1,6 @@
 # `pluss::ai::ice::AssessReport`
 
-A plain result struct: the loss and a loss-appropriate metric returned by
+A plain result: the loss and a loss-appropriate metric returned by
 [`Model::assess`](../model/Model.md)/[`Coach::assess`](../coach/Coach.md).
 Never constructed directly by calling code -- every instance comes back
 from one of those calls.

@@ -34,7 +34,7 @@ Requested bin count, subject to the ambiguity above. Values `<= 0` fall back to
 
 **options** (`HistPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`CatalogPlotAccessor::hist`](../catalog-plot/hist.md) (`bins`, `alpha`, `line_width`).
 
 ## Returns

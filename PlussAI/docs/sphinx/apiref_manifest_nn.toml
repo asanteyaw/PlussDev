@@ -146,7 +146,7 @@ qualname = "pluss::ai::nn::Module"
 kind = "class"
 family = "nn/module"
 page = "api/nn/module/Module.md"
-summary = "The base class every layer, container, and composed network derives from -- parameter/buffer/child-module registration, train/eval mode, platform/dtype moves, snapshot/restore."
+summary = "The base type every layer, container, and composed network derives from -- parameter/buffer/child-module registration, train/eval mode, platform/dtype moves, snapshot/restore."
 methods = ["train", "eval", "to", "parameters", "named_parameters", "buffers", "named_buffers", "modules", "named_modules", "snapshot", "restore"]
 
 [[symbol]]
@@ -882,7 +882,7 @@ qualname = "pluss::ai::nn::optim::Optimizer"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/Optimizer.md"
-summary = "The base class every optimizer derives from -- owns the parameter list and drives step() from either explicit gradients or each parameter's own recorded sensitivity."
+summary = "The base type every optimizer derives from -- owns the parameter list and drives step() from either explicit gradients or each parameter's own recorded sensitivity."
 methods = ["step", "parameters", "size", "clear", "last_step_lane_telemetry"]
 
 [[symbol]]

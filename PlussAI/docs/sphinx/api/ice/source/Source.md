@@ -18,7 +18,7 @@ internally -- see each method's own page for exactly which.
 pluss::ai::ice::Source::~Source() = default;
 ```
 
-An abstract base class -- `prepare`/`learn_batches`/`valid_batches`/
+An abstract base type -- `prepare`/`learn_batches`/`valid_batches`/
 `test_batches`/`infer_batches` are all pure virtual, so `Source` itself
 is never instantiated directly.
 

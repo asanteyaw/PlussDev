@@ -1208,7 +1208,7 @@ option groups.
 
 ### 3D scene and trace options
 
-The 3D option structs share these nested groups:
+The 3D options share these nested groups:
 
 ```cpp
 pluss::table::Plot3DSceneOptions scene;

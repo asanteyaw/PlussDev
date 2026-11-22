@@ -15,7 +15,7 @@ All four algorithms answer the same question: given where I am, how do I take a 
 | `WorkingSet` | The same quadratic steps, with an explicit set of constraints treated as active. It hands the run to sequential QP if it stalls or fails. | As sequential QP, with the active set tracked. | As sequential QP. |
 | `InternalProtocol` | A primal-dual interior step: constraints enter through a barrier whose strength is driven toward zero. | Bounds and linear rows stay strictly satisfied; nonlinear inequalities carry their own slack variables by default, so they may be violated on the way. | Quasi-Newton (dense or limited-memory) or an exact Hessian. |
 
-Three facts to hold on to. The default algorithm is `SequentialQP`. Each algorithm reads only its own options struct, so a setting on the wrong struct does nothing. And a result with exit flag `Converged` certifies a point that satisfies the first-order optimality conditions, which is a local statement: nothing in it says that a better point does not exist.
+Three facts to hold on to. The default algorithm is `SequentialQP`. Each algorithm reads only its own options, so a setting on the wrong value does nothing. And a result with exit flag `Converged` certifies a point that satisfies the first-order optimality conditions, which is a local statement: nothing in it says that a better point does not exist.
 
 ## A guided tour
 

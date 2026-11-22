@@ -34,7 +34,7 @@ general call themselves.
   non-constant target are required.
 
 `options` (`ScoreRankOptions`, default `{}`)
-: Identical struct and contract to
+: Identical value and contract to
   [`f_score_rank`'s own `options`](f_score_rank.md#parameters) — see that
   page for `top_k`/`absolute_score`'s exact meaning. `ScoreRankOptions` is
   shared between both functions; nothing about it is regression-specific.

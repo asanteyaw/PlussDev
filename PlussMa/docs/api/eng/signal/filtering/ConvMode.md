@@ -30,7 +30,7 @@ Argument of `conv` and `corr`.
 
 ## Errors
 
-The enum has no invalid values; the functions validate their own arguments. When the kernel is longer than the input, the two sequences trade roles and the lengths follow (the third example).
+Every value is valid; the functions validate their own arguments. When the kernel is longer than the input, the two sequences trade roles and the lengths follow (the third example).
 
 ## Interpretation and Use
 

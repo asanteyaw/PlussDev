@@ -14,13 +14,13 @@ runtime state.
 using classic::TransformOptions = /* a variant holding any one prep::*Options value */;
 ```
 
-`TransformKind` is an enum with one value per [`prep`](../prep.md) stage this
+`TransformKind` has one value per [`prep`](../prep.md) stage this
 reference documents — `StandardScaler`, `MinMaxScaler`, `RobustScaler`,
 `SimpleImputer`, `NeighborImputer`, `IterativeImputer`, `OneHotEncoder`,
 `FrequencyEncoder`, `VectorNormalizer`, `MaxAbsScaler`, `QuantileMap`,
 `PowerMap`, `ThresholdBinarizer`, `PolynomialLift`, `OrdinalEncoder`,
 `LabelEncoder`, `BaseNEncoder`, `HashingEncoder`, `TargetEncoder`,
-`WOEEncoder`. `RouteRemainderPolicy` is a two-value enum, `PassThrough` /
+`WOEEncoder`. `RouteRemainderPolicy` takes two values, `PassThrough` /
 `Drop` — see the `remainder` field below.
 
 ## Construction
@@ -36,12 +36,12 @@ for you. Read it back through
 ## State
 
 `kind` — `TransformKind`
-: Which [`prep`](../prep.md) stage this is — the enum value corresponding to
+: Which [`prep`](../prep.md) stage this is — the value corresponding to
   the typed method that built it (`add_standard_scaler` sets
   `TransformKind::StandardScaler`, and so on).
 
 `options` — `TransformOptions`
-: The stage's own options struct, held in a `std::variant` of every
+: The stage's own options, held in a `std::variant` of every
   `prep::*Options` type. The active alternative always matches `kind`.
 
 `feature_route` — `std::vector<std::int64_t>`

@@ -18,7 +18,7 @@ changed afterward.
 
 Reuses [`LinearFamilyOptions`](../families/LinearFamilyOptions.md), but
 only five of its fields are ever read here — `elastic_l1_ratio` and every
-other field on that struct is silently ignored:
+other field on that value is silently ignored:
 
 - `objective` — which of the four `LinearObjective` values is accepted
   depends on which class reads it:
@@ -90,4 +90,4 @@ make the estimator too slow to adapt to new data.
   entry points that validate these fields eagerly, before any data is
   seen.
 - [`LinearFamilyOptions`](../families/LinearFamilyOptions.md) — the full
-  struct `family` embeds, including the fields this module never reads.
+  value `family` embeds, including the fields this module never reads.

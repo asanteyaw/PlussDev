@@ -25,7 +25,7 @@ second transfer meaning hidden behind `platform()`.
 
 ## Return And Lifetime Contract
 
-The return is the small `Platform` enum, exposed publicly as `pluss::pCPU`,
+The return is the small `Platform`, exposed publicly as `pluss::pCPU`,
 `pluss::pMPS`, and `pluss::pCUDA`. Views, reshapes, and ordinary operations
 preserve platform unless their documented purpose is transfer. Copies also
 remain on the same platform. Because this query is `noexcept` and performs no
@@ -66,7 +66,7 @@ view=cpu
 copy=cpu
 ```
 
-### 3. Use The Enum In Native C++ Dispatch
+### 3. Use The Platform Value In Native C++ Dispatch
 
 ```cpp
 if (table.platform() == pluss::pCPU) {

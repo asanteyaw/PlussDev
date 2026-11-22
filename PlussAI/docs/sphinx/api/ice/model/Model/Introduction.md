@@ -2,7 +2,7 @@
 
 ## What This Category Owns
 
-`model` owns exactly one type: `Model`, the base class every trainable
+`model` owns exactly one type: `Model`, the base type every trainable
 `ice` model derives from -- directly (a hand-written subclass) or
 through [`Outline`](../../outline/Outline.md) (the one-liner convenience
 for a plain chain of layers). None of the `models_ts`/`models_nlp`/

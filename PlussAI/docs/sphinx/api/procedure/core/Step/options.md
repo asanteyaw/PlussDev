@@ -16,7 +16,7 @@ StepOptions& options() noexcept;
 Returns the full [`StepOptions`](../StepOptions.md) the step was built
 with. Every other contract accessor (`inputs`/`outputs`/`persistable`/
 `trained`/`can_change_row_count`/`component`/`capability_mask`/`has`) is a
-thin, read-only forward over one field of this struct; `options()` is the
+thin, read-only forward over one field of this value; `options()` is the
 escape hatch when a caller needs a field none of those expose directly,
 such as `require_columns` or `time_feature`. The mutable overload lets a
 caller already holding a non-`const` `Step` adjust its contract in place

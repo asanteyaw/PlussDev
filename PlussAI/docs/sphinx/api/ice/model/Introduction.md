@@ -2,7 +2,7 @@
 
 ## What This Category Owns
 
-`model` owns exactly one type: [`Model`](Model.md), the base class every
+`model` owns exactly one type: [`Model`](Model.md), the base type every
 trainable `ice` model derives from -- the generic escape hatch: define
 parameters plus `forward`/`compute_loss`, get `learn`/`infer`/`assess`/
 `save`/`load`, gradient clipping, and non-finite diagnostics for free.

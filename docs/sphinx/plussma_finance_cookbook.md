@@ -220,11 +220,11 @@ double pb = fin::pricing::bates_price_cos(fin::pricing::OptionType::Call, 100.0,
 
 ### Notes
 
-Single MC option struct can be reused across model families.
+Single MC options can be reused across model families.
 
 ### Inputs
 
-- model parameter struct + shared `MonteCarloOptions`
+- model parameter set + shared `MonteCarloOptions`
 
 ### Output
 
@@ -417,7 +417,7 @@ Use model-specific calibration APIs to preserve correct parameter constraints.
 
 ### Output
 
-- model-specific calibration result structs
+- model-specific calibration results
 
 ### Options
 
@@ -811,7 +811,7 @@ Finance pipelines are sensitive to numeric settings and shape contracts.
 ### Options
 
 1. Prefer `Float64` for calibration/filtering and Greeks.
-2. Set seeds explicitly in every stochastic option struct.
+2. Set seeds explicitly in every stochastic options.
 3. Start with smaller MC budgets for smoke checks, then scale paths/steps.
 4. Validate input shape compatibility before expensive calibration runs.
 

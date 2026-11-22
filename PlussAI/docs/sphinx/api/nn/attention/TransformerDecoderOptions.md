@@ -129,9 +129,9 @@ handled automatically.
 ## See Also
 
 - [`TransformerDecoder`](TransformerDecoder.md) -- the only consumer of
-  this options struct.
+  these options.
 - [`TransformerDecoderLayerOptions`](TransformerDecoderLayerOptions.md)
-  -- the per-layer fields this struct forwards unchanged into every
+  -- the per-layer fields this value forwards unchanged into every
   internal layer.
 - [`TransformerEncoderOptions`](TransformerEncoderOptions.md) -- the
   encoder-side counterpart, field-for-field identical.

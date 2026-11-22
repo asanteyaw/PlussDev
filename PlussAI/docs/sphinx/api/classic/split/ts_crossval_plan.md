@@ -230,7 +230,7 @@ message = "ts_crossval_plan requires SplitOptions.shuffle=false."
 
 - [`SplitPlan`](SplitPlan.md) / [`IndexSplit`](IndexSplit.md) — the
   returned types.
-- [`SplitOptions`](SplitOptions.md) — the options struct.
+- [`SplitOptions`](SplitOptions.md) — the options.
 - [`crossval_plan`](crossval_plan.md) — the shuffle-eligible counterpart,
   for data with no chronological structure.
 - [`slice_batch`](slice_batch.md) — applying a fold's indices to real data.

@@ -20,7 +20,7 @@ explicit math::Function::operator bool() const noexcept;
 
 A default-constructed `Function` holds nothing: it is the "no function" value, the way an empty `std::function` or a null pointer is. `defined()` is `false` for it and `true` for every function built by `math::function`, `math::stack`, an operator, or arithmetic on other functions. The `explicit operator bool` is the same test spelled so that it reads naturally in an `if`.
 
-Call it whenever a `Function` might legitimately be absent: a lookup that can miss, a slot in a struct that is filled later, the result of an optional step. Every other method of `Function`, and every operator applied to it, requires a defined function and fails with an error otherwise, so testing first lets you report the problem in your own words (or skip the step) instead of catching that error.
+Call it whenever a `Function` might legitimately be absent: a lookup that can miss, a slot in a record that is filled later, the result of an optional step. Every other method of `Function`, and every operator applied to it, requires a defined function and fails with an error otherwise, so testing first lets you report the problem in your own words (or skip the step) instead of catching that error.
 
 `defined()` says nothing about the formula itself. It does not tell you the function is valid at any particular point, only that there is one.
 

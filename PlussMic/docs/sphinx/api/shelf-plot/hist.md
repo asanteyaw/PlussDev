@@ -38,7 +38,7 @@ fall back to `options_.default_bins`.
 
 **options** (`HistPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::hist`](../../api/dataframe-plot/hist.md) (`bins`,
 `alpha`, `line_width`).
 

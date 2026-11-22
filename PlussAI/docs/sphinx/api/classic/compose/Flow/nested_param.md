@@ -6,7 +6,7 @@
 `nested_param` reads one configuration value by its dotted path — a stage's
 route metadata or option field, or the attached model's task/family/option
 field — as a single `double`, regardless of the field's real type (`bool`,
-an enum, an `int64_t`). It is the generic read half of the same mechanism
+a categorical value, an `int64_t`). It is the generic read half of the same mechanism
 [`nested_param_keys`](nested_param_keys.md) enumerates and
 [`set_nested_param`](set_nested_param.md) writes through.
 
@@ -32,8 +32,8 @@ navigating typed accessors.
 
 `path` — `std::string_view`
 : A key from [`nested_param_keys()`](nested_param_keys.md): `"<stage>::<field>"`
-  or `"model::<field>"`. Every enum and `bool` field reads back as the
-  underlying integer value (a `bool` as `0.0`/`1.0`, an enum as its
+  or `"model::<field>"`. Every categorical and `bool` field reads back as the
+  underlying integer value (a `bool` as `0.0`/`1.0`, a categorical value as its
   `static_cast<std::uint8_t>`) — `nested_param` has no notion of the field's
   real C++ type, only that it fits in a `double`.
 

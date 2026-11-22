@@ -16,7 +16,7 @@ For each fitted column `map` computes `(x - median) / (q_high - q_low)`, with `q
 
 ## `summary()`
 
-`RobustScaler` returns a `TransformerSummary`, not a named struct:
+`RobustScaler` returns a `TransformerSummary`, not a named value:
 
 ### `TransformerSummary` fields
 

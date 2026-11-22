@@ -28,4 +28,4 @@ consistent across a model's lifetime.
 
 ## See Also
 
-- [`GELU`](GELU.md) -- the only consumer of this options struct.
+- [`GELU`](GELU.md) -- the only consumer of these options.

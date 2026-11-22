@@ -39,6 +39,6 @@ full account of each.
 ## Related Pages
 
 - [`models_ts`](../models_ts.md) -- the other `models_*` family.
-- [`options`](../options.md) -- the nested policy structs
+- [`options`](../options.md) -- the nested policy values
   `TextJudgeTrainOptions` shares with
   [`TrainOptions`](../options/TrainOptions.md).

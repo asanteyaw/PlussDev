@@ -58,7 +58,7 @@ cross entropy = 0.41703
 
 Every loss here is a plain function -- there is no type to construct, no
 `->` indirection, and no `parameters()`. Every loss's third argument is
-its own `Options` struct, always defaulted, so the common case omits it
+its own `Options`, always defaulted, so the common case omits it
 entirely (as shown for `MSE` and `CrossEntropy` above); the shared
 `reduction` field every one of them has means the same thing everywhere
 -- see [`Introduction`](losses/Introduction.md#the-shared-reduction-mode).

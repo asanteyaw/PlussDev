@@ -50,7 +50,7 @@ which is useful as a placeholder while a rule set is being assembled.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::MatcherOptions`. It has two boolean
+The options is `pluss::ai::nlp::MatcherOptions`. It has two boolean
 fields, and both default to `true`.
 
 ### `lowercase`

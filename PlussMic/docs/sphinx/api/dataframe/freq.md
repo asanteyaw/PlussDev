@@ -144,8 +144,8 @@ Name: count, ptype: Series
 
 ## Notes
 
-- `DataFrame::FreqKind` is the frequency measure enum used by `FreqOptions`.
-- `DataFrame::FreqOptions` is the public options struct for `freq()`.
+- `DataFrame::FreqKind` is the frequency measure used by `FreqOptions`.
+- `DataFrame::FreqOptions` is the public options for `freq()`.
 
 ## See Also
 

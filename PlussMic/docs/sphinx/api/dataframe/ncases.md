@@ -63,7 +63,7 @@ This matches the `3` in `scores`'s own `[3 cs x 2 feat]` footer when printed.
 
 - [`DataFrame::nfeatures`](nfeatures.md): the companion count for columns instead of
   rows.
-- [`DataFrame::shape`](shape.md): both counts together as one struct.
+- [`DataFrame::shape`](shape.md): both counts together as one value.
 - [`DataFrame::ndistinct`](ndistinct.md): count of distinct values, as opposed to raw
   row count.
 

@@ -37,7 +37,7 @@ not cut this epoch short (it already finished); it only prevents the
 
 ## Errors
 
-None from the base class; whatever an override throws (as
+None from the base type; whatever an override throws (as
 `EarlyStopCallback` does when its monitored metric is missing)
 propagates out of `Coach::learn` and triggers
 [`on_exception`](on_exception.md) instead.

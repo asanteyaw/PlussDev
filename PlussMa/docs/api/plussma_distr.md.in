@@ -4,7 +4,7 @@ The distributions of PlussMa live in `pluss::subsp::stats::distr`. Fifty-seven f
 
 ## Two Ways In
 
-**Kind-based functions** work for every family. `dst::Kind` is an enumeration with one value per family, and the free functions `distr::pdf`, `distr::logpdf`, `distr::cdf`, `distr::logcdf` and `distr::sample` take the kind, the points (or the shape of the draws) and a `std::vector<double>` of parameters in the order the family's page gives. Every function evaluates a whole `Series` at once.
+**Kind-based functions** work for every family. `dst::Kind` has one value per family, and the free functions `distr::pdf`, `distr::logpdf`, `distr::cdf`, `distr::logcdf` and `distr::sample` take the kind, the points (or the shape of the draws) and a `std::vector<double>` of parameters in the order the family's page gives. Every function evaluates a whole `Series` at once.
 
 **Objects** (the [object based distributions](distr/object_based.md)) bind a family and its parameters. `distr::Distribution{kind, params}` works for every `dst::Kind` and delegates evaluation and sampling to the kind-based functions. Dedicated wrappers such as `distr::Normal{mean, stddev}` and `distr::Gamma{shape, scale, location}` add strongly named parameters and exact family-specific operations. The object surface includes `pdf`, `cdf`, `logpdf`, `logcdf`, `sample`, `sample_like`, the cumulant generating function `cgf`, `cumulant(order)`, and maximum-likelihood fitting where supported. An object can take a `Series` for each parameter so one call evaluates a different distribution at every point.
 

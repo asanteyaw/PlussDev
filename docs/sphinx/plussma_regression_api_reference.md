@@ -72,11 +72,11 @@ const pluss::Series y = pluss::make_series(std::vector<double>{2,4,6,8}, {4}, cf
 
 - `x` and `y` accepted directly by `*_fit` APIs.
 
-## Enum: OLSCovarianceType
+## OLSCovarianceType
 
 ### API Signature
 
-- `enum OLSCovarianceType { Nonrobust }`
+- `OLSCovarianceType`: `Nonrobust`
 
 ### Notes
 
@@ -105,7 +105,7 @@ opt.covariance = reg::OLSCovarianceType::Nonrobust;
 
 - OLS fit uses non-robust covariance estimation.
 
-## Struct: OLSOptions
+## OLSOptions
 
 ### API Signature
 
@@ -149,11 +149,11 @@ opt.predictor_names = {"sqft", "rooms", "age"};
 
 - `opt` can be passed directly to `reg::ols_fit(...)`.
 
-## Enum: GLMFamily
+## GLMFamily
 
 ### API Signature
 
-- `enum GLMFamily { Normal, Binomial, Poisson }`
+- `GLMFamily`: `Normal`, `Binomial`, `Poisson`
 
 ### Notes
 
@@ -186,11 +186,11 @@ reg::GLMOptions o3; o3.family = reg::GLMFamily::Poisson;
 
 - GLM fit behavior follows chosen family constraints.
 
-## Enum: GLMLink
+## GLMLink
 
 ### API Signature
 
-- `enum GLMLink { Canonical, Identity, Log, Logit }`
+- `GLMLink`: `Canonical`, `Identity`, `Log`, `Logit`
 
 ### Notes
 
@@ -226,11 +226,11 @@ opt.link = reg::GLMLink::Canonical;
 
 - Fitted result reports resolved `fit.link` as `Logit`.
 
-## Enum: GLMPredictionType
+## GLMPredictionType
 
 ### API Signature
 
-- `enum GLMPredictionType { Mean, Linear }`
+- `GLMPredictionType`: `Mean`, `Linear`
 
 ### Notes
 
@@ -260,7 +260,7 @@ auto eta = reg::glm_predict(fit, x_test, reg::GLMPredictionType::Linear, cfg);
 
 - `mu` and `eta` have same length, different scales.
 
-## Struct: GLMOptions
+## GLMOptions
 
 ### API Signature
 
@@ -306,7 +306,7 @@ opt.predictor_names = {"x"};
 
 - IRLS will run with requested tolerance/iteration budget.
 
-## Struct: QuantileOptions
+## QuantileOptions
 
 ### API Signature
 
@@ -351,7 +351,7 @@ opt.eps = 1e-6;
 
 - Quantile IRLS runs with specified robustness and convergence controls.
 
-## Struct: PolyOptions
+## PolyOptions
 
 ### API Signature
 
@@ -393,7 +393,7 @@ opt.predictor_names = {"a", "b"};
 
 - Generated polynomial basis includes powers and cross terms up to selected degree.
 
-## Struct: OLSFitResult
+## OLSFitResult
 
 ### API Signature
 
@@ -434,7 +434,7 @@ std::cout << fit.coefficients << "\n";
 
 - Printed scalar diagnostics and coefficient vector for inspection.
 
-## Struct: GLMFitResult
+## GLMFitResult
 
 ### API Signature
 
@@ -474,7 +474,7 @@ std::cout << "converged=" << (fit.converged ? "true" : "false")
 
 - Convergence and quality diagnostics for model acceptance checks.
 
-## Struct: QuantileFitResult
+## QuantileFitResult
 
 ### API Signature
 
@@ -512,7 +512,7 @@ std::cout << "tau=" << fit.tau
 
 - Quantile-specific diagnostics to compare tail/median models.
 
-## Struct: PolyFitResult
+## PolyFitResult
 
 ### API Signature
 

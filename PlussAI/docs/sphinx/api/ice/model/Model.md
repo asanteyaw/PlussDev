@@ -12,7 +12,7 @@ just a chain of existing layers; `Model` is for anything else.
 pluss::ai::ice::Model::~Model() = default;
 ```
 
-An abstract base class -- `forward(const Series&)` is pure virtual,
+An abstract base type -- `forward(const Series&)` is pure virtual,
 so `Model` itself is never instantiated directly.
 
 ## Construction

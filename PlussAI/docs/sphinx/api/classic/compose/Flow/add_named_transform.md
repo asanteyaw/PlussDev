@@ -36,8 +36,8 @@ supplied as a runtime value instead of baked into the method name.
   for the full list of values.
 
 `options` — `TransformOptions`
-: The matching options struct, held in the `TransformOptions` variant —
-  construct the concrete struct (`prep::StandardScalerOptions{}`, …) and it
+: The matching options, held in the `TransformOptions` variant —
+  construct the concrete value (`prep::StandardScalerOptions{}`, …) and it
   converts implicitly. Passing an `options` alternative that does not match
   `kind` fails (see Errors).
 

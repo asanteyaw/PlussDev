@@ -224,7 +224,7 @@ data=[[1.6094379]]
 
 ## See Also
 
-- [`WOEEncoderOptions`](WOEEncoderOptions.md) — the options struct.
+- [`WOEEncoderOptions`](WOEEncoderOptions.md) — the options.
 - [`TargetEncoder`](TargetEncoder.md) — the any-target alternative, prior
   (not `0.0`) as the unseen-category fallback.
 - [`compose::Flow::learn`](../../compose/Flow/learn.md) — how a supervised

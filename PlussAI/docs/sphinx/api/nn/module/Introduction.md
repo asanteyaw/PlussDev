@@ -5,7 +5,7 @@
 `module` owns the one base contract every layer, container, and composed
 network in `nn` implements, and the one container that composes them:
 
-- [`Module`](Module.md) — the base class: parameter/buffer/child-module
+- [`Module`](Module.md) — the base type: parameter/buffer/child-module
   registration, `train`/`eval` mode, `to(platform/dtype)` moves,
   `parameters`/`buffers`/`modules` (flat and named, recursive through
   children), and `snapshot`/`restore` for checkpointing.

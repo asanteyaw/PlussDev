@@ -366,7 +366,7 @@ its operators, and the rest.
 
 ### Example 11
 
-Example 11 opts a custom struct into `let`.
+Example 11 opts a user-defined type into `let`.
 
 ```cpp
 #include <pluss/mic.h>
@@ -402,7 +402,7 @@ custom payload value: 2.5
 custom payload is a let payload: 1
 ```
 
-The struct becomes a payload once `enable_let` is specialized.
+The value becomes a payload once `enable_let` is specialized.
 
 ### Example 12
 

@@ -12,7 +12,7 @@ For most applications:
 #include <pluss/pluss.h>
 ```
 
-For loader option structs and utility helpers:
+For loader options and utility helpers:
 
 ```cpp
 #include <pluss/tils.h>

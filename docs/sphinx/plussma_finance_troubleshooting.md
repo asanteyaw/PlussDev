@@ -224,7 +224,7 @@ When a finance workflow fails, use this exact sequence:
 Provide these fields to make fixes fast:
 
 - API called
-- full option struct values
+- full options values
 - dtype/platform
 - random seed + deterministic flag
 - sample input shapes and 3-5 input rows

@@ -11,7 +11,7 @@ individually. Every field here except `num_encoder_layers` and
 [`TransformerEncoder`](TransformerEncoder.md) and
 [`TransformerDecoder`](TransformerDecoder.md) this constructs -- the two
 stacks share every option except their own layer count and their own
-independent per-layer random seeds (offset from this struct's own `seed`
+independent per-layer random seeds (offset from this value's own `seed`
 by different constants for the encoder side and the decoder side).
 
 ## Fields
@@ -117,13 +117,13 @@ Otherwise, treat `d_model`/`nhead`/`dim_feedforward`/`dropout`/
 `num_encoder_layers`/`num_decoder_layers` default to the original
 Transformer paper's `6`/`6`; deeper on one side than the other is a
 legitimate architecture choice (a strong encoder feeding a lighter
-decoder, for instance), not a constraint this struct enforces either way.
+decoder, for instance), not a constraint this value enforces either way.
 
 ## See Also
 
 - [`Transformer`](Transformer.md) -- the only consumer of this options
-  struct.
+  value.
 - [`TransformerEncoderOptions`](TransformerEncoderOptions.md) /
   [`TransformerDecoderOptions`](TransformerDecoderOptions.md) -- what
-  this struct's shared fields are forwarded into, on each side
+  this value's shared fields are forwarded into, on each side
   respectively.

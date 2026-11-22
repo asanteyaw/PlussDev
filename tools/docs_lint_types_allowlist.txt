@@ -1,0 +1,61 @@
+# Allowlist for tools/docs_lint_types.py.
+# Format:  kind | path-glob | name-glob | reason        (all four fields required)
+# kind = type  : a fenced-code type definition whose declared name matches name-glob
+# kind = prose : a banned prose word (lower-case match) in files matching path-glob
+# Only USER-DEFINED helper types that an example program needs belong here.
+# Library-owned types (options, results, value sets, library bases) never do:
+# document those with a field | type | default | meaning table instead.
+
+# --- user types that extend a library base type, shown to demonstrate how to extend it
+type | PlussAI/docs/*/api/ice/* | *Callback | user callback deriving from the library Callback base; the example shows how to extend it
+type | PlussAI/docs/*/api/ice/* | DoubleHead | user model deriving from the library Model base
+type | PlussAI/docs/*/api/ice/* | LoggingModel | user model deriving from the library Model base
+type | PlussAI/docs/*/api/ice/* | *Source | user source deriving from the library Source base
+type | PlussAI/docs/*/api/nlp/* | *Stage | user stage deriving from the library IStage base
+type | PlussAI/docs/*/api/nlp/* | Bare | user stage deriving from the library IStage base (minimal override example)
+type | PlussAI/docs/*/api/nn/* | *Dataset | user dataset deriving from the library Dataset base
+type | PlussAI/docs/*/api/nn/* | *Impl | user module deriving from the library Module base
+type | PlussTils/docs/* | SquaresDataset | user dataset deriving from the library Dataset base
+
+# --- local helpers that hold example data or example state so the program compiles
+type | PlussAI/docs/*/api/nn/module/Schedule/* | TakeOutput | user module step used to demonstrate Schedule
+type | PlussAI/docs/*/api/nn/module/Schedule/* | ScaleHidden | user module step used to demonstrate Schedule
+type | PlussAI/docs/*/api/nn/module/Schedule/* | Combine | user module step used to demonstrate Schedule
+type | PlussAI/docs/*/api/procedure/* | SquareModule | user module used by the example
+type | PlussAI/docs/*/api/nlp/tasks/* | Setting | local row of example settings
+type | PlussMa/docs/* | Row | local row of example data
+type | PlussMa/docs/* | Case | local example case
+type | PlussMa/docs/* | Run | local example run description
+type | PlussMa/docs/* | Mode | local example case
+type | PlussMa/docs/* | Setting | local example case
+type | PlussMa/docs/* | Entry | local example case
+type | PlussMa/docs/* | Data | local holder of the example's simulated data
+type | PlussMa/docs/* | Rows | local holder of example matrices
+type | PlussMa/docs/* | Simulated | local holder of the example's simulated data
+type | PlussMa/docs/* | BsGreeks | local holder of the example's sensitivities
+type | PlussMa/docs/* | Chain | local example problem definition
+type | PlussMa/docs/* | Rule | local example row
+type | PlussMa/docs/* | Square | local example callable
+type | PlussMa/docs/* | Cover | local example case
+type | PlussMa/docs/* | Counts | local example counters
+type | PlussMa/docs/* | Pick | local example case
+type | PlussMa/docs/* | Pair | local example case
+type | PlussMa/docs/* | PairCase | local example case
+type | PlussMa/docs/* | Start | local example case
+type | PlussMa/docs/* | Alg | local example row
+type | PlussMa/docs/* | Col | local example row
+type | PlussMa/docs/* | Preset | local example row
+type | PlussMa/docs/* | Model | local example row pairing a label with a Hessian approximation
+type | PlussMa/docs/* | S | local example row
+type | PlussMa/docs/* | P | local example row
+type | PlussMa/docs/* | MyObjective | user objective that the example passes to the optimizer
+type | PlussMa/docs/* | Reading | local example record
+type | PlussMa/docs/* | Sale | local example record
+type | PlussTils/docs/* | Reading | user payload type the example opts into let
+type | PlussTils/docs/* | Invoice | user payload type the example sends through transmit
+type | PlussTils/docs/* | Line | user payload type the example sends through transmit
+type | PlussTils/docs/* | Sale | user record that the example prints
+type | docs/sphinx/plussma_optimization_user_guide.md | MyObjective | user objective that the example passes to the optimizer
+type | docs/sphinx/kit.md | Metrics | user type in namespace mylib showing how to add output_render
+type | PlussPl/docs/* | PairCase | local example row of pair-plot settings
+prose | PlussMic/docs/sphinx/api/archive-plot/* | struct | TEMPORARY: another change is rewriting the Archive plot pages; remove this entry once they are converted

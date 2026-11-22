@@ -142,7 +142,7 @@ downstream).
 ## See Also
 
 - [`TransformerEncoder`](TransformerEncoder.md) -- the only consumer of
-  this options struct.
+  these options.
 - [`TransformerEncoderLayerOptions`](TransformerEncoderLayerOptions.md)
-  -- the per-layer fields this struct forwards unchanged into every
+  -- the per-layer fields this value forwards unchanged into every
   internal layer.

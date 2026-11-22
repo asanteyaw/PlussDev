@@ -30,7 +30,7 @@ Same as [`line()`](line.md)'s `x`.
 
 **options** (`AreaPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::area`](../../api/dataframe-plot/area.md) (`alpha`,
 `line_width`, `align`) — note `alpha` defaults lower here (`0.88`) than `line()`'s
 `1.0`. `align` is inert here, same as [`line()`](line.md).

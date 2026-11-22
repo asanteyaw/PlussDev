@@ -27,7 +27,7 @@ owning overload's step unpersistable, same as the reference overload.
 
 ## Related Pages
 
-- [`ice::Model`](../../ice/model/Model.md) -- the base class every
+- [`ice::Model`](../../ice/model/Model.md) -- the base type every
   wrapped model derives from.
 - [`registry`](../registry.md) -- `bind_ice`, required before a
   `restore_key` can actually reload anything.

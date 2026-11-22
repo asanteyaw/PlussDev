@@ -244,7 +244,7 @@ procedure/persist
 ## Reading Strategy
 
 1. [core](procedure/core.md) -- `Procedure`/`Step`/`Link`/`Artifact`/
-   `ProcedureResult` and their supporting option structs, referenced by
+   `ProcedureResult` and their supporting options, referenced by
    every later category.
 2. [build](procedure/build.md) -- the generic `step`/`sink`/`link`/`input`/
    `make` free functions every adapter overload specializes.

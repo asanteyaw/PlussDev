@@ -38,7 +38,7 @@ of the three boolean options is valid.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::SentencizerOptions`. All three fields
+The options is `pluss::ai::nlp::SentencizerOptions`. All three fields
 default to `true`, which gives the most common behavior: break on sentence-final
 marks and on line breaks, and do not break after known abbreviations.
 

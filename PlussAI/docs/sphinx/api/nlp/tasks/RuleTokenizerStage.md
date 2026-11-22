@@ -47,7 +47,7 @@ at construction because no option has an invalid value.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::RuleTokenizerOptions`. It has two
+The options is `pluss::ai::nlp::RuleTokenizerOptions`. It has two
 boolean fields, and both default to `true`.
 
 ### `keep_punct`

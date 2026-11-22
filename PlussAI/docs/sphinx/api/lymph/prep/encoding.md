@@ -8,7 +8,7 @@ object and readable through `summary()` and the public attributes.
 Each encoder here is the object twin of a
 [`prep::stage`](stage.md) factory: `prep::OneHotEncoder` does the same
 arithmetic as `prep::stage::one_hot_encoder(...)`, from the same
-[`options::OneHotEncoder`](encoding/OneHotEncoderOptions.md) struct. The
+[`options::OneHotEncoder`](encoding/OneHotEncoderOptions.md) value. The
 difference is ownership.
 
 | Reach for… | when… |

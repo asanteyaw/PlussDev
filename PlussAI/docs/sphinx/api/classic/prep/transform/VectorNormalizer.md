@@ -188,7 +188,7 @@ data=[[0, 0]]
 ## See Also
 
 - [`VectorNormalizerOptions`](VectorNormalizerOptions.md) — the options
-  struct, including the `VectorNorm` enum.
+  value, including the `VectorNorm`.
 - [`scaling`](../scaling.md) — the per-feature (not per-row) counterpart.
 - [`transform/Introduction`](Introduction.md) — why this type lives in
   `transform` rather than `scaling`.

@@ -5,7 +5,7 @@
 
 [Back to `module::Model`](../Model.md)
 
-Applies a function to whichever struct the model holds.
+Applies a function to whichever value the model holds.
 
 ## Signature
 
@@ -16,12 +16,12 @@ template <typename F> decltype(auto) module::Model::visit(F &&f) const;
 
 ## What It Does
 
-Calls `f` with the held struct (`model::Heston &`, `model::Sabr &`, ...), so one generic lambda handles every family (typically with `if constexpr` on the type). It is `std::visit` on the underlying variant. The non-const form lets `f` edit the struct.
+Calls `f` with the held model (`model::Heston &`, `model::Sabr &`, ...), so one generic lambda handles every family (typically with `if constexpr` on the type). It is `std::visit` on the underlying variant. The non-const form lets `f` edit the value.
 
 ## Parameters
 
 `F &&f`
-: A callable accepting each of the six structs.
+: A callable accepting each of the six values.
 
 ## Returns
 

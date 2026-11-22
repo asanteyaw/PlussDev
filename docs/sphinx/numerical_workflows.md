@@ -153,7 +153,7 @@ auto result = minimize(problem);
 
 See [Optimization User Guide](plussma_optimization_user_guide.md) and
 [Optimization Cookbook](plussma_optimization_cookbook.md) for the concrete
-solver families and option structs available in your build.
+solver families and options available in your build.
 
 ## Differentiation and autodiff
 

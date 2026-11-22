@@ -110,7 +110,7 @@ A default-constructed `Catalog` is not just empty — `defined()` itself is `fal
   `Stream::plot().auto_plot()`; anything else (zero or several) delegates to `line()`'s
   empty-selection form. There is no row-count- or dtype-based branching the way
   `DataFrame::plot().auto_plot()` has.
-- `options` is accepted but has no effect — `CatalogAutoPlotOptions` is an empty struct.
+- `options` is accepted but has no effect — `CatalogAutoPlotOptions` is an empty value.
 - An undefined handle throws before an empty-but-defined one would even be checked — see
   Example 3.
 - Note keys are never counted as "plottable" here, the same exclusion every other method on

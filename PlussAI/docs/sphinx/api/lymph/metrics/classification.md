@@ -50,7 +50,7 @@ lymph::metrics::MetricReport lymph::metrics::classification::score_report(
 
 `confusion_table` and `summary` each take a further overload with an explicit
 `std::initializer_list<double> label_order` (plus a trailing `normalize` /
-`zero_division`) in place of the options struct — see
+`zero_division`) in place of the options — see
 [`confusion_table`](confusion_table.md) and
 [`classification_summary`](classification_summary.md).
 

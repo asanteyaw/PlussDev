@@ -23,7 +23,7 @@ Validates the field, then prices every option in the strip with `controls.engine
 
 - `price()` prices the held `model`.
 - `price(candidate)` prices a different [`Model`](../../model/Model.md) in the same instrument, market and controls **without changing the field**: this is what a calibration calls at every trial of the parameters.
-- `price(model)` is the same with a concrete model struct (`model::Heston`, ...) in place of a `Model`.
+- `price(model)` is the same with a concrete model (`model::Heston`, ...) in place of a `Model`.
 
 **Which engine for which model.** Black-Scholes: Analytic, Cos, MonteCarlo, Lattice, Spectral. SABR: Analytic, MonteCarlo. Heston: Fft, Cos, Pde, MonteCarlo. Bates: Fft, Cos, MonteCarlo. Rough Heston and rough Bergomi: MonteCarlo only. Asking for another combination throws an error that lists the supported engines. American and Bermudan exercise narrows the choice further (see [`Vanilla`](../../instrument/Vanilla.md)).
 
@@ -35,7 +35,7 @@ Validates the field, then prices every option in the strip with `controls.engine
 : Another model to price in the same instrument, market and controls.
 
 `const M &model`
-: A concrete model struct (`model::Heston`, ...).
+: A concrete model (`model::Heston`, ...).
 
 `pluss::Config cfg`
 : Device of the result.
@@ -199,7 +199,7 @@ field still prices to 8.62810810
 
 ### Example 5
 
-Pricing a concrete model struct. Copy the held Heston parameters out with `as`, change one, and price that.
+Pricing a concrete model. Copy the held Heston parameters out with `as`, change one, and price that.
 
 ```cpp
 #include <pluss/ma.h>

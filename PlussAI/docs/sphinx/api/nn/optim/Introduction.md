@@ -3,8 +3,8 @@
 ## What This Category Owns
 
 `optim` owns everything that turns a computed gradient into a parameter
-update: the [`Optimizer`](Optimizer.md) base class every concrete
-algorithm derives from, the three options structs shared across all of
+update: the [`Optimizer`](Optimizer.md) base type every concrete
+algorithm derives from, the three options shared across all of
 them ([`GradientClipOptions`](GradientClipOptions.md),
 [`ExecutionOptions`](ExecutionOptions.md),
 [`StepDiagnosticsOptions`](StepDiagnosticsOptions.md)), the per-step
@@ -40,11 +40,11 @@ about [`parameters`](Optimizer/parameters.md), [`size`](Optimizer/size.md),
 between `SGD` and `Adam` -- read [`Optimizer`](Optimizer.md) once, and that
 knowledge carries to every algorithm on this page unchanged.
 
-What *does* differ per algorithm is its own `Options` struct's fields (the
+What *does* differ per algorithm is its own `Options`'s fields (the
 actual update formula's hyperparameters -- learning rate, momentum,
 betas, ...) and its own per-parameter state (a velocity buffer, a running
 squared-gradient accumulator, first/second moment estimates, ...). Every
-`Options` struct, across all seven optimizers, ends in the same two
+`Options`, across all seven optimizers, ends in the same two
 fields -- `clip` ([`GradientClipOptions`](GradientClipOptions.md)) and
 `execution` ([`ExecutionOptions`](ExecutionOptions.md)) -- so gradient
 clipping and update-lane selection are configured identically everywhere,
@@ -65,7 +65,7 @@ category:
 - **`capture_state()` / `restore_state(state)`.** Every optimizer's
   internal state (velocity, moment estimates, accumulators, step count --
   whatever that algorithm tracks) can be captured into a plain `State`
-  struct and restored later, independent of
+  value and restored later, independent of
   [`Module::snapshot`](../module/Module/snapshot.md)/
   [`restore`](../module/Module/restore.md) (which capture parameter
   *values*, not optimizer state). Checkpointing training resumably means
@@ -79,7 +79,7 @@ category:
 2. [`GradientClipOptions`](GradientClipOptions.md) /
    [`ExecutionOptions`](ExecutionOptions.md) /
    [`StepDiagnosticsOptions`](StepDiagnosticsOptions.md) --
-   the three shared options structs every algorithm's own `Options` ends
+   the three shared options every algorithm's own `Options` ends
    with (the first two) or composes separately (the third, set once on the
    optimizer rather than per algorithm).
 3. Any one concrete algorithm ([`SGD`](SGD.md) is the simplest place to

@@ -40,7 +40,7 @@ A generic configuration scribble, translated into `ReadExcelOptions` internally.
 
 **options** (`const pluss::loader::ReadExcelOptions&`, optional)
 
-Sheet selection and header-parsing controls, same struct as
+Sheet selection and header-parsing controls, same value as
 [`Catalog::load_excel`](../catalog/load_excel.md)'s.
 
 ## Returns

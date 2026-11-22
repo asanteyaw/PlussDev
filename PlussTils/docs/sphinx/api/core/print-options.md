@@ -6,7 +6,7 @@
 last argument, or that is stored as the engine's baseline. Its fields are
 grouped by what they affect, and each group has its own reference page.
 
-- [`PrintOptions`](../core-print-options.md): the struct itself, its resolution
+- [`PrintOptions`](../core-print-options.md): the value itself, its resolution
   order, and how a call's options merge with the engine's baseline.
 - [Joining](../core-print-options/joining.md): `sep`, `end`, `prefix`, `suffix`,
   `line_prefix`, `flush`.
@@ -33,7 +33,7 @@ grouped by what they affect, and each group has its own reference page.
 - [Presets](../core-print-options/presets.md): `plain`, `pretty_json`, `repr`,
   `table_cell`.
 
-The enumerations and the two supporting structs each have their own page:
+The enumerations and the two supporting values each have their own page:
 [`Align`](../core-align.md), [`Sign`](../core-sign.md),
 [`Notation`](../core-notation.md), [`Humanize`](../core-humanize.md),
 [`BoolStyle`](../core-bool-style.md), [`CaseXf`](../core-case-xf.md),

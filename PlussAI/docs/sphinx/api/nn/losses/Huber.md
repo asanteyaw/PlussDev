@@ -172,7 +172,7 @@ MSE / Huber ratio: 100.483x
 
 ## See Also
 
-- [`HuberOptions`](HuberOptions.md) -- the options struct.
+- [`HuberOptions`](HuberOptions.md) -- the options.
 - [`SmoothL1`](SmoothL1.md) -- a related but numerically different
   quadratic/linear loss.
 - [`MSE`](MSE.md) -- the purely quadratic counterpart this improves on

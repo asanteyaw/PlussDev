@@ -27,7 +27,7 @@ Same as the 2D accessor: a shelf with fewer than three rows throws
 
 **options** (`ActPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::act`](../../api/dataframe-plot/act.md) (`max_lag`,
 `show_confidence_band`, `confidence_level`, `trace_width`).
 

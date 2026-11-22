@@ -7,7 +7,7 @@ ratio computed from those totals.
 The counts record what the scorer saw. `gold_count` is how many entities the reference
 contains, `predicted_count` is how many the system produced, and `correct_count` is how
 many predictions matched a gold entity exactly. The three ratios follow from those
-counts, so the struct can be checked by hand.
+counts, so the value can be checked by hand.
 
 ## Fields
 
@@ -63,7 +63,7 @@ To combine runs, sum the counts and recompute the ratios from the sums, as with
 
 ## See Also
 
-- [`assess::ner`](assess_ner.md) -- produces this struct.
+- [`assess::ner`](assess_ner.md) -- produces this value.
 - [`NerStage`](NerStage.md) -- produces the predicted entities.
 - [`TagScore`](TagScore.md) -- the token-level counterpart.
 

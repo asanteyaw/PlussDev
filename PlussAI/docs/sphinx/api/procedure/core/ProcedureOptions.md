@@ -124,7 +124,7 @@ schedule=1
 cache=1
 ```
 
-The values round-trip through `options()`. `workers` is active; the two enum
+The values round-trip through `options()`. `workers` is active; the two
 values reserve policy intent but do not yet alter execution.
 
 ### Return A Structured Failure

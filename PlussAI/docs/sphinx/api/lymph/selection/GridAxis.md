@@ -39,7 +39,7 @@ fastest** as `i` counts up, matching an equivalent nested-loop expansion.
 `grid_points` materializes all of them in that order — reach for it only when
 every point will actually be evaluated.
 
-Values are always `double`. For a boolean or enum hyperparameter, sweep `{0.0,
+Values are always `double`. For a boolean or categorical hyperparameter, sweep `{0.0,
 1.0}` (or `{0, 1, 2}`) and convert in the closure:
 `point.at("fit_intercept") != 0.0`.
 

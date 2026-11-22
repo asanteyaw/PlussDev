@@ -29,7 +29,7 @@ bool is_duration() const noexcept;
 ## What It Does
 
 `kind()` reports which of the four payload types a `Queue` is actually
-holding, as a `Queue::Kind` enum value. `kind_name()` gives the same answer
+holding, as a `Queue::Kind` value. `kind_name()` gives the same answer
 as a human-readable string -- `"Series"`, `"Note"`, `"Timeline"`, or
 `"Duration"` -- and the static overload converts an arbitrary `Kind` value
 to its name without needing a `Queue` instance at all. `is_series()`,
@@ -80,7 +80,7 @@ static kind_name(Kind::Duration): Duration
 
 The static overload names any `Kind` value directly -- useful for printing
 a kind you got from somewhere other than a live `Queue`, such as a stored
-enum value.
+value.
 
 Example 2. `is_series()`/`is_note()`/`is_timeline()`/`is_duration()` on a
 `Series`-holding and a `Note`-holding `Queue`. Exactly one is `true` in each

@@ -211,7 +211,7 @@ data=[[0],
 
 ## See Also
 
-- [`PowerMapOptions`](PowerMapOptions.md) — the options struct.
+- [`PowerMapOptions`](PowerMapOptions.md) — the options.
 - [`QuantileMap`](QuantileMap.md) — the empirical-percentile alternative.
 - [`StandardScaler`](../scaling/StandardScaler.md) — the standardization
   step this type applies after its own power transform.

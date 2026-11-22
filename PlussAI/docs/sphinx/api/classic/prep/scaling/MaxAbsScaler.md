@@ -232,7 +232,7 @@ data=[[0]]
 
 ## See Also
 
-- [`MaxAbsScalerOptions`](MaxAbsScalerOptions.md) — the options struct.
+- [`MaxAbsScalerOptions`](MaxAbsScalerOptions.md) — the options.
 - [`StandardScaler`](StandardScaler.md) / [`MinMaxScaler`](MinMaxScaler.md) /
   [`RobustScaler`](RobustScaler.md) — the other three scalers.
 - [`scaling/Introduction`](Introduction.md) — the contract shared by all four.

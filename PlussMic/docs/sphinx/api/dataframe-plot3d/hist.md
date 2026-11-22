@@ -58,7 +58,7 @@ applies a smoothing pass to the grid before rendering, repeated `smooth_passes` 
 (floored to a minimum of `1`); this softens sharp bin-to-bin jumps at the cost of
 blurring the exact counts. `as_wireframe` and `as_surface` control the render shape —
 see the note below for exactly how they interact. `align` is present for the same
-struct-reuse-with-`Catalog::plot3d()` reason as `Scatter3DPlotOptions`'s (see
+value-reuse-with-`Catalog::plot3d()` reason as `Scatter3DPlotOptions`'s (see
 [`scatter()`](scatter.md)) — inert on `DataFramePlot3DAccessor::hist()` itself.
 
 ```{note} Three mutually exclusive render shapes, checked in a fixed order

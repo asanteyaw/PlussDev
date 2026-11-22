@@ -45,7 +45,7 @@ does not need one `.append(...)` per layer:
   same-typed stages.
 - `std::initializer_list<Layer>` is the disambiguating overload for a bare
   `{...}` literal -- `pluss::RangeView<Layer>` alone cannot deduce `Layer`
-  from a braced-init-list argument, since deducing a class template
+  from a braced-init-list argument, since deducing the template arguments
   parameter that way is not something list-initialization supports; a
   `std::initializer_list<T>` parameter is the one form the language does
   let a template argument be deduced through. See Example 4.

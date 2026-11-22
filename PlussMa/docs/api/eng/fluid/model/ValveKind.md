@@ -25,7 +25,7 @@ Chooses the equation that replaces the ordinary head-loss law of a valve link. `
 
 ## Returns
 
-An enumeration; one value per valve in `Valves::kind`.
+One value per valve in `Valves::kind`.
 
 ## Errors
 

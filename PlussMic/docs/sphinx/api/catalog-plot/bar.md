@@ -173,7 +173,7 @@ Catalog::plot().bar: unknown key 'nonexistent'
 ## Notes
 
 - `ci_enabled`/`ci_level` are unused by this method despite being present on
-  `CatalogBarPlotOptions` — they exist for shape-compatibility across the plotting option structs.
+  `CatalogBarPlotOptions` — they exist for shape-compatibility across the plotting options.
 - `horizontal = true` swaps which values feed which axis, not just the render direction —
   see the important callout above.
 - Every other mechanic is shared with [`line()`](line.md) — see that page for the full

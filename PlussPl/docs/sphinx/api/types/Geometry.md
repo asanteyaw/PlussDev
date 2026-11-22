@@ -6,7 +6,7 @@
 
 ## What It Does
 
-Three plain structs carry the numbers that the plotting calls take and return.
+Three plain values carry the numbers that the plotting calls take and return.
 
 A **`Range1d`** is an interval with a `low` and a `high` end. It is the argument of the manual limits ([`Pane::x_limits`](../pane/x_limits.md), `y_limits`, `z_limits`, `color_limits`), of a trace's [`color_limits`](../trace/color_limits.md), of the span of a band ([`BandCue`](Cues.md)) and of a `bucket` range. Its default is the unit interval 0 to 1.
 
@@ -18,7 +18,7 @@ None of them validates its values on construction. A `Range1d` with `low` above 
 
 ## Fields
 
-| Struct | Field | Meaning | Default |
+| Value | Field | Meaning | Default |
 |---|---|---|---|
 | `Range1d` | `low`, `high` | The two ends of the interval, in data units. | 0 and 1 |
 | `Vec3d` | `x`, `y`, `z` | The coordinates. | 0, 0, 0 |
@@ -112,7 +112,7 @@ default Extent2d: 1280 x 820
 
 ## Notes
 
-- These structs are aggregates: initialise them with braces (`Range1d{0.0, 10.0}`) or by assigning the fields.
+- These values are aggregates: initialise them with braces (`Range1d{0.0, 10.0}`) or by assigning the fields.
 - `Range1d` is not ordered or checked: `Range1d{10.0, 0.0}` is a legal value, and is rejected by the limit calls that require `low < high`.
 - Vectors and ranges here are data units; the figure size is in drawing units. Point sizes of fonts, tick lengths and gutters do not scale with the size of the figure.
 

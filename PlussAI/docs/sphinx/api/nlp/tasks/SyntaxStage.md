@@ -41,7 +41,7 @@ the three boolean options is valid.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::SyntaxOptions`. All three fields default
+The options is `pluss::ai::nlp::SyntaxOptions`. All three fields default
 to `true`.
 
 ### `prefer_verbs`

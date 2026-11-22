@@ -258,7 +258,7 @@ max abs diff between Shelf and FeatureBatch forms = 0
 
 ## See Also
 
-- [`OrdinalEncoderOptions`](OrdinalEncoderOptions.md) — the options struct.
+- [`OrdinalEncoderOptions`](OrdinalEncoderOptions.md) — the options.
 - [`LabelEncoder`](LabelEncoder.md) — the same rank encoding, `one_based`
   defaulting `false`, meant for a target column rather than a feature.
 - [`OneHotEncoder`](OneHotEncoder.md) — the right choice when no order

@@ -26,7 +26,7 @@ to row labels the way the 2D accessor has.
 This page also establishes mechanics shared by every method on
 `DataFramePlot3DAccessor` — [`scatter()`](scatter.md), [`hist()`](hist.md),
 [`surface()`](surface.md), and [`wireframe()`](wireframe.md) all work the same way with
-respect to `Studio`, feature-to-axis conversion, and the two 3D options structs described
+respect to `Studio`, feature-to-axis conversion, and the two 3D options described
 below.
 
 ```{important} Every method returns a Studio, same as the 2D accessor

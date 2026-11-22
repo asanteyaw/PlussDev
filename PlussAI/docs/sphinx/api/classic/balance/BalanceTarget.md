@@ -157,4 +157,4 @@ so cleaning cannot itself worsen the imbalance it runs before correcting.
 - [`class_mix`](class_mix.md) / [`ClassMix`](ClassMix.md) — the class
   distribution every target-count rule reads.
 - [`TrainOptions`](../core/TrainOptions.md#balance) — `.balance`, where
-  this struct reaches every classifier automatically.
+  this value reaches every classifier automatically.

@@ -2,7 +2,7 @@
 
 # Pricing engines
 
-The seven engines behind `controls.engine`, each a small struct of settings with a `price` method that works on its own, without a [`Field`](field/Field.md): `engine.price(instrument, model, market, risk, cfg)`. A `Field` holds one of each in `Controls`, so the settings listed here are the ones you set as `field.controls.cos.num_terms`, `field.controls.mc.paths` and so on. Each page documents every setting with an example of its effect.
+The seven engines behind `controls.engine`, each a small value of settings with a `price` method that works on its own, without a [`Field`](field/Field.md): `engine.price(instrument, model, market, risk, cfg)`. A `Field` holds one of each in `Controls`, so the settings listed here are the ones you set as `field.controls.cos.num_terms`, `field.controls.mc.paths` and so on. Each page documents every setting with an example of its effect.
 
 | Engine | Models | Method |
 |---|---|---|

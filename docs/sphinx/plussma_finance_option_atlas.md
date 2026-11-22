@@ -15,7 +15,7 @@ namespace fin = pluss::ma::finance;
 | Use case | Instrument | Model | Engine | Primary API | Output |
 |---|---|---|---|---|---|
 | Vanilla European, baseline | `instrument::Vanilla` | BS implicit (vol input) | Analytic | `pricing::black_scholes_price` | `double/Series` |
-| Vanilla + Greeks | `instrument::Vanilla` | BS implicit | Analytic | `pricing::black_scholes_greeks` | struct |
+| Vanilla + Greeks | `instrument::Vanilla` | BS implicit | Analytic | `pricing::black_scholes_greeks` | value |
 | Recover implied vol | `instrument::Vanilla` | BS implicit | Root-find | `pricing::implied_vol` | `double/Series` |
 | Heston point price | `instrument::Vanilla` | `volatility::HestonParams` | Quadrature | `pricing::heston_price` | `double` |
 | Heston fast grid | `instrument::Vanilla` | `volatility::HestonParams` | FFT | `pricing::heston_price_fft_grid` | `HestonFftResult` |

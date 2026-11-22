@@ -6,7 +6,7 @@ Every program is complete and its output is the output of that program.
 
 ## How it works
 
-- **A `Field` is data.** Its five members (`instrument`, `market`, `model`, `controls`, `paths`) are plain structs of `Series`; change any one and price again.
+- **A `Field` is data.** Its five members (`instrument`, `market`, `model`, `controls`, `paths`) are plain values of `Series`; change any one and price again.
 - **The model is a value.** A `module::Model` holds one of `BlackScholes`, `Sabr`, `Heston`, `Bates`, `RoughHeston`, `RoughBergomi`, exposes its parameters as a flat vector, and can be replaced or priced as a candidate without touching the `Field`.
 - **The engine is a choice, not a consequence.** `Analytic`, `Fft`, `Cos`, `MonteCarlo` and `Lattice` price the models they support; a `Field` never switches silently and reports the engines a model supports when you ask for another.
 - **A fit is a loss plus a minimiser.** The `Field` prices every quote in one call and reduces the residuals to a number; any minimiser can use that as its objective.

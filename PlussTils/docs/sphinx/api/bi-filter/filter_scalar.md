@@ -264,6 +264,6 @@ wrong type read throws: 1
 
 ## See Also
 
-- [`Filter`](../bi-filter.md) -- the struct whose payload holds this type.
+- [`Filter`](../bi-filter.md) -- the value whose payload holds this type.
 - [`FilterRange`](filter_range.md) -- two scalars forming a range.
 - [`FilterSet`](filter_set.md) -- several members forming a set.

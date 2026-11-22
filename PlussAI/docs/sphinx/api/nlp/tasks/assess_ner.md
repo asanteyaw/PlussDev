@@ -45,7 +45,7 @@ the alignment fields are read, so the gold documents may carry other annotations
 
 An `EntityScore`. Its `doc_count`, `gold_count`, `predicted_count`, and `correct_count`
 are corpus totals, and its `precision`, `recall`, and `f1` are computed from those totals.
-The struct is described on its own page.
+The value is described on its own page.
 
 ## Errors
 

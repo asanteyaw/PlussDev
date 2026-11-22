@@ -152,7 +152,7 @@ int main() {
 
 ### Example 3
 
-The enum and the constants are the same values.
+The values and the constants are the same.
 
 @@run@@
 ```cpp

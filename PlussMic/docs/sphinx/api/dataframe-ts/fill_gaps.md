@@ -26,7 +26,7 @@ A gap with no qualifying neighbor in the requested direction (for example, leadi
 nulls under `Forward`, or trailing nulls under `Backward`) remains `NULL`. This
 `GapFillMode` (`pluss::subsp::stats::ts::GapFillMode`) has exactly these four
 values — `Forward`, `Backward`, `Zero`, `Constant` — and no `None`/no-op member;
-don't confuse it with the unrelated `TsReindexFill` enum used by
+don't confuse it with the unrelated `TsReindexFill` used by
 [`align_to()`](align_to.md), which does have a `None` value.
 
 ## Parameters

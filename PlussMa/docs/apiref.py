@@ -828,7 +828,7 @@ def write_landings(topics: list[dict]) -> None:
         "```{toctree}", ":maxdepth: 3", ":hidden:", "", *guide_refs, "```", ""])
     ref = "\n".join([
         "# API Reference", "",
-        "One page per function, method, enumeration and options structure, grouped by topic. "
+        "One page per function, method, set of values and set of options, grouped by topic. "
         "Every page states the signature, what the call does, every parameter, what it returns "
         "and what it refuses, and shows complete programs with real output. "
         "For the reasoning and worked problems, each topic has a matching "

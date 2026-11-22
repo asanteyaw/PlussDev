@@ -112,6 +112,6 @@ platform/dtype changes.
 
 ## See Also
 
-- [`RNN`](RNN.md) -- the only consumer of this options struct.
+- [`RNN`](RNN.md) -- the only consumer of these options.
 - [`GRUOptions`](GRUOptions.md) / [`LSTMOptions`](LSTMOptions.md) -- the
   same shared fields, on the gated recurrent architectures.

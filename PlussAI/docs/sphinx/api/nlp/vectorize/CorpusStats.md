@@ -82,7 +82,7 @@ problem rather than real content.
 
 ## See Also
 
-- [`describe`](describe.md) -- produces this struct.
+- [`describe`](describe.md) -- produces this value.
 - [`DocMapOptions`](DocMapOptions.md) -- the rules every count follows.
 - [`Mapper`](Mapper.md) -- learns the vocabulary this summary previews.
 

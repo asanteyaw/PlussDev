@@ -18,7 +18,7 @@ prefer a named factory when the unit is fixed in source code.
 
 `pluss::make_duration` intentionally forwards to this contract. It does not
 copy differently or infer a unit. Scaling and shape validation happen before a
-result is returned, and invalid enum values or overflow throw.
+result is returned, and invalid values or overflow throw.
 
 ## Examples
 ```cpp

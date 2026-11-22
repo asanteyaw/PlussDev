@@ -45,7 +45,7 @@ one backend. A stage that has never been trained leaves `doc_label` empty and
 
 ## Options
 
-The options struct is `pluss::ai::nlp::TextCatOptions`. The first group of
+The options is `pluss::ai::nlp::TextCatOptions`. The first group of
 fields applies to the feature representation, and the second group applies to
 training and to the backends.
 

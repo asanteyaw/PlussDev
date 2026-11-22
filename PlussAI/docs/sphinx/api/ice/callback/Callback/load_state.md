@@ -34,7 +34,7 @@ strings regardless of a field's real type.
 
 ## Errors
 
-None from the base class; an override that mis-parses a value (for
+None from the base type; an override that mis-parses a value (for
 example `std::stoi` on malformed text) throws whatever that parse
 itself throws.
 

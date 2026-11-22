@@ -1,6 +1,6 @@
 # `pluss::ai::nn::Module`
 
-`Module` is the base class every layer, container, and composed network in
+`Module` is the base type every layer, container, and composed network in
 `nn` derives from. It owns parameter/buffer/child-module registration,
 `train`/`eval` mode (propagated recursively to every registered child),
 `to(platform)`/`to(dtype)` moves (likewise recursive), flat and named

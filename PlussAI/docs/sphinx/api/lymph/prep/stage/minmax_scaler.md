@@ -15,7 +15,7 @@ lymph::prep::Stage lymph::prep::stage::minmax_scaler(
     lymph::options::MinMaxScaler options = {});
 ```
 
-`lymph::options::MinMaxScaler` is the canonical spelling of the option struct;
+`lymph::options::MinMaxScaler` is the canonical spelling of the options;
 `lymph::prep::MinMaxScalerOptions` is the family-scoped alias for the same type.
 
 ## What It Does
@@ -141,7 +141,7 @@ trained     = true
 
 `lower` / `upper`. The default range is `[0, 1]`; a second scaler targets
 `[-1, 1]`. The stage factory and the standalone object take the identical option
-struct.
+value.
 
 ```cpp
 #include <pluss/pluss.h>

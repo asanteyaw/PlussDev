@@ -35,7 +35,7 @@ family or stage type ahead of time.
 
 `value` — `double`
 : The new value, converted back to the field's real type (a `bool` field
-  treats `value >= 0.5` as `true`; an enum field truncates via
+  treats `value >= 0.5` as `true`; a categorical field truncates via
   `static_cast`).
 
 ## Returns

@@ -24,6 +24,6 @@ themselves matter more than a single scalar.
 
 ## See Also
 
-- [`L1`](L1.md) -- the only consumer of this options struct.
+- [`L1`](L1.md) -- the only consumer of these options.
 - [`SmoothL1Options`](SmoothL1Options.md) -- `SmoothL1` with `beta=0`
   reduces to exactly this loss.

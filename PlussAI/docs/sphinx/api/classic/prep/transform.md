@@ -75,7 +75,7 @@ values = 5
 [`FunctionTransformer`](transform/FunctionTransformer.md) and
 [`FeatureTransformer`](transform/FeatureTransformer.md) are constructed
 differently from every other `prep` kernel — the former takes a callable
-instead of an options struct, the latter is built up with its own
+instead of an options value, the latter is built up with its own
 `add_stage`/`add_pipeline` calls rather than fit directly — see their own
 pages.
 

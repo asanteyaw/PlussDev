@@ -16,7 +16,7 @@ lymph::prep::Stage lymph::prep::stage::maxabs_scaler(
     lymph::options::MaxAbsScaler options = {});
 ```
 
-`lymph::options::MaxAbsScaler` is the canonical spelling of the option struct;
+`lymph::options::MaxAbsScaler` is the canonical spelling of the options;
 `lymph::prep::MaxAbsScalerOptions` is the family-scoped alias for the same type.
 
 ## What It Does

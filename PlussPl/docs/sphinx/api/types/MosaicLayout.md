@@ -12,7 +12,7 @@ Without `mosaic`, the layout is not active and the panes are arranged automatica
 
 ## Fields
 
-| Struct | Field | Meaning | Default |
+| Value | Field | Meaning | Default |
 |---|---|---|---|
 | `MosaicLayout` | `rows`, `cols` | The grid size. | 0 (no mosaic) |
 | | `gutter_x`, `gutter_y` | The space between cells, horizontally and vertically: a distance in drawing units, or `auto_gutter` (-1), a share of the cell. | `auto_gutter` |

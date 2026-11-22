@@ -155,7 +155,7 @@ exact reproducibility across runs matters.
 ## See Also
 
 - [`TransformerEncoderLayer`](TransformerEncoderLayer.md) -- the only
-  consumer of this options struct.
+  consumer of these options.
 - [`MultiheadAttentionOptions`](MultiheadAttentionOptions.md) -- several
   fields here (`nhead`, `dropout`, `bias`, `batch_first`,
   `average_attn_weights`) are forwarded directly into one of these.

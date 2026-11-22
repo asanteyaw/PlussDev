@@ -27,7 +27,7 @@ minimum of `16`.
 
 **options** (`DensityPlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`CatalogPlotAccessor::density`](../catalog-plot/density.md) (`points`, `alpha`,
 `line_width`).
 

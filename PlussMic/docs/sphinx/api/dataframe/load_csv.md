@@ -109,7 +109,7 @@ object over a long positional argument list.
 
 **options** (`const pluss::loader::ReadCsvOptions&`)
 
-A typed options struct covering the same settings as the positional overload
+A typed options covering the same settings as the positional overload
 (`sep`, `ncases`, `case_col`, `usefeats`, `on_bad_lines`, and more), useful when the same
 parsing configuration is reused across several files.
 

@@ -83,7 +83,7 @@ g: x Positive  y Real
 
 ### Example 2
 
-Every value of the enumeration, read back one at a time. `Real` is the default and declares nothing; the other six restrict the variable.
+Every value of the values, read back one at a time. `Real` is the default and declares nothing; the other six restrict the variable.
 
 ```cpp
 #include <pluss/ma.h>

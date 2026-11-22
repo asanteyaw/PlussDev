@@ -64,7 +64,7 @@ for which values are actually supported.
 | `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
 | `trace` | Trace defaults | Mesh-edge shading and material settings. |
 
-The same shared structs documented in full on [`line()`](line.md); `wireframe()` has no
+The same shared options documented in full on [`line()`](line.md); `wireframe()` has no
 fields of its own beyond these two. A `Wireframe` trace preset (tuned lighting/shading
 for mesh edges) is available via `options.trace.preset`.
 

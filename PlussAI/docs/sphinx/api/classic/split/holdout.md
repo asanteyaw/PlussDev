@@ -195,7 +195,7 @@ data=[10, 3, 0, 5, 7, 6]
 ## See Also
 
 - [`IndexSplit`](IndexSplit.md) — the returned type.
-- [`SplitOptions`](SplitOptions.md) — the options struct.
+- [`SplitOptions`](SplitOptions.md) — the options.
 - [`crossval_plan`](crossval_plan.md) — the multi-fold counterpart.
 - [`slice_batch`](slice_batch.md) — applying the returned indices to real
   data.

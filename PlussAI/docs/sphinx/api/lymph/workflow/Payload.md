@@ -61,7 +61,7 @@ the caller already assembled.
   that role was set by name, or not at all.
 
 `std::string time_feature() const` · `const std::optional<TimeOptions>& time_options() const`
-: The time column's name, and the full options struct when
+: The time column's name, and the full options when
   [`time(TimeOptions)`](Payload/time.md) was used.
 
 ## Methods

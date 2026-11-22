@@ -59,4 +59,4 @@ seed as any other.
 
 ## See Also
 
-- [`Embedding`](Embedding.md) -- the only consumer of this options struct.
+- [`Embedding`](Embedding.md) -- the only consumer of these options.

@@ -673,7 +673,7 @@ max abs diff (balance ignored by the regressor) = 0
 
 ## See Also
 
-- [`OnlineLinearOptions`](OnlineLinearOptions.md) — the options struct.
+- [`OnlineLinearOptions`](OnlineLinearOptions.md) — the options.
 - [`make_online_linear_regressor`](make_online_linear_regressor.md) — the
   eager-validation entry point.
 - [`OnlineLinearClassifier`](OnlineLinearClassifier.md) — the

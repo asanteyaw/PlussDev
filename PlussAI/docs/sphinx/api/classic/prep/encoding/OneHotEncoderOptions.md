@@ -22,7 +22,7 @@ Must be `>= 0`.
 `CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent`
 
 What happens when a feature's fitted cardinality exceeds `max_categories`.
-This same three-value enum is shared by every category-vocabulary encoder in
+This same three-value choice is shared by every category-vocabulary encoder in
 `encoding` (`FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`,
 `BaseNEncoder`, and — via `SupervisedFitOptions` — `TargetEncoder` /
 `WOEEncoder`); it is documented in full here and referenced, not repeated,

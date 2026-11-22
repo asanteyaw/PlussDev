@@ -1,15 +1,15 @@
 # `pluss::ai::ice::options`
 
 `options` owns `TrainOptions` (public alias for the declared `Recipe`
-struct) -- the central training configuration every `Model::learn` call
+value) -- the central training configuration every `Model::learn` call
 and every `models_*` catalog entry's `learn()` takes -- its five nested
-policy structs, and `AssessReport`, the result `assess()` returns.
+policy values, and `AssessReport`, the result `assess()` returns.
 
 ## The Surface
 
 | Entity | What it gives you |
 | --- | --- |
-| [`TrainOptions`](options/TrainOptions.md) | batch size, learning rate, optimizer/loss kind, shuffle/seed, standardize, plus the five policy structs below |
+| [`TrainOptions`](options/TrainOptions.md) | batch size, learning rate, optimizer/loss kind, shuffle/seed, standardize, plus the five policy values below |
 | [`ValidationPolicy`](options/ValidationPolicy.md) | validation split ratio, evaluation cadence, monitored metric name/direction |
 | [`ArchitectureRegularization`](options/ArchitectureRegularization.md) | dropout strength (`TextJudge`-specific override) |
 | [`ObjectiveRegularization`](options/ObjectiveRegularization.md) | weight decay, L1/L2 penalties, label smoothing |

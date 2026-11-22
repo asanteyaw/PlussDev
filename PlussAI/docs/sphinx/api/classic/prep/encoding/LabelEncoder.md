@@ -182,7 +182,7 @@ data=[[2]]
 
 ## See Also
 
-- [`LabelEncoderOptions`](LabelEncoderOptions.md) — the options struct.
+- [`LabelEncoderOptions`](LabelEncoderOptions.md) — the options.
 - [`OrdinalEncoder`](OrdinalEncoder.md) — the identical mechanics, meant for
   an ordered feature column rather than a target.
 - [`encoding/Introduction`](Introduction.md) — the contract shared across

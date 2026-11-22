@@ -4,14 +4,14 @@
 
 `prep::scaling` owns four standalone numeric scaler objects —
 [`prep::StandardScaler`](StandardScaler.md), `prep::MinMaxScaler`,
-`prep::RobustScaler`, `prep::MaxAbsScaler` — and the option structs that
+`prep::RobustScaler`, `prep::MaxAbsScaler` — and the options that
 configure them ([`options::StandardScaler`](StandardScalerOptions.md) and its
 siblings).
 
 ## Object, Not Stage
 
 Every scaler here has a twin among the [`prep::stage`](../stage.md)
-factories that does identical arithmetic from the identical option struct. The
+factories that does identical arithmetic from the identical options. The
 subfamily exists for the cases where you want the scaler as a *value you hold*
 rather than a step folded into a model:
 

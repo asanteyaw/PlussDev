@@ -5,7 +5,7 @@ from -- the layers that sit between [`fusion`](fusion.md)/[`cnn`](cnn.md)/
 [`rnn`](rnn.md) stages so a stack of linear operations does not collapse
 into one big linear operation. Every type here is a
 [`Module`](module/Module.md), constructible with no arguments (or, for most
-of them, one small options struct). All of them add no parameters to a
+of them, one small options). All of them add no parameters to a
 network's [`parameters()`](module/Module/parameters.md) except
 [`PReLU`](activation/PReLU.md), whose negative-side slope is itself a
 learnable weight.

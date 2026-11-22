@@ -2,7 +2,7 @@
 
 The strategy of `integra` and the settings of its two engines.
 
-`strategy` chooses the engine; `quadrature` and `monte_carlo` are the full option structs of the two engines, used when that engine runs. In `Auto`, the quadrature tolerance and refinement budget decide when quadrature has failed, so tightening them sends more integrals to Monte Carlo.
+`strategy` chooses the engine; `quadrature` and `monte_carlo` are the full options of the two engines, used when that engine runs. In `Auto`, the quadrature tolerance and refinement budget decide when quadrature has failed, so tightening them sends more integrals to Monte Carlo.
 
 ## Fields
 

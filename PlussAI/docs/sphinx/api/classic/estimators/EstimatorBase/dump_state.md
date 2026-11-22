@@ -39,7 +39,7 @@ same `ModelSpec`, reproduces the original fit.
 
 ## Errors
 
-- `Status::not_implemented` — the base class default, returned by any family
+- `Status::not_implemented` — the base type default, returned by any family
   that has not overridden `dump_state`. Every classifier and regressor family
   shipped today overrides it; treat this as a real possibility for a family
   you have not checked rather than assuming it always succeeds.

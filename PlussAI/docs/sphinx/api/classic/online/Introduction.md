@@ -99,7 +99,7 @@ for that asymmetry demonstrated directly.
 
 ## Related Pages
 
-- [`families`](../families.md) — `LinearFamilyOptions`, the struct
+- [`families`](../families.md) — `LinearFamilyOptions`, the value
   `OnlineLinearOptions::family` embeds.
 - [`core`](../core.md) — `TrainOptions`, including `max_iterations` (the
   bootstrap-step count inside `learn`) and `balance` (the classifier-only

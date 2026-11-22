@@ -23,7 +23,7 @@ Gives the direction of a `StateControl`. `Below` fires when the watched value is
 
 ## Returns
 
-An enumeration; `StateControl::sense`.
+Used by `StateControl::sense`.
 
 ## Errors
 

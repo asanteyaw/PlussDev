@@ -114,7 +114,7 @@ Produced only by [`sweep`](sweep.md) / [`probe`](probe.md) /
 
 `ledger` — `TuneLedger`
 : The same `trials`, restated as parallel `pluss::Series` columns instead
-  of a `std::vector` of structs — see [`TuneLedger`](TuneLedger.md).
+  of a `std::vector` of values — see [`TuneLedger`](TuneLedger.md).
 
 ## Methods
 

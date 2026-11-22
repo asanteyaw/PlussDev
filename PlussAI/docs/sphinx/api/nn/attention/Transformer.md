@@ -92,7 +92,7 @@ owns no parameters directly, only the two sub-stacks that do.
 Five examples: the full encoder-decoder path end to end, the
 encoder-only `forward(src)`/`encode(src)`/`operator()(src)` forms shown
 equivalent, independent encoder/decoder depths accessed through
-`encoder()`/`decoder()`, the positional-vs-options-struct construction
+`encoder()`/`decoder()`, the positional-vs-options construction
 equivalence, and confirming the whole model runs on the MPS backend.
 
 ### Example 1
@@ -232,7 +232,7 @@ output shape: [1, 1, 4]
 
 ### Example 4
 
-The positional and `TransformerOptions`-struct constructor forms, given
+The positional and `TransformerOptions`-value constructor forms, given
 the same `seed`, produce bit-for-bit identical output.
 
 ```cpp
@@ -330,7 +330,7 @@ transformer on MPS: OK, output platform=2
 
 ## See Also
 
-- [`TransformerOptions`](TransformerOptions.md) -- the options struct.
+- [`TransformerOptions`](TransformerOptions.md) -- the options.
 - [`TransformerEncoder`](TransformerEncoder.md) /
   [`TransformerDecoder`](TransformerDecoder.md) -- the two internal
   stacks this composes.

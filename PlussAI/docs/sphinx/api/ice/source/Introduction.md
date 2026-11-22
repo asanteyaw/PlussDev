@@ -3,7 +3,7 @@
 ## What This Category Owns
 
 `source` owns the pluggable batch-feeding abstraction
-[`Coach`](../coach/Coach.md) iterates over: the base class
+[`Coach`](../coach/Coach.md) iterates over: the base type
 [`Source`](Source.md), its two built-in implementations
 ([`TensorSource`](TensorSource.md)/[`DataSetSource`](DataSetSource.md)),
 and the two plain context types every call threads through

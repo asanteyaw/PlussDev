@@ -56,6 +56,6 @@ larger floor.
 ## See Also
 
 - [`RelativeMSE`](RelativeMSE.md) -- the only consumer of this options
-  struct.
+  value.
 - [`MSEOptions`](MSEOptions.md) -- the plain (unscaled) counterpart's
   options, sharing the same `reduction` field.

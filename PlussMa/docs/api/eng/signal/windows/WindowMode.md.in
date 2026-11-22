@@ -2,12 +2,6 @@
 
 Chooses where a window places its endpoints.
 
-## Signature
-
-```cpp
-enum class signal::WindowMode { Symmetric, Periodic };
-```
-
 ## What It Does
 
 A window of length `n` can be sampled over a span that ends on its last coefficient or one that stops just short of it. `Symmetric` samples `n` points over a full period so the window is its own mirror image: `w[i] = w[n-1-i]`. `Periodic` samples the first `n` points of a window one coefficient longer, so the next copy would start where this one ends and the window tiles.
@@ -21,7 +15,7 @@ A window of length `n` can be sampled over a span that ends on its last coeffici
 
 ## Errors
 
-The enum has no invalid values; the window functions validate their own size, dtype and platform.
+Every value is valid; the window functions validate their own size, dtype and platform.
 
 ## Interpretation and Use
 

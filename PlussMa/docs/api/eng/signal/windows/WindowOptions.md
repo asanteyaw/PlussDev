@@ -4,27 +4,17 @@
 
 The endpoint convention, dtype and platform of a window.
 
-## Signature
-
-```cpp
-struct signal::WindowOptions {
-  signal::WindowMode mode{signal::WindowMode::Symmetric};
-  pluss::ScalarType dtype{pluss::ScalarType::Float64};
-  pluss::Platform platform{pluss::Platform::CPU};
-};
-```
-
 ## What It Does
 
 Passed as the second argument of `boxcar`, `bartlett`, `blackman`, `hamming` and `hann`. It does not change the shape of the window; it chooses which of the equivalent samplings is returned and where and in which precision the coefficients live.
 
 ## Fields
 
-| Field | Meaning | Default |
-|---|---|---|
-| `mode` | `Symmetric` or `Periodic`; see `WindowMode`. | `Symmetric` |
-| `dtype` | `Float32` or `Float64`. | `Float64` |
-| `platform` | Where the result is allocated. | `CPU` |
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `mode` | `signal::WindowMode` | `Symmetric` | `Symmetric` or `Periodic`; see `WindowMode`. |
+| `dtype` | `pluss::ScalarType` | `Float64` | `Float32` or `Float64`. |
+| `platform` | `pluss::Platform` | `CPU` | Where the result is allocated. |
 
 ## Errors
 

@@ -132,7 +132,7 @@ it.
 
 ## See Also
 
-- [`Step`](Step.md) -- every accessor this struct backs.
+- [`Step`](Step.md) -- every accessor this value backs.
 - [`build`](../build.md) -- the generic `step` overloads a caller fills
   this with directly.
 - [`RunOptions`](RunOptions.md) -- `allow_temporal_leakage`, the other

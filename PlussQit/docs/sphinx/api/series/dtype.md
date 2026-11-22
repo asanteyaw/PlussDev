@@ -15,10 +15,10 @@ DType Series::dtype() const
 Returns compact metadata describing how each value in the `Series` is
 stored.
 
-The returned `DType` is a small, copyable, allocation-free struct with three
+The returned `DType` is a small, copyable, allocation-free value with three
 public fields:
 
-- **`scalar`** — the `ScalarType` enum value (`Float32`, `Int64`, `Bool`,
+- **`scalar`** — the `ScalarType` value (`Float32`, `Int64`, `Bool`,
   `Complex64`, ...)
 - **`itemsize`** — bytes occupied by **one** stored value
 - **`name`** — the stable printable name (`"float32"`, `"int64"`, ...)
@@ -46,13 +46,13 @@ None.
 ## Returns
 
 `DType`
-    A value-type struct (`scalar`, `itemsize`, `name`, and the three category
+    A value-type value (`scalar`, `itemsize`, `name`, and the three category
     predicates). Inspecting it never allocates, converts, or copies tensor
     data — it reads metadata only.
 
 ## Gradient
 
-Not applicable — `dtype()` returns a plain struct, not a `Series`.
+Not applicable — `dtype()` returns a plain value, not a `Series`.
 
 ## Examples
 
@@ -173,7 +173,7 @@ the 8-bit float formats.
 
 ## Summary
 
-`dtype()` returns a `Series`' storage metadata as a small `DType` struct:
+`dtype()` returns a `Series`' storage metadata as a small `DType`:
 
 - `scalar`, `itemsize`, `name`, plus `is_floating()` / `is_complex()` /
   `is_integral()` category queries

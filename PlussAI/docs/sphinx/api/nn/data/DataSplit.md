@@ -1,6 +1,6 @@
 # `pluss::loader::DataSplit`
 
-A plain result struct: the train/val/test field `Series` produced by one
+A plain result: the train/val/test field `Series` produced by one
 [`split_fields`](split_fields.md) call. Never constructed directly by
 calling code -- every instance comes back from `split_fields`.
 

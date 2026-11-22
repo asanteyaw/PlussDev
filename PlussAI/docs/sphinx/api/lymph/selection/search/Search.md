@@ -86,7 +86,7 @@ Built by a factory, not by hand — its constructor is private. All three live i
 
 `build(std::vector<GridAxis> axes, TuneOptions options)`
 : From an assembled `TuneOptions` — search kind, trial count, seed, split,
-  worker count in one struct.
+  worker count in one value.
 
 [`grid` / `random` / `build`](grid.md) has the full signatures and worked
 examples.

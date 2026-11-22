@@ -2,7 +2,7 @@
 
 [Back to The Pricing Field](../finance_06_the_pricing_field.md)
 
-A `module::Model` is a value that holds exactly one of six models. The six are plain structs of `Series`, one `Series` per parameter, and the `Model` is a thin wrapper around a `std::variant` of them. This page covers what each model is, the order of its parameters in the flat vector that optimizers use, how to read and write parameters, how to ask which model is held, and which fields are optional.
+A `module::Model` is a value that holds exactly one of six models. The six are plain values of `Series`, one `Series` per parameter, and the `Model` is a thin wrapper around a `std::variant` of them. This page covers what each model is, the order of its parameters in the flat vector that optimizers use, how to read and write parameters, how to ask which model is held, and which fields are optional.
 
 ## The six models
 
@@ -23,7 +23,7 @@ In the Bates model {math}`N` is a Poisson process of intensity {math}`\lambda` (
 
 ## The parameter vector
 
-`model.parameters()` returns a flat `Series` of the model's main parameters, in a fixed order, and `model.parameters(values)` writes them back. This is the interface for an optimizer, which sees a vector, not six differently named structs.
+`model.parameters()` returns a flat `Series` of the model's main parameters, in a fixed order, and `model.parameters(values)` writes them back. This is the interface for an optimizer, which sees a vector, not six differently named values.
 
 | Model | Parameters, in order | Count |
 |---|---|---|
@@ -50,7 +50,7 @@ template <typename F> decltype(auto) module::Model::visit(F &&f);
 
 | Call | Meaning |
 |---|---|
-| `Model(model)` | a `Model` is built from, and assigned from, any of the six model structs |
+| `Model(model)` | a `Model` is built from, and assigned from, any of the six model |
 | `parameters(cfg)` | the flat parameter vector, in the order of the table above |
 | `parameters(values)` | writes the vector back, from a `Series`, a `std::vector`, a `std::array` or a `std::span` |
 | `name()`, `holds<M>()` | the name of the held model, and whether it is the model `M` |
@@ -155,7 +155,7 @@ Each setter produced the expected vector. The `Float32` line shows both the vect
 
 ## Program 3: which model is held
 
-`holds<M>()` tests for a model, `name()` returns its name, `as<M>()` returns a reference to it (to read or modify one parameter), and `visit` calls a function with whichever model is held, so that a single piece of generic code works for all six. Assigning a model struct or a `Model` to a `Model` replaces what it holds. The program changes one field of a Black-Scholes model through `as`, visits a model with a function that behaves differently for the Heston family, and then calls `as<Sabr>()` on a Heston model, which is an error naming both models. At the end it shows the template overload `Field::price(m)`, which prices a bare model struct and gives the same result as pricing a `Model`.
+`holds<M>()` tests for a model, `name()` returns its name, `as<M>()` returns a reference to it (to read or modify one parameter), and `visit` calls a function with whichever model is held, so that a single piece of generic code works for all six. Assigning a model or a `Model` to a `Model` replaces what it holds. The program changes one field of a Black-Scholes model through `as`, visits a model with a function that behaves differently for the Heston family, and then calls `as<Sabr>()` on a Heston model, which is an error naming both models. At the end it shows the template overload `Field::price(m)`, which prices a bare model and gives the same result as pricing a `Model`.
 
 @@run@@
 ```cpp
@@ -265,7 +265,7 @@ The two expansions differ in the fourth decimal in the wings (23.3799 and 23.380
 
 ## Program 5: optional fields and defaults
 
-Several fields of the model structs are optional and may be left undefined: `mu` and `variance_floor` in the Heston family, `alpha_floor` in SABR, and the three jump fields of the Bates model. The rules, shown by the program, are:
+Several fields of the model are optional and may be left undefined: `mu` and `variance_floor` in the Heston family, `alpha_floor` in SABR, and the three jump fields of the Bates model. The rules, shown by the program, are:
 
 - **`mu` is not used by the `Field`.** The drift of the asset is always {math}`r-q` from the market, so a `mu` set on the model has no effect on a price or a simulation made through the `Field`. It exists for the standalone path generators, where there is no market.
 - **`variance_floor` and `alpha_floor`** are floors applied to the variance (or to {math}`\alpha`) in a discretised simulation, to keep the Euler step from producing a negative value. They affect simulation only, and default to {math}`10^{-12}`.
@@ -314,7 +314,7 @@ The two expansions differ in the fourth decimal in the wings (23.3799 and 23.380
 
 ## Program 5: optional fields and defaults
 
-Several fields of the model structs are optional and may be left undefined: `mu` and `variance_floor` in the Heston family, `alpha_floor` in SABR, and the three jump fields of the Bates model. The rules, shown by the program, are:
+Several fields of the model are optional and may be left undefined: `mu` and `variance_floor` in the Heston family, `alpha_floor` in SABR, and the three jump fields of the Bates model. The rules, shown by the program, are:
 
 - **`mu` is not used by the `Field`.** The drift of the asset is always {math}`r-q` from the market, so a `mu` set on the model has no effect on a price or a simulation made through the `Field`. It exists for the standalone path generators, where there is no market.
 - **`variance_floor` and `alpha_floor`** are floors applied to the variance (or to {math}`\alpha`) in a discretised simulation, to keep the Euler step from producing a negative value. They affect simulation only, and default to {math}`10^{-12}`.

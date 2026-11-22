@@ -6,7 +6,7 @@ the dropout seed.
 Passed to [`scaled_attention`](scaled_attention.md)'s fifth argument,
 defaulted, and nested inside [`MultiheadOptions`](MultiheadOptions.md)'s
 own `attention` field, since [`multihead_attention`](multihead_attention.md)
-builds its per-head attention from this same struct internally.
+builds its per-head attention from this same value internally.
 
 ## Fields
 
@@ -60,6 +60,6 @@ non-standard scale.
 ## See Also
 
 - [`scaled_attention`](scaled_attention.md) -- the direct consumer of
-  this options struct.
-- [`MultiheadOptions`](MultiheadOptions.md) -- nests this struct as its
+  these options.
+- [`MultiheadOptions`](MultiheadOptions.md) -- nests this value as its
   own `attention` field.

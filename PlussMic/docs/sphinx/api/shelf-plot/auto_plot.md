@@ -30,7 +30,7 @@ Both routed-to calls use their own zero-argument overload — no companion `x` s
 ever passed through, even when one exists conceptually.
 ```
 
-The two-argument overload's `AutoPlotOptions` is the same currently-empty struct
+The two-argument overload's `AutoPlotOptions` is the same currently-empty value
 documented on the 2D accessor's page; it has no effect on routing or rendering today.
 
 ## Parameters

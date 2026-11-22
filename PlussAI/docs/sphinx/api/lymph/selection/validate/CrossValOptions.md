@@ -1,7 +1,7 @@
 # `lymph::options::CrossVal`
 
 `options::CrossVal` (family alias `selection::CrossValOptions`, and
-`selection::TimeValOptions` for the chronological reading) is the option struct
+`selection::TimeValOptions` for the chronological reading) is the options
 behind every [`Plan`](Plan.md). The [`cross`](cross.md) /
 [`stratified`](cross.md#the-stratified-and-grouped-variants) /
 [`grouped`](cross.md#the-stratified-and-grouped-variants) / [`time`](time.md)

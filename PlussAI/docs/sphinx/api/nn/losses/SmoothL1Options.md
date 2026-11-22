@@ -41,7 +41,7 @@ value produces a shared loss.
 
 ## See Also
 
-- [`SmoothL1`](SmoothL1.md) -- the only consumer of this options struct.
+- [`SmoothL1`](SmoothL1.md) -- the only consumer of these options.
 - [`HuberOptions`](HuberOptions.md) -- the related but numerically
   different quadratic/linear loss's options.
 - [`L1Options`](L1Options.md) -- what this reduces to exactly at

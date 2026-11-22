@@ -4,8 +4,8 @@ The learnable weight's shape, its initial value, and where it is allocated.
 
 Passed to [`PReLU`](PReLU.md)'s constructor; all three fields have defaults,
 so `PReLUOptions{}` reproduces a single shared slope initialized to `0.25`.
-Unlike every other options struct in this family, `PReLU` does not accept
-this struct as a single defaulted constructor argument -- instead it has a
+Unlike every other options in this family, `PReLU` does not accept
+this value as a single defaulted constructor argument -- instead it has a
 second constructor that takes `num_parameters`, `init`, and `cfg` as three
 separate defaulted parameters (see [`PReLU`](PReLU.md)'s Signature), which
 is what makes plain `nn::PReLU prelu;` work. Passing a `PReLUOptions` value
@@ -48,4 +48,4 @@ the *last* axis for the broadcast against `weight` to succeed (see
 
 ## See Also
 
-- [`PReLU`](PReLU.md) -- the only consumer of this options struct.
+- [`PReLU`](PReLU.md) -- the only consumer of these options.

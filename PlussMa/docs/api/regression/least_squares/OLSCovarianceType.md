@@ -11,7 +11,7 @@ regression::OLSCovarianceType regression::OLSOptions::covariance = regression::O
 regression::OLSCovarianceType regression::OLSFitResult::covariance_type;
 ```
 
-The enum has one member today; it exists so the choice is recorded on every result and a robust estimator can be added without changing any signature.
+There is one value today; it exists so the choice is recorded on every result and a robust estimator can be added without changing any signature.
 
 ## Fields
 

@@ -231,7 +231,7 @@ data=[[5]]
 
 ## See Also
 
-- [`TargetEncoderOptions`](TargetEncoderOptions.md) — the options struct.
+- [`TargetEncoderOptions`](TargetEncoderOptions.md) — the options.
 - [`WOEEncoder`](WOEEncoder.md) — the binary-target, log-odds-scale
   alternative.
 - [`compose::Flow::learn`](../../compose/Flow/learn.md) — how a supervised

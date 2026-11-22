@@ -10,7 +10,7 @@ cross-validation scheme. [`slice_feature_batch` / `slice_labeled_batch`](slice_b
 are the only functions here that touch real data, and they do only one
 thing: apply indices you already have to a batch.
 
-## One Options Struct, Many Callers
+## One Options Value, Many Callers
 
 [`SplitOptions`](SplitOptions.md) is large because it is shared by every
 function in this family **and** by every higher-level caller that runs a

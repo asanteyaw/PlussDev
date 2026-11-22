@@ -116,7 +116,7 @@ field_count=0
 
 ## See Also
 
-- [`StepPersistSpec`](../StepPersistSpec.md) -- the full struct.
+- [`StepPersistSpec`](../StepPersistSpec.md) -- the full value.
 - [`persist`](../../persist.md) -- where these fields land in the saved
   bundle's audit directory.
 

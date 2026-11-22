@@ -140,7 +140,7 @@ single-value surface.
 ## Overload Guide
 
 Use the overload that matches the job rather than forcing every call through the options
-struct.
+value.
 
 ### Legacy three-key overload
 
@@ -178,7 +178,7 @@ This is the cleanest surface when every value feature should use the same reduct
 
 ### `PivotTableOptions`
 
-Use the options struct when you need any of the following:
+Use the options when you need any of the following:
 
 - multiple aggregations
 - per-value aggregation control

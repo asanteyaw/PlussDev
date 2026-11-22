@@ -41,7 +41,7 @@ outright.
 
 - [`models`](models.md) / [`workflow`](workflow.md) — the types the
   save/load methods live on.
-- [`options`](options.md) — the sibling umbrella family, for option structs
+- [`options`](options.md) — the sibling umbrella family, for options
   rather than persistence.
 
 <!-- apiref:toctree:start -->

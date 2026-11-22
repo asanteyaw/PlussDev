@@ -69,7 +69,7 @@ parameterized layer in this reference already documents.
 
 ## See Also
 
-- [`RNNOptions`](RNNOptions.md) -- the options struct.
+- [`RNNOptions`](RNNOptions.md) -- the options.
 - [`GRU`](GRU.md) / [`LSTM`](LSTM.md) -- the gated alternatives, same
   shared shape conventions.
 - [`PackedSequence`](PackedSequence.md) -- the variable-length-batch input

@@ -19,7 +19,7 @@ CatalogPlotAccessor Catalog::plot(const KeySelection& keys, const pluss::table::
 The entry point into the catalog-level 2D plotting accessor — key-based line/step/area/
 scatter/bar/hist/density/corr_heatmap/scatter_matrix/auto_plot charts, returning
 `pluss::pl::Studio` figures. The accessor
-takes its style from `pluss::table::DataFramePlotOptions`, the same struct
+takes its style from `pluss::table::DataFramePlotOptions`, the same value
 [`DataFrame::plot`](../dataframe/plot.md) takes, so fields like `default_x_feature` still
 apply even though what they resolve is a catalog key rather than a frame feature. Every
 method on the returned `CatalogPlotAccessor` has its own page, with real rendered charts,
@@ -74,7 +74,7 @@ auto chart = ct.plot().line("sales", "day");
 - [`CatalogPlotAccessor` API Reference](../../catalog_plot_accessor_api_reference): every
   chart method on the accessor this call returns, each with a real rendered example.
 - [`Catalog::plot3d`](plot3d.md): the 3D counterpart of this entry point.
-- [`DataFrame::plot`](../dataframe/plot.md): the shared `DataFramePlotOptions` struct's
+- [`DataFrame::plot`](../dataframe/plot.md): the shared `DataFramePlotOptions`'s
   canonical documentation.
 
 <div class="pluss-inline-prev-next">

@@ -83,6 +83,6 @@ reason requires otherwise.
 
 ## See Also
 
-- [`GRU`](GRU.md) -- the only consumer of this options struct.
+- [`GRU`](GRU.md) -- the only consumer of these options.
 - [`RNNOptions`](RNNOptions.md) / [`LSTMOptions`](LSTMOptions.md) -- the
   same shared fields on the other two recurrent architectures.

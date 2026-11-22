@@ -71,7 +71,7 @@ this instance was constructed with.
 
 Five examples: a 3-layer stack fed a `memory` of a different sequence
 length than `tgt`, `final_norm=true` versus `false`, the
-positional-vs-options-struct construction equivalence, confirming
+positional-vs-options construction equivalence, confirming
 `reset_parameters()`'s reproducibility, and confirming the stack runs on
 the MPS backend.
 
@@ -178,7 +178,7 @@ data=[0, -5.5511151e-17]
 
 ### Example 3
 
-The positional and `TransformerDecoderOptions`-struct constructor forms,
+The positional and `TransformerDecoderOptions`-value constructor forms,
 given the same `seed`, produce bit-for-bit identical output -- shown here
 via `operator()` on one side and `forward` on the other, since both
 resolve to the same call.
@@ -311,7 +311,7 @@ transformer decoder on MPS: OK, output platform=2
 ## See Also
 
 - [`TransformerDecoderOptions`](TransformerDecoderOptions.md) -- the
-  options struct.
+  options.
 - [`TransformerDecoderLayer`](TransformerDecoderLayer.md) -- the
   repeating unit this stacks.
 - [`TransformerEncoder`](TransformerEncoder.md) -- the analogous

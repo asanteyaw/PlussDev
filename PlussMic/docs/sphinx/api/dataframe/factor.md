@@ -15,7 +15,7 @@ CategoryEncoding DataFrame::factor(std::string_view feature, bool ordered = fals
 
 The lower-level label-encoding primitive: converts one feature's distinct values into
 integer codes, returning both the codes *and* the level list that maps each code back
-to its original value — a `CategoryEncoding{codes, levels, ordered}` struct rather than
+to its original value — a `CategoryEncoding{codes, levels, ordered}` rather than
 a modified frame. [`encode()`](encode.md)'s `Ordinal` mode is a thin convenience
 wrapper around exactly this call, discarding `levels` and splicing `codes` back into
 the frame in place of `feature`. Reach for `factor()` directly (instead of
@@ -51,7 +51,7 @@ shelf.
 ## Returns
 
 `CategoryEncoding`
-    A plain struct with three fields: `codes` (`Shelf`, `Int64`, one entry per case,
+    A plain value with three fields: `codes` (`Shelf`, `Int64`, one entry per case,
     `NULL` wherever `feature` itself was missing), `levels` (`Shelf`, the distinct
     values in code order — code `i` corresponds to `levels[i]`), and `ordered` (`bool`,
     the value passed in). `CategoryEncoding` also exposes a `.decode()` method that

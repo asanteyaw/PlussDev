@@ -26,7 +26,7 @@ Every page of this reference documents one function, method or options structure
 | Family | What it covers |
 |---|---|
 | [Functions](calculus/functions.md) | The `Function` value, how to build one, arithmetic and elementwise methods, tensor methods, and the accessors that report what a function is |
-| [Operators](calculus/operators.md) | The `Operator` value, its capabilities, the option structs, and the operators that combine and define others |
+| [Operators](calculus/operators.md) | The `Operator` value, its capabilities, the options, and the operators that combine and define others |
 | [Derivatives](calculus/differential.md) | Partial and complex (Wirtinger) derivatives, gradient, Jacobian, Hessian, covariant derivative of a scalar |
 | [Integrals](calculus/integral.md) | Antiderivatives, anchored and definite integrals including infinite ranges, convolution |
 | [Differential geometry](calculus/geometry.md) | Levi-Civita connection, covariant derivative of tensors, absolute derivative along a curve |

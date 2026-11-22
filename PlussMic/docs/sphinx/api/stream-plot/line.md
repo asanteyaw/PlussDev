@@ -54,7 +54,7 @@ plain case index if it has none — see the important callout above.
 
 **options** (`LinePlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`CatalogPlotAccessor::line`](../catalog-plot/line.md) (`alpha`, `line_width`,
 `y_limit_method`, `align`) — see that page for each field's meaning. `align` is
 accepted for shape-compatibility but has no observable effect here: `Stream::line()`

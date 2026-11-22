@@ -25,7 +25,7 @@ model-specific name.
 ### `optimizer`
 
 `OptimizerKind optimizer = OptimizerKind::Adam`
-: Which `nn::optim` algorithm backs training -- same enum as
+: Which `nn::optim` algorithm backs training -- same values as
   [`TrainOptions::optimizer`](../options/TrainOptions.md).
 
 ### `shuffle`
@@ -92,7 +92,7 @@ pre-wired, matching
 [`make_optimizer`](../optim/make_optimizer.md)'s own default. Set
 `validation.split_ratio > 0` together with `loop_regularization` for
 early stopping, exactly as [`TrainOptions`](../options/TrainOptions.md)
-describes -- every nested policy struct here is the identical shared
+describes -- every nested policy value here is the identical shared
 type.
 
 ## See Also

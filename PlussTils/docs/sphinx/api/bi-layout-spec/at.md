@@ -231,5 +231,5 @@ zero row span refused at render: 1
 
 ## See Also
 
-- [`LayoutSpec`](../bi-layout-spec.md) -- the struct this builds.
+- [`LayoutSpec`](../bi-layout-spec.md) -- the value this builds.
 - [`Board`](../bi-board.md) -- where these layouts are used.

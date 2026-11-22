@@ -1,7 +1,7 @@
 # `pluss::ai::ice::platform`
 
 `platform` owns device-selection policy for `ice` training: the
-`TrainPlatform` request enum (`CPU`/`GPU`/`Auto`) and
+`TrainPlatform` request (`CPU`/`GPU`/`Auto`) and
 [`resolve_platform`](platform/resolve_platform.md), which turns a request
 into a concrete `pluss::Platform` by querying this machine's real device
 availability -- never a compile-time guess.
@@ -10,7 +10,7 @@ availability -- never a compile-time guess.
 
 | Entity | What it gives you |
 | --- | --- |
-| `TrainPlatform` | the request enum -- `CPU` (default), `GPU` (explicit, warns if absent), `Auto` (silent) |
+| `TrainPlatform` | the request value -- `CPU` (default), `GPU` (explicit, warns if absent), `Auto` (silent) |
 | [`resolve_platform`](platform/resolve_platform.md) | resolves a `TrainPlatform` against real CUDA/MPS availability |
 
 ## How To Call It

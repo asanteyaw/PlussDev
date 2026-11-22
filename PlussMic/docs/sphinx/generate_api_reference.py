@@ -1688,7 +1688,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'skipnull': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
         'random_state': 'Optional seed used to make sampling or shuffling reproducible.',
         'freq': 'Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.',
-        'op': 'Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.',
+        'op': 'Operation key or value that chooses the aggregation, comparison, or fill behavior for the call.',
         'step': 'Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.',
         'render': 'When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.',
         'dropnull_keys': 'When `true`, rows with null pivot/group keys are excluded before reshaping.',

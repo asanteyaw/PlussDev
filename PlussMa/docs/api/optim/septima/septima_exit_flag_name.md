@@ -122,7 +122,7 @@ exit = MaxIterations
 
 ## See Also
 
-- [`SeptimaExitFlag`](SeptimaExitFlag.md): the enumeration
+- [`SeptimaExitFlag`](SeptimaExitFlag.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

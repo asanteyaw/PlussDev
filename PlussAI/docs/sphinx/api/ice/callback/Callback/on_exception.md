@@ -35,7 +35,7 @@ triggering [`on_checkpoint_save`](on_checkpoint_save.md) too.
 
 ## Errors
 
-None from the base class. If an override itself throws, that new
+None from the base type. If an override itself throws, that new
 exception replaces the one already being propagated.
 
 ## Practical Examples

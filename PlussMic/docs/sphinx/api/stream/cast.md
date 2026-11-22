@@ -19,7 +19,7 @@ Converts the stream to a different payload kind (`Series`, `Note`, `Timeline`,
 the full breakdown of what each `ShelfCastTarget` means and how `ShelfCastOptions`
 (dtype selection, parse-failure handling) affects the conversion. The first overload is a
 convenience shorthand accepting just a `series_dtype` directly instead of a full
-`ShelfCastOptions`; the second accepts the full options struct.
+`ShelfCastOptions`; the second accepts the full options.
 
 ```{note} cast() also has a no-argument accessor-returning overload
 `Stream::cast()` (no arguments) and `Stream::cast(options)` (options only, no target)

@@ -17,7 +17,7 @@ once:
 
 All three share the same shape conventions (see each one's own
 Introduction for the exact per-timestep formula) and the same
-construction pattern (an `Options` struct, or the equivalent positional
+construction pattern (an `Options`, or the equivalent positional
 arguments).
 
 ## Same Shape Conventions Throughout

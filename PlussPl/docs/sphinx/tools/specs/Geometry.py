@@ -17,7 +17,7 @@ struct Extent2d {
   double width{1280.0};
   double height{820.0};
 };""",
-    intro="""Three plain structs carry the numbers that the plotting calls take and return.
+    intro="""Three plain values carry the numbers that the plotting calls take and return.
 
 A **`Range1d`** is an interval with a `low` and a `high` end. It is the argument of the manual limits ([`Pane::x_limits`](../pane/x_limits.md), `y_limits`, `z_limits`, `color_limits`), of a trace's [`color_limits`](../trace/color_limits.md), of the span of a band ([`BandCue`](Cues.md)) and of a `bucket` range. Its default is the unit interval 0 to 1.
 
@@ -78,7 +78,7 @@ for (int i = 0; i < 2; ++i) {
 }
 std::cout << "default Extent2d: " << Extent2d{}.width << " x " << Extent2d{}.height << "\\n";"""),
     ],
-    notes="""- These structs are aggregates: initialise them with braces (`Range1d{0.0, 10.0}`) or by assigning the fields.
+    notes="""- These values are aggregates: initialise them with braces (`Range1d{0.0, 10.0}`) or by assigning the fields.
 - `Range1d` is not ordered or checked: `Range1d{10.0, 0.0}` is a legal value, and is rejected by the limit calls that require `low < high`.
 - Vectors and ranges here are data units; the figure size is in drawing units. Point sizes of fonts, tick lengths and gutters do not scale with the size of the figure.""",
     see=["[`Pane::x_limits`](../pane/x_limits.md), [`Trace::color_limits`](../trace/color_limits.md): the places a `Range1d` is accepted.", "[`Studio::size`](../studio/size.md), [`Studio::extent`](../studio/extent.md): set and read the `Extent2d`.", "[`Cues`](Cues.md), [`Lens`](Lens.md): the `Vec3d` users."],

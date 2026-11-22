@@ -2,7 +2,7 @@
 
 `options::StandardScaler` configures [`prep::StandardScaler`](StandardScaler.md)
 and the [`prep::stage::standard_scaler`](../stage/standard_scaler.md) stage — the
-two share this struct. `lymph::prep::StandardScalerOptions` is the family-scoped
+two share this value. `lymph::prep::StandardScalerOptions` is the family-scoped
 alias for the same type.
 
 ## Fields
@@ -30,7 +30,7 @@ small.
 The defaults are full standardization: centre, scale, and guard against
 near-zero variance. Turn off centering or scaling only for a specific downstream
 reason. When a column has outliers, [`options::RobustScaler`](RobustScalerOptions.md)
-resists them where this struct does not.
+resists them where this value does not.
 
 ## See Also
 

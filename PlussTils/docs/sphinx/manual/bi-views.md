@@ -1565,7 +1565,7 @@ heatmap: 6
 corr: 7
 ```
 
-Kpi is zero and corr is seven, so the numbers run in the order of the enumeration.
+Kpi is zero and corr is seven, so the numbers run in the order of the kinds.
 
 ## Example 17: The constructors set the kind
 

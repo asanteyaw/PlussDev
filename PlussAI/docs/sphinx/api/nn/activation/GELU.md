@@ -164,7 +164,7 @@ gelu on MPS: OK, platform=2
 
 ## See Also
 
-- [`GELUOptions`](GELUOptions.md) -- the options struct.
+- [`GELUOptions`](GELUOptions.md) -- the options.
 - [`SiLU`](SiLU.md) -- another smooth, non-monotonic modern activation.
 - [`Elu`](Elu.md) -- a saturating (rather than asymptotically linear)
   alternative for the negative side.

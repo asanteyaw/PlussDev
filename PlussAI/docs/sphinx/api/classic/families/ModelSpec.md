@@ -51,7 +51,7 @@ cls::ModelFamily::Linear, cls::LinearFamilyOptions{}}`.
   `LinearFamilyOptions` is a mismatched spec (see Errors below).
 
 `options` — `FamilyOptions` (`std::variant` of all nine `*FamilyOptions`
-structs)
+values)
 : The chosen family's construction options. Default: a default-constructed
   `LinearFamilyOptions` (matching the default `family = Linear`). See each
   family's own options page — [`LinearFamilyOptions`](LinearFamilyOptions.md),

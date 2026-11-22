@@ -63,7 +63,7 @@ lower or upper triangle (plus the diagonal) instead of drawing every cell twice
 `corner = true` is a shorthand: if `pair.triangle` is still at its default (`Full`), it
 gets switched to `Lower` automatically — a "corner-style" pairs plot with the diagonal
 at the top-left and only the lower triangle filled in. `pair` is the full underlying
-`PlussPl` `PairPlotOptions` struct (triangle, diagonal kind, point vs. regression cells,
+`PlussPl` `PairPlotOptions` (triangle, diagonal kind, point vs. regression cells,
 grid sizing, point limits, and more); only the fields most relevant here are called out
 on this page — the rest are documented in `PlussPl`'s own reference.
 

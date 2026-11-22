@@ -175,7 +175,7 @@ dtype=complex64 is_complex=true
 ## See Also
 
 - [`Series::dtype`](dtype.md): the exact representation, plus `itemsize` and
-  the same category queries on the `DType` struct.
+  the same category queries on the `DType`.
 - [`Series::is_floating_point`](is_floating_point.md) /
   [`Series::is_signed`](is_signed.md): the other two category predicates.
 - [`Series::real`](real.md) / [`Series::imag`](imag.md): extract a real

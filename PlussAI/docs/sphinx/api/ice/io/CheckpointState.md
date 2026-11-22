@@ -83,7 +83,7 @@ value.
 
 ## Methods
 
-None -- `CheckpointState` is a plain read/write data struct; every
+None -- `CheckpointState` is a plain read/write data value; every
 field is public, see `## State` above.
 
 ## Practical Examples

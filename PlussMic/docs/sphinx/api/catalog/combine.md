@@ -24,7 +24,7 @@ Parameter used by this overload. The examples below show the supported call shap
 
 **op**
 
-Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
+Operation key or value that chooses the aggregation, comparison, or fill behavior for the call.
 
 **out_key**
 

@@ -55,7 +55,7 @@ importance or reliability. The two are independent and can be combined --
 ## See Also
 
 - [`BCEWithLogits`](BCEWithLogits.md) -- the only consumer of this
-  options struct.
+  options.
 - [`CrossEntropyOptions`](CrossEntropyOptions.md) /
   [`NLLOptions`](NLLOptions.md) -- the multi-class analogues, which use
   a `class_weight` vector instead of a single scalar-or-broadcastable

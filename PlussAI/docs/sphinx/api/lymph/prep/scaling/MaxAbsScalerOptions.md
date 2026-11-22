@@ -2,7 +2,7 @@
 
 `options::MaxAbsScaler` configures `prep::MaxAbsScaler` and the
 [`prep::stage::maxabs_scaler`](../stage/maxabs_scaler.md) stage — the two share
-this struct. `lymph::prep::MaxAbsScalerOptions` is the family-scoped alias for the
+this value. `lymph::prep::MaxAbsScalerOptions` is the family-scoped alias for the
 same type.
 
 ## Fields

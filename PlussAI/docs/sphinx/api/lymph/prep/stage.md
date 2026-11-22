@@ -78,7 +78,7 @@ directly-fittable object with its own `.learn(frame)` / `.map(frame)`:
 | `prep::stage::simple_imputer(opts)` | `prep::SimpleImputer{opts}` |
 | ... | ... one per kind |
 
-Both take the **same option struct**, so the arithmetic is identical; only the
+Both take the **same options**, so the arithmetic is identical; only the
 return type and the ownership differ. Reach for a stage factory when the
 transform should travel as part of a model's own contract. Reach for the
 standalone object when the transform is a first-class thing you fit, inspect, and
@@ -120,7 +120,7 @@ the two **supervised** encoders that read the training target —
 `Series -> Series` function as a stateless stage (attached with `Model::add`, not
 `append`).
 
-Every factory takes its transform's option struct with a default-constructed
+Every factory takes its transform's options with a default-constructed
 value, so `prep::stage::standard_scaler()` and
 `prep::stage::standard_scaler({.with_centering = false})` are both valid. The
 supervised encoders are the exception to "inert until fitted": they still hold no

@@ -1,6 +1,6 @@
 # `pluss::ai::ice::Callback`
 
-The training-loop observer/hook base class -- run/epoch/batch/backward/
+The training-loop observer/hook base type -- run/epoch/batch/backward/
 step/checkpoint/exception hooks, plus opt-in state persistence. Every
 hook has a no-op default, so a subclass overrides only the ones it
 cares about. [`Coach::learn`](../coach/Coach.md) calls every hook at a
@@ -17,7 +17,7 @@ conditions its own page documents.
 pluss::ai::ice::Callback::~Callback() = default;
 ```
 
-An abstract-in-practice base class -- every hook has a default
+An abstract-in-practice base type -- every hook has a default
 implementation, so nothing is pure virtual, but a `Callback` with every
 hook left at its default does nothing observable.
 

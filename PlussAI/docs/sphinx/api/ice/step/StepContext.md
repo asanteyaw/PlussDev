@@ -1,6 +1,6 @@
 # `pluss::ai::ice::StepContext`
 
-A plain, read-only context struct: the per-step bookkeeping the training
+A plain, read-only context value: the per-step bookkeeping the training
 loop passes into every [`Model`](../model/Model.md) step method
 ([`learn_step`](../model/Model.md)/[`valid_step`](../model/Model.md)/
 [`test_step`](../model/Model.md)/[`infer_step`](../model/Model.md)) and

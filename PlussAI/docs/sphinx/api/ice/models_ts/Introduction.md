@@ -52,6 +52,6 @@ substitution, not a different workflow.
   read.
 - [`source`](../source.md) -- `Source`/`BatchPlan`, one layer further
   back.
-- [`options`](../options.md) -- the nested policy structs every
+- [`options`](../options.md) -- the nested policy values every
   `*TrainOptions` here shares with
   [`pluss::ai::ice::TrainOptions`](../options/TrainOptions.md).

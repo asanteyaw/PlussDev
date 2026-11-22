@@ -29,7 +29,7 @@ Two equivalent forms: pass a
 [`TransformerEncoderOptions`](TransformerEncoderOptions.md) directly, or
 spell out the most-used fields as positional arguments. The positional
 form has no parameters for `layer_norm_eps` or `final_norm` -- both stay
-at their defaults (`1e-5`, `true`) unless the options-struct form is
+at their defaults (`1e-5`, `true`) unless the options form is
 used:
 
 ```cpp
@@ -76,7 +76,7 @@ this instance was constructed with.
 
 Five examples: a 3-layer stack's shape and per-layer weight
 distinctness, `final_norm=true` versus `false` and the parameter-count
-difference it produces, the positional-vs-options-struct construction
+difference it produces, the positional-vs-options construction
 equivalence, confirming `reset_parameters()`'s reproducibility, and
 confirming the stack runs on the MPS backend.
 
@@ -182,7 +182,7 @@ data=[2.7755576e-17, 2.7755576e-17]
 
 ### Example 3
 
-The positional and `TransformerEncoderOptions`-struct constructor forms,
+The positional and `TransformerEncoderOptions`-value constructor forms,
 given the same `seed`, produce bit-for-bit identical output.
 
 ```cpp
@@ -316,7 +316,7 @@ transformer encoder on MPS: OK, output platform=2
 ## See Also
 
 - [`TransformerEncoderOptions`](TransformerEncoderOptions.md) -- the
-  options struct.
+  options.
 - [`TransformerEncoderLayer`](TransformerEncoderLayer.md) -- the
   repeating unit this stacks.
 - [`TransformerDecoder`](TransformerDecoder.md) -- the analogous

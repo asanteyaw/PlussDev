@@ -4,7 +4,7 @@ This page is the exhaustive option-combination map for Lymph.
 
 Scope definition used here:
 
-- **Exhaustive discrete coverage**: every enum/bool branch is enumerated.
+- **Exhaustive discrete coverage**: every categorical/bool branch is enumerated.
 - **Numeric fields**: continuous/integer ranges are infinite; these are covered with explicit sweep grids so users can fully enumerate practical search spaces.
 
 ## Global Training/Inference/Evaluation Combinations
@@ -23,7 +23,7 @@ These options apply to all model families and workflows.
 
 ### Inputs
 
-- typed options structs
+- typed options
 
 ### Output
 
@@ -172,11 +172,11 @@ Discrete exhaustive counts:
 
 - `SimpleImputerOptions`: `strategy(4)` => **4**
 - `NeighborImputerOptions`: `weighting(2)` => **2** (+ numeric axes)
-- `IterativeImputerOptions`: no enum/bool => **1** (+ numeric axes)
+- `IterativeImputerOptions`: no categorical/bool fields => **1** (+ numeric axes)
 - `StandardScalerOptions`: `with_centering(2) * with_scaling(2)` => **4**
 - `MinMaxScalerOptions`: `clip(2)` => **2**
 - `RobustScalerOptions`: `with_centering(2) * with_scaling(2)` => **4**
-- `MaxAbsScalerOptions`: no enum/bool => **1**
+- `MaxAbsScalerOptions`: no categorical/bool fields => **1**
 - `OneHotEncoderOptions`: `overflow(3) * include_unknown_bucket(2)` => **6**
 - `FrequencyEncoderOptions`: `overflow(3)` => **3**
 - `OrdinalEncoderOptions`: `overflow(3) * include_unknown_bucket(2) * one_based(2)` => **12**
@@ -185,7 +185,7 @@ Discrete exhaustive counts:
 - `QuantileMapOptions`: `output(2)` => **2**
 - `PowerMapOptions`: `mode(2) * standardize(2) * lambda_mode(2)` => **8**
   - lambda mode: `{auto(lambda=nullopt), fixed(lambda=value)}`
-- `ThresholdBinarizerOptions`: no enum/bool => **1**
+- `ThresholdBinarizerOptions`: no categorical/bool fields => **1**
 - `PolynomialLiftOptions`: `interactions_only(2) * include_bias(2)` => **4**
 
 Total discrete preprocessor combinations across all wrappers:
@@ -231,11 +231,11 @@ for (auto overflow : {lym::prep::CategoryOverflowPolicy::Error,
 
 ### Notes
 
-Factories expose complete NodeJ family option structs. Discrete combinations below are exhaustive over enum/bool fields.
+Factories expose complete NodeJ family options. Discrete combinations below are exhaustive over categorical and bool fields.
 
 ### Inputs
 
-- family options structs
+- family options
 
 ### Output
 

@@ -2,7 +2,7 @@
 
 `options::RobustScaler` configures `prep::RobustScaler` and the
 [`prep::stage::robust_scaler`](../stage/robust_scaler.md) stage — the two share
-this struct. `lymph::prep::RobustScalerOptions` is the family-scoped alias for the
+this value. `lymph::prep::RobustScalerOptions` is the family-scoped alias for the
 same type.
 
 ## Fields

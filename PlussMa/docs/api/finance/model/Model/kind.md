@@ -17,7 +17,7 @@ The family the model holds, as a `Kind`.
 
 ## What It Does
 
-Returns the [`Kind`](../Kind.md) of the held struct. Use it to branch on the family, or to rebuild a model of the same family from a new vector of parameters; [`name`](name.md) gives the same information as text.
+Returns the [`Kind`](../Kind.md) of the held model. Use it to branch on the family, or to rebuild a model of the same family from a new vector of parameters; [`name`](name.md) gives the same information as text.
 
 ## Returns
 
@@ -86,7 +86,7 @@ Heston -> Heston [2.000, 0.050, 0.400, -0.600, 0.050]
 
 ### Example 3
 
-A model assigned from a struct reports that struct's kind.
+A model assigned from a value reports that value's kind.
 
 ```cpp
 #include <pluss/ma.h>

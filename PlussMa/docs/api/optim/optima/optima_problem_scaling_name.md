@@ -113,7 +113,7 @@ internal preset      : InitialPoint
 
 ## See Also
 
-- [`OptimaProblemScaling`](OptimaProblemScaling.md): the enumeration
+- [`OptimaProblemScaling`](OptimaProblemScaling.md): the values it takes
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -226,7 +226,7 @@ layer_norm on MPS: OK, platform=2
 
 ## See Also
 
-- [`LayerNormOptions`](LayerNormOptions.md) -- the options struct.
+- [`LayerNormOptions`](LayerNormOptions.md) -- the options.
 - [`PReLU`](../activation/PReLU.md) -- the other parameterized layer
   documented so far, for comparison of how learnable state is exposed.
 

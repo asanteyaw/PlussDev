@@ -58,7 +58,7 @@ values — each format's own loader (for example [`load_json()`](load_json.md)'s
 
 **options** (`const pluss::loader::ReadCsvOptions&`)
 
-A typed CSV-parsing options struct, for the `"csv"`/`"txt"`/`"text"` source types only.
+A typed CSV-parsing options, for the `"csv"`/`"txt"`/`"text"` source types only.
 
 **sep**, **ncases**, **usefeats** (`std::vector<std::string>` or
 `pluss::RangeView<std::string_view>`), **case_col**, **on_bad_lines**

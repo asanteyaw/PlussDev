@@ -19,7 +19,7 @@ void module::Model::parameters(const std::vector<double> &params, pluss::Config 
 
 ## What It Does
 
-The getter returns a rank-1 `Series` of the model's parameters in the order of [`Kind`](../Kind.md); the setters take the same numbers in the same order from a `Series`, a `std::span`, a `std::array` or a `std::vector` and write them into the held struct. The count must match the family. This pair is the interface to an optimiser: read the starting point, write each trial point, price. Only the parameters in the vector are touched: the optional extras of a struct (`mu`, the floors, SABR's volatility type) keep their values. Setting does not validate; call [`validate`](validate.md) or price.
+The getter returns a rank-1 `Series` of the model's parameters in the order of [`Kind`](../Kind.md); the setters take the same numbers in the same order from a `Series`, a `std::span`, a `std::array` or a `std::vector` and write them into the held model. The count must match the family. This pair is the interface to an optimiser: read the starting point, write each trial point, price. Only the parameters in the vector are touched: the optional extras of a value (`mu`, the floors, SABR's volatility type) keep their values. Setting does not validate; call [`validate`](validate.md) or price.
 
 ## Parameters
 
@@ -126,7 +126,7 @@ int main() {
 
 ### Example 4
 
-A round trip is the identity, and the optional extras are untouched. The Heston `mu` set on the struct survives a parameter write.
+A round trip is the identity, and the optional extras are untouched. The Heston `mu` set on the value survives a parameter write.
 
 @@run@@
 ```cpp

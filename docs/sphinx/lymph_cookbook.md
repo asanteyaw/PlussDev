@@ -19,7 +19,7 @@ These options are shared across all Lymph workflows and models.
 
 ### Inputs
 
-- typed option structs from `pluss::ai::nodej`
+- typed options from `pluss::ai::nodej`
 
 ### Output
 
@@ -702,7 +702,7 @@ Lymph factories are thin wrappers over NodeJ specs. Every family option is avail
 
 ### Inputs
 
-- one family options struct
+- one family options
 
 ### Output
 

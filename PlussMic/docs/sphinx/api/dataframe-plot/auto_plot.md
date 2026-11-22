@@ -29,7 +29,7 @@ quick, exploratory looks at a frame without having to pick a chart type by hand 
 anything beyond "show me something reasonable," reach for the specific method directly
 instead.
 
-The two-argument overload's `AutoPlotOptions` is currently an empty struct (reserved for
+The two-argument overload's `AutoPlotOptions` is currently an empty value (reserved for
 future use) — it has no effect on routing or rendering today; both overloads behave
 identically.
 

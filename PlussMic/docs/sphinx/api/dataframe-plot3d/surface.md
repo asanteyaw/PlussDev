@@ -93,7 +93,7 @@ are actually supported.
 | `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
 | `trace` | Trace defaults | Surface shading and material settings. |
 
-The same shared structs documented in full on [`line()`](line.md); `surface()` has no
+The same shared options documented in full on [`line()`](line.md); `surface()` has no
 fields of its own beyond these two.
 
 ## Returns

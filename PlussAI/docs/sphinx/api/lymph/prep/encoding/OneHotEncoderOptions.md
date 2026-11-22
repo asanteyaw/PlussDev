@@ -35,7 +35,7 @@ What to do when a column has more than `max_categories` distinct values:
 | `Error` | reject the column |
 | `SkipFeature` | drop the column from the output |
 
-`lymph::prep::CategoryOverflowPolicy` is the family spelling of the enum.
+`lymph::prep::CategoryOverflowPolicy` is the family spelling of this set of values.
 
 ### `include_unknown_bucket`
 

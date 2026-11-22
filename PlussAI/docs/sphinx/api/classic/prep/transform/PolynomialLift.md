@@ -202,7 +202,7 @@ x1^2 = 9
 
 ## See Also
 
-- [`PolynomialLiftOptions`](PolynomialLiftOptions.md) — the options struct.
+- [`PolynomialLiftOptions`](PolynomialLiftOptions.md) — the options.
 - [`LinearFamilyOptions`](../../families/LinearFamilyOptions.md) — the
   model family this is most often paired with.
 - [`transform/Introduction`](Introduction.md) — the parent sub-family.

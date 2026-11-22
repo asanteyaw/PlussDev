@@ -4,7 +4,7 @@ Configures the IDF weighting and row scaling
 [`LexiconMapper::map_tfidf_dense`/`map_tfidf_sparse`](LexiconMapper.md#methods)
 apply on top of the raw term counts
 [`LexiconMapOptions`](LexiconMapOptions.md) already shaped. Unlike
-`LexiconMapOptions`, this struct is **not** fixed at construction — a fresh
+`LexiconMapOptions`, this value is **not** fixed at construction — a fresh
 value is passed to each `map_tfidf_*` call (default `{}` if omitted), so
 the same learned vocabulary can be scored under different weighting
 schemes without re-learning.
@@ -76,6 +76,6 @@ weighted term-count totals directly rather than a similarity measure.
 - [`LexiconMapper`](LexiconMapper.md) — the sole consumer, via
   `map_tfidf_dense`/`map_tfidf_sparse`.
 - [`LexiconMapOptions`](LexiconMapOptions.md) — the fixed-at-construction
-  struct governing the raw term counts and vocabulary this weighting is
+  value governing the raw term counts and vocabulary this weighting is
   layered on top of, including `binary`, which changes what "term
-  frequency" even means before this struct's fields ever run.
+  frequency" even means before this value's fields ever run.

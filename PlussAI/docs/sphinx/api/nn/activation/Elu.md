@@ -161,7 +161,7 @@ same values: true
 
 ## See Also
 
-- [`EluOptions`](EluOptions.md) -- the options struct.
+- [`EluOptions`](EluOptions.md) -- the options.
 - [`elu`](../functional/elu.md) -- the stateless functional form.
 - [`LeakyReLU`](LeakyReLU.md) -- the piecewise-linear alternative with a
   similar motivation.

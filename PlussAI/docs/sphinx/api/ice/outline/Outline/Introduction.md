@@ -50,7 +50,7 @@ state, the composed `Schedule` itself.
 ## Why The Using Declaration
 
 `Outline` overrides only the `Series` overload of
-[`Model::forward`](../../model/Model/forward.md); the base class also
+[`Model::forward`](../../model/Model/forward.md); the base type also
 declares a virtual `Batch` overload (default: `forward(batch.inputs())`).
 In plain C++, a derived class that overrides one overload of a name
 hides every other overload of that name at the derived class's own
@@ -70,7 +70,7 @@ independent example of exactly this fix on a hand-written subclass.
 
 ## Related Pages
 
-- [`Model`](../../model/Model.md) -- the base class `Outline` derives
+- [`Model`](../../model/Model.md) -- the base type `Outline` derives
   from; every method not listed on `Outline`'s own page is inherited
   from there unchanged.
 - [`Schedule`](../../../nn/module/Schedule.md) -- the composition

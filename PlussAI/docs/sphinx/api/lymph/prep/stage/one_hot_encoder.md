@@ -16,7 +16,7 @@ lymph::prep::Stage lymph::prep::stage::one_hot_encoder(
     lymph::options::OneHotEncoder options = {});
 ```
 
-`lymph::options::OneHotEncoder` is the canonical spelling of the option struct;
+`lymph::options::OneHotEncoder` is the canonical spelling of the options;
 `lymph::prep::OneHotEncoderOptions` is the family-scoped alias for the same type.
 
 ## What It Does
@@ -58,7 +58,7 @@ The three fields of `lymph::options::OneHotEncoder`:
 
 The full field reference lives on the
 [`options::OneHotEncoder` page](../encoding/OneHotEncoderOptions.md); it is the
-same struct the standalone `prep::OneHotEncoder` takes.
+same value the standalone `prep::OneHotEncoder` takes.
 
 ## Parameters
 
@@ -153,7 +153,7 @@ trained     = true
 ### Example 2
 
 The expansion made visible through the standalone `prep::OneHotEncoder`, which
-takes the same option struct. Three categories over six rows become four
+takes the same options. Three categories over six rows become four
 columns: one per category plus the reserved unknown bucket (`region_3`, all zero
 here since every value was seen). On a `DataFrame` the categorical column must be
 named with `.features({...})`.

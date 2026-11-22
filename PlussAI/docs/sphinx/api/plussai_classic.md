@@ -14,7 +14,7 @@ describing it (`ModelSpec`), build it (`make_classifier` / `make_regressor` /
 Reach for `classic` when you want the lower-level contracts directly:
 
 - raw batch and split mechanics
-- the estimator families and their options, one struct at a time
+- the estimator families and their options, one value at a time
 - transform kernels you compose and route yourself
 - metric, tuning, and persistence primitives with no workflow object in the way
 

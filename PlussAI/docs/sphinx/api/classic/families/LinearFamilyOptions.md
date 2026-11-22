@@ -42,7 +42,7 @@ coefficients smoothly, the default), `Elastic` (a blend of both, weighted by
 `double regularization_strength = 1e-6`
 
 The penalty weight. `>= 0`; `0` is equivalent to `regularization = None`
-regardless of the enum value. Larger values shrink coefficients harder —
+regardless of the value. Larger values shrink coefficients harder —
 toward zero for `L2`, toward exact zero (more of them) for `L1`. The default
 `1e-6` is deliberately tiny — close enough to unregularized that it mainly
 guards against numerical degeneracy rather than meaningfully shrinking
@@ -202,7 +202,7 @@ RobustLeast prediction  : 15.8653
   alternative.
 - [`estimators`](../estimators.md) — `make_classifier` / `make_regressor`
   consuming a `Linear`-family spec.
-- [`online`](../online.md) — `OnlineLinearOptions` wraps this same struct for
+- [`online`](../online.md) — `OnlineLinearOptions` wraps this same value for
   the incremental learners.
 
 <!-- apiref:toctree:start -->

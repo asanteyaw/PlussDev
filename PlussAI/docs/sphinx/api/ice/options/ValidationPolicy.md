@@ -80,7 +80,7 @@ early stopping and best-checkpoint selection.
 
 - [`TrainOptions`](TrainOptions.md) -- the field this nests under.
 - [`LoopRegularization`](LoopRegularization.md) -- `early_stopping`/
-  `patience`/`min_delta`, read together with this struct by
+  `patience`/`min_delta`, read together with this value by
   `EarlyStopCallback`.
 - [`EarlyStopCallback`](../callback/EarlyStopCallback.md) -- the
   consumer of `monitor`/`direction`.

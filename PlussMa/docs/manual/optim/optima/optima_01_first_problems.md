@@ -51,7 +51,7 @@ The four overloads that take a function (the first, second, fifth and sixth rows
 - **One vector or named blocks?** Use one vector when the unknowns are interchangeable coordinates, such as portfolio weights. Use named blocks when they mean different things or have different shapes, such as a matrix and an offset. Once you use blocks, build bounds as packs with the same names.
 - **Automatic or analytic gradient?** Start with plain `Series` code. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
 - **Inline objective or a `ConstrainedProblem`?** Inline for one-off solves. A `ConstrainedProblem` when the problem is reused, stored, or passed around.
-- **Struct or builder?** The builder is shorter and chooses the right objective slot for the callable you give it. Fill the struct when you need slots the builder does not cover.
+- **Value or builder?** The builder is shorter and chooses the right objective slot for the callable you give it. Fill the value when you need slots the builder does not cover.
 
 ## Where next
 

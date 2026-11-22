@@ -1,6 +1,6 @@
 # API Reference
 
-One page per function, method, enumeration and options structure, grouped by topic. Every page states the signature, what the call does, every parameter, what it returns and what it refuses, and shows complete programs with real output. For the reasoning and worked problems, each topic has a matching [User Guide](manual/index.md); the reference links to it and it links back.
+One page per function, method, set of values and set of options, grouped by topic. Every page states the signature, what the call does, every parameter, what it returns and what it refuses, and shows complete programs with real output. For the reasoning and worked problems, each topic has a matching [User Guide](manual/index.md); the reference links to it and it links back.
 
 | Topic | What it covers | Guide |
 |---|---|---|

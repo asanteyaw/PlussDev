@@ -82,13 +82,13 @@ the common square-kernel case, or two different values when the layer
 genuinely needs asymmetric geometry (a tall-and-narrow kernel over a
 spectrogram, for instance). See [`Conv`](Conv.md)'s Construction section
 for a real gotcha: passing a bare `{h, w}` brace literal compiles cleanly
-through this struct's own aggregate initialization, but does **not**
+through this value's own aggregate initialization, but does **not**
 deduce correctly when passed positionally to `Conv`'s non-`ConvOptions`
 constructor overload.
 
 ## See Also
 
-- [`Conv`](Conv.md) -- the only consumer of this options struct (also
+- [`Conv`](Conv.md) -- the only consumer of these options (also
   reachable as `Conv2d`/`ConvNd`).
 - [`Conv1dOptions`](Conv1dOptions.md) / [`Conv3dOptions`](Conv3dOptions.md) --
   the same fields specialized to 1 and 3 spatial axes.

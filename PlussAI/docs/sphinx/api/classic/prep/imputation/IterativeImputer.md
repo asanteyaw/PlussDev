@@ -232,7 +232,7 @@ data=[[1, 1, 1],
 ## See Also
 
 - [`IterativeImputerOptions`](IterativeImputerOptions.md) — the options
-  struct.
+  value.
 - [`SimpleImputer`](SimpleImputer.md) / [`NeighborImputer`](NeighborImputer.md) —
   the cheaper alternatives.
 - [`imputation/Introduction`](Introduction.md) — the contract shared across

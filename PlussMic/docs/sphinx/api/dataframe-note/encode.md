@@ -16,7 +16,7 @@ DataFrame DataFrameNoteAccessor::encode(std::string_view encoding = "base64") co
 Replaces every selected text feature's cells with an encoded form of their
 raw bytes, choosing between three schemes via the `encoding` argument:
 `"base64"` (the default), `"hex"`, or `"url"`. Unlike most methods on this
-accessor, `encode()` doesn't validate its argument against an enum — any
+accessor, `encode()` doesn't validate its argument against a fixed list — any
 other string throws.
 
 - **`"base64"`**: standard Base64 (RFC 4648), using the classic alphabet

@@ -20,7 +20,7 @@ to any query that is evaluated with the session. Setting a scope restricts the f
 to queries that carry the same scope, and `scoped` is the convenient way to set it.
 
 The static factories `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `between`, and `in` build a
-filter with the operator and payload already in place. Build the struct directly when
+filter with the operator and payload already in place. Build the value directly when
 you need a combination the factories do not offer, such as a text ordering.
 
 ## Fields

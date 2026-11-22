@@ -16,7 +16,7 @@ Returns the step's full [`StepPersistSpec`](../StepPersistSpec.md).
 Every other persistence accessor (`reloadable`/`frozen`/`custom`/
 `persist_key`/`persist_schema_version`/`component_schema_version`/
 `persist_fields`/`can_save_component`) is a thin forward over one field
-of this struct; `persist()` is the escape hatch for reading more than one
+of this value; `persist()` is the escape hatch for reading more than one
 field at once, or a field none of those expose.
 
 ## Parameters

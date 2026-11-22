@@ -8,7 +8,7 @@ through `summary()`.
 Each scaler here is the object twin of a
 [`prep::stage`](stage.md) factory: `prep::StandardScaler` does the same
 arithmetic as `prep::stage::standard_scaler(...)`, from the same
-[`options::StandardScaler`](scaling/StandardScalerOptions.md) struct. The
+[`options::StandardScaler`](scaling/StandardScalerOptions.md) value. The
 difference is ownership.
 
 | Reach for… | when… |

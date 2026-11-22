@@ -49,7 +49,7 @@ about the result.
    or [`compose`](../compose.md); every `learn` takes one.
 3. [`InferOptions`](InferOptions.md) / [`AssessOptions`](AssessOptions.md) —
    read alongside `infer` / `assess`.
-4. [`RandomState`](RandomState.md) — a two-field struct, but worth knowing once
+4. [`RandomState`](RandomState.md) — a two-field value, but worth knowing once
    since it recurs inside several other option bags.
 
 ## Related Pages

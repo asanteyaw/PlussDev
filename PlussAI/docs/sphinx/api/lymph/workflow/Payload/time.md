@@ -26,7 +26,7 @@ const pluss::Series& lymph::workflow::Payload::time() const;
 
 ## What It Does
 
-`time` sets the time role of a payload: the column that chronological cross-validation orders rows by, and optionally a leakage window. It takes a column name, a full time options struct, or a separate series. The getters return what was attached.
+`time` sets the time role of a payload: the column that chronological cross-validation orders rows by, and optionally a leakage window. It takes a column name, a full time options, or a separate series. The getters return what was attached.
 
 ## Parameters
 
@@ -37,7 +37,7 @@ const pluss::Series& lymph::workflow::Payload::time() const;
 `lymph::workflow::TimeOptions options`
 : The full contract: `index`, `horizon`, `gap`, `lookback`. Validated
   immediately — see Errors. `time_feature()` returns `options.index` and
-  `time_options()` returns the whole struct. Read by
+  `time_options()` returns the whole value. Read by
   [`selection::validate::time`](../../selection/validate/time.md) to fill any
   of its own unset window fields.
 
@@ -113,7 +113,7 @@ time_options().has_value = false
 ### Example 2
 
 `time(TimeOptions)` — the leakage-aware contract. `time_options()` reads the
-whole struct back.
+whole value back.
 
 ```cpp
 #include <pluss/pluss.h>

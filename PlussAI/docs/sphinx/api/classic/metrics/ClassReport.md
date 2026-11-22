@@ -186,7 +186,7 @@ data=[0.66666667]
 
 - [`classification_summary`](classification_summary.md) — the producing
   function.
-- [`ClassReportOptions`](ClassReportOptions.md) — the options struct.
+- [`ClassReportOptions`](ClassReportOptions.md) — the options.
 - [`ConfusionTable`](ConfusionTable.md) — the underlying matrix.
 - [`classification_metrics`](classification_metrics.md) — a narrower,
   flat-`Series` view of a subset of these numbers.

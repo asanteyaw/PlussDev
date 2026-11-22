@@ -5,7 +5,7 @@
 
 [Back to `module::Model`](../Model.md)
 
-The held struct of a given family, for reading or editing; throws if the family is different.
+The held model of a given family, for reading or editing; throws if the family is different.
 
 ## Signature
 
@@ -16,11 +16,11 @@ template <SupportedModel M> const M &module::Model::as() const;
 
 ## What It Does
 
-Returns a reference to the held `model::Heston` (or whichever `M` you name) so you can read a parameter, change one in place, or copy the struct. The non-const form allows editing, and the edit is seen by the next price. Asking for the wrong family throws and names the family held. Use [`holds`](holds.md) to test first, or [`visit`](visit.md) to handle every family.
+Returns a reference to the held `model::Heston` (or whichever `M` you name) so you can read a parameter, change one in place, or copy the value. The non-const form allows editing, and the edit is seen by the next price. Asking for the wrong family throws and names the family held. Use [`holds`](holds.md) to test first, or [`visit`](visit.md) to handle every family.
 
 ## Returns
 
-A reference to the held struct.
+A reference to the held model.
 
 ## Errors
 

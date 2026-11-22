@@ -28,6 +28,6 @@ single scalar loss.
 
 ## See Also
 
-- [`MSE`](MSE.md) -- the only consumer of this options struct.
+- [`MSE`](MSE.md) -- the only consumer of these options.
 - [`Introduction`](Introduction.md) -- the shared `reduction` semantics
   every loss in this family uses identically.

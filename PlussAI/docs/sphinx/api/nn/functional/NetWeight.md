@@ -194,7 +194,7 @@ output from a hand-built NetWeight, no Module constructed: 0.761594
 
 ## See Also
 
-- [`NetConfig`](NetConfig.md) -- the companion configuration struct.
+- [`NetConfig`](NetConfig.md) -- the companion configuration value.
 - [`rnn`](rnn.md) / [`gru`](gru.md) / [`lstm`](lstm.md) -- the three
   consumers of this type.
 - [`RNN::params()`](../rnn/RNN/params.md) /

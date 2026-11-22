@@ -571,7 +571,7 @@ The binding holds two dates.
 
 ## Example 18: a new type can join by opting in
 
-A type outside the core set becomes a payload by specializing the opt-in trait. This example defines a small struct and opts it in.
+A type outside the core set becomes a payload by specializing the opt-in trait. This example defines a small user type and opts it in.
 
 ```cpp
 #include <pluss/mic.h>

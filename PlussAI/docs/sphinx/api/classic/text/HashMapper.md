@@ -494,7 +494,7 @@ Output
 ## See Also
 
 - [`LexiconMapper`](LexiconMapper.md) — the vocabulary-backed counterpart.
-- [`HashMapOptions`](HashMapOptions.md) — the options struct this class
+- [`HashMapOptions`](HashMapOptions.md) — the options this class
   reads fresh on every call.
 - [`SparseTripletMatrix`](../sparse/SparseTripletMatrix.md) /
   [`SparseCsrMatrix`](../sparse/SparseCsrMatrix.md) — `map_sparse`'s output

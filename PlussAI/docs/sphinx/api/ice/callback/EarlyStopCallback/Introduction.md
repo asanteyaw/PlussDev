@@ -72,7 +72,7 @@ in-memory snapshot path.
 
 ## Related Pages
 
-- [`Callback`](../Callback.md) -- the base class; `on_run_begin`/
+- [`Callback`](../Callback.md) -- the base type; `on_run_begin`/
   `on_epoch_end`/`on_run_end`/`state_key`/`save_state`/`load_state` are
   all overridden here.
 - [`CallbackChain`](../CallbackChain.md) -- what `Coach` assembles this

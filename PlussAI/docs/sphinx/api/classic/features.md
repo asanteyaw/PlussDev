@@ -9,7 +9,7 @@ functions — [`rank_features`](features/rank_features.md)/
 [`f_score_rank`](features/f_score_rank.md)/
 [`f_regression_rank`](features/f_regression_rank.md). Nothing here is a
 persistent object — every function takes a batch and a plain options
-struct, and returns a plain result struct; see
+value, and returns a plain result; see
 [`Introduction`](features/Introduction.md) for how the four scoring
 functions relate to each other and two facts worth knowing before reaching
 for any of them (`absolute_score` currently does nothing; `variance_prune`

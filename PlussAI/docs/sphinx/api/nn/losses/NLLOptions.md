@@ -71,7 +71,7 @@ such as padded positions in a batch of variable-length sequences.
 
 ## See Also
 
-- [`NLL`](NLL.md) -- the only consumer of this options struct.
+- [`NLL`](NLL.md) -- the only consumer of these options.
 - [`CrossEntropyOptions`](CrossEntropyOptions.md) -- the same four
   fields, plus `label_smoothing` and support for soft-probability
   targets.

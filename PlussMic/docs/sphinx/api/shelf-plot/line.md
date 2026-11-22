@@ -51,7 +51,7 @@ and no `default_x_feature` set.
 
 **options** (`LinePlotOptions`)
 
-The identical struct documented on
+The identical options documented on
 [`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md)
 (`alpha`, `line_width`, `y_limit_method`, `align`) — see that page for each field's
 meaning. `align` is doubly inert at this layer: `x`'s own size check above

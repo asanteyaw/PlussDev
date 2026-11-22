@@ -26,7 +26,7 @@ already return a `Stage`.
 ## State
 
 A stage's configuration lives in its own fields, set by its constructor.
-The base class holds no state. Learned state, when a stage has any, is the
+The base type holds no state. Learned state, when a stage has any, is the
 stage's own business and reaches disk only through `dump_state_lines`.
 
 ## Methods

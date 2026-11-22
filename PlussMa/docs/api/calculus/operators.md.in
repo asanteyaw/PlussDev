@@ -1,6 +1,6 @@
 # Operators
 
-An `operators::Operator` is a transformation of functions: differentiate, integrate, shift, scale, transform. This family documents the operator value type, its option structs, and the factories that build and combine operators; the individual operators (derivatives, integrals, transforms, series and so on) are in their own families.
+An `operators::Operator` is a transformation of functions: differentiate, integrate, shift, scale, transform. This family documents the operator value type, its options, and the factories that build and combine operators; the individual operators (derivatives, integrals, transforms, series and so on) are in their own families.
 
 ## The Surface
 

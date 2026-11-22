@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Lint published docs for library type-body and struct/enum wording leaks
+        run: python3 tools/docs_lint_types.py --check
+
       - name: Install Sphinx toolchain
         run: python3 -m pip install -r docs/sphinx/requirements.txt
 

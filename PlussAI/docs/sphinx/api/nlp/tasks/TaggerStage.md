@@ -42,7 +42,7 @@ heuristics are off, until `learn` has been called on training documents.
 
 ## Options
 
-The options struct is `pluss::ai::nlp::TaggerOptions`. Its defaults give
+The options is `pluss::ai::nlp::TaggerOptions`. Its defaults give
 heuristic tagging with the learned tables enabled, the classic backend, and
 lemmas used when they are available.
 

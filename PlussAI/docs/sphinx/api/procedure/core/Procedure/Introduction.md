@@ -50,7 +50,7 @@ treat it as usable -- see its own page for exactly that pattern.
 - [`Link`](../Link.md) -- what one entry in `links()` actually is.
 - [`ProcedureResult`](../ProcedureResult.md) -- what `run()` returns.
 - [`ProcedureOptions`](../ProcedureOptions.md) -- the construction policy
-  struct passed to `make()`/the constructor.
+  value passed to `make()`/the constructor.
 - [`build`](../../build.md) -- `step`/`sink`/`link`/`input`/`make`, the
   free functions used to build a `Procedure` in practice.
 - [`persist`](../../persist.md) -- the bundle format behind `save`/`load`.

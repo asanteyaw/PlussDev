@@ -282,10 +282,10 @@ embedding lookup on MPS: OK, platform=2
 
 ## See Also
 
-- [`EmbeddingOptions`](EmbeddingOptions.md) -- the options struct.
+- [`EmbeddingOptions`](EmbeddingOptions.md) -- the options.
 - [`LayerNorm`](../normalization/LayerNorm.md) -- another parameterized
   layer with no no-argument constructor, for comparison of how a required
-  shape argument shows up in the options struct.
+  shape argument shows up in the options.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

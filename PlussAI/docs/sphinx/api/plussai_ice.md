@@ -68,7 +68,7 @@ ice/models_rl
 1. [platform](ice/platform.md) -- device-selection policy (`TrainPlatform`,
    `resolve_platform`), referenced by every later category.
 2. [options](ice/options.md) -- `TrainOptions` (public alias for `Recipe`)
-   and its five nested policy structs -- the central configuration surface
+   and its five nested policy values -- the central configuration surface
    every `learn()` call across `ice` takes.
 3. [step](ice/step.md) -- the core `Batch`/`StepContext`/`StepResult`
    shapes a training loop's per-step methods pass around.

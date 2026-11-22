@@ -3,7 +3,7 @@
 This page documents `pluss::pl::flash` — the ~65-function, high-level plotting surface
 built on top of `Studio`/`Pane`/`Trace`. It is the convenience-first layer most users
 reach for directly: one function call per plot family, backed by rich `*Options`
-structs for the toggles each family exposes.
+values for the toggles each family exposes.
 
 ## Using This Reference
 

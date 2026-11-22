@@ -2,7 +2,7 @@
 
 # Optima Internal Protocol
 
-`InternalProtocol` is the Pluss-native public label for the primal-dual barrier backend currently implemented under the `OptimaAlgorithm::InternalProtocol` enum branch.
+`InternalProtocol` is the Pluss-native public label for the primal-dual barrier backend currently implemented under the `OptimaAlgorithm::InternalProtocol` branch.
 
 The intent is straightforward:
 

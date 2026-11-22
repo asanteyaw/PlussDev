@@ -1,22 +1,22 @@
 # Lymph `options`
 
-`lymph::options` is the **umbrella alias namespace** for option structs — one
-short spelling per struct, regardless of which family actually owns and defines
+`lymph::options` is the **umbrella alias namespace** for options — one
+short spelling per value, regardless of which family actually owns and defines
 it. `options::DFBatch` and `DataFrameBatchOptions` are the same type; use
 whichever reads better in context. It holds no behavior of its own — it is
 exactly the list of `using` aliases in `lymph/options.h`.
 
-This page is the field reference: for every option struct, the data members it
+This page is the field reference: for every set of options, the data members it
 carries, their types, their defaults, and the values each one accepts.
 
-## How An Options Struct Works
+## How An Options Value Works
 
 Every `*Options` type is a plain aggregate. There are no constructors and no
 setters — brace-initialize it, then assign the fields you want to change; every
 field you leave alone keeps the default shown in the tables below. Pass it **by
 value** to the factory or verb that takes it.
 
-Set two training fields on a default options struct, then train a logistic regression model with it. The program prints whether the model trained.
+Set two training fields on a default options, then train a logistic regression model with it. The program prints whether the model trained.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -358,14 +358,14 @@ pass either spelling to that family's factory
 
 ### `options::Transform` — `TransformOptions`
 
-Not a struct — a `std::variant` that holds exactly one prep-stage `*Options`
+Not a value — a `std::variant` that holds exactly one prep-stage `*Options`
 value (default-constructed as `StandardScalerOptions`). It is how a single
 transform stage carries its configuration; assign any one of the prep-stage
-option structs below into it.
+options below into it.
 
 ## Prep-Stage Options
 
-Every `prep::stage::*` / prep wrapper factory takes its own `*Options` struct.
+Every `prep::stage::*` / prep wrapper factory takes its own `*Options`.
 Ten already have a dedicated field page; the rest are tabled here in full.
 
 ### With a dedicated page
@@ -496,7 +496,7 @@ Ten already have a dedicated field page; the rest are tabled here in full.
 
 ## Shared Enumerations
 
-| Enum | Values |
+| Option | Values |
 | --- | --- |
 | `ObservationLayout` | `Rows`, `Columns` |
 | `MissingPolicy` | `Reject`, `Drop`, `ImputeMean`, `ImputeMedian`, `KeepNaN` |
@@ -515,7 +515,7 @@ Ten already have a dedicated field page; the rest are tabled here in full.
 | `WorkflowSchedule` | `Deterministic`, `Adaptive` |
 | `WorkflowCache` | `Off`, `Stage` |
 | `MetricKind` | classification: `Accuracy`, `BalancedAccuracy`, `Precision`, `Recall` / `Sensitivity`, `Specificity`, `F1`, `GeometricMean`, `BalanceQuality`, `RocAuc`, `LogLoss`, `Mcc`, `CohenKappa`, `Gini`, `AveragePrecision`, `Brier`; regression: `Mse`, `Rmse`, `Mae`, `R2`, `QuantileLoss` |
-| `RandomState` | not an enum — `{std::uint64_t seed = 0; bool deterministic = true;}` |
+| `RandomState` | not a set of values — `{std::uint64_t seed = 0; bool deterministic = true;}` |
 
 ## Usage
 
@@ -584,7 +584,7 @@ mcc      = 1
 
 ### Example 2
 
-A model-family options struct. `options::Linear::regularization_strength`
+A model-family options. `options::Linear::regularization_strength`
 shrinks the fitted slope toward zero — a large value pulls the prediction back
 toward the target mean.
 
@@ -642,7 +642,7 @@ heavy (strength 1e3)  prediction     : 58.4296
 
 ### Example 3
 
-A prep-stage options struct, reached through its `options::` alias.
+A prep-stage options, reached through its `options::` alias.
 `options::SimpleImputer::strategy` decides what fills a missing cell;
 `constant_value` supplies the fill when `strategy == Constant`.
 
@@ -709,7 +709,7 @@ data=[1, 2, -1, 4, 5]
 - [`selection`](selection.md) / [`workflow`](workflow.md) — `CrossVal`, `Fit`,
   `Tune`, `Split`, `Workflow`, `Time`.
 - [`reports`](reports.md) — the umbrella pattern this mirrors, for report *types*
-  rather than option structs.
+  rather than options.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

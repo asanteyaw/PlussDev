@@ -2,7 +2,7 @@
 
 # Inference API Reference
 
-The hypothesis tests of PlussMa live in `pluss::subsp::stats::inference::hypothesis`. Every test is a free function that takes the data as `Series`, an options struct, and an optional `Config`, and returns a result struct that extends `TestDecision`.
+The hypothesis tests of PlussMa live in `pluss::subsp::stats::inference::hypothesis`. Every test is a free function that takes the data as `Series`, an options value, and an optional `Config`, and returns a result that extends `TestDecision`.
 
 ## The Result
 

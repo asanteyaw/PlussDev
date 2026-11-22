@@ -5,7 +5,7 @@
 `prep` owns the concrete transform kernels — scalers, encoders, imputers,
 distribution reshapers, and an outlier scorer — that every
 [`compose::Flow`](../compose/Flow.md) stage is ultimately built from. Each one
-is a small, independently usable class: construct it with an options struct,
+is a small, independently usable class: construct it with an options value,
 `learn` it on a [`FeatureBatch`](../data/FeatureBatch.md), then `map` new
 batches through the fitted transform. Nothing in `prep` knows about routing
 columns to different stages, persisting more than its own state, or

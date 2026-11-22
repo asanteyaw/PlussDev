@@ -16,7 +16,7 @@ the same convention every dropout call in this reference uses, so the
 output's expected value matches `x`'s own value regardless of `p`. Only
 takes effect when `training == true`; with `training == false`, `x` is
 returned completely unchanged, dropped nor scaled. This is the exact
-function every `dropout` field in this reference's `Options` structs
+function every `dropout` field in this reference's `Options`
 (`FusionOptions` has none, but `TransformerEncoderLayerOptions::dropout`,
 `RNNOptions::dropout`, and others) is threaded through to internally.
 

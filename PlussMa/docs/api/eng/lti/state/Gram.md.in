@@ -26,7 +26,7 @@ Argument of `gram`.
 
 ## Errors
 
-The enum has no invalid values; `gram` reports unstable systems.
+Every value is valid; `gram` reports unstable systems.
 
 ## Interpretation and Use
 

@@ -24,7 +24,7 @@ The change an `Action` makes. `Close` shuts the link. `Open` reopens it and clea
 
 ## Returns
 
-An enumeration; `Action::act`.
+Used by `Action::act`.
 
 ## Errors
 

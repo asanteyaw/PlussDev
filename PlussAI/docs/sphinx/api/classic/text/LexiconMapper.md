@@ -114,7 +114,7 @@ only fails once `learn()` is actually called.
   transform-many contract. See [Example 8](#example-8).
 
 `dump_state()` / `load_state(state)`
-: `LexiconMapperState` — a plain struct, not a `Series` vector (unlike
+: `LexiconMapperState` — a plain value, not a `Series` vector (unlike
   every state-dump type in [`sparse`](../sparse.md)):
 
 ### `classic::LexiconMapperState` fields
@@ -794,7 +794,7 @@ learned=true, empty vocab ok = false
 
 - [`HashMapper`](HashMapper.md) — the stateless, fixed-width counterpart.
 - [`LexiconMapOptions`](LexiconMapOptions.md) /
-  [`TfIdfMapOptions`](TfIdfMapOptions.md) — the two options structs this
+  [`TfIdfMapOptions`](TfIdfMapOptions.md) — the two options this
   class reads.
 - [`SparseTripletMatrix`](../sparse/SparseTripletMatrix.md) /
   [`SparseCsrMatrix`](../sparse/SparseCsrMatrix.md) — `map_sparse`/

@@ -22,7 +22,7 @@ Says what a node is. A `Junction` has an unknown head and a demand that leaves t
 
 ## Returns
 
-An enumeration; one value per node in `Nodes::kind`.
+One value per node in `Nodes::kind`.
 
 ## Errors
 

@@ -149,7 +149,7 @@ Output
 - [`input_type_at`](input_type_at.md) -- the paired accessor for a stage's
   input type.
 - [`stage_info`](stage_info.md) -- both types together, plus the name and
-  `module_stage` flag, as one struct.
+  `module_stage` flag, as one value.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

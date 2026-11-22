@@ -138,7 +138,7 @@ construction time.
 ## See Also
 
 - [`TransformerDecoderLayer`](TransformerDecoderLayer.md) -- the only
-  consumer of this options struct.
+  consumer of these options.
 - [`TransformerEncoderLayerOptions`](TransformerEncoderLayerOptions.md)
   -- the encoder-side counterpart, field-for-field identical.
 - [`MultiheadAttentionOptions`](MultiheadAttentionOptions.md) -- several

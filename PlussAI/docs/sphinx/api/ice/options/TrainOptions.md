@@ -36,7 +36,7 @@ failure already on.
 `OptimizerKind optimizer = OptimizerKind::Adam`
 : Which `nn::optim` algorithm [`make_optimizer`](../optim/make_optimizer.md)
   constructs: `Adam` (the default), `AdamW`, `SGD`, `RMSProp`, `Adagrad`,
-  or `NAdam`. An enum rather than a string -- picking an unsupported
+  or `NAdam`. A fixed set of values rather than a string -- picking an unsupported
   optimizer is a compile-time typo, not a runtime surprise discovered
   mid-training.
 
@@ -137,7 +137,7 @@ through the `DataFrame` overload with features on very different scales
 caller already prepared. Reach for a `models_*` catalog entry's own
 `*TrainOptions` instead of this type when training that catalog entry
 specifically; the two are separate types that happen to share most
-field names and every nested policy struct, not the same type reused.
+field names and every nested policy value, not the same type reused.
 
 ## See Also
 

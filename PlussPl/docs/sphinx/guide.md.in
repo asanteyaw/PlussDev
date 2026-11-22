@@ -12,7 +12,7 @@ PlussPl draws figures: a `Studio` holds panes, a pane holds traces, and the `fla
 8. **[Three dimensions](guide/three_dimensions.md).** Surfaces, clouds, paths, densities, cameras, lights and themes.
 9. **[Four dimensions and animation](guide/four_dimensions_and_animation.md).** 4D paths and clouds, rotations, frame export and the live viewers.
 10. **[Colour and style](guide/colour_and_style.md).** Palettes, themes, contexts and your own data.
-11. **[The flash style system](guide/flash_styles.md).** Six styles, six palettes and four contexts, set from one options struct.
+11. **[The flash style system](guide/flash_styles.md).** Six styles, six palettes and four contexts, set from one options value.
 12. **[Flash from a dataset](guide/flash_datasets.md).** Joint, pair and triplots by column name, from bundled datasets, your tables and your matrices.
 13. **[Categories and matrices from a dataset](guide/flash_categories_matrices.md).** Every catplot kind and option, heat maps with range, labels and masks, and clustered maps.
 14. **[The plot window](guide/plot_window.md).** The menus of the window that `show()` opens: themes, colors, and the views that smooth, transform, focus, split, fit and annotate a figure, and the same views from code.

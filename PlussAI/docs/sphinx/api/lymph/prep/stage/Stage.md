@@ -28,9 +28,9 @@ const lymph::prep::stage::Stage b = lymph::prep::stage::one_hot_encoder();
 ## Construction
 
 A `Stage` is produced by a `prep::stage::*` factory, one per transform kind. Each
-factory takes that transform's option struct, default-constructed if omitted:
+factory takes that transform's options, default-constructed if omitted:
 
-| Factory | Transform | Option struct |
+| Factory | Transform | Option value |
 | --- | --- | --- |
 | `prep::stage::standard_scaler(opts)` | zero-mean / unit-variance scaling | `options::StandardScaler` |
 | `prep::stage::minmax_scaler(opts)` | rescale to a fixed range | `options::MinMaxScaler` |
@@ -50,7 +50,7 @@ factory takes that transform's option struct, default-constructed if omitted:
 | `prep::stage::polynomial_lift(opts)` | add polynomial / interaction columns | `options::PolynomialLift` |
 | `prep::stage::custom(name, fn)` | an arbitrary `Series → Series` callable | — |
 
-The option struct is the same one the standalone twin object takes, so
+The options is the same one the standalone twin object takes, so
 `prep::stage::standard_scaler(opts)` and `prep::StandardScaler{opts}` do identical
 arithmetic (see [`prep::stage` overview](../stage.md)).
 
@@ -64,7 +64,7 @@ values. It has two data members:
   enumerators.
 
 `TransformOptions options`
-: A variant holding the option struct for `kind`. Set by the factory; rarely read
+: A variant holding the options for `kind`. Set by the factory; rarely read
   directly.
 
 Because there is no fitted state, a `Stage` value is cheap to copy and safe to

@@ -25,4 +25,4 @@ in the limit `lambd=0` makes `Hardshrink` the identity function.
 
 ## See Also
 
-- [`Hardshrink`](Hardshrink.md) -- the only consumer of this options struct.
+- [`Hardshrink`](Hardshrink.md) -- the only consumer of these options.

@@ -163,7 +163,7 @@ hardshrink on MPS: OK, platform=2
 
 ## See Also
 
-- [`HardshrinkOptions`](HardshrinkOptions.md) -- the options struct.
+- [`HardshrinkOptions`](HardshrinkOptions.md) -- the options.
 - [`LeakyReLU`](LeakyReLU.md) -- another piecewise-linear activation, but
   one that never zeroes its input.
 

@@ -4,7 +4,7 @@ Opt-in fail-fast checks run during [`step`](Optimizer/step.md), each
 independently toggled and each off by default. Unlike
 [`GradientClipOptions`](GradientClipOptions.md)/
 [`ExecutionOptions`](ExecutionOptions.md), this is not a field on every
-optimizer's own `Options` struct -- it is set once directly on the
+optimizer's own `Options` -- it is set once directly on the
 optimizer itself, via
 [`Optimizer::set_step_diagnostics`](Optimizer.md#state)/`step_diagnostics()`,
 and applies to every `step()` call that optimizer makes afterward,
@@ -64,7 +64,7 @@ regardless of which overload is used.
 ## Guidance
 
 All five default to `false`/`0.0` -- an optimizer with no diagnostics set
-behaves exactly as it did before this options struct existed, with zero
+behaves exactly as it did before these options existed, with zero
 added checking cost. Turning them on trades a small amount of per-step
 validation cost for failing loudly, at the exact step where something
 went wrong, instead of training silently on garbage (a `NaN` parameter

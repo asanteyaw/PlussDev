@@ -177,7 +177,7 @@ before enabling gradient tracking on data of unknown provenance.
 ## See Also
 
 - [`Series::dtype`](dtype.md): the exact representation and the same category
-  queries on the `DType` struct.
+  queries on the `DType`.
 - [`Series::is_complex`](is_complex.md) /
   [`Series::is_signed`](is_signed.md): the other two category predicates.
 - [`Series::isnan`](isnan.md) / [`Series::isinf`](isinf.md) /

@@ -6,7 +6,7 @@
 
 Four functions describe where a random variable puts its probability. The **density** `pdf(x)` says how concentrated the probability is near `x` (for a discrete family it is the probability of exactly `x`, the mass function). The **distribution function** `cdf(x)` says how much probability lies at or below `x`. Their logarithms, `logpdf` and `logcdf`, carry the same information on a scale where very small numbers are still representable. Every function works on a whole `Series` at once, so a grid of a million points is a single call, and any parameter may itself be a `Series`, in which case each point is evaluated under its own distribution.
 
-The common families are structs holding their parameters (`Normal{mean, stddev}`, `Gamma{shape, scale, location}`, `Poisson{lambda}`, and so on), and the methods below are the same for all of them. The programs on this page use the aliases `namespace distr = pluss::subsp::stats::distr;` and `using pluss::Series;`.
+The common families are values holding their parameters (`Normal{mean, stddev}`, `Gamma{shape, scale, location}`, `Poisson{lambda}`, and so on), and the methods below are the same for all of them. The programs on this page use the aliases `namespace distr = pluss::subsp::stats::distr;` and `using pluss::Series;`.
 
 ## The basic functions
 
@@ -208,7 +208,7 @@ The normal's third and fourth cumulants are zero. The gamma and exponential fami
 - **Use the log forms for products and tails.** `logpdf` and `logcdf` for likelihoods and extreme probabilities; the plain forms for ordinary values.
 - **A density is not a probability.** For a continuous family `pdf` can exceed 1; integrate it over an interval or take a difference of `cdf` values.
 - **Discrete families take counts.** `pdf` of a discrete family is the mass function; a value outside the support has probability 0.
-- **Pass parameters in the documented order.** The struct fields have names; the kind-based functions of [Families by kind](families_by_kind.md) take a list whose order matters.
+- **Pass parameters in the documented order.** The value fields have names; the kind-based functions of [Families by kind](families_by_kind.md) take a list whose order matters.
 - **Series parameters pair element by element.** The lengths must agree with the points; one call then replaces a loop.
 
 Where next: [Random draws](random_draws.md) turns the same families into data.

@@ -71,7 +71,7 @@ Passed to [`CrossEntropy`](CrossEntropy.md)'s third argument, defaulted
 Everything [`NLLOptions`](NLLOptions.md#guidance)'s guidance says about
 `class_dim`/`class_weight`/`use_ignore_index`/`ignore_index` applies
 identically here for class-index targets. `label_smoothing` is the field
-unique to this struct -- leave it at `0.0` unless overconfidence is a
+unique to this value -- leave it at `0.0` unless overconfidence is a
 known problem for the task at hand; a small value (`0.1` is a common
 starting point) is the usual choice when it helps at all. Remember that
 `use_ignore_index`/`ignore_index` require a class-index target --
@@ -82,8 +82,8 @@ those positions before calling instead.
 ## See Also
 
 - [`CrossEntropy`](CrossEntropy.md) -- the only consumer of this options
-  struct.
+  value.
 - [`NLLOptions`](NLLOptions.md) -- the four fields shared with this
-  struct, without `label_smoothing` or soft-target support.
+  value, without `label_smoothing` or soft-target support.
 - [`BCEWithLogitsOptions`](BCEWithLogitsOptions.md) -- the binary
   (two-class) analogue.

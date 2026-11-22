@@ -28,7 +28,7 @@ row's first piece, `part_1` its second, and so on. Requires the shelf to be
   column-name `prefix` (default `"part"`).
 - **`split(pattern, options)`**: `pattern` is literal or regex depending on
   `options.regex`; `options.limit` caps the split count and `options.prefix` names the
-  columns (the same `TextOptions` struct used across the string/text family — see
+  columns (the same `TextOptions` used across the string/text family — see
   [`replace()`](replace.md)).
 
 Both overloads produce ragged results: a row with fewer pieces than the widest row is

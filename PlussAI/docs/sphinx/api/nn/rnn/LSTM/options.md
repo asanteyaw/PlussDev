@@ -42,7 +42,7 @@ None.
 Three examples: reading back the options a positional-constructor call
 produced, including `proj_size`, confirming that mutating a geometry
 field through the mutable overload does not retroactively resize
-`params()`, and confirming the `LSTMOptions`-struct and positional
+`params()`, and confirming the `LSTMOptions`-value and positional
 constructor forms produce identical options (including `proj_size`).
 
 ### Example 1
@@ -124,7 +124,7 @@ after reset_parameters(): params()[0].weight_hh cols=16
 
 ### Example 3
 
-The `LSTMOptions`-struct constructor and the positional-argument
+The `LSTMOptions`-value constructor and the positional-argument
 constructor are just two ways to reach the same state -- `options()`
 reports identical values either way, including `proj_size`.
 

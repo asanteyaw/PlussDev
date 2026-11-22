@@ -460,7 +460,7 @@ The grid has 16384 nodes and spans from near zero to an absurd upper strike (4·
 
 ## Program 8: calling a pricer without a Field
 
-A `Field` calls a pricer for you. The pricers are also values you can use on their own: `pricer::Analytic`, `pricer::Fft`, `pricer::COS` and `pricer::MonteCarlo` each have a `price(instrument, model, market, risk, cfg)` member that takes the same objects as the `Field` and returns the same `module::Field::Result`. Use them when one engine is all you need, or to keep several differently configured engines side by side. `risk` is a `pricer::RiskSpec`. The settings are the fields of the struct, which you give in the braces. `Analytic` has `with_greeks`, which turns off the closed-form Greeks even when `RiskSpec::All` is asked.
+A `Field` calls a pricer for you. The pricers are also values you can use on their own: `pricer::Analytic`, `pricer::Fft`, `pricer::COS` and `pricer::MonteCarlo` each have a `price(instrument, model, market, risk, cfg)` member that takes the same objects as the `Field` and returns the same `module::Field::Result`. Use them when one engine is all you need, or to keep several differently configured engines side by side. `risk` is a `pricer::RiskSpec`. The settings are the fields of the value, which you give in the braces. `Analytic` has `with_greeks`, which turns off the closed-form Greeks even when `RiskSpec::All` is asked.
 
 @@run@@
 ```cpp

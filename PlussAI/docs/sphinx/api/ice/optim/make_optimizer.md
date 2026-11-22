@@ -254,7 +254,7 @@ step 4: loss = 11.56, w = 0.750002, b = 0.250002
 - [`ExecutionPolicy::grad_clip`](../options/ExecutionPolicy.md) /
   [`fail_on_non_finite`](../options/ExecutionPolicy.md) -- the clip and
   non-finite diagnostics pre-wired into the result.
-- [`Optimizer`](../../nn/optim/Optimizer.md) -- the shared base class
+- [`Optimizer`](../../nn/optim/Optimizer.md) -- the shared base type
   of everything this function can return.
 - [`Coach`](../coach/Coach.md) -- calls this exact function internally
   to build the optimizer behind every `Model::learn`.

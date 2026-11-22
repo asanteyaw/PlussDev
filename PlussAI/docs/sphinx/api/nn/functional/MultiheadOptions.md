@@ -49,7 +49,7 @@ own guidance for `num_heads`/`batch_first`/`average_weights`. Set
 ## See Also
 
 - [`multihead_attention`](multihead_attention.md) -- the only consumer
-  of this options struct.
+  of these options.
 - [`AttentionOptions`](AttentionOptions.md) -- the nested `attention`
   field.
 - [`MultiheadAttentionOptions`](../attention/MultiheadAttentionOptions.md)

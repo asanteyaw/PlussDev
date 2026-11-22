@@ -44,7 +44,7 @@ step's component artifact actually looks like on disk.
 
 - [`Procedure`](../Procedure.md) -- the DAG a `Step` is one node of.
 - [`StepOptions`](../StepOptions.md) / [`StepPersistSpec`](../StepPersistSpec.md)
-  -- the two structs most `Step` accessors just forward.
+  -- the two values most `Step` accessors just forward.
 - [`build`](../../build.md) -- `procedure::step`'s generic overloads.
 
 <!-- apiref:nav:start -->

@@ -23,7 +23,7 @@ Chooses how the demand at a junction behaves. `Fixed` delivers the whole demand 
 
 ## Returns
 
-An enumeration; `Options::demand_mode`.
+Used by `Options::demand_mode`.
 
 ## Errors
 

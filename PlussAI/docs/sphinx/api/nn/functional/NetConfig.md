@@ -24,7 +24,7 @@ A plain aggregate -- there is no constructor beyond the implicit
 default/aggregate ones. Passed to [`rnn`](rnn.md)/[`gru`](gru.md)/
 [`lstm`](lstm.md)'s trailing `cfg` argument, defaulted, replacing every
 geometry/behavior field a constructed `RNN`/`GRU`/`LSTM`
-[`Options`](../rnn/RNNOptions.md) struct would otherwise supply, since
+[`Options`](../rnn/RNNOptions.md) value would otherwise supply, since
 there is no `Module` instance to read them from in the functional form.
 
 ## State
@@ -74,7 +74,7 @@ there is no `Module` instance to read them from in the functional form.
 
 `cfg` -- `pluss::Config`, default engine default
 : Present for symmetry with the `Module` classes' own `Options`
-  structs, but **not consulted** by `rnn`/`gru`/`lstm` themselves -- the
+  values, but **not consulted** by `rnn`/`gru`/`lstm` themselves -- the
   zero-filled initial hidden/cell state (when `hx`/`state` is omitted)
   is built to match `input`'s own dtype/platform directly, not this
   field. See Example 3.
@@ -242,17 +242,17 @@ never a member of this type itself.
 
 ## Changelog
 
-- **0.1** — the full functional-RNN configuration struct.
+- **0.1** — the full functional-RNN configuration value.
 
 ## See Also
 
-- [`NetWeight`](NetWeight.md) -- the companion explicit-weight struct.
+- [`NetWeight`](NetWeight.md) -- the companion explicit-weight value.
 - [`rnn`](rnn.md) / [`gru`](gru.md) / [`lstm`](lstm.md) -- the three
   consumers of this type.
 - [`RNNOptions`](../rnn/RNNOptions.md) /
   [`GRUOptions`](../rnn/GRUOptions.md) /
   [`LSTMOptions`](../rnn/LSTMOptions.md) -- the analogous `Options`
-  structs for the stateful `Module` classes, where `cfg` (there, the
+  values for the stateful `Module` classes, where `cfg` (there, the
   field driving actual parameter allocation) is genuinely consulted,
   unlike here.
 

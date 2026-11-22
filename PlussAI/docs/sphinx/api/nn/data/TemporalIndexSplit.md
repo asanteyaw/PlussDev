@@ -1,6 +1,6 @@
 # `pluss::loader::TemporalIndexSplit`
 
-A plain result struct: the forward-chaining train/test index folds
+A plain result: the forward-chaining train/test index folds
 produced by one [`temporal_split_indices`](temporal_split_indices.md)
 call. Never constructed directly by calling code -- every instance
 comes back from `temporal_split_indices`.
@@ -22,7 +22,7 @@ instance comes from
 
 `std::vector<TemporalIndexFold> folds`
 : One entry per fold, in ascending time order (earliest test window
-  first). Each `TemporalIndexFold` is itself a plain struct with two
+  first). Each `TemporalIndexFold` is itself a plain value with two
   fields:
   - `train_indices` (`std::vector<std::int64_t>`) -- the sample indices
     this fold trains on, strictly before its own test window (plus

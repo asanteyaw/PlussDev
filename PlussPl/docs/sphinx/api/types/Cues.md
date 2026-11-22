@@ -7,15 +7,15 @@
 ## What It Does
 
 Cues are annotations that mark a pane without being data: a **rule** is a reference line at a value on one axis (a target, a threshold, a mean), a **band** is a shaded stripe between two values on one axis (a tolerance, a regime, a period of interest), and a **pin** is a note attached to a point with a short leader line. They are added with the pane methods
-[`rule_x`](../pane/rule_x.md), `rule_y`, `rule_z`, [`band_x`](../pane/band_x.md), `band_y`, `band_z` and [`pin`](../pane/pin.md), and read back through `Pane::rules()`, `Pane::bands()` and `Pane::pins()`, which return the cue structs documented here.
+[`rule_x`](../pane/rule_x.md), `rule_y`, `rule_z`, [`band_x`](../pane/band_x.md), `band_y`, `band_z` and [`pin`](../pane/pin.md), and read back through `Pane::rules()`, `Pane::bands()` and `Pane::pins()`, which return the cue values documented here.
 
 A cue belongs to the pane and is drawn over its plot area in the pane's coordinates, so it moves with the axes. Cues take part in the automatic limits: a rule or a band outside the plotted data widens the axis to include it, which can squeeze the data into a corner. To keep the axis on the data, set the limits yourself ([`LimitMethod`](LimitMethod.md), Example 5).
 
-The three structs describe the cue *as it is drawn*. The pane methods fill them from their arguments, and choose the colour themselves: a cue takes the next accent of the pane's [`Theme`](Theme.md) after the traces and the cues already on the pane, so a rule added to a pane with two lines gets the third accent. The colour and width fields are there to read back; there is no call to set them.
+The three values describe the cue *as it is drawn*. The pane methods fill them from their arguments, and choose the colour themselves: a cue takes the next accent of the pane's [`Theme`](Theme.md) after the traces and the cues already on the pane, so a rule added to a pane with two lines gets the third accent. The colour and width fields are there to read back; there is no call to set them.
 
 ## Fields
 
-| Struct | Field | Meaning | Default |
+| Value | Field | Meaning | Default |
 |---|---|---|---|
 | `RuleCue` | `axis` | `CueAxis::X`, `Y` or `Z`: the axis the value is on. | `X` |
 | | `value` | The position of the line on that axis, in data units. | 0 |

@@ -7,7 +7,7 @@
 
 [Back to `module::Field`](../Field.md)
 
-Like `bind_objective`, taking the concrete model struct instead of a `Model`.
+Like `bind_objective`, taking the concrete model instead of a `Model`.
 
 ## Signature
 
@@ -17,7 +17,7 @@ template <SupportedModel M> std::function<double(const M &)> module::Field::bind
 
 ## What It Does
 
-The same frozen objective, but the callable takes a `model::Heston` (or whichever `M` you name) directly, saving the wrapping into a `Model`. Use it when your minimiser already manipulates the typed struct.
+The same frozen objective, but the callable takes a `model::Heston` (or whichever `M` you name) directly, saving the wrapping into a `Model`. Use it when your minimiser already manipulates the typed value.
 
 ## Parameters
 

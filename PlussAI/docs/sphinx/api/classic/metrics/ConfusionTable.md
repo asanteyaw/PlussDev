@@ -99,8 +99,8 @@ data=[[0.66666667, 0.33333333, 0],
 ## See Also
 
 - [`confusion_table`](confusion_table.md) — the producing function.
-- [`ConfusionOptions`](ConfusionOptions.md) — the options struct, including
-  the `ConfusionNormalize` enum.
+- [`ConfusionOptions`](ConfusionOptions.md) — the options, including
+  the `ConfusionNormalize`.
 - [`ClassReport`](ClassReport.md) — the fuller report built on this matrix.
 
 <!-- apiref:toctree:start -->

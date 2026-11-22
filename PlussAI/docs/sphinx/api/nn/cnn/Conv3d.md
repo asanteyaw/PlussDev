@@ -255,7 +255,7 @@ conv3d on MPS: OK, platform=2
 
 ## See Also
 
-- [`Conv3dOptions`](Conv3dOptions.md) -- the options struct.
+- [`Conv3dOptions`](Conv3dOptions.md) -- the options.
 - [`Conv`](Conv.md) -- the 2-D case (also `Conv2d`/`ConvNd`).
 - [`Conv1d`](Conv1d.md) -- the 1-D case.
 

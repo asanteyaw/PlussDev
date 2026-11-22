@@ -212,7 +212,7 @@ message = "FunctionTransformer::dump_state is unavailable for callable-based sta
 ## See Also
 
 - [`FunctionTransformerOptions`](FunctionTransformerOptions.md) — the
-  options struct.
+  options.
 - [`FeatureTransformer`](FeatureTransformer.md) — routes any
   `TransformerBase`, including a `FunctionTransformer`, into a composed
   sub-pipeline.

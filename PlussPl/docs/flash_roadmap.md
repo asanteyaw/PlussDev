@@ -192,7 +192,7 @@ Status:
 ## Acceptance Criteria For Each New Flash Op
 
 1. No alias duplicates.
-2. Option struct exists (no argument sprawl).
+2. Option value exists (no argument sprawl).
 3. Works with pluss-native types (`Series`, `Note`, `Timeline`) only.
 4. Scales to large data via sampling/downsampling options.
 5. Has one focused example in `PlussPl/examples` and one delegation example in `PlussMic/examples/table`.

@@ -35,7 +35,7 @@ overrides this specifically to restore the best-seen parameters when
 
 ## Errors
 
-None from the base class; `on_run_end` does not fire at all if an
+None from the base type; `on_run_end` does not fire at all if an
 exception propagated out of the run -- see
 [`on_exception`](on_exception.md) for that path instead.
 

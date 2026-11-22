@@ -39,7 +39,7 @@
 
 ## Examples
 
-Example 1. One trace of each simple kind, created and read back with `kind()`. The integer is the position of the kind in the enumeration, which is what a stored value would hold. The 2D kinds go on a planar pane and the 3D kinds on a volumetric one, in the same figure.
+Example 1. One trace of each simple kind, created and read back with `kind()`. The integer is the position of the kind in the list of kinds, which is what a stored value would hold. The 2D kinds go on a planar pane and the 3D kinds on a volumetric one, in the same figure.
 
 ```cpp
 auto fig = studio("trace_kind_kinds");

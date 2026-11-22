@@ -15,7 +15,7 @@ std::string Shelf::ptype() const
 
 Returns the broad payload family as a display string: `"Series"`, `"Note"`,
 `"Timeline"`, or `"TimeIndex"` — the same information [`kind()`](kind.md) returns as
-a typed `ShelfKind` enum, formatted for printing. This is the 1D analog of
+a typed `ShelfKind`, formatted for printing. This is the 1D analog of
 `DataFrame::ptypes()`, which reports the same family names per feature.
 
 ## Parameters
@@ -60,7 +60,7 @@ Timeline
 
 ## See Also
 
-- [`Shelf::kind`](kind.md): the same information as a typed `ShelfKind` enum,
+- [`Shelf::kind`](kind.md): the same information as a typed `ShelfKind`,
   for use in C++ comparisons and `switch` statements.
 - [`Shelf::dtype`](dtype.md): the concrete dtype, one level more specific.
 - [`DataFrame::ptypes`](../dataframe/ptypes.md): the same summary across every

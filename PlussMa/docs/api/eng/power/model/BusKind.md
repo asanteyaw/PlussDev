@@ -24,7 +24,7 @@ Every bus in a network is one of three kinds. The kind says which two of the fou
 
 ## Returns
 
-A scoped enumeration, stored in `Buses::kind`.
+Stored in `Buses::kind`.
 
 ## Errors
 

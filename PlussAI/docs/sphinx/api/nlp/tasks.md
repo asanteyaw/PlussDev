@@ -37,7 +37,7 @@ persistence behavior, and its verified programs.
 tags, after checking that the predicted and gold documents align token for token.
 [`assess::ner`](tasks/assess_ner.md) matches predicted entities to gold entities one to
 one, on token range and label, and reports precision, recall, and F1. The
-[`TagScore`](tasks/TagScore.md) and [`EntityScore`](tasks/EntityScore.md) structs hold the
+[`TagScore`](tasks/TagScore.md) and [`EntityScore`](tasks/EntityScore.md) values hold the
 counts behind those figures, and their pages show how to combine counts from separate
 corpora. These are task metrics; [`Workflow::assess`](workflow/Workflow/assess.md) instead
 reports how much text a pipeline processed.

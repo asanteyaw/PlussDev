@@ -27,7 +27,7 @@ uniformly regardless of each stream's current kind.
 
 ```{important} Preferred surface
 Prefer the accessor form in new code: `archive.cast().timeline()` reads better than
-passing an explicit target enum at the root. The direct root overload still exists and
+passing an explicit target at the root. The direct root overload still exists and
 returns the same result.
 ```
 

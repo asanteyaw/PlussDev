@@ -285,5 +285,5 @@ The binding shows the columns that the setters stored.
 
 ## See Also
 
-- [`BindSpec`](../bi-view.md) -- the struct this returns.
+- [`BindSpec`](../bi-view.md) -- the value this returns.
 - [`View`](../bi-view.md)
