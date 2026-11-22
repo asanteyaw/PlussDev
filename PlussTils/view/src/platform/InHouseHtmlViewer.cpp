@@ -1750,15 +1750,8 @@ bool show_inhouse_html_window(const std::string& title,
           consumed = true;
           const auto& hit = hit_regions[*hit_idx];
           if (hit.action == "table.sort.column") {
-            const int next_col = hit.value;
-            if (table_sort_column == next_col && table_sort_target == hit.target) {
-              table_sort_ascending = !table_sort_ascending;
-            } else {
-              table_sort_column = next_col;
-              table_sort_target = hit.target;
-              table_sort_ascending = true;
-            }
-            needs_render = true;
+            // The header itself is only a target for hovering and layout; sorting belongs to the
+            // up and down triangles (table.sort.asc / table.sort.desc), so a click here is ignored.
           } else if (hit.action == "table.resize.column") {
             if (event.click_count >= 2) {
               // Double-click on a border toggles that column: fit to its widest value (width 0 =
