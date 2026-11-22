@@ -46,6 +46,10 @@ struct SelectionWords {
 inline constexpr SelectionWords feature_selection_words{
     "feature", "features", "all_features", "include_features", "exclude_features", "options.features"};
 
+// A Catalog and an Archive both have keys, not features; the container noun is theirs.
+inline constexpr SelectionWords key_selection_words{
+    "key", "keys", "all_keys", "include_keys", "exclude_keys", "options.keys", "catalog"};
+
 // Translates a container's selection vocabulary to flash's column selection and resolves it there.
 // With no knob set and `shortcut_all`, every numeric name is selected (flash's all_columns).
 [[nodiscard]] inline std::vector<std::string> resolve_plot_selection(
@@ -75,6 +79,17 @@ inline constexpr SelectionWords feature_selection_words{
   PLUSS_CHECK(picked.has_value(), std::string(where) + ": no " + std::string(words.nouns) +
                                       " named; name them or set " + std::string(words.home));
   return *picked;
+}
+
+// A frame-style selection handed to a container that has keys (a Catalog, an Archive) is a wording
+// mistake, not a silent no-op.
+inline void reject_feature_selection_for_keys(const FeatureSelection& features,
+                                              std::string_view where,
+                                              std::string_view container) {
+  PLUSS_CHECK(!features.any(),
+              std::string(where) + (container.starts_with('A') ? ": an " : ": a ") + std::string(container) +
+                  " selects keys, not features. Use all_keys, include_keys or exclude_keys (options.keys) instead of "
+                  "all_features, include_features or exclude_features.");
 }
 
 [[nodiscard]] inline std::vector<std::string> resolve_feature_selection(

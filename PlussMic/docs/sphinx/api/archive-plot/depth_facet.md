@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1a3165eacf1d -->
+<!-- pluss-signature-hash: cd58a0a6ce5a -->
 
 # ArchivePlotAccessor::depth_facet
 
@@ -12,14 +12,16 @@ pluss::pl::Studio ArchivePlotAccessor::depth_facet(pluss::RangeView<std::string_
 
 pluss::pl::Studio ArchivePlotAccessor::depth_facet(
     pluss::RangeView<std::string_view> keys,
-    const AtlasDepthFacetPlotOptions& options) const
+    const ArchiveDepthFacetPlotOptions& options) const
+
+pluss::pl::Studio ArchivePlotAccessor::depth_facet(const ArchiveDepthFacetPlotOptions& options) const
 ```
 
 ## What It Does
 
 The same multi-key depth comparison as [`depth_compare()`](depth_compare.md), laid out as
-one small-multiple pane per key instead of one shared overlaid pane — reuses
-[`AtlasPlotAccessor::depth_facet`](../atlas-plot/depth_facet.md) directly. Same
+one small-multiple pane per key instead of one shared overlaid pane. The keys are chosen as for
+`depth_compare()`, see [Selecting keys](depth_compare.md#selecting-keys). Same
 empty-`keys`-tabelizes-the-whole-archive behavior as `depth_compare()` — see that page's
 important callout.
 
@@ -29,10 +31,19 @@ important callout.
     Same resolution as [`depth_compare()`](depth_compare.md): empty selects every
     numeric key in the first catalog.
 
-**options** (`const AtlasDepthFacetPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::depth_facet`](../atlas-plot/depth_facet.md)
-    (`statistic`, `show_grid`, `rows`, `cols`, `grid_gap_x`, `grid_gap_y`, `max_features`).
+**options** (`const ArchiveDepthFacetPlotOptions&`)
+    The settings of the plot.
+
+| Field | Type | Default |
+|---|---|---|
+| `statistic` | `pluss::table::AtlasDepthStatistic` | `Mean` |
+| `show_grid` | `bool` | `true` |
+| `rows` | `std::int64_t` | `0` (automatic) |
+| `cols` | `std::int64_t` | `0` (automatic) |
+| `grid_gap_x` | `double` | `16.0` |
+| `grid_gap_y` | `double` | `16.0` |
+| `max_keys` | `std::int64_t` | `0` (no cap) |
+| `keys` | `KeySelection` | no knob set |
 
 ## Returns
 
@@ -93,7 +104,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-pluss::table::AtlasDepthFacetPlotOptions options;
+pluss::kindle::ArchiveDepthFacetPlotOptions options;
 options.rows = 1;
 options.cols = 3;
 auto chart = archive.plot().depth_facet({}, options);
@@ -102,12 +113,53 @@ chart.show();
 
 ![Output of Example 2](img/depth_facet-2.svg)
 
+Example 3. A key selection with a cap: every numeric key except `pressure`, at most two.
+
+```cpp
+auto chart = archive.plot().depth_facet({.keys = {.exclude_keys = {"pressure"}}, .max_keys = 2});
+```
+
+Two panes, `temp_c` and `humidity`, using the archive of
+[`depth_compare()`](depth_compare.md#selecting-keys).
+
+![Output of Example 3](img/depth_facet-3.svg)
+
+Example 4. `include_keys` with an explicit grid shape.
+
+```cpp
+pluss::kindle::ArchiveDepthFacetPlotOptions options;
+options.keys.include_keys = {"humidity", "pressure"};
+options.rows = 1;
+options.cols = 2;
+auto chart = archive.plot().depth_facet(options);
+```
+
+![Output of Example 4](img/depth_facet-4.svg)
+
+Example 5. Misuse. `all_keys` with `include_keys`:
+
+```cpp
+archive.plot().depth_facet({.keys = {.all_keys = true, .include_keys = {"humidity"}}});
+```
+
+```text
+Archive::plot().depth_facet: all_keys and include_keys cannot be combined: all_keys already means every numeric key. To plot only some keys set include_keys instead (and leave all_keys false), or to plot everything remove include_keys.
+```
+
+An unknown key named in the call:
+
+```cpp
+archive.plot().depth_facet({"humidty"});
+```
+
+```text
+Archive::plot().depth_facet: unknown key 'humidty'. Did you mean 'humidity'? Available keys = [temp_c, humidity, pressure]. Fix the spelling or remove 'humidty'.
+```
+
 ## Notes
 
 - An empty `keys` tabelizes the whole archive — see [`depth_compare()`](depth_compare.md)'s
   important callout.
-- Delegates to [`AtlasPlotAccessor::depth_facet`](../atlas-plot/depth_facet.md) for the
-  reduction, grid layout, and rendering.
 
 ## See Also
 

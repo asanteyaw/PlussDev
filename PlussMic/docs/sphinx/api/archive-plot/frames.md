@@ -300,6 +300,26 @@ chart.show();
 
 ![Output of Example 8](img/frames-6.svg)
 
+`frames()` names keys, and an unknown key is reported with the closest name and the keys the archive has:
+
+```cpp
+archive.plot().frames({0, 1}, "temp_c", "humidty");
+```
+
+```text
+Archive::plot().frames: unknown key 'humidty'. Did you mean 'humidity'? Available keys = [temp_c, humidity, pressure]. Fix the spelling or remove 'humidty'.
+```
+
+`frames(index)` returns a `CatalogPlotAccessor`, whose key selection and errors are those of a Catalog:
+
+```cpp
+archive.plot().frames(0).line({.keys = {.include_keys = {"humidty"}}});
+```
+
+```text
+Catalog::plot().line: include_keys names unknown key 'humidty'. Did you mean 'humidity'? Available keys = [temp_c, humidity, pressure]. Fix the spelling or remove 'humidty' from include_keys.
+```
+
 ## Notes
 
 - The single-index overload's out-of-range check (`"Archive: index out of bounds"`) runs at

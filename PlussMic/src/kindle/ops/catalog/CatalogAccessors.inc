@@ -351,8 +351,8 @@ std::vector<std::string> catalog_plottable_keys(const Catalog& base) {
 }
 
 // The words a Catalog selection error uses: a Catalog has keys, not features.
-inline constexpr pluss::table::detail::SelectionWords catalog_selection_words{
-    "key", "keys", "all_keys", "include_keys", "exclude_keys", "options.keys", "catalog"};
+inline constexpr pluss::table::detail::SelectionWords catalog_selection_words =
+    pluss::table::detail::key_selection_words;
 
 // The keys a plot draws: the named keys, or the keys of a key selection, or (with neither)
 // every numeric key. The selection is resolved by the one shared selection resolver, worded for keys.
@@ -386,9 +386,7 @@ std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
 
 // A frame-style selection handed to a Catalog is a wording mistake, not a silent no-op.
 void catalog_reject_feature_selection(const pluss::table::FeatureSelection& features, std::string_view where) {
-  PLUSS_CHECK(!features.any(),
-              std::string(where) + ": a Catalog selects keys, not features. Use all_keys, include_keys or exclude_keys "
-              "(options.keys) instead of all_features, include_features or exclude_features.");
+  pluss::table::detail::reject_feature_selection_for_keys(features, where, "Catalog");
 }
 
 bool catalog_shelf_supports_hue(const pluss::table::Shelf& shelf) {

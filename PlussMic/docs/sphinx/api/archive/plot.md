@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 00e9595252fb -->
+<!-- pluss-signature-hash: 4bafcda5abfd -->
 
 # Archive::plot
 
@@ -9,7 +9,8 @@
 
 ```cpp
 ArchivePlotAccessor Archive::plot() const
-ArchivePlotAccessor Archive::plot(const pluss::table::AtlasPlotOptions& options) const
+ArchivePlotAccessor Archive::plot(const KeySelection& keys) const
+ArchivePlotAccessor Archive::plot(const ArchivePlotOptions& options) const
 ```
 
 ## What It Does
@@ -19,24 +20,38 @@ The entry point into the archive-level plotting accessor — depth-stack-aware c
 across depth via `surface()`/`wireframe()`/`cloud3()`, and depth-axis-specific chart types),
 returning `pluss::pl::Studio` figures (or a `CatalogPlotAccessor` for a single selected
 catalog via `frames(index)`). `ArchivePlotAccessor` is the kindle-layer counterpart to
-[`AtlasPlotAccessor`](../../atlas_plot_accessor_api_reference) — every method delegates
-straight through to it, tabelizing the relevant catalogs into `DataFrame`s first, reusing
-its rendering logic exactly rather than duplicating it. Every method on the returned
+[`AtlasPlotAccessor`](../../atlas_plot_accessor_api_reference), speaking of keys and catalogs
+instead of features and frames. Every method on the returned
 accessor has its own page, with real rendered charts, under
 [`ArchivePlotAccessor` API Reference](../../archive_plot_accessor_api_reference).
 
-```{important} Reuses AtlasPlotOptions directly — there is no separate ArchivePlotOptions
-There is no `ArchivePlotOptions` type — this accessor reuses `pluss::table::AtlasPlotOptions`
-as-is, the same scribble of per-chart-type option structs (`figure`, `frames`, `depth_axis`,
-`surface`, `wireframe`, `cloud3`, `depth`, `depth_compare`, `depth_facet`, `depth_rolling`,
-`triplot`) [`Atlas::plot`](../atlas/plot.md) takes.
-```
-
 ## Parameters
 
-**options** (`const pluss::table::AtlasPlotOptions&`, optional)
-    A scribble of per-chart-type option structs — each field configures the corresponding
-    method on the returned accessor. See the important callout above.
+**keys** (`const KeySelection&`)
+    Which keys every key-selecting plot of the accessor (`depth_compare`, `depth_facet`, `triplot`) draws when a
+    call names none: `all_keys`, `include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in
+    the call override both. See [Selecting keys](../archive-plot/depth_compare.md#selecting-keys).
+
+**options** (`const ArchivePlotOptions&`)
+    The settings each plot of the accessor starts from.
+
+| Field | Type |
+|---|---|
+| `figure` | `pluss::table::DataFramePlotOptions` |
+| `frames` | `pluss::table::AtlasFramesPlotOptions` |
+| `depth_axis` | `pluss::table::AtlasDepthAxisOptions` |
+| `surface` | `pluss::table::Surface3DPlotOptions` |
+| `wireframe` | `pluss::table::Wireframe3DPlotOptions` |
+| `cloud3` | `pluss::table::Scatter3DPlotOptions` |
+| `depth` | `pluss::table::AtlasDepthPlotOptions` |
+| `depth_compare` | `ArchiveDepthComparePlotOptions` |
+| `depth_facet` | `ArchiveDepthFacetPlotOptions` |
+| `depth_rolling` | `pluss::table::AtlasDepthRollingPlotOptions` |
+| `triplot` | `pluss::pl::flash::TriplotOptions` |
+| `keys` | `KeySelection` |
+
+Passing `all_features`, `include_features` or `exclude_features` in `figure` throws an error that names the key
+knobs to use instead.
 
 ## Returns
 
@@ -60,6 +75,31 @@ auto c1 = pluss::kindle::Catalog({
 auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
 
 auto catalog_plot = archive.plot().frames(0);
+```
+
+Example 2. An accessor-level key selection, then a whole `ArchivePlotOptions`, and the error for a frame-style
+selection. The archive is the one of [`depth_compare()`](../archive-plot/depth_compare.md#selecting-keys).
+
+```cpp
+const auto narrowed = archive.plot(pluss::kindle::KeySelection{.exclude_keys = {"pressure"}});
+auto compare = narrowed.depth_compare();
+auto facet = narrowed.depth_facet();
+std::cout << compare.panes().front().trace_count() << " " << facet.panes().size() << "\n";
+
+pluss::kindle::ArchivePlotOptions options;
+options.keys.include_keys = {"humidity"};
+options.depth_compare.statistic = pluss::table::AtlasDepthStatistic::Median;
+std::cout << archive.plot(options).depth_compare().panes().front().trace_count() << "\n";
+
+pluss::kindle::ArchivePlotOptions bad;
+bad.figure.include_features = {"humidity"};
+try { archive.plot(bad); } catch (const pluss::Error& e) { std::cout << e.message() << "\n"; }
+```
+
+```text
+2 2
+1
+Archive::plot: an Archive selects keys, not features. Use all_keys, include_keys or exclude_keys (options.keys) instead of all_features, include_features or exclude_features.
 ```
 
 ## Notes

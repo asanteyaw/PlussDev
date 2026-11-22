@@ -2003,6 +2003,121 @@ void test_archive_plot_accessor() {
   }, "Archive::plot().wireframe should fall back to positional outer alignment when case labels are unavailable");
 }
 
+void test_archive_plot_key_selection() {
+  const auto labels = Stream(pluss::make_note(std::vector<std::string>{"d0", "d1", "d2"}, std::array<std::int64_t, 1>{3}));
+  const auto make_catalog = [](double base) {
+    return Catalog(std::vector<std::pair<std::string, Stream>>{
+        {"alpha", labeled_series({1.0 + base, 2.0 + base, 3.0 + base}, {"a", "b", "c"})},
+        {"beta", labeled_series({4.0 + base, 5.0 + base, 7.0 + base}, {"a", "b", "c"})},
+        {"gamma", labeled_series({2.0 - base, 1.0 - base, 0.0 - base}, {"a", "b", "c"})},
+        {"delta", labeled_series({9.0, 8.0 + base, 7.0}, {"a", "b", "c"})},
+    });
+  };
+  const auto archive = pluss::kindle::Archive({make_catalog(0.0), make_catalog(1.0), make_catalog(2.0)}, labels);
+  const auto traces = [](const pluss::pl::Studio& fig) { return fig.panes().front().trace_count(); };
+  const auto message = [](auto&& fn) {
+    try { fn(); } catch (const pluss::Error& e) { return e.message(); }
+    return std::string{};
+  };
+  const auto has = [](const std::string& text, std::string_view needle) { return text.find(needle) != std::string::npos; };
+  // Archive errors speak of keys and catalogs, never of features, frames or columns.
+  const auto keys_only = [&](const std::string& text) {
+    return !has(text, "feature") && !has(text, "frame") && !has(text, "column") && !has(text, "Atlas");
+  };
+
+  using pluss::kindle::ArchivePlotOptions;
+  using pluss::kindle::KeySelection;
+
+  // Shortcut: no keys named, no knob set -> every numeric key.
+  expect(traces(archive.plot().depth_compare()) == 4, "Archive depth_compare() draws every numeric key");
+  expect(archive.plot().depth_facet().panes().size() == 4, "Archive depth_facet() draws every numeric key");
+  expect(archive.plot().triplot().panes().size() >= 1, "Archive triplot() uses every numeric key");
+  // Every knob of depth_compare.
+  expect(traces(archive.plot().depth_compare({.keys = {.all_keys = true}})) == 4, "Archive depth_compare all_keys");
+  expect(traces(archive.plot().depth_compare({.keys = {.include_keys = {"gamma", "alpha"}}})) == 2, "Archive depth_compare include_keys");
+  expect(traces(archive.plot().depth_compare({.keys = {.exclude_keys = {"delta"}}})) == 3, "Archive depth_compare exclude_keys");
+  expect(traces(archive.plot().depth_compare({.max_keys = 2})) == 2, "Archive depth_compare max_keys");
+  expect(traces(archive.plot().depth_compare({.statistic = pluss::table::AtlasDepthStatistic::Max, .show_grid = false, .line_width = 3.0F})) == 4,
+         "Archive depth_compare statistic, show_grid, line_width");
+  expect(traces(archive.plot().depth_compare({"alpha", "beta"}, {.statistic = pluss::table::AtlasDepthStatistic::Median})) == 2,
+         "Archive depth_compare named keys with options");
+  expect(traces(archive.plot().depth_compare({"alpha", "beta"})) == 2, "Archive depth_compare named keys");
+  // Every knob of depth_facet.
+  expect(archive.plot().depth_facet({.keys = {.all_keys = true}}).panes().size() == 4, "Archive depth_facet all_keys");
+  expect(archive.plot().depth_facet({.keys = {.include_keys = {"beta"}}}).panes().size() == 1, "Archive depth_facet include_keys");
+  expect(archive.plot().depth_facet({.keys = {.exclude_keys = {"alpha", "beta"}}}).panes().size() == 2, "Archive depth_facet exclude_keys");
+  expect(archive.plot().depth_facet({.max_keys = 2}).panes().size() == 2, "Archive depth_facet max_keys");
+  expect(archive.plot().depth_facet({.show_grid = false, .rows = 2, .cols = 2, .grid_gap_x = 8.0, .grid_gap_y = 8.0}).panes().size() == 4,
+         "Archive depth_facet rows, cols, gaps, show_grid");
+  expect(archive.plot().depth_facet({"alpha", "beta"}, {.statistic = pluss::table::AtlasDepthStatistic::Min}).panes().size() == 2,
+         "Archive depth_facet named keys with options");
+  // triplot selects keys too.
+  expect(archive.plot().triplot(KeySelection{.include_keys = {"alpha", "beta", "gamma"}}).panes().size() >= 1, "Archive triplot include_keys");
+  expect(archive.plot().triplot(KeySelection{.exclude_keys = {"delta"}}).panes().size() >= 1, "Archive triplot exclude_keys");
+  expect(archive.plot().triplot(KeySelection{.all_keys = true}).panes().size() >= 1, "Archive triplot all_keys");
+  expect(archive.plot().triplot({"alpha", "beta", "delta"}).panes().size() >= 1, "Archive triplot named keys");
+  // Accessor-level selection, per-plot override, names override both.
+  const auto narrowed = archive.plot(KeySelection{.include_keys = {"alpha", "beta"}});
+  expect(traces(narrowed.depth_compare()) == 2 && narrowed.depth_facet().panes().size() == 2, "Archive accessor-level include_keys");
+  expect(traces(narrowed.depth_compare({.keys = {.include_keys = {"delta"}}})) == 1, "Archive per-plot selection overrides the accessor");
+  expect(traces(narrowed.depth_compare({"gamma"})) == 1, "Archive named keys override the accessor");
+  ArchivePlotOptions styled;
+  styled.keys.exclude_keys = {"delta"};
+  styled.depth_compare.max_keys = 2;
+  styled.figure.width = 640.0;
+  expect(traces(archive.plot(styled).depth_compare()) == 2, "Archive ArchivePlotOptions: keys and per-plot defaults");
+  // frames() hands back a Catalog accessor that speaks of keys.
+  expect(archive.plot(KeySelection{.include_keys = {"alpha"}}).frames(1).line().panes().front().trace_count() == 1,
+         "Archive frames(i) applies the accessor selection");
+
+  // Misuse: every message speaks of keys.
+  const auto both = message([&] { (void)archive.plot().depth_compare({.keys = {.all_keys = true, .exclude_keys = {"alpha"}}}); });
+  expect(has(both, "Archive::plot().depth_compare: all_keys and exclude_keys cannot be combined") && has(both, "set exclude_keys instead") && keys_only(both),
+         "Archive: " + both);
+  const auto both_inc = message([&] { (void)archive.plot().depth_facet({.keys = {.all_keys = true, .include_keys = {"alpha"}}}); });
+  expect(has(both_inc, "Archive::plot().depth_facet: all_keys and include_keys cannot be combined") && keys_only(both_inc), "Archive: " + both_inc);
+  const auto inc_exc = message([&] { (void)archive.plot().triplot(KeySelection{.include_keys = {"alpha"}, .exclude_keys = {"beta"}}); });
+  expect(has(inc_exc, "Archive::plot().triplot: include_keys and exclude_keys cannot both be set") && keys_only(inc_exc), "Archive: " + inc_exc);
+  const auto unknown = message([&] { (void)archive.plot().depth_compare({.keys = {.include_keys = {"zz"}}}); });
+  expect(has(unknown, "unknown key 'zz'") && has(unknown, "Available keys = [alpha, beta, gamma, delta]") && keys_only(unknown), "Archive: " + unknown);
+  const auto typo = message([&] { (void)archive.plot().depth_compare({.keys = {.exclude_keys = {"betta"}}}); });
+  expect(has(typo, "Did you mean 'beta'?") && has(typo, "Available keys = [") && keys_only(typo), "Archive: " + typo);
+  const auto empty = message([&] { (void)archive.plot().depth_compare({.keys = {.exclude_keys = {"alpha", "beta", "gamma", "delta"}}}); });
+  expect(has(empty, "leaves no numeric key to draw") && has(empty, "an archive") && keys_only(empty), "Archive: " + empty);
+  const auto named_typo = message([&] { (void)archive.plot().depth_compare({"alpah"}); });
+  expect(has(named_typo, "Archive::plot().depth_compare: unknown key 'alpah'") && has(named_typo, "Did you mean 'alpha'?") &&
+             has(named_typo, "Available keys = [alpha, beta, gamma, delta]") && keys_only(named_typo),
+         "Archive: " + named_typo);
+  const auto facet_typo = message([&] { (void)archive.plot().depth_facet({"bta"}); });
+  expect(has(facet_typo, "Archive::plot().depth_facet: unknown key 'bta'") && keys_only(facet_typo), "Archive: " + facet_typo);
+  const auto tri_typo = message([&] { (void)archive.plot().triplot({"alpha", "beta", "gama"}); });
+  expect(has(tri_typo, "Archive::plot().triplot: unknown key 'gama'") && has(tri_typo, "Did you mean 'gamma'?") && keys_only(tri_typo), "Archive: " + tri_typo);
+  const auto tri_few = message([&] { (void)archive.plot().triplot(KeySelection{.include_keys = {"alpha", "beta"}}); });
+  expect(has(tri_few, "requires at least three numeric keys; found 2") && keys_only(tri_few), "Archive: " + tri_few);
+  for (const auto& where : {std::string("depth"), std::string("depth_rolling"), std::string("surface"), std::string("wireframe")}) {
+    const auto single = message([&] {
+      if (where == "depth") (void)archive.plot().depth("zz");
+      else if (where == "depth_rolling") (void)archive.plot().depth_rolling("zz");
+      else if (where == "surface") (void)archive.plot().surface("zz");
+      else (void)archive.plot().wireframe("zz");
+    });
+    expect(has(single, "Archive::plot()." + where + ": unknown key 'zz'") && has(single, "Available keys = [") && !has(single, "feature") && !has(single, "Atlas"), "Archive: " + single);
+  }
+  const auto cloud = message([&] { (void)archive.plot().cloud3("alpha", "beta", "zz"); });
+  expect(has(cloud, "Archive::plot().cloud3: unknown key 'zz'") && keys_only(cloud), "Archive: " + cloud);
+  const auto frames_typo = message([&] { (void)archive.plot().frames({0, 1}, "alpha", "gama"); });
+  expect(has(frames_typo, "unknown key 'gama'") && has(frames_typo, "Did you mean 'gamma'?") && !has(frames_typo, "feature") && !has(frames_typo, "Atlas"),
+         "Archive: " + frames_typo);
+  // The frame wording handed to an Archive is rejected with the key wording.
+  const auto wrong = message([&] { ArchivePlotOptions bad; bad.figure.include_features = {"alpha"}; (void)archive.plot(bad); });
+  expect(has(wrong, "an Archive selects keys, not features") && has(wrong, "include_keys"), "Archive: " + wrong);
+  // Selection through frames(i) is the Catalog accessor, which words its errors with keys as well.
+  const auto catalog_acc = message([&] { (void)archive.plot().frames(0).line({.keys = {.include_keys = {"zz"}}}); });
+  expect(has(catalog_acc, "unknown key 'zz'") && keys_only(catalog_acc), "Archive frames(i): " + catalog_acc);
+  const auto no_catalogs = message([&] { (void)pluss::kindle::Archive(std::vector<Catalog>{}).plot().depth_compare(); });
+  expect(has(no_catalogs, "the archive has no catalogs") && keys_only(no_catalogs), "Archive: " + no_catalogs);
+}
+
 void test_archive_time_accessors() {
   const auto archive = pluss::kindle::Archive({
       Catalog(std::vector<std::pair<std::string, Stream>>{
@@ -2415,6 +2530,7 @@ int main() {
     test_catalog_mutation_tabelize_io();
     test_archive_to_table_bridge();
     test_archive_plot_accessor();
+    test_archive_plot_key_selection();
     test_archive_time_accessors();
   } catch (const std::exception& e) {
     std::cerr << "[kindle_catalog_tests] failure: " << e.what() << "\n";

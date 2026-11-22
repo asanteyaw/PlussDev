@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -80,6 +81,18 @@ struct AtlasDepthRollingPlotOptions {
   float rolling_line_width{1.8F};
 };
 
+// The words an Atlas plot uses in its errors: where it is called from, the selection vocabulary and the
+// nouns of the container and of its depth slices. The defaults are the Atlas's own; a stack of catalogs
+// (Archive) supplies its own words and reuses every plot unchanged.
+struct AtlasPlotWords {
+  std::string where{"Atlas::plot()"};
+  detail::SelectionWords selection{detail::feature_selection_words};
+  std::string_view container{"atlas"};
+  std::string_view slice{"frame"};
+  std::string_view slices{"frames"};
+  std::string_view rows{"cases"};
+};
+
 struct AtlasPlotOptions {
   DataFramePlotOptions figure{};
   AtlasFramesPlotOptions frames{};
@@ -98,7 +111,8 @@ class AtlasPlotAccessor {
 public:
   AtlasPlotAccessor(std::vector<DataFrame> frames,
                     std::optional<Shelf> depth_labels = std::nullopt,
-                    AtlasPlotOptions options = {});
+                    AtlasPlotOptions options = {},
+                    AtlasPlotWords words = {});
 
   DataFramePlotAccessor frames(std::int64_t frame_index = 0) const;
   // x first, then y: frames(indices, x, y). A single name is y against the case labels.
@@ -159,6 +173,7 @@ private:
   std::vector<DataFrame> frames_{};
   std::optional<Shelf> depth_labels_{std::nullopt};
   AtlasPlotOptions options_{};
+  AtlasPlotWords words_{};
 };
 
 } // namespace pluss::table

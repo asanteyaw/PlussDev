@@ -222,7 +222,7 @@ struct ColumnWords {
   PLUSS_CHECK(!out.empty(),
               head + "the selection leaves no numeric " + w.noun + " to draw (numeric " + w.nouns + " = " +
                   column_name_list(numeric_names) + "). Remove some of " + w.exclude + ", or use " + w.all +
-                  " on a " + w.container + " that has numeric " + w.nouns + ".");
+                  " on " + std::string(w.container.empty() || std::string("aeiou").find(w.container[0]) == std::string::npos ? "a " : "an ") + w.container + " that has numeric " + w.nouns + ".");
   return out;
 }
 
