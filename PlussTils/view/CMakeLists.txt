@@ -442,10 +442,13 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_SOURCE_DIR}/test/window_smoke.cpp
     )
     target_link_libraries(plussview_window_smoke PRIVATE PlussTilsView)
-    # The viewer's Excel export pulls in libzip, which needs zlib; a test that opens the window links it too.
-    find_package(ZLIB QUIET)
-    if(ZLIB_FOUND)
-        target_link_libraries(plussview_window_smoke PRIVATE ZLIB::ZLIB)
+    # The viewer's Excel export pulls in the static libzip, which needs zlib; the window smoke links
+    # it explicitly (find_library, so it also finds the static zlib in the vcpkg prefix).
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        find_library(PLUSSVIEW_SMOKE_ZLIB NAMES z PATH_SUFFIXES lib)
+    endif()
+    if(PLUSSVIEW_SMOKE_ZLIB)
+        target_link_libraries(plussview_window_smoke PRIVATE "${PLUSSVIEW_SMOKE_ZLIB}")
     endif()
     set_target_properties(plussview_window_smoke PROPERTIES
         CXX_STANDARD 20
