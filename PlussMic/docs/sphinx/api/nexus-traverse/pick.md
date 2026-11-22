@@ -25,11 +25,12 @@ replaces it entirely; it doesn't intersect or extend the previous list.
 **features** (a range of `std::string_view` — a brace literal, a named
 container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
 or any other range whose elements convert to `std::string_view`)
-    The feature names to keep in the final result, in iteration order.
-    Validated the same way as other name lists on this class (`Nexus::select()`'s keys,
-    for example): each name must be non-empty and unique within the request. Feature
-    existence itself is checked only when [`.collect()`](collect.md) actually runs and
-    tries to select them from the materialized frame.
+
+The feature names to keep in the final result, in iteration order.
+Validated the same way as other name lists on this class (`Nexus::select()`'s keys,
+for example): each name must be non-empty and unique within the request. Feature
+existence itself is checked only when [`.collect()`](collect.md) actually runs and
+tries to select them from the materialized frame.
 
 :::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::select`](../nexus/select.md)'s own note on this — the same

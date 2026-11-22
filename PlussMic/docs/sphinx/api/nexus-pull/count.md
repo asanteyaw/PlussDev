@@ -35,18 +35,20 @@ call is more ceremony than it buys.
 ## Parameters
 
 **source** (`std::string_view`)
-    The feature to count non-null occurrences of. Typically
-    `"table.feature"` for a related table (e.g. `"events.event_id"`); a bare
-    root feature name is also accepted syntactically but aggregating a root
-    feature against itself is rarely useful and matches
-    [`Nexus::pull`](../nexus/pull.md)'s own restriction against targeting
-    `root`.
+
+The feature to count non-null occurrences of. Typically
+`"table.feature"` for a related table (e.g. `"events.event_id"`); a bare
+root feature name is also accepted syntactically but aggregating a root
+feature against itself is rarely useful and matches
+[`Nexus::pull`](../nexus/pull.md)'s own restriction against targeting
+`root`.
 
 **alias** (`std::string_view`, default empty)
-    The output column name. When omitted, the default alias is
-    `<table>_<feature>_count` (dots replaced by underscores) — see
-    [`Nexus::pull`](../nexus/pull.md)'s "Every output column is aliased
-    automatically" rule, which applies identically here.
+
+The output column name. When omitted, the default alias is
+`<table>_<feature>_count` (dots replaced by underscores) — see
+[`Nexus::pull`](../nexus/pull.md)'s "Every output column is aliased
+automatically" rule, which applies identically here.
 
 ## Returns
 

@@ -19,8 +19,9 @@ the automatic `root_table + "_" + <last table>`-style name the underlying
 ## Parameters
 
 **value** (`std::string_view`)
-    The title to apply. Must be non-empty — an empty string throws
-    `"NexusTraverse::name: title cannot be empty"`.
+
+The title to apply. Must be non-empty — an empty string throws
+`"NexusTraverse::name: title cannot be empty"`.
 
 ## Returns
 

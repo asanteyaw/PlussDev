@@ -45,22 +45,27 @@ Any other value, including a different spelling such as `"Line"` or `"lines"`, t
 ## Parameters
 
 **pane** (`Pane&`, first three overloads) / **studio** (`Studio&`, last three overloads)
-    The target. The `Studio&` overloads create a new `pane2()` internally — the caller
-    never touches the pane directly.
+
+The target. The `Studio&` overloads create a new `pane2()` internally — the caller
+never touches the pane directly.
 
 **x**, **y** (series-convertible)
-    The point/vertex coordinates.
+
+The point/vertex coordinates.
 
 **hue** (`const Note&`, or any series-convertible value, four of the six overloads)
-    Forwarded verbatim to `scatterplot()`/`lineplot()` — see those pages for the exact
-    grouping/threshold/fallback behavior.
+
+Forwarded verbatim to `scatterplot()`/`lineplot()` — see those pages for the exact
+grouping/threshold/fallback behavior.
 
 **kind** (`std::string_view`, default `"scatter"`)
-    `"scatter"` dispatches to [`flash::scatterplot`](scatterplot.md);
-    `"line"` dispatches to [`flash::lineplot`](lineplot.md). Anything else throws `pluss::Error`.
+
+`"scatter"` dispatches to [`flash::scatterplot`](scatterplot.md);
+`"line"` dispatches to [`flash::lineplot`](lineplot.md). Anything else throws `pluss::Error`.
 
 **title** (`std::string`, default `{}`, `Studio&` overloads only)
-    Passed through to [`Studio::pane2`](../studio/pane2.md) as the new pane's title.
+
+Passed through to [`Studio::pane2`](../studio/pane2.md) as the new pane's title.
 
 ## Returns
 

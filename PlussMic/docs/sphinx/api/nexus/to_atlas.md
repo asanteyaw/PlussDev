@@ -26,9 +26,10 @@ not from `to_atlas()` itself).
 **keys** (a range of `std::string_view` — a brace literal, a named container
 such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
 other range whose elements convert to `std::string_view`)
-    The tables to collect, in iteration order. Same
-    validation as [`select()`](select.md)'s key list: non-empty, unique, and each must
-    already exist in the workspace.
+
+The tables to collect, in iteration order. Same
+validation as [`select()`](select.md)'s key list: non-empty, unique, and each must
+already exist in the workspace.
 
 :::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::select`](select.md)'s own note on this — the same
@@ -39,9 +40,10 @@ like `std::set` iterates sorted, not in insertion order).
 :::
 
 **labels** (`std::optional<Shelf>`, default `std::nullopt`)
-    Axis-0 labels for the resulting atlas. Left at the default, `to_atlas()` uses the
-    requested `keys` themselves as the labels (as Note-kind text) — so the atlas remembers
-    which table each layer came from even without you supplying labels explicitly.
+
+Axis-0 labels for the resulting atlas. Left at the default, `to_atlas()` uses the
+requested `keys` themselves as the labels (as Note-kind text) — so the atlas remembers
+which table each layer came from even without you supplying labels explicitly.
 
 ## Returns
 

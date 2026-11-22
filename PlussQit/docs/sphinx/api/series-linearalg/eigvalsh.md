@@ -36,9 +36,10 @@ and the solve runs on the CPU.
 ## Parameter
 
 **upper** (`bool`, default `false`)
-    Selects the triangle that is read: `false` for the lower triangle (including
-    the diagonal), `true` for the upper one. Both choices agree for an exactly
-    symmetric or Hermitian matrix.
+
+Selects the triangle that is read: `false` for the lower triangle (including
+the diagonal), `true` for the upper one. Both choices agree for an exactly
+symmetric or Hermitian matrix.
 
 ## Returns
 

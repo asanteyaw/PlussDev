@@ -28,11 +28,13 @@ positional window on differently-sized fields in a ragged registry.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The inclusive start position. Negative values count from the end of each
-    field.
+
+The inclusive start position. Negative values count from the end of each
+field.
 
 **stop** (`std::int64_t`)
-    The exclusive stop position. Negative values count from the end of each field.
+
+The exclusive stop position. Negative values count from the end of each field.
 
 ## Returns
 

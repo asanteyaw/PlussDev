@@ -19,7 +19,8 @@ Only panes created after the call are affected; panes that already exist keep wh
 ## Parameters
 
 **pane** (`const Pane&`)
-    The pane whose style becomes the default for new panes. Not stored; only its style is copied.
+
+The pane whose style becomes the default for new panes. Not stored; only its style is copied.
 
 ## Returns
 

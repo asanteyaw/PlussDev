@@ -54,18 +54,20 @@ it, so `count("aa")` on `"aaaa"` reports `2`, not `3`.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    The text to count — a regular expression pattern under the
-    single-argument overload (see the warning above), or literal/regex text
-    under the two-argument overload depending on `options.regex`.
+
+The text to count — a regular expression pattern under the
+single-argument overload (see the warning above), or literal/regex text
+under the two-argument overload depending on `options.regex`.
 
 **options** (`TextOptions`, two-argument overload only)
-    `options.regex` (default `false`): treat `pattern` as a regex instead
-    of literal text.
-    `options.case_sensitive` (default `true`): ASCII-fold both sides before
-    comparing (literal mode) or compile with `std::regex::icase` (regex
-    mode) when `false`.
-    `options.limit` (default `-1`): stop counting once this many matches
-    have been found; `-1` means no cap.
+
+`options.regex` (default `false`): treat `pattern` as a regex instead
+of literal text.
+`options.case_sensitive` (default `true`): ASCII-fold both sides before
+comparing (literal mode) or compile with `std::regex::icase` (regex
+mode) when `false`.
+`options.limit` (default `-1`): stop counting once this many matches
+have been found; `-1` means no cap.
 
 ## Returns
 

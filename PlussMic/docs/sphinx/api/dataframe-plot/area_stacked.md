@@ -71,13 +71,15 @@ call win over both. The rules, the directive error messages and compiled example
 ## Parameters
 
 **y_features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
-    Numeric features to stack, in the order they're accumulated — the first feature forms
-    the bottom band, the last feature's cumulative top is the total across all of them. At
-    least one is required — an empty list throws `"DataFrame::plot().area_stacked: at least
-    one y feature is required"`.
+
+Numeric features to stack, in the order they're accumulated — the first feature forms
+the bottom band, the last feature's cumulative top is the total across all of them. At
+least one is required — an empty list throws `"DataFrame::plot().area_stacked: at least
+one y feature is required"`.
 
 **x_feature** (`std::string_view`)
-    Same three-step resolution as [`line()`](line.md).
+
+Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaStackedPlotOptions`)
 

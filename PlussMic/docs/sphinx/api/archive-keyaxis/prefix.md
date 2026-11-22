@@ -27,8 +27,9 @@ can end up just as ragged.
 ## Parameters
 
 **prefix** (`std::string_view`)
-    The exact leading substring each surviving key name must start with. Matching is
-    case-sensitive and has no separate `case_sensitive` toggle.
+
+The exact leading substring each surviving key name must start with. Matching is
+case-sensitive and has no separate `case_sensitive` toggle.
 
 ## Returns
 

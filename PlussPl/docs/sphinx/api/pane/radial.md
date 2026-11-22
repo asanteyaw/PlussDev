@@ -19,10 +19,12 @@ Adds a **polar trace**: points given by an angle and a distance from the centre,
 ## Parameters
 
 **theta** (`Series`-convertible)
-    The angles, in radians.
+
+The angles, in radians.
 
 **radius** (`Series`-convertible)
-    The distances from the centre.
+
+The distances from the centre.
 
 ## Returns
 

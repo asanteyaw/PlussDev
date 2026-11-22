@@ -23,9 +23,10 @@ in any order, repeated as many times as they appear at the start.
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from the left edge. Every leading
-    character that appears anywhere in `chars` is removed, stopping at the
-    first character that doesn't.
+
+The set of characters to strip from the left edge. Every leading
+character that appears anywhere in `chars` is removed, stopping at the
+first character that doesn't.
 
 ## Returns
 

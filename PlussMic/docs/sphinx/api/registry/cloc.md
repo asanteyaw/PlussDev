@@ -28,12 +28,14 @@ registry.
 ## Parameters
 
 **row** (`std::int64_t`)
-    The single positional row to select (single-row overload). Negative values
-    count from the end of each field.
+
+The single positional row to select (single-row overload). Negative values
+count from the end of each field.
 
 **start** / **stop** (`std::int64_t`)
-    The `[start, stop)` positional range to select (range overload). Negative
-    values count from the end of each field.
+
+The `[start, stop)` positional range to select (range overload). Negative
+values count from the end of each field.
 
 ## Returns
 

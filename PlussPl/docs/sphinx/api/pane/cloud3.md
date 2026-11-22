@@ -27,10 +27,12 @@ As for `cloud`, there is no call with a colour and no size. All series have the 
 ## Parameters
 
 **x**, **y**, **z** (`Series`-convertible)
-    The positions.
+
+The positions.
 
 **size**, **color** (`Series`-convertible, optional)
-    Size and colour value of each marker, or one for all.
+
+Size and colour value of each marker, or one for all.
 
 ## Returns
 

@@ -21,7 +21,8 @@ It applies to the level-based kinds: `contour`, `isoband` and `ridge3`, and to a
 ## Parameters
 
 **enable** (`bool`, setter only)
-    True to draw the level labels, false to remove them.
+
+True to draw the level labels, false to remove them.
 
 ## Returns
 

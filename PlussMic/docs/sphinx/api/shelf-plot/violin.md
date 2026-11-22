@@ -38,14 +38,16 @@ small-cardinality code.
 ## Parameters
 
 **group** (`const Shelf&`, value/group mode)
-    The companion shelf defining violin groups — text-like or numeric, see the important
-    callout above. Must match the bound shelf's size, or the call throws
-    `"Shelf::plot: shelf size mismatch"`.
+
+The companion shelf defining violin groups — text-like or numeric, see the important
+callout above. Must match the bound shelf's size, or the call throws
+`"Shelf::plot: shelf size mismatch"`.
 
 **options** (`ViolinPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::violin`](../../api/dataframe-plot/violin.md)
-    (`alpha`, `line_width`, `width`, `bw_adjust`, `cut`, `scale`, `inner`, `side`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::violin`](../../api/dataframe-plot/violin.md)
+(`alpha`, `line_width`, `width`, `bw_adjust`, `cut`, `scale`, `inner`, `side`).
 
 ## Returns
 

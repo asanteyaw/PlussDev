@@ -22,9 +22,10 @@ the start of that calendar period (e.g. the first of the month).
 ## Parameters
 
 **freq** (`std::string_view`)
-    One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`,
-    `"H"`/`"h"`/`"hour"`, or `"D"`/`"d"`/`"day"`. Cannot be empty. An
-    unsupported frequency throws.
+
+One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`,
+`"H"`/`"h"`/`"hour"`, or `"D"`/`"d"`/`"day"`. Cannot be empty. An
+unsupported frequency throws.
 
 ## Returns
 

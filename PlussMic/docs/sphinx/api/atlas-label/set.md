@@ -21,7 +21,8 @@ labels of a single frame instead.
 ## Parameters
 
 **labels** (`const Shelf&`)
-    The new depth labels. Its length must equal `depth()`.
+
+The new depth labels. Its length must equal `depth()`.
 
 ## Returns
 

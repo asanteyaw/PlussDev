@@ -31,9 +31,10 @@ A relationship is considered valid when **all** of the following hold:
 ## Parameters
 
 **name** (`std::string_view`)
-    The relationship to validate, matching [`Relationship::name`](relationships.md). Must
-    already be declared — an unknown name throws
-    `"Nexus::validate_relationship: unknown relationship '<name>'"`.
+
+The relationship to validate, matching [`Relationship::name`](relationships.md). Must
+already be declared — an unknown name throws
+`"Nexus::validate_relationship: unknown relationship '<name>'"`.
 
 ## Returns
 

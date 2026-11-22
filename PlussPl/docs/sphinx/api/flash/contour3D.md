@@ -23,17 +23,20 @@ identical. Note only the `level_count`-taking overload is aliased —
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3, and `z` rank-2 to satisfy
 [`Pane::ridge3`](../pane/ridge3.md)'s own deeper requirement)
-    The scalar field to contour — identical requirements to
-    [`flash::ridge3`](ridge3.md)'s `level_count` overload.
+
+The scalar field to contour — identical requirements to
+[`flash::ridge3`](ridge3.md)'s `level_count` overload.
 
 **level_count** (`int`, default `8`)
-    Automatic, evenly-spaced level count. Note the default of `8` matches
-    [`Pane::contour`](../pane/contour.md)/[`Pane::isoband`](../pane/isoband.md), *not*
-    [`flash::isoshell`](isoshell.md)'s `4`.
+
+Automatic, evenly-spaced level count. Note the default of `8` matches
+[`Pane::contour`](../pane/contour.md)/[`Pane::isoband`](../pane/isoband.md), *not*
+[`flash::isoshell`](isoshell.md)'s `4`.
 
 ## Returns
 

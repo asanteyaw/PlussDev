@@ -43,8 +43,9 @@ complex code.
 ## Parameter
 
 **other** (`const Series&`)
-    The right vector. Both operands must be one-dimensional and have equal
-    length. There is no broadcasting.
+
+The right vector. Both operands must be one-dimensional and have equal
+length. There is no broadcasting.
 
 ## Returns
 

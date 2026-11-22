@@ -20,10 +20,12 @@ slicing does.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The inclusive start position. Negative values count from the end.
+
+The inclusive start position. Negative values count from the end.
 
 **stop** (`std::int64_t`)
-    The exclusive stop position. Negative values count from the end.
+
+The exclusive stop position. Negative values count from the end.
 
 ## Returns
 

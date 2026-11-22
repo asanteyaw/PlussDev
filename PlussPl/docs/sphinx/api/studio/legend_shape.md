@@ -20,7 +20,8 @@ So the shape matters only when there is room for more than one column. Short lab
 ## Parameters
 
 **shape** (`KeyShape`, setter)
-    `Auto`, `Horizontal` or `Vertical`; see [`KeyShape`](../types/KeyShape.md).
+
+`Auto`, `Horizontal` or `Vertical`; see [`KeyShape`](../types/KeyShape.md).
 
 ## Returns
 

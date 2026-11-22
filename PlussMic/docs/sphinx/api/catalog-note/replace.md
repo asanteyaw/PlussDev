@@ -30,17 +30,20 @@ explanation and the exact throw message.
 ## Parameters
 
 **from** (`std::string_view`)
-    The text to replace — literal under the two-argument overload, or literal/regex
-    under the three-argument overload depending on `options.regex`.
+
+The text to replace — literal under the two-argument overload, or literal/regex
+under the three-argument overload depending on `options.regex`.
 
 **to** (`std::string_view`)
-    The replacement text.
+
+The replacement text.
 
 **options** (`pluss::table::TextOptions`, three-argument overload only)
-    `options.regex` (default `false`): treat `from` as a regex pattern.
-    `options.case_sensitive` (default `true`): ignore case when `false`.
-    `options.limit` (default `-1`, unlimited): cap the number of replacements per
-    value.
+
+`options.regex` (default `false`): treat `from` as a regex pattern.
+`options.case_sensitive` (default `true`): ignore case when `false`.
+`options.limit` (default `-1`, unlimited): cap the number of replacements per
+value.
 
 ## Returns
 

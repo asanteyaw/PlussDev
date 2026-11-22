@@ -21,8 +21,9 @@ one-element `Stream` — the square root of [`var()`](var.md), with the identica
 ## Parameters
 
 **unbiased** (`bool`, defaults to `true`)
-    `true` uses the Bessel-corrected sample variance (dividing by `n - 1`) before taking the
-    square root; `false` uses the population variance (dividing by `n`).
+
+`true` uses the Bessel-corrected sample variance (dividing by `n - 1`) before taking the
+square root; `false` uses the population variance (dividing by `n`).
 
 ## Returns
 

@@ -32,7 +32,8 @@ Same escape from the kindle model as [`lag_block()`](lag_block.md)/
 ## Parameters
 
 **axis** (`const Stream&`)
-    A `Timeline`/`TimeIndex` stream to extract calendar components from.
+
+A `Timeline`/`TimeIndex` stream to extract calendar components from.
 
 ## Returns
 

@@ -23,14 +23,17 @@ that ends up before `start` produces an empty (not erroring) result.
 ## Parameters
 
 **start** (`std::int64_t`)
-    Inclusive starting position. Negative values count from the end.
+
+Inclusive starting position. Negative values count from the end.
 
 **stop** (`std::int64_t`)
-    Exclusive ending position. Negative values count from the end.
+
+Exclusive ending position. Negative values count from the end.
 
 **render** (`bool`, default `false`)
-    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
-    only.
+
+See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+only.
 
 ## Returns
 

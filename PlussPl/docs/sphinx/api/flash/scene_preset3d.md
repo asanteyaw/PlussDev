@@ -30,10 +30,12 @@ three all use the `Orthographic` presets from [`camera_preset3d`](camera_preset3
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane — its `Theme`, grid style, `Lens`, and `LightRig` are all mutated.
+
+The target pane — its `Theme`, grid style, `Lens`, and `LightRig` are all mutated.
 
 **preset** (`ScenePreset3D`)
-    Which named scene to apply — see the table above.
+
+Which named scene to apply — see the table above.
 
 ## Returns
 

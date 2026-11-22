@@ -51,13 +51,15 @@ happens to *that position's own* output value is then controlled separately by
 ## Parameters
 
 **statistic** (`ScanStatistic`)
-    Which running computation to perform: `Sum`, `Product`, `Minimum`, or
-    `Maximum`.
+
+Which running computation to perform: `Sum`, `Product`, `Minimum`, or
+`Maximum`.
 
 **skip_nulls** (`bool`, default `true`)
-    `true`: a missing input position stays missing in the output, but later
-    positions' running values are unaffected. `false`: a missing input
-    position makes every subsequent output position missing too.
+
+`true`: a missing input position stays missing in the output, but later
+positions' running values are unaffected. `false`: a missing input
+position makes every subsequent output position missing too.
 
 ## Returns
 

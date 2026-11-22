@@ -34,8 +34,9 @@ that matches the slot's actual [`kind()`](kind.md).
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::Duration&`)
-    The replacement for null values, in the kind matching the overload
-    selected.
+
+The replacement for null values, in the kind matching the overload
+selected.
 
 ## Returns
 

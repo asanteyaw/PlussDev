@@ -23,11 +23,13 @@ That axis is each frame's own case labels, which must already be
 ## Parameters
 
 **ascending** (`bool`, default `true`)
-    Sort chronologically forward (`true`) or backward (`false`), within each frame.
+
+Sort chronologically forward (`true`) or backward (`false`), within each frame.
 
 **nulls_last** (`bool`, default `true`)
-    Whether an undefined axis position sorts after (`true`) or before (`false`)
-    every defined position, within each frame.
+
+Whether an undefined axis position sorts after (`true`) or before (`false`)
+every defined position, within each frame.
 
 ## Returns
 

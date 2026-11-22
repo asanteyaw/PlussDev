@@ -28,8 +28,9 @@ catalogs matching different numbers (or sets) of keys.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavored regular expression, matched against each key name using
-    "search" (not "full match") semantics — anchor with `^`/`$` for whole-name matching.
+
+An ECMAScript-flavored regular expression, matched against each key name using
+"search" (not "full match") semantics — anchor with `^`/`$` for whole-name matching.
 
 ## Returns
 

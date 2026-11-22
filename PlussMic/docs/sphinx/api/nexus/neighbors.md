@@ -20,7 +20,8 @@ table's point of view. This is a one-hop view into the same relationship graph
 ## Parameters
 
 **table** (`std::string_view`)
-    The table to inspect. Must already exist in the workspace.
+
+The table to inspect. Must already exist in the workspace.
 
 ## Returns
 

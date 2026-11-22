@@ -35,9 +35,10 @@ If every row is invalid, `fn` is never called at all and `map()` returns `*this`
 ## Parameters
 
 **fn** (`const std::function<ShelfValue(const ShelfValue&)>&`)
-    Called once per valid row with that row's value wrapped as a `ShelfValue`. Must return
-    a `ShelfValue` wrapping exactly one row, of a consistent payload kind across all calls.
-    Must not be empty — see Example 5.
+
+Called once per valid row with that row's value wrapped as a `ShelfValue`. Must return
+a `ShelfValue` wrapping exactly one row, of a consistent payload kind across all calls.
+Must not be empty — see Example 5.
 
 ## Returns
 

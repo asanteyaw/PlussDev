@@ -25,13 +25,16 @@ Adds **stems**: one vertical line for each value, from a baseline to the value, 
 ## Parameters
 
 **x** (`Series`-convertible, second call)
-    The positions.
+
+The positions.
 
 **y** (`Series`-convertible)
-    The values.
+
+The values.
 
 **base** (`double`, default 0)
-    The baseline the stems starts from.
+
+The baseline the stems starts from.
 
 ## Returns
 

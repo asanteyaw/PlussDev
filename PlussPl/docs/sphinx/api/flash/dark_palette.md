@@ -19,10 +19,12 @@ mirror of [`flash::light_palette`](light_palette.md).
 ## Parameters
 
 **color** (`Rgba`)
-    The target (end) color the ramp approaches.
+
+The target (end) color the ramp approaches.
 
 **n** (`std::int64_t`, default `6`)
-    Number of stops, at least `2`; fewer throws `pluss::Error`.
+
+Number of stops, at least `2`; fewer throws `pluss::Error`.
 
 ## Returns
 

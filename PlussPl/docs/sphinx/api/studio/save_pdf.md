@@ -21,10 +21,12 @@ Writes the figure to a one-page PDF file. The page is the size of the figure ([`
 ## Parameters
 
 **path** (`std::string_view`)
-    The file to write. Must end in `.pdf` (any case).
+
+The file to write. Must end in `.pdf` (any case).
 
 **engine** (`PdfEngine`, default `PdfEngine::Auto`)
-    `Auto` and `Internal` use the built-in writer; `SvgConvert` uses an installed converter.
+
+`Auto` and `Internal` use the built-in writer; `SvgConvert` uses an installed converter.
 
 ## Returns
 

@@ -20,10 +20,12 @@ clamps to the end rather than throwing.
 ## Parameters
 
 **start** (`std::int64_t`)
-    Inclusive starting row index.
+
+Inclusive starting row index.
 
 **stop** (`std::int64_t`)
-    Exclusive ending row index.
+
+Exclusive ending row index.
 
 ## Returns
 

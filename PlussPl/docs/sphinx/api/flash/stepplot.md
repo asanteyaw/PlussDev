@@ -25,10 +25,12 @@ through [`Pane::trend`](../pane/trend.md) — there is no dedicated "step" trace
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The step's corner coordinates, in index order. Must have identical lengths.
+
+The step's corner coordinates, in index order. Must have identical lengths.
 
 ## Returns
 

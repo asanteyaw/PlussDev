@@ -23,10 +23,12 @@ produces an empty (not erroring) result. Internally implemented as
 ## Parameters
 
 **start** (`std::int64_t`)
-    Inclusive starting position. Negative values count from the end.
+
+Inclusive starting position. Negative values count from the end.
 
 **stop** (`std::int64_t`)
-    Exclusive ending position. Negative values count from the end.
+
+Exclusive ending position. Negative values count from the end.
 
 ## Returns
 

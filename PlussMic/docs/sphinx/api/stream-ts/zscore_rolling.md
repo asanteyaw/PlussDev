@@ -42,15 +42,18 @@ message pattern.
 ## Parameters
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions. Must be positive, or it throws.
+
+The trailing window size, in positions. Must be positive, or it throws.
 
 **min_periods** (`std::int64_t`, default `1`)
-    The minimum number of positions that must actually exist in a window
-    near the start of the stream.
+
+The minimum number of positions that must actually exist in a window
+near the start of the stream.
 
 **epsilon** (`double`, default `1e-12`)
-    The smallest rolling standard deviation still treated as usefully
-    nonzero. Must be positive, or it throws.
+
+The smallest rolling standard deviation still treated as usefully
+nonzero. Must be positive, or it throws.
 
 ## Returns
 

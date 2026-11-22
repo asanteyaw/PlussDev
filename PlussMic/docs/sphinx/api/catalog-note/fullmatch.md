@@ -27,8 +27,9 @@ explanation and the exact throw message.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression, always — never literal text. The pattern must match the
-    entire value; a partial match anywhere in the middle is not enough.
+
+A regular expression, always — never literal text. The pattern must match the
+entire value; a partial match anywhere in the middle is not enough.
 
 ## Returns
 

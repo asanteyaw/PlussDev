@@ -26,9 +26,10 @@ every frame via [`Axel::map`](../axel/map.md).
 ## Parameters
 
 **kind** (`SlotKind`)
-    The kind to filter fields by — one of `SlotKind::Empty`,
-    `SlotKind::Null`, `SlotKind::Series`, `SlotKind::Note`,
-    `SlotKind::Timeline`, `SlotKind::TimeIndex`, `SlotKind::Mixed`.
+
+The kind to filter fields by — one of `SlotKind::Empty`,
+`SlotKind::Null`, `SlotKind::Series`, `SlotKind::Note`,
+`SlotKind::Timeline`, `SlotKind::TimeIndex`, `SlotKind::Mixed`.
 
 ## Returns
 

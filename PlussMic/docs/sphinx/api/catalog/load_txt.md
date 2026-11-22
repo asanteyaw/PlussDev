@@ -21,11 +21,13 @@ per column, with per-column dtype inference.
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The text file to read.
+
+The text file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying CSV-style reader
-    options.
+
+A generic configuration scribble, translated into the underlying CSV-style reader
+options.
 
 ## Returns
 

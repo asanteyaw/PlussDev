@@ -26,9 +26,10 @@ before landing at the requested dtype, following the same rules described on
 ## Parameters
 
 **dtype** (`pluss::codem::ScalarType`)
-    The target scalar dtype — for example `pluss::codem::ScalarType::Bool`,
-    `Int64`, or `Float64`. Choose the smallest dtype that still supports whatever
-    downstream operation you plan to run.
+
+The target scalar dtype — for example `pluss::codem::ScalarType::Bool`,
+`Int64`, or `Float64`. Choose the smallest dtype that still supports whatever
+downstream operation you plan to run.
 
 ## Returns
 

@@ -99,12 +99,14 @@ windowed pulls yet.
 ## Parameters
 
 **root** (`std::string_view`)
-    The table whose row grain is preserved. Must already exist in the workspace.
+
+The table whose row grain is preserved. Must already exist in the workspace.
 
 **fields** (`std::initializer_list<std::string_view>`)
-    One or more field expressions, parsed as described above. Each parsed field's output
-    alias must be unique — two expressions that would collide on the same alias throw. At
-    least one field is required.
+
+One or more field expressions, parsed as described above. Each parsed field's output
+alias must be unique — two expressions that would collide on the same alias throw. At
+least one field is required.
 
 ## Returns
 

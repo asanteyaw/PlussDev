@@ -32,15 +32,18 @@ constant-width visual guide, not a rigorous per-lag hypothesis test bound.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
-    fixed to `[-1.0, 1.0]`.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
+fixed to `[-1.0, 1.0]`.
 
 **values** (series-convertible)
-    The sequence to autocorrelate. Must contain at least three points, or `acfplot`
-    throws `pluss::Error("flash::acfplot requires at least three points")`.
+
+The sequence to autocorrelate. Must contain at least three points, or `acfplot`
+throws `pluss::Error("flash::acfplot requires at least three points")`.
 
 **options** (`const AcfPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `AcfPlotOptions` fields
 

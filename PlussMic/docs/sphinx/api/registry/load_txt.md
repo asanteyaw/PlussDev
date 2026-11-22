@@ -22,12 +22,14 @@ inference.
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The text file to read.
+
+The text file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying CSV-style reader
-    options — see [`load_csv()`](load_csv.md)'s important callout for the recognized
-    `"ncases"` row-limit key.
+
+A generic configuration scribble, translated into the underlying CSV-style reader
+options — see [`load_csv()`](load_csv.md)'s important callout for the recognized
+`"ncases"` row-limit key.
 
 ## Returns
 

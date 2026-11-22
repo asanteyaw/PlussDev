@@ -23,11 +23,13 @@ not here.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out.
+
+The figure to lay out.
 
 **gx**, **gy** (`double`, default `14.0` each)
-    The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`
-    — the same tighter default `PairGrid` uses, not `FacetGrid`'s wider `18.0`.
+
+The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`
+— the same tighter default `PairGrid` uses, not `FacetGrid`'s wider `18.0`.
 
 ## Returns
 

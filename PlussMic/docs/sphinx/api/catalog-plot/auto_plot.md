@@ -35,7 +35,8 @@ errors as [`line()`](line.md#selecting-keys); with none set, every plottable key
 ## Parameters
 
 **options** (`const CatalogAutoPlotOptions&`, optional)
-    Its single field `keys` (`KeySelection`, default: no knob set) selects the keys to consider.
+
+Its single field `keys` (`KeySelection`, default: no knob set) selects the keys to consider.
 
 ## Returns
 

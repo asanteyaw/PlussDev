@@ -33,33 +33,38 @@ Two independent overloads sharing the `set_style` name, plus an exact-alias pair
 ## Parameters
 
 **pane** (`Pane&`)
-    The pane to style.
+
+The pane to style.
 
 **style** (`GridStyle`, default `Major`, first overload)
-    See [`Pane::grid`](../pane/grid.md) for `GridStyle`'s three values.
+
+See [`Pane::grid`](../pane/grid.md) for `GridStyle`'s three values.
 
 **style** (`FlashStyle`, second overload — no default; must be given explicitly)
-    See the field-by-field breakdown below.
+
+See the field-by-field breakdown below.
 
 ## `FlashStyle` values
 
 **Darkgrid**, **Lightgrid**, **Sandgrid** — the three grid-family styles
-    All three enable `axes_visible(true)`, `grid(GridStyle::Major)`, and major grid
-    lines on all three axes (`x_major_grid`/`y_major_grid`/`z_major_grid`, all `true`).
-    They differ only in foreground color and internal theme name:
-    - `Darkgrid`: foreground `rgb(34,34,34)`, theme name `flash_style_darkgrid`.
-    - `Lightgrid` (the default `FlashThemeOptions::style`): foreground
-      `rgb(34,34,34)`, theme name `flash_style_lightgrid`.
-    - `Sandgrid`: foreground `rgb(56,52,40)` (a warm near-black), theme name
-      `flash_style_sandgrid`.
+
+All three enable `axes_visible(true)`, `grid(GridStyle::Major)`, and major grid
+lines on all three axes (`x_major_grid`/`y_major_grid`/`z_major_grid`, all `true`).
+They differ only in foreground color and internal theme name:
+- `Darkgrid`: foreground `rgb(34,34,34)`, theme name `flash_style_darkgrid`.
+- `Lightgrid` (the default `FlashThemeOptions::style`): foreground
+  `rgb(34,34,34)`, theme name `flash_style_lightgrid`.
+- `Sandgrid`: foreground `rgb(56,52,40)` (a warm near-black), theme name
+  `flash_style_sandgrid`.
 
 **Dark**, **Light**, **Sand** — the three gridless styles
-    All three enable `axes_visible(true)` but `grid(GridStyle::None)`, and disable both
-    major and minor grid lines on all three axes. They differ only in foreground color
-    and internal theme name:
-    - `Dark`: foreground `rgb(34,34,34)`, theme name `flash_style_dark`.
-    - `Light`: foreground `rgb(26,26,26)`, theme name `flash_style_light`.
-    - `Sand`: foreground `rgb(56,52,40)`, theme name `flash_style_sand`.
+
+All three enable `axes_visible(true)` but `grid(GridStyle::None)`, and disable both
+major and minor grid lines on all three axes. They differ only in foreground color
+and internal theme name:
+- `Dark`: foreground `rgb(34,34,34)`, theme name `flash_style_dark`.
+- `Light`: foreground `rgb(26,26,26)`, theme name `flash_style_light`.
+- `Sand`: foreground `rgb(56,52,40)`, theme name `flash_style_sand`.
 
 ```{important} Background is always neutral white; only foreground and grid visibility change
 Every one of the six FlashStyle values sets the pane's background to plain white

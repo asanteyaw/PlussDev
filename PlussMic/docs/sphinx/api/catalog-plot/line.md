@@ -283,19 +283,22 @@ Catalog::plot: a Catalog selects keys, not features. Use all_keys, include_keys 
 ## Parameters
 
 **y_key** (`std::string_view`)
-    A single Series/Timeline/TimeIndex key to draw as one line trace.
+
+A single Series/Timeline/TimeIndex key to draw as one line trace.
 
 **y_keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
-    Several keys, each drawn as its own line trace on the same axes. A legend is shown
-    automatically whenever more than one y-key is requested (and suppressed for a single
-    key). An **empty** range (the default) selects every Series/Timeline/TimeIndex key in
-    the catalog, in catalog order — Note keys are silently excluded from this default
-    selection, not an error. If the catalog has no plottable keys at all, this throws
-    `"Catalog::plot().line: no plottable streams found"`.
+
+Several keys, each drawn as its own line trace on the same axes. A legend is shown
+automatically whenever more than one y-key is requested (and suppressed for a single
+key). An **empty** range (the default) selects every Series/Timeline/TimeIndex key in
+the catalog, in catalog order — Note keys are silently excluded from this default
+selection, not an error. If the catalog has no plottable keys at all, this throws
+`"Catalog::plot().line: no plottable streams found"`.
 
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    The key to use as the shared x-axis. See "Choosing the x-axis" above.
+
+The key to use as the shared x-axis. See "Choosing the x-axis" above.
 
 **options** (`CatalogLinePlotOptions`)
 

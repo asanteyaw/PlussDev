@@ -20,14 +20,17 @@ unchanged.
 ## Parameters
 
 **width** (`std::int64_t`)
-    The target minimum character width.
+
+The target minimum character width.
 
 **align** (`pluss::table::TextAlign`, default `Left`)
-    Where the original text lands within the padded width: `Left` (padding
-    added on the right), `Right` (padding on the left), or `Center`.
+
+Where the original text lands within the padded width: `Left` (padding
+added on the right), `Right` (padding on the left), or `Center`.
 
 **fill** (`char`, default `' '`)
-    The character used to pad.
+
+The character used to pad.
 
 ## Returns
 

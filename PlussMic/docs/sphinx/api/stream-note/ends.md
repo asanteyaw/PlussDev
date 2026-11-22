@@ -25,7 +25,8 @@ explanation and the exact throw message.
 ## Parameters
 
 **suffix** (`std::string_view`)
-    The literal suffix to test for.
+
+The literal suffix to test for.
 
 ## Returns
 

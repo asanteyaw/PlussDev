@@ -28,9 +28,10 @@ a scoping device. The reducer calls made through the returned
 ## Parameters
 
 **table** (`std::string_view`)
-    The related table every reducer call through the returned `NexusPullAgg`
-    will be scoped to. Must be non-empty — an empty table name throws
-    immediately, before any reducer is called.
+
+The related table every reducer call through the returned `NexusPullAgg`
+will be scoped to. Must be non-empty — an empty table name throws
+immediately, before any reducer is called.
 
 ## Returns
 

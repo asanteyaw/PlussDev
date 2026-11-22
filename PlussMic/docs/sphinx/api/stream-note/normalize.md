@@ -22,8 +22,9 @@ first makes such text comparable and matchable consistently.
 ## Parameters
 
 **form** (`pluss::table::UnicodeForm`, defaults to `NFC`)
-    Which Unicode normalization form to apply — `NFC` (canonical composition,
-    the default) or the library's other supported forms.
+
+Which Unicode normalization form to apply — `NFC` (canonical composition,
+the default) or the library's other supported forms.
 
 ## Returns
 

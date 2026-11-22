@@ -34,12 +34,14 @@ function will actively strip any existing grid rather than leaving it untouched.
 ## Parameters
 
 **pane** (`Pane&`)
-    The pane to adjust.
+
+The pane to adjust.
 
 **enable** (`bool`, default `true`)
-    On a grid-family-styled pane: `true` restricts to horizontal-only lines, `false`
-    restores the full major grid (`x`/`y`/`z` all on). On a non-grid-family-styled
-    pane: ignored — see the important callout above.
+
+On a grid-family-styled pane: `true` restricts to horizontal-only lines, `false`
+restores the full major grid (`x`/`y`/`z` all on). On a non-grid-family-styled
+pane: ignored — see the important callout above.
 
 ## Returns
 

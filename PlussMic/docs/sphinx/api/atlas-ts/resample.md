@@ -32,12 +32,14 @@ aggregate.
 ## Parameters
 
 **freq** (`std::string_view`)
-    The bucket frequency — fixed units (`S`/`min`/`H`/`D`, optionally prefixed with
-    a multiplier), calendar-aware `W`/`M`/`Y` buckets.
+
+The bucket frequency — fixed units (`S`/`min`/`H`/`D`, optionally prefixed with
+a multiplier), calendar-aware `W`/`M`/`Y` buckets.
 
 **step** (`std::int64_t`, default `1`)
-    A frequency multiplier — for example `step = 6` with `freq = "H"` produces
-    6-hour buckets.
+
+A frequency multiplier — for example `step = 6` with `freq = "H"` produces
+6-hour buckets.
 
 ## Returns
 

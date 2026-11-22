@@ -21,10 +21,12 @@ key across the objects, with per-column dtype inference — the same underlying 
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The JSON file to read. Expected shape: a top-level array of flat (non-nested) objects.
+
+The JSON file to read. Expected shape: a top-level array of flat (non-nested) objects.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying reader options.
+
+A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 

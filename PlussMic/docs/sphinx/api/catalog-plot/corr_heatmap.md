@@ -39,10 +39,11 @@ cell's correlation is computed over the exact same subset of rows. See Example 3
 
 **keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
-    Same resolution as [`line()`](line.md): an empty range selects every
-    plottable key. At least **two** resolved keys are required —
-    `"Catalog::plot().corr_heatmap: need at least two plottable streams"` if fewer. See
-    Example 4.
+
+Same resolution as [`line()`](line.md): an empty range selects every
+plottable key. At least **two** resolved keys are required —
+`"Catalog::plot().corr_heatmap: need at least two plottable streams"` if fewer. See
+Example 4.
 
 **options** (`CatalogCorrHeatmapPlotOptions`)
 

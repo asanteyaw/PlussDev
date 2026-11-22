@@ -27,13 +27,16 @@ The range of the colours is the data's, or the pane's [`color_limits`](color_lim
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The coordinates of the columns and the rows, or full matrices.
+
+The coordinates of the columns and the rows, or full matrices.
 
 **z** (`Series`-convertible, rank 2)
-    The field.
+
+The field.
 
 **c** (`Series`-convertible, optional)
-    The values that colour the surface, with as many elements as `z`.
+
+The values that colour the surface, with as many elements as `z`.
 
 ## Returns
 

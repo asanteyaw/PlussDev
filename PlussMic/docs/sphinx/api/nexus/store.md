@@ -33,11 +33,13 @@ retrievable name.
 ## Parameters
 
 **name** (`std::string_view`)
-    The view name. For the saving overloads: must be non-empty.
+
+The view name. For the saving overloads: must be non-empty.
 
 **plan** (`const JoinPlan&`, saving overloads)
-    The plan to save. `plan.root_table` must be non-empty and must exist in the workspace;
-    each step's tables must exist and chain correctly (see above).
+
+The plan to save. `plan.root_table` must be non-empty and must exist in the workspace;
+each step's tables must exist and chain correctly (see above).
 
 ## Returns
 

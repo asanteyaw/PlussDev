@@ -27,9 +27,10 @@ or auto-padding; every catalog in the stack gets exactly one label, in order.
 ## Parameters
 
 **labels** (`const Stream&`)
-    The new depth labels, one entry per catalog. Any payload kind is accepted — `Note`
-    (the common case, e.g. quarter names) works as well as `Series`, `Timeline`, or
-    `TimeIndex`.
+
+The new depth labels, one entry per catalog. Any payload kind is accepted — `Note`
+(the common case, e.g. quarter names) works as well as `Series`, `Timeline`, or
+`TimeIndex`.
 
 ## Returns
 

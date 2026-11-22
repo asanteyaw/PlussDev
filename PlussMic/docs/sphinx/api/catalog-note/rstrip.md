@@ -29,7 +29,8 @@ explanation and the exact throw message.
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from the right edge only.
+
+The set of characters to strip from the right edge only.
 
 ## Returns
 

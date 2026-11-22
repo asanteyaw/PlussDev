@@ -21,7 +21,8 @@ The dock takes room only when it draws something. `KeyDock::East` and `KeyDock::
 ## Parameters
 
 **dock** (`KeyDock`)
-    `KeyDock::None` (the default) for no docked legend, `KeyDock::East` for the right edge, `KeyDock::South` for the bottom edge. See [`KeyDock`](../types/KeyDock.md).
+
+`KeyDock::None` (the default) for no docked legend, `KeyDock::East` for the right edge, `KeyDock::South` for the bottom edge. See [`KeyDock`](../types/KeyDock.md).
 
 ## Returns
 

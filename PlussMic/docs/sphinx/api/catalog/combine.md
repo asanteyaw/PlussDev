@@ -15,19 +15,24 @@ Use this when you need to merge compatible objects or extend the current one wit
 ## Parameters
 
 **lhs**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **rhs**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **op**
-    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
+
+Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 **out_key**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **policy**
-    Policy object that changes the structural behavior of this overload.
+
+Policy object that changes the structural behavior of this overload.
 
 ## Returns
 

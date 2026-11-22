@@ -21,10 +21,12 @@ Calling `y_caption` again with the same group replaces the text; there is one ca
 ## Parameters
 
 **group** (`std::string`)
-    The alignment-group name. Panes join it with `align_y`, `align_xy` or `align_xyz` using the same string; the match is exact and case-sensitive.
+
+The alignment-group name. Panes join it with `align_y`, `align_xy` or `align_xyz` using the same string; the match is exact and case-sensitive.
 
 **text** (`std::string`)
-    The caption. Math text between dollar signs is typeset. An empty string draws nothing.
+
+The caption. Math text between dollar signs is typeset. An empty string draws nothing.
 
 ## Returns
 

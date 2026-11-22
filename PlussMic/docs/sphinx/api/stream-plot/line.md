@@ -45,19 +45,21 @@ label, otherwise a plain case index. See Examples 1 and 2.
 ## Parameters
 
 **x** (`const Stream&`, optional)
-    A companion stream used as the x-axis. Must be the same size as the bound stream — a
-    mismatched size throws `"Shelf::plot: shelf size mismatch"` (the message still refers
-    to `Shelf`, since that's where the size check actually runs after both streams
-    convert). Omitted means the x-axis falls back to the bound stream's own label, or a
-    plain case index if it has none — see the important callout above.
+
+A companion stream used as the x-axis. Must be the same size as the bound stream — a
+mismatched size throws `"Shelf::plot: shelf size mismatch"` (the message still refers
+to `Shelf`, since that's where the size check actually runs after both streams
+convert). Omitted means the x-axis falls back to the bound stream's own label, or a
+plain case index if it has none — see the important callout above.
 
 **options** (`LinePlotOptions`)
-    The identical struct documented on
-    [`CatalogPlotAccessor::line`](../catalog-plot/line.md) (`alpha`, `line_width`,
-    `y_limit_method`, `align`) — see that page for each field's meaning. `align` is
-    accepted for shape-compatibility but has no observable effect here: `Stream::line()`
-    only ever wraps at most two operands (the bound stream and `x`) into a `Shelf`-level
-    call, which has no multi-key alignment step to configure.
+
+The identical struct documented on
+[`CatalogPlotAccessor::line`](../catalog-plot/line.md) (`alpha`, `line_width`,
+`y_limit_method`, `align`) — see that page for each field's meaning. `align` is
+accepted for shape-compatibility but has no observable effect here: `Stream::line()`
+only ever wraps at most two operands (the bound stream and `x`) into a `Shelf`-level
+call, which has no multi-key alignment step to configure.
 
 ## Returns
 

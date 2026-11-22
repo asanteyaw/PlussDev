@@ -28,9 +28,10 @@ the result atlas throws `"Atlas: all frames must have identical row count (stric
 ## Parameters
 
 **fn** (`const std::function<DataFrame(const DataFrame&)>&`)
-    A callback receiving one frame and returning its replacement. Must not be empty, and
-    must return frames with a uniform row count across the whole atlas — see the important
-    callout above.
+
+A callback receiving one frame and returning its replacement. Must not be empty, and
+must return frames with a uniform row count across the whole atlas — see the important
+callout above.
 
 ## Returns
 

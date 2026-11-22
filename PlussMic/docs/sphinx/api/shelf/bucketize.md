@@ -32,22 +32,26 @@ edge[1]]` for that one interval only.
 ## Parameters
 
 **bins** (`pluss::RangeView<double>`)
-    Strictly increasing interval edges — `N + 1` edges define `N` buckets. Must
-    contain at least two edges, none of them `NaN`, or it throws.
+
+Strictly increasing interval edges — `N + 1` edges define `N` buckets. Must
+contain at least two edges, none of them `NaN`, or it throws.
 
 **labels** (`pluss::RangeView<std::int64_t>`, optional)
-    Explicit bucket labels, one per bucket. Left empty (the default) to use
-    `0, 1, 2, ...` as labels. If given, its length must equal `bins.size() - 1`,
-    or it throws.
+
+Explicit bucket labels, one per bucket. Left empty (the default) to use
+`0, 1, 2, ...` as labels. If given, its length must equal `bins.size() - 1`,
+or it throws.
 
 **right** (`bool`, default `true`)
-    `true`: each interval is right-closed, left-open (`(a, b]`). `false`:
-    left-closed, right-open (`[a, b)`).
+
+`true`: each interval is right-closed, left-open (`(a, b]`). `false`:
+left-closed, right-open (`[a, b)`).
 
 **include_lowest** (`bool`, default `true`)
-    When `right = true`, additionally admits the exact lower bound of the
-    *first* interval only. Has no additional effect when `right = false`,
-    since the first interval is already left-closed in that case.
+
+When `right = true`, additionally admits the exact lower bound of the
+*first* interval only. Has no additional effect when `right = false`,
+since the first interval is already left-closed in that case.
 
 ## Returns
 

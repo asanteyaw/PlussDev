@@ -31,14 +31,17 @@ specifically) a duplicate source key within the mapping itself. See Example 3.
 ## Parameters
 
 **from** (`std::string_view`)
-    The existing stream name (single-pair overload).
+
+The existing stream name (single-pair overload).
 
 **to** (`std::string_view`)
-    The new name for that stream (single-pair overload).
+
+The new name for that stream (single-pair overload).
 
 **mapping** (`std::initializer_list<std::pair<std::string_view, std::string_view>>` or
 `const std::unordered_map<std::string, std::string>&`)
-    Several `old_name -> new_name` pairs, applied in one call.
+
+Several `old_name -> new_name` pairs, applied in one call.
 
 ## Returns
 

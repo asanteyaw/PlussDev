@@ -19,8 +19,9 @@ Returns a new slot keeping only the values for which `predicate` returns
 ## Parameters
 
 **predicate** (`const std::function<bool(const Slot::Value&)>&`)
-    Called once per value; return `true` to keep it, `false` to drop it.
-    Cannot be an empty `std::function`.
+
+Called once per value; return `true` to keep it, `false` to drop it.
+Cannot be an empty `std::function`.
 
 ## Returns
 

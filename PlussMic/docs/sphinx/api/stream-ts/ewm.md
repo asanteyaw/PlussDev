@@ -36,25 +36,31 @@ message pattern.
 ## Parameters
 
 **alpha** (`double`)
-    The smoothing factor, in `(0, 1]`.
+
+The smoothing factor, in `(0, 1]`.
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    `Mean`, `Var`, or `Std`.
+
+`Mean`, `Var`, or `Std`.
 
 **adjusted** (`bool`, default `true`)
-    `true`: normalized form, supports missing entries. `false`: classic
-    recursive form, requires a non-nullable source stream.
+
+`true`: normalized form, supports missing entries. `false`: classic
+recursive form, requires a non-nullable source stream.
 
 **bias_corrected** (`bool`, default `true`)
-    For `Var`/`Std` only: whether to apply a bias correction.
+
+For `Var`/`Std` only: whether to apply a bias correction.
 
 **min_count** (`std::int64_t`, default `1`)
-    The smallest number of real observations seen so far still considered
-    valid.
+
+The smallest number of real observations seen so far still considered
+valid.
 
 **ignore_nulls** (`bool`, default `false`)
-    Only relevant with `adjusted = true`: whether a gap consumes a decay
-    step (`false`) or is skipped entirely for decay purposes (`true`).
+
+Only relevant with `adjusted = true`: whether a gap consumes a decay
+step (`false`) or is skipped entirely for decay purposes (`true`).
 
 ## Returns
 

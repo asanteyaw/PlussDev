@@ -20,7 +20,8 @@ new `Atlas`, and does not touch the bound atlas's frames.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The other set of labels to intersect with the atlas's current depth labels.
+
+The other set of labels to intersect with the atlas's current depth labels.
 
 ## Returns
 

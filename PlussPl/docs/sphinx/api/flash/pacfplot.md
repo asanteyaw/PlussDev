@@ -29,18 +29,21 @@ approximation — see [`flash::acfplot`](acfplot.md)'s important callout), same
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
-    fixed to `[-1.0, 1.0]`.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
+fixed to `[-1.0, 1.0]`.
 
 **values** (series-convertible)
-    The sequence to compute partial autocorrelations for. Must contain at least four
-    points, or `pacfplot` throws `pluss::Error("flash::pacfplot requires at
-    least four points")` — one more than [`flash::acfplot`](acfplot.md)'s three-point
-    minimum, since the Durbin-Levinson recursion needs slightly more data to be
-    meaningful.
+
+The sequence to compute partial autocorrelations for. Must contain at least four
+points, or `pacfplot` throws `pluss::Error("flash::pacfplot requires at
+least four points")` — one more than [`flash::acfplot`](acfplot.md)'s three-point
+minimum, since the Durbin-Levinson recursion needs slightly more data to be
+meaningful.
 
 **options** (`const PacfPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `PacfPlotOptions` fields
 

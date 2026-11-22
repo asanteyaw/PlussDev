@@ -21,10 +21,12 @@ With a [`headline`](headline.md) the first row's title sits below the headline, 
 ## Parameters
 
 **row** (`std::int64_t`)
-    The row, counted from 0 at the top. Must not be negative.
+
+The row, counted from 0 at the top. Must not be negative.
 
 **text** (`std::string`)
-    The title. Empty draws nothing.
+
+The title. Empty draws nothing.
 
 ## Returns
 

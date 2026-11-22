@@ -19,8 +19,9 @@ slot is left unchanged.
 ## Parameters
 
 **value** (`const Slot::Value&`)
-    The value to append — any of `std::monostate`, `pluss::Series`,
-    `pluss::Note`, `pluss::Timeline`, or `pluss::TimeIndex`.
+
+The value to append — any of `std::monostate`, `pluss::Series`,
+`pluss::Note`, `pluss::Timeline`, or `pluss::TimeIndex`.
 
 ## Returns
 

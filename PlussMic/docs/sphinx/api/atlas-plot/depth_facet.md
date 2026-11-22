@@ -30,14 +30,16 @@ not compile.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    The numeric features to facet, one pane each. An empty range (the default) selects **every**
-    numeric feature present in the first frame.
+
+The numeric features to facet, one pane each. An empty range (the default) selects **every**
+numeric feature present in the first frame.
 
 **options** (`const AtlasDepthFacetPlotOptions&`)
-    `statistic` (`AtlasDepthStatistic`, default `Mean`): the per-frame reduction applied to every
-    feature. `show_grid` (default `true`). `rows`/`cols` (facet grid shape, `0` auto-sizes).
-    `grid_gap_x`/`grid_gap_y`. `max_features` (`std::int64_t`, default `0`, `0` means no cap) —
-    same truncation semantics as [`depth_compare`](depth_compare.md)'s `max_features`.
+
+`statistic` (`AtlasDepthStatistic`, default `Mean`): the per-frame reduction applied to every
+feature. `show_grid` (default `true`). `rows`/`cols` (facet grid shape, `0` auto-sizes).
+`grid_gap_x`/`grid_gap_y`. `max_features` (`std::int64_t`, default `0`, `0` means no cap) —
+same truncation semantics as [`depth_compare`](depth_compare.md)'s `max_features`.
 
 ## Returns
 

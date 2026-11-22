@@ -42,30 +42,36 @@ numeric-group), each available both with and without a trailing `const ViolinOpt
 `ViolinOptions` (default-constructible; every field has a default):
 
 **width** (`double`, default `0.8`)
-    The violin's maximum half-width, in x-axis units, at its widest point.
+
+The violin's maximum half-width, in x-axis units, at its widest point.
 
 **bw_adjust** (`double`, default `1.0`)
-    A multiplier on the KDE bandwidth — larger values produce a smoother/wider density
-    estimate, smaller values track the raw data more tightly.
+
+A multiplier on the KDE bandwidth — larger values produce a smoother/wider density
+estimate, smaller values track the raw data more tightly.
 
 **cut** (`double`, default `2.0`)
-    How far past the data's min/max the density curve's evaluation grid extends, in
-    bandwidth units.
+
+How far past the data's min/max the density curve's evaluation grid extends, in
+bandwidth units.
 
 **scale** (`ViolinScale`, default `ViolinScale::Area`)
-    How multiple violins are scaled relative to one another — `Area` (equal area under
-    each curve), `Count` (area proportional to each group's observation count), or `Width`
-    (equal peak width for every group regardless of density or count).
+
+How multiple violins are scaled relative to one another — `Area` (equal area under
+each curve), `Count` (area proportional to each group's observation count), or `Width`
+(equal peak width for every group regardless of density or count).
 
 **inner** (`ViolinInner`, default `ViolinInner::Box`)
-    The inner summary overlay drawn inside the violin body — `None`, `Box` (a thin
-    box-and-whisker), `Quartile` (three reference lines at Q1/median/Q3), `Stick` (one line
-    per raw observation), or `Point` (one dot per raw observation).
+
+The inner summary overlay drawn inside the violin body — `None`, `Box` (a thin
+box-and-whisker), `Quartile` (three reference lines at Q1/median/Q3), `Stick` (one line
+per raw observation), or `Point` (one dot per raw observation).
 
 **side** (`ViolinSide`, default `ViolinSide::Full`)
-    Which half of the mirrored density curve to draw — `Full` (both halves, the classic
-    symmetric violin shape), `Left`, or `Right` (a single half only — useful for
-    side-by-side split-violin comparisons between two groups sharing an x position).
+
+Which half of the mirrored density curve to draw — `Full` (both halves, the classic
+symmetric violin shape), `Left`, or `Right` (a single half only — useful for
+side-by-side split-violin comparisons between two groups sharing an x position).
 
 ```{important} Same Note-vs-numeric-group category-labeling split as boxplot()/stripplot()
 Only the Note overloads call Pane::x_categories() to set real text tick
@@ -76,23 +82,28 @@ flash::boxplot's page for an example of the same split.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::violin`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::violin`, which requires it.
 
 **values** (series-convertible, or `const Series&` for the `Note` overloads)
-    The observation values to summarize.
+
+The observation values to summarize.
 
 **categories** (`const Note&`, third/fourth overloads only)
-    The categorical grouping variable. Distinct labels become x-axis category tick text,
-    in first-seen order.
+
+The categorical grouping variable. Distinct labels become x-axis category tick text,
+in first-seen order.
 
 **group** (series-convertible, fifth/sixth overloads only)
-    A numeric grouping variable, paired with `values` by index. No category-label setup is
-    performed.
+
+A numeric grouping variable, paired with `values` by index. No category-label setup is
+performed.
 
 **options** (`const ViolinOptions&`, optional on every grouping shape)
-    Styling and statistical controls — see the field table above. Omitting it uses every
-    default (`width=0.8`, `bw_adjust=1.0`, `cut=2.0`, `scale=Area`, `inner=Box`,
-    `side=Full`).
+
+Styling and statistical controls — see the field table above. Omitting it uses every
+default (`width=0.8`, `bw_adjust=1.0`, `cut=2.0`, `scale=Area`, `inner=Box`,
+`side=Full`).
 
 ## Returns
 

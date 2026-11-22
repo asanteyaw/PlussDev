@@ -38,13 +38,15 @@ below uses `.to_dbl()` for a clean number instead of streaming the
 ## Parameters
 
 **unbiased** (`bool`, default `true`)
-    `true`: sample variance (`n - 1` divisor). `false`: population variance
-    (`n` divisor).
+
+`true`: sample variance (`n - 1` divisor). `false`: population variance
+(`n` divisor).
 
 **options** (`StatisticOptions`)
-    `ddof` (default `1`): the divisor is `n - ddof`. `min_count` (default
-    `1`): the smallest observed count still considered valid; below it, the
-    result is `NULL` rather than a thrown error.
+
+`ddof` (default `1`): the divisor is `n - ddof`. `min_count` (default
+`1`): the smallest observed count still considered valid; below it, the
+result is `NULL` rather than a thrown error.
 
 ## Returns
 

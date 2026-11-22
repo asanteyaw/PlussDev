@@ -28,9 +28,10 @@ the `ShelfValue` directly.
 ## Parameters
 
 **skipnull** (`bool`, default `true`)
-    Must stay `true` when the shelf has a validity mask — missing entries are
-    always excluded from the reduction when a mask is present. `skipnull =
-    false` together with a validity mask throws.
+
+Must stay `true` when the shelf has a validity mask — missing entries are
+always excluded from the reduction when a mask is present. `skipnull =
+false` together with a validity mask throws.
 
 ## Returns
 

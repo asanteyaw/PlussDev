@@ -18,7 +18,8 @@ Appends `value` to the slot in place and returns `*this` for chaining.
 ## Parameters
 
 **value** (`const Slot::Value&`)
-    The value to append.
+
+The value to append.
 
 ## Returns
 

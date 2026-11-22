@@ -27,19 +27,24 @@ page's own important callout.
 ## Parameters
 
 **delimiter** (`std::string_view`, first overload)
-    The literal text to split on.
+
+The literal text to split on.
 
 **limit** (`std::int64_t`, first overload, default `-1`)
-    Maximum number of splits; `-1` means unlimited.
+
+Maximum number of splits; `-1` means unlimited.
 
 **prefix** (`std::string`, first overload, default `"part"`)
-    The prefix used to name each output column (`"part_0"`, `"part_1"`, ...).
+
+The prefix used to name each output column (`"part_0"`, `"part_1"`, ...).
 
 **pattern** (`std::string_view`, second overload)
-    A regex pattern to split on, instead of a literal delimiter.
+
+A regex pattern to split on, instead of a literal delimiter.
 
 **options** (`const pluss::table::TextOptions&`, second overload)
-    `options.case_sensitive` (default `true`): ignore case when `false`.
+
+`options.case_sensitive` (default `true`): ignore case when `false`.
 
 ## Returns
 

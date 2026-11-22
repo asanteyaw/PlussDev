@@ -38,10 +38,12 @@ one — and the keyed overload only checks the one field you name.
 ## Parameters
 
 **indices** (`std::span<const std::int64_t>` / `const std::vector<std::int64_t>&`)
-    The positions to select. May repeat or appear out of order.
+
+The positions to select. May repeat or appear out of order.
 
 **key** (`std::string_view`, keyed overloads only)
-    The single field to scope the selection to. Throws if it doesn't exist.
+
+The single field to scope the selection to. Throws if it doesn't exist.
 
 ## Returns
 

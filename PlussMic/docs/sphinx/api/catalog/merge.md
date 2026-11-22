@@ -27,14 +27,17 @@ happens. See Example 2.
 ## Parameters
 
 **other** (`const Catalog&`)
-    The right-hand catalog to join against. Must be defined.
+
+The right-hand catalog to join against. Must be defined.
 
 **on** (`std::string_view`)
-    The shared key stream name. Must be non-empty, and must exist in **both** catalogs.
+
+The shared key stream name. Must be non-empty, and must exist in **both** catalogs.
 
 **how** (`std::string_view`, default `"inner"`)
-    The join mode. Only `"inner"` is currently supported — see the important callout
-    above.
+
+The join mode. Only `"inner"` is currently supported — see the important callout
+above.
 
 ## Returns
 

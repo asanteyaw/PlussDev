@@ -76,28 +76,34 @@ raw values on its own axis instead, which renders differently from the default.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md) pane.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md) pane.
 
 **columns** (`pluss::RangeView<pluss::Series>`)
-    One entry per feature. Must contain at least two features, or `parallelplot` throws
-    `pluss::Error("flash::parallelplot requires at least two columns")`, and
-    every column must be the same length (`"flash::parallelplot requires equal-length
-    columns"` on mismatch).
+
+One entry per feature. Must contain at least two features, or `parallelplot` throws
+`pluss::Error("flash::parallelplot requires at least two columns")`, and
+every column must be the same length (`"flash::parallelplot requires equal-length
+columns"` on mismatch).
 
 **group_labels** (`const Note&`, group-labels overload only)
-    One label per row, used to color and legend each row's line by group instead of a
-    uniform color. Its length must exactly match the row count, or `parallelplot` throws
-    `pluss::Error("flash::parallelplot: group label length must match rows")`.
+
+One label per row, used to color and legend each row's line by group instead of a
+uniform color. Its length must exactly match the row count, or `parallelplot` throws
+`pluss::Error("flash::parallelplot: group label length must match rows")`.
 
 **data** (`const Dataset&`, Dataset overload only)
-    See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
+
+See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
 
 **matrix**, **frame_options**, **feature_names**, **feature_axis** (matrix overloads)
-    Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads —
-    see that page's Parameters section for the full description.
+
+Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads —
+see that page's Parameters section for the full description.
 
 **options** (`const ParallelCoordinatesOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

@@ -32,9 +32,10 @@ already text.
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from both edges. Every leading or trailing
-    character that appears anywhere in `chars` is removed, stopping at the first
-    character on each side that doesn't.
+
+The set of characters to strip from both edges. Every leading or trailing
+character that appears anywhere in `chars` is removed, stopping at the first
+character on each side that doesn't.
 
 ## Returns
 

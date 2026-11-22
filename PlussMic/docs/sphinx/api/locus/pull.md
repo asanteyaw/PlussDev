@@ -30,6 +30,7 @@ named plan assembled across conditionals. `collect()` is the only terminal.
 ## Parameter
 
 **root** (`std::string_view`)
+
 : The exact key of the catalog whose records define the output grain. It is
   validated immediately.
 

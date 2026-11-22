@@ -32,14 +32,17 @@ instead.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::spike`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::spike`, which requires it.
 
 **values** (series-convertible)
-    The raw observation positions.
+
+The raw observation positions.
 
 **height** (`double`, default `0.08`)
-    The tick marks' height, in y-axis units. Clamped to a minimum of `1e-4` — see the
-    important callout above.
+
+The tick marks' height, in y-axis units. Clamped to a minimum of `1e-4` — see the
+important callout above.
 
 ## Returns
 

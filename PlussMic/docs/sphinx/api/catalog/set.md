@@ -30,14 +30,17 @@ unambiguously builds a `NamedStream`) for multi-item calls instead — see Examp
 ## Parameters
 
 **key** (`std::string_view`)
-    The stream name to add or overwrite (single-item overload).
+
+The stream name to add or overwrite (single-item overload).
 
 **value** (`const Stream&`)
-    The stream to store under `key` (single-item overload).
+
+The stream to store under `key` (single-item overload).
 
 **items** (`std::initializer_list<std::pair<std::string_view, Stream>>` or
 `std::initializer_list<NamedStream>`)
-    Several `key -> stream` entries to add or overwrite in one call.
+
+Several `key -> stream` entries to add or overwrite in one call.
 
 ## Returns
 

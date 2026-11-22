@@ -15,13 +15,16 @@ Computes row-wise text similarity between two named text streams.
 ## Parameters
 
 **field1**
-    First named field used by this overload.
+
+First named field used by this overload.
 
 **field2**
-    Second named field used by this overload.
+
+Second named field used by this overload.
 
 **method**
-    Method selector string understood by this overload.
+
+Method selector string understood by this overload.
 
 ## Returns
 

@@ -30,6 +30,7 @@ Reuses the same all-keys-reconciled-together alignment
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`, required)
+
 The three keys forming the path's 3D coordinates, connected in row order after
 alignment.
 

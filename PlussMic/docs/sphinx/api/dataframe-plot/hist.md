@@ -53,8 +53,9 @@ instead. Any `bins` value other than exactly `20` (or `<= 0`, which always falls
 ## Parameters
 
 **bins** (`std::int64_t`, default `20`)
-    Requested bin count — subject to the `resolve_bins()` ambiguity described above. Values
-    `<= 0` always fall back to `options_.default_bins` (clamped to at least `1`).
+
+Requested bin count — subject to the `resolve_bins()` ambiguity described above. Values
+`<= 0` always fall back to `options_.default_bins` (clamped to at least `1`).
 
 **options** (`HistPlotOptions`)
 
@@ -69,14 +70,16 @@ instead. Any `bins` value other than exactly `20` (or `<= 0`, which always falls
 Same `bins` ambiguity applies to `options.bins` as to the plain `bins` argument.
 
 **feature** (`std::string_view`)
-    A single numeric feature to histogram, drawn on one pane.
+
+A single numeric feature to histogram, drawn on one pane.
 
 **features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
-    Several numeric features. If this resolves to exactly one name (including via the
-    empty-list "infer everything" rule, on a frame with only one numeric feature), it's
-    routed through the single-feature path automatically. Otherwise each feature gets its
-    own pane in a mosaic grid. Follows the same empty-list-means-"every numeric feature"
-    rule described on [`box()`](box.md)'s page.
+
+Several numeric features. If this resolves to exactly one name (including via the
+empty-list "infer everything" rule, on a frame with only one numeric feature), it's
+routed through the single-feature path automatically. Otherwise each feature gets its
+own pane in a mosaic grid. Follows the same empty-list-means-"every numeric feature"
+rule described on [`box()`](box.md)'s page.
 
 ## Returns
 

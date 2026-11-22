@@ -25,7 +25,8 @@ specific colormap's data).
 ## Parameters
 
 **name** (`std::string_view`, default `"viridis"`)
-    Case-sensitive. See the dispatch table below.
+
+Case-sensitive. See the dispatch table below.
 
 ## Dispatch table
 

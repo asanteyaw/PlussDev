@@ -30,11 +30,13 @@ mirroring [`flash::animate3`](animate3.md)'s play/pause/speed/PNG-snapshot contr
 
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
-    The 4D point data. Unequal lengths throw `pluss::Error("flash::animate4:
-    x, y, z, w must have identical lengths")`.
+
+The 4D point data. Unequal lengths throw `pluss::Error("flash::animate4:
+x, y, z, w must have identical lengths")`.
 
 **options** (`const HyperAnimationOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `HyperAnimationOptions` fields
 

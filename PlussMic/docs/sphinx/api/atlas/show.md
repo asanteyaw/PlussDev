@@ -30,11 +30,13 @@ explicitly rather than `show(options)`/`show()`.
 ## Parameters
 
 **os** (`std::ostream&`, two-argument overload)
-    The destination stream to write to (e.g. `std::cout`, an `std::ostringstream`). Prefer
-    this overload — see the important callout above.
+
+The destination stream to write to (e.g. `std::cout`, an `std::ostringstream`). Prefer
+this overload — see the important callout above.
 
 **options** (`const display::DisplayOptions&`, optional)
-    Rendering options shared with the rest of the display layer.
+
+Rendering options shared with the rest of the display layer.
 
 ## Returns
 

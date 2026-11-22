@@ -22,7 +22,8 @@ than `n`).
 ## Parameters
 
 **n** (`std::int64_t`)
-    Number of leading rows to keep from each stream.
+
+Number of leading rows to keep from each stream.
 
 ## Returns
 

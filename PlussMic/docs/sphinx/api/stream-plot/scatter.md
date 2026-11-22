@@ -42,17 +42,20 @@ since `Stream` never contributes one. See Example 5.
 ## Parameters
 
 **x** (`const Stream&`, required)
-    The companion stream for the horizontal axis. Must match the bound stream's size, or
-    the call throws `"Shelf::plot: shelf size mismatch"` — see Example 6.
+
+The companion stream for the horizontal axis. Must match the bound stream's size, or
+the call throws `"Shelf::plot: shelf size mismatch"` — see Example 6.
 
 **hue** (`const Stream&`, optional)
-    Optional companion stream splitting points into separate colored/labeled groups. Must
-    be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
+
+Optional companion stream splitting points into separate colored/labeled groups. Must
+be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
 
 **options** (`ScatterPlotOptions`)
-    The identical struct documented on
-    [`CatalogPlotAccessor::scatter`](../catalog-plot/scatter.md) (`alpha`, `line_width`,
-    `fit_line`, `fit_order`, `fit_ci`, `fit_confidence_level`).
+
+The identical struct documented on
+[`CatalogPlotAccessor::scatter`](../catalog-plot/scatter.md) (`alpha`, `line_width`,
+`fit_line`, `fit_order`, `fit_ci`, `fit_confidence_level`).
 
 ## Returns
 

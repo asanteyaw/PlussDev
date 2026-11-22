@@ -25,7 +25,8 @@ own edge-case example.
 ## Parameters
 
 **n** (`std::int64_t`)
-    How many bottom-ranked rows to return. Must be non-negative.
+
+How many bottom-ranked rows to return. Must be non-negative.
 
 ## Returns
 

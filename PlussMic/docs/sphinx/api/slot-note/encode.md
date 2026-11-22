@@ -19,8 +19,9 @@ Encodes each value's text bytes using the named encoding, replacing each
 ## Parameters
 
 **encoding** (`std::string_view`, defaults to `"base64"`)
-    The name of the encoding scheme. `"base64"` and `"hex"` are the two
-    schemes exercised in the examples below.
+
+The name of the encoding scheme. `"base64"` and `"hex"` are the two
+schemes exercised in the examples below.
 
 ## Returns
 

@@ -47,13 +47,16 @@ uses for its own `x_key`/y-key reconciliation. See Example 4.
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`, required)
+
 The three keys forming each point's 3D position.
 
 **size_key** (`std::optional<std::string_view>`, default `std::nullopt`)
+
 Optional numeric key controlling each point's marker size. When omitted,
 `options.default_marker_size` is used uniformly for every point.
 
 **color_key** (`std::optional<std::string_view>`, default `std::nullopt`)
+
 Optional numeric key controlling each point's color, as a continuous color-mapped value
 — **not** a categorical grouping the way `hue_key` is on the 2D `scatter()`.
 

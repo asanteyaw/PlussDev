@@ -35,8 +35,9 @@ the payload kind:
 ## Parameters
 
 **render** (`bool`, default `false`)
-    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
-    only; has no effect on what an explicit `std::cout << ...` prints.
+
+See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+only; has no effect on what an explicit `std::cout << ...` prints.
 
 ## Returns
 

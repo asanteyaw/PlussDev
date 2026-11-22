@@ -22,8 +22,9 @@ the atlas's own depth. The `Atlas` analog of
 ## Parameters
 
 **fn** (`const std::function<DataFrame(const std::vector<DataFrame>&)>&`)
-    A callback receiving every frame in the atlas at once, returning a single `DataFrame`.
-    Must not be empty.
+
+A callback receiving every frame in the atlas at once, returning a single `DataFrame`.
+Must not be empty.
 
 ## Returns
 

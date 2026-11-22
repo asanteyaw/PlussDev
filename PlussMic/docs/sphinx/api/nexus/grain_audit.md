@@ -28,9 +28,10 @@ metadata whose `primary_key` is empty and `candidate_keys` is also empty, throws
 ## Parameters
 
 **table** (`std::string_view`)
-    The table to audit. Must already exist in the workspace and have `TableMeta` declared
-    with at least one non-empty key set (`primary_key` and/or an entry in
-    `candidate_keys`).
+
+The table to audit. Must already exist in the workspace and have `TableMeta` declared
+with at least one non-empty key set (`primary_key` and/or an entry in
+`candidate_keys`).
 
 ## Returns
 

@@ -23,13 +23,15 @@ fill every gap unconditionally.
 ## Parameters
 
 **mode** (`GapFillMode`, default `Forward`)
-    `Forward`, `Backward`, `Zero`, or `Constant` — see
-    [`DataFrameTsAccessor::fill_gaps`](../dataframe-ts/fill_gaps.md) for the full
-    behavior of each.
+
+`Forward`, `Backward`, `Zero`, or `Constant` — see
+[`DataFrameTsAccessor::fill_gaps`](../dataframe-ts/fill_gaps.md) for the full
+behavior of each.
 
 **constant** (`std::optional<double>`, default `std::nullopt`)
-    The fill value for `GapFillMode::Constant`. Required (and only meaningful) when
-    `mode == Constant`.
+
+The fill value for `GapFillMode::Constant`. Required (and only meaningful) when
+`mode == Constant`.
 
 ## Returns
 

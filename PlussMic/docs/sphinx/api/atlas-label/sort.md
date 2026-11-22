@@ -22,11 +22,13 @@ internally. Reordering the labels also reorders the frames themselves, so
 ## Parameters
 
 **ascending** (`bool`, default `true`)
-    Sort direction: `true` for ascending order, `false` for descending.
+
+Sort direction: `true` for ascending order, `false` for descending.
 
 **nulls_last** (`bool`, default `true`)
-    Where null depth labels land: `true` places them at the end regardless of
-    `ascending`, `false` places them at the start.
+
+Where null depth labels land: `true` places them at the end regardless of
+`ascending`, `false` places them at the start.
 
 ## Returns
 

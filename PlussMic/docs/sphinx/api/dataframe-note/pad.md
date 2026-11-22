@@ -56,17 +56,20 @@ the rendered table; the practical zero-padding example (Example 2) uses
 ## Parameters
 
 **width** (`std::int64_t`)
-    The target character width. Must be `>= 0` — `pad(-1)` throws
-    `"Shelf::pad: width must be >= 0"`.
+
+The target character width. Must be `>= 0` — `pad(-1)` throws
+`"Shelf::pad: width must be >= 0"`.
 
 **align** (`TextAlign`, default `TextAlign::Left`)
-    Where the fill characters go: `Left` pads on the right, `Right` pads
-    on the left, `Center` splits the fill (extra character on the right
-    for an odd amount).
+
+Where the fill characters go: `Left` pads on the right, `Right` pads
+on the left, `Center` splits the fill (extra character on the right
+for an odd amount).
 
 **fill** (`char`, default `' '`)
-    The single character used to pad. Note this is a `char`, not a
-    `std::string_view` — multi-byte UTF-8 fill sequences aren't supported.
+
+The single character used to pad. Note this is a `char`, not a
+`std::string_view` — multi-byte UTF-8 fill sequences aren't supported.
 
 ## Returns
 

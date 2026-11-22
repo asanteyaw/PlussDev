@@ -27,17 +27,21 @@ plot. Two overloads:
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to add a new pane to.
+
+The figure to add a new pane to.
 
 **x**, **y** (series-convertible)
-    The raw observation pairs, forwarded to `regplot` unchanged (including its
-    finite-value filtering and minimum-two-points validation).
+
+The raw observation pairs, forwarded to `regplot` unchanged (including its
+finite-value filtering and minimum-two-points validation).
 
 **options** (`const RegPlotOptions&`, second overload only)
-    See [`flash::regplot`](regplot.md)'s field table.
+
+See [`flash::regplot`](regplot.md)'s field table.
 
 **title** (`std::string`, default empty, optional on both overloads)
-    The new pane's title.
+
+The new pane's title.
 
 ## Returns
 

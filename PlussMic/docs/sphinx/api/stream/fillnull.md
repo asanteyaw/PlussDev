@@ -35,8 +35,9 @@ point; here, on a single stream, a mismatch is a caller error worth surfacing.
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
 `const pluss::Duration&`)
-    The fill value. Its C++ type must match the stream's payload kind — see the important
-    callout above.
+
+The fill value. Its C++ type must match the stream's payload kind — see the important
+callout above.
 
 ## Returns
 

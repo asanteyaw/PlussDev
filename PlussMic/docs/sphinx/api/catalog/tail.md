@@ -20,7 +20,8 @@ independently per stream, so it works even on a ragged catalog.
 ## Parameters
 
 **n** (`std::int64_t`)
-    Number of trailing rows to keep from each stream.
+
+Number of trailing rows to keep from each stream.
 
 ## Returns
 

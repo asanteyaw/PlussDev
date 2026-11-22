@@ -42,18 +42,22 @@ x-axis, pass a Note, not a numeric group vector.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::quartet`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::quartet`, which requires it.
 
 **values** (series-convertible, or `const Series&` for the `Note` overload)
-    The observation values to summarize.
+
+The observation values to summarize.
 
 **categories** (`const Note&`, second overload only)
-    The categorical grouping variable. Distinct labels become x-axis category tick text,
-    in first-seen order.
+
+The categorical grouping variable. Distinct labels become x-axis category tick text,
+in first-seen order.
 
 **group** (series-convertible, third overload only)
-    A numeric grouping variable, paired with `values` by index. No category-label setup is
-    performed.
+
+A numeric grouping variable, paired with `values` by index. No category-label setup is
+performed.
 
 ## Returns
 

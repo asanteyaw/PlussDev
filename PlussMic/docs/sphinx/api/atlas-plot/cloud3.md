@@ -35,12 +35,14 @@ not compile.
 ## Parameters
 
 **x_feature**, **y_feature**, **z_feature** (`std::string_view`)
-    The three numeric features forming each point's coordinates. Each must exist in every
-    selected frame.
+
+The three numeric features forming each point's coordinates. Each must exist in every
+selected frame.
 
 **options** (`const Scatter3DPlotOptions&`)
-    `scene` (`Plot3DSceneOptions`), `trace` (`Plot3DTraceOptions`), and `default_marker_size`
-    (`double`, default `12.0`) — the point size applied when no per-point size series is given.
+
+`scene` (`Plot3DSceneOptions`), `trace` (`Plot3DTraceOptions`), and `default_marker_size`
+(`double`, default `12.0`) — the point size applied when no per-point size series is given.
 
 ## Returns
 

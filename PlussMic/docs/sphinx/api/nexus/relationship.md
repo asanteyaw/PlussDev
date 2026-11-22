@@ -20,7 +20,8 @@ lookups elsewhere on this class ([`frame(key)`](frame.md), which throws on an un
 ## Parameters
 
 **name** (`std::string_view`)
-    The relationship name to look up, matching [`Relationship::name`](relationships.md).
+
+The relationship name to look up, matching [`Relationship::name`](relationships.md).
 
 ## Returns
 

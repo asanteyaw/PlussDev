@@ -55,16 +55,19 @@ when no options are needed.
 ## Parameters
 
 **from** (`std::string_view`)
-    The literal text or regex pattern to search for. An empty `from` under
-    literal mode is a no-op (the cell is returned unchanged).
+
+The literal text or regex pattern to search for. An empty `from` under
+literal mode is a no-op (the cell is returned unchanged).
 
 **to** (`std::string_view`)
-    The replacement text. Under regex mode, may contain `$1`, `$2`, ...
-    backreferences to `from`'s capture groups.
+
+The replacement text. Under regex mode, may contain `$1`, `$2`, ...
+backreferences to `from`'s capture groups.
 
 **options** (`TextOptions`, two-argument overload only)
-    `options.regex`, `options.case_sensitive`, `options.limit` as described
-    above.
+
+`options.regex`, `options.case_sensitive`, `options.limit` as described
+above.
 
 ## Returns
 

@@ -23,8 +23,9 @@ independently per catalog.
 ## Parameters
 
 **policy** (`const TabelizePolicy&`, optional)
-    The same alignment policy [`Catalog::tabelize()`](../catalog/tabelize.md) accepts —
-    see that page for the full breakdown of each field.
+
+The same alignment policy [`Catalog::tabelize()`](../catalog/tabelize.md) accepts —
+see that page for the full breakdown of each field.
 
 ## Returns
 

@@ -73,23 +73,28 @@ literal brace list — see Example 4.
 ## Parameters
 
 **sources** (a range of `std::string_view`)
-    Root feature names to pull unchanged, each keeping its own name.
+
+Root feature names to pull unchanged, each keeping its own name.
 
 **source** (`std::string_view`)
-    A single root feature name.
+
+A single root feature name.
 
 **alias** (`std::string_view`, default empty)
-    The output column name for the single-field form. Empty means "keep
-    `source`'s own name."
+
+The output column name for the single-field form. Empty means "keep
+`source`'s own name."
 
 **fields** (a range of `(source, alias)` pairs, or a `map`/`unordered_map`
 of the same)
-    Several fields renamed in one call. In the unscoped forms, `source` is a
-    root feature name; in the `table`-scoped forms, `source` is a feature on
-    `table`, automatically qualified as `"table.source"`.
+
+Several fields renamed in one call. In the unscoped forms, `source` is a
+root feature name; in the `table`-scoped forms, `source` is a feature on
+`table`, automatically qualified as `"table.source"`.
 
 **table** (`std::string_view`, table-scoped overloads only)
-    The related table every entry in `fields` is qualified against.
+
+The related table every entry in `fields` is qualified against.
 
 Every field name is validated only when [`.collect()`](collect.md) actually
 executes — an unknown feature or an unreachable table surfaces there, the

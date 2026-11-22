@@ -20,11 +20,13 @@ this registry.
 ## Parameters
 
 **key** (`std::string_view`)
-    The field to filter. Throws if it doesn't exist.
+
+The field to filter. Throws if it doesn't exist.
 
 **predicate** (`const std::function<bool(const Slot::Value&)>&`)
-    A callback taking each of the field's values in turn; values for which it
-    returns `false` are dropped.
+
+A callback taking each of the field's values in turn; values for which it
+returns `false` are dropped.
 
 ## Returns
 

@@ -32,11 +32,13 @@ pass the result to [`filter()`](filter.md) to actually drop the flagged rows.
 ## Parameters
 
 **keep_first** (`bool`, default `true`)
-    Treat each value's first occurrence as the survivor (left `false`).
+
+Treat each value's first occurrence as the survivor (left `false`).
 
 **keep_last** (`bool`, default `false`)
-    Treat each value's last occurrence as the survivor (left `false`) instead.
-    Cannot be `true` at the same time as `keep_first`.
+
+Treat each value's last occurrence as the survivor (left `false`) instead.
+Cannot be `true` at the same time as `keep_first`.
 
 ## Returns
 

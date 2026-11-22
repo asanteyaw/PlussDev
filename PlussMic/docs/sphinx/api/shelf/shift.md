@@ -22,9 +22,10 @@ no-op, returning `*this` unchanged.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    Number of positions to shift. Positive shifts values to later positions
-    (introducing `NULL`s at the start); negative shifts values to earlier positions
-    (introducing `NULL`s at the end).
+
+Number of positions to shift. Positive shifts values to later positions
+(introducing `NULL`s at the start); negative shifts values to earlier positions
+(introducing `NULL`s at the end).
 
 ## Returns
 

@@ -23,18 +23,22 @@ position behaves.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The shelf to compare against, currently living at `right_axis` ticks.
+
+The shelf to compare against, currently living at `right_axis` ticks.
 
 **left_axis** (`const Shelf&`)
-    The bound shelf's own time axis (`Timeline`/`TimeIndex`), same length as
-    the bound shelf.
+
+The bound shelf's own time axis (`Timeline`/`TimeIndex`), same length as
+the bound shelf.
 
 **right_axis** (`const Shelf&`)
-    `other`'s time axis (`Timeline`/`TimeIndex`), same length as `other`.
+
+`other`'s time axis (`Timeline`/`TimeIndex`), same length as `other`.
 
 **mode** (`TsAlignMode`, default `Exact`)
-    The alignment strategy — same meaning as [`align_to()`](align_to.md)'s
-    `mode`: `Exact`, `Backward`, `Forward`, or `Nearest`.
+
+The alignment strategy — same meaning as [`align_to()`](align_to.md)'s
+`mode`: `Exact`, `Backward`, `Forward`, or `Nearest`.
 
 ## Returns
 

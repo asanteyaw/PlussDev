@@ -42,22 +42,27 @@ once; the check order simply decides which one silently wins.
 ## Parameters
 
 **pane** (`Pane&`, Pane overload)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y** (series-convertible)
-    The raw observations to bin. Unlike the 3D-native family's own functions, `hist3d`
-    performs no explicit rank validation of its own before calling `hist2d_grid` — that
-    helper's own checks (equal, non-empty lengths; at least one finite pair) apply
-    instead.
+
+The raw observations to bin. Unlike the 3D-native family's own functions, `hist3d`
+performs no explicit rank validation of its own before calling `hist2d_grid` — that
+helper's own checks (equal, non-empty lengths; at least one finite pair) apply
+instead.
 
 **options** (`const Hist3DOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## Returns
 

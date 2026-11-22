@@ -32,13 +32,15 @@ require field-length agreement. See Example 2.
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of rows to sample. Clamped to `[0, size]` — requesting more than
-    the registry's row count returns all rows (still shuffled), not a throw.
+
+The number of rows to sample. Clamped to `[0, size]` — requesting more than
+the registry's row count returns all rows (still shuffled), not a throw.
 
 **random_state** (`std::optional<std::uint64_t>`, optional)
-    A seed for the shuffle. Passing the same seed on the same registry reproduces
-    the same sample; omitting it seeds from `std::random_device`, giving a
-    different result on each call.
+
+A seed for the shuffle. Passing the same seed on the same registry reproduces
+the same sample; omitting it seeds from `std::random_device`, giving a
+different result on each call.
 
 ## Returns
 

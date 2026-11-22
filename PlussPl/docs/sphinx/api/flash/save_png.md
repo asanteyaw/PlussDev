@@ -20,13 +20,16 @@ this function writes a file to disk and opens no window.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to render.
+
+The figure to render.
 
 **path** (`std::string_view`)
-    Forwarded to [`Studio::save_png`](../studio/save_png.md) as the output file path.
+
+Forwarded to [`Studio::save_png`](../studio/save_png.md) as the output file path.
 
 **dpi** (`std::int64_t`, default `144`)
-    Forwarded to [`Studio::save_png`](../studio/save_png.md) as the render resolution.
+
+Forwarded to [`Studio::save_png`](../studio/save_png.md) as the render resolution.
 
 ## Returns
 

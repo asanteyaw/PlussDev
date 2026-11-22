@@ -36,22 +36,27 @@ Only `Sum`, `Mean`, `Var`, and `Std` are supported.
 ## Parameters
 
 **axis** (`const Shelf&`)
-    A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Series`, the same length
-    as the bound shelf, non-missing and sorted ascending.
+
+A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Series`, the same length
+as the bound shelf, non-missing and sorted ascending.
 
 **duration_nanos** (`std::int64_t`)
-    The window width, in nanoseconds. Must be positive.
+
+The window width, in nanoseconds. Must be positive.
 
 **statistic** (`TimeWindowStatistic`, default `Mean`)
-    `Sum`, `Mean`, `Var`, or `Std`.
+
+`Sum`, `Mean`, `Var`, or `Std`.
 
 **options** (`const StatisticOptions&`)
-    `ddof` (default `1`): delta degrees of freedom for `Var`/`Std`. `min_count`
-    (default `1`): minimum non-missing observations required for a position's
-    output to be non-`NULL`.
+
+`ddof` (default `1`): delta degrees of freedom for `Var`/`Std`. `min_count`
+(default `1`): minimum non-missing observations required for a position's
+output to be non-`NULL`.
 
 **closure** (`WindowClosure`, default `Right`)
-    Which end(s) of each duration window are inclusive.
+
+Which end(s) of each duration window are inclusive.
 
 ## Returns
 

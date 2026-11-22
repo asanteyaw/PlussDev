@@ -72,16 +72,18 @@ difference between the two spellings.
 ## Parameters
 
 **from** / **to**
-    The value(s) participating in the replacement. Their C++ type selects which
-    overload (and which payload kind) applies — see What It Does above.
+
+The value(s) participating in the replacement. Their C++ type selects which
+overload (and which payload kind) applies — see What It Does above.
 
 **options** (`TextOptions`, text overload only)
-    `options.regex` (default `false`): treat `from` as a regular expression instead
-    of literal text; supports `$1`, `$2`, ... backreferences in `to`.
-    `options.case_sensitive` (default `true`): when `false`, matching ignores case
-    (ASCII fold), but `to` is inserted exactly as given. `options.limit` (default
-    `-1`): caps the number of replacements per cell; matches never overlap.
-    `options.prefix` is not used by `replace()`.
+
+`options.regex` (default `false`): treat `from` as a regular expression instead
+of literal text; supports `$1`, `$2`, ... backreferences in `to`.
+`options.case_sensitive` (default `true`): when `false`, matching ignores case
+(ASCII fold), but `to` is inserted exactly as given. `options.limit` (default
+`-1`): caps the number of replacements per cell; matches never overlap.
+`options.prefix` is not used by `replace()`.
 
 ## Returns
 

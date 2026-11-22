@@ -37,23 +37,28 @@ point in the cloud renders at the same size regardless of options.
 ## Parameters
 
 **pane** (`Pane&`, Pane overload)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
-    The 4D point coordinates. Unequal lengths throw
-    `pluss::Error("flash::cloud4: x, y, z, w must have identical lengths")`.
+
+The 4D point coordinates. Unequal lengths throw
+`pluss::Error("flash::cloud4: x, y, z, w must have identical lengths")`.
 
 **options** (`const HyperPlotOptions&`, optional)
-    See [`flash::path4`](path4.md)'s field table — identical options, shared between both
-    functions. `point_size` is the one field that's consumed here (see the
-    important callout above); it is inert on `path4`.
+
+See [`flash::path4`](path4.md)'s field table — identical options, shared between both
+functions. `point_size` is the one field that's consumed here (see the
+important callout above); it is inert on `path4`.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## Returns
 

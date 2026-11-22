@@ -26,9 +26,10 @@ frame via [`Axel::map`](../axel/map.md).
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from the right edge. Every trailing
-    character that appears anywhere in `chars` is removed, stopping at
-    the first character (scanning from the end) that doesn't.
+
+The set of characters to strip from the right edge. Every trailing
+character that appears anywhere in `chars` is removed, stopping at
+the first character (scanning from the end) that doesn't.
 
 ## Returns
 

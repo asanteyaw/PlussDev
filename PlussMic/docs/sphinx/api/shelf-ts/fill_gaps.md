@@ -29,11 +29,13 @@ to fill it with.
 ## Parameters
 
 **mode** (`GapFillMode`, default `Forward`)
-    Which fill strategy to use.
+
+Which fill strategy to use.
 
 **constant** (`std::optional<double>`, default `std::nullopt`)
-    The fill value for `GapFillMode::Constant`. Ignored by every other mode;
-    required (throws if absent) when `mode` is `Constant`.
+
+The fill value for `GapFillMode::Constant`. Ignored by every other mode;
+required (throws if absent) when `mode` is `Constant`.
 
 ## Returns
 

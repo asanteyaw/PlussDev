@@ -21,7 +21,8 @@ The palette colours whatever the kind derives its colour from a value: the cells
 ## Parameters
 
 **palette** (`PaletteRamp`)
-    The ramp to use. It is copied into the trace.
+
+The ramp to use. It is copied into the trace.
 
 ## Returns
 

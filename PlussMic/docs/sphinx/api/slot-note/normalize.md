@@ -28,7 +28,8 @@ a new slot.
 ## Parameters
 
 **form** (`pluss::table::UnicodeForm`, defaults to `pluss::table::UnicodeForm::NFC`)
-    Which of the four standard Unicode normalization forms to apply.
+
+Which of the four standard Unicode normalization forms to apply.
 
 ## Returns
 

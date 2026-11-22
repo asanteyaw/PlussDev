@@ -27,9 +27,10 @@ Same as the 2D accessor: a shelf with fewer than two rows throws
 ## Parameters
 
 **options** (`LagPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::lag`](../../api/dataframe-plot/lag.md) (`lag`,
-    `max_points`, `marker_area`, `trace_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::lag`](../../api/dataframe-plot/lag.md) (`lag`,
+`max_points`, `marker_area`, `trace_width`).
 
 ## Returns
 

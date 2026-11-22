@@ -20,10 +20,12 @@ analog of [`Archive::label`](../archive/label.md)`.sort()`.
 ## Parameters
 
 **ascending** (`bool`, defaults to `true`)
-    Sort direction for the depth labels.
+
+Sort direction for the depth labels.
 
 **nulls_last** (`bool`, defaults to `true`)
-    Whether `NULL` depth labels sort to the end (`true`) or the start (`false`).
+
+Whether `NULL` depth labels sort to the end (`true`) or the start (`false`).
 
 ## Returns
 

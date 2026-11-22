@@ -33,17 +33,19 @@ earns its keep when you want several reducers on the same table.
 ## Parameters
 
 **source** (`std::string_view`)
-    The feature to sum. Typically `"table.feature"` for a related table
-    (e.g. `"events.spend"`); a bare root feature name is accepted
-    syntactically but rarely useful, per [`Nexus::pull`](../nexus/pull.md)'s
-    restriction against aggregate fields targeting `root` itself. An empty
-    `source` throws — see Example 2.
+
+The feature to sum. Typically `"table.feature"` for a related table
+(e.g. `"events.spend"`); a bare root feature name is accepted
+syntactically but rarely useful, per [`Nexus::pull`](../nexus/pull.md)'s
+restriction against aggregate fields targeting `root` itself. An empty
+`source` throws — see Example 2.
 
 **alias** (`std::string_view`, default empty)
-    The output column name. When omitted, the default alias is
-    `<table>_<feature>_sum` (dots replaced by underscores) — see
-    [`Nexus::pull`](../nexus/pull.md)'s "Every output column is aliased
-    automatically" rule, and Example 3 below.
+
+The output column name. When omitted, the default alias is
+`<table>_<feature>_sum` (dots replaced by underscores) — see
+[`Nexus::pull`](../nexus/pull.md)'s "Every output column is aliased
+automatically" rule, and Example 3 below.
 
 ## Returns
 

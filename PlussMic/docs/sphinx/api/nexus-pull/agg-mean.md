@@ -23,13 +23,16 @@ scoped table in one call.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own numeric feature to average.
+
+The scoped table's own numeric feature to average.
 
 **alias** (`std::string_view`, default empty)
-    The output column name.
+
+The output column name.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `mean` requests on the same scoped table, added in order.
+
+Several `mean` requests on the same scoped table, added in order.
 
 ## Returns
 

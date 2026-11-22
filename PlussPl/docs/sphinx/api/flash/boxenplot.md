@@ -30,10 +30,12 @@ shape exists. For grouped boxes, call flash::boxplot() directly.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **values** (series-convertible)
-    The observation values to summarize.
+
+The observation values to summarize.
 
 ## Returns
 

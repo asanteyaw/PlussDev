@@ -15,13 +15,16 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **source**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **shift**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **trim_trailing**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 ## Returns
 

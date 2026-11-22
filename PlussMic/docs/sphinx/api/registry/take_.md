@@ -28,11 +28,13 @@ which throws `"Slot::at: index out of bounds"` for any index `< 0` or
 ## Parameters
 
 **key** (`std::string_view`)
-    The field to reorder. Throws if it doesn't exist.
+
+The field to reorder. Throws if it doesn't exist.
 
 **indices** (`std::span<const std::int64_t>` / `const std::vector<std::int64_t>&`)
-    The positions to select, applied to just this field. May repeat or appear
-    out of order.
+
+The positions to select, applied to just this field. May repeat or appear
+out of order.
 
 ## Returns
 

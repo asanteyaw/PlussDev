@@ -23,8 +23,9 @@ A negative `periods` delegates to [`lead()`](lead.md) with the sign flipped.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The number of rows to shift forward, within each frame. Negative values behave
-    as [`lead(-periods)`](lead.md) instead.
+
+The number of rows to shift forward, within each frame. Negative values behave
+as [`lead(-periods)`](lead.md) instead.
 
 ## Returns
 

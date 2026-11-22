@@ -22,7 +22,8 @@ the valid names, so a mistyped name is reported instead of silently drawing the 
 ## Parameters
 
 **name** (`std::string_view`, default `"ocean"`)
-    Case-sensitive. See the dispatch table below.
+
+Case-sensitive. See the dispatch table below.
 
 ## Dispatch table
 

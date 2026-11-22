@@ -40,23 +40,28 @@ splits, random analytical holdouts, and wide-frame feature partitioning.
 ## Parameters
 
 **frac** (`double`)
-    Must be in `[0, 1]`. The proportion assigned to the second returned frame.
+
+Must be in `[0, 1]`. The proportion assigned to the second returned frame.
 
 **options** (`SplitOptions`, optional)
-    Controls:
 
-    - `axis`: split rows (`Axis::Case`) or columns (`Axis::Feature`)
-    - `shuffle`: whether the chosen axis is shuffled before splitting
-    - `random_state`: optional deterministic seed used when shuffling
+Controls:
+
+- `axis`: split rows (`Axis::Case`) or columns (`Axis::Feature`)
+- `shuffle`: whether the chosen axis is shuffled before splitting
+- `random_state`: optional deterministic seed used when shuffling
 
 **axis** (`Axis`)
-    Shorthand overload for choosing row-wise vs. feature-wise splitting.
+
+Shorthand overload for choosing row-wise vs. feature-wise splitting.
 
 **shuffle** (`bool`)
-    Whether the chosen axis is shuffled before the split point is applied.
+
+Whether the chosen axis is shuffled before the split point is applied.
 
 **random_state** (`std::uint64_t`)
-    Deterministic seed for randomized splitting.
+
+Deterministic seed for randomized splitting.
 
 ## Returns
 

@@ -18,8 +18,9 @@ its own output column named `"lag" + <lag value>`. Requires at least one lag.
 ## Parameters
 
 **lags** (`pluss::RangeView<std::int64_t>`)
-    The lag distances to compute, in the order given. Must not be empty, or it
-    throws.
+
+The lag distances to compute, in the order given. Must not be empty, or it
+throws.
 
 ## Returns
 

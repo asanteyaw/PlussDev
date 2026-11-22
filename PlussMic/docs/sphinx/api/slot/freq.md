@@ -20,9 +20,10 @@ frequency.
 ## Parameters
 
 **options** (`pluss::kindle::FreqOptions`, optional)
-    `{std::int64_t top = 0, bool dropnull = true}` — `top` limits the
-    result to the `top` most frequent values (`0` means no limit);
-    `dropnull` controls whether nulls are excluded before counting.
+
+`{std::int64_t top = 0, bool dropnull = true}` — `top` limits the
+result to the `top` most frequent values (`0` means no limit);
+`dropnull` controls whether nulls are excluded before counting.
 
 ## Returns
 

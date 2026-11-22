@@ -15,7 +15,8 @@ Adds derived text features from one named text stream.
 ## Parameters
 
 **field**
-    Name of the target stream in the catalog.
+
+Name of the target stream in the catalog.
 
 ## Returns
 

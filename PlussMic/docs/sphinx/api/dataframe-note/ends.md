@@ -30,8 +30,9 @@ no regex mode. For a case-insensitive or pattern-based suffix check, use
 ## Parameters
 
 **suffix** (`std::string_view`)
-    The literal text to check for at the end of each cell. An empty suffix
-    matches every non-null cell (every string ends with the empty string).
+
+The literal text to check for at the end of each cell. An empty suffix
+matches every non-null cell (every string ends with the empty string).
 
 ## Returns
 

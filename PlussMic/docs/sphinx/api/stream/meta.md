@@ -21,7 +21,8 @@ Two ways to read the stream's free-form metadata map: the no-argument overload r
 ## Parameters
 
 **key** (`std::string_view`, only for the single-key overload)
-    The metadata key to look up.
+
+The metadata key to look up.
 
 ## Returns
 

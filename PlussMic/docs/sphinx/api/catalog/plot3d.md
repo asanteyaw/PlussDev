@@ -24,10 +24,11 @@ its own page, with real rendered charts, under
 ## Parameters
 
 **options** (`const pluss::table::DataFramePlotOptions&`, optional)
-    Shared defaults applied to every chart method called on the returned accessor. Note that
-    `surface()`/`wireframe()` forward this same `options` value on to a `DataFrame::plot3d()`
-    call internally (via `tabelize()`), while `scatter()`/`line()`/`hist()` use it only for
-    figure-level sizing/layout.
+
+Shared defaults applied to every chart method called on the returned accessor. Note that
+`surface()`/`wireframe()` forward this same `options` value on to a `DataFrame::plot3d()`
+call internally (via `tabelize()`), while `scatter()`/`line()`/`hist()` use it only for
+figure-level sizing/layout.
 
 ## Returns
 

@@ -33,21 +33,25 @@ existing Pane& (Volumetric), obtained via Studio::pane3() yourself first.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3, and `z` rank-2 to satisfy
 [`Pane::ridge3`](../pane/ridge3.md)'s own deeper requirement)
-    The scalar field to contour, lifted onto the pane's third axis.
+
+The scalar field to contour, lifted onto the pane's third axis.
 
 **levels** (series-convertible, must be rank ≤ 3, non-integral type, second overload
 only)
-    Explicit contour threshold values.
+
+Explicit contour threshold values.
 
 **level_count** (`int`, third overload only)
-    Automatic, evenly-spaced level count. Defaults to `8` when omitted entirely (the
-    first overload), the same default [`Pane::contour`](../pane/contour.md)/
-    [`Pane::isoband`](../pane/isoband.md) use — note this is a *different* default from
-    [`flash::isoshell`](isoshell.md)'s `4`.
+
+Automatic, evenly-spaced level count. Defaults to `8` when omitted entirely (the
+first overload), the same default [`Pane::contour`](../pane/contour.md)/
+[`Pane::isoband`](../pane/isoband.md) use — note this is a *different* default from
+[`flash::isoshell`](isoshell.md)'s `4`.
 
 ## Returns
 

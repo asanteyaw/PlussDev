@@ -45,14 +45,16 @@ stored values untouched (just marked invalid). This is the masked equivalent of
 ## Parameters
 
 **bool_mask** (`const Shelf&` or `const pluss::Series&`)
-    A boolean row mask, the same length as `*this`. `true` marks a row for replacement;
-    `false` leaves it untouched. The `Series` overloads are equivalent to wrapping the mask
-    in `Shelf(bool_mask)` first.
+
+A boolean row mask, the same length as `*this`. `true` marks a row for replacement;
+`false` leaves it untouched. The `Series` overloads are equivalent to wrapping the mask
+in `Shelf(bool_mask)` first.
 
 **value** (`const Shelf&` / `double` / `std::string_view` / `const char*` / `pluss::null_t`)
-    The replacement written into every masked row. A scalar (`double`/text/`pluss::series::null`)
-    or a size-1 `Shelf` broadcasts to every masked row; a `Shelf` matching `*this`'s
-    length supplies one replacement value per row instead.
+
+The replacement written into every masked row. A scalar (`double`/text/`pluss::series::null`)
+or a size-1 `Shelf` broadcasts to every masked row; a `Shelf` matching `*this`'s
+length supplies one replacement value per row instead.
 
 ## Returns
 

@@ -49,13 +49,15 @@ computed). See Example 2 — this is the same category of surprise documented on
 ## Parameters
 
 **delimiter** (`std::string_view`, default `"|"`)
-    The literal text to split each cell on before collecting tokens. Must not be
-    empty — `indicate("")` throws `"Shelf::indicate: delimiter cannot be empty"`.
+
+The literal text to split each cell on before collecting tokens. Must not be
+empty — `indicate("")` throws `"Shelf::indicate: delimiter cannot be empty"`.
 
 **prefix** (`std::string`, default `""`)
-    Text prepended to each level to form its column name — with the default empty
-    prefix, a column is named exactly after the level text itself (e.g. a `"red"`
-    token produces a column literally named `red`).
+
+Text prepended to each level to form its column name — with the default empty
+prefix, a column is named exactly after the level text itself (e.g. a `"red"`
+token produces a column literally named `red`).
 
 ## Returns
 

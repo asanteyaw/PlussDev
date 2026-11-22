@@ -24,10 +24,11 @@ source shelf.
 ## Parameters
 
 **dropnull** (`bool`, default `true`)
-    - `true` (the default): missing entries are excluded entirely from the
-      result.
-    - `false`: at most one missing entry is kept, appearing at the position of
-      its first occurrence among the survivors.
+
+- `true` (the default): missing entries are excluded entirely from the
+  result.
+- `false`: at most one missing entry is kept, appearing at the position of
+  its first occurrence among the survivors.
 
 ## Returns
 

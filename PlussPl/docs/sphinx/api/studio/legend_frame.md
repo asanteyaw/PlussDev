@@ -20,7 +20,8 @@ The setter takes any `KeyFrame` and never throws. With no docked legend ( `KeyDo
 ## Parameters
 
 **frame** (`KeyFrame`, setter)
-    `Framed`, `Soft` or `None`; see [`KeyFrame`](../types/KeyFrame.md).
+
+`Framed`, `Soft` or `None`; see [`KeyFrame`](../types/KeyFrame.md).
 
 ## Returns
 

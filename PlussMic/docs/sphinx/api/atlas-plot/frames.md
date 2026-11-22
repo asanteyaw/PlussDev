@@ -50,25 +50,30 @@ Like every method on `AtlasPlotAccessor`, the multi-index overloads build and re
 ## Parameters
 
 **frame_index** (`std::int64_t`, single-index overload, defaults to `0`)
-    The depth position to select. Negative values count from the end (`-1` is the last frame).
-    Out of range throws.
+
+The depth position to select. Negative values count from the end (`-1` is the last frame).
+Out of range throws.
 
 **frame_indices** (`pluss::RangeView<std::int64_t>`, multi-index overloads)
-    One or more depth positions to overlay/facet. Negative values count from the end. Duplicates
-    (after resolving negatives) are silently collapsed to one occurrence, in first-seen order.
-    Must select at least one frame.
+
+One or more depth positions to overlay/facet. Negative values count from the end. Duplicates
+(after resolving negatives) are silently collapsed to one occurrence, in first-seen order.
+Must select at least one frame.
 
 **x_feature** (`std::string_view`, optional, comes first)
-    The feature to plot on the x-axis. When only one name is given it is the y feature and the
-    x-axis is each frame's own case axis (row index or row label).
+
+The feature to plot on the x-axis. When only one name is given it is the y feature and the
+x-axis is each frame's own case axis (row index or row label).
 
 **y_feature** (`std::string_view`, multi-index overloads)
-    The numeric feature to plot on the y-axis, read from every selected frame.
+
+The numeric feature to plot on the y-axis, read from every selected frame.
 
 **options** (`const AtlasFramesPlotOptions&`)
-    `mode` (`AtlasFrameSelectionMode`, default `Overlay`): `Overlay` draws every selected frame as
-    its own line on one pane; `Facet` draws each in its own small-multiple pane. `rows`/`cols`
-    (facet grid shape, `0` auto-sizes), `grid_gap_x`/`grid_gap_y`, `show_grid`, `line_width`.
+
+`mode` (`AtlasFrameSelectionMode`, default `Overlay`): `Overlay` draws every selected frame as
+its own line on one pane; `Facet` draws each in its own small-multiple pane. `rows`/`cols`
+(facet grid shape, `0` auto-sizes), `grid_gap_x`/`grid_gap_y`, `show_grid`, `line_width`.
 
 ## Returns
 

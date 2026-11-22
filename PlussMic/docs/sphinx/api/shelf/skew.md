@@ -30,9 +30,10 @@ deviation would otherwise produce.
 ## Parameters
 
 **min_count** (`std::int64_t`, default `3`)
-    The smallest observed count still considered valid. The effective floor is
-    always `max(3, min_count)` — skewness needs at least 3 observations
-    regardless of what you pass here.
+
+The smallest observed count still considered valid. The effective floor is
+always `max(3, min_count)` — skewness needs at least 3 observations
+regardless of what you pass here.
 
 ## Returns
 

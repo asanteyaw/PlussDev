@@ -22,10 +22,12 @@ instead.
 ## Parameters
 
 **directory** (`std::string_view`)
-    The directory a prior [`save()`](save.md) call wrote to.
+
+The directory a prior [`save()`](save.md) call wrote to.
 
 **options** (`const StoreOptions&`, default `{}`)
-    Must match what [`save()`](save.md) was called with.
+
+Must match what [`save()`](save.md) was called with.
 
 ## Returns
 

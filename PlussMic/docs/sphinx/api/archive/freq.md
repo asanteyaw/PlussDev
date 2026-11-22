@@ -30,8 +30,9 @@ values; `options.dropnull` (default `true`) excludes `NULL` from consideration.
 ## Parameters
 
 **options** (`FreqOptions`, optional)
-    `top` limits the result to the N most frequent values (`0` = no limit); `dropnull`
-    excludes `NULL` from the counts.
+
+`top` limits the result to the N most frequent values (`0` = no limit); `dropnull`
+excludes `NULL` from the counts.
 
 ## Returns
 

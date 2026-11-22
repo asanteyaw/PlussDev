@@ -22,9 +22,10 @@ via [`Axel::map`](../axel/map.md).
 ## Parameters
 
 **suffix** (`std::string_view`)
-    The literal text to check for at the end of each value. Always a
-    literal comparison — there is no regex or case-insensitive mode,
-    unlike [`has()`](has.md).
+
+The literal text to check for at the end of each value. Always a
+literal comparison — there is no regex or case-insensitive mode,
+unlike [`has()`](has.md).
 
 ## Returns
 

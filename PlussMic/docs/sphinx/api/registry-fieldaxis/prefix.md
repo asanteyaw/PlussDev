@@ -20,7 +20,8 @@ unlike [`like()`](like.md).
 ## Parameters
 
 **token** (`std::string_view`)
-    The prefix each field name must start with.
+
+The prefix each field name must start with.
 
 ## Returns
 

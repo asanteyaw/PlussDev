@@ -28,9 +28,10 @@ method (including this one) is called.
 ## Parameters
 
 **unit** (`pluss::table::TimeUnit`, defaults to `pluss::table::TimeUnit::Nanos`)
-    One of the fixed-duration units: `Nanos`, `Micros`, `Millis`, `Seconds`, or
-    `Days`. Passing a span-only unit (`Weeks`, `Months`, `Years`,
-    `BusinessDays`) throws.
+
+One of the fixed-duration units: `Nanos`, `Micros`, `Millis`, `Seconds`, or
+`Days`. Passing a span-only unit (`Weeks`, `Months`, `Years`,
+`BusinessDays`) throws.
 
 ## Returns
 

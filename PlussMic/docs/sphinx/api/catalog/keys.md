@@ -39,11 +39,13 @@ instead of a bare `Stream`.
 ## Parameters
 
 **key** (`std::string_view`)
-    A single stream name to extract as a `Stream`.
+
+A single stream name to extract as a `Stream`.
 
 **field_names** (`std::span<const std::string_view>` or
 `std::initializer_list<std::string_view>`)
-    Several stream names to project down to, returned as a `Catalog`.
+
+Several stream names to project down to, returned as a `Catalog`.
 
 ## Returns
 

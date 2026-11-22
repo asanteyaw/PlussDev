@@ -22,12 +22,14 @@ visible, effectively undoing a prior `tickless(pane)` call.
 ## Parameters
 
 **pane** (`Pane&`)
-    The pane to toggle.
+
+The pane to toggle.
 
 **enable** (`bool`, default `true`)
-    `true`: hide the axes frame, keep tick labels. `false`: show the axes frame, keep
-    tick labels (both branches leave tick labels visible — only `axes_visible` actually
-    changes between the two).
+
+`true`: hide the axes frame, keep tick labels. `false`: show the axes frame, keep
+tick labels (both branches leave tick labels visible — only `axes_visible` actually
+changes between the two).
 
 ## Returns
 

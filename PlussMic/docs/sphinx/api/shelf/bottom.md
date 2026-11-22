@@ -21,12 +21,14 @@ clamps to an empty result rather than throwing.
 ## Parameters
 
 **n** (`std::int64_t`)
-    Number of smallest-valued entries to keep. Clamped into `[0, size()]` — no
-    error for a negative or oversized value.
+
+Number of smallest-valued entries to keep. Clamped into `[0, size()]` — no
+error for a negative or oversized value.
 
 **render** (`bool`, default `false`)
-    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
-    only.
+
+See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+only.
 
 ## Returns
 

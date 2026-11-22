@@ -20,7 +20,8 @@ The count must be from 0 to 8; anything else throws `pluss::Error` and the store
 ## Parameters
 
 **decimals** (`int`)
-    The number of decimals, 0 to 8.
+
+The number of decimals, 0 to 8.
 
 ## Returns
 

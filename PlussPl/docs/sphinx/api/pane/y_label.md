@@ -19,7 +19,8 @@ The setter takes any text. An empty string clears the label and gives exactly th
 ## Parameters
 
 **label** (`std::string`)
-    The label text. Empty clears the label.
+
+The label text. Empty clears the label.
 
 ## Returns
 

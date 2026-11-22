@@ -54,21 +54,26 @@ is positive (or negative).
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x** (series-convertible, first overload only)
-    Numeric bar positions.
+
+Numeric bar positions.
 
 **categories** (`const Note&`, second overload only)
-    The categorical grouping variable. Distinct labels become tick text, in first-seen
-    order (via `encode_categories`) — see the note below on `countplot()`'s different
-    ordering.
+
+The categorical grouping variable. Distinct labels become tick text, in first-seen
+order (via `encode_categories`) — see the note below on `countplot()`'s different
+ordering.
 
 **y** / **values** (series-convertible, or `const Series&` for the `Note` overload)
-    The bar heights.
+
+The bar heights.
 
 **options** (`const BarPlotOptions&`, optional, both overloads)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

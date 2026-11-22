@@ -20,8 +20,9 @@ same operation. Restricted to a numeric `Series` shelf; anything else throws.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The number of positions to shift backward. Negative values behave as
-    [`lag(-periods)`](lag.md) instead.
+
+The number of positions to shift backward. Negative values behave as
+[`lag(-periods)`](lag.md) instead.
 
 ## Returns
 

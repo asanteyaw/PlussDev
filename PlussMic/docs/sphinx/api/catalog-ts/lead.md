@@ -27,8 +27,9 @@ full explanation and how to project down to numeric keys first.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The number of positions to shift backward. Negative values behave as
-    [`lag(-periods)`](lag.md) instead.
+
+The number of positions to shift backward. Negative values behave as
+[`lag(-periods)`](lag.md) instead.
 
 ## Returns
 

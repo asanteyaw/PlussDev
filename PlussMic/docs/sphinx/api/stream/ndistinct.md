@@ -26,8 +26,9 @@ values if you need the raw integer, rather than assuming it converts implicitly.
 ## Parameters
 
 **options** (`DistinctOptions`, defaults to `{}`)
-    `dropnull` (default `true`) controls whether a `NULL` value counts as one of the
-    distinct values being counted — identical semantics to [`distinct()`](distinct.md).
+
+`dropnull` (default `true`) controls whether a `NULL` value counts as one of the
+distinct values being counted — identical semantics to [`distinct()`](distinct.md).
 
 ## Returns
 

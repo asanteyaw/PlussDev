@@ -22,11 +22,13 @@ frame, broadcast across the whole `Atlas` via [`Atlas::map_frames()`](../atlas/m
 ## Parameters
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    The statistic computed over each row's growing window — see
-    [`rolling()`](rolling.md) for the full set.
+
+The statistic computed over each row's growing window — see
+[`rolling()`](rolling.md) for the full set.
 
 **options** (`const StatisticOptions&`)
-    `ddof` (default `1`), `min_count` (default `1`).
+
+`ddof` (default `1`), `min_count` (default `1`).
 
 ## Returns
 

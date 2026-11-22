@@ -20,7 +20,8 @@ a new `Stream`. Like the immutable version, dropping a nonexistent key is a harm
 ## Parameters
 
 **key** (`std::string_view`)
-    The metadata key to remove.
+
+The metadata key to remove.
 
 ## Returns
 

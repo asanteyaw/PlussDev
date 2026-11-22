@@ -28,10 +28,12 @@ on any call, regardless of the filename or options passed.
 ## Parameters
 
 **filename** (`std::string_view`)
-    The destination `.parquet` file path.
+
+The destination `.parquet` file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying Parquet writer options.
+
+A generic configuration scribble, translated into the underlying Parquet writer options.
 
 ## Returns
 

@@ -20,7 +20,8 @@ stream rather than throwing; `n <= 0` returns an empty stream rather than throwi
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of leading rows to keep.
+
+The number of leading rows to keep.
 
 ## Returns
 

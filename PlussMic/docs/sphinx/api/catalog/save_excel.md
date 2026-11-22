@@ -28,10 +28,12 @@ the filename or options passed.
 ## Parameters
 
 **filename** (`std::string_view`)
-    The destination `.xlsx` file path.
+
+The destination `.xlsx` file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying Excel writer options.
+
+A generic configuration scribble, translated into the underlying Excel writer options.
 
 ## Returns
 

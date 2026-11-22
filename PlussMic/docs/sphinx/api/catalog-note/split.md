@@ -40,19 +40,24 @@ CatalogNoteAccessor::findall's own important callout.
 ## Parameters
 
 **delimiter** (`std::string_view`, first overload)
-    Literal text to split on (first overload) — not a regex pattern.
+
+Literal text to split on (first overload) — not a regex pattern.
 
 **limit** (`std::int64_t`, default `-1`, first overload)
-    Maximum number of splits to perform per value; `-1` means unlimited.
+
+Maximum number of splits to perform per value; `-1` means unlimited.
 
 **prefix** (`std::string`, default `"part"`, first overload)
-    Column-name prefix for the resulting `DataFrame`'s segment columns.
+
+Column-name prefix for the resulting `DataFrame`'s segment columns.
 
 **pattern** (`std::string_view`, second overload)
-    A pattern to split on — literal or regex depending on `options.regex`.
+
+A pattern to split on — literal or regex depending on `options.regex`.
 
 **options** (`pluss::table::TextOptions`, second overload)
-    Full text-matching options for the pattern-based split.
+
+Full text-matching options for the pattern-based split.
 
 ## Returns
 

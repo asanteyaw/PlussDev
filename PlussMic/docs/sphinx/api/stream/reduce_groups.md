@@ -15,19 +15,24 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **source**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **shift**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **offsets**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **op**
-    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
+
+Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 **unbiased**
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 ## Returns
 

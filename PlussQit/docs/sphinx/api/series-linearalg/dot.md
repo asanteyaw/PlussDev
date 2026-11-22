@@ -41,9 +41,10 @@ factor, and scaling the scalar result scales both reverse sensitivities.
 ## Parameter
 
 **other** (`const Series&`)
-    The right vector. Both operands must be one-dimensional and have the same
-    length. Their elementwise multiplication must also have a valid common
-    dtype and platform.
+
+The right vector. Both operands must be one-dimensional and have the same
+length. Their elementwise multiplication must also have a valid common
+dtype and platform.
 
 ## Returns
 

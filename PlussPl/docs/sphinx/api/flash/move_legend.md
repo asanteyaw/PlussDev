@@ -27,18 +27,22 @@ overloads — identical below.
 ## Parameters
 
 **pane** (`Pane&`, `Pane` overloads)
-    The pane to position an in-pane legend on.
+
+The pane to position an in-pane legend on.
 
 **studio** (`Studio&`, `Studio` overloads)
-    The figure to dock a consolidated legend on.
+
+The figure to dock a consolidated legend on.
 
 **place** (`KeyPlace`, `Pane` overloads)
-    See [`Pane::legend`](../pane/legend.md) for `KeyPlace`'s full value set (seven
-    placements, including `None` to turn the legend off).
+
+See [`Pane::legend`](../pane/legend.md) for `KeyPlace`'s full value set (seven
+placements, including `None` to turn the legend off).
 
 **dock** (`KeyDock`, `Studio` overloads)
-    See [`Studio::legend`](../studio/legend.md) for `KeyDock`'s three values (`None`,
-    `East`, `South`).
+
+See [`Studio::legend`](../studio/legend.md) for `KeyDock`'s three values (`None`,
+`East`, `South`).
 
 ## Returns
 

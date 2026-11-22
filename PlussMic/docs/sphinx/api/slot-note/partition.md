@@ -29,12 +29,14 @@ itself is still valid.
 ## Parameters
 
 **separator** (`std::string_view`)
-    The literal text to split on. Must not be empty.
+
+The literal text to split on. Must not be empty.
 
 **prefix** (`std::string`, defaults to `"part"`)
-    Base name for the three output features: `<prefix>_0` (before),
-    `<prefix>_1` (the separator, or `""` if not found), `<prefix>_2`
-    (after, or `""` if not found).
+
+Base name for the three output features: `<prefix>_0` (before),
+`<prefix>_1` (the separator, or `""` if not found), `<prefix>_2`
+(after, or `""` if not found).
 
 ## Returns
 

@@ -30,17 +30,20 @@ purely as a smaller-surface, more conventionally-named entry point ("act" for
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
-    fixed to `[-1.0, 1.0]`.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
+fixed to `[-1.0, 1.0]`.
 
 **values** (series-convertible)
-    The sequence to autocorrelate. Must contain at least three points, or `actplot`
-    throws (via [`flash::acfplot`](acfplot.md)) `pluss::Error("flash::acfplot
-    requires at least three points")` — note the error message names `acfplot`, not
-    `actplot`, since it's thrown by the delegated-to function.
+
+The sequence to autocorrelate. Must contain at least three points, or `actplot`
+throws (via [`flash::acfplot`](acfplot.md)) `pluss::Error("flash::acfplot
+requires at least three points")` — note the error message names `acfplot`, not
+`actplot`, since it's thrown by the delegated-to function.
 
 **options** (`const AutocorrelationPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `AutocorrelationPlotOptions` fields
 

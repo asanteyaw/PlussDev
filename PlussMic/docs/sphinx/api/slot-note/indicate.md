@@ -27,11 +27,13 @@ in **alphabetical order** — not first-seen order.
 ## Parameters
 
 **delimiter** (`std::string_view`, defaults to `"|"`)
-    The literal text to split each value on before collecting tokens.
-    Must not be empty.
+
+The literal text to split each value on before collecting tokens.
+Must not be empty.
 
 **prefix** (`std::string`, defaults to `""`)
-    Text prepended to each level to form its feature name.
+
+Text prepended to each level to form its feature name.
 
 ## Returns
 

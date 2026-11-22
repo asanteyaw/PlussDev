@@ -34,8 +34,9 @@ is entirely missing while `drop_nulls = true`).
 ## Parameters
 
 **drop_nulls** (`bool`, default `true`)
-    `true`: missing entries are excluded from mode candidacy entirely.
-    `false`: missing entries compete for "most frequent" like any other value.
+
+`true`: missing entries are excluded from mode candidacy entirely.
+`false`: missing entries compete for "most frequent" like any other value.
 
 ## Returns
 

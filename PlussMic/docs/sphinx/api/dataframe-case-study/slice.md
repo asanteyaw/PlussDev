@@ -31,9 +31,10 @@ features.
 ## Parameters
 
 **start** / **stop** (`std::int64_t`)
-    The half-open interval `[start, stop)`. Nonnegative values are physical
-    positions; negative values count backward from `ncases()`. Both bounds are
-    normalized, then clamped to `[0, ncases()]` — no combination of bounds throws.
+
+The half-open interval `[start, stop)`. Nonnegative values are physical
+positions; negative values count backward from `ncases()`. Both bounds are
+normalized, then clamped to `[0, ncases()]` — no combination of bounds throws.
 
 ## Returns
 

@@ -23,11 +23,13 @@ preserved.
 ## Parameters
 
 **feature** (`std::string_view`, single-feature overload)
-    A single feature name to select.
+
+A single feature name to select.
 
 **features** (`std::initializer_list<std::string_view>` or
 `pluss::RangeView<std::string_view>`, multi-feature overloads)
-    Several feature names to select at once.
+
+Several feature names to select at once.
 
 ## Returns
 

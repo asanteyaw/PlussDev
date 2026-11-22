@@ -32,15 +32,17 @@ not compile.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    The numeric features to include, at least three. An empty range (the default, used by the
-    no-argument and options-only overloads) selects every numeric feature in the first frame.
+
+The numeric features to include, at least three. An empty range (the default, used by the
+no-argument and options-only overloads) selects every numeric feature in the first frame.
 
 **options** (`const pluss::pl::flash::TriplotOptions&`)
-    `kind` (`TriplotKind`, default `Cloud`): the pane flavor — `Cloud` (scatter), `Sheet`,
-    `Lattice`, `Spire`, `Ridge`. `labels` (defaults to the resolved feature names).
-    `max_features`/`max_panels`/`rows`/`cols`/`max_points` cap or shape the grid. `show_grid`,
-    sizing fields (`cell_width`/`cell_height`/`outer_pad_x`/`outer_pad_y`/`grid_gap_x`/
-    `grid_gap_y`), and `auto_size` round out the layout controls.
+
+`kind` (`TriplotKind`, default `Cloud`): the pane flavor — `Cloud` (scatter), `Sheet`,
+`Lattice`, `Spire`, `Ridge`. `labels` (defaults to the resolved feature names).
+`max_features`/`max_panels`/`rows`/`cols`/`max_points` cap or shape the grid. `show_grid`,
+sizing fields (`cell_width`/`cell_height`/`outer_pad_x`/`outer_pad_y`/`grid_gap_x`/
+`grid_gap_y`), and `auto_size` round out the layout controls.
 
 ## Returns
 

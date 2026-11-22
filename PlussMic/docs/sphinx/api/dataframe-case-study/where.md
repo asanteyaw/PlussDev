@@ -34,10 +34,11 @@ the same filtering kernel.
 ## Parameters
 
 **values** (`const Shelf&` / `const pluss::Series&`)
-    The Boolean mask. The `Shelf` overload must be `Series`-kind with `Bool` dtype
-    and is aligned to the frame's case axis before filtering (a lane with no aligned
-    source value is treated as `false`). The `Series` overload must be 1D, `Bool`
-    dtype, and exactly `ncases()` long, or the call throws.
+
+The Boolean mask. The `Shelf` overload must be `Series`-kind with `Bool` dtype
+and is aligned to the frame's case axis before filtering (a lane with no aligned
+source value is treated as `false`). The `Series` overload must be 1D, `Bool`
+dtype, and exactly `ncases()` long, or the call throws.
 
 ## Returns
 

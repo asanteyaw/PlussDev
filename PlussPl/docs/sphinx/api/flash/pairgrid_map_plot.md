@@ -25,22 +25,26 @@ diagonal (conventionally a univariate distribution of one feature) versus off-di
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **dimensions** (`std::int64_t`)
-    Both the row and column count of the resulting square grid — one per feature being
-    compared pairwise. Must be strictly positive, or `pairgrid_map_plot` throws
-    `pluss::Error("flash::pairgrid_map_plot dimensions must be positive")`.
+
+Both the row and column count of the resulting square grid — one per feature being
+compared pairwise. Must be strictly positive, or `pairgrid_map_plot` throws
+`pluss::Error("flash::pairgrid_map_plot dimensions must be positive")`.
 
 **mapper** (a callable taking `(Pane&, std::int64_t row, std::int64_t col, bool is_diagonal)`)
-    Called once per cell, in row-major order, after that cell's pane has already been
-    created and `place(row, col)`d. `is_diagonal` is `row == col` — typically used to
-    branch between drawing a univariate distribution (diagonal) and a bivariate
-    relationship (off-diagonal) for the same underlying feature set, as shown below.
+
+Called once per cell, in row-major order, after that cell's pane has already been
+created and `place(row, col)`d. `is_diagonal` is `row == col` — typically used to
+branch between drawing a univariate distribution (diagonal) and a bivariate
+relationship (off-diagonal) for the same underlying feature set, as shown below.
 
 **gx**, **gy** (`double`, default `14.0` each)
-    Forwarded straight to the internal [`flash::PairGrid`](PairGrid.md) call as its
-    `gx`/`gy` gutter — the same tighter default `PairGrid` itself uses.
+
+Forwarded straight to the internal [`flash::PairGrid`](PairGrid.md) call as its
+`gx`/`gy` gutter — the same tighter default `PairGrid` itself uses.
 
 ## Returns
 

@@ -25,13 +25,16 @@ A rank-2 `y` is read as one series per column, with a band for each, stacked one
 ## Parameters
 
 **x** (`Series`-convertible, second call)
-    The positions.
+
+The positions.
 
 **y** (`Series`-convertible)
-    The values.
+
+The values.
 
 **base** (`double`, default 0)
-    The baseline the band start from.
+
+The baseline the band start from.
 
 ## Returns
 

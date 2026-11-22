@@ -32,16 +32,19 @@ a fit line or confidence band, those settings are silently ignored here.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The raw observation pairs. Filtered to finite pairs via the same `finite_xy` helper
-    `regplot` uses; fewer than two finite pairs throws `pluss::Error
-    ("flash::residplot requires at least two finite x/y pairs")`.
+
+The raw observation pairs. Filtered to finite pairs via the same `finite_xy` helper
+`regplot` uses; fewer than two finite pairs throws `pluss::Error
+("flash::residplot requires at least two finite x/y pairs")`.
 
 **options** (`const RegPlotOptions&`, first overload only)
-    Only `order`/`robust`/`lowess`/`lowess_frac` are consulted — see the important
-    callout above.
+
+Only `order`/`robust`/`lowess`/`lowess_frac` are consulted — see the important
+callout above.
 
 ## Returns
 

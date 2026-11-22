@@ -68,20 +68,24 @@ short-vector-is-fine rule applies independently to x_labels and y_labels.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **xs**, **ys** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per facet — `xs[i]`/`ys[i]` are that facet's complete x/y series. Must be
-    non-empty and equal in length, or `relgridplot` throws
-    `pluss::Error("flash::relgridplot requires non-empty aligned x/y facet
-    vectors")`.
+
+One entry per facet — `xs[i]`/`ys[i]` are that facet's complete x/y series. Must be
+non-empty and equal in length, or `relgridplot` throws
+`pluss::Error("flash::relgridplot requires non-empty aligned x/y facet
+vectors")`.
 
 **kind** (`std::string_view`, kind-string overloads only)
-    `"scatter"`, `"line"`, or `"reg"` — resolved via `flash::relgrid_kind`. Equivalent to
-    passing a `RelGridPlotOptions` with only `kind` set.
+
+`"scatter"`, `"line"`, or `"reg"` — resolved via `flash::relgrid_kind`. Equivalent to
+passing a `RelGridPlotOptions` with only `kind` set.
 
 **options** (`const RelGridPlotOptions&`, optional, options overloads only)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

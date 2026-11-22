@@ -28,8 +28,9 @@ resulting catalog is very likely ragged, for the same reason.
 ## Parameters
 
 **options** (`FreqOptions`, optional)
-    `top` (default `0`, meaning unlimited) caps each stream's result to its `top` most
-    frequent values. `dropnull` (default `true`) excludes `NULL` from the count.
+
+`top` (default `0`, meaning unlimited) caps each stream's result to its `top` most
+frequent values. `dropnull` (default `true`) excludes `NULL` from the count.
 
 ## Returns
 

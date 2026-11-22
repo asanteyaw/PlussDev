@@ -32,14 +32,16 @@ including how percentages are computed against the filtered total.
 ## Parameters
 
 **labels** (`const Shelf&`, optional)
-    A companion shelf whose values label each slice. Must match the bound shelf's size,
-    or the call throws `"Shelf::plot: shelf size mismatch"`. Omitted falls back to the
-    wrapped frame's own row labels — see [`line()`](line.md)'s row-label inheritance rule.
+
+A companion shelf whose values label each slice. Must match the bound shelf's size,
+or the call throws `"Shelf::plot: shelf size mismatch"`. Omitted falls back to the
+wrapped frame's own row labels — see [`line()`](line.md)'s row-label inheritance rule.
 
 **options** (`PiePlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::pie`](../../api/dataframe-plot/pie.md)
-    (`show_label`, `show_percent`, `show_value`, `precision`, `separator`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::pie`](../../api/dataframe-plot/pie.md)
+(`show_label`, `show_percent`, `show_value`, `precision`, `separator`).
 
 ## Returns
 

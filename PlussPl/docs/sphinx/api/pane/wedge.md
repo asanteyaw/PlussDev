@@ -27,13 +27,16 @@ Values must be finite and not negative, with at least one positive, and `labels`
 ## Parameters
 
 **values** (`Series`-convertible)
-    The sizes of the wedges; only their shares matter.
+
+The sizes of the wedges; only their shares matter.
 
 **explode** (`Series`-convertible, optional)
-    How far each wedge is pulled out.
+
+How far each wedge is pulled out.
 
 **labels** (strings, optional)
-    One label for each wedge.
+
+One label for each wedge.
 
 ## Returns
 

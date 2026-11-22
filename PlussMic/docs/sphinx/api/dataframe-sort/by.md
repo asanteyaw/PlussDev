@@ -43,16 +43,19 @@ happens when [`yield()`](yield.md)/[`order()`](order.md)/[`head()`](head.md)/
 ## Parameters
 
 **feature** (`std::string_view`)
-    A single feature name to sort by.
+
+A single feature name to sort by.
 
 **features** (`std::initializer_list<std::string_view>` or
 `pluss::RangeView<std::string_view>`)
-    Several feature names to sort by, in the order given; each inherits the
-    builder's current direction/null-placement defaults.
+
+Several feature names to sort by, in the order given; each inherits the
+builder's current direction/null-placement defaults.
 
 **specs** (`pluss::RangeView<DataFrame::ArrangeSpec>`)
-    Several `{feature, ascending, nulls_last}` specs, each carrying its own
-    direction and null placement independent of the builder defaults.
+
+Several `{feature, ascending, nulls_last}` specs, each carrying its own
+direction and null placement independent of the builder defaults.
 
 ## Returns
 

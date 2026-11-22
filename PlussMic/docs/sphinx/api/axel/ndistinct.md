@@ -21,8 +21,9 @@ frame via [`map()`](map.md).
 ## Parameters
 
 **options** (`pluss::kindle::DistinctOptions`, optional)
-    `{bool dropnull = true}` — whether null values are excluded before
-    counting distinct values. Defaults to excluding them.
+
+`{bool dropnull = true}` — whether null values are excluded before
+counting distinct values. Defaults to excluding them.
 
 ## Returns
 

@@ -22,7 +22,8 @@ The range applies to every trace of the pane that is coloured by data: clouds, f
 ## Parameters
 
 **limits** (`Range1d`)
-    The values of the lowest and the highest colour. `low` must be strictly below `high`, both finite.
+
+The values of the lowest and the highest colour. `low` must be strictly below `high`, both finite.
 
 ## Returns
 

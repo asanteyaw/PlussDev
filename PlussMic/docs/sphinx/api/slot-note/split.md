@@ -34,18 +34,22 @@ the widest one is `NULL` in the extra features.
 ## Parameters
 
 **delimiter** / **pattern** (`std::string_view`)
-    The literal delimiter (first overload) or literal/regex pattern
-    (second overload). Must not be empty.
+
+The literal delimiter (first overload) or literal/regex pattern
+(second overload). Must not be empty.
 
 **limit** (`std::int64_t`, first overload, default `-1`)
-    Maximum number of splits to perform; `-1` means unlimited.
+
+Maximum number of splits to perform; `-1` means unlimited.
 
 **prefix** (`std::string`, first overload, default `"part"`)
-    Base name for the output features: `<prefix>_0`, `<prefix>_1`, ...
+
+Base name for the output features: `<prefix>_0`, `<prefix>_1`, ...
 
 **options** (`pluss::table::TextOptions`, second overload)
-    `options.regex` (default `false`), `options.limit` (default `-1`),
-    `options.prefix` (default `"part"`).
+
+`options.regex` (default `false`), `options.limit` (default `-1`),
+`options.prefix` (default `"part"`).
 
 ## Returns
 

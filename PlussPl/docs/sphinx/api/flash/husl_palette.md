@@ -27,8 +27,9 @@ The name is a naming convenience, not a claim of colorspace equivalence.
 ## Parameters
 
 **n** (`std::int64_t`, default `6`)
-    Forwarded to [`flash::hls_palette`](hls_palette.md) — see that page for the
-    minimum.
+
+Forwarded to [`flash::hls_palette`](hls_palette.md) — see that page for the
+minimum.
 
 ## Returns
 

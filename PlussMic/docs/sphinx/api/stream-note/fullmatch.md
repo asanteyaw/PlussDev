@@ -21,7 +21,8 @@ replacing it with a `Bool` `Series` stream. Equivalent to
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavor regular expression that must match the whole string.
+
+An ECMAScript-flavor regular expression that must match the whole string.
 
 ## Returns
 

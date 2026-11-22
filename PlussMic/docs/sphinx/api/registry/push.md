@@ -21,10 +21,12 @@ value to **every** field.
 ## Parameters
 
 **key** (`std::string_view`)
-    The field to append to (single-key overload). Throws if it doesn't exist.
+
+The field to append to (single-key overload). Throws if it doesn't exist.
 
 **value** (`const Slot::Value&`)
-    The value to append.
+
+The value to append.
 
 ## Returns
 

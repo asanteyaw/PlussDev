@@ -23,13 +23,16 @@ already prefixed by `"<table>."`. The batch overloads add several
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own feature to count distinct non-null values of.
+
+The scoped table's own feature to count distinct non-null values of.
 
 **alias** (`std::string_view`, default empty)
-    The output column name.
+
+The output column name.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `ndistinct` requests on the same scoped table, added in order.
+
+Several `ndistinct` requests on the same scoped table, added in order.
 
 ## Returns
 

@@ -59,12 +59,14 @@ call win over both. The rules, the directive error messages and compiled example
 ## Parameters
 
 **y_feature** / **y_features**
-    Same as [`line()`](line.md): one or more numeric features, each drawn as its own filled
-    area trace, overlapping rather than stacked. At least one is required — an empty list
-    throws `"DataFrame::plot().area: at least one y feature is required"`.
+
+Same as [`line()`](line.md): one or more numeric features, each drawn as its own filled
+area trace, overlapping rather than stacked. At least one is required — an empty list
+throws `"DataFrame::plot().area: at least one y feature is required"`.
 
 **x_feature** (`std::string_view`)
-    Same three-step resolution as [`line()`](line.md).
+
+Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaPlotOptions`)
 

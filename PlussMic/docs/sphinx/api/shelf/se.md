@@ -26,13 +26,15 @@ the scalar validity mask rather than trust the printed number in that case.
 ## Parameters
 
 **target** (`ErrorTarget`, default `Mean`)
-    Which statistic's standard error to compute. Only `Mean` is currently
-    implemented; `Median` throws.
+
+Which statistic's standard error to compute. Only `Mean` is currently
+implemented; `Median` throws.
 
 **options** (`StatisticOptions`, default `{}`)
-    `ddof` (default `1`): the same divisor adjustment `var()`/`std()` use.
-    `min_count` (default `1`): the smallest observed count still considered
-    valid; below it, the result is marked invalid rather than thrown.
+
+`ddof` (default `1`): the same divisor adjustment `var()`/`std()` use.
+`min_count` (default `1`): the smallest observed count still considered
+valid; below it, the result is marked invalid rather than thrown.
 
 ## Returns
 

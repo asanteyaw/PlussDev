@@ -25,7 +25,8 @@ Check for `-1` in the returned `Shelf` if you need to detect misses.
 ## Parameters
 
 **targets** (`const Shelf&`)
-    The depth-label values to look up.
+
+The depth-label values to look up.
 
 ## Returns
 

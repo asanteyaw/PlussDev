@@ -21,7 +21,8 @@ to every frame via [`Axel::map`](../axel/map.md).
 ## Parameters
 
 **token** (`std::string_view`)
-    The suffix each surviving field name must end with.
+
+The suffix each surviving field name must end with.
 
 ## Returns
 

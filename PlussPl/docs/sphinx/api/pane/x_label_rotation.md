@@ -20,7 +20,8 @@ The angle must be finite. Infinity and NaN are refused with `pluss::Error` and t
 ## Parameters
 
 **degrees** (`double`)
-    The angle in degrees. Finite.
+
+The angle in degrees. Finite.
 
 ## Returns
 

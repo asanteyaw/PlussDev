@@ -28,15 +28,17 @@ for the full explanation of this in-place composition pattern.
 ## Parameters
 
 **figure** (`pluss::pl::Studio&`, in-place overload only)
-    An existing figure to append the table pane into.
+
+An existing figure to append the table pane into.
 
 **options** (`BriefPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::brief`](../../api/dataframe-plot/brief.md)
-    (`title`, `precision`, `include_header`, `max_cases`, `transpose`,
-    `include_case_index`, `features_per_table`, `tables_per_row`, `table_gap_spaces`).
-    `features_per_table`/`tables_per_row` have no visible effect here since there is always
-    exactly one feature (the bound shelf) to lay out.
+
+The identical struct documented on
+[`DataFramePlotAccessor::brief`](../../api/dataframe-plot/brief.md)
+(`title`, `precision`, `include_header`, `max_cases`, `transpose`,
+`include_case_index`, `features_per_table`, `tables_per_row`, `table_gap_spaces`).
+`features_per_table`/`tables_per_row` have no visible effect here since there is always
+exactly one feature (the bound shelf) to lay out.
 
 ## Returns
 

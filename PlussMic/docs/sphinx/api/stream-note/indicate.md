@@ -29,10 +29,12 @@ important callout.
 ## Parameters
 
 **delimiter** (`std::string_view`, defaults to `"|"`)
-    The literal text used to split each value into tokens before binarizing.
+
+The literal text used to split each value into tokens before binarizing.
 
 **prefix** (`std::string`, default empty)
-    Optional prefix prepended to each generated column's name.
+
+Optional prefix prepended to each generated column's name.
 
 ## Returns
 

@@ -22,7 +22,8 @@ The setter requires its argument, so `pane.axes_visible()` always reads.
 ## Parameters
 
 **enable** (`bool`, setter only)
-    `true` to draw axis lines and ticks, `false` to leave them out.
+
+`true` to draw axis lines and ticks, `false` to leave them out.
 
 ## Returns
 

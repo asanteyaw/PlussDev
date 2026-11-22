@@ -22,7 +22,8 @@ all of which throw on an unknown name rather than returning an empty result).
 ## Parameters
 
 **name** (`std::string_view`)
-    The relationship name to check, matching [`Relationship::name`](relationships.md).
+
+The relationship name to check, matching [`Relationship::name`](relationships.md).
 
 ## Returns
 

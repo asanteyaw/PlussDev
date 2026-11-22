@@ -19,10 +19,12 @@ The span must be finite and strictly increasing (`low < high`); anything else th
 ## Parameters
 
 **span** (`Range1d`)
-    The range, `{low, high}`, in data units. Finite and strictly increasing.
+
+The range, `{low, high}`, in data units. Finite and strictly increasing.
 
 **label** (`std::string`, default empty)
-    Text written on the band. Empty draws no text.
+
+Text written on the band. Empty draws no text.
 
 ## Returns
 

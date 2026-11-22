@@ -37,25 +37,30 @@ A figure-sizing helper — two independent overloads:
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to resize/rescale.
+
+The figure to resize/rescale.
 
 **width**, **height** (`double`, raw overload)
-    The new canvas size in points, forwarded to [`Studio::size`](../studio/size.md).
+
+The new canvas size in points, forwarded to [`Studio::size`](../studio/size.md).
 
 **tick_font_scale**, **axis_label_font_scale** (`double`, default `1.0` each, raw
 overload)
-    Forwarded to [`Studio::context_scales`](../studio/context_scales.md), and also
-    re-applied per-pane to every pane currently in the figure (via the same internal
-    tick-font-scale helper `flash::set_theme` uses).
+
+Forwarded to [`Studio::context_scales`](../studio/context_scales.md), and also
+re-applied per-pane to every pane currently in the figure (via the same internal
+tick-font-scale helper `flash::set_theme` uses).
 
 **context** (`FlashContext`, `FlashContext` overload)
-    See the field table below.
+
+See the field table below.
 
 **width**, **height** (`std::optional<double>`, default empty, `FlashContext` overload)
-    When set, used **instead of** the preset's own base width/height (the preset's tick/
-    axis font scale is still applied). When `context == FlashContext::Inherit` and
-    either is set, only [`Studio::size`](../studio/size.md) is called (no font-scale
-    change) — see the important callout below.
+
+When set, used **instead of** the preset's own base width/height (the preset's tick/
+axis font scale is still applied). When `context == FlashContext::Inherit` and
+either is set, only [`Studio::size`](../studio/size.md) is called (no font-scale
+change) — see the important callout below.
 
 ## `FlashContext` values
 
@@ -63,17 +68,21 @@ Each non-`Inherit` value maps to a fixed `(width, height, tick_font_scale,
 axis_label_font_scale)` quadruple:
 
 **Paper** — `920 × 640`, scale `0.8`/`0.8`
-    The smallest preset — sized for print/publication figures.
+
+The smallest preset — sized for print/publication figures.
 
 **Notebook** — `1200 × 780`, scale `1.0`/`1.0`
-    The baseline preset — identical values to `Inherit`'s own fallback numbers (see
-    below), just reached via an explicit named context instead of leaving sizing alone.
+
+The baseline preset — identical values to `Inherit`'s own fallback numbers (see
+below), just reached via an explicit named context instead of leaving sizing alone.
 
 **Talk** — `1440 × 900`, scale `1.3`/`1.3`
-    Larger canvas and font scale, sized for presentation/talk slides.
+
+Larger canvas and font scale, sized for presentation/talk slides.
 
 **Poster** — `1840 × 1160`, scale `1.6`/`1.6`
-    The largest preset, sized for poster printing.
+
+The largest preset, sized for poster printing.
 
 ```{important} Inherit is not "no preset" -- it is special-cased
 FlashContext::Inherit skips the preset table entirely: if width/height are also both

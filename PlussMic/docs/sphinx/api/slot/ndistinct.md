@@ -19,8 +19,9 @@ the source slot.
 ## Parameters
 
 **options** (`pluss::kindle::DistinctOptions`, optional)
-    `{bool dropnull = true}` — whether null values are dropped before
-    counting distinct values. Defaults to dropping them.
+
+`{bool dropnull = true}` — whether null values are dropped before
+counting distinct values. Defaults to dropping them.
 
 ## Returns
 

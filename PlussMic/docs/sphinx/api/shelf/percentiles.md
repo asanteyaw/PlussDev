@@ -31,12 +31,14 @@ like any other missing entry.
 ## Parameters
 
 **points** (`pluss::RangeView<double>`, default `{0.25, 0.5, 0.75}`)
-    The fractional positions to evaluate, each in `[0, 1]`. Must be
-    non-empty, or it throws.
+
+The fractional positions to evaluate, each in `[0, 1]`. Must be
+non-empty, or it throws.
 
 **min_count** (`std::int64_t`, default `1`)
-    The smallest number of observed values still considered valid. Below it,
-    every requested point comes back missing rather than throwing.
+
+The smallest number of observed values still considered valid. Below it,
+every requested point comes back missing rather than throwing.
 
 ## Returns
 

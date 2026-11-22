@@ -30,10 +30,12 @@ message pattern.
 ## Parameters
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    The statistic computed over each expanding window.
+
+The statistic computed over each expanding window.
 
 **options** (`const pluss::table::StatisticOptions&`)
-    `ddof` (default `1`), `min_count` (default `1`).
+
+`ddof` (default `1`), `min_count` (default `1`).
 
 ## Returns
 

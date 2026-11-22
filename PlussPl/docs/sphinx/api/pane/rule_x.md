@@ -19,10 +19,12 @@ The position must be finite; a NaN or infinite value throws `pluss::Error` and n
 ## Parameters
 
 **value** (`double`)
-    The position of the rule, in data units. Finite.
+
+The position of the rule, in data units. Finite.
 
 **label** (`std::string`, default empty)
-    Text written on the rule. Empty draws no text.
+
+Text written on the rule. Empty draws no text.
 
 ## Returns
 

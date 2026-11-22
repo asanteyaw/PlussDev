@@ -17,10 +17,12 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **ops**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 ## Returns
 

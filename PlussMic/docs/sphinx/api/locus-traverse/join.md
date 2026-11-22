@@ -34,10 +34,12 @@ The data is read only when `collect()` runs.
 ## Parameters
 
 **right** (`std::string_view`)
+
 : Name of the catalog to append. It must already exist in the captured Locus.
   The name is copied into the returned builder.
 
 **spec** (`const locus::JoinSpec&`)
+
 : Complete description of this hop.
 
 | Field | Meaning | Default |

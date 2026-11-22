@@ -29,10 +29,12 @@ model entirely — its result is a `pluss::table::DataFrame`, not a `Stream`.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavor regular expression.
+
+An ECMAScript-flavor regular expression.
 
 **options** (`const pluss::table::TextOptions&`, two-argument overload)
-    `options.case_sensitive` (default `true`): ignore case when `false`.
+
+`options.case_sensitive` (default `true`): ignore case when `false`.
 
 ## Returns
 

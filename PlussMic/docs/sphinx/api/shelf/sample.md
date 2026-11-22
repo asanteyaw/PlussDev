@@ -47,20 +47,24 @@ cross-platform guarantee of the exact indices drawn.
 ## Parameters
 
 **n** (`std::int64_t`)
-    Number of entries to draw. Must be `>= 0`. Without `replace`, capped silently
-    at `size()`.
+
+Number of entries to draw. Must be `>= 0`. Without `replace`, capped silently
+at `size()`.
 
 **frac** (floating-point)
-    Fraction of `size()` to draw, rounded to the nearest integer count. Must be
-    finite and `>= 0`. A value `> 1.0` requires `replace = true`.
+
+Fraction of `size()` to draw, rounded to the nearest integer count. Must be
+finite and `>= 0`. A value `> 1.0` requires `replace = true`.
 
 **random_state** (`std::uint64_t`, optional)
-    Seed for the random number generator. Omitted (or the no-`random_state`
-    overload) draws a fresh, non-reproducible seed each call via
-    `std::random_device`.
+
+Seed for the random number generator. Omitted (or the no-`random_state`
+overload) draws a fresh, non-reproducible seed each call via
+`std::random_device`.
 
 **replace** (`bool`, default `false`)
-    Whether a position can be drawn more than once.
+
+Whether a position can be drawn more than once.
 
 ## Returns
 

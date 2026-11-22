@@ -25,12 +25,13 @@ full explanation and the exact throw message.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A `strftime`-style format string. Recognized tokens: `%Y` (4-digit year),
-    `%m`/`%d` (2-digit month/day), `%H`/`%M`/`%S` (2-digit hour/minute/second),
-    `%f` (9-digit zero-padded nanoseconds), `%z` (UTC offset as
-    `+HH:MM`/`-HH:MM`, never a bare `Z`), `%a`/`%A` (abbreviated/full weekday
-    name), `%b`/`%B` (abbreviated/full month name), and `%%` (a literal `%`).
-    Cannot be empty.
+
+A `strftime`-style format string. Recognized tokens: `%Y` (4-digit year),
+`%m`/`%d` (2-digit month/day), `%H`/`%M`/`%S` (2-digit hour/minute/second),
+`%f` (9-digit zero-padded nanoseconds), `%z` (UTC offset as
+`+HH:MM`/`-HH:MM`, never a bare `Z`), `%a`/`%A` (abbreviated/full weekday
+name), `%b`/`%B` (abbreviated/full month name), and `%%` (a literal `%`).
+Cannot be empty.
 
 ## Returns
 

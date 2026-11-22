@@ -21,14 +21,17 @@ lag-`n` correlation; a formless cloud suggests none). Single overload, single pa
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
 
 **values** (series-convertible)
-    The sequence to lag against itself. Must contain at least two points, or `lagplot`
-    throws `pluss::Error("flash::lagplot requires at least two points")`.
+
+The sequence to lag against itself. Must contain at least two points, or `lagplot`
+throws `pluss::Error("flash::lagplot requires at least two points")`.
 
 **options** (`const LagPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `LagPlotOptions` fields
 

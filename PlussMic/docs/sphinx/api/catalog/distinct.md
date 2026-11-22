@@ -36,7 +36,8 @@ calling this. See Example 1.
 ## Parameters
 
 **options** (`DistinctOptions`, optional)
-    `dropnull` (default `true`) excludes `NULL` from each stream's distinct-value list.
+
+`dropnull` (default `true`) excludes `NULL` from each stream's distinct-value list.
 
 ## Returns
 

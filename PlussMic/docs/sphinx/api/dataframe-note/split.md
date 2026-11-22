@@ -62,22 +62,26 @@ demonstration with identical data under both overloads.
 ## Parameters
 
 **delimiter** / **pattern** (`std::string_view`)
-    The literal delimiter (first overload) or literal/regex pattern (second
-    overload, depending on `options.regex`) to split on. An empty delimiter
-    throws `"Shelf::split: delimiter cannot be empty"`.
+
+The literal delimiter (first overload) or literal/regex pattern (second
+overload, depending on `options.regex`) to split on. An empty delimiter
+throws `"Shelf::split: delimiter cannot be empty"`.
 
 **limit** (`std::int64_t`, first overload, default `-1`)
-    Maximum number of splits to perform (producing at most `limit + 1`
-    pieces); `-1` means unlimited.
+
+Maximum number of splits to perform (producing at most `limit + 1`
+pieces); `-1` means unlimited.
 
 **prefix** (`std::string`, first overload, default `"part"`)
-    Base name for the output columns: `<prefix>_0`, `<prefix>_1`, ...
+
+Base name for the output columns: `<prefix>_0`, `<prefix>_1`, ...
 
 **options** (`TextOptions`, second overload)
-    `options.regex` (default `false`): treat `pattern` as regex.
-    `options.limit` (default `-1`): cap the number of splits.
-    `options.prefix` (default `"part"`): base name for output columns.
-    `options.case_sensitive` is **not** used by `split()`.
+
+`options.regex` (default `false`): treat `pattern` as regex.
+`options.limit` (default `-1`): cap the number of splits.
+`options.prefix` (default `"part"`): base name for output columns.
+`options.case_sensitive` is **not** used by `split()`.
 
 ## Returns
 

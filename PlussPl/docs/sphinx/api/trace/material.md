@@ -21,7 +21,8 @@ A material only shows on a lit surface: the trace needs a [lighting mode](lighti
 ## Parameters
 
 **profile** (`MaterialProfile`)
-    `Default`, `Dull`, `Shiny` or `Metal`.
+
+`Default`, `Dull`, `Shiny` or `Metal`.
 
 ## Returns
 

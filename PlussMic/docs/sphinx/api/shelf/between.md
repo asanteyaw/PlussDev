@@ -45,24 +45,29 @@ want to be certain rather than relying on the default. See Examples 1 and 5.
 ## Parameters
 
 **a**, **b** (`double`)
-    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind shelf.
+
+Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind shelf.
 
 **lo**, **hi** (`std::string_view`)
-    Lower and upper scalar temporal literals, parsed the same way
-    [`compare()`](compare.md)'s text overload parses them against a temporal shelf.
-    Requires a `Timeline`- or `TimeIndex`-kind shelf.
+
+Lower and upper scalar temporal literals, parsed the same way
+[`compare()`](compare.md)'s text overload parses them against a temporal shelf.
+Requires a `Timeline`- or `TimeIndex`-kind shelf.
 
 **lo**, **hi** (`const Shelf&`)
-    Lower- and upper-bound shelves, applied element by element (row `i`'s value is tested
-    against `lo`'s and `hi`'s row `i`).
+
+Lower- and upper-bound shelves, applied element by element (row `i`'s value is tested
+against `lo`'s and `hi`'s row `i`).
 
 **inclusive** (`bool`)
-    Shared boundary closure: `true` closes both boundaries (`>=`/`<=`), `false` opens both
-    (`>`/`<`). Default differs by overload family — see the important callout above.
+
+Shared boundary closure: `true` closes both boundaries (`>=`/`<=`), `false` opens both
+(`>`/`<`). Default differs by overload family — see the important callout above.
 
 **include_left**, **include_right** (`bool`)
-    Independent boundary closure — `include_left` controls the lower bound, `include_right`
-    the upper bound. Use this form when the two boundaries need different treatment.
+
+Independent boundary closure — `include_left` controls the lower bound, `include_right`
+the upper bound. Use this form when the two boundaries need different treatment.
 
 ## Returns
 

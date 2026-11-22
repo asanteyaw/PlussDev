@@ -21,7 +21,8 @@ no-op: it returns an equivalent stream rather than throwing.
 ## Parameters
 
 **key** (`std::string_view`)
-    The metadata key to remove.
+
+The metadata key to remove.
 
 ## Returns
 

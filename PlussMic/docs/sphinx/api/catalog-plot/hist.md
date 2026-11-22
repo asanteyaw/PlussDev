@@ -36,15 +36,17 @@ y-axis meaning ("count"), regardless of key count.
 
 **key** / **keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `keys` defaults to `{}`)
-    Same resolution as [`line()`](line.md): an empty `keys` takes the keys of the selection (`options.keys`, else the accessor's), or, with none set, every
-    plottable (Series/Timeline/TimeIndex) key in the catalog; an explicitly named unknown
-    key throws `"Catalog::plot().hist: unknown key '<name>'"`.
+
+Same resolution as [`line()`](line.md): an empty `keys` takes the keys of the selection (`options.keys`, else the accessor's), or, with none set, every
+plottable (Series/Timeline/TimeIndex) key in the catalog; an explicitly named unknown
+key throws `"Catalog::plot().hist: unknown key '<name>'"`.
 
 **bins** (`std::int64_t`, default `20`)
-    Bin count, forwarded straight into a `CatalogHistPlotOptions{.bins = bins}`. Unlike
-    `DataFrame::plot().hist()`, there is no ambiguity between "explicit 20" and "the
-    accessor's own default" here — `Catalog::plot().hist()` never reads
-    `options().default_bins` at all; `20` is simply this parameter's own default value.
+
+Bin count, forwarded straight into a `CatalogHistPlotOptions{.bins = bins}`. Unlike
+`DataFrame::plot().hist()`, there is no ambiguity between "explicit 20" and "the
+accessor's own default" here — `Catalog::plot().hist()` never reads
+`options().default_bins` at all; `20` is simply this parameter's own default value.
 
 **options** (`CatalogHistPlotOptions`)
 

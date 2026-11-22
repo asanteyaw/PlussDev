@@ -74,13 +74,15 @@ axes has size 1, that axis is broadcast against the other.
 ## Parameters
 
 **equation** (`std::string_view`)
-    The subscripts, as described above. The number of comma-separated terms
-    must equal `operands.size()`, and each term must name exactly as many axes
-    as its operand has (or, if it contains `...`, at most that many).
+
+The subscripts, as described above. The number of comma-separated terms
+must equal `operands.size()`, and each term must name exactly as many axes
+as its operand has (or, if it contains `...`, at most that many).
 
 **operands** (`const std::vector<Series>&`)
-    The operands, in the order of the equation's terms. A braced list works:
-    `Series::einsum("ij,jk->ik", {a, b})`. Operands should share a dtype.
+
+The operands, in the order of the equation's terms. A braced list works:
+`Series::einsum("ij,jk->ik", {a, b})`. Operands should share a dtype.
 
 ## Returns
 

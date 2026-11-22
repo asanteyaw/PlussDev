@@ -35,15 +35,17 @@ overlaid on a shared `"value"`/`"density"` axis pair.
 
 **key** / **keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `keys` defaults to `{}`)
-    Same resolution as [`hist()`](hist.md): an empty `keys` selects every
-    plottable key; an explicitly named unknown key throws
-    `"Catalog::plot().density: unknown key '<name>'"`, the same way `hist()`'s Example 5
-    does.
+
+Same resolution as [`hist()`](hist.md): an empty `keys` selects every
+plottable key; an explicitly named unknown key throws
+`"Catalog::plot().density: unknown key '<name>'"`, the same way `hist()`'s Example 5
+does.
 
 **points** (`std::int64_t`, default `128`)
-    The number of points the density curve is evaluated at, forwarded into a
-    `CatalogDensityPlotOptions{.points = points}`. Internally clamped to a minimum of `16`
-    regardless of what's passed.
+
+The number of points the density curve is evaluated at, forwarded into a
+`CatalogDensityPlotOptions{.points = points}`. Internally clamped to a minimum of `16`
+regardless of what's passed.
 
 **options** (`CatalogDensityPlotOptions`)
 

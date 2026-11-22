@@ -56,20 +56,24 @@ mechanics.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **values** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per facet — `values[i]` is that facet's complete sample series. Must be
-    non-empty, or `disgridplot` throws
-    `pluss::Error("flash::disgridplot requires at least one facet series")`.
-    Unlike `relgridplot`/`catgridplot`, there is no second series to align against, so
-    this is the only shape check.
+
+One entry per facet — `values[i]` is that facet's complete sample series. Must be
+non-empty, or `disgridplot` throws
+`pluss::Error("flash::disgridplot requires at least one facet series")`.
+Unlike `relgridplot`/`catgridplot`, there is no second series to align against, so
+this is the only shape check.
 
 **kind** (`std::string_view`, kind-string overloads only)
-    `"hist"`, `"density"`, `"ecdf"`, or `"rug"` — resolved via `flash::disgrid_kind`.
+
+`"hist"`, `"density"`, `"ecdf"`, or `"rug"` — resolved via `flash::disgrid_kind`.
 
 **options** (`const DisGridPlotOptions&`, optional, options overloads only)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

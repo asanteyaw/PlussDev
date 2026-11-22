@@ -30,15 +30,17 @@ not compile.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    The numeric features to overlay. An empty range (the default) selects **every** numeric
-    feature present in the first frame.
+
+The numeric features to overlay. An empty range (the default) selects **every** numeric
+feature present in the first frame.
 
 **options** (`const AtlasDepthComparePlotOptions&`)
-    `statistic` (`AtlasDepthStatistic`, default `Mean`): the per-frame reduction applied to every
-    feature. `show_grid` (default `true`). `line_width` (default `1.5F`). `max_features`
-    (`std::int64_t`, default `0`): caps the number of features actually plotted — `0` means no
-    cap; a positive value truncates the (deduplicated) selection down to that many, keeping the
-    first ones in selection order.
+
+`statistic` (`AtlasDepthStatistic`, default `Mean`): the per-frame reduction applied to every
+feature. `show_grid` (default `true`). `line_width` (default `1.5F`). `max_features`
+(`std::int64_t`, default `0`): caps the number of features actually plotted — `0` means no
+cap; a positive value truncates the (deduplicated) selection down to that many, keeping the
+first ones in selection order.
 
 ## Returns
 

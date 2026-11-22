@@ -32,10 +32,12 @@ build-support check.
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The `.parquet` file to read.
+
+The `.parquet` file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying reader options.
+
+A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 

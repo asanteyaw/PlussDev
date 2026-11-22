@@ -23,6 +23,14 @@ SPECS = HERE / "specs"
 VERIFY = ROOT / "PlussTils" / "tools" / "verify_example.sh"
 CACHE = pathlib.Path(os.environ.get("PLOTDOCS_CACHE", tempfile.gettempdir())) / "plotdocs_cache"
 
+sys.path.insert(0, str(ROOT / "tools"))
+from docs_dedent_params import transform as _dedent_params  # noqa: E402
+
+
+def params_text(text):
+    """Parameter descriptions as Markdown paragraphs: a bold name line, a blank line, then the unindented description."""
+    return _dedent_params(text)[0]
+
 HARNESS = """#include <pluss/pl/plusspl.h>
 #include <cmath>
 #include <filesystem>
@@ -161,7 +169,7 @@ def render_method(page, results, prev, nxt, family):
     slug = page["slug"]
     L = ["<!-- pluss-hand-authored -->", "", f"# {page['title']}", "", f"[Back to {family.capitalize()} API Reference](../../{family}_api_reference)", "",
          "## Signature", "", "```cpp", page["signature"].strip("\n"), "```", "", "## What It Does", "", page["intro"].strip("\n"), "",
-         "## Parameters", "", page.get("parameters", "*(none)*").strip("\n"), "", "## Returns", "", page["returns"].strip("\n"), "", "## Examples", ""]
+         "## Parameters", "", params_text(page.get("parameters", "*(none)*").strip("\n")).strip("\n"), "", "## Returns", "", page["returns"].strip("\n"), "", "## Examples", ""]
     for i, ex in enumerate(page["examples"], 1):
         stdout, svg = results[(slug, i)]
         L += [f"Example {i}. {ex['text'].strip()}", "", "```cpp", ex["code"].strip("\n"), "```", ""]

@@ -28,7 +28,8 @@ throws otherwise).
 ## Parameters
 
 **field** (`std::string_view`)
-    The field name to look for.
+
+The field name to look for.
 
 ## Returns
 

@@ -21,13 +21,15 @@ since a `Stream` is always one series. Both overloads forward to
 ## Parameters
 
 **points** (`std::int64_t`, default `128`)
-    The number of evaluation points used to draw the curve. Internally clamped to a
-    minimum of `16`.
+
+The number of evaluation points used to draw the curve. Internally clamped to a
+minimum of `16`.
 
 **options** (`DensityPlotOptions`)
-    The identical struct documented on
-    [`CatalogPlotAccessor::density`](../catalog-plot/density.md) (`points`, `alpha`,
-    `line_width`).
+
+The identical struct documented on
+[`CatalogPlotAccessor::density`](../catalog-plot/density.md) (`points`, `alpha`,
+`line_width`).
 
 ## Returns
 

@@ -21,7 +21,8 @@ unchanged onto the result).
 ## Parameters
 
 **fn** (`const std::function<Catalog(const Catalog&)>&`)
-    A callback receiving one catalog and returning its replacement. Must not be empty.
+
+A callback receiving one catalog and returning its replacement. Must not be empty.
 
 ## Returns
 

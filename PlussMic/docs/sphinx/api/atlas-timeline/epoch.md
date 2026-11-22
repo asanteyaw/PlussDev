@@ -21,9 +21,10 @@ broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
 ## Parameters
 
 **unit** (`TimeUnit`, default `TimeUnit::Nanos`)
-    One of the fixed-duration units: `Nanos`, `Micros`, `Millis`, `Seconds`, or `Days`.
-    Passing a span-only unit (`Weeks`, `Months`, `Years`, `BusinessDays` — meant for
-    [`span()`](span.md), not a fixed epoch count) throws.
+
+One of the fixed-duration units: `Nanos`, `Micros`, `Millis`, `Seconds`, or `Days`.
+Passing a span-only unit (`Weeks`, `Months`, `Years`, `BusinessDays` — meant for
+[`span()`](span.md), not a fixed epoch count) throws.
 
 ## Returns
 

@@ -23,10 +23,12 @@ Divides the figure into a grid of `rows` by `cols` equal cells, with a gutter be
 ## Parameters
 
 **rows**, **cols** (`std::int64_t`)
-    The number of rows and columns. Positive.
+
+The number of rows and columns. Positive.
 
 **gutter_x**, **gutter_y** (`double`, default `auto_gutter`)
-    The gap between columns and between rows: `auto_gutter` for a share of a cell, or a distance. Finite and not negative.
+
+The gap between columns and between rows: `auto_gutter` for a share of a cell, or a distance. Finite and not negative.
 
 ## Returns
 

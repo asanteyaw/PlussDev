@@ -40,15 +40,18 @@ every overload requires at least one named feature.
 ## Parameters
 
 **feature** (`std::string_view`)
-    A single numeric feature to draw as one density curve.
+
+A single numeric feature to draw as one density curve.
 
 **features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
-    Several numeric features, each drawn as its own curve on the shared pane.
+
+Several numeric features, each drawn as its own curve on the shared pane.
 
 **points** (`std::int64_t`, default `128`)
-    The number of evaluation points used to draw each curve. Internally clamped to a
-    minimum of `16` regardless of what's passed — `density(feature, 1)` still draws a
-    16-point curve, not a degenerate one-point line.
+
+The number of evaluation points used to draw each curve. Internally clamped to a
+minimum of `16` regardless of what's passed — `density(feature, 1)` still draws a
+16-point curve, not a degenerate one-point line.
 
 **options** (`DensityPlotOptions`)
 

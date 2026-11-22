@@ -30,9 +30,10 @@ regex pattern anchored at the start.
 ## Parameters
 
 **prefix** (`std::string_view`)
-    The literal text to check for at the start of each cell. An empty
-    prefix matches every non-null cell (every string starts with the empty
-    string).
+
+The literal text to check for at the start of each cell. An empty
+prefix matches every non-null cell (every string starts with the empty
+string).
 
 ## Returns
 

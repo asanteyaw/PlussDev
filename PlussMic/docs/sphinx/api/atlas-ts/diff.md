@@ -24,8 +24,9 @@ zeros rather than throwing.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The shift distance used to build the comparison base, within each frame
-    independently.
+
+The shift distance used to build the comparison base, within each frame
+independently.
 
 ## Returns
 

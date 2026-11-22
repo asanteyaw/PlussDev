@@ -40,18 +40,22 @@ represent discrete categories) skips that step entirely.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::cloud`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::cloud`, which requires it.
 
 **categories** (`const Note&`, first overload only)
-    The categorical grouping variable. Distinct labels become x-axis category tick text,
-    in first-seen order.
+
+The categorical grouping variable. Distinct labels become x-axis category tick text,
+in first-seen order.
 
 **group** (series-convertible, second overload only)
-    A numeric x-position variable, paired with `values` by index. No category-label setup
-    is performed.
+
+A numeric x-position variable, paired with `values` by index. No category-label setup
+is performed.
 
 **values** (series-convertible, or `const Series&` for the `Note` overload)
-    The y-axis observation values.
+
+The y-axis observation values.
 
 ## Returns
 

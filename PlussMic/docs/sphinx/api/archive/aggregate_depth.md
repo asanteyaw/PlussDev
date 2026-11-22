@@ -21,8 +21,9 @@ keeps the archive's own depth.
 ## Parameters
 
 **fn** (`const std::function<Catalog(const std::vector<Catalog>&)>&`)
-    A callback receiving every catalog in the archive at once, returning a single `Catalog`.
-    Must not be empty.
+
+A callback receiving every catalog in the archive at once, returning a single `Catalog`.
+Must not be empty.
 
 ## Returns
 

@@ -43,18 +43,21 @@ for the calendar-duration form.
 ## Parameters
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions. Must be positive, or it throws.
+
+The trailing window size, in positions. Must be positive, or it throws.
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
-    `Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
+`Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const pluss::table::WindowOptions&`)
-    `min_count` (default `1`): minimum non-missing observations required for a
-    position's output to be non-`NULL`. `ddof` (default `1`): delta degrees of
-    freedom for `Var`/`Std`. `centered` (default `false`): whether the window
-    is centered on the position instead of trailing it. `closure` (default
-    `Right`): which end(s) of the window are inclusive.
+
+`min_count` (default `1`): minimum non-missing observations required for a
+position's output to be non-`NULL`. `ddof` (default `1`): delta degrees of
+freedom for `Var`/`Std`. `centered` (default `false`): whether the window
+is centered on the position instead of trailing it. `closure` (default
+`Right`): which end(s) of the window are inclusive.
 
 ## Returns
 

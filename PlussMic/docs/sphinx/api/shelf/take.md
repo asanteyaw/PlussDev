@@ -25,9 +25,10 @@ list.
 ## Parameters
 
 **indices** (`std::span<const std::int64_t>`)
-    The positions to select, in the order they should appear in the result.
-    Repeats are allowed. Negative values count from the end; any index still
-    out-of-range after that resolution throws.
+
+The positions to select, in the order they should appear in the result.
+Repeats are allowed. Negative values count from the end; any index still
+out-of-range after that resolution throws.
 
 ## Returns
 

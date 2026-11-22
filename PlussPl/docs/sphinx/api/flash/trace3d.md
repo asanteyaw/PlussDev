@@ -29,10 +29,12 @@ pattern [`flash::scene3d`](scene3d.md) uses for pane-level scene configuration. 
 ## Parameters
 
 **trace** (`Trace&`)
-    The target trace to restyle.
+
+The target trace to restyle.
 
 **options** (`const Trace3DOptions&`)
-    See the field table below.
+
+See the field table below.
 
 ## `Trace3DOptions` fields
 

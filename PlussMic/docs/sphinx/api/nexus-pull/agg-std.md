@@ -29,14 +29,17 @@ only column names, not computed values, so nothing here depends on it.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own numeric feature to take the standard deviation
-    of.
+
+The scoped table's own numeric feature to take the standard deviation
+of.
 
 **alias** (`std::string_view`, default empty)
-    The output column name.
+
+The output column name.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `std` requests on the same scoped table, added in order.
+
+Several `std` requests on the same scoped table, added in order.
 
 ## Returns
 

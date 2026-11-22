@@ -21,10 +21,12 @@ and throw condition from `rename()` applies unchanged.
 ## Parameters
 
 **from** (`std::string_view`)
-    The existing stream name.
+
+The existing stream name.
 
 **to** (`std::string_view`)
-    The new name for that stream.
+
+The new name for that stream.
 
 ## Returns
 

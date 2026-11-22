@@ -19,7 +19,8 @@ The title belongs to this pane. The figure's own heading is [`Studio::headline`]
 ## Parameters
 
 **title** (`std::string`)
-    The title. Empty for none.
+
+The title. Empty for none.
 
 ## Returns
 

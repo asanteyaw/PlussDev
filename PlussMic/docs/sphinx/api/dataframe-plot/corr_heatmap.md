@@ -26,8 +26,9 @@ feature `j`. Follows the same numeric-feature rules as [`box()`](box.md) — an 
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features to correlate. Empty (the default) infers every numeric feature in the
-    frame — see [`box()`](box.md)'s important callout for the exact rule and throw text.
+
+Numeric features to correlate. Empty (the default) infers every numeric feature in the
+frame — see [`box()`](box.md)'s important callout for the exact rule and throw text.
 
 **options** (`CorrHeatmapPlotOptions`)
 

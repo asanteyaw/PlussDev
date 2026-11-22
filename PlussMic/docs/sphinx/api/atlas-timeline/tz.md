@@ -23,9 +23,10 @@ calendar fields (year/month/day/hour, and box-table display) shifts.
 ## Parameters
 
 **name** (`std::string_view`)
-    The target timezone. Only `"UTC"` (also the empty string), `"America/Edmonton"`,
-    `"America/New_York"`, and `"Europe/London"` are recognized (case-insensitive); any
-    other name throws.
+
+The target timezone. Only `"UTC"` (also the empty string), `"America/Edmonton"`,
+`"America/New_York"`, and `"Europe/London"` are recognized (case-insensitive); any
+other name throws.
 
 ## Returns
 

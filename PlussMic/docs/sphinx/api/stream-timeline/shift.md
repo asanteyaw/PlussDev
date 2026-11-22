@@ -27,14 +27,16 @@ full explanation and the exact throw message.
 ## Parameters
 
 **periods** (`std::int64_t`)
-    How many `freq` units to shift by. Positive moves forward in time,
-    negative moves backward.
+
+How many `freq` units to shift by. Positive moves forward in time,
+negative moves backward.
 
 **freq** (`std::string_view`)
-    One of `"y"`/`"yr"`/`"year"`/`"years"`/`"annual"`,
-    `"mo"`/`"mth"`/`"month"`/`"months"`, `"d"`/`"day"`/`"days"`,
-    `"h"`/`"hr"`/`"hour"`/`"hours"`, `"t"`/`"min"`/`"minute"`/`"minutes"`, or
-    `"s"`/`"sec"`/`"second"`/`"seconds"` (case-insensitive). Cannot be empty.
+
+One of `"y"`/`"yr"`/`"year"`/`"years"`/`"annual"`,
+`"mo"`/`"mth"`/`"month"`/`"months"`, `"d"`/`"day"`/`"days"`,
+`"h"`/`"hr"`/`"hour"`/`"hours"`, `"t"`/`"min"`/`"minute"`/`"minutes"`, or
+`"s"`/`"sec"`/`"second"`/`"seconds"` (case-insensitive). Cannot be empty.
 
 ## Returns
 

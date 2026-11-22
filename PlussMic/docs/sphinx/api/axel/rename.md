@@ -22,11 +22,13 @@ matching `Registry::rename()` overload per frame.
 ## Parameters
 
 **from** (`std::string_view`) / **to** (`std::string_view`)
-    Single-field form: the existing field name and its replacement.
+
+Single-field form: the existing field name and its replacement.
 
 **mapping** (`std::initializer_list<std::pair<std::string_view, std::string_view>>`)
-    Multi-field form: a list of `{from, to}` pairs to rename in one
-    call.
+
+Multi-field form: a list of `{from, to}` pairs to rename in one
+call.
 
 ## Returns
 

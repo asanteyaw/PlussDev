@@ -27,13 +27,15 @@ not compile.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The numeric feature to reduce and smooth, one value per frame.
+
+The numeric feature to reduce and smooth, one value per frame.
 
 **options** (`const AtlasDepthRollingPlotOptions&`)
-    `statistic` (`AtlasDepthStatistic`, default `Mean`). `window` (`std::int64_t`, default `3`):
-    the rolling-average window size, in frames. `show_raw` (`bool`, default `true`): whether the
-    unsmoothed raw series is drawn alongside the rolling average. `show_grid` (default `true`).
-    `raw_line_width`/`rolling_line_width` control line thickness.
+
+`statistic` (`AtlasDepthStatistic`, default `Mean`). `window` (`std::int64_t`, default `3`):
+the rolling-average window size, in frames. `show_raw` (`bool`, default `true`): whether the
+unsmoothed raw series is drawn alongside the rolling average. `show_grid` (default `true`).
+`raw_line_width`/`rolling_line_width` control line thickness.
 
 ## Returns
 

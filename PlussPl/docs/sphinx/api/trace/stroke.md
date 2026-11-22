@@ -23,7 +23,8 @@ Kinds that colour by value ignore the stroke: `fieldmap`, `contour`, `isoband`, 
 ## Parameters
 
 **color** (`Rgba`)
-    The new colour. The channels are fractions between 0 and 1.
+
+The new colour. The channels are fractions between 0 and 1.
 
 ## Returns
 

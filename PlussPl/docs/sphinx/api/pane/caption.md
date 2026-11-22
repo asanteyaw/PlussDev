@@ -19,7 +19,8 @@ A caption belongs to one pane and needs nothing else. The figure-level captions 
 ## Parameters
 
 **text** (`std::string`)
-    The caption. Empty for none.
+
+The caption. Empty for none.
 
 ## Returns
 

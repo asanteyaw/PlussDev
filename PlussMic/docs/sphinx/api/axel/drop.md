@@ -25,7 +25,8 @@ removing them. Implemented as [`map()`](map.md) applying
 ## Parameters
 
 **fields** (`std::span<const std::string_view>`, `std::initializer_list<std::string_view>`, or any range of string-view-like names)
-    One or more field names to drop from every frame.
+
+One or more field names to drop from every frame.
 
 ## Returns
 

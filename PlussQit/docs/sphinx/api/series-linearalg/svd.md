@@ -64,8 +64,9 @@ describes how strongly reversing the map can amplify error.
 ## Parameter
 
 **full_matrices** (`bool`, default `true`)
-    Controls whether `U` and `Vh` include complete orthonormal bases or only
-    the directions needed to reconstruct `A`. It never changes `.s`.
+
+Controls whether `U` and `Vh` include complete orthonormal bases or only
+the directions needed to reconstruct `A`. It never changes `.s`.
 
 For input `[...,m,n]`, let `k=min(m,n)`:
 

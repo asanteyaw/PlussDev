@@ -29,13 +29,16 @@ The levels are spread between the lowest and highest value of the field, and the
 ## Parameters
 
 **values** (`Series`-convertible, rank 3)
-    The field.
+
+The field.
 
 **x**, **y**, **z** (`Series`-convertible, optional)
-    The coordinates along each axis.
+
+The coordinates along each axis.
 
 **level_count** (`int`, default 4) or **levels** (container)
-    How many shells, or at which values.
+
+How many shells, or at which values.
 
 ## Returns
 

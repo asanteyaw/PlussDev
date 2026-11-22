@@ -33,10 +33,12 @@ CatalogNoteAccessor::findall's own important callout.
 ## Parameters
 
 **separator** (`std::string_view`)
-    Literal text to partition on — only the *first* occurrence is used.
+
+Literal text to partition on — only the *first* occurrence is used.
 
 **prefix** (`std::string`, default `"part"`)
-    Column-name prefix for the resulting `DataFrame`'s 3 columns.
+
+Column-name prefix for the resulting `DataFrame`'s 3 columns.
 
 ## Returns
 

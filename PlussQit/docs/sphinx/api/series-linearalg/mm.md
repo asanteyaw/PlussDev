@@ -40,8 +40,9 @@ silently selecting a different rank rule.
 ## Parameter
 
 **other** (`const Series&`)
-    The right-hand matrix. It must have rank 2, use the same dtype and platform
-    as the left matrix, and satisfy `left.size(1) == other.size(0)`.
+
+The right-hand matrix. It must have rank 2, use the same dtype and platform
+as the left matrix, and satisfy `left.size(1) == other.size(0)`.
 
 ## Returns
 

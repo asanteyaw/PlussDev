@@ -19,7 +19,8 @@ A volumetric pane has x, y and z axes and a camera that is set through its [`Len
 ## Parameters
 
 **title** (`std::string`, default empty)
-    The pane's title. Empty draws none.
+
+The pane's title. Empty draws none.
 
 ## Returns
 

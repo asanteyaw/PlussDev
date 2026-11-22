@@ -20,10 +20,12 @@ Returns a new registry with `other`'s values appended to one named field's
 ## Parameters
 
 **key** (`std::string_view`)
-    The field to append to. Throws if it doesn't exist.
+
+The field to append to. Throws if it doesn't exist.
 
 **other** (`const Slot&`)
-    The values to append. Must be defined.
+
+The values to append. Must be defined.
 
 ## Returns
 

@@ -19,8 +19,9 @@ replacing each `Note` value with a `Bool` `Series`.
 ## Parameters
 
 **prefix** (`std::string_view`)
-    The literal text to check for at the start of each value. Always a
-    literal comparison.
+
+The literal text to check for at the start of each value. Always a
+literal comparison.
 
 ## Returns
 

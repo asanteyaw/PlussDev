@@ -49,18 +49,20 @@ shorter streams instead of truncating longer ones. See Example 2.
 ## Parameters
 
 **policy** (`const TabelizePolicy&`, optional)
-    `align` controls truncate-vs-pad behavior on a ragged catalog (`Inner` truncates to
-    the shortest stream, the default; `Outer` pads to the longest). `fill` (default
-    `Null`) controls what fills the gaps under `Outer` alignment. `include_label_feature`
-    (default `false`) additionally adds the row-index axis as its own feature, named
-    `label_feature` (default `"label"`); `collision` decides what happens if that name
-    already exists as a stream.
+
+`align` controls truncate-vs-pad behavior on a ragged catalog (`Inner` truncates to
+the shortest stream, the default; `Outer` pads to the longest). `fill` (default
+`Null`) controls what fills the gaps under `Outer` alignment. `include_label_feature`
+(default `false`) additionally adds the row-index axis as its own feature, named
+`label_feature` (default `"label"`); `collision` decides what happens if that name
+already exists as a stream.
 
 **policy** (`const RaggedPolicy&`, alternative overload)
-    Selects the row domain, alignment, and absent-value handling through the shared
-    ragged policy. Pass an explicit policy, such as
-    `RaggedPolicy::defaults(OpClass::Rectangular)`. Exact-domain and loss-error
-    constraints are checked before conversion.
+
+Selects the row domain, alignment, and absent-value handling through the shared
+ragged policy. Pass an explicit policy, such as
+`RaggedPolicy::defaults(OpClass::Rectangular)`. Exact-domain and loss-error
+constraints are checked before conversion.
 
 ## Returns
 

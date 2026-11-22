@@ -29,12 +29,14 @@ Example 2, where the same seed reliably reproduces the same sample.
 ## Parameters
 
 **n** (`std::int64_t`)
-    Number of rows to sample. Clamped to `[0, nrows]` — requesting more rows than the
-    catalog has simply returns all of them (still shuffled), rather than throwing.
+
+Number of rows to sample. Clamped to `[0, nrows]` — requesting more rows than the
+catalog has simply returns all of them (still shuffled), rather than throwing.
 
 **random_state** (`std::optional<std::uint64_t>`, default `std::nullopt`)
-    An explicit seed for reproducible sampling. Omit it for a non-deterministic sample
-    seeded from the system's random device.
+
+An explicit seed for reproducible sampling. Omit it for a non-deterministic sample
+seeded from the system's random device.
 
 ## Returns
 

@@ -33,11 +33,12 @@ Filling a whole-number (integer) feature with a fractional value widens the feat
 ## Parameters
 
 **value**
-    The replacement for `NULL` cells. Its C++ type selects the overload — `double`
-    for `Series`, `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for
-    `Timeline`-kind shelves, `pluss::Duration` for `Duration`-kind shelves. The
-    `Timeline` overload requires a scalar value (`numel() == 1`); the `Duration`
-    overload requires exactly one value and that value must not itself be `NaT`.
+
+The replacement for `NULL` cells. Its C++ type selects the overload — `double`
+for `Series`, `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for
+`Timeline`-kind shelves, `pluss::Duration` for `Duration`-kind shelves. The
+`Timeline` overload requires a scalar value (`numel() == 1`); the `Duration`
+overload requires exactly one value and that value must not itself be `NaT`.
 
 ## Returns
 

@@ -29,9 +29,10 @@ rendered charts, under
 ## Parameters
 
 **options** (`const pluss::table::DataFramePlotOptions&`, optional)
-    Shared defaults applied to every chart method called on the returned accessor — most
-    relevantly `default_bins` (read by [`hist()`](../stream-plot/hist.md)'s ambiguity
-    handling).
+
+Shared defaults applied to every chart method called on the returned accessor — most
+relevantly `default_bins` (read by [`hist()`](../stream-plot/hist.md)'s ambiguity
+handling).
 
 ## Returns
 

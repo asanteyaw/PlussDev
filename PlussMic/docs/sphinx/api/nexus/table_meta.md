@@ -54,8 +54,9 @@ else reads it: [`grain_audit()`](grain_audit.md) throws if a feature named in
 ## Parameters
 
 **key** (`std::string_view`)
-    The table to look up. Does not need to exist in the workspace — see the important
-    callout below for what happens when it doesn't.
+
+The table to look up. Does not need to exist in the workspace — see the important
+callout below for what happens when it doesn't.
 
 ```{important} An unknown table returns std::nullopt, it does not throw
 Unlike most other lookups on `Nexus` (`frame()`, `apply()`, and friends, which throw

@@ -40,14 +40,16 @@ or non-numeric feature throws, matching the rest of the plotting accessor. If yo
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features to include in the matrix. Empty (the default) means "take the frame's
-    numeric features automatically." Wide analytical tables therefore stay fully visible by
-    default instead of being silently truncated.
+
+Numeric features to include in the matrix. Empty (the default) means "take the frame's
+numeric features automatically." Wide analytical tables therefore stay fully visible by
+default instead of being silently truncated.
 
 **triangle** (`ScatterMatrixTriangle`, two-argument overload)
-    `Full` (the default elsewhere too), `Lower`, or `Upper` — restricts the grid to only the
-    lower or upper triangle (plus the diagonal) instead of drawing every cell twice
-    (`(i, j)` and `(j, i)` are mirror images of the same pairwise relationship).
+
+`Full` (the default elsewhere too), `Lower`, or `Upper` — restricts the grid to only the
+lower or upper triangle (plus the diagonal) instead of drawing every cell twice
+(`(i, j)` and `(j, i)` are mirror images of the same pairwise relationship).
 
 **options** (`ScatterMatrixPlotOptions`)
 

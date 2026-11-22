@@ -25,11 +25,13 @@ rotation angle to render for each exported frame.
 ## Parameters
 
 **base** (`const HyperPlotOptions&`)
-    The starting options every generated frame copies — every field except whichever one
-    `options.plane` selects stays fixed at `base`'s own value across all frames.
+
+The starting options every generated frame copies — every field except whichever one
+`options.plane` selects stays fixed at `base`'s own value across all frames.
 
 **options** (`const HyperSweepOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `HyperSweepOptions` fields
 

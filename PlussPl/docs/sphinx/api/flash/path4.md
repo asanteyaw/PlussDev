@@ -31,24 +31,29 @@ a new [`Volumetric`](../studio/pane3.md) pane for you.
 ## Parameters
 
 **pane** (`Pane&`, Pane overload)
-    The target pane. Must be `Volumetric` (since the projected result is drawn via
-    [`Pane::path3`](../pane/path3.md)).
+
+The target pane. Must be `Volumetric` (since the projected result is drawn via
+[`Pane::path3`](../pane/path3.md)).
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
-    The 4D trajectory's coordinates. Unequal lengths throw
-    `pluss::Error("flash::path4: x, y, z, w must have identical lengths")`
-    (thrown by the shared internal projection helper, using this function's own name in
-    the message).
+
+The 4D trajectory's coordinates. Unequal lengths throw
+`pluss::Error("flash::path4: x, y, z, w must have identical lengths")`
+(thrown by the shared internal projection helper, using this function's own name in
+the message).
 
 **options** (`const HyperPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## `HyperPlotOptions` fields
 

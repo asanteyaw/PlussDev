@@ -31,6 +31,7 @@ reference to the caller.
 ## Parameter
 
 **table** (`std::string_view`)
+
 : The exact key of the anchor catalog. The key must already exist. Empty and
   unknown names fail before a builder is returned.
 

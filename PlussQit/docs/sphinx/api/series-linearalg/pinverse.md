@@ -59,16 +59,17 @@ input subspaces, respectively.
 ## Parameter
 
 **rcond** (`double`, default `1e-12`)
-    Relative singular-value cutoff. A singular value `s[i]` is retained only
-    when
 
-    ```text
-    s[i] > rcond * largest_singular_value
-    ```
+Relative singular-value cutoff. A singular value `s[i]` is retained only
+when
 
-    Increasing `rcond` removes more weak directions and reduces the effective
-    rank. Zero retains every strictly positive singular value. The value must
-    be finite and non-negative.
+```text
+s[i] > rcond * largest_singular_value
+```
+
+Increasing `rcond` removes more weak directions and reduces the effective
+rank. Zero retains every strictly positive singular value. The value must
+be finite and non-negative.
 
 ## Shape Contract
 

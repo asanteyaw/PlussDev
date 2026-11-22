@@ -19,7 +19,8 @@ the last catalog). An exact synonym for [`dloc()`](dloc.md).
 ## Parameters
 
 **i** (`std::int64_t`)
-    The depth-index to fetch. Negative values count from the end.
+
+The depth-index to fetch. Negative values count from the end.
 
 ## Returns
 

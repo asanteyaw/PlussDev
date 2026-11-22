@@ -29,13 +29,16 @@ An integer is always a count: `4` asks for four levels, and one level at the val
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The coordinates of the columns and rows, or full matrices.
+
+The coordinates of the columns and rows, or full matrices.
 
 **z** (`Series`-convertible, rank 2)
-    The field.
+
+The field.
 
 **level_count** (`int`) or **levels** (container of numbers)
-    How many levels, or which.
+
+How many levels, or which.
 
 ## Returns
 

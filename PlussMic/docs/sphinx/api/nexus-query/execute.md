@@ -30,9 +30,10 @@ produces a result set.
 ## Parameters
 
 **statement** (`std::string_view`)
-    A SQL `SELECT` statement (or a statement shape that produces a result
-    set, such as a `WITH ... SELECT`). Table names inside it refer to the
-    workspace's own table names.
+
+A SQL `SELECT` statement (or a statement shape that produces a result
+set, such as a `WITH ... SELECT`). Table names inside it refer to the
+workspace's own table names.
 
 ## Returns
 

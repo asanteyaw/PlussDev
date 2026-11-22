@@ -22,16 +22,19 @@ symmetric around lag `0`, plotting `2 * max_lag + 1` spikes total.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
-    fixed to `[-1.0, 1.0]`.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), y-axis
+fixed to `[-1.0, 1.0]`.
 
 **x**, **y** (series-convertible)
-    The two sequences to cross-correlate. Must have identical lengths and at least three
-    points, or `ccfplot` throws `pluss::Error("flash::ccfplot requires aligned
-    x/y with at least three points")` — a single check covering both conditions.
+
+The two sequences to cross-correlate. Must have identical lengths and at least three
+points, or `ccfplot` throws `pluss::Error("flash::ccfplot requires aligned
+x/y with at least three points")` — a single check covering both conditions.
 
 **options** (`const CcfPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `CcfPlotOptions` fields
 

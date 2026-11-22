@@ -45,10 +45,12 @@ lighting configuration to actually be visible on this trace.
 ## Parameters
 
 **trace** (`Trace&`)
-    The target trace to restyle.
+
+The target trace to restyle.
 
 **preset** (`TracePreset3D`)
-    Which named preset to apply — see the table above.
+
+Which named preset to apply — see the table above.
 
 ## Returns
 

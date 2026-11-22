@@ -58,23 +58,28 @@ combination with no matching rows at all) with `0` before rendering.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, direct mode)
-    Numeric features to render as heatmap rows. At least one is required — an empty list
-    throws `"DataFrame::plot().heatmap: at least one feature is required"` (this overload
-    does **not** have the "infer every numeric feature" shorthand that
-    [`box()`](box.md)/[`hist()`](hist.md)/etc. have).
+
+Numeric features to render as heatmap rows. At least one is required — an empty list
+throws `"DataFrame::plot().heatmap: at least one feature is required"` (this overload
+does **not** have the "infer every numeric feature" shorthand that
+[`box()`](box.md)/[`hist()`](hist.md)/etc. have).
 
 **case_feature** (`std::string_view`, grouped mode)
-    Feature whose distinct values become the output heatmap's rows.
+
+Feature whose distinct values become the output heatmap's rows.
 
 **feature_feature** (`std::string_view`, grouped mode)
-    Feature whose distinct values become the output heatmap's columns.
+
+Feature whose distinct values become the output heatmap's columns.
 
 **value_feature** (`std::string_view`, grouped mode)
-    Feature aggregated into each cell.
+
+Feature aggregated into each cell.
 
 **op** (`DataFrame::GroupOp`, grouped mode, default `Mean`)
-    The aggregation applied per cell: `Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`,
-    `Max`, `Std`, `Var`, or `Mode`.
+
+The aggregation applied per cell: `Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`,
+`Max`, `Std`, `Var`, or `Mode`.
 
 **options** (`HeatmapPlotOptions`)
 

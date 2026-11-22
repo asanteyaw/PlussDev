@@ -34,8 +34,9 @@ A feature with fewer than two rows throws `"flash::lagplot requires at least two
 ## Parameters
 
 **feature** (`std::string_view`)
-    The single numeric feature to lag against itself. Must resolve to a `Series`-kind
-    feature — see [`act()`](act.md)'s shared-diagnostics note.
+
+The single numeric feature to lag against itself. Must resolve to a `Series`-kind
+feature — see [`act()`](act.md)'s shared-diagnostics note.
 
 **options** (`LagPlotOptions`)
 

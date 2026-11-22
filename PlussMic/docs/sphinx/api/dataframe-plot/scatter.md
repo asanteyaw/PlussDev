@@ -45,16 +45,19 @@ text first (e.g. with `bucketize()` or `note()`-family conversions).
 ## Parameters
 
 **x_feature** (`std::string_view`, required)
-    The feature for the horizontal axis. Always numeric-plotted (see `require_plot_size`
-    validation) — not resolved from `default_x_feature` the way other chart methods'
-    optional `x_feature` is.
+
+The feature for the horizontal axis. Always numeric-plotted (see `require_plot_size`
+validation) — not resolved from `default_x_feature` the way other chart methods'
+optional `x_feature` is.
 
 **y_feature** (`std::string_view`, required)
-    The feature for the vertical axis.
+
+The feature for the vertical axis.
 
 **hue_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional categorical feature to split points into separate colored/labeled groups. See
-    the important callout above for its resolution and type requirements.
+
+Optional categorical feature to split points into separate colored/labeled groups. See
+the important callout above for its resolution and type requirements.
 
 **options** (`ScatterPlotOptions`)
 

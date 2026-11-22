@@ -19,7 +19,8 @@ Saved views are created by [`store()`](store.md) and executed later by name via
 ## Parameters
 
 **name** (`std::string_view`)
-    The view name to check.
+
+The view name to check.
 
 ## Returns
 

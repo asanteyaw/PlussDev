@@ -28,15 +28,17 @@ under [`CatalogPlotAccessor` API Reference](../../catalog_plot_accessor_api_refe
 ## Parameters
 
 **keys** (`const KeySelection&`, optional)
-    Which keys every plot of the accessor draws when a call names none: `all_keys`,
-    `include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in the call
-    override both. See [Selecting keys](../catalog-plot/line.md#selecting-keys). Passing the frame
-    fields `all_features`, `include_features` or `exclude_features` in `options` throws an error
-    that names the key knobs to use instead.
+
+Which keys every plot of the accessor draws when a call names none: `all_keys`,
+`include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in the call
+override both. See [Selecting keys](../catalog-plot/line.md#selecting-keys). Passing the frame
+fields `all_features`, `include_features` or `exclude_features` in `options` throws an error
+that names the key knobs to use instead.
 
 **options** (`const pluss::table::DataFramePlotOptions&`, optional)
-    Shared defaults (`default_x_feature`, `default_hue_feature`, tick/label formatting,
-    figure size, ...) applied to every chart method called on the returned accessor.
+
+Shared defaults (`default_x_feature`, `default_hue_feature`, tick/label formatting,
+figure size, ...) applied to every chart method called on the returned accessor.
 
 ## Returns
 

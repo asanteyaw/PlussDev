@@ -42,11 +42,13 @@ name.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression — matches are extracted, not just tested for.
+
+A regular expression — matches are extracted, not just tested for.
 
 **options** (`pluss::table::TextOptions`, two-argument overload only)
-    `options.case_sensitive` (default `true`) is the field that matters here;
-    `options.regex` is implicitly `true` for this method regardless of what's passed.
+
+`options.case_sensitive` (default `true`) is the field that matters here;
+`options.regex` is implicitly `true` for this method regardless of what's passed.
 
 ## Returns
 

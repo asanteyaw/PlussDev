@@ -39,9 +39,11 @@ nothing and returns an equivalent plan.
 ## Parameters
 
 **to** (`std::string_view`)
+
 : Existing target catalog name. The name is copied into the returned builder.
 
 **how** (`locus::JoinHow`)
+
 : Matching mode applied uniformly to every hop. The default is `Left`. All
   seven join modes are accepted, although multi-hop `Cross` is rarely useful:
   a path still determines which catalogs are visited, but each hop forms a

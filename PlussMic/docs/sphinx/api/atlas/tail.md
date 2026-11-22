@@ -22,7 +22,8 @@ rather than throwing.
 ## Parameters
 
 **n** (`std::int64_t`, defaults to `5`)
-    The number of trailing frames to keep.
+
+The number of trailing frames to keep.
 
 ## Returns
 

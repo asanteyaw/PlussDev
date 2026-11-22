@@ -21,7 +21,8 @@ fixture, a string literal) rather than sitting in a file.
 ## Parameters
 
 **json_text** (`std::string_view`)
-    A JSON array of flat (non-nested) objects.
+
+A JSON array of flat (non-nested) objects.
 
 ## Returns
 

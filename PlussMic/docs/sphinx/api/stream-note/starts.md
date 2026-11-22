@@ -25,7 +25,8 @@ explanation and the exact throw message.
 ## Parameters
 
 **prefix** (`std::string_view`)
-    The literal prefix to test for.
+
+The literal prefix to test for.
 
 ## Returns
 

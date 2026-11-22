@@ -31,14 +31,17 @@ available.
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The `.xlsx` file to read.
+
+The `.xlsx` file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into `ReadExcelOptions` internally.
+
+A generic configuration scribble, translated into `ReadExcelOptions` internally.
 
 **options** (`const pluss::loader::ReadExcelOptions&`, optional)
-    Sheet selection and header-parsing controls, same struct as
-    [`Catalog::load_excel`](../catalog/load_excel.md)'s.
+
+Sheet selection and header-parsing controls, same struct as
+[`Catalog::load_excel`](../catalog/load_excel.md)'s.
 
 ## Returns
 

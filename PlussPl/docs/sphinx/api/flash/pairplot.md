@@ -136,42 +136,50 @@ size the Studio already had.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per feature — `columns[i]` is that feature's complete value series. Must be
-    non-empty, and every column must be the same length, or `pairplot` throws
-    `pluss::Error("flash::pairplot requires at least one series")` (empty case)
-    or `pluss::Error("flash::pairplot requires equal-length columns")` (length
-    mismatch).
+
+One entry per feature — `columns[i]` is that feature's complete value series. Must be
+non-empty, and every column must be the same length, or `pairplot` throws
+`pluss::Error("flash::pairplot requires at least one series")` (empty case)
+or `pluss::Error("flash::pairplot requires equal-length columns")` (length
+mismatch).
 
 **data** (`const Dataset&`, Dataset overload only)
-    A pre-built dataset — see `flash::make_dataset` in the "`Dataset` and `make_dataset`"
-    section below.
-    Its `numeric_names` become `options.labels` automatically when `options.labels` is
-    empty.
+
+A pre-built dataset — see `flash::make_dataset` in the "`Dataset` and `make_dataset`"
+section below.
+Its `numeric_names` become `options.labels` automatically when `options.labels` is
+empty.
 
 **matrix** (`const Series&`, matrix overloads only)
-    A rank-2 `Series`. Split into one column per feature according to `feature_axis`
-    (`Axis::Cols`, the default: each matrix column is a feature; `Axis::Rows`: each matrix
-    row is a feature).
+
+A rank-2 `Series`. Split into one column per feature according to `feature_axis`
+(`Axis::Cols`, the default: each matrix column is a feature; `Axis::Rows`: each matrix
+row is a feature).
 
 **frame_options** (`const MatrixFrameOptions&`, one matrix overload only)
-    `{ Axis feature_axis; std::vector<std::string> feature_names; }` — bundles the axis
-    orientation and feature names into one value.
+
+`{ Axis feature_axis; std::vector<std::string> feature_names; }` — bundles the axis
+orientation and feature names into one value.
 
 **feature_names** (`pluss::RangeView<std::string_view>`, `const std::vector<std::string>&`,
 or `std::initializer_list<std::string_view>`, three matrix overloads)
-    Per-feature names, forwarded into `options.labels` when `options.labels` is empty.
-    A mismatched count falls back to auto-generated `"x_1"`, `"x_2"`, … labels (note the
-    underscore — the matrix overloads' auto-labels differ slightly from the
-    columns-overloads' `"x1"`, `"x2"`, … fallback).
+
+Per-feature names, forwarded into `options.labels` when `options.labels` is empty.
+A mismatched count falls back to auto-generated `"x_1"`, `"x_2"`, … labels (note the
+underscore — the matrix overloads' auto-labels differ slightly from the
+columns-overloads' `"x1"`, `"x2"`, … fallback).
 
 **feature_axis** (`Axis`, matrix overloads with explicit names)
-    `Axis::Cols` or `Axis::Rows` — which matrix axis holds the features.
+
+`Axis::Cols` or `Axis::Rows` — which matrix axis holds the features.
 
 **options** (`const PairPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

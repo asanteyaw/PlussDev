@@ -28,11 +28,13 @@ replacing each `Note` field with a `Bool` `Series` field. Unlike
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression to test each value against.
+
+A regular expression to test each value against.
 
 **full** (`bool`, defaults to `false`)
-    When `true`, the pattern must match the entire value rather than just
-    appear somewhere within it.
+
+When `true`, the pattern must match the entire value rather than just
+appear somewhere within it.
 
 ## Returns
 

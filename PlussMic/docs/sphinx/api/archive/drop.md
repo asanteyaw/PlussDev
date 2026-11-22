@@ -32,7 +32,8 @@ catalog and the whole call throws — check with [`has()`](has.md) first if you'
 
 **keys** (`std::span<const std::string_view>`, `std::initializer_list<std::string_view>`,
 or `const std::vector<std::string>&`)
-    The stream names to remove, applied uniformly to every catalog.
+
+The stream names to remove, applied uniformly to every catalog.
 
 ## Returns
 

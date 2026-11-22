@@ -42,8 +42,9 @@ for a mixed-kind axel, narrow with [`fields()`](fields.md) first.
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&`)
-    The replacement for null values, in the kind matching the overload
-    selected.
+
+The replacement for null values, in the kind matching the overload
+selected.
 
 ## Returns
 

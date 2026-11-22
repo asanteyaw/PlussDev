@@ -31,10 +31,11 @@ kind throws.
 ## Parameters
 
 **limit** (`std::int64_t`, default `-1`)
-    Maximum number of consecutive missing positions to fill per gap, counted from
-    the left anchor forward — the same convention as [`ffill()`](ffill.md)'s
-    `limit`. `-1` means unlimited (fill the entire gap). Must be `-1` or `>= 0`,
-    or it throws.
+
+Maximum number of consecutive missing positions to fill per gap, counted from
+the left anchor forward — the same convention as [`ffill()`](ffill.md)'s
+`limit`. `-1` means unlimited (fill the entire gap). Must be `-1` or `>= 0`,
+or it throws.
 
 ## Returns
 

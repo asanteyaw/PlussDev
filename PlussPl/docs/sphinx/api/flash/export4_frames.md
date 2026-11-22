@@ -28,13 +28,15 @@ via [`flash::cloud4`](cloud4.md), and saves that frame to
 
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
-    The 4D point data, reused unchanged for every exported frame — only the rotation
-    angles change frame to frame, per `options.sweep`. Unequal lengths throw
-    `pluss::Error("flash::export4_frames: x, y, z, w must have identical
-    lengths")`.
+
+The 4D point data, reused unchanged for every exported frame — only the rotation
+angles change frame to frame, per `options.sweep`. Unequal lengths throw
+`pluss::Error("flash::export4_frames: x, y, z, w must have identical
+lengths")`.
 
 **options** (`const HyperFrameExportOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `HyperFrameExportOptions` fields
 

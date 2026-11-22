@@ -25,10 +25,12 @@ Adds a **box-and-whisker** summary of a sample: a box from the first to the thir
 ## Parameters
 
 **values** (`Series`-convertible)
-    The sample. Not empty.
+
+The sample. Not empty.
 
 **group** (`Series`-convertible, optional)
-    The group of each value; same length as `values`.
+
+The group of each value; same length as `values`.
 
 ## Returns
 

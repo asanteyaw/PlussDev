@@ -49,8 +49,9 @@ not require one multiplication per step.
 ## Parameter
 
 **n** (`std::int64_t`)
-    The integer exponent. Zero is valid. Negative values first invert each
-    matrix and fail if any matrix is singular.
+
+The integer exponent. Zero is valid. Negative values first invert each
+matrix and fail if any matrix is singular.
 
 ## Shape Contract
 

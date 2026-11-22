@@ -27,8 +27,9 @@ one.
 ## Parameters
 
 **options** (`DistinctOptions`, defaults to `{}`)
-    `dropnull` (default `true`) controls whether a `NULL` value counts as one of the
-    distinct values in the result.
+
+`dropnull` (default `true`) controls whether a `NULL` value counts as one of the
+distinct values in the result.
 
 ## Returns
 

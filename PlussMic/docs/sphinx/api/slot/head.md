@@ -18,8 +18,9 @@ Returns a new slot holding the first `n` values.
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of leading values to keep. Clamped to `[0, size()]` — never
-    throws for an out-of-range `n`.
+
+The number of leading values to keep. Clamped to `[0, size()]` — never
+throws for an out-of-range `n`.
 
 ## Returns
 

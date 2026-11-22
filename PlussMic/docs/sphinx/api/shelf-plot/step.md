@@ -26,15 +26,17 @@ inheritance rules shared by every method on this accessor.
 ## Parameters
 
 **x** (`const Shelf&`, optional)
-    Same as [`line()`](line.md)'s `x` — a companion shelf used as the x-axis, must match
-    the bound shelf's size or the call throws `"Shelf::plot: shelf size mismatch"`.
-    Omitted falls back to the wrapped frame's own row labels.
+
+Same as [`line()`](line.md)'s `x` — a companion shelf used as the x-axis, must match
+the bound shelf's size or the call throws `"Shelf::plot: shelf size mismatch"`.
+Omitted falls back to the wrapped frame's own row labels.
 
 **options** (`StepPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::step`](../../api/dataframe-plot/step.md) (`alpha`,
-    `line_width`, `align`). `align` is inert here — a mismatched-size `x` throws
-    unconditionally before it could ever apply, same as [`line()`](line.md).
+
+The identical struct documented on
+[`DataFramePlotAccessor::step`](../../api/dataframe-plot/step.md) (`alpha`,
+`line_width`, `align`). `align` is inert here — a mismatched-size `x` throws
+unconditionally before it could ever apply, same as [`line()`](line.md).
 
 ## Returns
 

@@ -22,16 +22,20 @@ The first overload takes a window `title` (empty uses the figure's [`name`](name
 ## Parameters
 
 **title** (`std::string_view`, default empty)
-    The window title. Empty uses the figure's name, then `PlussPl Plot`.
+
+The window title. Empty uses the figure's name, then `PlussPl Plot`.
 
 **width**, **height** (`std::int64_t`, default 1280 and 820)
-    The requested window size in pixels, raised to at least 320 by 240.
+
+The requested window size in pixels, raised to at least 320 by 240.
 
 **options** (`const pluss::view::HtmlWindowOptions&`)
-    Title, size (at least 640 by 420), snapshot file names and backend preference.
+
+Title, size (at least 640 by 420), snapshot file names and backend preference.
 
 **launch** (`bool`, default `true`)
-    `false` writes the page but opens nothing.
+
+`false` writes the page but opens nothing.
 
 ## Returns
 

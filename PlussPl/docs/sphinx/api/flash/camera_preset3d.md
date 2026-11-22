@@ -30,12 +30,14 @@ to [`Lens::spatial()`](../pane/lens.md)'s starting `Lens` — every preset here 
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane whose `Lens` is mutated.
+
+The target pane whose `Lens` is mutated.
 
 **preset** (`CameraPreset3D`)
-    Which named angle to apply — see the table above. Any value outside the declared
-    enumerators (or `Spatial` itself) falls through to the `Spatial` values via the
-    `switch`'s `default` case.
+
+Which named angle to apply — see the table above. Any value outside the declared
+enumerators (or `Spatial` itself) falls through to the `Spatial` values via the
+`switch`'s `default` case.
 
 ## Returns
 

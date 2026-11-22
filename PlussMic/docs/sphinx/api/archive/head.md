@@ -20,7 +20,8 @@ throwing; `n <= 0` returns an empty (zero-depth) archive rather than throwing.
 ## Parameters
 
 **n** (`std::int64_t`, defaults to `5`)
-    The number of leading catalogs to keep.
+
+The number of leading catalogs to keep.
 
 ## Returns
 

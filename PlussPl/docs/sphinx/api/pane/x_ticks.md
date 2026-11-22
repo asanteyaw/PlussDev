@@ -21,10 +21,12 @@ There are three call forms: a braced list of labels, a range of string views, an
 ## Parameters
 
 **positions** (`Series` or numeric vector)
-    Where the ticks go, in data units. A non-empty vector.
+
+Where the ticks go, in data units. A non-empty vector.
 
 **labels** (`pluss::RangeView<std::string_view>` or braced list)
-    The text of each tick; as many as there are positions.
+
+The text of each tick; as many as there are positions.
 
 ## Returns
 

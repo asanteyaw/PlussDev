@@ -27,16 +27,18 @@ callout on that page and on [`flash::set_theme`](set_theme.md): it must be appli
 ## Parameters
 
 **style** (`FlashStyle`, default `Lightgrid`)
-    Controls the returned `Theme`'s `foreground()` color and `name()` — see
-    [`flash::set_style`](set_style.md)'s `FlashStyle` value table for the exact
-    foreground color per value. `background()` is always plain white regardless of
-    `style`.
+
+Controls the returned `Theme`'s `foreground()` color and `name()` — see
+[`flash::set_style`](set_style.md)'s `FlashStyle` value table for the exact
+foreground color per value. `background()` is always plain white regardless of
+`style`.
 
 **palette** (`FlashPalette`, default `Deep`)
-    Controls the returned `Theme`'s `accents()` (via
-    [`flash::flash_palette_colors`](flash_palette.md)) and `surface_palette()` (via the
-    same palette, wrapped as a `PaletteRamp`) — see
-    [`flash::flash_palette`](flash_palette.md)'s value table.
+
+Controls the returned `Theme`'s `accents()` (via
+[`flash::flash_palette_colors`](flash_palette.md)) and `surface_palette()` (via the
+same palette, wrapped as a `PaletteRamp`) — see
+[`flash::flash_palette`](flash_palette.md)'s value table.
 
 ## Returns
 

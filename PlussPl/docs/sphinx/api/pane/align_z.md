@@ -30,7 +30,8 @@ Joining a group does not change the settings of the axis. Leaving it (`clear_z_a
 ## Parameters
 
 **group** (`std::string`, setter only)
-    The name of the group. Panes with the same name share the z range. An empty string leaves the group.
+
+The name of the group. Panes with the same name share the z range. An empty string leaves the group.
 
 ## Returns
 

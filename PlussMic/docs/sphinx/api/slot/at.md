@@ -18,7 +18,8 @@ Fetches the value at position `i`, bounds-checked.
 ## Parameters
 
 **i** (`std::int64_t`)
-    The zero-based index to fetch.
+
+The zero-based index to fetch.
 
 ## Returns
 

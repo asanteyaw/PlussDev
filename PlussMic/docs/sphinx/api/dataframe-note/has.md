@@ -61,15 +61,17 @@ search it compiles the pattern with the `std::regex::icase` flag.
 ## Parameters
 
 **needle** (`std::string_view`)
-    The text to search for — a literal substring by default, or a regular
-    expression pattern when `options.regex` is `true`.
+
+The text to search for — a literal substring by default, or a regular
+expression pattern when `options.regex` is `true`.
 
 **options** (`TextOptions`, default `{}`)
-    `options.regex` (default `false`): treat `needle` as a regex pattern
-    instead of literal text.
-    `options.case_sensitive` (default `true`): when `false`, the search
-    ignores case (ASCII fold for literal mode, `std::regex::icase` for
-    regex mode).
+
+`options.regex` (default `false`): treat `needle` as a regex pattern
+instead of literal text.
+`options.case_sensitive` (default `true`): when `false`, the search
+ignores case (ASCII fold for literal mode, `std::regex::icase` for
+regex mode).
 
 ## Returns
 

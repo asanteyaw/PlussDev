@@ -29,7 +29,8 @@ there is currently no metadata-only summary view for Catalog.
 ## Parameters
 
 **os** (`std::ostream&`)
-    The destination stream.
+
+The destination stream.
 
 ## Returns
 

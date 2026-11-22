@@ -32,16 +32,19 @@ the primary, most commonly used path.
 ## Parameters
 
 **target** (`pluss::table::ShelfCastTarget`)
-    The payload kind to cast to — `Series`, `Note`, `Timeline`, or `TimeIndex`.
+
+The payload kind to cast to — `Series`, `Note`, `Timeline`, or `TimeIndex`.
 
 **series_dtype** (`std::optional<pluss::codem::ScalarType>`, first overload, defaults to
 `std::nullopt`)
-    The numeric dtype to use when `target` is `Series`. Shorthand for setting just this one
-    field of `ShelfCastOptions`.
+
+The numeric dtype to use when `target` is `Series`. Shorthand for setting just this one
+field of `ShelfCastOptions`.
 
 **options** (`const pluss::table::ShelfCastOptions&`, second overload)
-    The full conversion policy — `series_dtype` and `invalid` (parse-failure handling). See
-    [`Shelf::cast`](../shelf/cast.md) for the complete breakdown.
+
+The full conversion policy — `series_dtype` and `invalid` (parse-failure handling). See
+[`Shelf::cast`](../shelf/cast.md) for the complete breakdown.
 
 ## Returns
 

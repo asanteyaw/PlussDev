@@ -35,18 +35,21 @@ read it back with `meta(key)` first, modify the copy, and pass the whole thing b
 ## Parameters
 
 **key** (`std::string_view`)
-    The table to read or describe. For the setters it must already exist in the workspace;
-    an unknown key throws `"Nexus::meta: unknown table '<key>'"`. The getter returns
-    `std::nullopt` instead.
+
+The table to read or describe. For the setters it must already exist in the workspace;
+an unknown key throws `"Nexus::meta: unknown table '<key>'"`. The getter returns
+`std::nullopt` instead.
 
 **value** (`const TableMeta&`)
-    The metadata to attach, replacing anything previously declared for `key`. Accepted
-    as-is: see [`table_meta()`](table_meta.md)'s note that `TableMeta` itself is never
-    validated at attachment time.
+
+The metadata to attach, replacing anything previously declared for `key`. Accepted
+as-is: see [`table_meta()`](table_meta.md)'s note that `TableMeta` itself is never
+validated at attachment time.
 
 **values** (brace list of `{key, TableMeta}` pairs)
-    The bulk form: one entry per table, each applied in order with the same checks as the
-    one-table setter.
+
+The bulk form: one entry per table, each applied in order with the same checks as the
+one-table setter.
 
 ## Returns
 

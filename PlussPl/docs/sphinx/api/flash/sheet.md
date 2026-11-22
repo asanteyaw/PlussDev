@@ -27,23 +27,29 @@ creates the [`Volumetric`](../studio/pane3.md) pane for you.
 ## Parameters
 
 **pane** (`Pane&`, Pane overloads)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y** (series-convertible, must each be rank ≤ 3)
-    The grid's coordinate axes.
+
+The grid's coordinate axes.
 
 **z** (series-convertible, must be rank ≤ 3, and rank-2 to satisfy
 [`Pane::sheet`](../pane/sheet.md)'s own deeper requirement)
-    The surface height at each `(x, y)` grid point.
+
+The surface height at each `(x, y)` grid point.
 
 **c** (series-convertible, must be rank ≤ 3, four-argument overload only)
-    A separate fill-color value per grid point.
+
+A separate fill-color value per grid point.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## Returns
 

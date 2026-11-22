@@ -21,7 +21,8 @@ distinct from the row-label axis (see [`lbl()`](lbl.md)) and from the payload da
 ## Parameters
 
 **key** (`std::string_view`)
-    The metadata key to check for.
+
+The metadata key to check for.
 
 ## Returns
 

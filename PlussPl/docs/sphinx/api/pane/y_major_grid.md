@@ -19,7 +19,8 @@ The two grids of an axis are independent: the minor grid can be on with the majo
 ## Parameters
 
 **enable** (`bool`, default `true`)
-    `true` draws the grid, `false` removes it.
+
+`true` draws the grid, `false` removes it.
 
 ## Returns
 

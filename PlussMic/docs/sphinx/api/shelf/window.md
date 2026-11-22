@@ -43,15 +43,18 @@ that don't yet have enough valid history come back `NULL` instead. See Example 3
 ## Parameters
 
 **window** (`std::int64_t`)
-    The trailing window size, in rows. Must be `> 0`.
+
+The trailing window size, in rows. Must be `> 0`.
 
 **op** (`ShelfWindowOp`)
-    Which aggregate to compute over each window — `RollingSum`, `RollingMean`,
-    `RollingMin`, or `RollingMax`.
+
+Which aggregate to compute over each window — `RollingSum`, `RollingMean`,
+`RollingMin`, or `RollingMax`.
 
 **min_periods** (`std::int64_t`, default `1`)
-    The minimum number of valid values required within a row's window for that row to
-    produce a result; rows with fewer are `NULL`. Must be `> 0` and `<= window`.
+
+The minimum number of valid values required within a row's window for that row to
+produce a result; rows with fewer are `NULL`. Must be `> 0` and `<= window`.
 
 ## Returns
 

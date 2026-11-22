@@ -30,7 +30,8 @@ The format shapes the automatic tick labels. Labels given explicitly with [`y_ti
 ## Parameters
 
 **format** (`TickFormat`)
-    One of the eight formats; see [`TickFormat`](../types/TickFormat.md).
+
+One of the eight formats; see [`TickFormat`](../types/TickFormat.md).
 
 ## Returns
 

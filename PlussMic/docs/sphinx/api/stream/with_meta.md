@@ -26,15 +26,18 @@ A new stream derived from this one keeps its metadata when the operation keeps t
 ## Parameters
 
 **key** (`std::string`, single-pair overload)
-    The metadata key to set.
+
+The metadata key to set.
 
 **value** (`std::string`, single-pair overload)
-    The value to associate with `key`.
+
+The value to associate with `key`.
 
 **items** (`std::initializer_list<std::pair<std::string_view, std::string_view>>`,
 multi-pair overload)
-    One or more key/value pairs to set in a single call, e.g.
-    `{{"units", "kg"}, {"source", "sensor"}}`.
+
+One or more key/value pairs to set in a single call, e.g.
+`{{"units", "kg"}, {"source", "sensor"}}`.
 
 ## Returns
 

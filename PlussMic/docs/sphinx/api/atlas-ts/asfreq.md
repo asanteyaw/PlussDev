@@ -23,21 +23,26 @@ frame, broadcast across the whole `Atlas` via [`Atlas::map_frames()`](../atlas/m
 ## Parameters
 
 **freq** (`std::string_view`)
-    The bucket frequency, exactly as in [`resample()`](resample.md).
+
+The bucket frequency, exactly as in [`resample()`](resample.md).
 
 **step** (`std::int64_t`, default `1`)
-    A frequency multiplier, exactly as in [`resample()`](resample.md).
+
+A frequency multiplier, exactly as in [`resample()`](resample.md).
 
 **fill_mode** (`GapFillMode`, default `Forward`)
-    The [`fill_gaps()`](fill_gaps.md) strategy applied to empty buckets after
-    resampling, within each frame.
+
+The [`fill_gaps()`](fill_gaps.md) strategy applied to empty buckets after
+resampling, within each frame.
 
 **constant** (`std::optional<double>`, default `std::nullopt`)
-    The fill value when `fill_mode == GapFillMode::Constant`.
+
+The fill value when `fill_mode == GapFillMode::Constant`.
 
 **op** (`ResampleOp`, default `Last`)
-    How a bucket with more than one source observation is combined — `Mean`, `Sum`,
-    `Min`, `Max`, `First`, `Last`, or `Count`.
+
+How a bucket with more than one source observation is combined — `Mean`, `Sum`,
+`Min`, `Max`, `First`, `Last`, or `Count`.
 
 ## Returns
 

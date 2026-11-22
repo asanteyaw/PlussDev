@@ -45,14 +45,17 @@ The returned `Trace&` is the fit line when `show_fit` is true; with `show_fit = 
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The raw observation pairs. Must be the same length (enforced by `finite_xy`, which
-    throws `pluss::Error` on a mismatch).
+
+The raw observation pairs. Must be the same length (enforced by `finite_xy`, which
+throws `pluss::Error` on a mismatch).
 
 **options** (`const RegPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

@@ -28,7 +28,8 @@ stream. If the stream isn't a numeric `Series`, the call throws — e.g.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The shift distance used to build the comparison base.
+
+The shift distance used to build the comparison base.
 
 ## Returns
 

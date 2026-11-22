@@ -40,16 +40,20 @@ table is pivoted, the z-grid still has to be numeric so it can be rendered in 3D
 ## Parameters
 
 **x_feature** (`std::string_view`)
+
 Feature whose distinct values become the grid's columns (x-axis) — see
 [`surface()`](surface.md)'s note on grid-coordinate resolution.
 
 **y_feature** (`std::string_view`)
+
 Feature whose distinct values become the grid's rows (y-axis).
 
 **z_feature** (`std::string_view`)
+
 Feature aggregated into each grid cell's height.
 
 **op** (`DataFrame::GroupOp`, default `Mean`)
+
 The aggregation applied per cell — see [`surface()`](surface.md)'s important callout
 for which values are actually supported.
 

@@ -36,13 +36,16 @@ below.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out.
+
+The figure to lay out.
 
 **dimensions** (`std::int64_t`)
-    Both the row and column count of the resulting square grid.
+
+Both the row and column count of the resulting square grid.
 
 **gx**, **gy** (`double`, default `14.0` each)
-    The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`.
+
+The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`.
 
 ## Returns
 

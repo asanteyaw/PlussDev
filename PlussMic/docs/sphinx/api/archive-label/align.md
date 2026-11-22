@@ -39,10 +39,11 @@ before any lookup happens.
 ## Parameters
 
 **labels** (`const Stream&`)
-    The depth-label values to align onto, in the desired result order. Its length
-    becomes the result's new `depth()` — it can be shorter (narrowing), longer than is
-    possible only up to the number of distinct current labels, reordered, or repeat a
-    label to duplicate that catalog in the result.
+
+The depth-label values to align onto, in the desired result order. Its length
+becomes the result's new `depth()` — it can be shorter (narrowing), longer than is
+possible only up to the number of distinct current labels, reordered, or repeat a
+label to duplicate that catalog in the result.
 
 ## Returns
 

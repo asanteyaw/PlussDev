@@ -55,19 +55,22 @@ broadcasting to every selected row) or exactly that same length.
 ## Parameters
 
 **conditions** (`pluss::RangeView<Shelf>` or `std::initializer_list<Shelf>`)
-    Ordered boolean masks, evaluated in order — the first `true` condition at each row
-    decides which `choices` entry that row takes. At least one condition is required, and
-    all conditions must share the same length.
+
+Ordered boolean masks, evaluated in order — the first `true` condition at each row
+decides which `choices` entry that row takes. At least one condition is required, and
+all conditions must share the same length.
 
 **choices** (`pluss::RangeView<Shelf>` or `std::initializer_list<Shelf>`)
-    Values corresponding positionally to `conditions` — `choices[k]` is used wherever
-    `conditions[k]` is the first `true` condition at a row. Must have the same count as
-    `conditions`, and every entry must share one payload kind (see the important callout).
+
+Values corresponding positionally to `conditions` — `choices[k]` is used wherever
+`conditions[k]` is the first `true` condition at a row. Must have the same count as
+`conditions`, and every entry must share one payload kind (see the important callout).
 
 **default_value** (`Shelf` / `double` / `std::string_view` / `const char*` /
 `pluss::Timeline` / `pluss::null_t`)
-    The value used for any row where **no** condition is `true`. Must match `choices`'
-    payload kind (or be `pluss::series::null`, which is always accepted).
+
+The value used for any row where **no** condition is `true`. Must match `choices`'
+payload kind (or be `pluss::series::null`, which is always accepted).
 
 ## Returns
 

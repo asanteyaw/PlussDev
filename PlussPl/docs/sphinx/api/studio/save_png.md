@@ -21,10 +21,12 @@ The raster is the figure size scaled by `dpi / 96`: a 1280 by 820 figure is 1920
 ## Parameters
 
 **path** (`std::string_view`)
-    The file to write. The extension must be `.png`, in any case; any other extension throws `pluss::Error`.
+
+The file to write. The extension must be `.png`, in any case; any other extension throws `pluss::Error`.
 
 **dpi** (`std::int64_t`, default `144`)
-    The raster density. The width and height in pixels are the figure size times `dpi / 96`. Must be positive, and the result must not exceed 32768 pixels on a side.
+
+The raster density. The width and height in pixels are the figure size times `dpi / 96`. Must be positive, and the result must not exceed 32768 pixels on a side.
 
 ## Returns
 

@@ -29,14 +29,17 @@ explanation and the exact throw message.
 ## Parameters
 
 **width** (`std::int64_t`)
-    The target character width. Values already at least this long are left unchanged.
+
+The target character width. Values already at least this long are left unchanged.
 
 **align** (`pluss::table::TextAlign`, defaults to `Left`)
-    Where the original text lands within the padded field: `Left` (text at the start,
-    fill on the right — the default), `Right` (fill on the left), or `Center`.
+
+Where the original text lands within the padded field: `Left` (text at the start,
+fill on the right — the default), `Right` (fill on the left), or `Center`.
 
 **fill** (`char`, defaults to `' '`)
-    The character used to pad.
+
+The character used to pad.
 
 ## Examples
 

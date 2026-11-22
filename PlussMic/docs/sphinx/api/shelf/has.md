@@ -36,12 +36,14 @@ most table libraries. Invalid rows in `candidates` are skipped (never contribute
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*`)
-    A single scalar to test every row against — equivalent to [`eq(value)`](eq.md).
+
+A single scalar to test every row against — equivalent to [`eq(value)`](eq.md).
 
 **values** (`const Shelf&`)
-    A set of candidate values (typically a short, `Note`- or `Series`-kind shelf) — each
-    row of `*this` is tested against every entry of `values`, matching if it equals *any*
-    of them.
+
+A set of candidate values (typically a short, `Note`- or `Series`-kind shelf) — each
+row of `*this` is tested against every entry of `values`, matching if it equals *any*
+of them.
 
 ## Returns
 

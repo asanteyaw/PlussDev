@@ -17,7 +17,8 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ## Parameters
 
 **policy**
-    Policy object that changes the structural behavior of this overload.
+
+Policy object that changes the structural behavior of this overload.
 
 ## Returns
 

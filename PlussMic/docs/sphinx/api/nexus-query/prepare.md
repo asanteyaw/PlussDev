@@ -29,8 +29,9 @@ whether a named table/column actually exists is only checked once
 ## Parameters
 
 **statement** (`std::string_view`)
-    A SQL statement template, with `{name}`/`{@name}` placeholders anywhere
-    a bound value or identifier belongs.
+
+A SQL statement template, with `{name}`/`{@name}` placeholders anywhere
+a bound value or identifier belongs.
 
 ## Returns
 

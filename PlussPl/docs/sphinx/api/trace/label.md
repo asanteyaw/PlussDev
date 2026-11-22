@@ -23,7 +23,8 @@ The label is the only thing in a trace's styling that does not depend on its kin
 ## Parameters
 
 **label** (`std::string`, setter only)
-    The legend text. An empty string removes the trace from the legend.
+
+The legend text. An empty string removes the trace from the legend.
 
 ## Returns
 

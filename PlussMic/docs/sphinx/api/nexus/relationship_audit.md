@@ -19,9 +19,10 @@ is the relationship-level counterpart to [`grain_audit()`](grain_audit.md).
 ## Parameters
 
 **name** (`std::string_view`)
-    The relationship to audit, matching [`Relationship::name`](relationships.md). Must
-    already be declared — an unknown name throws
-    `"Nexus::relationship_audit: unknown relationship '<name>'"`.
+
+The relationship to audit, matching [`Relationship::name`](relationships.md). Must
+already be declared — an unknown name throws
+`"Nexus::relationship_audit: unknown relationship '<name>'"`.
 
 ## Returns
 

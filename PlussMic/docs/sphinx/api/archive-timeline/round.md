@@ -28,9 +28,10 @@ method (including this one) is called.
 ## Parameters
 
 **unit** (`std::string_view`)
-    One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`,
-    `"H"`/`"h"`/`"hour"`, or `"D"`/`"d"`/`"day"`. Cannot be empty. An
-    unsupported unit throws.
+
+One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`,
+`"H"`/`"h"`/`"hour"`, or `"D"`/`"d"`/`"day"`. Cannot be empty. An
+unsupported unit throws.
 
 ## Returns
 

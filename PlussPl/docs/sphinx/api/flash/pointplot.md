@@ -40,17 +40,21 @@ err, or use flash::whiskplot()'s 6-argument asymmetric overload directly.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x** (series-convertible)
-    The x-axis positions, shared by both the line and the error bars.
+
+The x-axis positions, shared by both the line and the error bars.
 
 **y** (series-convertible)
-    The y-axis values, shared by both the line and the error bars.
+
+The y-axis values, shared by both the line and the error bars.
 
 **err** (series-convertible)
-    The symmetric error magnitude at each point — applied identically above (`y + err`)
-    and below (`y - err`) every point.
+
+The symmetric error magnitude at each point — applied identically above (`y + err`)
+and below (`y - err`) every point.
 
 ## Returns
 

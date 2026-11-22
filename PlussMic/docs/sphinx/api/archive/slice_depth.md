@@ -20,10 +20,12 @@ bounds rather than throwing.
 ## Parameters
 
 **start** (`std::int64_t`)
-    Inclusive starting depth-index. Negative values count from the end.
+
+Inclusive starting depth-index. Negative values count from the end.
 
 **stop** (`std::int64_t`)
-    Exclusive ending depth-index. Negative values count from the end.
+
+Exclusive ending depth-index. Negative values count from the end.
 
 ## Returns
 

@@ -35,10 +35,12 @@ succeeds trivially, returning the registry unchanged.
 ## Parameters
 
 **from** / **to** (`std::string_view`)
-    The existing field name and its replacement (single-pair overload).
+
+The existing field name and its replacement (single-pair overload).
 
 **mapping** (`std::initializer_list<std::pair<std::string_view, std::string_view>>` / `const std::unordered_map<std::string, std::string>&`)
-    A `{from, to}` mapping for renaming several fields in one call.
+
+A `{from, to}` mapping for renaming several fields in one call.
 
 ## Returns
 

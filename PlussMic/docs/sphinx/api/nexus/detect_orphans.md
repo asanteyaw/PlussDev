@@ -30,12 +30,14 @@ have no matching row in `right_table`; `Right` returns the mirror image — rows
 ## Parameters
 
 **relationship_name** (`std::string_view`)
-    The relationship to check, matching [`Relationship::name`](relationships.md). Must
-    already be declared — an unknown name throws
-    `"Nexus::detect_orphans: unknown relationship '<name>'"`.
+
+The relationship to check, matching [`Relationship::name`](relationships.md). Must
+already be declared — an unknown name throws
+`"Nexus::detect_orphans: unknown relationship '<name>'"`.
 
 **side** (`RelationshipSide`, default `Left`)
-    Which side's unmatched rows to return.
+
+Which side's unmatched rows to return.
 
 ## Returns
 

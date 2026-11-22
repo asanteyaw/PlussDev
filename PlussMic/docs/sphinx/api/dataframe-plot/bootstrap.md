@@ -35,8 +35,9 @@ points"`.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The single numeric feature to bootstrap. Must resolve to a `Series`-kind feature — see
-    [`act()`](act.md)'s shared-diagnostics note.
+
+The single numeric feature to bootstrap. Must resolve to a `Series`-kind feature — see
+[`act()`](act.md)'s shared-diagnostics note.
 
 **options** (`BootstrapPlotOptions`)
 

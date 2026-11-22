@@ -21,7 +21,8 @@ frames.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The set of labels to subtract from the atlas's current depth labels.
+
+The set of labels to subtract from the atlas's current depth labels.
 
 ## Returns
 

@@ -20,8 +20,9 @@ stream is independently re-indexed by `indices` via its own `take()`.
 ## Parameters
 
 **indices** (`std::span<const std::int64_t>`)
-    The row positions to select, in the order they should appear in the result. May repeat
-    a position or list positions out of order.
+
+The row positions to select, in the order they should appear in the result. May repeat
+a position or list positions out of order.
 
 ## Returns
 

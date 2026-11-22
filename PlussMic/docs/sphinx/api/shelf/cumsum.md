@@ -22,10 +22,11 @@ for a non-numeric shelf reads `"Shelf::scan"` rather than `"Shelf::cumsum"`.
 ## Parameters
 
 **skip_nulls** (`bool`, default `true`)
-    `true`: a missing input position stays missing in the output, but later
-    positions' running sums are unaffected. `false`: a missing input position
-    makes every subsequent output position missing too. See
-    [`Shelf::scan`](scan.md) for the full explanation.
+
+`true`: a missing input position stays missing in the output, but later
+positions' running sums are unaffected. `false`: a missing input position
+makes every subsequent output position missing too. See
+[`Shelf::scan`](scan.md) for the full explanation.
 
 ## Returns
 

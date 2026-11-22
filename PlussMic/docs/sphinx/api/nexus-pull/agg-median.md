@@ -27,13 +27,16 @@ its median, since the median only depends on the middle-ranked value(s).
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own numeric feature to take the median of.
+
+The scoped table's own numeric feature to take the median of.
 
 **alias** (`std::string_view`, default empty)
-    The output column name.
+
+The output column name.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `median` requests on the same scoped table, added in order.
+
+Several `median` requests on the same scoped table, added in order.
 
 ## Returns
 

@@ -25,17 +25,21 @@ transformation or validation of its own.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to display.
+
+The figure to display.
 
 **title** (`std::string_view`, default empty)
-    Forwarded to [`Studio::show`](../studio/show.md) as the window title.
+
+Forwarded to [`Studio::show`](../studio/show.md) as the window title.
 
 **width**, **height** (`std::int64_t`, default `1280`, `820`)
-    Forwarded to [`Studio::show`](../studio/show.md) as the window size.
+
+Forwarded to [`Studio::show`](../studio/show.md) as the window size.
 
 **launch** (`bool`, default `true`)
-    Forwarded to [`Studio::show`](../studio/show.md) — when `false`, the HTML is
-    generated but no window is actually opened.
+
+Forwarded to [`Studio::show`](../studio/show.md) — when `false`, the HTML is
+generated but no window is actually opened.
 
 ## Returns
 

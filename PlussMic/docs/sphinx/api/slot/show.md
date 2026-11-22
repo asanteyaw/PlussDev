@@ -20,7 +20,8 @@ string. What `operator<<` calls internally.
 ## Parameters
 
 **os** (`std::ostream&`)
-    The destination stream.
+
+The destination stream.
 
 ## Returns
 

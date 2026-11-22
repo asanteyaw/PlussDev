@@ -36,18 +36,22 @@ obtained via Studio::pane3() yourself first.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **z** (series-convertible, must be rank ≤ 3, and rank-2 to satisfy
 [`Pane::spire3`](../pane/spire3.md)'s own deeper requirement in every overload)
-    The bar height at each grid cell.
+
+The bar height at each grid cell.
 
 **x**, **y** (series-convertible, must each be rank ≤ 3, two- through four-argument
 overloads)
-    Explicit coordinate axes, auto-indexed as `0, 1, 2, …` when omitted.
+
+Explicit coordinate axes, auto-indexed as `0, 1, 2, …` when omitted.
 
 **c** (series-convertible, must be rank ≤ 3, four-argument overload only)
-    A separate per-bar color matrix, matching `z`'s shape.
+
+A separate per-bar color matrix, matching `z`'s shape.
 
 ## Returns
 

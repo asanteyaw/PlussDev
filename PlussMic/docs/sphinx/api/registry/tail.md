@@ -27,8 +27,9 @@ everything it has, taken from its own end.
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of trailing values to keep per field. Values less than `0` are
-    clamped to `0`.
+
+The number of trailing values to keep per field. Values less than `0` are
+clamped to `0`.
 
 ## Returns
 

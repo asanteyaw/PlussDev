@@ -30,9 +30,10 @@ which all start with `axel.fields({"..."}).accessor().method()`.
 ## Parameters
 
 **keys** (`std::span<const std::string_view>`, `std::initializer_list<std::string_view>`, or any range of string-view-like names)
-    One or more field names to keep in every frame. Cannot be empty.
-    Field names must be non-empty and unique within the call — duplicate
-    or blank names throw.
+
+One or more field names to keep in every frame. Cannot be empty.
+Field names must be non-empty and unique within the call — duplicate
+or blank names throw.
 
 ## Returns
 

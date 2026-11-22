@@ -19,7 +19,8 @@ A pane that does not belong to this figure (a standalone `Pane`, or a pane of an
 ## Parameters
 
 **pane** (`const Pane&`)
-    A pane of this figure, as returned by a creation call or taken from [`panes`](panes.md).
+
+A pane of this figure, as returned by a creation call or taken from [`panes`](panes.md).
 
 ## Returns
 

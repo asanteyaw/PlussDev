@@ -35,12 +35,14 @@ registry at all, via its `to_json()` fallback.
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The destination file path.
+
+The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying JSON writer
-    options. Ignored when the registry takes the `to_json()`
-    fallback path).
+
+A generic configuration scribble, translated into the underlying JSON writer
+options. Ignored when the registry takes the `to_json()`
+fallback path).
 
 ## Returns
 

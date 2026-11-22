@@ -38,22 +38,28 @@ instead of going through flash::whiskplot.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x** (series-convertible)
-    The x-axis positions.
+
+The x-axis positions.
 
 **y** (series-convertible)
-    The y-axis values.
+
+The y-axis values.
 
 **err** (series-convertible, first overload only)
-    The symmetric error magnitude — applied identically above and below each point.
+
+The symmetric error magnitude — applied identically above and below each point.
 
 **yneg**, **ypos** (series-convertible, second overload only)
-    The independent lower/upper vertical error extents.
+
+The independent lower/upper vertical error extents.
 
 **xneg**, **xpos** (series-convertible, second overload only)
-    The independent left/right horizontal error extents.
+
+The independent left/right horizontal error extents.
 
 ## Returns
 

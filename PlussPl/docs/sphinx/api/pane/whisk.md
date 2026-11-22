@@ -29,10 +29,12 @@ The lengths are distances, not positions: finite and not negative. Each is a ser
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The points.
+
+The points.
 
 **err**, **neg**, **pos**, **yneg**, **ypos**, **xneg**, **xpos** (`Series`-convertible)
-    Whisker lengths: finite, not negative, one per point or one for all.
+
+Whisker lengths: finite, not negative, one per point or one for all.
 
 ## Returns
 

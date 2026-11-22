@@ -22,8 +22,9 @@ squared deviations by `n - 1` instead of `n`. Delegates to `Shelf::var()`, so it
 ## Parameters
 
 **unbiased** (`bool`, defaults to `true`)
-    `true` divides by `n - 1` (sample variance, Bessel-corrected); `false` divides by `n`
-    (population variance).
+
+`true` divides by `n - 1` (sample variance, Bessel-corrected); `false` divides by `n`
+(population variance).
 
 ## Returns
 
