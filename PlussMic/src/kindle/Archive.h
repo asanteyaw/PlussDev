@@ -59,6 +59,30 @@ struct ArchiveDepthFacetPlotOptions {
   KeySelection keys{};
 };
 
+// The options of Archive::triplot: the grid's style, as in the flash triplot, and the selection of keys
+// it draws (`keys`, with `max_keys` as a cap) instead of feature indices and names.
+struct ArchiveTriplotPlotOptions {
+  pluss::pl::flash::TriplotKind kind{pluss::pl::flash::TriplotKind::Cloud};
+  std::vector<std::string> labels{};
+  std::int64_t max_keys{0};
+  std::int64_t max_panels{9};
+  std::int64_t rows{0};
+  std::int64_t cols{0};
+  std::int64_t max_points{2500};
+  std::int64_t ridge_levels{8};
+  bool show_grid{true};
+  bool auto_size{true};
+  double min_width{1280.0};
+  double min_height{900.0};
+  double cell_width{360.0};
+  double cell_height{300.0};
+  double outer_pad_x{100.0};
+  double outer_pad_y{100.0};
+  double grid_gap_x{10.0};
+  double grid_gap_y{10.0};
+  KeySelection keys{};
+};
+
 // The options of Archive::plot(): the figure style, the settings each plot starts from, and `keys`, the
 // selection every key-selecting plot (depth_compare, depth_facet, triplot) falls back to when it is not
 // given its own.
@@ -73,7 +97,7 @@ struct ArchivePlotOptions {
   ArchiveDepthComparePlotOptions depth_compare{};
   ArchiveDepthFacetPlotOptions depth_facet{};
   pluss::table::AtlasDepthRollingPlotOptions depth_rolling{};
-  pluss::pl::flash::TriplotOptions triplot{};
+  ArchiveTriplotPlotOptions triplot{};
   KeySelection keys{};
 };
 
@@ -387,12 +411,10 @@ public:
                                   const pluss::table::AtlasDepthRollingPlotOptions& options) const;
 
   pluss::pl::Studio triplot() const;
-  pluss::pl::Studio triplot(const pluss::pl::flash::TriplotOptions& options) const;
-  pluss::pl::Studio triplot(const KeySelection& keys) const;
-  pluss::pl::Studio triplot(const KeySelection& keys, const pluss::pl::flash::TriplotOptions& options) const;
+  pluss::pl::Studio triplot(const ArchiveTriplotPlotOptions& options) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> keys) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> keys,
-                            const pluss::pl::flash::TriplotOptions& options) const;
+                            const ArchiveTriplotPlotOptions& options) const;
 
 private:
   Archive archive_{};

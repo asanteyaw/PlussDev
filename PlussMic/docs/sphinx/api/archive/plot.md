@@ -47,7 +47,7 @@ accessor has its own page, with real rendered charts, under
 | `depth_compare` | `ArchiveDepthComparePlotOptions` |
 | `depth_facet` | `ArchiveDepthFacetPlotOptions` |
 | `depth_rolling` | `pluss::table::AtlasDepthRollingPlotOptions` |
-| `triplot` | `pluss::pl::flash::TriplotOptions` |
+| `triplot` | `ArchiveTriplotPlotOptions` |
 | `keys` | `KeySelection` |
 
 Passing `all_features`, `include_features` or `exclude_features` in `figure` throws an error that names the key

@@ -424,6 +424,29 @@ pluss::table::AtlasDepthFacetPlotOptions archive_to_atlas(const ArchiveDepthFace
   return out;
 }
 
+pluss::pl::flash::TriplotOptions archive_to_flash(const ArchiveTriplotPlotOptions& o) {
+  pluss::pl::flash::TriplotOptions out;
+  out.kind = o.kind;
+  out.labels = o.labels;
+  out.max_features = o.max_keys;
+  out.max_panels = o.max_panels;
+  out.rows = o.rows;
+  out.cols = o.cols;
+  out.max_points = o.max_points;
+  out.ridge_levels = o.ridge_levels;
+  out.show_grid = o.show_grid;
+  out.auto_size = o.auto_size;
+  out.min_width = o.min_width;
+  out.min_height = o.min_height;
+  out.cell_width = o.cell_width;
+  out.cell_height = o.cell_height;
+  out.outer_pad_x = o.outer_pad_x;
+  out.outer_pad_y = o.outer_pad_y;
+  out.grid_gap_x = o.grid_gap_x;
+  out.grid_gap_y = o.grid_gap_y;
+  return out;
+}
+
 pluss::table::AtlasPlotOptions archive_to_atlas(const ArchivePlotOptions& o) {
   pluss::table::AtlasPlotOptions out;
   out.figure = o.figure;
@@ -439,7 +462,7 @@ pluss::table::AtlasPlotOptions archive_to_atlas(const ArchivePlotOptions& o) {
   out.depth_compare = archive_to_atlas(o.depth_compare);
   out.depth_facet = archive_to_atlas(o.depth_facet);
   out.depth_rolling = o.depth_rolling;
-  out.triplot = o.triplot;
+  out.triplot = archive_to_flash(o.triplot);
   return out;
 }
 
@@ -616,17 +639,8 @@ pluss::pl::Studio ArchivePlotAccessor::triplot() const {
   return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options_.triplot);
 }
 
-pluss::pl::Studio ArchivePlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const {
+pluss::pl::Studio ArchivePlotAccessor::triplot(const ArchiveTriplotPlotOptions& options) const {
   return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options);
-}
-
-pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys) const {
-  return triplot(keys, options_.triplot);
-}
-
-pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys,
-                                               const pluss::pl::flash::TriplotOptions& options) const {
-  return archive_plot_accessor_for(archive_, {}, options_, "triplot").triplot(archive_as_selection(keys), options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys) const {
@@ -634,6 +648,8 @@ pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std:
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                               const pluss::pl::flash::TriplotOptions& options) const {
-  return archive_plot_accessor_for(archive_, keys, options_, "triplot").triplot(keys, options);
+                                               const ArchiveTriplotPlotOptions& options) const {
+  const auto accessor = archive_plot_accessor_for(archive_, keys, options_, "triplot");
+  if (keys.size() == 0) return accessor.triplot(archive_as_selection(options.keys), archive_to_flash(options));
+  return accessor.triplot(keys, archive_to_flash(options));
 }
