@@ -9,6 +9,10 @@ on:
         default: transient
         options:
           - transient
+      only:
+        description: Build only the matrix entry with this name (empty builds all)
+        type: string
+        default: ''
   schedule:
     - cron: "23 4 * * *"
   push:
@@ -31,6 +35,7 @@ jobs:
           - { name: ubuntu-24.04, os: ubuntu-24.04, mps: 'off' }
           - { name: ubuntu-24.04-arm, os: ubuntu-24.04-arm, mps: 'off' }
           - { name: windows-2022, os: windows-2022, mps: 'off' }
+    if: github.event_name != 'workflow_dispatch' || inputs.only == '' || inputs.only == matrix.name
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
@@ -72,10 +77,26 @@ jobs:
       - name: Build static native dependencies
         uses: ./.github/actions/native-deps
 
+      - name: Diagnose Windows native dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $inst = "$env:VCPKG_ROOT/installed/$env:PLUSSII_VCPKG_TRIPLET"
+          Write-Host "triplet=$env:PLUSSII_VCPKG_TRIPLET root=$env:VCPKG_ROOT"
+          Get-ChildItem "$env:VCPKG_ROOT/installed" | Format-Table Name
+          Get-ChildItem "$inst/include/sqlite3*.h" | Format-Table FullName
+          Get-ChildItem "$inst/lib" -Filter "sqlite3*" | Format-Table FullName
+          & "$env:VCPKG_ROOT/vcpkg" list | Select-String "sqlite3|libzip|arrow|curl"
+          Write-Host "CMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
+          New-Item -ItemType Directory -Force probe | Out-Null
+          Set-Content probe/CMakeLists.txt "cmake_minimum_required(VERSION 3.28)`nproject(probe LANGUAGES CXX)`nmessage(STATUS `"PREFIX=`${CMAKE_PREFIX_PATH}`")`nmessage(STATUS `"INSTALLED=`${VCPKG_INSTALLED_DIR} TRIPLET=`${VCPKG_TARGET_TRIPLET} MANIFEST=`${VCPKG_MANIFEST_MODE}`")`nfind_package(SQLite3 REQUIRED)`nmessage(STATUS `"SQLITE=`${SQLite3_INCLUDE_DIR} `${SQLite3_LIBRARY}`")"
+          cmake -S probe -B probe/build -T ClangCL --debug-find-pkg=SQLite3 "-DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET" "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
+
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
+        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN" "-DVCPKG_INSTALLED_DIR=$env:VCPKG_ROOT/installed" "-DCMAKE_PREFIX_PATH=$env:VCPKG_ROOT/installed/$env:PLUSSII_VCPKG_TRIPLET" "-DSQLite3_INCLUDE_DIR=$env:VCPKG_ROOT/installed/$env:PLUSSII_VCPKG_TRIPLET/include" "-DSQLite3_LIBRARY=$env:VCPKG_ROOT/installed/$env:PLUSSII_VCPKG_TRIPLET/lib/sqlite3.lib" --debug-find-pkg=SQLite3
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'

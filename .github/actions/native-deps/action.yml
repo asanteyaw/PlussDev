@@ -30,7 +30,8 @@ runs:
         mkdir -p "${RUNNER_TEMP}/vcpkg-binary-cache"
 
     - name: Restore vcpkg binary cache
-      uses: actions/cache@v4
+      id: vcpkg-cache
+      uses: actions/cache/restore@v4
       with:
         path: ${{ runner.temp }}/vcpkg-binary-cache
         key: vcpkg-native-${{ runner.os }}-${{ runner.arch }}-93ad765c7b66-${{ hashFiles('.github/actions/native-deps/action.yml') }}
@@ -75,3 +76,10 @@ runs:
         packages=("arrow[parquet]" libzip)
         if [[ "${RUNNER_OS}" == "Windows" ]]; then packages+=(sqlite3 curl); fi
         "${VCPKG_ROOT}/vcpkg" install "${packages[@]}" --triplet "${PLUSSII_VCPKG_TRIPLET}" --clean-after-build
+
+    - name: Save vcpkg binary cache
+      if: always() && steps.vcpkg-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/vcpkg-binary-cache
+        key: ${{ steps.vcpkg-cache.outputs.cache-primary-key }}
