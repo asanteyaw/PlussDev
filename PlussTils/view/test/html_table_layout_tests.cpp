@@ -274,6 +274,63 @@ void test_sizing_every_column_never_leaves_a_gap() {
   expect(fitted_last == expected.widths[2], "the column just auto-fitted keeps its fitted width");
 }
 
+[[nodiscard]] std::vector<std::string> drawn_texts(const std::string& html, const SizeI viewport,
+                                                  HtmlRenderConfig config = {}) {
+  const auto document = parse_html_document(html);
+  const auto scene = build_html_document_scene(document, viewport, config);
+  std::vector<std::string> texts;
+  for (const auto& command : scene.commands()) {
+    if (const auto* text = std::get_if<TextCommand>(&command)) {
+      texts.push_back(text->text);
+    }
+  }
+  return texts;
+}
+
+void test_resizing_a_column_never_changes_a_row() {
+  // Text does not wrap by default, so a row's height follows the font and not the column width.
+  std::string html = table_html(4, 5);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths["grid"][1] = resolve_table_geometry(initial.stats.table_font_px).min_resize;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  const auto narrow = render(html, viewport, config);
+  expect(narrow.stats.table_content_rect.height == initial.stats.table_content_rect.height,
+         "narrowing a column leaves every row the same height");
+}
+
+void test_a_number_that_does_not_fit_is_marked_and_never_cut() {
+  const std::string html =
+      "<html><head><style>table{width:100%;max-height:28.6em;} th,td{padding:8px;}</style></head><body><table "
+      "id=\"grid\"><thead><tr><th>name</th><th>amount</th></tr></thead><tbody><tr><td>a long text value that will "
+      "not fit</td><td>123456789.123456</td></tr></tbody></table></body></html>";
+  const SizeI viewport{900, 400};
+  const auto initial = render(html, viewport);
+  const int min_resize = resolve_table_geometry(initial.stats.table_font_px).min_resize;
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths["grid"][1] = min_resize + min_resize / 2;  // only the number column is sized; the text column fills
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  const auto texts = drawn_texts(html, viewport, config);
+  const std::string marker = html_table_geometry().numeric_overflow_marker;
+  const bool number_marked = std::any_of(texts.begin(), texts.end(), [&](const std::string& t) {
+    return !t.empty() && t.find_first_not_of(marker) == std::string::npos;
+  });
+  const bool number_cut = std::any_of(texts.begin(), texts.end(), [](const std::string& t) {
+    return t.find("1234") != std::string::npos && t != "123456789.123456";
+  });
+  std::string listing;
+  for (const auto& t : texts) listing += "[" + t + "]";
+  expect(number_marked, "a number that does not fit is shown as the overflow marker; drawn: " + listing);
+  expect(!number_cut, "a number is never cut");
+  // A text cell that does not fit ends in an ellipsis in a squeezed table.
+  const auto many = drawn_texts(table_html(30, 2), viewport);
+  expect(std::any_of(many.begin(), many.end(), [](const std::string& t) { return t.find("...") != std::string::npos; }),
+         "text that does not fit ends in an ellipsis");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -303,6 +360,8 @@ int main() {
     test_other_columns_absorb_a_resize_in_a_wide_table();
     test_header_never_gets_taller_when_a_column_shrinks();
     test_sizing_every_column_never_leaves_a_gap();
+    test_resizing_a_column_never_changes_a_row();
+    test_a_number_that_does_not_fit_is_marked_and_never_cut();
     test_pdf_export_writes_a_valid_file();
     std::cout << "[PASS] html_table_layout_tests\n";
     return 0;

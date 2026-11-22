@@ -2001,9 +2001,10 @@ struct TableMeasureState {
   const int gutter = state.header[at] != 0 ? geo.sort_gutter : 0;
   const int inner = std::max(20, width - ((padding + style.border) * 2) - 4 - gutter);
   int lines = 1;
-  if (!squeezed && (state.multiline[at] != 0 || state.text_width[at] > inner)) {
-    const int max_lines = state.header[at] != 0 ? geo.header_max_lines
-                                                 : (state.breaks_names[at] != 0 ? geo.label_max_lines : geo.value_max_lines);
+  const int max_lines = state.header[at] != 0 ? geo.header_max_lines
+                                               : (state.breaks_names[at] != 0 ? geo.label_max_lines : geo.value_max_lines);
+  // One line is one line whatever the text: no wrapping to measure.
+  if (!squeezed && max_lines > 1 && (state.multiline[at] != 0 || state.text_width[at] > inner)) {
     const auto wrapped = state.breaks_names[at] != 0
                              ? layout_header_lines(cell->text, style.font_size, inner, max_lines)
                              : limit_lines(layout_text_lines(cell->text, style, inner), max_lines, style.font_size, inner);
@@ -2273,10 +2274,14 @@ struct TableLayout {
     // Which columns need their cells measured again: all of them for a fresh layout, otherwise
     // only those whose width or squeeze state differs from the cached layout.
     column_dirty.assign(visible_columns, previous == nullptr);
+    // When no kind of cell can wrap, a cell's height does not depend on its column's width, so a
+    // resize changes no row at all and nothing needs measuring again.
+    const bool heights_follow_widths =
+        std::max({geometry_px.header_max_lines, geometry_px.value_max_lines, geometry_px.label_max_lines}) > 1;
     if (previous != nullptr) {
       for (std::size_t c = 0; c < visible_columns; ++c) {
-        column_dirty[c] = plan.widths[c] != previous->column_widths[c] ||
-                          plan.single_line[c] != previous->column_single_line[c];
+        column_dirty[c] = heights_follow_widths && (plan.widths[c] != previous->column_widths[c] ||
+                                                     plan.single_line[c] != previous->column_single_line[c]);
       }
     } else {
       cell_heights.assign(rows.size() * visible_columns, 0);
@@ -4123,9 +4128,19 @@ int render_table(Scene& scene,
           std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? sort_gutter_px : 0));
       const bool squeezed = c < plan.single_line.size() && plan.single_line[c];
       const int max_lines = squeezed ? 1 : (header_row ? table_geo.header_max_lines : table_geo.value_max_lines);
+      // A number that does not fit is shown as the overflow marker repeated across the cell, never
+      // cut: a cut number reads as a different number.
+      std::string shown = value;
+      if (!header_row && !table_geo.numeric_overflow_marker.empty() && parse_numeric_text(value).has_value() &&
+          layout_math_text(value, cell_style.font_size).width > text_max_w) {
+        const int marker_w = std::max(1, layout_math_text(table_geo.numeric_overflow_marker, cell_style.font_size).width);
+        const int repeats = std::max(1, text_max_w / marker_w);
+        shown.clear();
+        for (int i = 0; i < repeats; ++i) shown += table_geo.numeric_overflow_marker;
+      }
       const auto wrapped = header_row
-                               ? layout_header_lines(value, cell_style.font_size, text_max_w, max_lines)
-                               : limit_lines(layout_text_lines(value, cell_style, text_max_w),
+                               ? layout_header_lines(shown, cell_style.font_size, text_max_w, max_lines)
+                               : limit_lines(layout_text_lines(shown, cell_style, text_max_w),
                                              max_lines,
                                              cell_style.font_size,
                                              text_max_w);

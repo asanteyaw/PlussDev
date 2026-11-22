@@ -31,11 +31,17 @@ struct HtmlTableGeometry {
   double min_resize_em{3.5};        // narrowest a user can drag a column to
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
-  // Lines of text a cell may use before it ends in an ellipsis. A header is one line, so shrinking
-  // a column never makes the header row taller.
+  // Lines of text a cell may use before it ends in an ellipsis. Like a spreadsheet, text does not wrap
+  // unless asked to: one line per cell, so a row's height follows the font and not the column's width,
+  // and resizing a column never changes a row. Raise value_max_lines (or label_max_lines) to let
+  // long text wrap; headers stay on one line either way, so shrinking a column never makes the
+  // header row taller.
   int header_max_lines{1};
-  int value_max_lines{5};
-  int label_max_lines{3};  // row-label cells
+  int value_max_lines{1};
+  int label_max_lines{1};  // row-label cells
+  // A number too wide for its column is never cut (a cut number reads as a different number): it is
+  // shown as this marker repeated across the cell, the way a spreadsheet shows "####".
+  std::string numeric_overflow_marker{"#"};
   // Sort arrows: a stacked pair of triangles at the right of a header.
   double sort_control_em{1.0};      // width of the control
   double sort_pad_em{0.43};         // air between a header's text and the control
@@ -76,6 +82,7 @@ struct HtmlTableGeometryPx {
   int column_max{0};
   int max_viewport_height{0};
   double max_autofit_viewports{0.0};
+  std::string numeric_overflow_marker{};
 };
 
 [[nodiscard]] inline HtmlTableGeometry& html_table_geometry() {
@@ -111,6 +118,7 @@ struct HtmlTableGeometryPx {
   out.column_max = px(g.column_max_em);
   out.max_viewport_height = px(g.max_viewport_height_em);
   out.max_autofit_viewports = g.max_autofit_viewports;
+  out.numeric_overflow_marker = g.numeric_overflow_marker;
   return out;
 }
 
