@@ -66,6 +66,16 @@ if(NOT configure_result EQUAL 0)
   message(FATAL_ERROR "Could not configure a consumer against ${DISTRIBUTION_ARCHIVE}")
 endif()
 
+# A distribution that bundles its native libraries must not search the machine
+# for them: a runner that happens to have libzip would hide a broken package.
+file(GLOB_RECURSE bundled_native_cmake "${extract_dir}/*/lib/cmake/Pluss/PlussNativeBundle.cmake")
+if(bundled_native_cmake)
+  file(STRINGS "${consumer_build_dir}/CMakeCache.txt" searched_zip REGEX "^_pluss_zip_library")
+  if(searched_zip)
+    message(FATAL_ERROR "The package searched the system for libzip although the archive bundles it: ${searched_zip}")
+  endif()
+endif()
+
 execute_process(
   COMMAND "${CMAKE_COMMAND}" --build "${consumer_build_dir}" --config Release --parallel 2
   RESULT_VARIABLE build_result

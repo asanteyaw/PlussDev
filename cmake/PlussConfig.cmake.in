@@ -98,6 +98,11 @@ if(NOT _pluss_needs_unistring EQUAL -1 AND NOT TARGET Pluss::Unistring)
   endif()
 endif()
 
+if(NOT _pluss_needs_zip EQUAL -1 AND NOT TARGET Pluss::Zip AND TARGET Pluss::NativeBundle)
+  # The archive carries a static libzip inside Pluss::NativeBundle; nothing to find.
+  add_library(Pluss::Zip INTERFACE IMPORTED)
+endif()
+
 if(NOT _pluss_needs_zip EQUAL -1 AND NOT TARGET Pluss::Zip)
   find_library(_pluss_zip_library NAMES zip libzip)
   if(_pluss_zip_library)
