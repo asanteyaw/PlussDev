@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "pluss/tils/view/window/canvas.h"
+#include "pluss/tils/view/window/export.h"
 
 namespace pluss::view::window {
 
@@ -138,10 +139,10 @@ class IWindowShell {
     (void)extension;
     return {};
   }
+  // Saves the canvas as a PDF. Platforms with a system PDF writer override this; the default
+  // writes a portable one-page PDF so every platform can save one.
   virtual bool save_canvas_pdf(const PixelCanvas& canvas, std::string_view path) {
-    (void)canvas;
-    (void)path;
-    return false;
+    return window::save_canvas_pdf(canvas, path);
   }
 };
 

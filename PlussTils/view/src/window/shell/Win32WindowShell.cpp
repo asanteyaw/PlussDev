@@ -17,6 +17,7 @@
 #include <mutex>
 #include <string>
 #include <string_view>
+#include <cwchar>
 #include <utility>
 #include <vector>
 
@@ -28,8 +29,15 @@ namespace {
 
 constexpr wchar_t kWindowClassName[] = L"PlussViewPixelWindow";
 constexpr int kSaveButtonId = 4100;
+constexpr int kMenuButtonBaseId = 4110;  // one id per toolbar menu button, in order
 constexpr int kSaveMenuBaseId = 4200;
+constexpr int kMenuItemBaseId = 6000;    // one id per entry of the menu being shown
+// Toolbar geometry, in pixels at 96 dpi. Every button is as wide as its own label needs.
 constexpr int kToolbarHeight = 46;
+constexpr int kToolbarMarginPx = 12;     // gap to the window edge
+constexpr int kToolbarGapPx = 8;         // gap between neighbouring buttons
+constexpr int kToolbarButtonHeightPx = 30;
+constexpr int kToolbarButtonPadPx = 28;  // left and right padding around a label, together
 
 LRESULT CALLBACK pluss_window_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 
@@ -135,7 +143,8 @@ class Win32WindowShell final : public IWindowShell {
     }
 
     save_formats_ = config.save_formats;
-    toolbar_height_ = save_formats_.empty() ? 0 : kToolbarHeight;
+    menu_buttons_.clear();
+    toolbar_height_ = (save_formats_.empty() && config.menus.empty()) ? 0 : kToolbarHeight;
     const int width = std::max(640, config.initial_size.width);
     const int height = std::max(420, config.initial_size.height);
 
@@ -156,12 +165,28 @@ class Win32WindowShell final : public IWindowShell {
     }
 
     if (toolbar_height_ > 0) {
-      save_button_ = CreateWindowExW(0, L"BUTTON", L"Save \u25BE", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 92, 30,
-                                     hwnd_, reinterpret_cast<HMENU>(static_cast<INT_PTR>(kSaveButtonId)),
-                                     GetModuleHandleW(nullptr), nullptr);
-      if (save_button_ != nullptr) {
-        SendMessageW(save_button_, WM_SETFONT, reinterpret_cast<WPARAM>(GetStockObject(DEFAULT_GUI_FONT)), TRUE);
+      const HFONT font = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+      const auto make_button = [&](const std::wstring& label, const int id) {
+        HWND button = CreateWindowExW(0, L"BUTTON", label.c_str(), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0,
+                                      hwnd_, reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                      GetModuleHandleW(nullptr), nullptr);
+        if (button != nullptr) {
+          SendMessageW(button, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
+        }
+        return button;
+      };
+      if (!save_formats_.empty()) {
+        save_button_ = make_button(L"Save As \u25BE", kSaveButtonId);
       }
+      for (std::size_t index = 0; index < config.menus.size(); ++index) {
+        const std::wstring title = utf8_to_wide(config.menus[index].title.empty() ? std::string_view("Menu")
+                                                                                    : std::string_view(config.menus[index].title));
+        menu_buttons_.push_back(MenuButton{make_button(title + L" \u25BE", kMenuButtonBaseId + static_cast<int>(index)),
+                                           config.menus[index]});
+      }
+      RECT client{};
+      GetClientRect(hwnd_, &client);
+      layout_toolbar(client.right - client.left);
     }
 
     open_ = true;
@@ -206,6 +231,7 @@ class Win32WindowShell final : public IWindowShell {
       hwnd_ = nullptr;
     }
     save_button_ = nullptr;
+    menu_buttons_.clear();
     bgra_.clear();
     if (was_open) {
       events_.push_back(ShellEvent{ShellEventKind::Closed, size_, "win32_shell_closed"});
@@ -221,6 +247,14 @@ class Win32WindowShell final : public IWindowShell {
     auto buffered = std::move(events_);
     events_.clear();
     return buffered;
+  }
+
+  [[nodiscard]] bool supports_menus() const noexcept override { return true; }
+
+  void update_menus(const std::vector<ShellMenu>& menus) override {
+    for (std::size_t index = 0; index < menu_buttons_.size() && index < menus.size(); ++index) {
+      menu_buttons_[index].menu = menus[index];
+    }
   }
 
   [[nodiscard]] ShellBackend backend() const noexcept override { return ShellBackend::Win32; }
@@ -348,6 +382,17 @@ class Win32WindowShell final : public IWindowShell {
           show_save_menu();
           return 0;
         }
+        if (LOWORD(wparam) >= kMenuButtonBaseId &&
+            LOWORD(wparam) < kMenuButtonBaseId + static_cast<int>(menu_buttons_.size())) {
+          show_toolbar_menu(static_cast<std::size_t>(LOWORD(wparam) - kMenuButtonBaseId));
+          return 0;
+        }
+        if (LOWORD(wparam) >= kMenuItemBaseId &&
+            LOWORD(wparam) < kMenuItemBaseId + static_cast<int>(popup_notes_.size())) {
+          events_.push_back(ShellEvent{ShellEventKind::ShortcutCommand, size_,
+                                       popup_notes_[static_cast<std::size_t>(LOWORD(wparam) - kMenuItemBaseId)]});
+          return 0;
+        }
         if (LOWORD(wparam) >= kSaveMenuBaseId &&
             LOWORD(wparam) < kSaveMenuBaseId + static_cast<int>(save_formats_.size())) {
           const auto index = static_cast<std::size_t>(LOWORD(wparam) - kSaveMenuBaseId);
@@ -415,9 +460,7 @@ class Win32WindowShell final : public IWindowShell {
 
  private:
   void layout_children(const int client_width, const int client_height) {
-    if (save_button_ != nullptr) {
-      MoveWindow(save_button_, std::max(12, client_width - 104), 8, 92, 30, TRUE);
-    }
+    layout_toolbar(client_width);
     const SizeI next{
         std::max(1, client_width),
         std::max(1, client_height - toolbar_height_),
@@ -528,6 +571,72 @@ class Win32WindowShell final : public IWindowShell {
     }
   }
 
+  // Width a button needs for its own label: the text plus padding.
+  [[nodiscard]] int button_width(HWND button) const {
+    wchar_t text[128]{};
+    GetWindowTextW(button, text, static_cast<int>(sizeof(text) / sizeof(text[0])));
+    HDC dc = GetDC(button);
+    HGDIOBJ previous = SelectObject(dc, GetStockObject(DEFAULT_GUI_FONT));
+    SIZE extent{};
+    GetTextExtentPoint32W(dc, text, static_cast<int>(wcslen(text)), &extent);
+    SelectObject(dc, previous);
+    ReleaseDC(button, dc);
+    return extent.cx + kToolbarButtonPadPx;
+  }
+
+  // Buttons run right to left from the window edge: "Save As" first, then the menus, the last
+  // menu closest to it.
+  void layout_toolbar(const int client_width) {
+    const int y = (toolbar_height_ - kToolbarButtonHeightPx) / 2;
+    int right_edge = client_width - kToolbarMarginPx;
+    const auto place = [&](HWND button) {
+      if (button == nullptr) {
+        return;
+      }
+      const int width = button_width(button);
+      right_edge -= width;
+      MoveWindow(button, std::max(kToolbarMarginPx, right_edge), y, width, kToolbarButtonHeightPx, TRUE);
+      right_edge -= kToolbarGapPx;
+    };
+    place(save_button_);
+    for (std::size_t index = menu_buttons_.size(); index-- > 0;) {
+      place(menu_buttons_[index].button);
+    }
+  }
+
+  // Adds `options` to `menu`; an entry with children becomes a cascading submenu. A choice's note
+  // is "<prefix><id>": the menu's id for a top-level entry, the parent entry's id for a child.
+  void append_options(HMENU menu, const std::vector<ShellMenuOption>& options, const std::string& prefix) {
+    for (const auto& option : options) {
+      const std::wstring label = utf8_to_wide(option.label);
+      if (!option.children.empty()) {
+        HMENU submenu = CreatePopupMenu();
+        append_options(submenu, option.children, option.id + ":");
+        AppendMenuW(menu, MF_POPUP | MF_STRING, reinterpret_cast<UINT_PTR>(submenu), label.c_str());
+        continue;
+      }
+      popup_notes_.push_back(prefix + option.id);
+      AppendMenuW(menu, MF_STRING | (option.checked ? MF_CHECKED : MF_UNCHECKED),
+                  static_cast<UINT_PTR>(kMenuItemBaseId + static_cast<int>(popup_notes_.size()) - 1), label.c_str());
+    }
+  }
+
+  void show_toolbar_menu(const std::size_t index) {
+    if (hwnd_ == nullptr || index >= menu_buttons_.size()) {
+      return;
+    }
+    HMENU menu = CreatePopupMenu();
+    if (menu == nullptr) {
+      return;
+    }
+    popup_notes_.clear();
+    append_options(menu, menu_buttons_[index].menu.options, menu_buttons_[index].menu.id + ":");
+    RECT button_rect{};
+    GetWindowRect(menu_buttons_[index].button, &button_rect);
+    TrackPopupMenu(menu, TPM_LEFTALIGN | TPM_TOPALIGN, button_rect.left, button_rect.bottom, 0, hwnd_, nullptr);
+    DestroyMenu(menu);
+  }
+
   void show_save_menu() {
     if (hwnd_ == nullptr || save_formats_.empty()) {
       return;
@@ -539,7 +648,7 @@ class Win32WindowShell final : public IWindowShell {
     for (std::size_t index = 0; index < save_formats_.size(); ++index) {
       const std::wstring label = utf8_to_wide(save_formats_[index].label);
       AppendMenuW(menu, MF_STRING, static_cast<UINT_PTR>(kSaveMenuBaseId + static_cast<int>(index)),
-                  label.empty() ? L"Save \u25BE" : label.c_str());
+                  label.empty() ? L"Save As" : label.c_str());
     }
     RECT button_rect{};
     GetWindowRect(save_button_, &button_rect);
@@ -550,7 +659,13 @@ class Win32WindowShell final : public IWindowShell {
   bool open_{false};
   bool dragging_{false};
   HWND hwnd_{nullptr};
+  struct MenuButton {
+    HWND button{nullptr};
+    ShellMenu menu{};
+  };
   HWND save_button_{nullptr};
+  std::vector<MenuButton> menu_buttons_{};
+  std::vector<std::string> popup_notes_{};
   int toolbar_height_{0};
   SizeI size_{};
   SizeI pixel_size_{};

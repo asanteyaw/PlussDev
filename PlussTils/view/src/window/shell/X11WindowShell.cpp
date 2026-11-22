@@ -14,6 +14,8 @@
 #include <clocale>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <memory>
@@ -63,6 +65,29 @@ namespace {
   return (state & (ControlMask | Mod1Mask | Mod4Mask)) == 0U;
 }
 
+// Toolbar and menu geometry, in pixels. Every button is as wide as its own label needs.
+constexpr int kToolbarHeightPx = 46;
+constexpr int kToolbarMarginPx = 12;      // gap to the window edge
+constexpr int kToolbarGapPx = 8;          // gap between neighbouring buttons
+constexpr int kToolbarButtonHeightPx = 30;
+constexpr int kToolbarButtonPadPx = 28;   // padding left and right of a label, together
+constexpr int kArrowPx = 8;               // the pull-down arrow beside a label
+constexpr int kPopupRowHeightPx = 28;
+constexpr int kPopupPadPx = 14;           // left and right padding of a menu row
+constexpr int kPopupIndentPx = 16;        // extra left padding per nesting level
+constexpr int kPopupCheckPx = 18;         // room kept for a check mark
+constexpr int kPopupMinWidthPx = 140;
+
+struct Rgb {
+  std::uint8_t r, g, b;
+};
+constexpr Rgb kToolbarFill{238, 240, 244};
+constexpr Rgb kButtonFill{255, 255, 255};
+constexpr Rgb kButtonLine{188, 194, 204};
+constexpr Rgb kInk{30, 34, 43};
+constexpr Rgb kMutedInk{110, 118, 132};
+constexpr Rgb kHoverFill{205, 222, 246};
+
 } // namespace
 
 class X11WindowShell final : public IWindowShell {
@@ -85,8 +110,10 @@ class X11WindowShell final : public IWindowShell {
     depth_ = DefaultDepth(display_, screen_);
     const int width = std::max(640, config.initial_size.width);
     const int height = std::max(420, config.initial_size.height);
+    menus_ = config.menus;
+    toolbar_height_ = (config.save_formats.empty() && config.menus.empty()) ? 0 : kToolbarHeightPx;
     window_ = XCreateSimpleWindow(display_, RootWindow(display_, screen_), 0, 0, static_cast<unsigned int>(width),
-                                  static_cast<unsigned int>(height), 0, BlackPixel(display_, screen_),
+                                  static_cast<unsigned int>(height + toolbar_height_), 0, BlackPixel(display_, screen_),
                                   WhitePixel(display_, screen_));
     if (window_ == 0) {
       events_.push_back(ShellEvent{ShellEventKind::Error, {}, "x11_window_create_failed"});
@@ -136,6 +163,11 @@ class X11WindowShell final : public IWindowShell {
 
     save_formats_ = config.save_formats;
     size_ = SizeI{width, height};
+    font_ = XLoadQueryFont(display_, "-*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1");
+    if (font_ == nullptr) {
+      font_ = XLoadQueryFont(display_, "fixed");
+    }
+    layout_toolbar(width);
     XMapRaised(display_, window_);
     XFlush(display_);
     open_ = true;
@@ -175,6 +207,11 @@ class X11WindowShell final : public IWindowShell {
       XCloseIM(input_method_);
       input_method_ = nullptr;
     }
+    close_popup();
+    if (display_ != nullptr && font_ != nullptr) {
+      XFreeFont(display_, font_);
+      font_ = nullptr;
+    }
     if (display_ != nullptr && gc_ != nullptr) {
       XFreeGC(display_, gc_);
       gc_ = nullptr;
@@ -207,6 +244,12 @@ class X11WindowShell final : public IWindowShell {
     return buffered;
   }
 
+  [[nodiscard]] bool supports_menus() const noexcept override { return true; }
+
+  void update_menus(const std::vector<ShellMenu>& menus) override {
+    menus_ = menus;
+  }
+
   [[nodiscard]] ShellBackend backend() const noexcept override { return ShellBackend::X11; }
 
   [[nodiscard]] ShellCapabilities capabilities() const noexcept override {
@@ -232,6 +275,8 @@ class X11WindowShell final : public IWindowShell {
     return XGetSelectionOwner(display_, clipboard_atom_) == window_;
   }
 
+  // Asks for a file name with the desktop's own dialog (zenity or kdialog) when one is installed,
+  // and otherwise saves into the current folder under the suggested name.
   [[nodiscard]] std::string choose_save_path(const std::string_view suggested_name,
                                              const std::string_view extension) override {
     std::string filename = suggested_name.empty() ? std::string("plussview") : std::string(suggested_name);
@@ -243,10 +288,273 @@ class X11WindowShell final : public IWindowShell {
     }
     std::error_code error;
     const auto directory = std::filesystem::current_path(error);
-    return error ? filename : (directory / filename).string();
+    const std::string fallback = error ? filename : (directory / filename).string();
+    const std::string start = fallback;
+    const std::string quoted = shell_quote(start);
+    const std::string commands[] = {
+        "zenity --file-selection --save --confirm-overwrite --filename=" + quoted + " 2>/dev/null",
+        "kdialog --getsavefilename " + quoted + " 2>/dev/null",
+    };
+    for (const auto& command : commands) {
+      const std::string tool = command.substr(0, command.find(' '));
+      if (std::system(("command -v " + tool + " >/dev/null 2>&1").c_str()) != 0) {
+        continue;
+      }
+      std::string chosen;
+      if (FILE* pipe = popen(command.c_str(), "r")) {
+        char buffer[512];
+        while (std::fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+          chosen += buffer;
+        }
+        const int status = pclose(pipe);
+        while (!chosen.empty() && (chosen.back() == '\n' || chosen.back() == '\r')) {
+          chosen.pop_back();
+        }
+        if (status != 0 || chosen.empty()) {
+          return {};  // the user cancelled
+        }
+        return chosen;
+      }
+    }
+    return fallback;
   }
 
  private:
+  [[nodiscard]] static std::string shell_quote(const std::string& text) {
+    std::string quoted = "'";
+    for (const char ch : text) {
+      if (ch == '\'') {
+        quoted += "'\\''";
+      } else {
+        quoted += ch;
+      }
+    }
+    return quoted + "'";
+  }
+
+  [[nodiscard]] unsigned long pixel_of(const Rgb color) const noexcept {
+    return pack_component(color.r, visual_->red_mask) | pack_component(color.g, visual_->green_mask) |
+           pack_component(color.b, visual_->blue_mask);
+  }
+
+  [[nodiscard]] int text_width(const std::string& text) const {
+    return font_ != nullptr ? XTextWidth(font_, text.c_str(), static_cast<int>(text.size())) : 8 * static_cast<int>(text.size());
+  }
+
+  void draw_text(const Drawable target, const int x, const int center_y, const std::string& text, const Rgb color) {
+    if (font_ == nullptr) {
+      return;
+    }
+    XSetForeground(display_, gc_, pixel_of(color));
+    XSetFont(display_, gc_, font_->fid);
+    const int baseline = center_y + (font_->ascent - font_->descent) / 2;
+    XDrawString(display_, target, gc_, x, baseline, text.c_str(), static_cast<int>(text.size()));
+  }
+
+  void draw_arrow(const Drawable target, const int x, const int center_y, const Rgb color) {
+    XSetForeground(display_, gc_, pixel_of(color));
+    XPoint points[3] = {{static_cast<short>(x), static_cast<short>(center_y - kArrowPx / 4)},
+                        {static_cast<short>(x + kArrowPx), static_cast<short>(center_y - kArrowPx / 4)},
+                        {static_cast<short>(x + kArrowPx / 2), static_cast<short>(center_y + kArrowPx / 4 + 1)}};
+    XFillPolygon(display_, target, gc_, points, 3, Convex, CoordModeOrigin);
+  }
+
+  // Buttons run right to left from the window edge: "Save As" first, then the menus, the last
+  // menu closest to it.
+  void layout_toolbar(const int client_width) {
+    toolbar_buttons_.clear();
+    if (toolbar_height_ <= 0) {
+      return;
+    }
+    const int y = (toolbar_height_ - kToolbarButtonHeightPx) / 2;
+    int right_edge = client_width - kToolbarMarginPx;
+    const auto place = [&](const std::string& label, const int menu_index) {
+      const int width = text_width(label) + kArrowPx + kToolbarButtonPadPx;
+      right_edge -= width;
+      toolbar_buttons_.push_back(ToolbarButton{std::max(kToolbarMarginPx, right_edge), y, width,
+                                               kToolbarButtonHeightPx, label, menu_index});
+      right_edge -= kToolbarGapPx;
+    };
+    if (!save_formats_.empty()) {
+      place("Save As", -1);
+    }
+    for (std::size_t index = menus_.size(); index-- > 0;) {
+      place(menus_[index].title.empty() ? std::string("Menu") : menus_[index].title, static_cast<int>(index));
+    }
+  }
+
+  void draw_toolbar() {
+    if (toolbar_height_ <= 0 || display_ == nullptr || gc_ == nullptr) {
+      return;
+    }
+    XSetForeground(display_, gc_, pixel_of(kToolbarFill));
+    XFillRectangle(display_, window_, gc_, 0, 0, static_cast<unsigned int>(std::max(1, size_.width)),
+                   static_cast<unsigned int>(toolbar_height_));
+    for (const auto& button : toolbar_buttons_) {
+      XSetForeground(display_, gc_, pixel_of(kButtonFill));
+      XFillRectangle(display_, window_, gc_, button.x, button.y, static_cast<unsigned int>(button.w),
+                     static_cast<unsigned int>(button.h));
+      XSetForeground(display_, gc_, pixel_of(kButtonLine));
+      XDrawRectangle(display_, window_, gc_, button.x, button.y, static_cast<unsigned int>(button.w - 1),
+                     static_cast<unsigned int>(button.h - 1));
+      const int center_y = button.y + button.h / 2;
+      draw_text(window_, button.x + kToolbarButtonPadPx / 2, center_y, button.label, kInk);
+      draw_arrow(window_, button.x + button.w - kToolbarButtonPadPx / 2 - kArrowPx, center_y, kMutedInk);
+    }
+    XFlush(display_);
+  }
+
+  // Flattens a menu into rows. A cascading entry becomes a heading with its children indented
+  // beneath it, so one popup shows everything. A choice's note is "<prefix><id>".
+  void append_rows(const std::vector<ShellMenuOption>& options, const std::string& prefix, const int level) {
+    for (const auto& option : options) {
+      if (!option.children.empty()) {
+        popup_rows_.push_back(PopupRow{option.label, {}, false, true, level});
+        append_rows(option.children, option.id + ":", level + 1);
+      } else {
+        popup_rows_.push_back(PopupRow{option.label, prefix + option.id, option.checked, false, level});
+      }
+    }
+  }
+
+  void open_popup(const int button_index) {
+    close_popup();
+    const ToolbarButton& button = toolbar_buttons_[static_cast<std::size_t>(button_index)];
+    popup_rows_.clear();
+    if (button.menu_index < 0) {
+      for (const auto& format : save_formats_) {
+        popup_rows_.push_back(PopupRow{format.label, "save_as:" + format.extension, false, false, 0});
+      }
+    } else {
+      const auto& menu = menus_[static_cast<std::size_t>(button.menu_index)];
+      append_rows(menu.options, menu.id + ":", 0);
+    }
+    if (popup_rows_.empty()) {
+      return;
+    }
+    int width = kPopupMinWidthPx;
+    for (const auto& row : popup_rows_) {
+      width = std::max(width, text_width(row.label) + 2 * kPopupPadPx + kPopupCheckPx + row.level * kPopupIndentPx);
+    }
+    const int height = static_cast<int>(popup_rows_.size()) * kPopupRowHeightPx;
+    Window child = 0;
+    int root_x = 0;
+    int root_y = 0;
+    XTranslateCoordinates(display_, window_, RootWindow(display_, screen_), button.x, button.y + button.h, &root_x,
+                          &root_y, &child);
+    XSetWindowAttributes attributes{};
+    attributes.override_redirect = True;
+    attributes.background_pixel = pixel_of(kButtonFill);
+    attributes.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask |
+                            LeaveWindowMask;
+    popup_window_ = XCreateWindow(display_, RootWindow(display_, screen_), root_x, root_y,
+                                  static_cast<unsigned int>(width), static_cast<unsigned int>(height), 1, depth_,
+                                  InputOutput, visual_, CWOverrideRedirect | CWBackPixel | CWEventMask, &attributes);
+    popup_size_ = SizeI{width, height};
+    popup_hover_ = -1;
+    XMapRaised(display_, popup_window_);
+    XGrabPointer(display_, popup_window_, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync,
+                 GrabModeAsync, None, None, CurrentTime);
+    XGrabKeyboard(display_, popup_window_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+    draw_popup();
+  }
+
+  void close_popup() {
+    if (display_ == nullptr || popup_window_ == 0) {
+      popup_window_ = 0;
+      return;
+    }
+    XUngrabPointer(display_, CurrentTime);
+    XUngrabKeyboard(display_, CurrentTime);
+    XDestroyWindow(display_, popup_window_);
+    popup_window_ = 0;
+    popup_rows_.clear();
+    XFlush(display_);
+  }
+
+  void draw_popup() {
+    if (popup_window_ == 0) {
+      return;
+    }
+    for (std::size_t index = 0; index < popup_rows_.size(); ++index) {
+      const auto& row = popup_rows_[index];
+      const int y = static_cast<int>(index) * kPopupRowHeightPx;
+      const bool hovered = static_cast<int>(index) == popup_hover_ && !row.heading;
+      XSetForeground(display_, gc_, pixel_of(hovered ? kHoverFill : kButtonFill));
+      XFillRectangle(display_, popup_window_, gc_, 0, y, static_cast<unsigned int>(popup_size_.width),
+                     static_cast<unsigned int>(kPopupRowHeightPx));
+      const int center_y = y + kPopupRowHeightPx / 2;
+      if (row.checked) {
+        // A check mark: a small filled square, since core fonts have no tick glyph.
+        XSetForeground(display_, gc_, pixel_of(kInk));
+        XFillRectangle(display_, popup_window_, gc_, kPopupPadPx / 2 + row.level * kPopupIndentPx, center_y - 3, 6, 6);
+      }
+      draw_text(popup_window_, kPopupPadPx + kPopupCheckPx / 2 + row.level * kPopupIndentPx, center_y, row.label,
+                row.heading ? kMutedInk : kInk);
+    }
+    XFlush(display_);
+  }
+
+  [[nodiscard]] int popup_row_at(const int y) const noexcept {
+    if (y < 0) {
+      return -1;
+    }
+    const int index = y / kPopupRowHeightPx;
+    return index < static_cast<int>(popup_rows_.size()) ? index : -1;
+  }
+
+  void handle_popup_event(XEvent& event) {
+    switch (event.type) {
+      case Expose: draw_popup(); break;
+      case MotionNotify: {
+        const int row = popup_row_at(event.xmotion.y);
+        if (row != popup_hover_) {
+          popup_hover_ = row;
+          draw_popup();
+        }
+        break;
+      }
+      case ButtonPress: {
+        const bool inside = event.xbutton.x >= 0 && event.xbutton.y >= 0 && event.xbutton.x < popup_size_.width &&
+                            event.xbutton.y < popup_size_.height;
+        const int row = inside ? popup_row_at(event.xbutton.y) : -1;
+        if (row >= 0 && !popup_rows_[static_cast<std::size_t>(row)].heading) {
+          events_.push_back(ShellEvent{ShellEventKind::ShortcutCommand, size_,
+                                       popup_rows_[static_cast<std::size_t>(row)].note});
+          close_popup();
+        } else if (!inside) {
+          close_popup();
+        }
+        break;
+      }
+      case KeyPress: {
+        char buffer[8]{};
+        KeySym key = NoSymbol;
+        XLookupString(&event.xkey, buffer, sizeof(buffer), &key, nullptr);
+        if (key == XK_Escape) {
+          close_popup();
+        }
+        break;
+      }
+      default: break;
+    }
+  }
+
+  // A press on the toolbar opens that button's menu. Returns true when the press was the toolbar's.
+  bool press_toolbar(const int x, const int y) {
+    if (y >= toolbar_height_) {
+      return false;
+    }
+    for (std::size_t index = 0; index < toolbar_buttons_.size(); ++index) {
+      const auto& button = toolbar_buttons_[index];
+      if (x >= button.x && x < button.x + button.w && y >= button.y && y < button.y + button.h) {
+        open_popup(static_cast<int>(index));
+        break;
+      }
+    }
+    return true;
+  }
+
   void blit() {
     if (display_ == nullptr || window_ == 0 || gc_ == nullptr || pixels_.empty() || pixel_size_.width <= 0 ||
         pixel_size_.height <= 0) {
@@ -261,10 +569,11 @@ class X11WindowShell final : public IWindowShell {
     }
     const int width = std::min(size_.width, pixel_size_.width);
     const int height = std::min(size_.height, pixel_size_.height);
-    XPutImage(display_, window_, gc_, image, 0, 0, 0, 0, static_cast<unsigned int>(std::max(0, width)),
+    XPutImage(display_, window_, gc_, image, 0, 0, 0, toolbar_height_, static_cast<unsigned int>(std::max(0, width)),
               static_cast<unsigned int>(std::max(0, height)));
     image->data = nullptr;
     XDestroyImage(image);
+    draw_toolbar();
     XFlush(display_);
   }
 
@@ -297,11 +606,16 @@ class X11WindowShell final : public IWindowShell {
 
     const std::string shortcut = shortcut_for_key(key, key_event.state);
     if (!shortcut.empty()) {
-      std::string note = shortcut;
       if (shortcut == "save_snapshot" && !save_formats_.empty()) {
-        note = "save_as:" + save_formats_.front().extension;
+        for (std::size_t index = 0; index < toolbar_buttons_.size(); ++index) {
+          if (toolbar_buttons_[index].menu_index < 0) {
+            open_popup(static_cast<int>(index));
+            break;
+          }
+        }
+        return;
       }
-      events_.push_back(ShellEvent{ShellEventKind::ShortcutCommand, size_, std::move(note)});
+      events_.push_back(ShellEvent{ShellEventKind::ShortcutCommand, size_, shortcut});
       return;
     }
     if (!is_text_modifier(key_event.state)) {
@@ -352,6 +666,10 @@ class X11WindowShell final : public IWindowShell {
   }
 
   void handle_event(XEvent& event) {
+    if (popup_window_ != 0 && event.xany.window == popup_window_) {
+      handle_popup_event(event);
+      return;
+    }
     switch (event.type) {
       case Expose:
         if (event.xexpose.count == 0) {
@@ -361,8 +679,9 @@ class X11WindowShell final : public IWindowShell {
       case ConfigureNotify: {
         const SizeI next{
             std::max(1, event.xconfigure.width),
-            std::max(1, event.xconfigure.height),
+            std::max(1, event.xconfigure.height - toolbar_height_),
         };
+        layout_toolbar(event.xconfigure.width);
         if (next.width != size_.width || next.height != size_.height) {
           size_ = next;
           events_.push_back(ShellEvent{ShellEventKind::ResizeRequested, size_, "x11_shell_resized"});
@@ -384,9 +703,13 @@ class X11WindowShell final : public IWindowShell {
       case KeyPress: handle_key(event.xkey); break;
       case ButtonPress:
         if (event.xbutton.button == Button1) {
+          if (press_toolbar(event.xbutton.x, event.xbutton.y)) {
+            break;
+          }
           dragging_ = true;
-          last_pointer_ = PointI{event.xbutton.x, event.xbutton.y};
-          push_pointer_event(ShellEventKind::PointerDown, "x11_pointer_down", event.xbutton.x, event.xbutton.y);
+          last_pointer_ = PointI{event.xbutton.x, event.xbutton.y - toolbar_height_};
+          push_pointer_event(ShellEventKind::PointerDown, "x11_pointer_down", event.xbutton.x,
+                             event.xbutton.y - toolbar_height_);
         } else if (event.xbutton.button == Button4 || event.xbutton.button == Button5 || event.xbutton.button == 6 ||
                    event.xbutton.button == 7) {
 #if defined(PLUSSTILS_VIEW_HAVE_XINPUT2) && PLUSSTILS_VIEW_HAVE_XINPUT2
@@ -408,7 +731,7 @@ class X11WindowShell final : public IWindowShell {
               dx,
               dy,
               static_cast<double>(event.xbutton.x),
-              static_cast<double>(event.xbutton.y),
+              static_cast<double>(event.xbutton.y - toolbar_height_),
               false,
               (event.xbutton.state & ShiftMask) != 0U,
           });
@@ -417,12 +740,13 @@ class X11WindowShell final : public IWindowShell {
       case ButtonRelease:
         if (event.xbutton.button == Button1) {
           dragging_ = false;
-          push_pointer_event(ShellEventKind::PointerUp, "x11_pointer_up", event.xbutton.x, event.xbutton.y);
+          push_pointer_event(ShellEventKind::PointerUp, "x11_pointer_up", event.xbutton.x,
+                             event.xbutton.y - toolbar_height_);
         }
         break;
       case MotionNotify:
         if (dragging_ || (event.xmotion.state & Button1Mask) != 0U) {
-          const PointI next{event.xmotion.x, event.xmotion.y};
+          const PointI next{event.xmotion.x, event.xmotion.y - toolbar_height_};
           push_pointer_event(ShellEventKind::PointerDrag, "x11_drag", next.x, next.y, next.x - last_pointer_.x,
                              next.y - last_pointer_.y);
           last_pointer_ = next;
@@ -546,7 +870,7 @@ class X11WindowShell final : public IWindowShell {
         dx,
         dy,
         std::clamp(event.event_x, 0.0, static_cast<double>(size_.width)),
-        std::clamp(event.event_y, 0.0, static_cast<double>(size_.height)),
+        std::clamp(event.event_y - toolbar_height_, 0.0, static_cast<double>(size_.height)),
         true,
         (event.mods.effective & ShiftMask) != 0U,
     });
@@ -572,6 +896,26 @@ class X11WindowShell final : public IWindowShell {
   PointI last_pointer_{};
   std::vector<std::uint32_t> pixels_{};
   std::vector<ShellSaveFormat> save_formats_{};
+  std::vector<ShellMenu> menus_{};
+  struct ToolbarButton {
+    int x{0}, y{0}, w{0}, h{0};
+    std::string label{};
+    int menu_index{-1};  // -1 is "Save As"
+  };
+  struct PopupRow {
+    std::string label{};
+    std::string note{};
+    bool checked{false};
+    bool heading{false};
+    int level{0};
+  };
+  std::vector<ToolbarButton> toolbar_buttons_{};
+  std::vector<PopupRow> popup_rows_{};
+  Window popup_window_{0};
+  SizeI popup_size_{};
+  int popup_hover_{-1};
+  int toolbar_height_{0};
+  XFontStruct* font_{nullptr};
   std::vector<ShellEvent> events_{};
   std::string clipboard_{};
 #if defined(PLUSSTILS_VIEW_HAVE_XINPUT2) && PLUSSTILS_VIEW_HAVE_XINPUT2

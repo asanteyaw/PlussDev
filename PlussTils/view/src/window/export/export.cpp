@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <fstream>
 #include <optional>
 #include <string>
@@ -216,6 +217,109 @@ bool save_canvas(const PixelCanvas& canvas,
 bool save_canvas(const PixelCanvas& canvas, const std::string_view path) {
   const auto format = detect_export_format_(path);
   return format.has_value() && save_canvas(canvas, path, *format);
+}
+
+
+namespace {
+
+// PDF RunLengthDecode: a length byte n in 0..127 is followed by n + 1 literal bytes; n in
+// 129..255 is followed by one byte repeated 257 - n times; 128 ends the data.
+void run_length_encode(const std::vector<std::uint8_t>& in, std::vector<std::uint8_t>& out) {
+  constexpr std::size_t kMaxRun = 128;
+  constexpr std::size_t kMinRepeat = 3;  // shorter repeats cost more than they save
+  std::size_t i = 0;
+  while (i < in.size()) {
+    std::size_t run = 1;
+    while (i + run < in.size() && run < kMaxRun && in[i + run] == in[i]) {
+      ++run;
+    }
+    if (run >= kMinRepeat) {
+      out.push_back(static_cast<std::uint8_t>(257U - run));
+      out.push_back(in[i]);
+      i += run;
+      continue;
+    }
+    std::size_t end = i;
+    while (end < in.size() && end - i < kMaxRun) {
+      std::size_t ahead = 1;
+      while (end + ahead < in.size() && ahead < kMinRepeat && in[end + ahead] == in[end]) {
+        ++ahead;
+      }
+      if (ahead >= kMinRepeat) {
+        break;
+      }
+      ++end;
+    }
+    if (end == i) {
+      end = i + 1;
+    }
+    out.push_back(static_cast<std::uint8_t>(end - i - 1U));
+    out.insert(out.end(), in.begin() + static_cast<std::ptrdiff_t>(i), in.begin() + static_cast<std::ptrdiff_t>(end));
+    i = end;
+  }
+  out.push_back(128);
+}
+
+}  // namespace
+
+bool save_canvas_pdf(const PixelCanvas& canvas, const std::string_view path) {
+  if (canvas.empty() || path.empty()) {
+    return false;
+  }
+  const auto size = canvas.size();
+  const auto rgba = canvas.bytes();
+  std::vector<std::uint8_t> rgb;
+  rgb.reserve(static_cast<std::size_t>(size.width) * static_cast<std::size_t>(size.height) * 3U);
+  for (std::size_t i = 0; i + 3U < rgba.size() + 0U; i += 4U) {
+    rgb.push_back(rgba[i]);
+    rgb.push_back(rgba[i + 1U]);
+    rgb.push_back(rgba[i + 2U]);
+  }
+  std::vector<std::uint8_t> encoded;
+  run_length_encode(rgb, encoded);
+
+  std::string body;
+  std::vector<std::size_t> offsets;
+  const auto begin_object = [&](const int number) {
+    offsets.push_back(body.size());
+    body += std::to_string(number) + " 0 obj\n";
+  };
+  body += "%PDF-1.4\n";
+  const std::string w = std::to_string(size.width);
+  const std::string h = std::to_string(size.height);
+  begin_object(1);
+  body += "<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
+  begin_object(2);
+  body += "<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n";
+  begin_object(3);
+  body += "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + w + " " + h +
+          "] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n";
+  const std::string content = "q " + w + " 0 0 " + h + " 0 0 cm /Im0 Do Q";
+  begin_object(4);
+  body += "<< /Length " + std::to_string(content.size()) + " >>\nstream\n" + content + "\nendstream\nendobj\n";
+  begin_object(5);
+  body += "<< /Type /XObject /Subtype /Image /Width " + w + " /Height " + h +
+          " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /RunLengthDecode /Length " +
+          std::to_string(encoded.size()) + " >>\nstream\n";
+  std::ofstream file{std::string(path), std::ios::binary | std::ios::trunc};
+  if (!file) {
+    return false;
+  }
+  file.write(body.data(), static_cast<std::streamsize>(body.size()));
+  file.write(reinterpret_cast<const char*>(encoded.data()), static_cast<std::streamsize>(encoded.size()));
+  const std::size_t after_image = body.size() + encoded.size();
+  const std::string tail_objects = "\nendstream\nendobj\n";
+  file.write(tail_objects.data(), static_cast<std::streamsize>(tail_objects.size()));
+  const std::size_t xref_at = after_image + tail_objects.size();
+  std::string xref = "xref\n0 6\n0000000000 65535 f \n";
+  for (const std::size_t offset : offsets) {
+    char line[24];
+    std::snprintf(line, sizeof(line), "%010zu 00000 n \n", offset);
+    xref += line;
+  }
+  xref += "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n" + std::to_string(xref_at) + "\n%%EOF\n";
+  file.write(xref.data(), static_cast<std::streamsize>(xref.size()));
+  return static_cast<bool>(file);
 }
 
 } // namespace pluss::view::window

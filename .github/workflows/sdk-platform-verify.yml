@@ -1,4 +1,4 @@
-name: PlussII Distribution Verification
+name: PlussView Verification
 
 on:
   push:
@@ -53,7 +53,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/validation/') }}
 
 jobs:
-  verify-distribution:
+  verify-plussview:
     strategy:
       fail-fast: false
       matrix:
@@ -65,9 +65,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         env:
-          # Generated build_cpp_env artifacts still contain Windows-reserved
-          # names. Sparse checkout omits them; disable Git's whole-tree path
-          # rejection so it can materialize the selected source directories.
+          # Sparse checkout omits generated build files with Windows-reserved names.
           GIT_CONFIG_COUNT: 1
           GIT_CONFIG_KEY_0: core.protectNTFS
           GIT_CONFIG_VALUE_0: 'false'
@@ -88,84 +86,64 @@ jobs:
             pluss
             tools
 
-      - name: Check CMake version
-        run: cmake --version
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linux dependencies (curl, X11 window tests, screenshots)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev libx11-dev libxi-dev libfreetype-dev xvfb x11-apps imagemagick
 
       - name: Build static native dependencies
         uses: ./.github/actions/native-deps
 
-      - name: Install Linux window test dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libx11-dev libxi-dev libfreetype-dev xvfb
-
+      # The same configuration the release archives are built with, plus the tests.
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
-
-      - name: Configure Ubuntu
-        if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN
-
-      - name: Stage distribution
-        run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
-
-      - name: Build built-in table and plot renderer smoke
-        run: cmake --build build --config Release --target plusstils_view_platform_show_smoke --parallel 2
-
-      - name: Build Atlas view check
-        if: runner.os != 'Windows'
-        run: cmake --build build --config Release --target plussmic_atlas_view_smoke --parallel 2
-
-      - name: Build Atlas view check on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
         run: |
-          cmake --build build --config Release --target plussmic_atlas_view_smoke --parallel 2 *> atlas-build.log
-          $buildResult = $LASTEXITCODE
-          Get-Content atlas-build.log | Select-Object -Last 80
-          if ($buildResult -ne 0) {
-            Get-Content atlas-build.log | Select-String -Pattern 'error|fatal|LNK[0-9]+' | Select-Object -Last 20 | ForEach-Object { Write-Host "::error::$($_.Line)" }
-          }
-          exit $buildResult
+          # Quote every -D value: an unquoted -DX=$env:Y reaches CMake as the literal text "$env:Y".
+          cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON "-DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET" "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
 
-      - name: Verify Atlas controls on Linux and macOS
+      - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: build/PlussMic/test/plussmic_atlas_view_smoke
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN -DPLUSSQIT_ENABLE_MPS=OFF
 
-      - name: Verify Atlas controls on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: '& "build/PlussMic/test/Release/plussmic_atlas_view_smoke.exe"'
+      - name: Build PlussView tests
+        run: cmake --build build --config Release --target plussview_html_table_layout_tests plussview_html_scroll_tests plussview_async_compositor_tests plussview_window_smoke --parallel 2
 
-      - name: Verify Linux table and plot windows
+      # Layout, sizing, resizing, sort arrows and the PDF writer: no window needed.
+      - name: Run PlussView layout tests
+        run: ctest --test-dir build -C Release -R "plussview_(html_table_layout|html_scroll|async_compositor)_tests" --output-on-failure
+
+      # A real window: the viewer shows a table and writes the PNG and PDF that Save As would.
+      - name: Table window and export smoke (Linux, under a virtual display)
         if: runner.os == 'Linux'
-        run: xvfb-run -a build/PlussTils/view/plusstils_view_platform_show_smoke build/renderer-show-smoke --window
+        run: |
+          mkdir -p smoke
+          xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
+            build/PlussTils/view/plussview_window_smoke smoke &
+            smoke_pid=$!
+            sleep 3
+            xwd -root -silent | convert xwd:- smoke/window-with-toolbar.png || true
+            wait $smoke_pid'
 
-      - name: Verify Windows table and plot windows
+      - name: Table window and export smoke (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: '& "build/PlussTils/view/Release/plusstils_view_platform_show_smoke.exe" "build/renderer-show-smoke" --window'
+        run: '& "build/PlussTils/view/Release/plussview_window_smoke.exe" smoke'
 
-      - name: Verify macOS table and plot rendering
+      - name: Table window and export smoke (macOS)
         if: runner.os == 'macOS'
-        run: build/PlussTils/view/plusstils_view_platform_show_smoke build/renderer-show-smoke
+        run: build/PlussTils/view/plussview_window_smoke smoke
 
-      - name: Upload renderer snapshots
+      - name: Upload exports and window screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: plussii-renderer-${{ matrix.os }}-verify
-          path: build/renderer-show-smoke/*.png
-          if-no-files-found: error
-
-      - name: Package and validate downloadable ZIP
-        run: cmake "-DDISTRIBUTION_BUILD_DIR=${{ github.workspace }}/build" "-DDISTRIBUTION_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedDistribution.cmake
-
-      - name: Upload validated ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: plussii-cpp-${{ matrix.os }}-verify
-          path: build/plussii-cpp-*.zip
-          if-no-files-found: error
+          name: plussview-smoke-${{ matrix.os }}
+          path: smoke/*
+          if-no-files-found: warn

@@ -20,4 +20,9 @@ enum class CanvasExportFormat : unsigned char {
                                CanvasExportFormat format);
 [[nodiscard]] bool save_canvas(const PixelCanvas& canvas, std::string_view path);
 
+// Writes the canvas as a one-page PDF whose page is the canvas's size in points, with the image
+// run-length encoded. Needs no libraries, so every platform can save a PDF; macOS uses the
+// system PDF writer instead.
+[[nodiscard]] bool save_canvas_pdf(const PixelCanvas& canvas, std::string_view path);
+
 } // namespace pluss::view::window

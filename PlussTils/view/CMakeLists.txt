@@ -426,6 +426,28 @@ if(BUILD_TESTING)
     )
     add_test(NAME plussview_html_scroll_tests COMMAND plussview_html_scroll_tests)
 
+    add_executable(plussview_html_table_layout_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/html_table_layout_tests.cpp
+    )
+    target_link_libraries(plussview_html_table_layout_tests PRIVATE PlussTilsView)
+    set_target_properties(plussview_html_table_layout_tests PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+    add_test(NAME plussview_html_table_layout_tests COMMAND plussview_html_table_layout_tests)
+
+    # Opens a real window; run it explicitly where a display exists (see sdk-platform-verify.yml).
+    add_executable(plussview_window_smoke
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/window_smoke.cpp
+    )
+    target_link_libraries(plussview_window_smoke PRIVATE PlussTilsView)
+    set_target_properties(plussview_window_smoke PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+
     if(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE)
         add_executable(plussview_html_export_tests
             ${CMAKE_CURRENT_SOURCE_DIR}/test/html_export_tests.cpp

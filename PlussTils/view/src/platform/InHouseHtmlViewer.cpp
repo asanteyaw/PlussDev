@@ -1601,6 +1601,13 @@ bool show_inhouse_html_window(const std::string& title,
           (void)window::save_canvas(exported, event.note.substr(14));
         }
       } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
+                 event.note.rfind("export-pdf-to:", 0) == 0) {
+        // Test hook: write the content-only PDF export without a save dialog.
+        window::PixelCanvas exported;
+        if (export_canvas(exported)) {
+          (void)shell->save_canvas_pdf(exported, event.note.substr(14));
+        }
+      } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
                  event.note.rfind("export-all-png-to:", 0) == 0) {
         window::PixelCanvas exported;
         if (export_canvas(exported, true)) {
