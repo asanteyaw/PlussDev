@@ -67,35 +67,39 @@ std::string compact_number_label(double value) {
   return text;
 }
 
-std::int64_t normalize_frame_index(std::int64_t idx, std::int64_t depth) {
-  PLUSS_CHECK(depth > 0, "Atlas::plot().frames: atlas has no frames");
+std::int64_t normalize_frame_index(std::int64_t idx, std::int64_t depth, const AtlasPlotWords& w = {}) {
+  PLUSS_CHECK(depth > 0, w.where + ".frames: " + std::string(w.container) + " has no " + std::string(w.slices));
   std::int64_t out = idx;
   if (out < 0) {
     out += depth;
   }
-  PLUSS_CHECK(out >= 0 && out < depth, "Atlas::plot().frames: frame index out of bounds");
+  PLUSS_CHECK(out >= 0 && out < depth, w.where + ".frames: " + std::string(w.slice) + " index out of bounds");
   return out;
 }
 
-std::vector<std::int64_t> normalize_frame_indices(pluss::msharp::RangeView::Int indices, std::int64_t depth) {
-  PLUSS_CHECK(indices.size() != 0, "Atlas::plot().frames: at least one frame index is required");
+std::vector<std::int64_t> normalize_frame_indices(pluss::msharp::RangeView::Int indices,
+                                                  std::int64_t depth,
+                                                  const AtlasPlotWords& w = {}) {
+  PLUSS_CHECK(indices.size() != 0, w.where + ".frames: at least one " + std::string(w.slice) + " index is required");
   std::vector<std::int64_t> out;
   out.reserve(indices.size());
   std::vector<std::uint8_t> seen(static_cast<std::size_t>(depth), static_cast<std::uint8_t>(0));
   for (const auto idx : indices) {
-    const auto normalized = normalize_frame_index(idx, depth);
+    const auto normalized = normalize_frame_index(idx, depth, w);
     auto& visited = seen[static_cast<std::size_t>(normalized)];
     if (visited == static_cast<std::uint8_t>(0)) {
       visited = static_cast<std::uint8_t>(1);
       out.push_back(normalized);
     }
   }
-  PLUSS_CHECK(!out.empty(), "Atlas::plot().frames: no valid frame indices selected");
+  PLUSS_CHECK(!out.empty(), w.where + ".frames: no valid " + std::string(w.slice) + " indices selected");
   return out;
 }
 
-std::vector<std::int64_t> depth_positions(std::int64_t depth, const AtlasDepthAxisOptions& options) {
-  PLUSS_CHECK(depth > 0, "Atlas::plot(): atlas has no frames");
+std::vector<std::int64_t> depth_positions(std::int64_t depth,
+                                          const AtlasDepthAxisOptions& options,
+                                          const AtlasPlotWords& w = {}) {
+  PLUSS_CHECK(depth > 0, w.where + ": " + std::string(w.container) + " has no " + std::string(w.slices));
   const auto step = std::max<std::int64_t>(1, options.step);
   std::vector<std::int64_t> positions;
   positions.reserve(static_cast<std::size_t>((depth + step - 1) / step));
@@ -195,14 +199,15 @@ void require_min_size(std::int64_t actual, std::int64_t minimum, std::string_vie
 
 std::vector<std::string> depth_legend_labels(const std::optional<Shelf>& depth_labels,
                                              std::span<const std::int64_t> positions,
-                                             std::string_view where) {
+                                             std::string_view where,
+                                             std::string_view slice = "frame") {
   const auto depth = static_cast<std::int64_t>(positions.size());
   PLUSS_CHECK(depth > 0, std::string(where) + ": empty depth selection");
   if (!depth_labels.has_value()) {
     std::vector<std::string> labels;
     labels.reserve(static_cast<std::size_t>(depth));
     for (const auto p : positions) {
-      labels.push_back("frame " + std::to_string(p));
+      labels.push_back(std::string(slice) + " " + std::to_string(p));
     }
     return labels;
   }
@@ -349,78 +354,90 @@ std::vector<std::string> default_triplet_features(const std::vector<DataFrame>& 
   return names;
 }
 
-std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<std::string_view> requested,
-                                                  const std::vector<DataFrame>& frames,
-                                                  const FeatureSelection& selection = {}) {
-  PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
-  if (requested.size() == 0) {
-    const auto numeric_names = frames.front().feataxis().series().features();
-    auto names = detail::resolve_feature_selection(selection, frames.front().features(), numeric_names,
-                                                   "Atlas::plot().triplot");
-    PLUSS_CHECK(static_cast<std::int64_t>(names.size()) >= 3,
-                "Atlas::plot().triplot: requires at least three numeric features; found " +
-                    std::to_string(names.size()) + ". Add features or name them explicitly.");
-    return names;
+std::string names_list(const std::vector<std::string>& names) {
+  return pluss::pl::flash::detail::column_name_list(names);
+}
+
+// A name handed to a depth plot that the stack cannot draw: not there at all (with the closest name and
+// the available ones) or there but not numeric. Worded with the container's own noun.
+[[noreturn]] void fail_unplottable_name(const std::string& name,
+                                        const std::vector<std::string>& all_names,
+                                        const std::vector<std::string>& numeric_names,
+                                        std::string_view where,
+                                        const AtlasPlotWords& w) {
+  const std::string noun(w.selection.noun);
+  const std::string nouns(w.selection.nouns);
+  if (std::find(all_names.begin(), all_names.end(), name) == all_names.end()) {
+    PLUSS_FAIL(std::string(where) + ": unknown " + noun + " '" + name + "'." +
+               pluss::pl::flash::detail::closest_name_hint(name, all_names) + " Available " + nouns + " = " +
+               names_list(all_names) + ". Fix the spelling or remove '" + name + "'.");
   }
+  PLUSS_FAIL(std::string(where) + ": " + noun + " '" + name + "' is not numeric; only numeric " + nouns +
+             " can be drawn here. Numeric " + nouns + " = " + names_list(numeric_names) + ". Remove '" + name +
+             "' or convert it to a numeric " + noun + " first.");
+}
+
+void require_slices(const std::vector<DataFrame>& frames, std::string_view where, const AtlasPlotWords& w) {
+  PLUSS_CHECK(!frames.empty(), std::string(where) + ": " + std::string(w.container) + " has no " + std::string(w.slices));
+}
+
+std::vector<std::string> resolve_name_selection(const FeatureSelection& selection,
+                                                const std::vector<DataFrame>& frames,
+                                                std::string_view where,
+                                                const AtlasPlotWords& w) {
   const auto numeric_names = frames.front().feataxis().series().features();
-  std::unordered_set<std::string> available_set;
-  available_set.reserve(numeric_names.size());
-  for (const auto& name : numeric_names) {
-    available_set.insert(name);
-  }
-  std::vector<std::string> features;
-  features.reserve(requested.size());
+  return detail::resolve_plot_selection(selection.all_features, selection.include_features,
+                                        selection.exclude_features, w.selection, frames.front().features(),
+                                        numeric_names, where);
+}
+
+std::vector<std::string> resolve_explicit_names(pluss::msharp::RangeView::Of<std::string_view> requested,
+                                                const std::vector<DataFrame>& frames,
+                                                std::string_view where,
+                                                const AtlasPlotWords& w) {
+  const auto all_names = frames.front().features();
+  const auto numeric_names = frames.front().feataxis().series().features();
+  const std::unordered_set<std::string> available_set(numeric_names.begin(), numeric_names.end());
+  std::vector<std::string> out;
+  out.reserve(requested.size());
   std::unordered_set<std::string> selected_set;
   selected_set.reserve(requested.size());
-  for (const auto name : requested) {
-    const std::string feature(name);
-    PLUSS_CHECK(
-        available_set.contains(feature),
-        "Atlas::plot().triplot: feature '" + feature + "' is missing or not numeric");
-    if (selected_set.insert(feature).second) {
-      features.push_back(feature);
+  for (const auto name_view : requested) {
+    const std::string name(name_view);
+    if (!selected_set.insert(name).second) {
+      continue;
     }
+    if (!available_set.contains(name)) fail_unplottable_name(name, all_names, numeric_names, where, w);
+    out.push_back(name);
   }
-  PLUSS_CHECK(
-      static_cast<std::int64_t>(features.size()) >= 3,
-      "Atlas::plot().triplot: requires at least three selected features");
-  return features;
+  return out;
+}
+
+std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<std::string_view> requested,
+                                                  const std::vector<DataFrame>& frames,
+                                                  const FeatureSelection& selection,
+                                                  const AtlasPlotWords& w) {
+  const std::string where = w.where + ".triplot";
+  require_slices(frames, where, w);
+  const std::string nouns(w.selection.nouns);
+  std::vector<std::string> names = requested.size() == 0 ? resolve_name_selection(selection, frames, where, w)
+                                                         : resolve_explicit_names(requested, frames, where, w);
+  PLUSS_CHECK(static_cast<std::int64_t>(names.size()) >= 3,
+              where + ": requires at least three numeric " + nouns + "; found " + std::to_string(names.size()) +
+                  ". Name at least three " + nouns + " or set " + std::string(w.selection.all) + ".");
+  return names;
 }
 
 std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std::string_view> requested,
                                                 const std::vector<DataFrame>& frames,
                                                 std::int64_t max_features,
                                                 std::string_view where,
-                                                const FeatureSelection& selection) {
-  PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
-  const auto numeric = frames.front().feataxis().series();
-  const auto numeric_names = numeric.features();
-  std::unordered_set<std::string> available_set;
-  available_set.reserve(numeric_names.size());
-  for (const auto& name : numeric_names) {
-    available_set.insert(name);
-  }
-
-  std::vector<std::string> features;
-  if (requested.size() == 0) {
-    features = detail::resolve_feature_selection(selection, frames.front().features(), numeric_names, where);
-  } else {
-    features.reserve(requested.size());
-    std::unordered_set<std::string> selected_set;
-    selected_set.reserve(requested.size());
-    for (const auto name_view : requested) {
-      const std::string name(name_view);
-      if (!selected_set.insert(name).second) {
-        continue;
-      }
-      PLUSS_CHECK(
-          available_set.contains(name),
-          std::string(where) + ": feature '" + name + "' is missing or not numeric");
-      features.push_back(name);
-    }
-  }
-
-  PLUSS_CHECK(!features.empty(), std::string(where) + ": requires at least one numeric feature");
+                                                const FeatureSelection& selection,
+                                                const AtlasPlotWords& w) {
+  require_slices(frames, where, w);
+  std::vector<std::string> features = requested.size() == 0 ? resolve_name_selection(selection, frames, where, w)
+                                                            : resolve_explicit_names(requested, frames, where, w);
+  PLUSS_CHECK(!features.empty(), std::string(where) + ": requires at least one numeric " + std::string(w.selection.noun));
   if (max_features > 0 && static_cast<std::int64_t>(features.size()) > max_features) {
     features.resize(static_cast<std::size_t>(max_features));
   }
@@ -431,17 +448,18 @@ std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
                                            std::span<const std::int64_t> positions,
                                            std::string_view feature,
                                            AtlasDepthStatistic statistic,
-                                           std::string_view where) {
+                                           std::string_view where,
+                                           const AtlasPlotWords& w = {}) {
   PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
 
   std::vector<double> values;
   values.reserve(positions.size());
   for (const auto p : positions) {
     const auto& frame = frames[static_cast<std::size_t>(p)];
-    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": " + std::string(w.slice) + " has zero " + std::string(w.rows));
     PLUSS_CHECK(
         frame.get(feature).has_value(),
-        std::string(where) + ": missing feature '" + std::string(feature) + "'");
+        std::string(where) + ": missing " + std::string(w.selection.noun) + " '" + std::string(feature) + "'");
     const auto frame_values = shelf_to_numeric_values(frame.features(feature), where, feature);
     values.push_back(reduce_statistic(frame_values, statistic));
   }
@@ -450,11 +468,12 @@ std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
 
 std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>& frames,
                                                    const std::vector<std::string>& features,
-                                                   std::string_view where) {
-  PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
+                                                   std::string_view where,
+                                                   const AtlasPlotWords& w = {}) {
+  require_slices(frames, where, w);
   std::int64_t total_cases = 0;
   for (const auto& frame : frames) {
-    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": " + std::string(w.slice) + " has zero " + std::string(w.rows));
     total_cases += frame.ncases();
   }
 
@@ -466,7 +485,8 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
   for (const auto& frame : frames) {
     for (const auto i : std::views::iota(std::size_t{0}, features.size())) {
       const auto& feature = features[i];
-      PLUSS_CHECK(frame.get(feature).has_value(), std::string(where) + ": missing feature '" + feature + "'");
+      PLUSS_CHECK(frame.get(feature).has_value(),
+                  std::string(where) + ": missing " + std::string(w.selection.noun) + " '" + feature + "'");
       const auto values = shelf_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
       auto& dest = flattened[i];
@@ -486,7 +506,8 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
                                   const std::optional<Shelf>& depth_labels,
                                   std::span<const std::int64_t> positions,
                                   std::string_view feature,
-                                  std::string_view where) {
+                                  std::string_view where,
+                                  const AtlasPlotWords& w = {}) {
   PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
 
   const auto depth = static_cast<std::int64_t>(positions.size());
@@ -494,9 +515,10 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   std::int64_t max_cases = 0;
   for (const auto p : positions) {
     const auto& frame = frames[static_cast<std::size_t>(p)];
-    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": " + std::string(w.slice) + " has zero " + std::string(w.rows));
     PLUSS_CHECK(frame.get(feature).has_value(),
-                std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
+                std::string(where) + ": missing " + std::string(w.selection.noun) + " '" + std::string(feature) +
+                    "' in one or more " + std::string(w.slices));
     max_cases = std::max(max_cases, frame.ncases());
     all_case_labeled = all_case_labeled && shelf_prefers_labels(frame.labels().values());
   }
@@ -621,11 +643,15 @@ ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
 
 AtlasPlotAccessor::AtlasPlotAccessor(std::vector<DataFrame> frames,
                                      std::optional<Shelf> depth_labels,
-                                     AtlasPlotOptions options)
-    : frames_(std::move(frames)), depth_labels_(std::move(depth_labels)), options_(std::move(options)) {}
+                                     AtlasPlotOptions options,
+                                     AtlasPlotWords words)
+    : frames_(std::move(frames)),
+      depth_labels_(std::move(depth_labels)),
+      options_(std::move(options)),
+      words_(std::move(words)) {}
 
 DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index) const {
-  const auto idx = normalize_frame_index(frame_index, static_cast<std::int64_t>(frames_.size()));
+  const auto idx = normalize_frame_index(frame_index, static_cast<std::int64_t>(frames_.size()), words_);
   return frames_[static_cast<std::size_t>(idx)].plot(options_.figure);
 }
 
@@ -633,9 +659,9 @@ pluss::pl::Studio AtlasPlotAccessor::frames_y(pluss::msharp::RangeView::Int fram
                                               std::string_view y_feature,
                                               std::optional<std::string_view> x_feature,
                                               const AtlasFramesPlotOptions& options) const {
-  PLUSS_CHECK(!frames_.empty(), "Atlas::plot().frames: atlas has no frames");
-  const auto selected = normalize_frame_indices(frame_indices, static_cast<std::int64_t>(frames_.size()));
-  const auto labels = depth_legend_labels(depth_labels_, selected, "Atlas::plot().frames");
+  require_slices(frames_, words_.where + ".frames", words_);
+  const auto selected = normalize_frame_indices(frame_indices, static_cast<std::int64_t>(frames_.size()), words_);
+  const auto labels = depth_legend_labels(depth_labels_, selected, words_.where + ".frames", words_.slice);
 
   std::vector<ResolvedFrameAxis> axes;
   std::vector<std::vector<double>> y_values;
@@ -649,10 +675,10 @@ pluss::pl::Studio AtlasPlotAccessor::frames_y(pluss::msharp::RangeView::Int fram
   for (const auto p : selected) {
     const auto& frame = frames_[static_cast<std::size_t>(p)];
     PLUSS_CHECK(frame.get(y_feature).has_value(),
-                "Atlas::plot().frames: missing y feature '" + std::string(y_feature) + "' in one or more frames");
-    auto axis = resolve_frame_axis(frame, x_feature, "Atlas::plot().frames");
-    auto values = shelf_to_numeric_values(frame.features(y_feature), "Atlas::plot().frames", y_feature);
-    require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), "Atlas::plot().frames", y_feature);
+                words_.where + ".frames: missing y " + std::string(words_.selection.noun) + " '" + std::string(y_feature) + "' in one or more " + std::string(words_.slices));
+    auto axis = resolve_frame_axis(frame, x_feature, words_.where + ".frames");
+    auto values = shelf_to_numeric_values(frame.features(y_feature), words_.where + ".frames", y_feature);
+    require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), words_.where + ".frames", y_feature);
     xs_series.push_back(pluss::make_series(axis.values));
     ys_series.push_back(pluss::make_series(values));
     axes.push_back(std::move(axis));
@@ -710,8 +736,8 @@ pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature) const {
 
 pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature,
                                              const Surface3DPlotOptions& options) const {
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
-  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, "Atlas::plot().surface");
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
+  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, words_.where + ".surface", words_);
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_surface");
@@ -738,8 +764,8 @@ pluss::pl::Studio AtlasPlotAccessor::wireframe(std::string_view feature) const {
 
 pluss::pl::Studio AtlasPlotAccessor::wireframe(std::string_view feature,
                                                const Wireframe3DPlotOptions& options) const {
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
-  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, "Atlas::plot().wireframe");
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
+  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, words_.where + ".wireframe", words_);
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_wireframe");
@@ -770,12 +796,12 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
                                             std::string_view y_feature,
                                             std::string_view z_feature,
                                             const Scatter3DPlotOptions& options) const {
-  PLUSS_CHECK(!frames_.empty(), "Atlas::plot().cloud3: atlas has no frames");
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  require_slices(frames_, words_.where + ".cloud3", words_);
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
   const auto depth = static_cast<std::int64_t>(selected_depth.size());
   (void)depth;
 
-  const auto labels = depth_legend_labels(depth_labels_, selected_depth, "Atlas::plot().cloud3");
+  const auto labels = depth_legend_labels(depth_labels_, selected_depth, words_.where + ".cloud3", words_.slice);
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_cloud3");
@@ -785,18 +811,18 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
 
   for (const auto i : std::views::iota(std::size_t{0}, selected_depth.size())) {
     const auto& frame = frames_[static_cast<std::size_t>(selected_depth[i])];
-    PLUSS_CHECK(frame.ncases() > 0, "Atlas::plot().cloud3: frame has zero cases");
+    PLUSS_CHECK(frame.ncases() > 0, words_.where + ".cloud3: " + std::string(words_.slice) + " has zero " + std::string(words_.rows));
     PLUSS_CHECK(
         frame.get(x_feature).has_value() && frame.get(y_feature).has_value() && frame.get(z_feature).has_value(),
-        "Atlas::plot().cloud3: one or more requested features are missing in one or more frames");
+        words_.where + ".cloud3: one or more requested " + std::string(words_.selection.nouns) + " are missing in one or more " + std::string(words_.slices));
 
-    const auto x = shelf_to_numeric_values(frame.features(x_feature), "Atlas::plot().cloud3", x_feature);
-    const auto y = shelf_to_numeric_values(frame.features(y_feature), "Atlas::plot().cloud3", y_feature);
-    const auto z = shelf_to_numeric_values(frame.features(z_feature), "Atlas::plot().cloud3", z_feature);
+    const auto x = shelf_to_numeric_values(frame.features(x_feature), words_.where + ".cloud3", x_feature);
+    const auto y = shelf_to_numeric_values(frame.features(y_feature), words_.where + ".cloud3", y_feature);
+    const auto z = shelf_to_numeric_values(frame.features(z_feature), words_.where + ".cloud3", z_feature);
 
-    require_size(static_cast<std::int64_t>(x.size()), frame.ncases(), "Atlas::plot().cloud3", x_feature);
-    require_size(static_cast<std::int64_t>(y.size()), frame.ncases(), "Atlas::plot().cloud3", y_feature);
-    require_size(static_cast<std::int64_t>(z.size()), frame.ncases(), "Atlas::plot().cloud3", z_feature);
+    require_size(static_cast<std::int64_t>(x.size()), frame.ncases(), words_.where + ".cloud3", x_feature);
+    require_size(static_cast<std::int64_t>(y.size()), frame.ncases(), words_.where + ".cloud3", y_feature);
+    require_size(static_cast<std::int64_t>(z.size()), frame.ncases(), words_.where + ".cloud3", z_feature);
 
     auto& trace = flash::cloud3(
                       pane,
@@ -818,11 +844,11 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature) const {
 }
 
 pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const AtlasDepthPlotOptions& options) const {
-  PLUSS_CHECK(!frames_.empty(), "Atlas::plot().depth: atlas has no frames");
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  require_slices(frames_, words_.where + ".depth", words_);
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
   const auto depth_size = static_cast<std::int64_t>(selected_depth.size());
 
-  auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth");
+  auto depth_axis = build_depth_axis(depth_labels_, selected_depth, words_.where + ".depth");
   std::vector<double> center_values;
   center_values.reserve(static_cast<std::size_t>(depth_size));
 
@@ -839,11 +865,11 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
 
   for (const auto p : selected_depth) {
     const auto& frame = frames_[static_cast<std::size_t>(p)];
-    PLUSS_CHECK(frame.ncases() > 0, "Atlas::plot().depth: frame has zero cases");
+    PLUSS_CHECK(frame.ncases() > 0, words_.where + ".depth: " + std::string(words_.slice) + " has zero " + std::string(words_.rows));
     PLUSS_CHECK(
         frame.get(feature).has_value(),
-        std::string("Atlas::plot().depth: missing feature '") + std::string(feature) + "'");
-    const auto values = shelf_to_numeric_values(frame.features(feature), "Atlas::plot().depth", feature);
+        words_.where + ".depth: missing " + std::string(words_.selection.noun) + " '" + std::string(feature) + "'");
+    const auto values = shelf_to_numeric_values(frame.features(feature), words_.where + ".depth", feature);
     center_values.push_back(reduce_statistic(values, options.center));
     if (use_lower) {
       lower_values.push_back(reduce_statistic(values, *options.lower));
@@ -892,9 +918,10 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<
 pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features,
                                                    const AtlasDepthComparePlotOptions& options) const {
   const auto selected = resolve_depth_features(
-      features, frames_, options.max_features, "Atlas::plot().depth_compare", options.features.any() ? options.features : options_.figure.selection());
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
-  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_compare");
+      features, frames_, options.max_features, words_.where + ".depth_compare",
+      options.features.any() ? options.features : options_.figure.selection(), words_);
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, words_.where + ".depth_compare");
 
   auto fig = make_studio();
   auto& pane = fig.pane2("atlas_depth_compare");
@@ -910,7 +937,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<
   for (const auto feature_index : std::views::iota(std::size_t{0}, selected.size())) {
     const auto& feature = selected[feature_index];
     const auto values = depth_statistic_values(
-        frames_, selected_depth, feature, options.statistic, "Atlas::plot().depth_compare");
+        frames_, selected_depth, feature, options.statistic, words_.where + ".depth_compare", words_);
     flash::lineplot(pane, depth_axis.values, values)
         .label(feature)
         .stroke(color_for_index(feature_index))
@@ -928,9 +955,10 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<st
 pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
                                                  const AtlasDepthFacetPlotOptions& options) const {
   const auto selected = resolve_depth_features(
-      features, frames_, options.max_features, "Atlas::plot().depth_facet", options.features.any() ? options.features : options_.figure.selection());
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
-  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_facet");
+      features, frames_, options.max_features, words_.where + ".depth_facet",
+      options.features.any() ? options.features : options_.figure.selection(), words_);
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, words_.where + ".depth_facet");
 
   std::vector<pluss::Series> xs;
   std::vector<pluss::Series> ys;
@@ -946,7 +974,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<st
   const auto x_series = pluss::make_series(depth_axis.values);
   for (const auto& feature : selected) {
     auto values = depth_statistic_values(
-        frames_, selected_depth, feature, options.statistic, "Atlas::plot().depth_facet");
+        frames_, selected_depth, feature, options.statistic, words_.where + ".depth_facet", words_);
     xs.push_back(x_series);
     ys.push_back(pluss::make_series(values));
     titles.push_back(feature);
@@ -976,14 +1004,15 @@ pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature) con
 
 pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature,
                                                    const AtlasDepthRollingPlotOptions& options) const {
-  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
-  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_rolling");
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis, words_);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, words_.where + ".depth_rolling");
   const auto raw_values = depth_statistic_values(
       frames_,
       selected_depth,
       feature,
       options.statistic,
-      "Atlas::plot().depth_rolling");
+      words_.where + ".depth_rolling",
+      words_);
   const auto rolling_values = rolling_mean(raw_values, options.window);
 
   auto fig = make_studio();
@@ -1016,8 +1045,8 @@ pluss::pl::Studio AtlasPlotAccessor::triplot(const FeatureSelection& columns) co
 
 pluss::pl::Studio AtlasPlotAccessor::triplot(const FeatureSelection& columns,
                                              const pluss::pl::flash::TriplotOptions& options) const {
-  const auto selected = resolve_triplet_features({}, frames_, columns.any() ? columns : options_.figure.selection());
-  auto flat = flatten_feature_columns(frames_, selected, "Atlas::plot().triplot");
+  const auto selected = resolve_triplet_features({}, frames_, columns.any() ? columns : options_.figure.selection(), words_);
+  auto flat = flatten_feature_columns(frames_, selected, words_.where + ".triplot", words_);
   auto fig = make_studio();
   auto tri_options = options;
   if (tri_options.labels.empty()) {
@@ -1034,8 +1063,8 @@ pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::s
 
 pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features,
                                              const pluss::pl::flash::TriplotOptions& options) const {
-  const auto selected = resolve_triplet_features(features, frames_, options_.figure.selection());
-  auto columns = flatten_feature_columns(frames_, selected, "Atlas::plot().triplot");
+  const auto selected = resolve_triplet_features(features, frames_, options_.figure.selection(), words_);
+  auto columns = flatten_feature_columns(frames_, selected, words_.where + ".triplot", words_);
 
   auto fig = make_studio();
   auto tri_options = options;

@@ -338,20 +338,121 @@ ArchivePlotAccessor Archive::plot() const {
   return ArchivePlotAccessor(*this);
 }
 
-ArchivePlotAccessor Archive::plot(const pluss::table::AtlasPlotOptions& options) const {
+ArchivePlotAccessor Archive::plot(const KeySelection& keys) const {
+  ArchivePlotOptions options;
+  options.keys = keys;
+  return ArchivePlotAccessor(*this, std::move(options));
+}
+
+ArchivePlotAccessor Archive::plot(const ArchivePlotOptions& options) const {
   return ArchivePlotAccessor(*this, options);
 }
 
-ArchivePlotAccessor::ArchivePlotAccessor(Archive archive, pluss::table::AtlasPlotOptions options)
-    : archive_(std::move(archive)), options_(std::move(options)) {}
+ArchivePlotAccessor::ArchivePlotAccessor(Archive archive, ArchivePlotOptions options)
+    : archive_(std::move(archive)), options_(std::move(options)) {
+  pluss::table::detail::reject_feature_selection_for_keys(options_.figure.selection(), "Archive::plot", "Archive");
+}
 
 namespace {
 
-std::optional<pluss::table::Shelf> archive_depth_labels_as_shelf(const Archive& archive) {
-  if (!archive.label().has()) return std::nullopt;
-  return archive.label().values().to_shelf();
+// The words an Archive plot uses in its errors: keys and catalogs, never features and frames.
+pluss::table::AtlasPlotWords archive_plot_words() {
+  pluss::table::AtlasPlotWords words;
+  words.where = "Archive::plot()";
+  words.selection = pluss::table::detail::key_selection_words;
+  words.selection.container = "archive";
+  words.container = "archive";
+  words.slice = "catalog";
+  words.slices = "catalogs";
+  words.rows = "records";
+  return words;
 }
 
+pluss::table::FeatureSelection archive_as_selection(const KeySelection& keys) {
+  return pluss::table::FeatureSelection{keys.all_keys, keys.include_keys, keys.exclude_keys};
+}
+
+// An Archive carries a key only when every one of its catalogs does.
+std::vector<std::string> archive_available_keys(const Archive& archive) {
+  std::vector<std::string> out;
+  for (const auto& key : archive.catalog(0).keys()) {
+    if (archive.has(key)) out.push_back(key);
+  }
+  return out;
+}
+
+// Keys named to a plot must exist in the archive: say which one is not there, the closest key and the
+// keys it does have.
+void archive_require_keys(const Archive& archive, std::span<const std::string_view> keys, std::string_view method) {
+  const std::string where = std::string("Archive::plot().") + std::string(method);
+  PLUSS_CHECK(!archive.empty(), where + ": the archive has no catalogs to draw");
+  std::vector<std::string> available;
+  for (const auto key : keys) {
+    if (archive.has(key)) continue;
+    if (available.empty()) available = archive_available_keys(archive);
+    PLUSS_FAIL(where + ": unknown key '" + std::string(key) + "'." +
+               pluss::pl::flash::detail::closest_name_hint(std::string(key), available) + " Available keys = " +
+               pluss::pl::flash::detail::column_name_list(available) + ". Fix the spelling or remove '" +
+               std::string(key) + "'.");
+  }
+}
+
+void archive_require_keys(const Archive& archive, std::initializer_list<std::string_view> keys, std::string_view method) {
+  archive_require_keys(archive, std::span<const std::string_view>(keys.begin(), keys.size()), method);
+}
+
+pluss::table::AtlasDepthComparePlotOptions archive_to_atlas(const ArchiveDepthComparePlotOptions& o) {
+  pluss::table::AtlasDepthComparePlotOptions out;
+  out.statistic = o.statistic;
+  out.show_grid = o.show_grid;
+  out.line_width = o.line_width;
+  out.max_features = o.max_keys;
+  out.features = archive_as_selection(o.keys);
+  return out;
+}
+
+pluss::table::AtlasDepthFacetPlotOptions archive_to_atlas(const ArchiveDepthFacetPlotOptions& o) {
+  pluss::table::AtlasDepthFacetPlotOptions out;
+  out.statistic = o.statistic;
+  out.show_grid = o.show_grid;
+  out.rows = o.rows;
+  out.cols = o.cols;
+  out.grid_gap_x = o.grid_gap_x;
+  out.grid_gap_y = o.grid_gap_y;
+  out.max_features = o.max_keys;
+  out.features = archive_as_selection(o.keys);
+  return out;
+}
+
+pluss::table::AtlasPlotOptions archive_to_atlas(const ArchivePlotOptions& o) {
+  pluss::table::AtlasPlotOptions out;
+  out.figure = o.figure;
+  out.figure.all_features = o.keys.all_keys;
+  out.figure.include_features = o.keys.include_keys;
+  out.figure.exclude_features = o.keys.exclude_keys;
+  out.frames = o.frames;
+  out.depth_axis = o.depth_axis;
+  out.surface = o.surface;
+  out.wireframe = o.wireframe;
+  out.cloud3 = o.cloud3;
+  out.depth = o.depth;
+  out.depth_compare = archive_to_atlas(o.depth_compare);
+  out.depth_facet = archive_to_atlas(o.depth_facet);
+  out.depth_rolling = o.depth_rolling;
+  out.triplot = o.triplot;
+  return out;
+}
+
+// Archive is the ragged-capable depth stack. Atlas is the strict cube. Plotting
+// should therefore not force Archive through Atlas construction just to reuse
+// the shared plot kernels, because strict Atlas validation rejects exactly the
+// unequal-depth row counts Archive exists to carry.
+//
+// Instead, build the raw tabelized frames per catalog here and hand them
+// directly to AtlasPlotAccessor, which already owns the actual rendering logic
+// and now supports ragged frame lengths for surface/wireframe/cloud3/depth*
+// style operations. The accessor is given the Archive's own words, so every
+// message it raises speaks of keys and catalogs.
 std::vector<pluss::table::DataFrame> archive_tabelized_frames(const Archive& archive) {
   const auto& catalogs = archive.catalogs();
   std::vector<pluss::table::DataFrame> frames(catalogs.size());
@@ -363,160 +464,176 @@ std::vector<pluss::table::DataFrame> archive_tabelized_frames(const Archive& arc
   return frames;
 }
 
-// Archive is the ragged-capable depth stack. Atlas is the strict cube. Plotting
-// should therefore not force Archive through Atlas construction just to reuse
-// the shared plot kernels, because strict Atlas validation rejects exactly the
-// unequal-depth row counts Archive exists to carry.
-//
-// Instead, build the raw tabelized frames per catalog here and hand them
-// directly to AtlasPlotAccessor, which already owns the actual rendering logic
-// and now supports ragged frame lengths for surface/wireframe/cloud3/depth*
-// style operations.
-pluss::table::AtlasPlotAccessor archive_plot_accessor(const Archive& archive,
-                                                      const pluss::table::AtlasPlotOptions& options) {
+std::optional<pluss::table::Shelf> archive_depth_labels_as_shelf(const Archive& archive) {
+  if (!archive.label().has()) return std::nullopt;
+  return archive.label().values().to_shelf();
+}
+
+pluss::table::AtlasPlotAccessor archive_plot_accessor(const Archive& archive, const ArchivePlotOptions& options) {
   auto frames = archive_tabelized_frames(archive);
-  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_shelf(archive), options);
+  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_shelf(archive),
+                                         archive_to_atlas(options), archive_plot_words());
 }
 
 pluss::table::AtlasPlotAccessor archive_plot_accessor_scoped(const Archive& archive,
                                                              std::span<const std::string_view> keys,
-                                                             const pluss::table::AtlasPlotOptions& options) {
-  const auto scoped = archive.keys(keys);
-  auto frames = archive_tabelized_frames(scoped);
-  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_shelf(scoped), options);
+                                                             const ArchivePlotOptions& options,
+                                                             std::string_view method) {
+  archive_require_keys(archive, keys, method);
+  return archive_plot_accessor(archive.keys(keys), options);
 }
 
 pluss::table::AtlasPlotAccessor archive_plot_accessor_scoped(const Archive& archive,
                                                              std::initializer_list<std::string_view> keys,
-                                                             const pluss::table::AtlasPlotOptions& options) {
-  return archive_plot_accessor_scoped(archive, std::span<const std::string_view>(keys.begin(), keys.size()), options);
+                                                             const ArchivePlotOptions& options,
+                                                             std::string_view method) {
+  return archive_plot_accessor_scoped(archive, std::span<const std::string_view>(keys.begin(), keys.size()), options, method);
+}
+
+// Named keys scope the archive to just those keys; with none named the selection resolves over every key.
+pluss::table::AtlasPlotAccessor archive_plot_accessor_for(const Archive& archive,
+                                                          pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                          const ArchivePlotOptions& options,
+                                                          std::string_view method) {
+  if (keys.size() == 0) {
+    PLUSS_CHECK(!archive.empty(), std::string("Archive::plot().") + std::string(method) + ": the archive has no catalogs to draw");
+    return archive_plot_accessor(archive, options);
+  }
+  return archive_plot_accessor_scoped(archive, std::span<const std::string_view>(keys.data(), keys.size()), options, method);
 }
 
 } // namespace
 
 CatalogPlotAccessor ArchivePlotAccessor::frames(std::int64_t frame_index) const {
-  return archive_.catalog(frame_index).plot(options_.figure);
+  return archive_.catalog(frame_index).plot(options_.keys, options_.figure);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                               std::string_view y_key) const {
-  return archive_plot_accessor_scoped(archive_, {y_key}, options_).frames(frame_indices, y_key);
+  return archive_plot_accessor_scoped(archive_, {y_key}, options_, "frames").frames(frame_indices, y_key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                               std::string_view y_key,
                                               const pluss::table::AtlasFramesPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {y_key}, options_).frames(frame_indices, y_key, options);
+  return archive_plot_accessor_scoped(archive_, {y_key}, options_, "frames").frames(frame_indices, y_key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                               std::string_view x_key,
                                               std::string_view y_key) const {
-  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_).frames(frame_indices, x_key, y_key);
+  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_, "frames").frames(frame_indices, x_key, y_key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                               std::string_view x_key,
                                               std::string_view y_key,
                                               const pluss::table::AtlasFramesPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_).frames(frame_indices, x_key, y_key, options);
+  return archive_plot_accessor_scoped(archive_, {y_key, x_key}, options_, "frames")
+      .frames(frame_indices, x_key, y_key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::surface(std::string_view key) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).surface(key);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "surface").surface(key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::surface(std::string_view key,
                                                const pluss::table::Surface3DPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).surface(key, options);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "surface").surface(key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::wireframe(std::string_view key) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).wireframe(key);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "wireframe").wireframe(key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::wireframe(std::string_view key,
                                                  const pluss::table::Wireframe3DPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).wireframe(key, options);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "wireframe").wireframe(key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::cloud3(std::string_view x_key,
                                               std::string_view y_key,
                                               std::string_view z_key) const {
-  return archive_plot_accessor_scoped(archive_, {x_key, y_key, z_key}, options_).cloud3(x_key, y_key, z_key);
+  return archive_plot_accessor_scoped(archive_, {x_key, y_key, z_key}, options_, "cloud3").cloud3(x_key, y_key, z_key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::cloud3(std::string_view x_key,
                                               std::string_view y_key,
                                               std::string_view z_key,
                                               const pluss::table::Scatter3DPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {x_key, y_key, z_key}, options_).cloud3(x_key, y_key, z_key, options);
+  return archive_plot_accessor_scoped(archive_, {x_key, y_key, z_key}, options_, "cloud3")
+      .cloud3(x_key, y_key, z_key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth(std::string_view key) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).depth(key);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "depth").depth(key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth(std::string_view key,
                                              const pluss::table::AtlasDepthPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).depth(key, options);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "depth").depth(key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> keys) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).depth_compare(keys);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .depth_compare(keys);
+  return depth_compare(keys, options_.depth_compare);
 }
 
-pluss::pl::Studio ArchivePlotAccessor::depth_compare(
-    pluss::msharp::RangeView::Of<std::string_view> keys,
-    const pluss::table::AtlasDepthComparePlotOptions& options) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).depth_compare(keys, options);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .depth_compare(keys, options);
+pluss::pl::Studio ArchivePlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                     const ArchiveDepthComparePlotOptions& options) const {
+  return archive_plot_accessor_for(archive_, keys, options_, "depth_compare")
+      .depth_compare(keys, archive_to_atlas(options));
+}
+
+pluss::pl::Studio ArchivePlotAccessor::depth_compare(const ArchiveDepthComparePlotOptions& options) const {
+  return depth_compare(pluss::msharp::RangeView::Of<std::string_view>{}, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> keys) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).depth_facet(keys);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .depth_facet(keys);
+  return depth_facet(keys, options_.depth_facet);
 }
 
-pluss::pl::Studio ArchivePlotAccessor::depth_facet(
-    pluss::msharp::RangeView::Of<std::string_view> keys,
-    const pluss::table::AtlasDepthFacetPlotOptions& options) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).depth_facet(keys, options);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .depth_facet(keys, options);
+pluss::pl::Studio ArchivePlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                   const ArchiveDepthFacetPlotOptions& options) const {
+  return archive_plot_accessor_for(archive_, keys, options_, "depth_facet")
+      .depth_facet(keys, archive_to_atlas(options));
+}
+
+pluss::pl::Studio ArchivePlotAccessor::depth_facet(const ArchiveDepthFacetPlotOptions& options) const {
+  return depth_facet(pluss::msharp::RangeView::Of<std::string_view>{}, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth_rolling(std::string_view key) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).depth_rolling(key);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "depth_rolling").depth_rolling(key);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::depth_rolling(
     std::string_view key,
     const pluss::table::AtlasDepthRollingPlotOptions& options) const {
-  return archive_plot_accessor_scoped(archive_, {key}, options_).depth_rolling(key, options);
+  return archive_plot_accessor_scoped(archive_, {key}, options_, "depth_rolling").depth_rolling(key, options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot() const {
-  return archive_plot_accessor(archive_, options_).triplot();
+  return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options_.triplot);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const {
-  return archive_plot_accessor(archive_, options_).triplot(options);
+  return triplot(pluss::msharp::RangeView::Of<std::string_view>{}, options);
+}
+
+pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys) const {
+  return triplot(keys, options_.triplot);
+}
+
+pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys,
+                                               const pluss::pl::flash::TriplotOptions& options) const {
+  return archive_plot_accessor_for(archive_, {}, options_, "triplot").triplot(archive_as_selection(keys), options);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).triplot(keys);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .triplot(keys);
+  return triplot(keys, options_.triplot);
 }
 
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> keys,
                                                const pluss::pl::flash::TriplotOptions& options) const {
-  if (keys.size() == 0) return archive_plot_accessor(archive_, options_).triplot(keys, options);
-  return archive_plot_accessor_scoped(archive_, std::span<const std::string_view>(keys.data(), keys.size()), options_)
-      .triplot(keys, options);
+  return archive_plot_accessor_for(archive_, keys, options_, "triplot").triplot(keys, options);
 }

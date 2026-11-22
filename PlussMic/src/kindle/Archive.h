@@ -37,6 +37,46 @@ class ArchivePlotAccessor;
 class ArchiveTimelineAccessor;
 class ArchiveTimeSeriesAccessor;
 
+// Archive plot options speak of keys, as every Archive does: an Archive is a stack of catalogs, so what a
+// depth plot draws are keys, never features. Each struct mirrors the plot it configures, with the selection
+// as `keys` (all_keys, include_keys, exclude_keys) and the cap as `max_keys`.
+struct ArchiveDepthComparePlotOptions {
+  pluss::table::AtlasDepthStatistic statistic{pluss::table::AtlasDepthStatistic::Mean};
+  bool show_grid{true};
+  float line_width{1.5F};
+  std::int64_t max_keys{0};
+  KeySelection keys{};
+};
+
+struct ArchiveDepthFacetPlotOptions {
+  pluss::table::AtlasDepthStatistic statistic{pluss::table::AtlasDepthStatistic::Mean};
+  bool show_grid{true};
+  std::int64_t rows{0};
+  std::int64_t cols{0};
+  double grid_gap_x{16.0};
+  double grid_gap_y{16.0};
+  std::int64_t max_keys{0};
+  KeySelection keys{};
+};
+
+// The options of Archive::plot(): the figure style, the settings each plot starts from, and `keys`, the
+// selection every key-selecting plot (depth_compare, depth_facet, triplot) falls back to when it is not
+// given its own.
+struct ArchivePlotOptions {
+  pluss::table::DataFramePlotOptions figure{};
+  pluss::table::AtlasFramesPlotOptions frames{};
+  pluss::table::AtlasDepthAxisOptions depth_axis{};
+  pluss::table::Surface3DPlotOptions surface{};
+  pluss::table::Wireframe3DPlotOptions wireframe{};
+  pluss::table::Scatter3DPlotOptions cloud3{};
+  pluss::table::AtlasDepthPlotOptions depth{};
+  ArchiveDepthComparePlotOptions depth_compare{};
+  ArchiveDepthFacetPlotOptions depth_facet{};
+  pluss::table::AtlasDepthRollingPlotOptions depth_rolling{};
+  pluss::pl::flash::TriplotOptions triplot{};
+  KeySelection keys{};
+};
+
 class Archive {
 public:
   Archive();
@@ -137,7 +177,8 @@ public:
   pluss::scribble::Axel scribbelize() const;
 
   ArchivePlotAccessor plot() const;
-  ArchivePlotAccessor plot(const pluss::table::AtlasPlotOptions& options) const;
+  ArchivePlotAccessor plot(const KeySelection& keys) const;
+  ArchivePlotAccessor plot(const ArchivePlotOptions& options) const;
 
   std::string to_string() const;
   void show(std::ostream& os) const;
@@ -305,7 +346,7 @@ private:
 // tabelized just to look at one frame.
 class ArchivePlotAccessor {
 public:
-  explicit ArchivePlotAccessor(Archive archive, pluss::table::AtlasPlotOptions options = {});
+  explicit ArchivePlotAccessor(Archive archive, ArchivePlotOptions options = {});
 
   CatalogPlotAccessor frames(std::int64_t frame_index = 0) const;
   // x first, then y: frames(indices, x_key, y_key). A single key is y against the record labels.
@@ -335,23 +376,27 @@ public:
   pluss::pl::Studio depth(std::string_view key, const pluss::table::AtlasDepthPlotOptions& options) const;
   pluss::pl::Studio depth_compare(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const;
   pluss::pl::Studio depth_compare(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                  const pluss::table::AtlasDepthComparePlotOptions& options) const;
+                                  const ArchiveDepthComparePlotOptions& options) const;
+  pluss::pl::Studio depth_compare(const ArchiveDepthComparePlotOptions& options) const;
   pluss::pl::Studio depth_facet(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const;
   pluss::pl::Studio depth_facet(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                const pluss::table::AtlasDepthFacetPlotOptions& options) const;
+                                const ArchiveDepthFacetPlotOptions& options) const;
+  pluss::pl::Studio depth_facet(const ArchiveDepthFacetPlotOptions& options) const;
   pluss::pl::Studio depth_rolling(std::string_view key) const;
   pluss::pl::Studio depth_rolling(std::string_view key,
                                   const pluss::table::AtlasDepthRollingPlotOptions& options) const;
 
   pluss::pl::Studio triplot() const;
   pluss::pl::Studio triplot(const pluss::pl::flash::TriplotOptions& options) const;
+  pluss::pl::Studio triplot(const KeySelection& keys) const;
+  pluss::pl::Studio triplot(const KeySelection& keys, const pluss::pl::flash::TriplotOptions& options) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> keys) const;
   pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> keys,
                             const pluss::pl::flash::TriplotOptions& options) const;
 
 private:
   Archive archive_{};
-  pluss::table::AtlasPlotOptions options_{};
+  ArchivePlotOptions options_{};
 };
 
 template <class Fn>
