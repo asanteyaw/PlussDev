@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <cstdio>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <sstream>
@@ -2148,7 +2149,7 @@ struct TableLayout {
   }
   // Which column is protected changes the widths too, so it is part of what a cached layout is keyed on.
   const std::uint64_t override_signature =
-      column_override_signature(width_overrides) ^ (static_cast<std::uint64_t>(protected_column + 2) * 0x9E3779B97F4A7C15ULL);
+      column_override_signature(width_overrides) ^ std::hash<int>{}(protected_column);
 
   TableColumnPlan plan;
   std::vector<int> row_heights;
