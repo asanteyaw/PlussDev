@@ -29,24 +29,30 @@ overload (matching only the bare-arity `(x, y, z)` shape) that creates the
 ## Parameters
 
 **pane** (`Pane&`, Pane overloads)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
-    The point coordinates. A rank-4-or-higher input throws
-    `pluss::Error("flash::cloud3: expected input rank <= 3")`.
+
+The point coordinates. A rank-4-or-higher input throws
+`pluss::Error("flash::cloud3: expected input rank <= 3")`.
 
 **size** (series-convertible, must be rank ≤ 3, three- and five-argument overloads)
-    Per-point marker size — see [`Pane::cloud3`](../pane/cloud3.md) for the exact
-    length/broadcast rules.
+
+Per-point marker size — see [`Pane::cloud3`](../pane/cloud3.md) for the exact
+length/broadcast rules.
 
 **color** (series-convertible, must be rank ≤ 3, five-argument overload only)
-    Per-point marker color value, decoupled from `size`.
+
+Per-point marker color value, decoupled from `size`.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## Returns
 

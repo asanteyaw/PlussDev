@@ -35,13 +35,15 @@ into.
 ## Parameters
 
 **unbiased** (`bool`, default `true`)
-    `true`: sample standard deviation (`n - 1` divisor underneath). `false`:
-    population standard deviation (`n` divisor underneath).
+
+`true`: sample standard deviation (`n - 1` divisor underneath). `false`:
+population standard deviation (`n` divisor underneath).
 
 **options** (`StatisticOptions`)
-    `ddof` (default `1`): the divisor underneath is `n - ddof`. `min_count`
-    (default `1`): the smallest observed count still considered valid; below
-    it, the result is marked invalid rather than thrown.
+
+`ddof` (default `1`): the divisor underneath is `n - ddof`. `min_count`
+(default `1`): the smallest observed count still considered valid; below
+it, the result is marked invalid rather than thrown.
 
 ## Returns
 

@@ -25,8 +25,9 @@ labels (`const char*` is a thin convenience wrapper that forwards to the
 ## Parameters
 
 **value** (`double`, `std::string_view`, or `const char*`)
-    The single depth-label value to look up. Use the overload matching the atlas's
-    depth-label kind.
+
+The single depth-label value to look up. Use the overload matching the atlas's
+depth-label kind.
 
 ## Returns
 

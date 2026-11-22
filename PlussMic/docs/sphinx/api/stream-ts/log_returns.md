@@ -29,8 +29,9 @@ message pattern.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The shift distance used to build the comparison base. Must not be `0`,
-    or the call throws.
+
+The shift distance used to build the comparison base. Must not be `0`,
+or the call throws.
 
 ## Returns
 

@@ -39,19 +39,23 @@ way to override the bandwidth or the evaluation range through kdeplot() itself
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::trend`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::trend`, which requires it.
 
 **x**, **density** (series-convertible, first overload only)
-    A pre-computed density curve — `density[i]` at position `x[i]`, connected in index
-    order. No validation beyond what [`flash::lineplot`](lineplot.md) itself performs.
+
+A pre-computed density curve — `density[i]` at position `x[i]`, connected in index
+order. No validation beyond what [`flash::lineplot`](lineplot.md) itself performs.
 
 **values** (series-convertible, second overload only)
-    The raw observations to estimate a density from.
+
+The raw observations to estimate a density from.
 
 **points** (`std::int64_t`, default `128`, second overload only)
-    The number of evaluation points on the estimated curve, evenly spaced across
-    `[min(values), max(values)]`. Internally floored to a minimum of 16 regardless of what
-    is requested.
+
+The number of evaluation points on the estimated curve, evenly spaced across
+`[min(values), max(values)]`. Internally floored to a minimum of 16 regardless of what
+is requested.
 
 ## Returns
 

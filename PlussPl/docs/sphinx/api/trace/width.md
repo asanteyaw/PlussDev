@@ -21,7 +21,8 @@ Not every kind has lines the width can act on. It sets the width of: a `trend`, 
 ## Parameters
 
 **width** (`float`)
-    The stroke width. Must be finite and greater than zero.
+
+The stroke width. Must be finite and greater than zero.
 
 ## Returns
 

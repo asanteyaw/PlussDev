@@ -28,8 +28,9 @@ inverses involving covariance and normal-equation matrices.
 ## Parameter
 
 **upper** (`bool`, default `false`)
-    Return the upper factor when `true`; otherwise return the lower factor.
-    This changes which triangle contains meaningful values, not the shape.
+
+Return the upper factor when `true`; otherwise return the lower factor.
+This changes which triangle contains meaningful values, not the shape.
 
 ## Shape Contract
 

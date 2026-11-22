@@ -21,7 +21,8 @@ an empty archive, rather than throwing.
 ## Parameters
 
 **n** (`std::int64_t`, defaults to `5`)
-    The number of trailing catalogs to keep.
+
+The number of trailing catalogs to keep.
 
 ## Returns
 

@@ -23,18 +23,21 @@ spikes.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md) (created
-    internally by the delegated-to [`flash::acfplot`](acfplot.md) call), y-axis fixed to
-    `[-1.0, 1.0]`.
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md) (created
+internally by the delegated-to [`flash::acfplot`](acfplot.md) call), y-axis fixed to
+`[-1.0, 1.0]`.
 
 **x**, **y** (series-convertible)
-    The predictor/response pair to regress and then autocorrelate the residuals of. Only
-    finite `(x, y)` pairs participate (non-finite pairs are dropped, as [`flash::regplot`](regplot.md) itself does). At least three finite pairs must remain, or `resid_acfplot` throws
-    `pluss::Error("flash::resid_acfplot requires at least three finite x/y
-    pairs")`.
+
+The predictor/response pair to regress and then autocorrelate the residuals of. Only
+finite `(x, y)` pairs participate (non-finite pairs are dropped, as [`flash::regplot`](regplot.md) itself does). At least three finite pairs must remain, or `resid_acfplot` throws
+`pluss::Error("flash::resid_acfplot requires at least three finite x/y
+pairs")`.
 
 **options** (`const ResidAcfPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `ResidAcfPlotOptions` fields
 

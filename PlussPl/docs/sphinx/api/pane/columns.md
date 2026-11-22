@@ -25,10 +25,12 @@ The two series have the same length, or one of them has length 1. The bars are 0
 ## Parameters
 
 **y** (`Series`-convertible)
-    The bar heights (single-argument call) or, in the two-argument call, the positions.
+
+The bar heights (single-argument call) or, in the two-argument call, the positions.
 
 **x** (`Series`-convertible, two-argument call)
-    The heights.
+
+The heights.
 
 ## Returns
 

@@ -21,7 +21,8 @@ uniformly to every stream, not just the ones that obviously need it — applies 
 ## Parameters
 
 **dtype** (`pluss::codem::ScalarType`)
-    The target scalar dtype for every stream's numeric conversion.
+
+The target scalar dtype for every stream's numeric conversion.
 
 ## Returns
 

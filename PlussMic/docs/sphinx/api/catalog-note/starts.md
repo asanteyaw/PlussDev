@@ -25,8 +25,9 @@ explanation and the exact throw message.
 ## Parameters
 
 **prefix** (`std::string_view`)
-    The literal text to test for at the start of each value — always literal, never a
-    regex pattern.
+
+The literal text to test for at the start of each value — always literal, never a
+regex pattern.
 
 ## Returns
 

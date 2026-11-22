@@ -19,7 +19,8 @@ Any text is accepted, including empty text and text with spaces or line breaks; 
 ## Parameters
 
 **name** (`std::string`)
-    The new name. Empty makes the figure unnamed.
+
+The new name. Empty makes the figure unnamed.
 
 ## Returns
 

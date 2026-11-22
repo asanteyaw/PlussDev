@@ -26,11 +26,12 @@ bare number; both examples below use `.to_int()` for a clean integer instead.
 ## Parameters
 
 **dropnull** (`bool`, default `true`)
-    - `true` (the default): missing entries don't count toward the distinct
-      total.
-    - `false`: a missing entry counts as one additional distinct "value" (all
-      missing entries collapse into that single extra count, they don't count
-      individually).
+
+- `true` (the default): missing entries don't count toward the distinct
+  total.
+- `false`: a missing entry counts as one additional distinct "value" (all
+  missing entries collapse into that single extra count, they don't count
+  individually).
 
 ## Returns
 

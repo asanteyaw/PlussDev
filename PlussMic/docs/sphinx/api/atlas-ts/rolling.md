@@ -37,24 +37,29 @@ overloads shown above — a fixed row-count window, or a calendar-duration windo
 ## Parameters
 
 **window** (`std::int64_t`, fixed-window overload)
-    The trailing window size, in rows. Must be positive.
+
+The trailing window size, in rows. Must be positive.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    The statistic computed over each window: `Sum`, `Mean`, `Minimum`, `Maximum`,
-    `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each window: `Sum`, `Mean`, `Minimum`, `Maximum`,
+`Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const WindowOptions&`, fixed-window overload)
-    `min_count` (default `1`), `ddof` (default `1`), `centered` (default `false`),
-    `closure` (default `Right`) — see
-    [`DataFrameTsAccessor::rolling`](../dataframe-ts/rolling.md) for the full field
-    breakdown.
+
+`min_count` (default `1`), `ddof` (default `1`), `centered` (default `false`),
+`closure` (default `Right`) — see
+[`DataFrameTsAccessor::rolling`](../dataframe-ts/rolling.md) for the full field
+breakdown.
 
 **duration** (`std::string_view`, calendar-duration overload)
-    A duration string (for example `"2D"`) defining each row's time-based window
-    width, within that frame's own time axis.
+
+A duration string (for example `"2D"`) defining each row's time-based window
+width, within that frame's own time axis.
 
 **closure** (`WindowClosure`, calendar-duration overload, default `Right`)
-    Which end of the time window is inclusive.
+
+Which end of the time window is inclusive.
 
 ## Returns
 

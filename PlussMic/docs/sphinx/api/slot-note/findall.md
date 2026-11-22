@@ -32,16 +32,18 @@ as "match any character," not a literal period.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression pattern under the single-argument overload
-    (always regex mode), or literal/regex text under the two-argument
-    overload depending on `options.regex`.
+
+A regular expression pattern under the single-argument overload
+(always regex mode), or literal/regex text under the two-argument
+overload depending on `options.regex`.
 
 **options** (`pluss::table::TextOptions`, two-argument overload only)
-    `options.regex` (default `false`): treat `pattern` as regex.
-    `options.case_sensitive` (default `true`): case-insensitive when
-    `false`. `options.limit` (default `-1`): caps matches collected per
-    value, and therefore an upper bound on feature count. `options.prefix`
-    is **not** used — feature names are always `match_0`, `match_1`, ...
+
+`options.regex` (default `false`): treat `pattern` as regex.
+`options.case_sensitive` (default `true`): case-insensitive when
+`false`. `options.limit` (default `-1`): caps matches collected per
+value, and therefore an upper bound on feature count. `options.prefix`
+is **not** used — feature names are always `match_0`, `match_1`, ...
 
 ## Returns
 

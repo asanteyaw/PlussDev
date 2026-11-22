@@ -28,9 +28,10 @@ produces the same throw. See Examples 3 and 4.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The right-hand numeric shelf to dot with `*this`. Must be numeric `Series`-kind, with
-    no `NULL` values, and must line up one-to-one with `*this` (matching length, or
-    matching case labels if both shelves carry them).
+
+The right-hand numeric shelf to dot with `*this`. Must be numeric `Series`-kind, with
+no `NULL` values, and must line up one-to-one with `*this` (matching length, or
+matching case labels if both shelves carry them).
 
 ## Returns
 

@@ -39,15 +39,18 @@ with its (values, explode, labels) overload.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **values** (series-convertible)
-    The wedge magnitudes. Rendered proportionally to their share of the sum — they need
-    not already sum to 1 or 100.
+
+The wedge magnitudes. Rendered proportionally to their share of the sum — they need
+not already sum to 1 or 100.
 
 **labels** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 optional)
-    One label per wedge, in `values` order. Omit for unlabeled wedges.
+
+One label per wedge, in `values` order. Omit for unlabeled wedges.
 
 ## Returns
 

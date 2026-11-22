@@ -29,10 +29,11 @@ Example 1.
 ## Parameters
 
 **options** (`const display::DisplayOptions&`, optional)
-    Rendering options — same type `show()` accepts. For `Shelf`, the fields that actually
-    matter are `terminal_width`/`terminal_height` (`<= 0` auto-detects from the real
-    terminal; a smaller height lowers how many rows are shown before truncating to a `...`
-    ellipsis row) and `mode` (`Auto`/`Compact`/`Wide`, which adjusts cell-width presets).
+
+Rendering options — same type `show()` accepts. For `Shelf`, the fields that actually
+matter are `terminal_width`/`terminal_height` (`<= 0` auto-detects from the real
+terminal; a smaller height lowers how many rows are shown before truncating to a `...`
+ellipsis row) and `mode` (`Auto`/`Compact`/`Wide`, which adjusts cell-width presets).
 
 ```{important} show_case_index and show_shape_footer have no effect on Shelf
 Those two flags exist on `DisplayOptions` and are honored by `DataFrame` rendering, but

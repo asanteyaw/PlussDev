@@ -36,7 +36,8 @@ documented on the 2D accessor's page; it has no effect on routing or rendering t
 ## Parameters
 
 **options** (`AutoPlotOptions`)
-    Currently empty; reserved for future routing controls.
+
+Currently empty; reserved for future routing controls.
 
 ## Returns
 

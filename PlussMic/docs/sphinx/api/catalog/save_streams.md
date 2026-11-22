@@ -15,10 +15,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ## Parameters
 
 **directory**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **store_kind**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 ## Returns
 

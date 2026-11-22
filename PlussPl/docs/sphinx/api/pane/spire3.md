@@ -31,13 +31,16 @@ Adds a **bar chart in three dimensions**: a vertical bar for each cell of a matr
 ## Parameters
 
 **x**, **y** (`Series`-convertible, optional)
-    The coordinates of the columns and the rows.
+
+The coordinates of the columns and the rows.
 
 **z** (`Series`-convertible, rank 2)
-    The heights.
+
+The heights.
 
 **c** (`Series`-convertible, optional)
-    The values that colour the bars.
+
+The values that colour the bars.
 
 ## Returns
 

@@ -39,10 +39,12 @@ the theme).
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane whose `Theme` is mutated.
+
+The target pane whose `Theme` is mutated.
 
 **preset** (`ThemePreset3D`)
-    Which named theme to apply — see the table above.
+
+Which named theme to apply — see the table above.
 
 ## Returns
 

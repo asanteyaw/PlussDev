@@ -21,10 +21,12 @@ Use it for figures with many small panes, or for a figure that is going to be pl
 ## Parameters
 
 **enable** (`bool`, default `true`)
-    `true` for the compact layout, `false` for the relaxed one.
+
+`true` for the compact layout, `false` for the relaxed one.
 
 **padding** (`double`, default 6.0)
-    Room added back around the edges of the figure, in drawing units. Finite and not negative.
+
+Room added back around the edges of the figure, in drawing units. Finite and not negative.
 
 ## Returns
 

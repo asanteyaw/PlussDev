@@ -22,10 +22,12 @@ mapping overloads and reassign, if you need to rename several fields in place.
 ## Parameters
 
 **from** (`std::string_view`)
-    The field's current name.
+
+The field's current name.
 
 **to** (`std::string_view`)
-    The field's new name.
+
+The field's new name.
 
 ## Returns
 

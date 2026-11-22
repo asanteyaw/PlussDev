@@ -31,9 +31,10 @@ log-returns are computed strictly from that catalog's own rows.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The shift distance used to build the comparison base. Positive shifts
-    compare each position against an earlier one (a lag); negative shifts
-    compare against a later one (a lead). Must not be `0`, or the call throws.
+
+The shift distance used to build the comparison base. Positive shifts
+compare each position against an earlier one (a lag); negative shifts
+compare against a later one (a lead). Must not be `0`, or the call throws.
 
 ## Returns
 

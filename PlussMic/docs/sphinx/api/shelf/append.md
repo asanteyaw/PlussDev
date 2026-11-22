@@ -22,8 +22,9 @@ together.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The shelf to append. Must match `*this` exactly in payload kind (and, for
-    `Series`, scalar dtype and platform).
+
+The shelf to append. Must match `*this` exactly in payload kind (and, for
+`Series`, scalar dtype and platform).
 
 ## Returns
 

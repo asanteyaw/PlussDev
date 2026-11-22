@@ -54,13 +54,15 @@ Example 2.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression pattern (ECMAScript syntax) containing at least
-    one capture group `(...)`.
+
+A regular expression pattern (ECMAScript syntax) containing at least
+one capture group `(...)`.
 
 **names** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Column names for each capture group, in order. Leave empty for the
-    default `group_0`, `group_1`, ... naming, or supply exactly one name
-    per capture group.
+
+Column names for each capture group, in order. Leave empty for the
+default `group_0`, `group_1`, ... naming, or supply exactly one name
+per capture group.
 
 ## Returns
 

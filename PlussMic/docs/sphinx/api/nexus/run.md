@@ -23,14 +23,16 @@ you want a named result without permanently registering the view in the workspac
 ## Parameters
 
 **name** (`std::string_view`)
-    For the one-argument overload: the saved view to execute — must already exist (see
-    [`has_store()`](has_store.md)), or the call throws
-    `"Nexus::run: unknown store '<name>'"`. For the two-argument overload: just the title
-    applied to the result; no lookup happens.
+
+For the one-argument overload: the saved view to execute — must already exist (see
+[`has_store()`](has_store.md)), or the call throws
+`"Nexus::run: unknown store '<name>'"`. For the two-argument overload: just the title
+applied to the result; no lookup happens.
 
 **plan** (`const JoinPlan&`, two-argument overload)
-    The plan to normalize and execute, following the same rules
-    [`store()`](store.md)'s saving overloads apply.
+
+The plan to normalize and execute, following the same rules
+[`store()`](store.md)'s saving overloads apply.
 
 ## Returns
 

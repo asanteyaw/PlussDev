@@ -21,7 +21,8 @@ empty (zero-depth) atlas rather than throwing.
 ## Parameters
 
 **n** (`std::int64_t`, defaults to `5`)
-    The number of leading frames to keep.
+
+The number of leading frames to keep.
 
 ## Returns
 

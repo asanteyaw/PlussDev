@@ -23,13 +23,15 @@ always starts at position `0`.
 ## Parameters
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    The statistic computed over each expanding window: `Sum`, `Mean`, `Minimum`,
-    `Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each expanding window: `Sum`, `Mean`, `Minimum`,
+`Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const StatisticOptions&`)
-    `ddof` (default `1`): delta degrees of freedom for `Var`/`Std`. `min_count`
-    (default `1`): minimum non-missing observations required for a position's
-    output to be non-`NULL`.
+
+`ddof` (default `1`): delta degrees of freedom for `Var`/`Std`. `min_count`
+(default `1`): minimum non-missing observations required for a position's
+output to be non-`NULL`.
 
 ## Returns
 

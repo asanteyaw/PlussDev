@@ -73,30 +73,36 @@ Five overloads:
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **group** (`const Note&`, or series-convertible for the generic template overload)
-    The primary categorical (or, via the template escape hatch, numeric) grouping
-    variable. Distinct labels become x-axis category positions, via `Pane::x_ticks`.
+
+The primary categorical (or, via the template escape hatch, numeric) grouping
+variable. Distinct labels become x-axis category positions, via `Pane::x_ticks`.
 
 **values** (`const Series&`, or series-convertible for the generic template overload)
-    The observation values, one per `group` entry. Must be the same length as `group` — a
-    mismatch throws `pluss::Error("flash::catplot group/value length
-    mismatch")` (verified below).
+
+The observation values, one per `group` entry. Must be the same length as `group` — a
+mismatch throws `pluss::Error("flash::catplot group/value length
+mismatch")` (verified below).
 
 **hue** (`const Note&`, hued overloads only)
-    A second categorical variable splitting each group into sub-series. Must be the same
-    length as `group`/`values` — a mismatch throws `pluss::Error("flash::catplot
-    hue length must match group/value")`.
+
+A second categorical variable splitting each group into sub-series. Must be the same
+length as `group`/`values` — a mismatch throws `pluss::Error("flash::catplot
+hue length must match group/value")`.
 
 **options** (`const CatPlotOptions&`)
-    See the field table above. Not defaulted on the options-taking overloads (see the
-    important callout) — pass `{}` explicitly for all-default behavior.
+
+See the field table above. Not defaulted on the options-taking overloads (see the
+important callout) — pass `{}` explicitly for all-default behavior.
 
 **kind** (`std::string_view`, default `"strip"`, kind-string overloads only)
-    One of `"strip"`, `"swarm"`, `"box"`, `"violin"`, `"bar"`, `"count"`. Any other value
-    silently behaves as `"strip"` (no validation, no exception — the same documented
-    pattern as [`relplot`](relplot.md)'s `kind` parameter).
+
+One of `"strip"`, `"swarm"`, `"box"`, `"violin"`, `"bar"`, `"count"`. Any other value
+silently behaves as `"strip"` (no validation, no exception — the same documented
+pattern as [`relplot`](relplot.md)'s `kind` parameter).
 
 ## Returns
 

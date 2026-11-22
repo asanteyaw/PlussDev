@@ -30,16 +30,18 @@ this unscoped form for a single reducer on a related table; prefer
 ## Parameters
 
 **source** (`std::string_view`)
-    The feature to count distinct non-null values of. Typically
-    `"table.feature"` for a related table (e.g. `"events.event_id"`); a bare
-    root feature name is accepted syntactically but rarely useful, per
-    [`Nexus::pull`](../nexus/pull.md)'s restriction against aggregate fields
-    targeting `root` itself.
+
+The feature to count distinct non-null values of. Typically
+`"table.feature"` for a related table (e.g. `"events.event_id"`); a bare
+root feature name is accepted syntactically but rarely useful, per
+[`Nexus::pull`](../nexus/pull.md)'s restriction against aggregate fields
+targeting `root` itself.
 
 **alias** (`std::string_view`, default empty)
-    The output column name. When omitted, the default alias is
-    `<table>_<feature>_ndistinct` (dots replaced by underscores) — see
-    [`Nexus::pull`](../nexus/pull.md)'s automatic aliasing rule.
+
+The output column name. When omitted, the default alias is
+`<table>_<feature>_ndistinct` (dots replaced by underscores) — see
+[`Nexus::pull`](../nexus/pull.md)'s automatic aliasing rule.
 
 ## Returns
 

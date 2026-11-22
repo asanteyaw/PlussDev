@@ -38,7 +38,8 @@ routing or rendering today.
 ## Parameters
 
 **options** (`const AutoPlotOptions&`, optional)
-    Currently empty; reserved for future routing controls.
+
+Currently empty; reserved for future routing controls.
 
 ## Returns
 

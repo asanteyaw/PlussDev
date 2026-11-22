@@ -45,7 +45,8 @@ traversed in (`reversed = true` when the step goes from that relationship's decl
 ## Parameters
 
 **from** / **to** (`std::string_view`)
-    The two tables to connect. Both must already exist in the workspace.
+
+The two tables to connect. Both must already exist in the workspace.
 
 ## Returns
 

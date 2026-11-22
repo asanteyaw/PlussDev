@@ -24,13 +24,16 @@ fetching a field via [`fields(key)`](fields.md) and transforming it directly.
 ## Parameters
 
 **key** (`std::string_view`)
-    A single field name to set (single-item overload).
+
+A single field name to set (single-item overload).
 
 **value** (`const Slot&`)
-    The new `Slot` for that field. Must be defined.
+
+The new `Slot` for that field. Must be defined.
 
 **items** (`std::initializer_list<std::pair<std::string_view, Slot>>` / `std::initializer_list<std::pair<std::string, Slot>>`)
-    Several `{key, Slot}` pairs to set at once (multi-item overload).
+
+Several `{key, Slot}` pairs to set at once (multi-item overload).
 
 ## Returns
 

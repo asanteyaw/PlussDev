@@ -34,13 +34,15 @@ left join through `.join()`, set `spec.how` explicitly.
 ## Parameters
 
 **right** (`std::string_view`)
-    The table to join in next. Must already exist in the workspace.
+
+The table to join in next. Must already exist in the workspace.
 
 **spec** (`const JoinSpec&`, two-argument overload)
-    Same struct [`Nexus::join()`](../nexus/join.md) takes. If `spec.relationship_name` and
-    `spec.keys` are both left unset (and `spec.how` isn't `Cross`), the relationship is
-    auto-detected the same way the one-argument overload does. `spec.right_suffix`, if left
-    empty, defaults to `"_" + right`.
+
+Same struct [`Nexus::join()`](../nexus/join.md) takes. If `spec.relationship_name` and
+`spec.keys` are both left unset (and `spec.how` isn't `Cross`), the relationship is
+auto-detected the same way the one-argument overload does. `spec.right_suffix`, if left
+empty, defaults to `"_" + right`.
 
 ## Returns
 

@@ -19,10 +19,12 @@ familiar name some callers already expect. Identical.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
-    The trajectory coordinates — identical requirements to [`flash::path3`](path3.md).
+
+The trajectory coordinates — identical requirements to [`flash::path3`](path3.md).
 
 ## Returns
 

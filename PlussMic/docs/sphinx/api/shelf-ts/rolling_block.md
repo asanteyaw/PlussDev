@@ -30,11 +30,13 @@ example of this exact effect.
 ## Parameters
 
 **windows** (`pluss::RangeView<std::int64_t>`)
-    The window sizes to compute, in the order given. Must not be empty, or it
-    throws.
+
+The window sizes to compute, in the order given. Must not be empty, or it
+throws.
 
 **options** (`const TsRollingBlockOptions&`)
-    Which statistics to include, and the shared `min_periods`:
+
+Which statistics to include, and the shared `min_periods`:
 
 - **`include_mean`** (`bool`, default `true`)
 - **`include_std`** (`bool`, default `true`)

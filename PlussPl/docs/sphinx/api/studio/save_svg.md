@@ -19,7 +19,8 @@ Writes the figure to an SVG file: the text [`to_svg`](to_svg.md) returns, saved 
 ## Parameters
 
 **path** (`std::string_view`)
-    The file to write. Must end in `.svg` (any case). Relative paths are relative to the working directory.
+
+The file to write. Must end in `.svg` (any case). Relative paths are relative to the working directory.
 
 ## Returns
 

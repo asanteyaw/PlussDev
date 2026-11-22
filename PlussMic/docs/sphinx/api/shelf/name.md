@@ -32,8 +32,9 @@ exception) before calling the getter on a shelf that might be unnamed.
 ## Parameters
 
 **value** (`std::string`, setter overload only)
-    The name to attach. Must be non-empty — passing an empty string throws
-    `"Shelf::name(value): name must not be empty"`.
+
+The name to attach. Must be non-empty — passing an empty string throws
+`"Shelf::name(value): name must not be empty"`.
 
 ## Returns
 

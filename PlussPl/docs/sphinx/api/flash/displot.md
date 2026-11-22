@@ -27,13 +27,16 @@ flash::kdeplot directly; for an ECDF curve, call flash::ecdfplot directly.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **values** (series-convertible)
-    The raw, ungrouped observations to bin.
+
+The raw, ungrouped observations to bin.
 
 **bins** (`int`, default `12`)
-    The number of equal-width bins, over the data's own observed range.
+
+The number of equal-width bins, over the data's own observed range.
 
 ## Returns
 

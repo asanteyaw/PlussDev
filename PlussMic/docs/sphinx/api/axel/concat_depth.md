@@ -29,8 +29,9 @@ Example 2.
 ## Parameters
 
 **other** (`const Axel&`)
-    The axel whose frames are appended after this one's. Must be
-    defined.
+
+The axel whose frames are appended after this one's. Must be
+defined.
 
 ## Returns
 

@@ -22,7 +22,8 @@ The setter requires its argument, so `pane.parallel_xy_labels()` always reads.
 ## Parameters
 
 **enable** (`bool`, setter only)
-    `true` for labels that run along their axes, `false` for upright labels.
+
+`true` for labels that run along their axes, `false` for upright labels.
 
 ## Returns
 

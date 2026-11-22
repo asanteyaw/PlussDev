@@ -53,22 +53,26 @@ want statistics, compute them yourself and pass the results in as the "features.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new, titled [`Studio::pane2`](../studio/pane2.md).
+
+The figure to populate — a single new, titled [`Studio::pane2`](../studio/pane2.md).
 
 **columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per feature. Must be non-empty, or `summaryplot` throws
-    `pluss::Error("flash::summaryplot requires at least one column")`, and every
-    column must be the same length (`"flash::summaryplot requires equal-length
-    columns"`).
+
+One entry per feature. Must be non-empty, or `summaryplot` throws
+`pluss::Error("flash::summaryplot requires at least one column")`, and every
+column must be the same length (`"flash::summaryplot requires equal-length
+columns"`).
 
 **labels** (`pluss::RangeView<std::string_view>` or
 `std::initializer_list<std::string_view>`)
-    Per-feature names. May be empty (falls back to `"x1"`, `"x2"`, …), but if non-empty
-    its length must exactly match `columns`' length, or `summaryplot` throws
-    `pluss::Error("flash::summaryplot: labels size must match columns size")`.
+
+Per-feature names. May be empty (falls back to `"x1"`, `"x2"`, …), but if non-empty
+its length must exactly match `columns`' length, or `summaryplot` throws
+`pluss::Error("flash::summaryplot: labels size must match columns size")`.
 
 **options** (`const SummaryOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

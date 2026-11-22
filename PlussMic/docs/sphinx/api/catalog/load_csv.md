@@ -21,11 +21,13 @@ column, with the column's dtype inferred from its values (numeric columns become
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The CSV file to read.
+
+The CSV file to read.
 
 **options** (`const pluss::loader::ReadCsvOptions&`, optional)
-    Fine-grained control over parsing — delimiter detection, quoting, parallel-read
-    thresholds, and more.
+
+Fine-grained control over parsing — delimiter detection, quoting, parallel-read
+thresholds, and more.
 
 ## Returns
 

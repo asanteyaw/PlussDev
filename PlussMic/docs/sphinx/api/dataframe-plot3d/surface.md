@@ -70,15 +70,19 @@ grouped mode, not the `NaN`-gap behavior of [`parallel()`](../dataframe-plot/par
 ## Parameters
 
 **x_feature** (`std::string_view`)
+
 Feature whose distinct values become the grid's columns (x-axis).
 
 **y_feature** (`std::string_view`)
+
 Feature whose distinct values become the grid's rows (y-axis).
 
 **z_feature** (`std::string_view`)
+
 Feature aggregated into each grid cell's height.
 
 **op** (`DataFrame::GroupOp`, default `Mean`)
+
 The aggregation applied per cell — see the important callout above for which values
 are actually supported.
 

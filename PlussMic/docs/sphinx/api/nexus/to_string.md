@@ -25,7 +25,8 @@ read anything from it — the output is the same regardless of what's passed.
 ## Parameters
 
 **options** (`const display::DisplayOptions&`, default `{}`)
-    Accepted but currently unused — see the note above.
+
+Accepted but currently unused — see the note above.
 
 ## Returns
 

@@ -33,18 +33,21 @@ per-frame `other` in one call.
 ## Parameters
 
 **other** (`const Shelf&` / `const pluss::Timeline&`)
-    The right-hand timestamp(s), applied identically to every frame in the stack — see
-    the important callout above.
+
+The right-hand timestamp(s), applied identically to every frame in the stack — see
+the important callout above.
 
 **options** (`const TimelineSpanOptions&`)
-    `unit` (default `TimeUnit::Days`), `mode`, `anchor`, `signed_result`, and
-    `calendar` — the same fields as
-    [`DataFrameTimelineAccessor::span`](../dataframe-timeline/span.md)'s `options`; see
-    that page for the full breakdown and worked examples of each.
+
+`unit` (default `TimeUnit::Days`), `mode`, `anchor`, `signed_result`, and
+`calendar` — the same fields as
+[`DataFrameTimelineAccessor::span`](../dataframe-timeline/span.md)'s `options`; see
+that page for the full breakdown and worked examples of each.
 
 **unit** (`TimeUnit`, convenience overload)
-    Shorthand for `TimelineSpanOptions{.unit = unit}` with every other option left at
-    its default.
+
+Shorthand for `TimelineSpanOptions{.unit = unit}` with every other option left at
+its default.
 
 ## Returns
 

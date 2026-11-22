@@ -32,14 +32,16 @@ two-argument overload takes an explicit key list.
 ## Parameters
 
 **table** (`std::string_view`)
-    The table to check. Must already exist in the workspace.
+
+The table to check. Must already exist in the workspace.
 
 **keys** (a range of `std::string_view` — a brace literal, a named container
 such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
 other range whose elements convert to `std::string_view`; two-argument
 overload only)
-    The candidate key features. Same validation as
-    [`validate_keys()`](validate_keys.md)'s two-argument overload.
+
+The candidate key features. Same validation as
+[`validate_keys()`](validate_keys.md)'s two-argument overload.
 
 :::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::validate_keys`](validate_keys.md)'s own note on this — the

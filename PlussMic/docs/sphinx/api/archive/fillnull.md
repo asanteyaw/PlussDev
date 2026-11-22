@@ -33,8 +33,9 @@ are returned exactly as they were.
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
 `const pluss::Duration&`)
-    The fill value. Its C++ type selects both the overload and which streams are eligible
-    to be filled — see the important callout above.
+
+The fill value. Its C++ type selects both the overload and which streams are eligible
+to be filled — see the important callout above.
 
 ## Returns
 

@@ -19,11 +19,13 @@ values individually, directly on this registry.
 ## Parameters
 
 **key** (`std::string_view`)
-    The field to transform. Throws if it doesn't exist.
+
+The field to transform. Throws if it doesn't exist.
 
 **fn** (`const std::function<Slot::Value(const Slot::Value&)>&`)
-    A callback taking each of the field's values in turn and returning its
-    replacement.
+
+A callback taking each of the field's values in turn and returning its
+replacement.
 
 ## Returns
 

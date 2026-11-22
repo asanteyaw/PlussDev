@@ -20,7 +20,8 @@ The scale must be finite and positive; anything else throws. It applies to the t
 ## Parameters
 
 **scale** (`double`, setter only)
-    The factor on the default tick label size. Finite and strictly positive.
+
+The factor on the default tick label size. Finite and strictly positive.
 
 ## Returns
 

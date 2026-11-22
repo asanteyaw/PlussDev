@@ -33,22 +33,26 @@ draws, including empty ones (simply do nothing in the callback for those rows/co
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **rows**, **cols** (`std::int64_t`)
-    The grid's row and column counts. Both must be strictly positive, or
-    `facet_map_plot` throws `pluss::Error("flash::facet_map_plot rows/cols must
-    be positive")`, verified below. Unlike the other `*gridplot` functions, there is no
-    auto-resolution here — you must supply both explicitly.
+
+The grid's row and column counts. Both must be strictly positive, or
+`facet_map_plot` throws `pluss::Error("flash::facet_map_plot rows/cols must
+be positive")`, verified below. Unlike the other `*gridplot` functions, there is no
+auto-resolution here — you must supply both explicitly.
 
 **mapper** (a callable taking `(Pane&, std::int64_t row, std::int64_t col)`)
-    Called once per cell, in row-major order (`row` outer, `col` inner), after that cell's
-    pane has already been created and `place(row, col)`d. Do all of that panel's drawing —
-    traces, title, labels — inside this callback.
+
+Called once per cell, in row-major order (`row` outer, `col` inner), after that cell's
+pane has already been created and `place(row, col)`d. Do all of that panel's drawing —
+traces, title, labels — inside this callback.
 
 **gx**, **gy** (`double`, default `18.0` each)
-    Forwarded straight to the internal [`flash::FacetGrid`](FacetGrid.md) call as its
-    `gx`/`gy` gutter — the same default `FacetGrid` itself uses.
+
+Forwarded straight to the internal [`flash::FacetGrid`](FacetGrid.md) call as its
+`gx`/`gy` gutter — the same default `FacetGrid` itself uses.
 
 ## Returns
 

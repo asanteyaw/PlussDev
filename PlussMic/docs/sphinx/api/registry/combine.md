@@ -24,10 +24,12 @@ until a unique name is found.
 ## Parameters
 
 **other** (`const Registry&`)
-    The registry whose fields to merge in. Must be defined.
+
+The registry whose fields to merge in. Must be defined.
 
 **suffix** (`std::string`, optional, defaults to `"_other"`)
-    The suffix appended to `other`'s field name on a collision.
+
+The suffix appended to `other`'s field name on a collision.
 
 ## Returns
 

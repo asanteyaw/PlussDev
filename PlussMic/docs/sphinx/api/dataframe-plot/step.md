@@ -64,12 +64,14 @@ call win over both. The rules, the directive error messages and compiled example
 
 **y_feature** / **y_features** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`)
-    Same as [`line()`](line.md): one or more numeric features, each drawn as its own step
-    trace. At least one is required — an empty list throws `"DataFrame::plot().step: at
-    least one y feature is required"`.
+
+Same as [`line()`](line.md): one or more numeric features, each drawn as its own step
+trace. At least one is required — an empty list throws `"DataFrame::plot().step: at
+least one y feature is required"`.
 
 **x_feature** (`std::string_view`)
-    Same three-step resolution as [`line()`](line.md).
+
+Same three-step resolution as [`line()`](line.md).
 
 **options** (`StepPlotOptions`)
 

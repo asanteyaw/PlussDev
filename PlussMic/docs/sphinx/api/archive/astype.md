@@ -20,7 +20,8 @@ call. Delegates to each catalog's own [`Catalog::astype()`](../catalog/astype.md
 ## Parameters
 
 **dtype** (`pluss::codem::ScalarType`)
-    The numeric scalar dtype to cast every stream to (e.g. `Int64`, `Float64`).
+
+The numeric scalar dtype to cast every stream to (e.g. `Int64`, `Float64`).
 
 ## Returns
 

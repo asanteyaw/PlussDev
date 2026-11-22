@@ -21,10 +21,12 @@ same as [`abs()`](abs.md)/[`log()`](log.md)/[`exp()`](exp.md).
 ## Parameters
 
 **min_value** (`double`)
-    The lower bound. Values below this are replaced with it.
+
+The lower bound. Values below this are replaced with it.
 
 **max_value** (`double`)
-    The upper bound. Values above this are replaced with it.
+
+The upper bound. Values above this are replaced with it.
 
 ## Returns
 

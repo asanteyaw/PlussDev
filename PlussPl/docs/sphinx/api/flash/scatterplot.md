@@ -66,15 +66,18 @@ legend unless you'd already set one up (or explicitly turned it off) yourself.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::cloud`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::cloud`, which requires it.
 
 **x**, **y** (series-convertible)
-    The point coordinates.
+
+The point coordinates.
 
 **hue** (`const Note&`, or any series-convertible value, third overload group only)
-    The grouping/coloring variable, paired with `x`/`y` by index. A `Note` is always
-    treated as categorical; anything else is treated as numeric, with the branching
-    behavior described above.
+
+The grouping/coloring variable, paired with `x`/`y` by index. A `Note` is always
+treated as categorical; anything else is treated as numeric, with the branching
+behavior described above.
 
 ## Returns
 

@@ -34,20 +34,24 @@ family for its own verification.
 ## Parameters
 
 **pane** (`Pane&`, Pane overload)
-    The target pane. Must be `Volumetric` — see [`Pane::path3`](../pane/path3.md)'s own
-    important callout for the exact error thrown otherwise.
+
+The target pane. Must be `Volumetric` — see [`Pane::path3`](../pane/path3.md)'s own
+important callout for the exact error thrown otherwise.
 
 **studio** (`Studio&`, Studio overload)
-    The figure to create a new `Volumetric` pane in.
+
+The figure to create a new `Volumetric` pane in.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
-    The trajectory coordinates. A rank-4-or-higher input throws
-    `pluss::Error("flash::path3: expected input rank <= 3")` — see
-    [`Pane::path3`](../pane/path3.md) for the coordinate-length-matching requirements this
-    layer doesn't itself add anything to.
+
+The trajectory coordinates. A rank-4-or-higher input throws
+`pluss::Error("flash::path3: expected input rank <= 3")` — see
+[`Pane::path3`](../pane/path3.md) for the coordinate-length-matching requirements this
+layer doesn't itself add anything to.
 
 **title** (`std::string`, default `{}`, Studio overload only)
-    Forwarded to `Studio::pane3` as the new pane's title.
+
+Forwarded to `Studio::pane3` as the new pane's title.
 
 ## Returns
 

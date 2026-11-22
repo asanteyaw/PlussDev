@@ -21,7 +21,8 @@ pattern needs to match somewhere in the name, not the whole name — anchor with
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavor regular expression to search each field name against.
+
+An ECMAScript-flavor regular expression to search each field name against.
 
 ## Returns
 

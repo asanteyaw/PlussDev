@@ -93,12 +93,14 @@ exist yet without any of them throwing, right up until you call a terminal.
 ## Parameters
 
 **ascending** (`bool`, default `true`)
-    The default sort direction every key added via `.by(...)`/`.then(...)`
-    inherits, unless that key overrides it (e.g. via an `ArrangeSpec`, or a
-    later `.desc()` call).
+
+The default sort direction every key added via `.by(...)`/`.then(...)`
+inherits, unless that key overrides it (e.g. via an `ArrangeSpec`, or a
+later `.desc()` call).
 
 **nulls_last** (`bool`, default `true`)
-    The default null placement every key inherits, unless overridden.
+
+The default null placement every key inherits, unless overridden.
 
 ## Returns
 

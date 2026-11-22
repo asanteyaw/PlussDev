@@ -49,22 +49,27 @@ using the c-parameter overload, clamp/mask c yourself before passing it in.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The grid's axis coordinates — `x` must have as many entries as `z`'s column count,
-    `y` as many as `z`'s row count (enforced by the underlying `Pane::fieldmap`).
+
+The grid's axis coordinates — `x` must have as many entries as `z`'s column count,
+`y` as many as `z`'s row count (enforced by the underlying `Pane::fieldmap`).
 
 **z** (series-convertible, must be rank-2)
-    The field values that shape/position the grid (and, in the 3-argument overloads,
-    color it too).
+
+The field values that shape/position the grid (and, in the 3-argument overloads,
+color it too).
 
 **c** (series-convertible, must be rank-2 and the same shape as `z`, 4-argument overloads
 only)
-    A separate matrix supplying the fill color per cell, decoupled from `z`.
+
+A separate matrix supplying the fill color per cell, decoupled from `z`.
 
 **options** (`const HeatmapOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

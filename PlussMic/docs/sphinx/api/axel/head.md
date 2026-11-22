@@ -19,9 +19,10 @@ Returns the first `n` registry frames (depth-wise), clamped to
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of leading frames to keep. Values greater than `depth()`
-    are clamped down to `depth()`; negative values are clamped up to
-    `0`.
+
+The number of leading frames to keep. Values greater than `depth()`
+are clamped down to `depth()`; negative values are clamped up to
+`0`.
 
 ## Returns
 

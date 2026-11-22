@@ -15,7 +15,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 ## Parameters
 
 **directory**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 ## Returns
 

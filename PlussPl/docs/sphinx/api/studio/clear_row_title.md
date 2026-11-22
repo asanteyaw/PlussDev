@@ -19,7 +19,8 @@ The figure afterwards is exactly the figure that never set a title for that row.
 ## Parameters
 
 **row** (`std::int64_t`)
-    The row whose title is removed. A row without a title is ignored.
+
+The row whose title is removed. A row without a title is ignored.
 
 ## Returns
 

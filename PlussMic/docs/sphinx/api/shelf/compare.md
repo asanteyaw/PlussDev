@@ -53,14 +53,16 @@ fallback, everything else) compare the literal as plain text. See Example 4.
 ## Parameters
 
 **other**
-    The right-hand comparison target — a numeric scalar (`double`), a text scalar
-    (`std::string_view`/`const char*`), one of `Series`/`Note`/`Timeline`/`Duration`, or
-    another `Shelf`. Non-`Shelf` payloads that carry more than one row are compared
-    positionally and must match `size()`; a single-element (`dim() == 0`) payload
-    broadcasts across every row instead.
+
+The right-hand comparison target — a numeric scalar (`double`), a text scalar
+(`std::string_view`/`const char*`), one of `Series`/`Note`/`Timeline`/`Duration`, or
+another `Shelf`. Non-`Shelf` payloads that carry more than one row are compared
+positionally and must match `size()`; a single-element (`dim() == 0`) payload
+broadcasts across every row instead.
 
 **op** (`ShelfBinaryCompareOp`)
-    Which comparison to perform — `Eq`, `Ne`, `Lt`, `Le`, `Gt`, or `Ge`.
+
+Which comparison to perform — `Eq`, `Ne`, `Lt`, `Le`, `Gt`, or `Ge`.
 
 ## Returns
 

@@ -30,10 +30,12 @@ constructed as a spec first and added, rather than expressed as a plain
 ## Parameters
 
 **spec** (`const nexus::PullSpec&`)
-    A single pre-built spec to append.
+
+A single pre-built spec to append.
 
 **specs** (`std::initializer_list<nexus::PullSpec>`)
-    Several pre-built specs to append in one call, in list order.
+
+Several pre-built specs to append in one call, in list order.
 
 Neither overload validates `spec`/`specs` against the workspace at this
 point — an unknown source or a malformed table path only surfaces later,

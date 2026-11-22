@@ -32,11 +32,13 @@ two shapes:
 ## Parameters
 
 **window** (`std::int64_t`, fixed-window overload)
-    The trailing window size, in positions. Must be positive, or it throws.
+
+The trailing window size, in positions. Must be positive, or it throws.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    The statistic computed over each window: `Sum`, `Mean`, `Minimum`, `Maximum`,
-    `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each window: `Sum`, `Mean`, `Minimum`, `Maximum`,
+`Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const WindowOptions&`, fixed-window overload)
 
@@ -50,19 +52,23 @@ two shapes:
   inclusive.
 
 **axis** (`const Shelf&`, calendar-duration overload)
-    An explicit time axis (`Timeline` or `TimeIndex`), the same length as the
-    bound shelf, non-missing and sorted ascending.
+
+An explicit time axis (`Timeline` or `TimeIndex`), the same length as the
+bound shelf, non-missing and sorted ascending.
 
 **duration** (`std::string_view`, calendar-duration overload)
-    A duration string (for example `"2D"`, `"12H"`, `"30min"`) defining each
-    position's time-based window width.
+
+A duration string (for example `"2D"`, `"12H"`, `"30min"`) defining each
+position's time-based window width.
 
 **options** (`const StatisticOptions&`, calendar-duration overload)
-    `ddof` and `min_count`, same meaning as above; only `Sum`, `Mean`, `Var`, and
-    `Std` are supported for this overload.
+
+`ddof` and `min_count`, same meaning as above; only `Sum`, `Mean`, `Var`, and
+`Std` are supported for this overload.
 
 **closure** (`WindowClosure`, calendar-duration overload, default `Right`)
-    Which end of the time window is inclusive.
+
+Which end of the time window is inclusive.
 
 ## Returns
 

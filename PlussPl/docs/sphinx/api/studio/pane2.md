@@ -21,7 +21,8 @@ A new pane copies the figure's settings at that moment: the figure's theme ([`th
 ## Parameters
 
 **title** (`std::string`, default empty)
-    The pane's title. Empty draws none.
+
+The pane's title. Empty draws none.
 
 ## Returns
 

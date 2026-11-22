@@ -30,9 +30,10 @@ would otherwise produce.
 ## Parameters
 
 **min_count** (`std::int64_t`, default `4`)
-    The smallest observed count still considered valid. The effective floor is
-    always `max(4, min_count)` — kurtosis needs at least 4 observations
-    regardless of what you pass here.
+
+The smallest observed count still considered valid. The effective floor is
+always `max(4, min_count)` — kurtosis needs at least 4 observations
+regardless of what you pass here.
 
 ## Returns
 

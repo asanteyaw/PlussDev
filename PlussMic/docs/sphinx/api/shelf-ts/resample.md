@@ -38,22 +38,26 @@ over the remaining real observations in that bucket.
 ## Parameters
 
 **axis** (`const Shelf&`)
-    The time axis (`Timeline`/`TimeIndex`), same length as the bound shelf,
-    supplying each position's bucket membership.
+
+The time axis (`Timeline`/`TimeIndex`), same length as the bound shelf,
+supplying each position's bucket membership.
 
 **freq** (`std::string_view`) / **options** (`const pluss::TimeIndex::ResampleOptions&`)
-    The bucket frequency. `options` additionally exposes `step`, `closed`
-    (`Left`/`Right`), `label` (`Left`/`Right`), `origin`
-    (`StartDay`/`Start`/`Epoch`), and `offset_nanos` for finer control than a
-    bare frequency string.
+
+The bucket frequency. `options` additionally exposes `step`, `closed`
+(`Left`/`Right`), `label` (`Left`/`Right`), `origin`
+(`StartDay`/`Start`/`Epoch`), and `offset_nanos` for finer control than a
+bare frequency string.
 
 **op** (`ResampleOp`, default `Mean`)
-    The aggregation applied to each bucket: `Mean`, `Sum`, `Min`, `Max`,
-    `First`, `Last`, or `Count`.
+
+The aggregation applied to each bucket: `Mean`, `Sum`, `Min`, `Max`,
+`First`, `Last`, or `Count`.
 
 **step** (`std::int64_t`, default `1`)
-    A frequency multiplier — for example `step = 6` with `freq = "H"` produces
-    6-hour buckets.
+
+A frequency multiplier — for example `step = 6` with `freq = "H"` produces
+6-hour buckets.
 
 ## Returns
 

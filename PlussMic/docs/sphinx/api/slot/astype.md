@@ -19,7 +19,8 @@ shorthand for `cast(ShelfCastOptions{.series_dtype = dtype}).series()`.
 ## Parameters
 
 **dtype** (`pluss::codem::ScalarType`)
-    The target numeric scalar dtype (e.g. `Int64`, `Float64`, `Bool`).
+
+The target numeric scalar dtype (e.g. `Int64`, `Float64`, `Bool`).
 
 ## Returns
 

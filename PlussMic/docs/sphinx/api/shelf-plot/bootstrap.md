@@ -27,9 +27,10 @@ Same as the 2D accessor: a shelf with fewer than two rows throws
 ## Parameters
 
 **options** (`BootstrapPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::bootstrap`](../../api/dataframe-plot/bootstrap.md)
-    (`samples`, `sample_size`, `seed`, `bins`, `statistic`, `trace_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::bootstrap`](../../api/dataframe-plot/bootstrap.md)
+(`samples`, `sample_size`, `seed`, `bins`, `statistic`, `trace_width`).
 
 ## Returns
 

@@ -29,12 +29,14 @@ that produces the same key string twice throws.
 ## Parameters
 
 **atlas** (`const Atlas&`)
-    The source stack of same-shaped frames.
+
+The source stack of same-shaped frames.
 
 **labels** (`const Shelf&`, two-argument overload)
-    Explicit table keys, one per atlas frame. Must be defined, must have exactly
-    `atlas.depth()` elements, and must not produce a duplicate key string — see the
-    important callout above.
+
+Explicit table keys, one per atlas frame. Must be defined, must have exactly
+`atlas.depth()` elements, and must not produce a duplicate key string — see the
+important callout above.
 
 ## Returns
 

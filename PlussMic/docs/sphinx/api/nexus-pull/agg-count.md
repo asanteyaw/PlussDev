@@ -28,15 +28,18 @@ equivalent to calling the scalar overload once per pair.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own feature to count non-null occurrences of.
+
+The scoped table's own feature to count non-null occurrences of.
 
 **alias** (`std::string_view`, default empty)
-    The output column name. Aggregate reducers generally want an explicit
-    alias — see [`Nexus::pull`](../nexus/pull.md) for the default
-    `<table>_<feature>_<aggregate>` naming when one is omitted.
+
+The output column name. Aggregate reducers generally want an explicit
+alias — see [`Nexus::pull`](../nexus/pull.md) for the default
+`<table>_<feature>_<aggregate>` naming when one is omitted.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `count` requests on the same scoped table, added in order.
+
+Several `count` requests on the same scoped table, added in order.
 
 ## Returns
 

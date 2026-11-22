@@ -27,19 +27,23 @@ by other groups' positions) in the source shelf. See Example 2.
 ## Parameters
 
 **groups** (`const Shelf&`)
-    The grouping key, one entry per position, same length as the bound shelf.
-    Any shelf kind; compared by value.
+
+The grouping key, one entry per position, same length as the bound shelf.
+Any shelf kind; compared by value.
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions, applied independently within each
-    group.
+
+The trailing window size, in positions, applied independently within each
+group.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    The statistic computed over each window — same set `rolling()` supports.
+
+The statistic computed over each window — same set `rolling()` supports.
 
 **options** (`const WindowOptions&`)
-    Same meaning as [`rolling()`](rolling.md)'s fixed-window overload
-    (`min_count`, `ddof`, `centered`, `closure`).
+
+Same meaning as [`rolling()`](rolling.md)'s fixed-window overload
+(`min_count`, `ddof`, `centered`, `closure`).
 
 ## Returns
 

@@ -25,7 +25,8 @@ When all values are equal the range is widened by 0.5 each way whatever the meth
 ## Parameters
 
 **method** (`LimitMethod`)
-    `Tight`, `TickAligned` or `Padded`.
+
+`Tight`, `TickAligned` or `Padded`.
 
 ## Returns
 

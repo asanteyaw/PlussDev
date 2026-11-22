@@ -59,16 +59,19 @@ hue key '<name>' must be note-like or time-like"`. See Example 6.
 ## Parameters
 
 **x_key** (`std::string_view`, required)
-    The key for the horizontal axis. Its shelf kind decides which alignment path is taken
-    — see the important callout above.
+
+The key for the horizontal axis. Its shelf kind decides which alignment path is taken
+— see the important callout above.
 
 **y_key** (`std::string_view`, required)
-    The key for the vertical axis.
+
+The key for the vertical axis.
 
 **hue_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional categorical key to split points into separate colored/labeled groups. Must
-    resolve to a Note-, Timeline-, or TimeIndex-kind key if present — see the important
-    callout above.
+
+Optional categorical key to split points into separate colored/labeled groups. Must
+resolve to a Note-, Timeline-, or TimeIndex-kind key if present — see the important
+callout above.
 
 **options** (`pluss::table::ScatterPlotOptions` or `CatalogScatterPlotOptions`)
 

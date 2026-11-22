@@ -21,8 +21,9 @@ logical AND. At least one row must match.
 ## Parameters
 
 **pick** (`const DataFrame::CasePick&`)
-    The constraint to apply, using exactly one selector form (see CasePick Options
-    below). An empty `CasePick` (no selector form populated) is an error.
+
+The constraint to apply, using exactly one selector form (see CasePick Options
+below). An empty `CasePick` (no selector form populated) is an error.
 
 ## CasePick Options
 

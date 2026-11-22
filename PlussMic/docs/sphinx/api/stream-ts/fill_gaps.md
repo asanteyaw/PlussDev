@@ -30,11 +30,13 @@ message pattern.
 ## Parameters
 
 **mode** (`pluss::subsp::stats::ts::GapFillMode`, default `Forward`)
-    Which fill strategy to use.
+
+Which fill strategy to use.
 
 **constant** (`std::optional<double>`, default `std::nullopt`)
-    The fill value for `Constant`. Required (throws if absent) when `mode`
-    is `Constant`.
+
+The fill value for `Constant`. Required (throws if absent) when `mode`
+is `Constant`.
 
 ## Returns
 

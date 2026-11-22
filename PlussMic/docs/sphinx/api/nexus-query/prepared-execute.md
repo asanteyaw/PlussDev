@@ -52,14 +52,16 @@ placeholder was already baked in at `prepare()` time via
 
 **params** (`std::unordered_map<std::string, SqlParam>`, `SqlParam` =
 `std::variant<std::nullptr_t, bool, std::int64_t, double, std::string>`)
-    Value bindings for every `{name}` placeholder in the template. A
-    placeholder with no matching key throws (unless the statement's
-    `SqlOptions::missing_param_policy` was set to substitute `null`).
+
+Value bindings for every `{name}` placeholder in the template. A
+placeholder with no matching key throws (unless the statement's
+`SqlOptions::missing_param_policy` was set to substitute `null`).
 
 **identifier_params** (`std::unordered_map<std::string, std::string>`)
-    Identifier bindings for every `{@name}` placeholder in the template. A
-    placeholder with no matching key throws under the same policy rule as
-    `params`.
+
+Identifier bindings for every `{@name}` placeholder in the template. A
+placeholder with no matching key throws under the same policy rule as
+`params`.
 
 ## Returns
 

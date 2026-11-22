@@ -23,10 +23,12 @@ then calls the corresponding `DataFrame::save_csv`.
 ## Parameters
 
 **filename** (`std::string_view`)
-    The destination file path.
+
+The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the underlying CSV writer options.
+
+A generic configuration scribble, translated into the underlying CSV writer options.
 
 ## Returns
 

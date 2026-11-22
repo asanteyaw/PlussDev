@@ -21,7 +21,8 @@ Every value must be a finite number. A set with a value that is not (a `NaN` or 
 ## Parameters
 
 **options** (`StyleOptions`)
-    The values to draw with.
+
+The values to draw with.
 
 ## Returns
 

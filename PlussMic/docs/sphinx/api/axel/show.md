@@ -20,7 +20,8 @@ so `os << axel` and `axel.show(os)` are equivalent.
 ## Parameters
 
 **os** (`std::ostream&`)
-    The stream to write the summary to.
+
+The stream to write the summary to.
 
 ## Returns
 

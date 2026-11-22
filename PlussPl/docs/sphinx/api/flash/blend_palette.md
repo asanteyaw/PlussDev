@@ -18,11 +18,13 @@ generation, the `colors` vector becomes the ramp's `stops()` verbatim (in order)
 ## Parameters
 
 **colors** (`std::vector<Rgba>`)
-    The ramp's stops, used as-is. At least one colour is required: an empty list is an
-    error (see the edge case below). A single colour gives a constant ramp.
+
+The ramp's stops, used as-is. At least one colour is required: an empty list is an
+error (see the edge case below). A single colour gives a constant ramp.
 
 **name** (`std::string`, default `"blend"`)
-    The returned ramp's `name()`.
+
+The returned ramp's `name()`.
 
 ## Returns
 

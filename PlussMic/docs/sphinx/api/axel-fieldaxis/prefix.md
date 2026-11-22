@@ -21,7 +21,8 @@ to every frame via [`Axel::map`](../axel/map.md).
 ## Parameters
 
 **token** (`std::string_view`)
-    The prefix each surviving field name must start with.
+
+The prefix each surviving field name must start with.
 
 ## Returns
 

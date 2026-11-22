@@ -33,8 +33,9 @@ below uses `.to_int()` to extract a clean integer instead of streaming the
 ## Parameters
 
 **count_true** (`bool`, default `true`)
-    For a `Bool` `Series`: which truth value to count. For every other payload:
-    must stay `true` (the non-missing count); `false` throws.
+
+For a `Bool` `Series`: which truth value to count. For every other payload:
+must stay `true` (the non-missing count); `false` throws.
 
 ## Returns
 

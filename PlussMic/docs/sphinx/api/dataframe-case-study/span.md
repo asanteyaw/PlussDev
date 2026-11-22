@@ -35,10 +35,11 @@ and contain exactly one value.
 ## Parameters
 
 **start** / **stop** (`std::string_view` / `std::int64_t` / `double` / `const Shelf&`)
-    The inclusive interval endpoints, in the case axis's own key representation. The
-    `Shelf` overload requires each argument to be a defined, 1D, single-element
-    shelf (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
-    latter constructs a 0D payload that `Shelf`'s own constructor rejects).
+
+The inclusive interval endpoints, in the case axis's own key representation. The
+`Shelf` overload requires each argument to be a defined, 1D, single-element
+shelf (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
+latter constructs a 0D payload that `Shelf`'s own constructor rejects).
 
 ## Returns
 

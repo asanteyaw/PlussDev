@@ -58,13 +58,16 @@ if it wasn't already placed somewhere.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::trend`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::trend`, which requires it.
 
 **x**, **y** (series-convertible)
-    The line's vertex coordinates, connected in index order.
+
+The line's vertex coordinates, connected in index order.
 
 **hue** (`const Note&`, or any series-convertible value, third overload group only)
-    The grouping/coloring variable, paired with `x`/`y` by index.
+
+The grouping/coloring variable, paired with `x`/`y` by index.
 
 ## Returns
 

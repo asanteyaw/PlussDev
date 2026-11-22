@@ -19,7 +19,8 @@ It is per axis, it never throws, and it is read when the figure is rendered.
 ## Parameters
 
 **enable** (`bool`, default `true`)
-    `false` hides the tick labels, `true` shows them.
+
+`false` hides the tick labels, `true` shows them.
 
 ## Returns
 

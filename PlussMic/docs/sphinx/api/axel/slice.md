@@ -20,15 +20,17 @@ range is never out of bounds, it's silently narrowed instead.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The first frame index to include. Negative values count from the
-    end (`-1` is the last frame). Clamped into `[0, depth()]` after
-    resolving negatives.
+
+The first frame index to include. Negative values count from the
+end (`-1` is the last frame). Clamped into `[0, depth()]` after
+resolving negatives.
 
 **stop** (`std::int64_t`)
-    One past the last frame index to include. Same negative-index and
-    clamping rules as `start`. If the resolved `stop` ends up before the
-    resolved `start`, the result is an empty (zero-depth) `Axel`, not a
-    throw.
+
+One past the last frame index to include. Same negative-index and
+clamping rules as `start`. If the resolved `stop` ends up before the
+resolved `start`, the result is an empty (zero-depth) `Axel`, not a
+throw.
 
 ## Returns
 

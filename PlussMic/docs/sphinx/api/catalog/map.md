@@ -15,7 +15,8 @@ Applies the same function to every stream and returns the updated catalog.
 ## Parameters
 
 **fn**
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 ## Returns
 

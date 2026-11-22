@@ -46,20 +46,24 @@ other kind or dtype throws.
 ## Parameters
 
 **ties** (`RankTieRule`, default `Average`)
-    How equal-valued entries share rank numbers: `Average`, `Lowest`,
-    `Highest`, `First`, or `Dense`.
+
+How equal-valued entries share rank numbers: `Average`, `Lowest`,
+`Highest`, `First`, or `Dense`.
 
 **nulls** (`RankNullRule`, default `Keep`)
-    How missing entries are handled: `Keep` (exclude, stays missing), `Top`
-    (ranks first), or `Bottom` (ranks last).
+
+How missing entries are handled: `Keep` (exclude, stays missing), `Top`
+(ranks first), or `Bottom` (ranks last).
 
 **ascending** (`bool`, default `true`)
-    `true` ranks the smallest value `1`; `false` reverses it so the largest
-    value is `1`.
+
+`true` ranks the smallest value `1`; `false` reverses it so the largest
+value is `1`.
 
 **percentage** (`bool`, default `false`)
-    When `true`, divides every rank by the number of ranked entries, producing
-    a fraction in `(0, 1]` instead of a raw rank number.
+
+When `true`, divides every rank by the number of ranked entries, producing
+a fraction in `(0, 1]` instead of a raw rank number.
 
 ## Returns
 

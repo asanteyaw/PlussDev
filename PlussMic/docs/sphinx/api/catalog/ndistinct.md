@@ -22,7 +22,8 @@ count), so the resulting catalog is uniformly single-row.
 ## Parameters
 
 **options** (`DistinctOptions`, optional)
-    `dropnull` (default `true`) excludes `NULL` from each stream's distinct-value count.
+
+`dropnull` (default `true`) excludes `NULL` from each stream's distinct-value count.
 
 ## Returns
 

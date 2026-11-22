@@ -20,11 +20,13 @@ A thin, familiar-naming wrapper: forwards straight to
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to enable tight, auto-computed pane spacing on.
+
+The figure to enable tight, auto-computed pane spacing on.
 
 **padding** (`double`, default `6.0`)
-    Forwarded as `Studio::tight_layout`'s own `padding` argument — see that page for
-    the full spacing-computation description.
+
+Forwarded as `Studio::tight_layout`'s own `padding` argument — see that page for
+the full spacing-computation description.
 
 ## Returns
 

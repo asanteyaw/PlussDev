@@ -22,15 +22,18 @@ become `Series`-kind, everything else becomes `Note`-kind).
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The CSV file to read.
+
+The CSV file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into `ReadCsvOptions` internally. The
-    row-limiting key is `"ncases"`, not `"nrows"`.
+
+A generic configuration scribble, translated into `ReadCsvOptions` internally. The
+row-limiting key is `"ncases"`, not `"nrows"`.
 
 **options** (`const pluss::loader::ReadCsvOptions&`, optional)
-    Fine-grained control over parsing — delimiter detection, quoting, parallel-read
-    thresholds, and more.
+
+Fine-grained control over parsing — delimiter detection, quoting, parallel-read
+thresholds, and more.
 
 ## Returns
 

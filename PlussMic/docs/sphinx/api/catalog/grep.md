@@ -15,10 +15,12 @@ Keeps only the rows where one named text stream matches the pattern.
 ## Parameters
 
 **field**
-    Name of the target stream in the catalog.
+
+Name of the target stream in the catalog.
 
 **pattern**
-    Pattern string used for matching or extraction.
+
+Pattern string used for matching or extraction.
 
 ## Returns
 

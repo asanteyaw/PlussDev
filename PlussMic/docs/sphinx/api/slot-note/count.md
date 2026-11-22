@@ -34,15 +34,17 @@ specially.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    The text to count — a regular expression under the single-argument
-    overload (see the danger callout above), or literal/regex text under
-    the two-argument overload depending on `options.regex`.
+
+The text to count — a regular expression under the single-argument
+overload (see the danger callout above), or literal/regex text under
+the two-argument overload depending on `options.regex`.
 
 **options** (`pluss::table::TextOptions`, two-argument overload only)
-    `options.regex` (default `false`): treat `pattern` as regex instead
-    of literal text. `options.case_sensitive` (default `true`): ignore
-    case when `false`. `options.limit` (default `-1`, unlimited): stop
-    counting once this many matches have been found per value.
+
+`options.regex` (default `false`): treat `pattern` as regex instead
+of literal text. `options.case_sensitive` (default `true`): ignore
+case when `false`. `options.limit` (default `-1`, unlimited): stop
+counting once this many matches have been found per value.
 
 ## Returns
 

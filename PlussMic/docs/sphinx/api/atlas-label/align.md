@@ -30,8 +30,9 @@ that isn't one of the atlas's current depth labels. There is no depth-axis equiv
 ## Parameters
 
 **labels** (`const Shelf&`)
-    The target depth-label order. Every value in `labels` must already exist among the
-    atlas's current depth labels.
+
+The target depth-label order. Every value in `labels` must already exist among the
+atlas's current depth labels.
 
 ## Returns
 

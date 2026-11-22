@@ -36,14 +36,16 @@ are meaningful for a single `Stream`.
 ## Parameters
 
 **target_labels** (`const Stream&` or `const pluss::table::Shelf&`)
-    The label set to align onto. Under `Pos`, only its length matters; under
-    `Caselbl`, its entries are matched against the bound stream's own
-    labels.
+
+The label set to align onto. Under `Pos`, only its length matters; under
+`Caselbl`, its entries are matched against the bound stream's own
+labels.
 
 **options** (`const pluss::table::AlignOptions&`)
-    `align` (default `AlignBy::Pos`): the matching strategy described above.
-    `fill` (`std::optional<double>`, default `std::nullopt`): the value used
-    for an unmatched `Caselbl` position instead of `NULL`.
+
+`align` (default `AlignBy::Pos`): the matching strategy described above.
+`fill` (`std::optional<double>`, default `std::nullopt`): the value used
+for an unmatched `Caselbl` position instead of `NULL`.
 
 ## Returns
 

@@ -24,15 +24,17 @@ connected line. Every overload forwards to
 ## Parameters
 
 **x** (`const Stream&`, optional)
-    Same as [`line()`](line.md)'s `x` — a mismatched size throws
-    `"Shelf::plot: shelf size mismatch"`.
+
+Same as [`line()`](line.md)'s `x` — a mismatched size throws
+`"Shelf::plot: shelf size mismatch"`.
 
 **options** (`BarPlotOptions`)
-    The identical struct documented on
-    [`CatalogPlotAccessor::bar`](../catalog-plot/bar.md) (`ci_enabled`, `ci_level`,
-    `horizontal`, `align`). `ci_enabled = true` aggregates rows sharing the same `x`
-    position into a mean-plus-confidence-interval bar — useful when `x` has repeated
-    values, which a plain case index (no `x` given) never does.
+
+The identical struct documented on
+[`CatalogPlotAccessor::bar`](../catalog-plot/bar.md) (`ci_enabled`, `ci_level`,
+`horizontal`, `align`). `ci_enabled = true` aggregates rows sharing the same `x`
+position into a mean-plus-confidence-interval bar — useful when `x` has repeated
+values, which a plain case index (no `x` given) never does.
 
 ## Returns
 

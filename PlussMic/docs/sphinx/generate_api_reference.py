@@ -11,6 +11,15 @@ from dataclasses import dataclass
 from typing import Callable
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'tools'))
+from docs_dedent_params import transform as _dedent_params  # noqa: E402
+
+
+def normalize_params(markdown: str) -> str:
+    """Parameter descriptions as paragraphs: bold name line, blank line, unindented description."""
+    return _dedent_params(markdown)[0]
+
+
 DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
@@ -2215,7 +2224,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                                           name,
                                           type_notes.get(typ, type_notes.get(label_type, fallback_param_note(name, label_type))),
                                       ))
-        lines.append(f'**{name}**\n{indent_note(note)}')
+        lines.append(f'**{name}**\n\n{note}')
     return '\n\n'.join(lines)
 
 
@@ -3728,39 +3737,42 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('#### Parameters')
     lines.append('')
     lines.append('**pick**')
-    lines.append('    Structured-case selector used when the DataFrame has named case labels created by `label().set(...)`.')
     lines.append('')
-    lines.append('    Use this overload for hierarchical case lookup rather than ordinary row slicing.')
+    lines.append('Structured-case selector used when the DataFrame has named case labels created by `label().set(...)`.')
     lines.append('')
-    lines.append('    Supported forms:')
-    lines.append('    - `.label = "region", .value = "West"` selects every row whose named case label equals the supplied value.')
-    lines.append('    - `.caselbls = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case labels at once.')
-    lines.append('    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-label order.')
-    lines.append('    - `.drop = true` removes the matched case caselbl(s) from the returned structured case metadata after selection.')
+    lines.append('Use this overload for hierarchical case lookup rather than ordinary row slicing.')
+    lines.append('')
+    lines.append('Supported forms:')
+    lines.append('- `.label = "region", .value = "West"` selects every row whose named case label equals the supplied value.')
+    lines.append('- `.caselbls = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case labels at once.')
+    lines.append('- `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-label order.')
+    lines.append('- `.drop = true` removes the matched case caselbl(s) from the returned structured case metadata after selection.')
     lines.append('')
     lines.append('**rows**')
-    lines.append('    Row selector used for ordinary case-axis lookup and positional indexing.')
     lines.append('')
-    lines.append('    Supported forms:')
-    lines.append('    - `pluss::table::pos(row)` selects one row by zero-based position. Negative positions count from the end.')
-    lines.append('    - `pluss::table::pos(start, stop)` selects a half-open positional slice `[start, stop)`.')
-    lines.append('    - `pluss::table::pos({r1, r2, ...})` selects explicit row positions in the exact output order you request.')
-    lines.append('    - `pluss::table::label(value)` selects every row whose current case label equals `value`.')
-    lines.append('    - `pluss::table::labels({...})` selects several labels in the requested order. Duplicate labels expand to all matching rows.')
-    lines.append('    - `pluss::table::label_range(start, stop)` selects an inclusive case-label window from the first `start` match through the last `stop` match.')
-    lines.append('    - `pluss::table::mask(bool_shelf)` selects rows using a boolean shelf with one value per case.')
+    lines.append('Row selector used for ordinary case-axis lookup and positional indexing.')
+    lines.append('')
+    lines.append('Supported forms:')
+    lines.append('- `pluss::table::pos(row)` selects one row by zero-based position. Negative positions count from the end.')
+    lines.append('- `pluss::table::pos(start, stop)` selects a half-open positional slice `[start, stop)`.')
+    lines.append('- `pluss::table::pos({r1, r2, ...})` selects explicit row positions in the exact output order you request.')
+    lines.append('- `pluss::table::label(value)` selects every row whose current case label equals `value`.')
+    lines.append('- `pluss::table::labels({...})` selects several labels in the requested order. Duplicate labels expand to all matching rows.')
+    lines.append('- `pluss::table::label_range(start, stop)` selects an inclusive case-label window from the first `start` match through the last `stop` match.')
+    lines.append('- `pluss::table::mask(bool_shelf)` selects rows using a boolean shelf with one value per case.')
     lines.append('')
     lines.append('**features**')
-    lines.append('    Optional feature selector applied after the row selection has been resolved.')
     lines.append('')
-    lines.append('    Supported forms:')
-    lines.append('    - `pluss::table::all_features()` keeps every feature in source order.')
-    lines.append('    - `pluss::table::feature("name")` keeps one named feature.')
-    lines.append('    - `pluss::table::feature(position)` keeps one feature by zero-based position.')
-    lines.append('    - `pluss::table::features({"a", "b"})` keeps named features in the requested order.')
-    lines.append('    - `pluss::table::features({0, 2})` keeps feature positions in the requested order.')
-    lines.append('    - `pluss::table::features(start, stop)` keeps a half-open positional feature slice `[start, stop)`.')
-    lines.append('    - `pluss::table::feature_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.')
+    lines.append('Optional feature selector applied after the row selection has been resolved.')
+    lines.append('')
+    lines.append('Supported forms:')
+    lines.append('- `pluss::table::all_features()` keeps every feature in source order.')
+    lines.append('- `pluss::table::feature("name")` keeps one named feature.')
+    lines.append('- `pluss::table::feature(position)` keeps one feature by zero-based position.')
+    lines.append('- `pluss::table::features({"a", "b"})` keeps named features in the requested order.')
+    lines.append('- `pluss::table::features({0, 2})` keeps feature positions in the requested order.')
+    lines.append('- `pluss::table::features(start, stop)` keeps a half-open positional feature slice `[start, stop)`.')
+    lines.append('- `pluss::table::feature_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.')
     lines.append('')
     lines.append('#### Returns')
     lines.append('')
@@ -10475,14 +10487,14 @@ def main(argv: list[str] | None = None) -> int:
                             all_drifted.append(qualified)
                         continue
                     doc_path.write_text(
-                        build_method_page_markdown(
+                        normalize_params(build_method_page_markdown(
                             class_name,
                             name,
                             chunk,
                             prev_name,
                             next_name,
                             known_methods,
-                        )
+                        ))
                     )
                     written += 1
                 if skipped_hand_authored:
@@ -10493,13 +10505,13 @@ def main(argv: list[str] | None = None) -> int:
                 if is_hand_authored(cfg['output']):
                     print(f'{class_name}: preserved hand-authored landing page {cfg["output"].name}')
                 else:
-                    cfg['output'].write_text(build_method_index_page(class_name, methods))
+                    cfg['output'].write_text(normalize_params(build_method_index_page(class_name, methods)))
                 print(
                     f'{class_name}: wrote {written} method page(s), '
                     f'preserved {len(skipped_hand_authored)} -> {cfg["output"].name}'
                 )
             else:
-                cfg['output'].write_text(build_page(class_name, methods))
+                cfg['output'].write_text(normalize_params(build_page(class_name, methods)))
                 print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
         except Exception as exc:
             print(f'[generate_api_reference] skipping {class_name} generation: {exc}', file=sys.stderr)

@@ -21,7 +21,8 @@ with `^`/`$` if you need a full match).
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavor regular expression to search each key name against.
+
+An ECMAScript-flavor regular expression to search each key name against.
 
 ## Returns
 

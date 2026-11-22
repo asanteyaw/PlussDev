@@ -31,6 +31,7 @@ explanation — this page only covers what's specific to `hist()`.
 ## Parameters
 
 **x_feature**, **y_feature** (`std::string_view`, both required)
+
 The two numeric features jointly binned into the grid. Both must resolve to numeric
 values — see [`line()`](line.md)'s note on feature-to-axis conversion.
 

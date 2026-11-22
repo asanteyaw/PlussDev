@@ -29,10 +29,12 @@ is no option on ecdfplot() to switch to step interpolation.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **values** (series-convertible)
-    The raw, ungrouped observations.
+
+The raw, ungrouped observations.
 
 ## Returns
 

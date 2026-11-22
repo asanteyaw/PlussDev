@@ -21,11 +21,13 @@ subclass, renders identically). `n` is clamped into `[0, size()]`, same as
 ## Parameters
 
 **n** (`std::int64_t`, default `5`)
-    Number of trailing entries to keep. Clamped into `[0, size()]`.
+
+Number of trailing entries to keep. Clamped into `[0, size()]`.
 
 **render** (`bool`, default `false`)
-    See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
-    only, no effect on explicit stream insertion.
+
+See [`head()`](head.md)'s parameter description — auto-render-on-scope-exit
+only, no effect on explicit stream insertion.
 
 ## Returns
 

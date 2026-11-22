@@ -30,11 +30,13 @@ whatever order already exists. See Examples 2 and 3.
 ## Parameters
 
 **ascending** (`bool`, default `true`)
-    Sort direction by depth-label value.
+
+Sort direction by depth-label value.
 
 **nulls_last** (`bool`, default `true`)
-    Where a `NULL`/missing depth label sorts relative to non-null ones — matches the
-    same `nulls_last` convention used by [`DataFrame::sort`](../dataframe/sort.md).
+
+Where a `NULL`/missing depth label sorts relative to non-null ones — matches the
+same `nulls_last` convention used by [`DataFrame::sort`](../dataframe/sort.md).
 
 ## Returns
 

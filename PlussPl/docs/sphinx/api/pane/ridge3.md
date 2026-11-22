@@ -29,13 +29,16 @@ An integer is always a count; one level at the value 4 is `std::vector<double>{4
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The coordinates of the columns and rows.
+
+The coordinates of the columns and rows.
 
 **z** (`Series`-convertible, rank 2)
-    The field.
+
+The field.
 
 **level_count** (`int`) or **levels** (container)
-    How many levels, or which.
+
+How many levels, or which.
 
 ## Returns
 

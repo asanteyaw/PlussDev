@@ -24,7 +24,8 @@ Use it to compare figures with and without a pane, or to switch panes by a condi
 ## Parameters
 
 **enable** (`bool`, setter only)
-    `true` to draw the pane, `false` to hide it.
+
+`true` to draw the pane, `false` to hide it.
 
 ## Returns
 

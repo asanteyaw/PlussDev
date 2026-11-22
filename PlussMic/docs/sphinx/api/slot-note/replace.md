@@ -24,16 +24,19 @@ the bound slot, returning a new slot. `replace(from, to)` and
 ## Parameters
 
 **from** (`std::string_view`)
-    The literal text (or, with `options.regex = true`, the regular
-    expression) to search for.
+
+The literal text (or, with `options.regex = true`, the regular
+expression) to search for.
 
 **to** (`std::string_view`)
-    The replacement text. With `options.regex = true`, may contain `$1`,
-    `$2`, ... backreferences.
+
+The replacement text. With `options.regex = true`, may contain `$1`,
+`$2`, ... backreferences.
 
 **options** (`pluss::table::TextOptions`, three-argument overload only)
-    `options.regex` (default `false`), `options.case_sensitive` (default
-    `true`), `options.limit` (default `-1`, unlimited).
+
+`options.regex` (default `false`), `options.case_sensitive` (default
+`true`), `options.limit` (default `-1`, unlimited).
 
 ## Returns
 

@@ -15,16 +15,20 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **other**
-    Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 **left_keys**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **right_keys**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **ragged**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 ## Returns
 

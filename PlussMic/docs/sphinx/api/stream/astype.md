@@ -23,7 +23,8 @@ rather than throwing.
 ## Parameters
 
 **dtype** (`pluss::codem::ScalarType`)
-    The target numeric dtype (e.g. `Int64`, `Float64`).
+
+The target numeric dtype (e.g. `Int64`, `Float64`).
 
 ## Returns
 

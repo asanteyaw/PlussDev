@@ -26,7 +26,8 @@ The setter and the getter share a name; the call with an argument sets, the call
 ## Parameters
 
 **frame** (`KeyFrame`, setter only)
-    `Framed`, `Soft` or `None`.
+
+`Framed`, `Soft` or `None`.
 
 ## Returns
 

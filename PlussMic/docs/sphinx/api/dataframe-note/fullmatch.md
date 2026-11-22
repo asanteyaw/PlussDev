@@ -31,8 +31,9 @@ is itself a variable.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression pattern (ECMAScript syntax, via `std::regex`) that
-    must match the cell's entire text to report `true`.
+
+A regular expression pattern (ECMAScript syntax, via `std::regex`) that
+must match the cell's entire text to report `true`.
 
 ## Returns
 

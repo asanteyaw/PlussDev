@@ -45,14 +45,17 @@ same naming convention [`join()`](join.md) uses for a single hop.
 ## Parameters
 
 **path** (`const JoinPath&`, first overload)
-    A route already computed by [`path()`](path.md) (or built by hand).
+
+A route already computed by [`path()`](path.md) (or built by hand).
 
 **from** / **to** (`std::string_view`, second overload)
-    Table names to connect — internally calls `path(from, to)` first, so the same
-    "no route found" throw applies. Results are cached per `(from, to, how)`.
+
+Table names to connect — internally calls `path(from, to)` first, so the same
+"no route found" throw applies. Results are cached per `(from, to, how)`.
 
 **how** (`JoinHow`, default `Left`)
-    The join kind applied uniformly to every hop in the plan.
+
+The join kind applied uniformly to every hop in the plan.
 
 ## Returns
 

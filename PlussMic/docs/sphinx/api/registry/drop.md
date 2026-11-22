@@ -33,10 +33,12 @@ as `false` rather than throwing.
 ## Parameters
 
 **key** (`std::string_view`)
-    A single field name to remove (single-key overload).
+
+A single field name to remove (single-key overload).
 
 **keys** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` / `const std::vector<std::string>&` / any string-view name range)
-    Multiple field names to remove.
+
+Multiple field names to remove.
 
 ## Returns
 

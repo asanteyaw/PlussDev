@@ -20,7 +20,8 @@ explicit `std::ostream&` rather than a returned `std::string`.
 ## Parameters
 
 **os** (`std::ostream&`)
-    The destination stream.
+
+The destination stream.
 
 ## Returns
 

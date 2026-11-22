@@ -21,8 +21,9 @@ label values attached to each existing depth position.
 ## Parameters
 
 **labels** (`const Shelf&`)
-    The new depth-label axis. Must have the same length as the atlas's
-    [`depth()`](depth.md).
+
+The new depth-label axis. Must have the same length as the atlas's
+[`depth()`](depth.md).
 
 ## Returns
 

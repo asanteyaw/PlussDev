@@ -33,24 +33,28 @@ Which conversion path runs is decided once, up front, by the stream's own
 [`kind()`](kind.md):
 
 **`StreamKind::Series`**
-    Dispatches further on the series' `scalar_type()`: `Bool` values are converted via
-    an explicit length-1 `Bool` series per position; `Int64` values are converted via
-    `pluss::make_series(value, scalar_type())`, preserving the exact integer scalar
-    type; every other scalar type is read through `Float64` (`to(ScalarType::Float64)`)
-    before being wrapped — so a `Float32` stream, for instance, is round-tripped through
-    `double` precision on its way into the `Slot`.
+
+Dispatches further on the series' `scalar_type()`: `Bool` values are converted via
+an explicit length-1 `Bool` series per position; `Int64` values are converted via
+`pluss::make_series(value, scalar_type())`, preserving the exact integer scalar
+type; every other scalar type is read through `Float64` (`to(ScalarType::Float64)`)
+before being wrapped — so a `Float32` stream, for instance, is round-tripped through
+`double` precision on its way into the `Slot`.
 
 **`StreamKind::Note`**
-    Each position becomes a length-1 `Note` via `pluss::make_note(note.at(i))`.
+
+Each position becomes a length-1 `Note` via `pluss::make_note(note.at(i))`.
 
 **`StreamKind::Timeline`**
-    Each position's epoch-nanosecond value is converted back to a `Timeline` via
-    `pluss::timeline::from_epoch`, using the source timeline's own timezone.
+
+Each position's epoch-nanosecond value is converted back to a `Timeline` via
+`pluss::timeline::from_epoch`, using the source timeline's own timezone.
 
 **`StreamKind::TimeIndex`**
-    Each position becomes a single-element `TimeIndex` (`pluss::timeindex::make`,
-    non-sorted), built the same way as the `Timeline` case, from the index's own
-    underlying timeline and timezone.
+
+Each position becomes a single-element `TimeIndex` (`pluss::timeindex::make`,
+non-sorted), built the same way as the `Timeline` case, from the index's own
+underlying timeline and timezone.
 
 ## Returns
 

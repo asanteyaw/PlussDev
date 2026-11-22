@@ -20,8 +20,9 @@ escape-hatch way to build a per-value transform when no built-in method
 ## Parameters
 
 **fn** (`const std::function<Slot::Value(const Slot::Value&)>&`)
-    Called once per value; its return value replaces the original. Cannot
-    be an empty `std::function`.
+
+Called once per value; its return value replaces the original. Cannot
+be an empty `std::function`.
 
 ## Returns
 

@@ -25,13 +25,16 @@ one call.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The scoped table's own numeric feature to total.
+
+The scoped table's own numeric feature to total.
 
 **alias** (`std::string_view`, default empty)
-    The output column name.
+
+The output column name.
 
 **fields** (a range of `(feature, alias)` pairs)
-    Several `sum` requests on the same scoped table, added in order.
+
+Several `sum` requests on the same scoped table, added in order.
 
 ## Returns
 

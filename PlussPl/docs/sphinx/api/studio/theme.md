@@ -19,7 +19,8 @@ Panes that already exist keep the theme they were created with, exactly as with 
 ## Parameters
 
 **theme** (`Theme`)
-    The new theme: `Theme::paper()`, `Theme::ocean()`, or a theme built from its parts.
+
+The new theme: `Theme::paper()`, `Theme::ocean()`, or a theme built from its parts.
 
 ## Returns
 

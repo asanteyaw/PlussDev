@@ -20,7 +20,8 @@ The range must be finite on both ends and strictly increasing (`low < high`): a 
 ## Parameters
 
 **limits** (`Range1d`)
-    The displayed range, `{low, high}`. Finite and strictly increasing; positive for a log scale.
+
+The displayed range, `{low, high}`. Finite and strictly increasing; positive for a log scale.
 
 ## Returns
 

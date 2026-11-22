@@ -21,7 +21,8 @@ it from another `Stream`'s boolean result (e.g. [`notnull()`](notnull.md)) via
 ## Parameters
 
 **bool_mask** (`const pluss::Series&`)
-    A boolean mask, same length as the stream. `true` keeps the row; `false` drops it.
+
+A boolean mask, same length as the stream. `true` keeps the row; `false` drops it.
 
 ## Returns
 

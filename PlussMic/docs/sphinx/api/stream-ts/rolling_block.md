@@ -37,13 +37,15 @@ for a fully worked example of this exact effect.
 ## Parameters
 
 **windows** (`pluss::RangeView<std::int64_t>`)
-    The window sizes to compute, in the order given. Must not be empty, or
-    it throws.
+
+The window sizes to compute, in the order given. Must not be empty, or
+it throws.
 
 **options** (`const pluss::table::TsRollingBlockOptions&`)
-    `include_mean`/`include_std` (default `true`), `include_min`/
-    `include_max`/`include_sum`/`include_var` (default `false`), and
-    `min_periods` (default `1`).
+
+`include_mean`/`include_std` (default `true`), `include_min`/
+`include_max`/`include_sum`/`include_var` (default `false`), and
+`min_periods` (default `1`).
 
 ## Returns
 

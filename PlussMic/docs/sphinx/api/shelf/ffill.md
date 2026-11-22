@@ -39,9 +39,10 @@ entries (nothing valid appears before it) never gets filled, no matter the limit
 ## Parameters
 
 **limit** (`std::int64_t`, default `-1`)
-    Maximum number of consecutive missing positions to fill per run, counted from
-    the valid anchor forward. `-1` means unlimited (fill the entire run). Must be
-    `-1` or `>= 0`, or it throws.
+
+Maximum number of consecutive missing positions to fill per run, counted from
+the valid anchor forward. `-1` means unlimited (fill the entire run). Must be
+`-1` or `>= 0`, or it throws.
 
 ## Returns
 

@@ -33,11 +33,13 @@ CameraPreset3D::TopDown` on top of the same `preset = Studio` renders differentl
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane — whichever of its `Theme`, grid style, `Lens`, and `LightRig` are
-    covered by the options set.
+
+The target pane — whichever of its `Theme`, grid style, `Lens`, and `LightRig` are
+covered by the options set.
 
 **options** (`const Scene3DOptions&`)
-    See the field table below.
+
+See the field table below.
 
 ## `Scene3DOptions` fields
 

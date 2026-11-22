@@ -20,8 +20,9 @@ depth-axis wording used elsewhere on this class (`slice_depth`, `aggregate_depth
 ## Parameters
 
 **i** (`std::int64_t`)
-    The depth-index to fetch. Negative values count from the end, same as
-    [`catalog()`](catalog.md).
+
+The depth-index to fetch. Negative values count from the end, same as
+[`catalog()`](catalog.md).
 
 ## Returns
 

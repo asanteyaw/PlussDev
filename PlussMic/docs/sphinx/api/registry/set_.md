@@ -21,13 +21,16 @@ registry directly, upserting (replacing an existing field or adding a new one).
 ## Parameters
 
 **key** (`std::string_view`)
-    A single field name to set (single-item overload).
+
+A single field name to set (single-item overload).
 
 **value** (`const Slot&`)
-    The new `Slot` for that field. Must be defined.
+
+The new `Slot` for that field. Must be defined.
 
 **items** (`std::initializer_list<std::pair<std::string_view, Slot>>` / `std::initializer_list<std::pair<std::string, Slot>>`)
-    Several `{key, Slot}` pairs to set at once.
+
+Several `{key, Slot}` pairs to set at once.
 
 ## Returns
 

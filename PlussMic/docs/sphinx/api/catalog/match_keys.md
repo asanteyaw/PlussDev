@@ -15,37 +15,43 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Parameters
 
 **other**
-    Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 **left_keys**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **right_keys**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **how**
-    Join mode for `DataFrame::unify(...)`.
 
-    Supported values:
-    - `common`: Keep only rows whose key values match on both sides.
-    - `keep_left`: Preserve left keys and attach right-hand matches where they exist.
-    - `keep_right`: Preserve right keys and attach left-hand matches where they exist.
-    - `unite`: Keep the stable union of keys from both frames.
-    - `cross`: Create the cartesian product; key feature arguments must be empty.
-    - `left_only`: Keep left rows whose keys do not occur on the right.
-    - `right_only`: Keep right rows whose keys do not occur on the left.
+Join mode for `DataFrame::unify(...)`.
+
+Supported values:
+- `common`: Keep only rows whose key values match on both sides.
+- `keep_left`: Preserve left keys and attach right-hand matches where they exist.
+- `keep_right`: Preserve right keys and attach left-hand matches where they exist.
+- `unite`: Keep the stable union of keys from both frames.
+- `cross`: Create the cartesian product; key feature arguments must be empty.
+- `left_only`: Keep left rows whose keys do not occur on the right.
+- `right_only`: Keep right rows whose keys do not occur on the left.
 
 **validate**
-    Optional key-cardinality check for `DataFrame::unify(...)`.
 
-    Supported values:
-    - `many_to_many`: Allow duplicate key values on both sides. This is the default.
-    - `one_to_one`: Require each key to appear at most once on both sides.
-    - `one_to_many`: Require unique keys on the left and allow duplicates on the right.
-    - `many_to_one`: Allow duplicates on the left and require unique keys on the right.
+Optional key-cardinality check for `DataFrame::unify(...)`.
+
+Supported values:
+- `many_to_many`: Allow duplicate key values on both sides. This is the default.
+- `one_to_one`: Require each key to appear at most once on both sides.
+- `one_to_many`: Require unique keys on the left and allow duplicates on the right.
+- `many_to_one`: Allow duplicates on the left and require unique keys on the right.
 
 **ragged**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 ## Returns
 

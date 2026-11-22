@@ -32,23 +32,28 @@ filling in whatever's still `NULL` after alignment.
 ## Parameters
 
 **source_axis** (`const Shelf&`)
-    The time axis (`Timeline`/`TimeIndex`) the bound shelf's own values
-    currently live at. Must be the same length as the bound shelf.
+
+The time axis (`Timeline`/`TimeIndex`) the bound shelf's own values
+currently live at. Must be the same length as the bound shelf.
 
 **target_axis** (`const Shelf&`)
-    The new time axis (`Timeline`/`TimeIndex`) to reindex onto. Determines the
-    result's length.
+
+The new time axis (`Timeline`/`TimeIndex`) to reindex onto. Determines the
+result's length.
 
 **mode** (`TsAlignMode`, default `Exact`)
-    The matching strategy described above.
+
+The matching strategy described above.
 
 **fill_mode** (`GapFillMode`, fill overload)
-    The gap-fill strategy applied after alignment — same as
-    [`fill_gaps()`](fill_gaps.md)'s `mode`.
+
+The gap-fill strategy applied after alignment — same as
+[`fill_gaps()`](fill_gaps.md)'s `mode`.
 
 **constant** (`std::optional<double>`, fill overload)
-    The fill value when `fill_mode` is `GapFillMode::Constant`. Required in
-    that case.
+
+The fill value when `fill_mode` is `GapFillMode::Constant`. Required in
+that case.
 
 ## Returns
 

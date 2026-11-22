@@ -33,8 +33,9 @@ example output below reflects one particular build.
 ## Parameters
 
 **random_state** (`std::optional<std::uint64_t>`, default `std::nullopt`)
-    Seed for the random number generator. Omitted (`std::nullopt`) draws a fresh,
-    non-reproducible seed each call via `std::random_device`.
+
+Seed for the random number generator. Omitted (`std::nullopt`) draws a fresh,
+non-reproducible seed each call via `std::random_device`.
 
 ## Returns
 

@@ -28,14 +28,16 @@ every input position.
 ## Parameters
 
 **dim** (`std::int64_t`)
-    Selects the axis whose lanes are averaged. On shape `[2,3]`, `dim=0`
-    groups the two values in each column; `dim=1` groups the three values in
-    each row. Negative dimensions count from the back, so `-1` selects the
-    final axis.
+
+Selects the axis whose lanes are averaged. On shape `[2,3]`, `dim=0`
+groups the two values in each column; `dim=1` groups the three values in
+each row. Negative dimensions count from the back, so `-1` selects the
+final axis.
 
 **keepdim** (`bool`, default `false`)
-    If `false`, the reduced axis disappears. If `true`, it remains with size
-    one. This changes only geometry, not the calculated means.
+
+If `false`, the reduced axis disappears. If `true`, it remains with size
+one. This changes only geometry, not the calculated means.
 
 ## Returns
 

@@ -18,9 +18,10 @@ Returns the `Registry` frame at depth index `i`.
 ## Parameters
 
 **i** (`std::int64_t`)
-    The depth index to fetch, in `[0, depth())`. Out-of-range values
-    throw — there is no negative-index wraparound, unlike
-    [`slice()`](slice.md).
+
+The depth index to fetch, in `[0, depth())`. Out-of-range values
+throw — there is no negative-index wraparound, unlike
+[`slice()`](slice.md).
 
 ## Returns
 

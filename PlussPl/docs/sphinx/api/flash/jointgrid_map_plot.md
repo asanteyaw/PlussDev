@@ -41,19 +41,23 @@ hidden -- neither mapper ever sees it.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **joint_mapper** (a callable taking `(Pane&)`)
-    Called once, for the bottom-left (joint) panel — typically draws the bivariate
-    relationship between the two features.
+
+Called once, for the bottom-left (joint) panel — typically draws the bivariate
+relationship between the two features.
 
 **marginal_mapper** (a callable taking `(Pane&, bool is_top)`)
-    Called twice: once for the top marginal with `is_top = true`, once for the right
-    marginal with `is_top = false`.
+
+Called twice: once for the top marginal with `is_top = true`, once for the right
+marginal with `is_top = false`.
 
 **gx**, **gy** (`double`, default `14.0` each)
-    Forwarded straight to the internal [`flash::JointGrid`](JointGrid.md) call as its
-    `gx`/`gy` gutter.
+
+Forwarded straight to the internal [`flash::JointGrid`](JointGrid.md) call as its
+`gx`/`gy` gutter.
 
 ## Returns
 

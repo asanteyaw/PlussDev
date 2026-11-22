@@ -59,13 +59,15 @@ call win over both. The rules, the directive error messages and compiled example
 ## Parameters
 
 **y_feature** / **y_features**
-    One or more numeric features. A single feature draws one bar series; several draw
-    grouped bars sharing each axis position. At least one is required — an empty list
-    throws `"DataFrame::plot().bar: at least one y feature is required"`.
+
+One or more numeric features. A single feature draws one bar series; several draw
+grouped bars sharing each axis position. At least one is required — an empty list
+throws `"DataFrame::plot().bar: at least one y feature is required"`.
 
 **x_feature** (`std::string_view`)
-    Same three-step resolution as [`line()`](line.md) — falls back to the frame's row
-    labels (titled `"case"`) if omitted with no default set.
+
+Same three-step resolution as [`line()`](line.md) — falls back to the frame's row
+labels (titled `"case"`) if omitted with no default set.
 
 **options** (`BarPlotOptions`)
 

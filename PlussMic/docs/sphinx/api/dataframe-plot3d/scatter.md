@@ -47,14 +47,17 @@ passed to the underlying trace call is always populated, just filled with a cons
 ## Parameters
 
 **x_feature**, **y_feature**, **z_feature** (`std::string_view`, all required)
+
 The three features providing each point's `x`, `y`, and `z` coordinate — see
 [`line()`](line.md)'s note on feature-to-axis conversion.
 
 **size_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+
 Optional numeric feature controlling each point's marker size. Omitted means every
 point uses `options.default_marker_size` uniformly.
 
 **color_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
+
 Optional numeric feature mapped onto the trace's color scale, one continuous gradient
 across all points (not a categorical split into separate traces — contrast the 2D
 accessor's `hue_feature`).

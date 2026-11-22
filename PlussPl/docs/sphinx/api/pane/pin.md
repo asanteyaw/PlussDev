@@ -22,16 +22,20 @@ A pin takes part in the automatic ranges of the axes so that its anchor stays vi
 ## Parameters
 
 **text** (`std::string`)
-    The note.
+
+The note.
 
 **x**, **y** (`double`)
-    The anchor on a planar pane, in data units. Finite.
+
+The anchor on a planar pane, in data units. Finite.
 
 **anchor** (`Vec3d`)
-    The anchor as a 3D point. Finite.
+
+The anchor as a 3D point. Finite.
 
 **offset_x**, **offset_y** (`double`, default 38 and -18)
-    Where the text sits relative to the anchor, in drawing units; `offset_y` is positive downwards. Finite.
+
+Where the text sits relative to the anchor, in drawing units; `offset_y` is positive downwards. Finite.
 
 ## Returns
 

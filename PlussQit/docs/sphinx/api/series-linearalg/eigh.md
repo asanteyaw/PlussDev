@@ -56,10 +56,11 @@ direct form.
 ## Parameter
 
 **upper** (`bool`, default `false`)
-    Selects the triangle that is read. `false` reads the lower triangle
-    (including the diagonal), `true` the upper triangle. The other triangle is
-    never read. For an exactly symmetric or Hermitian matrix both choices give
-    the same answer.
+
+Selects the triangle that is read. `false` reads the lower triangle
+(including the diagonal), `true` the upper triangle. The other triangle is
+never read. For an exactly symmetric or Hermitian matrix both choices give
+the same answer.
 
 For a complex matrix, the imaginary part of each diagonal entry is ignored: a
 Hermitian matrix has a real diagonal, and the method behaves as if it did.

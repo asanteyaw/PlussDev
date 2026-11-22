@@ -32,7 +32,8 @@ those streams, in that order. Any chained operation then runs on the projected a
 ## Parameters
 
 **keys** (`std::span<const std::string_view>` or `std::initializer_list<std::string_view>`)
-    One or more stream names to select, applied to every catalog in the archive.
+
+One or more stream names to select, applied to every catalog in the archive.
 
 ## Returns
 

@@ -22,7 +22,8 @@ returning a new slot. The no-argument overload trims whitespace; the
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from the left edge.
+
+The set of characters to strip from the left edge.
 
 ## Returns
 

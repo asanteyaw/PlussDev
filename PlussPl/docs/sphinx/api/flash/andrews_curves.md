@@ -75,26 +75,32 @@ normalizes to a flat 0.0 rather than dividing by zero.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
 
 **columns** (`pluss::RangeView<pluss::Series>`)
-    One entry per feature. Must contain at least two features
-    (`pluss::Error("flash::andrews_curves requires at least two columns")`), and
-    every column must be the same length.
+
+One entry per feature. Must contain at least two features
+(`pluss::Error("flash::andrews_curves requires at least two columns")`), and
+every column must be the same length.
 
 **group_labels** (`const Note&`, group-labels overload only)
-    One label per row. Its length must exactly match the row count, or
-    `andrews_curves` throws `pluss::Error("flash::andrews_curves: group label
-    length must match rows")`.
+
+One label per row. Its length must exactly match the row count, or
+`andrews_curves` throws `pluss::Error("flash::andrews_curves: group label
+length must match rows")`.
 
 **data** (`const Dataset&`, Dataset overload only)
-    See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
+
+See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
 
 **matrix**, **frame_options**, **feature_names**, **feature_axis** (matrix overloads)
-    Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
+
+Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
 
 **options** (`const AndrewsCurvesOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

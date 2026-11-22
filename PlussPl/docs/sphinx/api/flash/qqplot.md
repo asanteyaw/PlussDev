@@ -43,18 +43,22 @@ The returned `Trace&` is always the qq scatter, with or without the reference li
 ## Parameters
 
 **pane** (`Pane&`, first overload) / **studio** (`Studio&`, second overload)
-    The target pane, or a `Studio` to create a new pane on.
+
+The target pane, or a `Studio` to create a new pane on.
 
 **values** (series-convertible)
-    The sample to check for normality. Non-finite entries are dropped before sorting; at
-    least two finite values are required — fewer throws `pluss::Error
-    ("flash::qqplot requires at least two finite values")`.
+
+The sample to check for normality. Non-finite entries are dropped before sorting; at
+least two finite values are required — fewer throws `pluss::Error
+("flash::qqplot requires at least two finite values")`.
 
 **options** (`const QqPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 **title** (`std::string`, default empty, second overload only)
-    The new pane's title.
+
+The new pane's title.
 
 ## Returns
 

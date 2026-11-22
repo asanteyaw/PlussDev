@@ -35,18 +35,22 @@ message pattern.
 ## Parameters
 
 **groups** (`const Stream&`)
-    The grouping key, one entry per position, same length as the bound
-    stream. Any stream kind; compared by value.
+
+The grouping key, one entry per position, same length as the bound
+stream. Any stream kind; compared by value.
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions, applied independently within
-    each group.
+
+The trailing window size, in positions, applied independently within
+each group.
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    The statistic computed over each window — same set `rolling()` supports.
+
+The statistic computed over each window — same set `rolling()` supports.
 
 **options** (`const pluss::table::WindowOptions&`)
-    Same meaning as [`rolling()`](rolling.md)'s fixed-window overload.
+
+Same meaning as [`rolling()`](rolling.md)'s fixed-window overload.
 
 ## Returns
 

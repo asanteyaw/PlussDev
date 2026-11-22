@@ -27,8 +27,9 @@ among the atlas's own depth labels; a target label with no match throws
 ## Parameters
 
 **labels** (`const Shelf&`)
-    The target depth-label order. Every entry must exist among the atlas's own depth
-    labels.
+
+The target depth-label order. Every entry must exist among the atlas's own depth
+labels.
 
 ## Returns
 

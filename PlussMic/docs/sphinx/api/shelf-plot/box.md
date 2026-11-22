@@ -23,9 +23,10 @@ always draws exactly one box, since a `Shelf` is always exactly one series; ther
 ## Parameters
 
 **options** (`BoxPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::box`](../../api/dataframe-plot/box.md) (`alpha`,
-    `line_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::box`](../../api/dataframe-plot/box.md) (`alpha`,
+`line_width`).
 
 ## Returns
 

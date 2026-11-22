@@ -48,21 +48,23 @@ columns.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression pattern under the single-argument overload (always
-    regex mode — see the danger box above), or literal/regex text under the
-    two-argument overload depending on `options.regex`.
+
+A regular expression pattern under the single-argument overload (always
+regex mode — see the danger box above), or literal/regex text under the
+two-argument overload depending on `options.regex`.
 
 **options** (`TextOptions`, two-argument overload only)
-    `options.regex` (default `false`): treat `pattern` as regex instead of
-    literal text.
-    `options.case_sensitive` (default `true`): case-insensitive matching
-    when `false`.
-    `options.limit` (default `-1`): cap the number of matches collected per
-    row (and therefore an upper bound on the number of output columns).
-    `options.prefix` is **not** used by `findall()` — output columns are
-    always named `match_0`, `match_1`, and so on, regardless of what
-    `options.prefix` is set to. (Contrast [`split()`](split.md) and
-    [`indicate()`](indicate.md), which do honor `options.prefix`.)
+
+`options.regex` (default `false`): treat `pattern` as regex instead of
+literal text.
+`options.case_sensitive` (default `true`): case-insensitive matching
+when `false`.
+`options.limit` (default `-1`): cap the number of matches collected per
+row (and therefore an upper bound on the number of output columns).
+`options.prefix` is **not** used by `findall()` — output columns are
+always named `match_0`, `match_1`, and so on, regardless of what
+`options.prefix` is set to. (Contrast [`split()`](split.md) and
+[`indicate()`](indicate.md), which do honor `options.prefix`.)
 
 ## Returns
 

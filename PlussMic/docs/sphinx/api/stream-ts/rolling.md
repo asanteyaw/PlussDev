@@ -61,36 +61,44 @@ important callout for the reverse view.
 ## Parameters
 
 **window** (`std::int64_t`, fixed-window overload)
-    The trailing window size, in positions. Must be positive, or it throws.
+
+The trailing window size, in positions. Must be positive, or it throws.
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
-    `Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
+`Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const pluss::table::WindowOptions&`, fixed-window overload)
-    `min_count` (default `1`), `ddof` (default `1`), `centered` (default
-    `false`), `closure` (default `Right`) — same meaning as
-    [`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md).
+
+`min_count` (default `1`), `ddof` (default `1`), `centered` (default
+`false`), `closure` (default `Right`) — same meaning as
+[`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md).
 
 **axis** (`const Stream&`, calendar-duration overloads)
-    An explicit time axis (`Timeline` or `TimeIndex`), the same length as the
-    bound stream, non-missing and sorted ascending.
+
+An explicit time axis (`Timeline` or `TimeIndex`), the same length as the
+bound stream, non-missing and sorted ascending.
 
 **groups** (`const Stream&`, third overload)
-    The grouping key, one entry per position, same length as the bound
-    stream. Any stream kind; compared by value.
+
+The grouping key, one entry per position, same length as the bound
+stream. Any stream kind; compared by value.
 
 **duration** (`std::string_view`, calendar-duration overloads)
-    A duration string (for example `"2D"`, `"12H"`, `"30min"`).
+
+A duration string (for example `"2D"`, `"12H"`, `"30min"`).
 
 **options** (`const pluss::table::StatisticOptions&`, calendar-duration
 overloads)
-    `ddof` and `min_count`; only `Sum`, `Mean`, `Var`, and `Std` are
-    supported for these overloads.
+
+`ddof` and `min_count`; only `Sum`, `Mean`, `Var`, and `Std` are
+supported for these overloads.
 
 **closure** (`pluss::table::WindowClosure`, calendar-duration overloads,
 default `Right`)
-    Which end of the time window is inclusive.
+
+Which end of the time window is inclusive.
 
 ## Returns
 

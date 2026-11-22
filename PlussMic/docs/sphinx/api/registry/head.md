@@ -27,8 +27,9 @@ ragged registry, `head(n)` can leave fields with different sizes than each other
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of leading values to keep per field. Values less than `0` are
-    clamped to `0`.
+
+The number of leading values to keep per field. Values less than `0` are
+clamped to `0`.
 
 ## Returns
 

@@ -23,14 +23,17 @@ overwritten.
 ## Parameters
 
 **key** (`std::string`, single-pair overload)
-    The metadata key to set.
+
+The metadata key to set.
 
 **value** (`std::string`, single-pair overload)
-    The value to associate with `key`.
+
+The value to associate with `key`.
 
 **items** (`std::initializer_list<std::pair<std::string_view, std::string_view>>`,
 multi-pair overload)
-    One or more key/value pairs to set in a single call.
+
+One or more key/value pairs to set in a single call.
 
 ## Returns
 

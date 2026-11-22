@@ -20,14 +20,17 @@ stream.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The starting character index (inclusive).
+
+The starting character index (inclusive).
 
 **stop** (`std::optional<std::int64_t>`, default `std::nullopt`)
-    The ending character index (exclusive); `std::nullopt` means "to the end
-    of the string."
+
+The ending character index (exclusive); `std::nullopt` means "to the end
+of the string."
 
 **step** (`std::int64_t`, default `1`)
-    The stride between extracted characters.
+
+The stride between extracted characters.
 
 ## Returns
 

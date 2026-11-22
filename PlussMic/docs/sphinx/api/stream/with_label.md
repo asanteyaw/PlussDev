@@ -27,8 +27,9 @@ different source than the stream's own row count.
 ## Parameters
 
 **label** (`const pluss::table::Shelf&`)
-    The row-label axis to attach. Commonly a `Note`-kind shelf of string labels, but any
-    `Shelf` payload kind is accepted. Must match the stream's own length.
+
+The row-label axis to attach. Commonly a `Note`-kind shelf of string labels, but any
+`Shelf` payload kind is accepted. Must match the stream's own length.
 
 ## Returns
 

@@ -30,13 +30,15 @@ overload with `TextOptions{.regex = false}` for a literal count.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    The pattern to count occurrences of — regex by default (single-argument
-    overload), or per `options.regex` (two-argument overload).
+
+The pattern to count occurrences of — regex by default (single-argument
+overload), or per `options.regex` (two-argument overload).
 
 **options** (`const pluss::table::TextOptions&`, two-argument overload)
-    `options.regex`: treat `pattern` as a regex pattern (default behavior of
-    the single-argument overload) or literal text. `options.case_sensitive`
-    (default `true`): ignore case when `false`.
+
+`options.regex`: treat `pattern` as a regex pattern (default behavior of
+the single-argument overload) or literal text. `options.case_sensitive`
+(default `true`): ignore case when `false`.
 
 ## Returns
 

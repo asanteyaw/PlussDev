@@ -15,13 +15,16 @@ Use this when you need to merge compatible objects or extend the current one wit
 ## Parameters
 
 **other**
-    Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+Second frame, shelf, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 **spec**
-    Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
+
+Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
 
 **options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 ## Returns
 

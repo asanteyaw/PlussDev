@@ -27,11 +27,13 @@ own `how` parameter — and defaults to `JoinHow::Left`, unlike [`.join()`](join
 ## Parameters
 
 **to** (`std::string_view`)
-    The table to reach. Must already exist in the workspace, and a relationship path from
-    the current anchor must exist — see [`path()`](../nexus/path.md)'s "no route" throw.
+
+The table to reach. Must already exist in the workspace, and a relationship path from
+the current anchor must exist — see [`path()`](../nexus/path.md)'s "no route" throw.
 
 **how** (`JoinHow`, default `Left`)
-    The join kind applied to every hop of the computed route.
+
+The join kind applied to every hop of the computed route.
 
 ## Returns
 

@@ -66,12 +66,13 @@ sides of this.
 ## Parameters
 
 **options** (`const ShelfCastOptions&`, optional)
-    `series_dtype` picks the concrete numeric dtype for a `series()` conversion (defaults
-    to `Float64`, or effectively `Bool` when you explicitly request it). `format`, if
-    non-empty, is a strptime-style pattern used to parse `Note` text for a `timeline()`
-    conversion instead of the default ISO-ish parser (it is rejected for `duration()`). `invalid` chooses
-    `Raise`-vs-`Null` behavior — see the important callout above for exactly which target
-    actually honors it.
+
+`series_dtype` picks the concrete numeric dtype for a `series()` conversion (defaults
+to `Float64`, or effectively `Bool` when you explicitly request it). `format`, if
+non-empty, is a strptime-style pattern used to parse `Note` text for a `timeline()`
+conversion instead of the default ISO-ish parser (it is rejected for `duration()`). `invalid` chooses
+`Raise`-vs-`Null` behavior — see the important callout above for exactly which target
+actually honors it.
 
 ## Returns
 

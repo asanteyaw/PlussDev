@@ -22,7 +22,8 @@ non-null cell within one feature's column must map to the same output kind.
 ## Parameters
 
 **fn** (`const std::function<ShelfValue(const ShelfValue&)>&`)
-    A callback receiving one cell and returning its replacement. Must not be empty.
+
+A callback receiving one cell and returning its replacement. Must not be empty.
 
 ## Returns
 

@@ -22,7 +22,8 @@ form of [`has()`](has.md) over multiple names at once.
 ## Parameters
 
 **keys** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` / any string-view name range)
-    The field names to check.
+
+The field names to check.
 
 ## Returns
 

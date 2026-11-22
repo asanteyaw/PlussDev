@@ -33,12 +33,14 @@ covers what's specific to `radviz()`.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features that become anchor points, in the given order around the circle. Empty
-    infers every numeric feature — see [`box()`](box.md)'s important callout for the exact
-    rule.
+
+Numeric features that become anchor points, in the given order around the circle. Empty
+infers every numeric feature — see [`box()`](box.md)'s important callout for the exact
+rule.
 
 **class_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional coloring/grouping feature, same behavior as [`parallel()`](parallel.md)'s.
+
+Optional coloring/grouping feature, same behavior as [`parallel()`](parallel.md)'s.
 
 **options** (`RadvizPlotOptions`)
 

@@ -33,13 +33,15 @@ platform (CPU/CUDA/MPS) — there's no automatic host-side conversion here.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The numeric `Series` shelf to compute covariance with.
+
+The numeric `Series` shelf to compute covariance with.
 
 **options** (`StatisticOptions`, default `{}`)
-    `ddof` (default `1`): the divisor is `n - ddof` over the valid pairs.
-    `min_count` (default `1`): the smallest number of valid pairs still
-    considered valid; below it (and always below `ddof + 1`), the result is
-    marked invalid.
+
+`ddof` (default `1`): the divisor is `n - ddof` over the valid pairs.
+`min_count` (default `1`): the smallest number of valid pairs still
+considered valid; below it (and always below `ddof + 1`), the result is
+marked invalid.
 
 ## Returns
 

@@ -20,7 +20,8 @@ newline `to_string()` omits.
 ## Parameters
 
 **os** (`std::ostream&`)
-    The destination stream to write to (e.g. `std::cout`, an `std::ostringstream`).
+
+The destination stream to write to (e.g. `std::cout`, an `std::ostringstream`).
 
 ## Returns
 

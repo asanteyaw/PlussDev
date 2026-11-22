@@ -48,10 +48,11 @@ data point to its feature's box, rather than appearing as a visible gap or `NULL
 
 **features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 default `{}`)
-    Numeric features to summarize, each as its own box. Leave empty (the default) to use
-    every numeric feature in the frame. At least one feature (explicit or inferred) is
-    required — an entirely non-numeric frame throws `"DataFrame::plot().box: at least one
-    numeric feature is required"` after the empty list resolves to nothing.
+
+Numeric features to summarize, each as its own box. Leave empty (the default) to use
+every numeric feature in the frame. At least one feature (explicit or inferred) is
+required — an entirely non-numeric frame throws `"DataFrame::plot().box: at least one
+numeric feature is required"` after the empty list resolves to nothing.
 
 **options** (`BoxPlotOptions`)
 

@@ -25,10 +25,12 @@ page's own important callout.
 ## Parameters
 
 **separator** (`std::string_view`)
-    The literal text to partition on.
+
+The literal text to partition on.
 
 **prefix** (`std::string`, default `"part"`)
-    The prefix used to name each of the three output columns.
+
+The prefix used to name each of the three output columns.
 
 ## Returns
 

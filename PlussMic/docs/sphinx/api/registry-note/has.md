@@ -48,13 +48,15 @@ pattern instead of literal text.
 ## Parameters
 
 **needle** (`std::string_view`)
-    The text to search for — a literal substring by default, or a regular
-    expression pattern when `options.regex` is `true`.
+
+The text to search for — a literal substring by default, or a regular
+expression pattern when `options.regex` is `true`.
 
 **options** (`pluss::table::TextOptions`, defaults to `{}`)
-    `options.regex` (default `false`): treat `needle` as a regex pattern
-    instead of literal text. `options.case_sensitive` (default `true`): when
-    `false`, the search ignores case.
+
+`options.regex` (default `false`): treat `needle` as a regex pattern
+instead of literal text. `options.case_sensitive` (default `true`): when
+`false`, the search ignores case.
 
 ## Returns
 

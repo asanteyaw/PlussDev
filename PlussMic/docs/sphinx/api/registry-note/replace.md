@@ -26,19 +26,22 @@ default-constructed `TextOptions`.
 ## Parameters
 
 **from** (`std::string_view`)
-    The literal text (or, with `options.regex = true`, the regular
-    expression) to search for.
+
+The literal text (or, with `options.regex = true`, the regular
+expression) to search for.
 
 **to** (`std::string_view`)
-    The replacement text. With `options.regex = true`, may contain `$1`,
-    `$2`, ... backreferences to capture groups in `from`.
+
+The replacement text. With `options.regex = true`, may contain `$1`,
+`$2`, ... backreferences to capture groups in `from`.
 
 **options** (`pluss::table::TextOptions`, three-argument overload only)
-    `options.regex` (default `false`): treat `from` as a regex instead of
-    literal text. `options.case_sensitive` (default `true`): when `false`,
-    matching ignores case, but `to` is still inserted exactly as given.
-    `options.limit` (default `-1`, unlimited): caps replacements per value;
-    matches never overlap.
+
+`options.regex` (default `false`): treat `from` as a regex instead of
+literal text. `options.case_sensitive` (default `true`): when `false`,
+matching ignores case, but `to` is still inserted exactly as given.
+`options.limit` (default `-1`, unlimited): caps replacements per value;
+matches never overlap.
 
 ## Returns
 

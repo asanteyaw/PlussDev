@@ -15,10 +15,12 @@ Computes one text summary statistic for a named text stream.
 ## Parameters
 
 **field**
-    Name of the target stream in the catalog.
+
+Name of the target stream in the catalog.
 
 **stat_type**
-    Statistic selector string understood by this overload.
+
+Statistic selector string understood by this overload.
 
 ## Returns
 

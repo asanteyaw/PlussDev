@@ -50,11 +50,13 @@ dependency.
 ## Parameters
 
 **directory** (`std::string_view`)
-    The target directory. Created (along with the `tables` subdirectory) if it doesn't
-    already exist.
+
+The target directory. Created (along with the `tables` subdirectory) if it doesn't
+already exist.
 
 **options** (`const StoreOptions&`, default `{}`)
-    File format and naming, as described above.
+
+File format and naming, as described above.
 
 ## Returns
 

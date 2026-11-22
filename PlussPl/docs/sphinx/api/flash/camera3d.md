@@ -25,19 +25,24 @@ positionally — identical given equivalent values.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane whose `Lens` is mutated.
+
+The target pane whose `Lens` is mutated.
 
 **options** (`const Camera3DOptions&`, options overload)
-    See the field table below.
+
+See the field table below.
 
 **azimuth_deg**, **elevation_deg** (`double`, positional overload)
-    Forwarded to [`Lens::look`](../pane/lens.md).
+
+Forwarded to [`Lens::look`](../pane/lens.md).
 
 **projection** (`ProjectionKind`, default `Orthographic`, positional overload)
-    Forwarded to [`Lens::project`](../pane/lens.md).
+
+Forwarded to [`Lens::project`](../pane/lens.md).
 
 **view_angle_deg** (`double`, default `30.0`, positional overload)
-    Forwarded to [`Lens::view_angle`](../pane/lens.md).
+
+Forwarded to [`Lens::view_angle`](../pane/lens.md).
 
 ## `Camera3DOptions` fields
 

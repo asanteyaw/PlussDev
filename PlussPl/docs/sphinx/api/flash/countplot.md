@@ -53,16 +53,20 @@ been zebra, apple, mango).
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **values** (series-convertible, first overload only)
-    The raw numeric observations to bin.
+
+The raw numeric observations to bin.
 
 **bins** (`int`, default `12`, first overload only)
-    The number of histogram bins — forwarded directly to `flash::histplot`.
+
+The number of histogram bins — forwarded directly to `flash::histplot`.
 
 **categories** (`const Note&`, second overload only)
-    The categorical values to tally.
+
+The categorical values to tally.
 
 ## Returns
 

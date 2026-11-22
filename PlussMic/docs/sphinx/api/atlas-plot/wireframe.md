@@ -27,11 +27,13 @@ not compile.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The numeric feature forming the mesh's z-axis. Must exist in every selected frame.
+
+The numeric feature forming the mesh's z-axis. Must exist in every selected frame.
 
 **options** (`const Wireframe3DPlotOptions&`)
-    Same shape as [`Surface3DPlotOptions`](surface.md): `scene` (`Plot3DSceneOptions`) and
-    `trace` (`Plot3DTraceOptions`).
+
+Same shape as [`Surface3DPlotOptions`](surface.md): `scene` (`Plot3DSceneOptions`) and
+`trace` (`Plot3DTraceOptions`).
 
 ## Returns
 

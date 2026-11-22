@@ -25,15 +25,18 @@ message pattern.
 ## Parameters
 
 **axis** (`const Stream&`)
-    A `Timeline`/`TimeIndex` stream, the same length as the bound stream, to
-    sort by.
+
+A `Timeline`/`TimeIndex` stream, the same length as the bound stream, to
+sort by.
 
 **ascending** (`bool`, default `true`)
-    Sort chronologically forward (`true`) or backward (`false`).
+
+Sort chronologically forward (`true`) or backward (`false`).
 
 **nulls_last** (`bool`, default `true`)
-    Whether undefined axis positions sort after (`true`) or before (`false`)
-    every defined position.
+
+Whether undefined axis positions sort after (`true`) or before (`false`)
+every defined position.
 
 ## Returns
 

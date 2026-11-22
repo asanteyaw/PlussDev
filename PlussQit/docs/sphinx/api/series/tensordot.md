@@ -52,16 +52,19 @@ negative.
 ## Parameters
 
 **other** (`const Series&`)
-    The second operand. Should share the receiver's dtype.
+
+The second operand. Should share the receiver's dtype.
 
 **dims** (`std::int64_t`, default `2`)
-    How many trailing axes of the receiver pair with leading axes of `other`.
-    Must be non-negative and no greater than either operand's rank.
+
+How many trailing axes of the receiver pair with leading axes of `other`.
+Must be non-negative and no greater than either operand's rank.
 
 **dims_self**, **dims_other** (`const std::vector<std::int64_t>&`)
-    The axes to contract, paired by position. Negative values count from the
-    end. Contracted axes must have equal length, with one exception: if one of
-    a pair has length 1 it is broadcast against the other.
+
+The axes to contract, paired by position. Negative values count from the
+end. Contracted axes must have equal length, with one exception: if one of
+a pair has length 1 it is broadcast against the other.
 
 ## Returns
 

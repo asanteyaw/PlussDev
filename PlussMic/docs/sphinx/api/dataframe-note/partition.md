@@ -44,13 +44,15 @@ already invalid on input produces `NULL` in all three. See Example 1.
 ## Parameters
 
 **separator** (`std::string_view`)
-    The literal text to split on. Must not be empty — `partition("")`
-    throws `"Shelf::partition: separator cannot be empty"`.
+
+The literal text to split on. Must not be empty — `partition("")`
+throws `"Shelf::partition: separator cannot be empty"`.
 
 **prefix** (`std::string`, default `"part"`)
-    Base name for the three output columns: `<prefix>_0` (before),
-    `<prefix>_1` (the separator, or `""` if not found), `<prefix>_2`
-    (after, or `""` if not found).
+
+Base name for the three output columns: `<prefix>_0` (before),
+`<prefix>_1` (the separator, or `""` if not found), `<prefix>_2`
+(after, or `""` if not found).
 
 ## Returns
 

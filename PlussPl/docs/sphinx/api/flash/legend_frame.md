@@ -21,16 +21,19 @@ legend is placed — see [`flash::move_legend`](move_legend.md) for that).
 ## Parameters
 
 **pane** (`Pane&`, `Pane` overload)
-    The pane whose in-pane legend's frame styling to set.
+
+The pane whose in-pane legend's frame styling to set.
 
 **studio** (`Studio&`, `Studio` overload)
-    The figure whose consolidated legend's frame styling to set.
+
+The figure whose consolidated legend's frame styling to set.
 
 **frame** (`KeyFrame`)
-    `Framed` (solid border and opaque background), `Soft` (low-contrast background, no
-    hard border — the default on both `Pane` and `Studio`), or `None` (no background or
-    border at all). See [`Pane::legend_frame`](../pane/legend_frame.md)/
-    [`Studio::legend_frame`](../studio/legend_frame.md) for the full description.
+
+`Framed` (solid border and opaque background), `Soft` (low-contrast background, no
+hard border — the default on both `Pane` and `Studio`), or `None` (no background or
+border at all). See [`Pane::legend_frame`](../pane/legend_frame.md)/
+[`Studio::legend_frame`](../studio/legend_frame.md) for the full description.
 
 ## Returns
 

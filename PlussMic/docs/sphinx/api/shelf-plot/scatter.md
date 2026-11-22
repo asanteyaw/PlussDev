@@ -43,17 +43,20 @@ to color by a numeric value, bucket or cast it to text first.
 ## Parameters
 
 **x** (`const Shelf&`, required)
-    The companion shelf for the horizontal axis. Must match the bound shelf's size, or
-    the call throws `"Shelf::plot: shelf size mismatch"`.
+
+The companion shelf for the horizontal axis. Must match the bound shelf's size, or
+the call throws `"Shelf::plot: shelf size mismatch"`.
 
 **hue** (`const Shelf&`, optional)
-    Optional companion shelf splitting points into separate colored/labeled groups. Must
-    be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
+
+Optional companion shelf splitting points into separate colored/labeled groups. Must
+be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
 
 **options** (`ScatterPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::scatter`](../../api/dataframe-plot/scatter.md)
-    (`alpha`, `line_width`, `fit_line`, `fit_order`, `fit_ci`, `fit_confidence_level`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::scatter`](../../api/dataframe-plot/scatter.md)
+(`alpha`, `line_width`, `fit_line`, `fit_order`, `fit_ci`, `fit_confidence_level`).
 
 ## Returns
 

@@ -21,7 +21,8 @@ An explicit [`y_label_rotation`](y_label_rotation.md) is applied on top of eithe
 ## Parameters
 
 **enable** (`bool`, default `true`)
-    `true` to turn the label vertical and centre it on the axis; `false` for the upright label at the top.
+
+`true` to turn the label vertical and centre it on the axis; `false` for the upright label at the top.
 
 ## Returns
 

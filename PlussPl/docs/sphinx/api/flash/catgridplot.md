@@ -63,21 +63,26 @@ mechanics; they are not re-derived here.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **groups** (`pluss::RangeView<pluss::Note>` or `std::initializer_list<Note>`)
-    One entry per facet — `groups[i]` is that facet's complete group-label series.
+
+One entry per facet — `groups[i]` is that facet's complete group-label series.
 
 **values** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per facet — `values[i]` is that facet's complete numeric series, aligned to
-    `groups[i]`.
+
+One entry per facet — `values[i]` is that facet's complete numeric series, aligned to
+`groups[i]`.
 
 **hues** (`pluss::RangeView<pluss::Note>` or `std::initializer_list<Note>`, hue overloads
 only)
-    One entry per facet — `hues[i]` is that facet's per-point hue-grouping series.
+
+One entry per facet — `hues[i]` is that facet's per-point hue-grouping series.
 
 **options** (`const CatGridPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

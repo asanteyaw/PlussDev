@@ -21,7 +21,8 @@ It applies to the surface kinds `sheet`, `spire3` and `isoshell`. On every other
 ## Parameters
 
 **enable** (`bool`, setter only)
-    True for see-through faces, false for opaque ones.
+
+True for see-through faces, false for opaque ones.
 
 ## Returns
 

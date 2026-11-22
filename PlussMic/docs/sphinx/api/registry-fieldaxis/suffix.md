@@ -20,7 +20,8 @@ unlike [`like()`](like.md).
 ## Parameters
 
 **token** (`std::string_view`)
-    The suffix each field name must end with.
+
+The suffix each field name must end with.
 
 ## Returns
 

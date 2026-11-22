@@ -21,13 +21,16 @@ data's own observed range.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D) — this wraps `Pane::bucket`, which requires it.
+
+The target pane. Must be `Planar` (2D) — this wraps `Pane::bucket`, which requires it.
 
 **values** (series-convertible)
-    The raw, ungrouped observations to bin.
+
+The raw, ungrouped observations to bin.
 
 **bins** (`int`, default `12`)
-    The number of equal-width bins, over the data's own observed range.
+
+The number of equal-width bins, over the data's own observed range.
 
 ## Returns
 

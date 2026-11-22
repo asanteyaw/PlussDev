@@ -21,7 +21,8 @@ frames.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The other set of labels to union with the atlas's current depth labels.
+
+The other set of labels to union with the atlas's current depth labels.
 
 ## Returns
 

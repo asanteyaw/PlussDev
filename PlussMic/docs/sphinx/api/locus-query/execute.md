@@ -32,6 +32,7 @@ declared-link validation and ragged join reporting are part of the contract.
 ## Parameter
 
 **statement** (`std::string_view`)
+
 : A result-producing SQL statement. `SELECT` and `WITH ... SELECT` are the usual
   forms. Workspace catalog keys and stream keys are identifiers; use `AS` to
   control result stream names.

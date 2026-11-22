@@ -31,29 +31,31 @@ paths without you having to restate the join keys every time.
 ## Parameters
 
 **rel** (`const Relationship&`, singular overload)
-    The relationship to declare. See [`relationships()`](relationships.md) for the full
-    field-by-field breakdown of `Relationship`. Validated before being added:
 
-    - `name` must be non-empty and not already used by another declared relationship in
-      this workspace.
-    - `left_table` and `right_table` must both be non-empty and must both already exist in
-      the workspace.
-    - `keys` must contain at least one `(left_feature, right_feature)` pair, and no pair
-      may have an empty feature name on either side.
-    - `confidence` must be in `[0, 1]`.
+The relationship to declare. See [`relationships()`](relationships.md) for the full
+field-by-field breakdown of `Relationship`. Validated before being added:
 
-    Note that the named features in `keys` are **not** checked against the tables'
-    actual columns at declaration time — only when something actually joins on them (see
-    [`join()`](join.md)/[`materialize()`](materialize.md)).
+- `name` must be non-empty and not already used by another declared relationship in
+  this workspace.
+- `left_table` and `right_table` must both be non-empty and must both already exist in
+  the workspace.
+- `keys` must contain at least one `(left_feature, right_feature)` pair, and no pair
+  may have an empty feature name on either side.
+- `confidence` must be in `[0, 1]`.
+
+Note that the named features in `keys` are **not** checked against the tables'
+actual columns at declaration time — only when something actually joins on them (see
+[`join()`](join.md)/[`materialize()`](materialize.md)).
 
 **rels** (`std::initializer_list<Relationship>`, plural overload)
-    A batch of relationships, each validated the same way as the singular overload and
-    added in the order given. If any entry fails validation, none of the batch's earlier
-    entries are un-added on the mutating `_` overload — validation happens as each entry is
-    processed, so a failure partway through the list leaves the workspace with however many
-    relationships were successfully added before the failure. Prefer the non-mutating form
-    if you need all-or-nothing behavior; check each `Relationship` yourself first, or wrap
-    the call and discard the result on failure.
+
+A batch of relationships, each validated the same way as the singular overload and
+added in the order given. If any entry fails validation, none of the batch's earlier
+entries are un-added on the mutating `_` overload — validation happens as each entry is
+processed, so a failure partway through the list leaves the workspace with however many
+relationships were successfully added before the failure. Prefer the non-mutating form
+if you need all-or-nothing behavior; check each `Relationship` yourself first, or wrap
+the call and discard the result on failure.
 
 ## Returns
 

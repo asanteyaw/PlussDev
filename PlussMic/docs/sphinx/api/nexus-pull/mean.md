@@ -31,15 +31,17 @@ reach for `.agg(table)` when stacking several reducers on the same table.
 ## Parameters
 
 **source** (`std::string_view`)
-    The feature to average. Typically `"table.feature"` for a related table
-    (e.g. `"events.spend"`); a bare root feature name is accepted
-    syntactically but rarely useful, per [`Nexus::pull`](../nexus/pull.md)'s
-    restriction against aggregate fields targeting `root` itself.
+
+The feature to average. Typically `"table.feature"` for a related table
+(e.g. `"events.spend"`); a bare root feature name is accepted
+syntactically but rarely useful, per [`Nexus::pull`](../nexus/pull.md)'s
+restriction against aggregate fields targeting `root` itself.
 
 **alias** (`std::string_view`, default empty)
-    The output column name. When omitted, the default alias is
-    `<table>_<feature>_mean` (dots replaced by underscores) — see
-    [`NexusPull::sum`](sum.md) for the auto-alias pattern in detail.
+
+The output column name. When omitted, the default alias is
+`<table>_<feature>_mean` (dots replaced by underscores) — see
+[`NexusPull::sum`](sum.md) for the auto-alias pattern in detail.
 
 ## Returns
 

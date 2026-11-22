@@ -23,7 +23,8 @@ The range must be finite and strictly increasing (`low < high`); anything else i
 ## Parameters
 
 **limits** (`Range1d`)
-    The `low` and `high` ends of the colour range. Must be finite with `low < high`.
+
+The `low` and `high` ends of the colour range. Must be finite with `low < high`.
 
 ## Returns
 

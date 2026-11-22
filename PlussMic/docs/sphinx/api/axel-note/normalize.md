@@ -37,10 +37,11 @@ differently until they're normalized to the same form.
 ## Parameters
 
 **form** (`pluss::table::UnicodeForm`, defaults to `pluss::table::UnicodeForm::NFC`)
-    Which of the four standard Unicode normalization forms to apply:
-    `NFC` (canonical composition, the default), `NFD` (canonical
-    decomposition), `NFKC` (compatibility composition), or `NFKD`
-    (compatibility decomposition).
+
+Which of the four standard Unicode normalization forms to apply:
+`NFC` (canonical composition, the default), `NFD` (canonical
+decomposition), `NFKC` (compatibility composition), or `NFKD`
+(compatibility decomposition).
 
 ## Returns
 

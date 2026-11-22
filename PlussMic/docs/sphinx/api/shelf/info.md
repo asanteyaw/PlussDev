@@ -23,7 +23,8 @@ whatever stream you provide. Both are pure conveniences over
 ## Parameters
 
 **os** (`std::ostream&`, `info(os)` overload only)
-    The destination stream. Defaults to `std::cout` for the no-argument overload.
+
+The destination stream. Defaults to `std::cout` for the no-argument overload.
 
 ## Returns
 

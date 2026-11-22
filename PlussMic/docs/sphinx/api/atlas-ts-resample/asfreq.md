@@ -29,8 +29,9 @@ an exact match is replaced by that single constant instead of `NULL`.
 ## Parameters
 
 **fill_value** (`std::optional<double>`, default `std::nullopt`)
-    A constant substituted for every non-exact-match grid tick, in every frame.
-    Leave as `std::nullopt` to keep those ticks `NULL`.
+
+A constant substituted for every non-exact-match grid tick, in every frame.
+Leave as `std::nullopt` to keep those ticks `NULL`.
 
 ## Returns
 

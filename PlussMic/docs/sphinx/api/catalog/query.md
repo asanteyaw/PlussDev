@@ -26,8 +26,9 @@ first pulling them out into local variables.
 ## Parameters
 
 **fn** (`const QueryFn&`, i.e. `std::function<pluss::Series(const Catalog&)>`)
-    A callback that receives the catalog and returns a `Bool`-dtype mask `Series`. Must not
-    be empty.
+
+A callback that receives the catalog and returns a `Bool`-dtype mask `Series`. Must not
+be empty.
 
 ## Returns
 

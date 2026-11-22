@@ -25,13 +25,16 @@ Adds a **histogram**: the raw `values` are counted into equal-width bins and a b
 ## Parameters
 
 **values** (`Series`-convertible)
-    The data to count. Not empty.
+
+The data to count. Not empty.
 
 **bins** (`int`, default 12)
-    The number of bins. Positive.
+
+The number of bins. Positive.
 
 **range** (`Range1d`, optional)
-    The interval to divide into bins. `low` below `high`, both finite.
+
+The interval to divide into bins. `low` below `high`, both finite.
 
 ## Returns
 

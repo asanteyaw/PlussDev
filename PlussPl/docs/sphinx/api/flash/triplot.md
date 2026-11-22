@@ -88,36 +88,44 @@ Of the six `TriplotKind` values, only Cloud and Path draw from three flat column
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate.
+
+The figure to lay out and populate.
 
 **columns** (`pluss::RangeView<pluss::Series>` or `std::initializer_list<Series>`)
-    One entry per feature. Must contain at least three features, or `triplot` throws
-    (message: `"flash::triplot requires at least three numeric features"`), and every
-    column must be the same length.
+
+One entry per feature. Must contain at least three features, or `triplot` throws
+(message: `"flash::triplot requires at least three numeric features"`), and every
+column must be the same length.
 
 **data** (`const Dataset&`, Dataset overload only)
-    See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page. Its `numeric_names`
-    become `options.labels` automatically when `options.labels` is empty.
+
+See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page. Its `numeric_names`
+become `options.labels` automatically when `options.labels` is empty.
 
 **matrix** (`const Series&`, matrix overloads only)
-    A rank-2 `Series`, split into feature columns exactly like
-    [`flash::pairplot`](pairplot.md)'s matrix overloads (`Axis::Cols` default: each column
-    is a feature).
+
+A rank-2 `Series`, split into feature columns exactly like
+[`flash::pairplot`](pairplot.md)'s matrix overloads (`Axis::Cols` default: each column
+is a feature).
 
 **frame_options** (`const MatrixFrameOptions&`, one matrix overload only)
-    `{ Axis feature_axis; std::vector<std::string> feature_names; }`.
+
+`{ Axis feature_axis; std::vector<std::string> feature_names; }`.
 
 **feature_names** (`pluss::RangeView<std::string_view>`, `const std::vector<std::string>&`,
 or `std::initializer_list<std::string_view>`, three matrix overloads)
-    Per-feature names for these overloads' outer parameter — **not** the same as
-    `TriplotOptions::feature_names`, which restricts *which* features participate rather
-    than naming them. This parameter is forwarded into `options.labels`.
+
+Per-feature names for these overloads' outer parameter — **not** the same as
+`TriplotOptions::feature_names`, which restricts *which* features participate rather
+than naming them. This parameter is forwarded into `options.labels`.
 
 **feature_axis** (`Axis`, matrix overloads with explicit names)
-    `Axis::Cols` or `Axis::Rows` — which matrix axis holds the features.
+
+`Axis::Cols` or `Axis::Rows` — which matrix axis holds the features.
 
 **options** (`const TriplotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

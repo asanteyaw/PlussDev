@@ -38,18 +38,21 @@ same width as `weights`.
 ## Parameters
 
 **weights** (`pluss::RangeView<double>`)
-    The per-position weights, oldest to newest. Implicitly sets the window
-    width to `weights.size()`. Must be non-empty, or it throws.
+
+The per-position weights, oldest to newest. Implicitly sets the window
+width to `weights.size()`. Must be non-empty, or it throws.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    Which statistic to compute inside each weighted window: `Sum`, `Mean`,
-    `Minimum`, `Maximum`, `Var`, or `Std` (`Minimum`/`Maximum` ignore the
-    weight values — see the note above).
+
+Which statistic to compute inside each weighted window: `Sum`, `Mean`,
+`Minimum`, `Maximum`, `Var`, or `Std` (`Minimum`/`Maximum` ignore the
+weight values — see the note above).
 
 **min_count** (`std::int64_t`, default `1`)
-    The smallest number of observed (weighted-eligible) positions in a window
-    still considered valid. Must be `> 0` and `<= weights.size()`, or it
-    throws.
+
+The smallest number of observed (weighted-eligible) positions in a window
+still considered valid. Must be `> 0` and `<= weights.size()`, or it
+throws.
 
 ## Returns
 

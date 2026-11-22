@@ -21,10 +21,12 @@ below `min_value` becomes `min_value`, a value above `max_value` becomes
 ## Parameters
 
 **min_value** (`double`)
-    The lower bound. Values below this are raised to it.
+
+The lower bound. Values below this are raised to it.
 
 **max_value** (`double`)
-    The upper bound. Values above this are lowered to it.
+
+The upper bound. Values above this are lowered to it.
 
 ## Returns
 

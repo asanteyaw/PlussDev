@@ -21,10 +21,12 @@ Both scales must be finite and positive, or the call throws and nothing changes.
 ## Parameters
 
 **tick_font_scale** (`double`)
-    The factor on the tick label size for new panes. Finite and positive.
+
+The factor on the tick label size for new panes. Finite and positive.
 
 **axis_label_font_scale** (`double`)
-    The factor on the axis label size for new panes. Finite and positive.
+
+The factor on the axis label size for new panes. Finite and positive.
 
 ## Returns
 

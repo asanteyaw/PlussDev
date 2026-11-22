@@ -23,10 +23,11 @@ and the atlas's own depth labels are carried over.
 ## Parameters
 
 **policy** (`const pluss::kindle::KindelizePolicy&`, optional)
-    `attach_labels` (default `true`) carries each frame's own case-label axis into its
-    resulting catalog's streams. `materialize_label` (default `false`) additionally adds
-    the case-label axis as its own stream, named `label_key` (default `"_label"`). See
-    [`DataFrame::kindelize`](../dataframe/kindelize.md) for the full field breakdown.
+
+`attach_labels` (default `true`) carries each frame's own case-label axis into its
+resulting catalog's streams. `materialize_label` (default `false`) additionally adds
+the case-label axis as its own stream, named `label_key` (default `"_label"`). See
+[`DataFrame::kindelize`](../dataframe/kindelize.md) for the full field breakdown.
 
 ## Returns
 

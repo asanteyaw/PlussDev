@@ -33,12 +33,14 @@ explanation and the exact throw message.
 ## Parameters
 
 **needle** (`std::string_view`)
-    The text to search for — literal by default, or regex if
-    `options.regex = true`.
+
+The text to search for — literal by default, or regex if
+`options.regex = true`.
 
 **options** (`pluss::table::TextOptions`, optional)
-    `options.regex` (default `false`): treat `needle` as a regex pattern.
-    `options.case_sensitive` (default `true`): ignore case when `false`.
+
+`options.regex` (default `false`): treat `needle` as a regex pattern.
+`options.case_sensitive` (default `true`): ignore case when `false`.
 
 ## Returns
 

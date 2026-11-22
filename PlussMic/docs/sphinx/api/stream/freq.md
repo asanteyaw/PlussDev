@@ -37,8 +37,9 @@ values attached via [`lbl()`](lbl.md) as row labels. Read a value with
 ## Parameters
 
 **options** (`FreqOptions`, defaults to `{}`)
-    `top` (default `0`, meaning unlimited) caps the result to the `top` most frequent
-    values. `dropnull` (default `true`) controls whether `NULL` is counted.
+
+`top` (default `0`, meaning unlimited) caps the result to the `top` most frequent
+values. `dropnull` (default `true`) controls whether `NULL` is counted.
 
 ## Returns
 

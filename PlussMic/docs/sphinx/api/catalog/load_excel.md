@@ -46,10 +46,12 @@ by changing your call. If you hit this, rebuild PlussMic with `libzip` available
 ## Parameters
 
 **filepath** (`std::string_view`)
-    The `.xlsx` file to read.
+
+The `.xlsx` file to read.
 
 **options** (`const pluss::loader::ReadExcelOptions&`, optional)
-    Sheet selection and header-parsing controls — see the struct above.
+
+Sheet selection and header-parsing controls — see the struct above.
 
 ## Returns
 

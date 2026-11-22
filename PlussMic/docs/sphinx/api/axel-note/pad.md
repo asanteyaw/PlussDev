@@ -37,14 +37,17 @@ right; `Right` keeps the text flush right and adds padding on the left;
 ## Parameters
 
 **width** (`std::int64_t`)
-    The minimum total length of the result. Values already at or
-    beyond this length are returned unchanged.
+
+The minimum total length of the result. Values already at or
+beyond this length are returned unchanged.
 
 **align** (`pluss::table::TextAlign`, defaults to `pluss::table::TextAlign::Left`)
-    Where the original text sits relative to the added padding.
+
+Where the original text sits relative to the added padding.
 
 **fill** (`char`, defaults to `' '`)
-    The character used to pad.
+
+The character used to pad.
 
 ## Returns
 

@@ -23,8 +23,9 @@ A negative `periods` delegates to [`lag()`](lag.md) with the sign flipped.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The number of rows to shift backward, within each frame. Negative values behave
-    as [`lag(-periods)`](lag.md) instead.
+
+The number of rows to shift backward, within each frame. Negative values behave
+as [`lag(-periods)`](lag.md) instead.
 
 ## Returns
 

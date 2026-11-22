@@ -55,7 +55,8 @@ any text that might contain non-ASCII characters.
 ## Parameters
 
 **form** (`UnicodeForm`, default `UnicodeForm::NFC`)
-    Which normalization form to apply: `NFC`, `NFD`, `NFKC`, or `NFKD`.
+
+Which normalization form to apply: `NFC`, `NFD`, `NFKC`, or `NFKD`.
 
 ## Returns
 

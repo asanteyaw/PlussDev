@@ -30,20 +30,23 @@ numeric `Series` payloads; every other kind or dtype throws.
 ## Parameters
 
 **bounds** (`const WindowBoundsFn&`)
-    A callback `(size, options) -> {starts, ends}` producing one half-open
-    `[start, end)` window per output row. Must not be empty (a default
-    `std::function`), or it throws.
+
+A callback `(size, options) -> {starts, ends}` producing one half-open
+`[start, end)` window per output row. Must not be empty (a default
+`std::function`), or it throws.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    Which statistic to compute inside each row's window: `Sum`, `Mean`,
-    `Minimum`, `Maximum`, `Var`, or `Std`.
+
+Which statistic to compute inside each row's window: `Sum`, `Mean`,
+`Minimum`, `Maximum`, `Var`, or `Std`.
 
 **options** (`WindowOptions`, default `{}`)
-    `min_count` (default `1`): the smallest number of observed values inside a
-    window still considered valid. `ddof` (default `1`): the divisor
-    adjustment for `Var`/`Std`. `centered`/`closure` are accepted but have no
-    effect here — your `bounds` callback already fully determines each
-    window's shape.
+
+`min_count` (default `1`): the smallest number of observed values inside a
+window still considered valid. `ddof` (default `1`): the divisor
+adjustment for `Var`/`Std`. `centered`/`closure` are accepted but have no
+effect here — your `bounds` callback already fully determines each
+window's shape.
 
 ## Returns
 

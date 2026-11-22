@@ -27,19 +27,24 @@ All of these throw `pluss::Error` with a message that names the problem. A sub-p
 ## Parameters
 
 **parent_index** (`std::size_t`)
-    Index of the parent pane, as returned by [`pane_index`](pane_index.md).
+
+Index of the parent pane, as returned by [`pane_index`](pane_index.md).
 
 **rows**, **cols** (`std::int64_t`)
-    The shape of the nested grid. Positive; the same for every sub-pane of this parent.
+
+The shape of the nested grid. Positive; the same for every sub-pane of this parent.
 
 **row**, **col** (`std::int64_t`)
-    The first cell of the sub-pane, counted from 0 at the top left of the parent.
+
+The first cell of the sub-pane, counted from 0 at the top left of the parent.
 
 **row_span**, **col_span** (`std::int64_t`, default 1)
-    How many rows and columns the sub-pane covers.
+
+How many rows and columns the sub-pane covers.
 
 **title** (`std::string`, default empty)
-    The sub-pane's title. Empty draws none.
+
+The sub-pane's title. Empty draws none.
 
 ## Returns
 

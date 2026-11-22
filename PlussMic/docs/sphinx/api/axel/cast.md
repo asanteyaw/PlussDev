@@ -29,9 +29,10 @@ of every frame. To cast only one field, chain
 ## Parameters
 
 **options** (`const pluss::table::ShelfCastOptions&`, optional)
-    Cast behavior options (e.g. parse formats) forwarded to each
-    frame's underlying `Registry::cast(options)` call. Omit for
-    defaults.
+
+Cast behavior options (e.g. parse formats) forwarded to each
+frame's underlying `Registry::cast(options)` call. Omit for
+defaults.
 
 ## Returns
 

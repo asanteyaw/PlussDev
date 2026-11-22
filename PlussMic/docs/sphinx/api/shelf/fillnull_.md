@@ -33,8 +33,9 @@ copy-on-write behavior are the same either way; only the internal mechanism diff
 ## Parameters
 
 **value**
-    Same as [`fillnull()`](fillnull.md) — the replacement for `NULL` cells,
-    selecting the overload (and required payload kind) by its C++ type.
+
+Same as [`fillnull()`](fillnull.md) — the replacement for `NULL` cells,
+selecting the overload (and required payload kind) by its C++ type.
 
 ## Returns
 

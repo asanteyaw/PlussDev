@@ -27,8 +27,9 @@ can end up just as ragged.
 ## Parameters
 
 **suffix** (`std::string_view`)
-    The exact trailing substring each surviving key name must end with. Matching is
-    case-sensitive and has no separate `case_sensitive` toggle.
+
+The exact trailing substring each surviving key name must end with. Matching is
+case-sensitive and has no separate `case_sensitive` toggle.
 
 ## Returns
 

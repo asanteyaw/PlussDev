@@ -52,12 +52,14 @@ table pair and you don't name one explicitly, the call throws — see Example 3.
 ## Parameters
 
 **left** / **right** (`std::string_view`)
-    The two tables to join, in that role order. Both must already exist in the workspace.
+
+The two tables to join, in that role order. Both must already exist in the workspace.
 
 **spec** (`const JoinSpec&`)
-    The join configuration — see above. For `spec.how == JoinHow::Cross`, `keys` must be
-    empty and `relationship_name` must not be set (a cross join has no join keys by
-    definition).
+
+The join configuration — see above. For `spec.how == JoinHow::Cross`, `keys` must be
+empty and `relationship_name` must not be set (a cross join has no join keys by
+definition).
 
 ## Returns
 

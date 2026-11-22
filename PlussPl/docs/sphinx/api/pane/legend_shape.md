@@ -26,7 +26,8 @@ The room is the plot area for a corner legend and a fixed width for `OutsideEast
 ## Parameters
 
 **shape** (`KeyShape`, setter only)
-    `Auto`, `Horizontal` or `Vertical`.
+
+`Auto`, `Horizontal` or `Vertical`.
 
 ## Returns
 

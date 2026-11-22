@@ -25,15 +25,18 @@ is only known at runtime (e.g. from a user-supplied string); reach for the speci
 ## Parameters
 
 **source_type** (`std::string_view`)
-    The format name — `"csv"`, `"txt"`/`"text"`, `"excel"`/`"xlsx"`, `"parquet"`, or
-    `"json"` (case-insensitive). Anything else throws.
+
+The format name — `"csv"`, `"txt"`/`"text"`, `"excel"`/`"xlsx"`, `"parquet"`, or
+`"json"` (case-insensitive). Anything else throws.
 
 **filepath** (`std::string_view`)
-    The file to read.
+
+The file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic, format-agnostic configuration scribble, translated internally into the
-    format-specific options struct (`ReadCsvOptions`, `ReadExcelOptions`, etc.).
+
+A generic, format-agnostic configuration scribble, translated internally into the
+format-specific options struct (`ReadCsvOptions`, `ReadExcelOptions`, etc.).
 
 ## Returns
 

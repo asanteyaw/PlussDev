@@ -28,7 +28,8 @@ Use `grid` for the same grid everywhere, and the per-axis switches for a grid on
 ## Parameters
 
 **style** (`GridStyle`, setter only)
-    `None`, `Major` or `MajorMinor`, applied to all three axes.
+
+`None`, `Major` or `MajorMinor`, applied to all three axes.
 
 ## Returns
 

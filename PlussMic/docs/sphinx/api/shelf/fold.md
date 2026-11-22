@@ -39,12 +39,14 @@ that single call; it does not change how many times `fn` is invoked.
 ## Parameters
 
 **fn** (`const std::function<Shelf(const Shelf&)>&`)
-    Called exactly once with `*this`. Must return a defined `Shelf`; must not be empty.
+
+Called exactly once with `*this`. Must return a defined `Shelf`; must not be empty.
 
 **shape** (`ResultShape`, default `Reduce`)
-    What size the returned `Shelf` is expected to have. `Reduce` requires exactly one row
-    (throws otherwise); `Preserve` requires the same row count as the input (throws
-    otherwise); `Infer` and `Expand` perform no size check at all.
+
+What size the returned `Shelf` is expected to have. `Reduce` requires exactly one row
+(throws otherwise); `Preserve` requires the same row count as the input (throws
+otherwise); `Infer` and `Expand` perform no size check at all.
 
 ## Returns
 

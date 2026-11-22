@@ -27,8 +27,9 @@ whether a `NULL` counts as one of the distinct values.
 ## Parameters
 
 **options** (`DistinctOptions`, optional)
-    `dropnull` (default `true`) excludes `NULL` from the distinct set; set `false` to
-    include it as its own distinct value.
+
+`dropnull` (default `true`) excludes `NULL` from the distinct set; set `false` to
+include it as its own distinct value.
 
 ## Returns
 

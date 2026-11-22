@@ -29,8 +29,9 @@ in a trailing value from a different catalog in the stack.
 ## Parameters
 
 **periods** (`std::int64_t`, default `1`)
-    The number of positions to shift forward. Negative values behave as
-    [`lead(-periods)`](lead.md) instead.
+
+The number of positions to shift forward. Negative values behave as
+[`lead(-periods)`](lead.md) instead.
 
 ## Returns
 

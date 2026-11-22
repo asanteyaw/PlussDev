@@ -33,15 +33,18 @@ result. You never need to separately guard against a `NaN` hiding behind a
 ## Parameters
 
 **other** (`const Shelf&`)
-    The numeric `Series` shelf to correlate with.
+
+The numeric `Series` shelf to correlate with.
 
 **method** (`ShelfCorrMethod`, default `Pearson`)
-    `Pearson`, `Spearman`, or `KendallTau` — same semantics as
-    [`corr()`](corr.md).
+
+`Pearson`, `Spearman`, or `KendallTau` — same semantics as
+[`corr()`](corr.md).
 
 **min_count** (`std::int64_t`, default `1`)
-    The smallest number of valid pairs still considered valid. Must be `>=
-    1`, or it throws.
+
+The smallest number of valid pairs still considered valid. Must be `>=
+1`, or it throws.
 
 ## Returns
 

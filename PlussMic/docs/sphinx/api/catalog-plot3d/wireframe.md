@@ -27,17 +27,20 @@ drawn as an open mesh (a lattice of connecting lines) instead of a filled sheet.
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`, required)
-    Must all exist in the catalog — an unknown key throws before any projection/tabelize
-    work happens.
+
+Must all exist in the catalog — an unknown key throws before any projection/tabelize
+work happens.
 
 **op** (`pluss::table::DataFrame::GroupOp`, default `Mean`)
-    The aggregation applied per grid cell — see
-    [`surface()`](surface.md)/[`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md)
-    for the remaining numeric-rendering constraints after pivoting.
+
+The aggregation applied per grid cell — see
+[`surface()`](surface.md)/[`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md)
+for the remaining numeric-rendering constraints after pivoting.
 
 **options** (`const Wireframe3DPlotOptions&`)
-    Same `scene`/`trace` shape documented on
-    [`CatalogPlot3DAccessor::scatter`](scatter.md).
+
+Same `scene`/`trace` shape documented on
+[`CatalogPlot3DAccessor::scatter`](scatter.md).
 
 ## Returns
 

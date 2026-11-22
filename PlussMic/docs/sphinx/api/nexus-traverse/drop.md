@@ -25,9 +25,10 @@ with it.
 **features** (a range of `std::string_view` — a brace literal, a named
 container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
 or any other range whose elements convert to `std::string_view`)
-    The feature names to remove from the final result. Same validation as
-    [`.pick()`](pick.md): each name must be non-empty and unique within the request.
-    Existence is checked when [`.collect()`](collect.md) runs.
+
+The feature names to remove from the final result. Same validation as
+[`.pick()`](pick.md): each name must be non-empty and unique within the request.
+Existence is checked when [`.collect()`](collect.md) runs.
 
 :::{note} `pluss::RangeView` is never spelled out in these examples
 See [`Nexus::select`](../nexus/select.md)'s own note on this — the same

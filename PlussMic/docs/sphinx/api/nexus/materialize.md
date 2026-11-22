@@ -24,9 +24,10 @@ produces a zero-step path) just returns the root table itself, retitled.
 ## Parameters
 
 **plan** (`const JoinPlan&`)
-    The recipe to execute — typically built by [`plan()`](plan.md), but can be constructed
-    by hand. `plan.root_table` must be non-empty and must already exist in the workspace;
-    each step's `right_table` must also exist.
+
+The recipe to execute — typically built by [`plan()`](plan.md), but can be constructed
+by hand. `plan.root_table` must be non-empty and must already exist in the workspace;
+each step's `right_table` must also exist.
 
 ## Returns
 

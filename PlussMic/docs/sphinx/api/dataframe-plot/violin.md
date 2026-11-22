@@ -58,15 +58,18 @@ codes.
 
 **features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 default `{}`, feature-list mode)
-    Numeric features to summarize, each as its own violin. Empty means "every numeric
-    feature" — see [`box()`](box.md)'s important callout for the exact rule and throw text.
+
+Numeric features to summarize, each as its own violin. Empty means "every numeric
+feature" — see [`box()`](box.md)'s important callout for the exact rule and throw text.
 
 **value_feature** (`std::string_view`, value/group mode)
-    The numeric feature whose distribution is drawn.
+
+The numeric feature whose distribution is drawn.
 
 **group_feature** (`std::string_view`, value/group mode)
-    The feature defining violin groups — text-like or numeric, see the important callout
-    above.
+
+The feature defining violin groups — text-like or numeric, see the important callout
+above.
 
 **options** (`ViolinPlotOptions`)
 

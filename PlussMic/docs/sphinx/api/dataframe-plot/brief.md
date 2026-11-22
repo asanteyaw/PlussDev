@@ -44,12 +44,14 @@ that page's important callout for the exact rule and throw text.
 ## Parameters
 
 **figure** (`pluss::pl::Studio&`, in-place overload only)
-    An existing figure to append the table pane into. Must already exist (default-constructed
-    or returned from an earlier plot call); this overload never creates a new `Studio`.
+
+An existing figure to append the table pane into. Must already exist (default-constructed
+or returned from an earlier plot call); this overload never creates a new `Studio`.
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features to summarize. Empty (the default) infers every numeric feature in the
-    frame — see [`box()`](box.md)'s important callout for the exact rule.
+
+Numeric features to summarize. Empty (the default) infers every numeric feature in the
+frame — see [`box()`](box.md)'s important callout for the exact rule.
 
 **options** (`BriefPlotOptions`)
 

@@ -25,8 +25,9 @@ is the contract, because one label may match several rows.
 ## Parameters
 
 **row** (`std::int64_t`)
-    The case position to select. `0` is the first case; `-1` is the last. Must satisfy
-    `-ncases() <= row < ncases()` after normalization, or the call throws.
+
+The case position to select. `0` is the first case; `-1` is the last. Must satisfy
+`-ncases() <= row < ncases()` after normalization, or the call throws.
 
 ## Returns
 

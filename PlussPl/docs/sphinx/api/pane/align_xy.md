@@ -21,7 +21,8 @@ Use it for panes that are copies of one another in layout (small multiples), whe
 ## Parameters
 
 **group** (`std::string`)
-    The name given to the groups of the x and y axes. An empty string leaves all of them.
+
+The name given to the groups of the x and y axes. An empty string leaves all of them.
 
 ## Returns
 

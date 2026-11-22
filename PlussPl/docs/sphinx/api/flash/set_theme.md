@@ -50,24 +50,29 @@ overloads spread across two different jobs, all sharing the `set_theme` name:
 ## Parameters
 
 **studio** (`Studio&`, `Studio` overloads)
-    The figure to theme.
+
+The figure to theme.
 
 **pane** (`Pane&`, `Pane` overloads)
-    The single pane to theme.
+
+The single pane to theme.
 
 **theme** (`Theme`, default `Theme::paper()`, `(Studio&, Theme)` overload)
-    The full replacement theme — see [`Studio::theme`](../studio/theme.md).
+
+The full replacement theme — see [`Studio::theme`](../studio/theme.md).
 
 **options** (`const FlashThemeOptions&`, `Options`-taking overloads)
-    See the field table below.
+
+See the field table below.
 
 **style**, **context**, **borderless**, **horizontal_grid** (`Pane` convenience
 overload)
-    Individually-named equivalents of `FlashThemeOptions`' first four fields — see the
-    field table below. This overload builds a `FlashThemeOptions` from exactly these
-    four values (`legend_place`/`legend_dock`/`legend_shape`/`width`/`height` are left
-    at their empty defaults) and forwards to the `Options`-taking overload — verified
-    identical below.
+
+Individually-named equivalents of `FlashThemeOptions`' first four fields — see the
+field table below. This overload builds a `FlashThemeOptions` from exactly these
+four values (`legend_place`/`legend_dock`/`legend_shape`/`width`/`height` are left
+at their empty defaults) and forwards to the `Options`-taking overload — verified
+identical below.
 
 ## `FlashThemeOptions` fields
 

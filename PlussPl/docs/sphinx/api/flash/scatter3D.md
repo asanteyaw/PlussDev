@@ -22,11 +22,13 @@ identical. Note only the bare-arity overload is aliased —
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
-    The point coordinates — identical requirements to [`flash::cloud3`](cloud3.md)'s bare
-    overload.
+
+The point coordinates — identical requirements to [`flash::cloud3`](cloud3.md)'s bare
+overload.
 
 ## Returns
 

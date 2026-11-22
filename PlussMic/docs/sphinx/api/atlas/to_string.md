@@ -21,7 +21,8 @@ a stream, minus the trailing newline those two append.
 ## Parameters
 
 **options** (`const display::DisplayOptions&`, optional)
-    Rendering options shared with the rest of the display layer.
+
+Rendering options shared with the rest of the display layer.
 
 ## Returns
 

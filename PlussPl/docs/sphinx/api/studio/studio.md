@@ -20,10 +20,12 @@ The name is bookkeeping: it is never drawn (see [`name`](name.md)); an empty nam
 ## Parameters
 
 **name** (`std::string`, default empty)
-    The figure's name, used for window titles and temporary file names. Not drawn.
+
+The figure's name, used for window titles and temporary file names. Not drawn.
 
 **theme** (`Theme`, constructor only, default `Theme::paper()`)
-    The figure's theme; `Theme::ocean()` is the other built-in one.
+
+The figure's theme; `Theme::ocean()` is the other built-in one.
 
 ## Returns
 

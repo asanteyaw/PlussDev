@@ -21,7 +21,8 @@ also want the stream itself when present.
 ## Parameters
 
 **key** (`std::string_view`)
-    The stream name to check.
+
+The stream name to check.
 
 ## Returns
 

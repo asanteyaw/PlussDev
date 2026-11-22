@@ -34,9 +34,10 @@ fix makes that mismatch fail loudly and immediately instead of guessing.
 ## Parameters
 
 **label** (`std::string_view` / `std::int64_t` / `const pluss::Timeline&`)
-    The depth label to search for. Its C++ type must match the depth labels' own payload
-    kind; `loc(std::int64_t)` throws immediately if the depth labels aren't `Series`-kind
-    rather than attempting to coerce them (see What It Does above).
+
+The depth label to search for. Its C++ type must match the depth labels' own payload
+kind; `loc(std::int64_t)` throws immediately if the depth labels aren't `Series`-kind
+rather than attempting to coerce them (see What It Does above).
 
 ## Returns
 

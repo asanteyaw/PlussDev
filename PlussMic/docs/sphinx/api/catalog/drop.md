@@ -28,11 +28,13 @@ silently ignores an unknown name.
 ## Parameters
 
 **field_name** (`std::string_view`)
-    A single stream name to remove.
+
+A single stream name to remove.
 
 **field_names** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` /
 `const std::vector<std::string>&`)
-    Several stream names to remove at once.
+
+Several stream names to remove at once.
 
 ## Returns
 

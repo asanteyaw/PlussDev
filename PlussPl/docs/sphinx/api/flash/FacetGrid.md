@@ -35,14 +35,17 @@ below.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out.
+
+The figure to lay out.
 
 **rows**, **cols** (`std::int64_t`)
-    The grid's row and column counts. No validation is performed here — `Studio::mosaic`
-    itself is the source of any bounds-checking behavior.
+
+The grid's row and column counts. No validation is performed here — `Studio::mosaic`
+itself is the source of any bounds-checking behavior.
 
 **gx**, **gy** (`double`, default `18.0` each)
-    The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`.
+
+The horizontal/vertical gutter between cells, forwarded straight to `Studio::mosaic`.
 
 ## Returns
 

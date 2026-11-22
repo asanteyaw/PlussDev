@@ -47,10 +47,12 @@ If you want to rewrite one field while keeping the rest of the registry, fetch t
 ## Parameters
 
 **key** (`std::string_view`)
-    One field name to fetch as a `Slot`.
+
+One field name to fetch as a `Slot`.
 
 **keys** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` / any string-view name range)
-    The field names to keep in a projected registry, in the order you want them returned.
+
+The field names to keep in a projected registry, in the order you want them returned.
 
 ## Returns
 

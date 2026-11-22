@@ -22,12 +22,14 @@ Identical. Note only the bare-arity overload is aliased —
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3, and `z` rank-2 to satisfy
 [`Pane::sheet`](../pane/sheet.md)'s own deeper requirement)
-    The surface grid — identical requirements to [`flash::sheet`](sheet.md)'s bare
-    overload.
+
+The surface grid — identical requirements to [`flash::sheet`](sheet.md)'s bare
+overload.
 
 ## Returns
 

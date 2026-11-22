@@ -26,8 +26,9 @@ call `map(...)` on the accessor.
 ## Parameters
 
 **fn** (`const std::function<Stream(const Stream&)>&`)
-    Called once per stream; must return a defined `Stream` of the same length as
-    its input.
+
+Called once per stream; must return a defined `Stream` of the same length as
+its input.
 
 ## Returns
 

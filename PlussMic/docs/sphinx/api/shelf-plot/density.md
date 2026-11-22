@@ -23,13 +23,15 @@ multi-feature overlay form here.
 ## Parameters
 
 **points** (`std::int64_t`, default `128`)
-    The number of evaluation points used to draw the curve. Internally clamped to a
-    minimum of `16`, same as the 2D accessor.
+
+The number of evaluation points used to draw the curve. Internally clamped to a
+minimum of `16`, same as the 2D accessor.
 
 **options** (`DensityPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::density`](../../api/dataframe-plot/density.md)
-    (`points`, `alpha`, `line_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::density`](../../api/dataframe-plot/density.md)
+(`points`, `alpha`, `line_width`).
 
 ## Returns
 

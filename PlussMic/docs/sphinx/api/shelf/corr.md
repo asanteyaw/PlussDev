@@ -46,10 +46,12 @@ different these two outcomes can be for the same underlying data.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The numeric `Series` shelf to correlate with.
+
+The numeric `Series` shelf to correlate with.
 
 **method** (`ShelfCorrMethod`, default `Pearson`)
-    `Pearson`, `Spearman`, or `KendallTau`.
+
+`Pearson`, `Spearman`, or `KendallTau`.
 
 ## Returns
 

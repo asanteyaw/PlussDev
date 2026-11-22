@@ -27,12 +27,14 @@ unrecognized name.
 ## Parameters
 
 **palette** (`FlashPalette`, default `Deep`, `FlashPalette` overload)
-    See the value table below.
+
+See the value table below.
 
 **name** (`std::string_view`, string overload)
-    Case-sensitive; the six lowercase names `"deep"`, `"muted"`, `"pastel"`, `"bright"`, `"dark"` and
-    `"colorblind"` are recognized. Any other string, including `"Deep"`, `"DEEP"` or an empty string,
-    is an error that lists the valid names.
+
+Case-sensitive; the six lowercase names `"deep"`, `"muted"`, `"pastel"`, `"bright"`, `"dark"` and
+`"colorblind"` are recognized. Any other string, including `"Deep"`, `"DEEP"` or an empty string,
+is an error that lists the valid names.
 
 ## `FlashPalette` values
 

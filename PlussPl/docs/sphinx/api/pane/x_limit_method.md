@@ -19,7 +19,8 @@ The method is stored in `x_axis().limit_method` and is kept when the axis is swi
 ## Parameters
 
 **method** (`LimitMethod`)
-    `TickAligned`, `Tight` or `Padded`.
+
+`TickAligned`, `Tight` or `Padded`.
 
 ## Returns
 

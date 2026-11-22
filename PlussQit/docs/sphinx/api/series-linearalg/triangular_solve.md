@@ -29,15 +29,18 @@ is why triangular solves are the final stage of QR, Cholesky, and LU methods.
 ## Parameters
 
 **b** (`const Series&`)
-    Vector `[...,n]` or matrix `[...,n,k]` of right-hand sides. A vector result
-    is represented as a column with shape `[...,n,1]`.
+
+Vector `[...,n]` or matrix `[...,n,k]` of right-hand sides. A vector result
+is represented as a column with shape `[...,n,1]`.
 
 **upper** (`bool`, default `true`)
-    Read the upper triangle when true; read the lower triangle when false.
+
+Read the upper triangle when true; read the lower triangle when false.
 
 **unitriangular** (`bool`, default `false`)
-    Treat every diagonal entry as exactly one. Stored diagonal values are
-    ignored, so no division by them occurs.
+
+Treat every diagonal entry as exactly one. Stored diagonal values are
+ignored, so no division by them occurs.
 
 Batch dimensions of `A` and `B` broadcast; matrix dimensions do not.
 

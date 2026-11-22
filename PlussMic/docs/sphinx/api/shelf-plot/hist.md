@@ -32,13 +32,15 @@ explanation.
 ## Parameters
 
 **bins** (`std::int64_t`, default `20`)
-    Requested bin count — subject to the `resolve_bins()` ambiguity above. Values `<= 0`
-    fall back to `options_.default_bins`.
+
+Requested bin count — subject to the `resolve_bins()` ambiguity above. Values `<= 0`
+fall back to `options_.default_bins`.
 
 **options** (`HistPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::hist`](../../api/dataframe-plot/hist.md) (`bins`,
-    `alpha`, `line_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::hist`](../../api/dataframe-plot/hist.md) (`bins`,
+`alpha`, `line_width`).
 
 ## Returns
 

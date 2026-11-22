@@ -24,28 +24,34 @@ weight decaying geometrically the further back a row is. Only
 ## Parameters
 
 **alpha** (`double`)
-    Smoothing factor in `(0, 1]`. Larger values weight recent observations more
-    heavily.
+
+Smoothing factor in `(0, 1]`. Larger values weight recent observations more
+heavily.
 
 **statistic** (`WindowStatistic`, default `Mean`)
-    `Mean`, `Var`, or `Std` — any other value throws.
+
+`Mean`, `Var`, or `Std` — any other value throws.
 
 **adjusted** (`bool`, default `true`)
-    Normalized-weighted-average form (`true`) versus the classic recursive form
-    (`false`) — see
-    [`DataFrameTsAccessor::ewm`](../dataframe-ts/ewm.md) for the exact formulas.
-    `adjusted = false` requires the bound feature to have no nulls anywhere in that
-    frame.
+
+Normalized-weighted-average form (`true`) versus the classic recursive form
+(`false`) — see
+[`DataFrameTsAccessor::ewm`](../dataframe-ts/ewm.md) for the exact formulas.
+`adjusted = false` requires the bound feature to have no nulls anywhere in that
+frame.
 
 **bias_corrected** (`bool`, default `true`)
-    For `Var`/`Std` only: whether to apply a finite-sample bias correction.
+
+For `Var`/`Std` only: whether to apply a finite-sample bias correction.
 
 **min_count** (`std::int64_t`, default `1`)
-    Minimum non-null observations seen so far, within that frame, required for a
-    row's output to be non-`NULL`.
+
+Minimum non-null observations seen so far, within that frame, required for a
+row's output to be non-`NULL`.
 
 **ignore_nulls** (`bool`, default `false`)
-    When `true`, a null observation is skipped entirely when computing decay weights.
+
+When `true`, a null observation is skipped entirely when computing decay weights.
 
 ## Returns
 

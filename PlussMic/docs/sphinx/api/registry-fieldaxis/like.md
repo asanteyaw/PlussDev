@@ -19,10 +19,12 @@ Returns a new registry containing only the fields whose **name** contains
 ## Parameters
 
 **needle** (`std::string_view`)
-    The substring to search for within each field name.
+
+The substring to search for within each field name.
 
 **case_sensitive** (`bool`, optional, defaults to `false`)
-    Whether the substring search is case-sensitive.
+
+Whether the substring search is case-sensitive.
 
 ## Returns
 

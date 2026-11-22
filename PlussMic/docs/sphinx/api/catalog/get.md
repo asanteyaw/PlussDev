@@ -28,7 +28,8 @@ Example 3.
 ## Parameters
 
 **key** (`std::string_view`)
-    The stream name to fetch.
+
+The stream name to fetch.
 
 ## Returns
 

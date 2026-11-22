@@ -22,11 +22,13 @@ table stack (e.g. a `DataFrame` column extraction) into `Stream`'s API. The opti
 ## Parameters
 
 **shelf** (`const pluss::table::Shelf&`)
-    The source shelf. Its payload kind becomes the resulting stream's kind.
+
+The source shelf. Its payload kind becomes the resulting stream's kind.
 
 **cases** (`std::optional<pluss::table::Shelf>`, defaults to `std::nullopt`)
-    An optional row-label axis to attach — see [`has_label()`](has_label.md)/
-    [`lbl()`](lbl.md).
+
+An optional row-label axis to attach — see [`has_label()`](has_label.md)/
+[`lbl()`](lbl.md).
 
 ## Returns
 

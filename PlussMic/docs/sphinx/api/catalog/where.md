@@ -22,8 +22,9 @@ catalog.
 ## Parameters
 
 **condition** (`const pluss::Series&`)
-    A `Bool`-dtype mask, `true` for rows to keep. Same requirements as
-    [`filter()`](filter.md).
+
+A `Bool`-dtype mask, `true` for rows to keep. Same requirements as
+[`filter()`](filter.md).
 
 ## Returns
 

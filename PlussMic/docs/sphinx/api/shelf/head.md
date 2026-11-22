@@ -31,14 +31,16 @@ like `Shelf`'s own).
 ## Parameters
 
 **n** (`std::int64_t`, default `5`)
-    Number of leading entries to keep. Values below `0` clamp to `0`; values above
-    `size()` clamp to `size()` — no error either way.
+
+Number of leading entries to keep. Values below `0` clamp to `0`; values above
+`size()` clamp to `size()` — no error either way.
 
 **render** (`bool`, default `false`)
-    When `true`, the returned view may auto-render itself if it reaches the end of
-    its scope without being explicitly printed (a convenience for interactive/REPL
-    contexts). Has no effect on what an explicit `std::cout << ...` prints, which is
-    what every example on this page uses.
+
+When `true`, the returned view may auto-render itself if it reaches the end of
+its scope without being explicitly printed (a convenience for interactive/REPL
+contexts). Has no effect on what an explicit `std::cout << ...` prints, which is
+what every example on this page uses.
 
 ## Returns
 

@@ -32,7 +32,8 @@ no wrapping needed.
 ## Parameters
 
 **labels** (`const Stream&` or `const pluss::table::Shelf&`)
-    The new row labels. Must be the same length as the bound stream.
+
+The new row labels. Must be the same length as the bound stream.
 
 ## Returns
 

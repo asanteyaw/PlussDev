@@ -35,8 +35,9 @@ to reverse the transform on a `Shelf`.
 ## Parameters
 
 **encoding** (`std::string_view`, default `"base64"`)
-    Which scheme to apply: `"base64"`, `"hex"`, or `"url"`. Any other value throws
-    `"Shelf::encode: encoding must be base64, hex, or url"`.
+
+Which scheme to apply: `"base64"`, `"hex"`, or `"url"`. Any other value throws
+`"Shelf::encode: encoding must be base64, hex, or url"`.
 
 ## Returns
 

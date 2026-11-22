@@ -48,15 +48,17 @@ numeric scalar if you'd rather those gaps came back filled instead. See Examples
 ## Parameters
 
 **target_labels** (`const Shelf&`)
-    The target label vector defining the output order — typically a `Note`-kind shelf
-    of label strings (a bare `pluss::Note` also works, thanks to `Shelf`'s implicit
-    constructor from `Note`). Under `AlignBy::Pos`, only its length matters.
+
+The target label vector defining the output order — typically a `Note`-kind shelf
+of label strings (a bare `pluss::Note` also works, thanks to `Shelf`'s implicit
+constructor from `Note`). Under `AlignBy::Pos`, only its length matters.
 
 **options** (`const AlignOptions&`)
-    `align` selects the matching rule (see above); `fill`, if set, supplies a numeric
-    scalar for target labels that have no match in the source shelf. `AlignBy::Both` is
-    rejected — it's a `DataFrame`-only concept (aligning both the case axis and the
-    feature axis at once), which has no meaning for a single `Shelf`.
+
+`align` selects the matching rule (see above); `fill`, if set, supplies a numeric
+scalar for target labels that have no match in the source shelf. `AlignBy::Both` is
+rejected — it's a `DataFrame`-only concept (aligning both the case axis and the
+feature axis at once), which has no meaning for a single `Shelf`.
 
 ## Returns
 

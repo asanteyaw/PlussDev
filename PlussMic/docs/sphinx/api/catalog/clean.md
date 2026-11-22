@@ -15,7 +15,8 @@ Cleans one named text stream and returns the updated catalog.
 ## Parameters
 
 **field**
-    Name of the target stream in the catalog.
+
+Name of the target stream in the catalog.
 
 ## Returns
 

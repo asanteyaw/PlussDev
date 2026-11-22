@@ -36,18 +36,21 @@ single unambiguous time axis to key one off of implicitly.
 ## Parameters
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions, applied independently within each
-    catalog. Must be positive, or it throws.
+
+The trailing window size, in positions, applied independently within each
+catalog. Must be positive, or it throws.
 
 **statistic** (`pluss::table::WindowStatistic`, default `Mean`)
-    The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
-    `Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
+
+The statistic computed over each window: `Sum`, `Mean`, `Minimum`,
+`Maximum`, `Var`, `Std`, `Sem`, `Skew`, or `Kurtosis`.
 
 **options** (`const pluss::table::WindowOptions&`)
-    `min_count` (default `1`), `ddof` (default `1`), `centered` (default
-    `false`), `closure` (default `Right`) — see
-    [`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md) for the
-    full breakdown of each field's effect.
+
+`min_count` (default `1`), `ddof` (default `1`), `centered` (default
+`false`), `closure` (default `Right`) — see
+[`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md) for the
+full breakdown of each field's effect.
 
 ## Returns
 

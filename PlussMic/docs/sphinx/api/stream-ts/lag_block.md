@@ -26,8 +26,9 @@ entirely — its result is a `pluss::table::DataFrame`, not a `Stream`.
 ## Parameters
 
 **lags** (`pluss::RangeView<std::int64_t>`)
-    The lag distances to compute, in the order given. Must not be empty, or
-    it throws.
+
+The lag distances to compute, in the order given. Must not be empty, or
+it throws.
 
 ## Returns
 

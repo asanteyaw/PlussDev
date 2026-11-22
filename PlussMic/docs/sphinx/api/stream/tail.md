@@ -20,7 +20,8 @@ clamps to the whole stream, and `n <= 0` returns an empty stream, rather than th
 ## Parameters
 
 **n** (`std::int64_t`)
-    The number of trailing rows to keep.
+
+The number of trailing rows to keep.
 
 ## Returns
 

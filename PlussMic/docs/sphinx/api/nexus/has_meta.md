@@ -31,8 +31,9 @@ result yourself.
 ## Parameters
 
 **key** (`std::string_view`)
-    The table name to check. Unlike most other lookups on this class, an unknown key does
-    not throw here — it simply returns `false`.
+
+The table name to check. Unlike most other lookups on this class, an unknown key does
+not throw here — it simply returns `false`.
 
 ## Returns
 

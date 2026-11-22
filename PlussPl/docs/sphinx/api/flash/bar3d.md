@@ -22,12 +22,14 @@ Identical. Note only the three-argument overload is aliased —
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3, and `z` rank-2 to satisfy
 [`Pane::spire3`](../pane/spire3.md)'s own deeper requirement)
-    The bar-forest grid — identical requirements to [`flash::spire3`](spire3.md)'s
-    three-argument overload.
+
+The bar-forest grid — identical requirements to [`flash::spire3`](spire3.md)'s
+three-argument overload.
 
 ## Returns
 

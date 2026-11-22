@@ -33,9 +33,10 @@ append to. See Example 3.
 ## Parameters
 
 **feature** / **features** / **specs**
-    Same shapes and meaning as [`by(...)`](by.md)'s corresponding overloads
-    — plain names inherit the builder's direction/null-placement defaults;
-    `ArrangeSpec`s carry their own.
+
+Same shapes and meaning as [`by(...)`](by.md)'s corresponding overloads
+— plain names inherit the builder's direction/null-placement defaults;
+`ArrangeSpec`s carry their own.
 
 ## Returns
 

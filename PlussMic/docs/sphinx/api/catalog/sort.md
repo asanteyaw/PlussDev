@@ -26,20 +26,24 @@ operation itself: this is a whole-catalog row-order plan, not a payload accessor
 ## Parameters
 
 **by_field** (`std::string_view`)
-    The single stream name to sort by. Must exist.
+
+The single stream name to sort by. Must exist.
 
 **ascending** (`bool`, default `true`)
-    For the single-key overload, `true` sorts smallest-to-largest (or alphabetically for
-    text); `false` reverses the order.
+
+For the single-key overload, `true` sorts smallest-to-largest (or alphabetically for
+text); `false` reverses the order.
 
 **fields** (`std::span<const std::string_view>` / `std::initializer_list<std::string_view>` /
 `const std::vector<std::string>&`)
-    The ordered list of sort-key streams for the multi-key overloads. Must be non-empty and
-    every name must exist.
+
+The ordered list of sort-key streams for the multi-key overloads. Must be non-empty and
+every name must exist.
 
 **ascending** (`const std::vector<bool>&`, default `{}`)
-    Optional per-key sort directions for the multi-key overloads. Leave empty to sort every
-    key ascending, or provide one flag per key.
+
+Optional per-key sort directions for the multi-key overloads. Leave empty to sort every
+key ascending, or provide one flag per key.
 
 ## Returns
 

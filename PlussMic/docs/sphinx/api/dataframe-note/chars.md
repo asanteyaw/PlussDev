@@ -32,22 +32,25 @@ separately over each string.
 ## Parameters
 
 **start** (`std::int64_t`)
-    Index of the first character to include. Negative values count from the
-    end of the cell (`-1` is the last character). Out-of-range values are
-    clamped, never throw.
+
+Index of the first character to include. Negative values count from the
+end of the cell (`-1` is the last character). Out-of-range values are
+clamped, never throw.
 
 **stop** (`std::optional<std::int64_t>`, default `std::nullopt`)
-    Index one past the last character to include (exclusive), or the point
-    to stop just before when walking backwards. When omitted, defaults to
-    "the end of the string" if `step > 0`, or "all the way to the start" if
-    `step < 0` — i.e., `chars(0)` returns the whole cell and `chars(-1,
-    std::nullopt, -1)` reverses it.
+
+Index one past the last character to include (exclusive), or the point
+to stop just before when walking backwards. When omitted, defaults to
+"the end of the string" if `step > 0`, or "all the way to the start" if
+`step < 0` — i.e., `chars(0)` returns the whole cell and `chars(-1,
+std::nullopt, -1)` reverses it.
 
 **step** (`std::int64_t`, default `1`)
-    Stride between characters. `1` takes every character in order; `2`
-    takes every other character; a negative step walks backwards. Must not
-    be `0` — `chars(0, std::nullopt, 0)` throws
-    `"Shelf::chars: step cannot be zero"`.
+
+Stride between characters. `1` takes every character in order; `2`
+takes every other character; a negative step walks backwards. Must not
+be `0` — `chars(0, std::nullopt, 0)` throws
+`"Shelf::chars: step cannot be zero"`.
 
 ## Returns
 

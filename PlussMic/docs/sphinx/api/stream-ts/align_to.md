@@ -39,20 +39,25 @@ message pattern.
 ## Parameters
 
 **source_axis** (`const Stream&`)
-    The time axis (`Timeline`/`TimeIndex`) the bound stream's own values
-    currently live at. Must be the same length as the bound stream.
+
+The time axis (`Timeline`/`TimeIndex`) the bound stream's own values
+currently live at. Must be the same length as the bound stream.
 
 **target_axis** (`const Stream&`)
-    The new time axis to reindex onto. Determines the result's length.
+
+The new time axis to reindex onto. Determines the result's length.
 
 **mode** (`pluss::table::TsAlignMode`, default `Exact`)
-    The matching strategy described above.
+
+The matching strategy described above.
 
 **fill_mode** (`pluss::subsp::stats::ts::GapFillMode`, fill overload)
-    The gap-fill strategy applied after alignment.
+
+The gap-fill strategy applied after alignment.
 
 **constant** (`std::optional<double>`, fill overload)
-    The fill value when `fill_mode` is `Constant`. Required in that case.
+
+The fill value when `fill_mode` is `Constant`. Required in that case.
 
 ## Returns
 

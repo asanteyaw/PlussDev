@@ -22,7 +22,8 @@ always anchors the pattern to both ends of the value.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression the entire value must match, start to end.
+
+A regular expression the entire value must match, start to end.
 
 ## Returns
 

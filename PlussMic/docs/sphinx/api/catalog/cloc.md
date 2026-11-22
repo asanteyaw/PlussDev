@@ -22,13 +22,16 @@ alias with no behavioral difference at all.
 ## Parameters
 
 **row** (`std::int64_t`)
-    A single row position to select. Produces a one-row catalog, not a scalar.
+
+A single row position to select. Produces a one-row catalog, not a scalar.
 
 **start** (`std::int64_t`)
-    Inclusive starting row position (two-argument overload).
+
+Inclusive starting row position (two-argument overload).
 
 **stop** (`std::int64_t`)
-    Exclusive ending row position (two-argument overload).
+
+Exclusive ending row position (two-argument overload).
 
 ## Returns
 

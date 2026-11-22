@@ -35,17 +35,20 @@ own once the missing position scrolls out of the trailing window. See Example 2.
 ## Parameters
 
 **window** (`std::int64_t`)
-    The trailing window size, in positions. Must be positive, or it throws.
+
+The trailing window size, in positions. Must be positive, or it throws.
 
 **min_periods** (`std::int64_t`, default `1`)
-    The minimum number of positions that must actually exist in a window near
-    the start of the shelf (a purely structural count based on how much of the
-    shelf has been seen so far — see the important callout above for why this
-    is *not* the same as "non-missing observations").
+
+The minimum number of positions that must actually exist in a window near
+the start of the shelf (a purely structural count based on how much of the
+shelf has been seen so far — see the important callout above for why this
+is *not* the same as "non-missing observations").
 
 **epsilon** (`double`, default `1e-12`)
-    The smallest rolling standard deviation still treated as usefully nonzero.
-    Must be positive, or it throws.
+
+The smallest rolling standard deviation still treated as usefully nonzero.
+Must be positive, or it throws.
 
 ## Returns
 

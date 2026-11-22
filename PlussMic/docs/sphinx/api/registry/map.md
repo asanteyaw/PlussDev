@@ -27,8 +27,9 @@ it via [`fields(key)`](fields.md), call `fn` on it directly, and reinsert with
 ## Parameters
 
 **fn** (`const std::function<Slot(const Slot&)>&`)
-    A callback taking each field's `Slot` in turn and returning its replacement.
-    Must return a defined `Slot` for every field.
+
+A callback taking each field's `Slot` in turn and returning its replacement.
+Must return a defined `Slot` for every field.
 
 ## Returns
 

@@ -29,14 +29,17 @@ explanation and the exact throw message.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The character index to start the slice at (inclusive).
+
+The character index to start the slice at (inclusive).
 
 **stop** (`std::optional<std::int64_t>`, default empty)
-    The character index to stop the slice before (exclusive). When empty, the slice
-    runs to the end of the string.
+
+The character index to stop the slice before (exclusive). When empty, the slice
+runs to the end of the string.
 
 **step** (`std::int64_t`, default `1`)
-    The stride between characters kept in the slice.
+
+The stride between characters kept in the slice.
 
 ## Returns
 

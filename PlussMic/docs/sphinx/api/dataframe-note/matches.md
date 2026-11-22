@@ -41,11 +41,13 @@ or call [`fullmatch()`](fullmatch.md) — see Example 1 for the contrast.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression pattern (ECMAScript syntax, via `std::regex`).
+
+A regular expression pattern (ECMAScript syntax, via `std::regex`).
 
 **full** (`bool`, default `false`)
-    `false`: match anchored at the start only. `true`: the pattern must
-    match the entire cell — identical to [`fullmatch(pattern)`](fullmatch.md).
+
+`false`: match anchored at the start only. `true`: the pattern must
+match the entire cell — identical to [`fullmatch(pattern)`](fullmatch.md).
 
 ## Returns
 

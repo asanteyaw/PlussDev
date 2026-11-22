@@ -22,15 +22,18 @@ indices counting from the end.
 ## Parameters
 
 **start** (`std::int64_t`)
-    The starting character position, inclusive. Negative values count
-    from the end (`-1` is the last character).
+
+The starting character position, inclusive. Negative values count
+from the end (`-1` is the last character).
 
 **stop** (`std::optional<std::int64_t>`, defaults to `std::nullopt`)
-    The ending character position, exclusive. `std::nullopt` (the
-    default) slices through to the end.
+
+The ending character position, exclusive. `std::nullopt` (the
+default) slices through to the end.
 
 **step** (`std::int64_t`, defaults to `1`)
-    The stride between characters kept in the slice.
+
+The stride between characters kept in the slice.
 
 ## Returns
 

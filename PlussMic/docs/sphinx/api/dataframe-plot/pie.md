@@ -35,15 +35,17 @@ only, not the original column's total.
 ## Parameters
 
 **value_feature** (`std::string_view`)
-    The numeric feature whose values become slice sizes. Only finite, strictly positive
-    values are plotted — see the important callout above.
+
+The numeric feature whose values become slice sizes. Only finite, strictly positive
+values are plotted — see the important callout above.
 
 **label_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    The feature whose values label each slice. When omitted, the frame's own row labels are
-    used instead (the axis/slice label falls back the same conceptual way
-    [`line()`](line.md)'s x-axis does when no `x_feature` is given, though `pie()` has no
-    `default_x_feature`-style shortcut of its own — it's just "explicit label_feature, or
-    the row labels").
+
+The feature whose values label each slice. When omitted, the frame's own row labels are
+used instead (the axis/slice label falls back the same conceptual way
+[`line()`](line.md)'s x-axis does when no `x_feature` is given, though `pie()` has no
+`default_x_feature`-style shortcut of its own — it's just "explicit label_feature, or
+the row labels").
 
 **options** (`PiePlotOptions`)
 

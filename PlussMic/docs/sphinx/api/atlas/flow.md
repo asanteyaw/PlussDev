@@ -22,7 +22,8 @@ frame's worth of depth) without a shape check getting in the way.
 ## Parameters
 
 **fn** (`const std::function<Atlas(const Atlas&)>&`)
-    Called exactly once with `*this`. Must return a defined `Atlas`; must not be empty.
+
+Called exactly once with `*this`. Must return a defined `Atlas`; must not be empty.
 
 ## Returns
 

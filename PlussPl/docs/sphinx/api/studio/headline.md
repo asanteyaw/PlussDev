@@ -21,7 +21,8 @@ The text is read when the figure is rendered, so `headline` can be called before
 ## Parameters
 
 **text** (`std::string`)
-    The headline. An empty string, or text that is only white space, removes the headline.
+
+The headline. An empty string, or text that is only white space, removes the headline.
 
 ## Returns
 

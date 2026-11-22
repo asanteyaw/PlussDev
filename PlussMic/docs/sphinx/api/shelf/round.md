@@ -22,8 +22,9 @@ use for decimal rounding.
 ## Parameters
 
 **decimals** (`std::int64_t`, default `0`)
-    Number of decimal places to round to. `0` rounds to the nearest integer value
-    (still returned as a floating-point `Shelf`).
+
+Number of decimal places to round to. `0` rounds to the nearest integer value
+(still returned as a floating-point `Shelf`).
 
 ## Returns
 

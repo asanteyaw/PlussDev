@@ -34,14 +34,16 @@ Two overloads, differing in where the key set comes from:
 ## Parameters
 
 **table** (`std::string_view`)
-    The table to check. Must already exist in the workspace.
+
+The table to check. Must already exist in the workspace.
 
 **keys** (a range of `std::string_view` — a brace literal, a named container
 such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
 other range whose elements convert to `std::string_view`; two-argument
 overload only)
-    The candidate key features to check for completeness and uniqueness. Each name must be
-    non-empty, unique within the request, and must name a real feature on `table`.
+
+The candidate key features to check for completeness and uniqueness. Each name must be
+non-empty, unique within the request, and must name a real feature on `table`.
 
 :::{note} `pluss::RangeView` is never spelled out in these examples
 `pluss::RangeView<std::string_view>` has implicit constructors from a brace

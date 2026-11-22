@@ -135,34 +135,42 @@ in Example 5.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to lay out and populate — always a `4×4` mosaic with exactly three panes
-    (joint, top marginal, right marginal).
+
+The figure to lay out and populate — always a `4×4` mosaic with exactly three panes
+(joint, top marginal, right marginal).
 
 **x**, **y** (series-convertible, core overloads)
-    The two features to plot directly. Must have identical lengths, or `jointplot` throws
-    `pluss::Error("flash::jointplot requires x/y with identical lengths")`.
+
+The two features to plot directly. Must have identical lengths, or `jointplot` throws
+`pluss::Error("flash::jointplot requires x/y with identical lengths")`.
 
 **kind** (`std::string_view`, default `"scatter"`, kind-string overloads)
-    `"scatter"`, `"reg"`, `"hex"`, or `"kde"` — any other string throws `pluss::Error`
-    naming the kinds there are.
+
+`"scatter"`, `"reg"`, `"hex"`, or `"kde"` — any other string throws `pluss::Error`
+naming the kinds there are.
 
 **data** (`const Dataset&`, Dataset overloads)
-    See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
+
+See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
 
 **x_name**, **y_name** (`std::string_view`, name-based overloads)
-    Feature names to look up. An unrecognized name throws (see the important callout
-    above and the edge-case example below) — on **every** name-based overload, including
-    the matrix ones, since they all route through the same `Dataset::numeric` lookup.
+
+Feature names to look up. An unrecognized name throws (see the important callout
+above and the edge-case example below) — on **every** name-based overload, including
+the matrix ones, since they all route through the same `Dataset::numeric` lookup.
 
 **matrix**, **frame_options**, **feature_names**, **feature_axis** (matrix-by-name
 overloads)
-    Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
+
+Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
 
 **matrix_options** (`const MatrixJointOptions&`, index-based overloads)
-    See the field table above.
+
+See the field table above.
 
 **options** (`const JointPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

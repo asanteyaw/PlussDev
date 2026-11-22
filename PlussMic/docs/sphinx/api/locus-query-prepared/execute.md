@@ -44,10 +44,12 @@ Value and identifier placeholders are deliberately separate:
 ## Parameters
 
 **params** (`Params`)
+
 : Runtime value bindings. Every supplied value is rendered according to its
   variant alternative. When `reject_unused_params` is enabled, extra keys fail.
 
 **identifier_params** (`std::unordered_map<std::string, std::string>`)
+
 : Runtime table or stream identifiers. Values are validated as simple
   identifiers before being quoted; SQL fragments are rejected.
 

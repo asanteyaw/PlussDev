@@ -21,7 +21,8 @@ The pane needs to be planar ([`pane2`](../studio/pane2.md)); a volumetric pane t
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The coordinates of the points. Equal lengths, or one of length 1.
+
+The coordinates of the points. Equal lengths, or one of length 1.
 
 ## Returns
 

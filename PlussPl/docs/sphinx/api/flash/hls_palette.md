@@ -23,13 +23,16 @@ pages.
 ## Parameters
 
 **n** (`std::int64_t`, default `6`)
-    Number of evenly-spaced hues to generate, at least `1`; `0` or a negative value throws `pluss::Error`.
+
+Number of evenly-spaced hues to generate, at least `1`; `0` or a negative value throws `pluss::Error`.
 
 **saturation** (`double`, default `0.68`)
-    HSL saturation, shared by every generated stop.
+
+HSL saturation, shared by every generated stop.
 
 **lightness** (`double`, default `0.52`)
-    HSL lightness, shared by every generated stop.
+
+HSL lightness, shared by every generated stop.
 
 ## Returns
 

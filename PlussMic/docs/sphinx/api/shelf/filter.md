@@ -36,9 +36,10 @@ and `ShelfGrouped::filter`, which all already accept a bare `Shelf` mask.
 ## Parameters
 
 **bool_mask** (`const pluss::Series&` or `const Shelf&`)
-    A `Bool`-typed, 1D mask the same length as `*this`. Each `true` position is
-    kept, in original order; every `false` position is dropped. The `Shelf`
-    overload additionally requires the shelf's payload kind to be `Series`.
+
+A `Bool`-typed, 1D mask the same length as `*this`. Each `true` position is
+kept, in original order; every `false` position is dropped. The `Shelf`
+overload additionally requires the shelf's payload kind to be `Series`.
 
 ## Returns
 

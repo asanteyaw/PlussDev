@@ -33,10 +33,12 @@ Gouraud/Flat-lit trace if you expect to see its effect.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane whose `LightRig` is mutated.
+
+The target pane whose `LightRig` is mutated.
 
 **options** (`const Lighting3DOptions&`)
-    See the field table below.
+
+See the field table below.
 
 ## `Lighting3DOptions` fields
 

@@ -26,9 +26,10 @@ Same as the 2D accessor: a shelf with fewer than three rows throws
 ## Parameters
 
 **options** (`ActPlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::act`](../../api/dataframe-plot/act.md) (`max_lag`,
-    `show_confidence_band`, `confidence_level`, `trace_width`).
+
+The identical struct documented on
+[`DataFramePlotAccessor::act`](../../api/dataframe-plot/act.md) (`max_lag`,
+`show_confidence_band`, `confidence_level`, `trace_width`).
 
 ## Returns
 

@@ -21,10 +21,12 @@ pure alias for this same method; [`cloc(row)`](cloc.md) is built on it too, as
 ## Parameters
 
 **start** (`std::int64_t`)
-    Inclusive starting row position.
+
+Inclusive starting row position.
 
 **stop** (`std::int64_t`)
-    Exclusive ending row position.
+
+Exclusive ending row position.
 
 ## Returns
 

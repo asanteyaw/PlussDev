@@ -26,7 +26,8 @@ Returns the first `n` values from the referenced column as a shelf.
 #### Parameters
 
 **n**
-    Number of leading values to preview from the referenced feature.
+
+Number of leading values to preview from the referenced feature.
 
 #### Returns
 

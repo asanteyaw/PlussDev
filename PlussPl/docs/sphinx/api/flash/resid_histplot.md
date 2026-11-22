@@ -36,18 +36,22 @@ where a perfectly-fit residual would land.
 ## Parameters
 
 **pane** (`Pane&`, first overload) / **studio** (`Studio&`, second overload)
-    The target pane, or a `Studio` to create a new pane on.
+
+The target pane, or a `Studio` to create a new pane on.
 
 **x**, **y** (series-convertible)
-    The raw observation pairs. Filtered to finite pairs; fewer than two finite pairs
-    throws `pluss::Error("flash::resid_histplot requires at least two finite
-    x/y pairs")`.
+
+The raw observation pairs. Filtered to finite pairs; fewer than two finite pairs
+throws `pluss::Error("flash::resid_histplot requires at least two finite
+x/y pairs")`.
 
 **options** (`const ResidHistPlotOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 **title** (`std::string`, default empty, second overload only)
-    The new pane's title.
+
+The new pane's title.
 
 ## Returns
 

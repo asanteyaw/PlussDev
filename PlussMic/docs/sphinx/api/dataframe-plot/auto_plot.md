@@ -67,14 +67,16 @@ Given the resolved feature names (`names`) and whether `features` was passed non
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features to consider. Empty (the default) infers every numeric feature in the
-    frame — see [`box()`](box.md)'s important callout for the exact rule. Whether this
-    argument was left empty or passed explicitly also affects routing directly (rule 2
-    above only fires for the default/empty case).
+
+Numeric features to consider. Empty (the default) infers every numeric feature in the
+frame — see [`box()`](box.md)'s important callout for the exact rule. Whether this
+argument was left empty or passed explicitly also affects routing directly (rule 2
+above only fires for the default/empty case).
 
 **options** (`AutoPlotOptions`)
 **AutoPlotOptions options:** no configurable fields.
-    Currently empty; reserved for future routing controls.
+
+Currently empty; reserved for future routing controls.
 
 ## Returns
 

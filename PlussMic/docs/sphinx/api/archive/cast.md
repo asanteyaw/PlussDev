@@ -42,17 +42,20 @@ only want to cast specific streams, use [`Archive::keys(names)`](keys.md) follow
 ## Parameters
 
 **options** (`const pluss::table::ShelfCastOptions&`, optional)
-    For the accessor overloads, stores conversion policy on the accessor before you pick
-    the terminal target.
+
+For the accessor overloads, stores conversion policy on the accessor before you pick
+the terminal target.
 
 **target** (`pluss::table::ShelfCastTarget`)
-    For the direct root overload, the payload kind to cast every stream to — `Series`,
-    `Note`, `Timeline`, or `TimeIndex`.
+
+For the direct root overload, the payload kind to cast every stream to — `Series`,
+`Note`, `Timeline`, or `TimeIndex`.
 
 **options** (`const pluss::table::ShelfCastOptions&`, optional)
-    For the direct root overload, conversion policy — `series_dtype` picks the numeric
-    dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
-    [`Shelf::cast`](../shelf/cast.md) for the full breakdown.
+
+For the direct root overload, conversion policy — `series_dtype` picks the numeric
+dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
+[`Shelf::cast`](../shelf/cast.md) for the full breakdown.
 
 ## Returns
 

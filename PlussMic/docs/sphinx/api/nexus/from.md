@@ -27,8 +27,9 @@ relationship to use at each step when it's unambiguous.
 ## Parameters
 
 **table** (`std::string_view`)
-    The table to anchor the query at. Must already exist in the workspace — an unknown
-    name throws `"Nexus::from: unknown table '<table>'"`.
+
+The table to anchor the query at. Must already exist in the workspace — an unknown
+name throws `"Nexus::from: unknown table '<table>'"`.
 
 ## Returns
 

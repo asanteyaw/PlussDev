@@ -37,14 +37,16 @@ numeric-pair branch and [`corr_heatmap()`](corr_heatmap.md).
 
 **keys** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`,
 defaults to `{}`)
-    Same resolution as [`line()`](line.md): an empty range selects every
-    plottable key. At least **two** resolved keys are required —
-    `"Catalog::plot().scatter_matrix: need at least two plottable streams"` if fewer.
+
+Same resolution as [`line()`](line.md): an empty range selects every
+plottable key. At least **two** resolved keys are required —
+`"Catalog::plot().scatter_matrix: need at least two plottable streams"` if fewer.
 
 **triangle** (`pluss::table::ScatterMatrixTriangle`, an alias for
 `pluss::pl::flash::PairPlotTriangle`)
-    Shorthand for `CatalogScatterMatrixPlotOptions{}.matrix.pair.triangle = triangle` —
-    `Full` (default, every cell), `Lower`, or `Upper`.
+
+Shorthand for `CatalogScatterMatrixPlotOptions{}.matrix.pair.triangle = triangle` —
+`Full` (default, every cell), `Lower`, or `Upper`.
 
 **options** (`CatalogScatterMatrixPlotOptions`)
 

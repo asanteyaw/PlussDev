@@ -19,7 +19,8 @@ A policy is refused with `pluss::Error`, leaving the previous scale in place, wh
 ## Parameters
 
 **scale** (`ScalePolicy`)
-    `ScalePolicy::linear()`, `ScalePolicy::log10()` or `ScalePolicy::symlog(base = 10, linear_threshold = 1)`.
+
+`ScalePolicy::linear()`, `ScalePolicy::log10()` or `ScalePolicy::symlog(base = 10, linear_threshold = 1)`.
 
 ## Returns
 

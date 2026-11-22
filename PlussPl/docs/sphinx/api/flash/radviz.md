@@ -76,28 +76,34 @@ row with all-zero weights falls back to the coordinate origin (denominator clamp
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), with both axes
-    fixed to `[-1.1, 1.1]` via [`Pane::x_limits`](../pane/x_limits.md)/
-    [`y_limits`](../pane/y_limits.md) (the anchors always sit on the unit circle, so this
-    keeps them fully in view with a small margin).
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md), with both axes
+fixed to `[-1.1, 1.1]` via [`Pane::x_limits`](../pane/x_limits.md)/
+[`y_limits`](../pane/y_limits.md) (the anchors always sit on the unit circle, so this
+keeps them fully in view with a small margin).
 
 **columns** (`pluss::RangeView<pluss::Series>`)
-    One entry per feature. Must contain at least **three** features
-    (`pluss::Error("flash::radviz requires at least three columns")`), and every
-    column must be the same length.
+
+One entry per feature. Must contain at least **three** features
+(`pluss::Error("flash::radviz requires at least three columns")`), and every
+column must be the same length.
 
 **group_labels** (`const Note&`, group-labels overload only)
-    One label per row. Its length must exactly match the row count, or `radviz` throws
-    `pluss::Error("flash::radviz: group label length must match rows")`.
+
+One label per row. Its length must exactly match the row count, or `radviz` throws
+`pluss::Error("flash::radviz: group label length must match rows")`.
 
 **data** (`const Dataset&`, Dataset overload only)
-    See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
+
+See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
 
 **matrix**, **frame_options**, **feature_names**, **feature_axis** (matrix overloads)
-    Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
+
+Identical shape and behavior to [`flash::pairplot`](pairplot.md)'s matrix overloads.
 
 **options** (`const RadvizOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

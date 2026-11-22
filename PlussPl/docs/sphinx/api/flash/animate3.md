@@ -27,11 +27,13 @@ slider. That HTML is opened in a real window via `pluss::view::show_html_window`
 ## Parameters
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3 and identical lengths)
-    The 3D point/path data. Unequal lengths throw `pluss::Error("flash::animate3:
-    x, y, z must have identical lengths")`.
+
+The 3D point/path data. Unequal lengths throw `pluss::Error("flash::animate3:
+x, y, z must have identical lengths")`.
 
 **options** (`const Animation3Options&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `Animation3Options` fields
 

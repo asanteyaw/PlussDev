@@ -24,7 +24,8 @@ key present in only some catalogs is exactly the situation this method is built 
 ## Parameters
 
 **key** (`std::string_view`)
-    The stream name to check for.
+
+The stream name to check for.
 
 ## Returns
 

@@ -21,7 +21,8 @@ Shading applies to the surface kinds: `sheet`, `spire3` and `isoshell`. On every
 ## Parameters
 
 **mode** (`ShadeMode`)
-    `Faceted`, `Flat` or `Smooth`.
+
+`Faceted`, `Flat` or `Smooth`.
 
 ## Returns
 

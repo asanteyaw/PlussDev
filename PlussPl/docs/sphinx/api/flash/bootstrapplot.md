@@ -23,15 +23,18 @@ different samples from the same underlying distribution.
 ## Parameters
 
 **studio** (`Studio&`)
-    The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
+
+The figure to populate — a single new [`Studio::pane2`](../studio/pane2.md).
 
 **values** (series-convertible)
-    The base sample to bootstrap from. Must contain at least two points, or
-    `bootstrapplot` throws `pluss::Error("flash::bootstrapplot requires at least
-    two points")`.
+
+The base sample to bootstrap from. Must contain at least two points, or
+`bootstrapplot` throws `pluss::Error("flash::bootstrapplot requires at least
+two points")`.
 
 **options** (`const BootstrapPlotOptions&`, optional)
-    See the field table below.
+
+See the field table below.
 
 ## `BootstrapPlotOptions` fields
 

@@ -19,7 +19,8 @@ value from the source slot.
 ## Parameters
 
 **other** (`const Slot&`)
-    The slot whose values are appended. Must be defined.
+
+The slot whose values are appended. Must be defined.
 
 ## Returns
 

@@ -24,13 +24,14 @@ a single frame, broadcast across the whole `Atlas` via
 ## Parameters
 
 **options** (`const TimelineLocalizeOptions&`)
-    `tz` (default `"UTC"`; must be one of the four supported names — see
-    [`tz()`](tz.md) — and cannot be empty), `fold` (`0` or `1`; disambiguates the
-    daylight-saving fall-back overlap), and `nonexistent` (only `"shift_forward"` is a
-    recognized handling mode for a spring-forward-gap reading; anything else, including
-    the default `"raise"`, throws). See
-    [`DataFrameTimelineAccessor::localize`](../dataframe-timeline/localize.md) for the
-    full field breakdown and DST edge-case examples.
+
+`tz` (default `"UTC"`; must be one of the four supported names — see
+[`tz()`](tz.md) — and cannot be empty), `fold` (`0` or `1`; disambiguates the
+daylight-saving fall-back overlap), and `nonexistent` (only `"shift_forward"` is a
+recognized handling mode for a spring-forward-gap reading; anything else, including
+the default `"raise"`, throws). See
+[`DataFrameTimelineAccessor::localize`](../dataframe-timeline/localize.md) for the
+full field breakdown and DST edge-case examples.
 
 ## Returns
 

@@ -26,7 +26,8 @@ Only traces that have a [`label`](../trace/label.md) are listed, in the order th
 ## Parameters
 
 **place** (`KeyPlace`)
-    Where to draw the legend; `KeyPlace::None` turns it off.
+
+Where to draw the legend; `KeyPlace::None` turns it off.
 
 ## Returns
 

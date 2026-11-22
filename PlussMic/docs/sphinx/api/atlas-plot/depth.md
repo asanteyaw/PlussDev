@@ -30,15 +30,17 @@ not compile.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The numeric feature to reduce and plot, one value per frame.
+
+The numeric feature to reduce and plot, one value per frame.
 
 **options** (`const AtlasDepthPlotOptions&`)
-    `center` (`AtlasDepthStatistic`, default `Mean`) is the line's own statistic;
-    `lower`/`upper` (`std::optional<AtlasDepthStatistic>`, default `Min`/`Max`) are
-    the band edges — set either to `std::nullopt` to omit that band edge entirely;
-    `show_grid` (default `true`); `center_trace_width`/`band_trace_width` control
-    line thickness. `AtlasDepthStatistic` has four values: `Mean`, `Median`, `Min`,
-    `Max`.
+
+`center` (`AtlasDepthStatistic`, default `Mean`) is the line's own statistic;
+`lower`/`upper` (`std::optional<AtlasDepthStatistic>`, default `Min`/`Max`) are
+the band edges — set either to `std::nullopt` to omit that band edge entirely;
+`show_grid` (default `true`); `center_trace_width`/`band_trace_width` control
+line thickness. `AtlasDepthStatistic` has four values: `Mean`, `Median`, `Min`,
+`Max`.
 
 ## Returns
 

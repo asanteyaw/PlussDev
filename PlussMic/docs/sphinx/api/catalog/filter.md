@@ -25,8 +25,9 @@ but not another's throws — naming the specific key that didn't match. See Exam
 ## Parameters
 
 **condition** (`const pluss::Series&`)
-    A `Bool`-dtype mask, `true` for rows to keep. Must be defined, and must match the
-    length of every stream it's applied to.
+
+A `Bool`-dtype mask, `true` for rows to keep. Must be defined, and must match the
+length of every stream it's applied to.
 
 ## Returns
 

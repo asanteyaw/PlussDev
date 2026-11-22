@@ -43,16 +43,18 @@ request is valid and returns a zero-case frame with the original feature schema.
 ## Parameters
 
 **value** (`std::string_view` / `std::int64_t` / any other integral type / `double`)
-    A single case-label key to match. Integral types other than `std::int64_t` convert
-    implicitly through a templated overload. Its C++ type does not have to match the
-    case axis's own dtype exactly (a `double` key still matches an `Int64` axis, for
-    example), since comparison happens against the axis's rendered label text.
+
+A single case-label key to match. Integral types other than `std::int64_t` convert
+implicitly through a templated overload. Its C++ type does not have to match the
+case axis's own dtype exactly (a `double` key still matches an `Int64` axis, for
+example), since comparison happens against the axis's rendered label text.
 
 **values** (`std::initializer_list<std::string_view>` / `pluss::RangeView<std::string_view>`
 / `std::initializer_list<std::int64_t>` / `pluss::RangeView<std::int64_t>` / `const Shelf&`)
-    The ordered sequence of case-label keys to select. Order is significant: the
-    result follows `values`' order, not the source frame's. The `RangeView` overloads
-    borrow their argument — it must remain alive for the duration of the call.
+
+The ordered sequence of case-label keys to select. Order is significant: the
+result follows `values`' order, not the source frame's. The `RangeView` overloads
+borrow their argument — it must remain alive for the duration of the call.
 
 ## Returns
 

@@ -20,8 +20,9 @@ positional selection, with repeats allowed.
 ## Parameters
 
 **indices** (`std::span<const std::int64_t>`)
-    The positions to select, in the order the result should have them.
-    Repeats are allowed.
+
+The positions to select, in the order the result should have them.
+Repeats are allowed.
 
 ## Returns
 

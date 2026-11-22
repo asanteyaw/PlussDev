@@ -27,14 +27,17 @@ throws on a genuinely mixed-type field.
 ## Parameters
 
 **target_type** (`std::string_view`)
-    The output format name. Anything not recognized by the underlying writer throws.
+
+The output format name. Anything not recognized by the underlying writer throws.
 
 **filepath** (`std::string_view`)
-    The destination file path.
+
+The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the format-specific writer
-    options.
+
+A generic configuration scribble, translated into the format-specific writer
+options.
 
 ## Returns
 

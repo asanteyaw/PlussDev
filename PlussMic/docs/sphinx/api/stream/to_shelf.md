@@ -23,10 +23,12 @@ stack when you need `Shelf`-specific operations not exposed on `Stream` directly
 ## Parameters
 
 **start** (`std::int64_t`, range overload)
-    Inclusive starting row index of the slice.
+
+Inclusive starting row index of the slice.
 
 **stop** (`std::int64_t`, range overload)
-    Exclusive ending row index of the slice.
+
+Exclusive ending row index of the slice.
 
 ## Returns
 

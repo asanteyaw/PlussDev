@@ -24,7 +24,8 @@ a full per-term TF-IDF vector.
 ## Parameters
 
 **field** (`std::string_view`)
-    The text stream to compute TF-IDF norms for. Must already exist.
+
+The text stream to compute TF-IDF norms for. Must already exist.
 
 ## Returns
 

@@ -40,21 +40,25 @@ that the text stays readable.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The labels of the columns and rows. They move with the columns and rows they name, so the tick text
-    always matches its (moved) row or column; the cells themselves sit at positions `0 .. n-1`.
+
+The labels of the columns and rows. They move with the columns and rows they name, so the tick text
+always matches its (moved) row or column; the cells themselves sit at positions `0 .. n-1`.
 
 **z** (series-convertible, must be rank-2)
-    The field values to reorder and plot. `x`'s length must equal `z`'s column count,
-    `y`'s length must equal `z`'s row count — a mismatch throws
-    `pluss::Error("flash::clustermap x/y extents must match z cols/rows")`. `z`
-    itself must be rank-2 — a flat input throws
-    `pluss::Error("flash::clustermap requires rank-2 z")`.
+
+The field values to reorder and plot. `x`'s length must equal `z`'s column count,
+`y`'s length must equal `z`'s row count — a mismatch throws
+`pluss::Error("flash::clustermap x/y extents must match z cols/rows")`. `z`
+itself must be rank-2 — a flat input throws
+`pluss::Error("flash::clustermap requires rank-2 z")`.
 
 **options** (`const ClusterMapOptions&`, optional)
-    See the field table above.
+
+See the field table above.
 
 ## Returns
 

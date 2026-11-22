@@ -32,12 +32,13 @@ method (including this one) is called.
 ## Parameters
 
 **options** (`const pluss::table::TimelineLocalizeOptions&`)
-    `tz` (default `"UTC"`; must be one of the four supported names — see
-    [`tz()`](tz.md) — and cannot be empty), `fold` (`0` or `1`; disambiguates
-    the daylight-saving fall-back overlap), and `nonexistent` (only
-    `"shift_forward"` is a recognized handling mode for a
-    spring-forward-gap reading; anything else, including the default
-    `"raise"`, throws).
+
+`tz` (default `"UTC"`; must be one of the four supported names — see
+[`tz()`](tz.md) — and cannot be empty), `fold` (`0` or `1`; disambiguates
+the daylight-saving fall-back overlap), and `nonexistent` (only
+`"shift_forward"` is a recognized handling mode for a
+spring-forward-gap reading; anything else, including the default
+`"raise"`, throws).
 
 ## Returns
 

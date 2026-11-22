@@ -21,11 +21,13 @@ Nothing. See the important callout above.
 ## Parameters
 
 **pane** (`Pane&`)
-    Accepted but not used.
+
+Accepted but not used.
 
 **(unnamed)** (`bool`, default `true`)
-    Accepted but not used — the parameter has no name in the signature, which is itself
-    a strong signal this was left as a stub.
+
+Accepted but not used — the parameter has no name in the signature, which is itself
+a strong signal this was left as a stub.
 
 ## Returns
 

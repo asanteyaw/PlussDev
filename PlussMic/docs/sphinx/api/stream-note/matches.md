@@ -22,11 +22,13 @@ equivalent to [`fullmatch()`](fullmatch.md)).
 ## Parameters
 
 **pattern** (`std::string_view`)
-    An ECMAScript-flavor regular expression.
+
+An ECMAScript-flavor regular expression.
 
 **full** (`bool`, default `false`)
-    When `true`, requires the pattern to match the entire string (anchored);
-    when `false` (the default), matches if the pattern appears anywhere.
+
+When `true`, requires the pattern to match the entire string (anchored);
+when `false` (the default), matches if the pattern appears anywhere.
 
 ## Returns
 

@@ -37,8 +37,9 @@ reason about.
 ## Parameter
 
 **vector** (`const Series&`)
-    The rank-1 right operand. Its length must equal the matrix's column count,
-    and its dtype and platform must match the matrix.
+
+The rank-1 right operand. Its length must equal the matrix's column count,
+and its dtype and platform must match the matrix.
 
 ## Returns
 

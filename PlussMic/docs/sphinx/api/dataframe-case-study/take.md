@@ -31,11 +31,12 @@ features. It allocates a new result and does not mutate or reorder the source.
 ## Parameters
 
 **rows** (`std::initializer_list<std::int64_t>` / `pluss::RangeView<std::int64_t>`)
-    The ordered sequence of case positions to gather. Nonnegative values are physical
-    positions; negative values count backward from `ncases()`. Each position is
-    validated independently — a single out-of-range value fails the entire call. The
-    `RangeView` overload borrows its argument, which must remain alive for the
-    duration of the call.
+
+The ordered sequence of case positions to gather. Nonnegative values are physical
+positions; negative values count backward from `ncases()`. Each position is
+validated independently — a single out-of-range value fails the entire call. The
+`RangeView` overload borrows its argument, which must remain alive for the
+duration of the call.
 
 ## Returns
 

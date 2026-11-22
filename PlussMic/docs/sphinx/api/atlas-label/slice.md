@@ -20,11 +20,13 @@ convention used across the rest of PlussMic's `.loc`-style APIs.
 ## Parameters
 
 **start** (`std::string_view`)
-    The first depth label to include.
+
+The first depth label to include.
 
 **stop** (`std::string_view`)
-    The last depth label to include (inclusive, unlike a positional slice's exclusive
-    stop).
+
+The last depth label to include (inclusive, unlike a positional slice's exclusive
+stop).
 
 ## Returns
 

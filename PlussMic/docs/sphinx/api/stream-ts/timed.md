@@ -39,20 +39,25 @@ message pattern.
 ## Parameters
 
 **axis** (`const Stream&`)
-    A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Series`, the same
-    length as the bound stream, non-missing and sorted ascending.
+
+A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Series`, the same
+length as the bound stream, non-missing and sorted ascending.
 
 **duration_nanos** (`std::int64_t`)
-    The window width, in nanoseconds. Must be positive.
+
+The window width, in nanoseconds. Must be positive.
 
 **statistic** (`pluss::table::TimeWindowStatistic`, default `Mean`)
-    `Sum`, `Mean`, `Var`, or `Std`.
+
+`Sum`, `Mean`, `Var`, or `Std`.
 
 **options** (`const pluss::table::StatisticOptions&`)
-    `ddof` (default `1`), `min_count` (default `1`).
+
+`ddof` (default `1`), `min_count` (default `1`).
 
 **closure** (`pluss::table::WindowClosure`, default `Right`)
-    Which end(s) of each duration window are inclusive.
+
+Which end(s) of each duration window are inclusive.
 
 ## Returns
 

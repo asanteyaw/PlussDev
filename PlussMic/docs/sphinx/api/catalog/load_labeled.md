@@ -15,13 +15,16 @@ Loads a CSV catalog and uses one field as stream case labels.
 ## Parameters
 
 **filepath**
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+
+File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 **label_field**
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 **options**
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 ## Returns
 

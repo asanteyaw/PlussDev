@@ -20,10 +20,12 @@ one-argument overload, or an explicit `std::ostream&` for the two-argument overl
 ## Parameters
 
 **os** (`std::ostream&`, two-argument overload)
-    The stream to print to.
+
+The stream to print to.
 
 **options** (`const display::DisplayOptions&`, default `{}`)
-    Accepted but currently unused, same as [`to_string()`](to_string.md)'s own `options`.
+
+Accepted but currently unused, same as [`to_string()`](to_string.md)'s own `options`.
 
 ## Returns
 

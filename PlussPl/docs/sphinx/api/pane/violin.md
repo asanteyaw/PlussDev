@@ -31,13 +31,16 @@ The four calls are the two choices, grouped or not and with options or not:
 ## Parameters
 
 **values** (`Series`-convertible)
-    The sample.
+
+The sample.
 
 **group** (`Series`-convertible, optional)
-    The group of each value; same length as `values`.
+
+The group of each value; same length as `values`.
 
 **options** (`ViolinOptions`, optional)
-    The shape of the violins.
+
+The shape of the violins.
 
 ## Returns
 

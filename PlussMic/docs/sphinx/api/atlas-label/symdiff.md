@@ -21,7 +21,8 @@ touch the bound atlas's frames.
 ## Parameters
 
 **other** (`const Shelf&`)
-    The other set of labels to compute the symmetric difference against.
+
+The other set of labels to compute the symmetric difference against.
 
 ## Returns
 

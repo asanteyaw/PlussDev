@@ -21,8 +21,9 @@ frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_fram
 ## Parameters
 
 **unit** (`std::string_view`)
-    One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`, `"H"`/`"h"`/`"hour"`,
-    or `"D"`/`"d"`/`"day"`. Cannot be empty. An unsupported unit throws.
+
+One of `"S"`/`"s"`/`"sec"`/`"second"`, `"min"`/`"m"`/`"minute"`, `"H"`/`"h"`/`"hour"`,
+or `"D"`/`"d"`/`"day"`. Cannot be empty. An unsupported unit throws.
 
 ## Returns
 

@@ -26,14 +26,16 @@ not compile.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The numeric feature forming the surface's z-axis. Must exist in every selected frame.
+
+The numeric feature forming the surface's z-axis. Must exist in every selected frame.
 
 **options** (`const Surface3DPlotOptions&`)
-    `scene` (`Plot3DSceneOptions`): `preset` (`ScenePreset3D`: `Survey`/`Presentation`/`Studio`/
-    `Topology`), `theme`, `camera_preset`/`camera`, `lighting`, `grid_style` — all optional,
-    layered on top of the default scene. `trace` (`Plot3DTraceOptions`): `preset`
-    (`TracePreset3D`), `shade` (`ShadeMode`: `Faceted`/`Flat`/`Smooth`), `lighting`, `material`,
-    `line_width`, `transparent` — all optional.
+
+`scene` (`Plot3DSceneOptions`): `preset` (`ScenePreset3D`: `Survey`/`Presentation`/`Studio`/
+`Topology`), `theme`, `camera_preset`/`camera`, `lighting`, `grid_style` — all optional,
+layered on top of the default scene. `trace` (`Plot3DTraceOptions`): `preset`
+(`TracePreset3D`), `shade` (`ShadeMode`: `Faceted`/`Flat`/`Smooth`), `lighting`, `material`,
+`line_width`, `transparent` — all optional.
 
 ## Returns
 

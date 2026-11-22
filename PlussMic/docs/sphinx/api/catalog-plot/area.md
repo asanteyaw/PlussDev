@@ -54,10 +54,12 @@ for the knobs, the precedence, the examples and the errors.
 
 **y_key** / **y_keys** (`std::string_view` / `pluss::RangeView<std::string_view>` /
 `std::initializer_list<std::string_view>`, `y_keys` defaults to `{}`)
-    Same resolution as [`line()`](line.md).
+
+Same resolution as [`line()`](line.md).
 
 **x_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Same three-step resolution as [`line()`](line.md).
+
+Same three-step resolution as [`line()`](line.md).
 
 **options** (`CatalogAreaPlotOptions`)
 

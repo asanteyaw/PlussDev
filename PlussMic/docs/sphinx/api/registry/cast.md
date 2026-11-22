@@ -33,8 +33,9 @@ some fields, call `cast()` on a narrower, projected registry instead:
 ## Parameters
 
 **options** (`const pluss::table::ShelfCastOptions&`, optional)
-    Casting behavior options (e.g. how parse failures are handled), shared with
-    the table model's cast machinery.
+
+Casting behavior options (e.g. how parse failures are handled), shared with
+the table model's cast machinery.
 
 ## Returns
 

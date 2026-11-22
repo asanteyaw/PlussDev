@@ -29,8 +29,9 @@ inside each group changes.
 ## Parameters
 
 **feature** / **features**
-    One or more feature names to group by, in priority order. Any feature
-    kind works; groups are compared by value.
+
+One or more feature names to group by, in priority order. Any feature
+kind works; groups are compared by value.
 
 ## Returns
 

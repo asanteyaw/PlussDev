@@ -74,17 +74,20 @@ to keep in sync.
 ## Parameters
 
 **x** (`const Series&`)
-    The coordinate values corresponding to each sample of `y` along `dim`.
-    Must be broadcastable against `y` along that dimension. May be complex,
-    matching `y`'s own dtype, for a complex-valued domain.
+
+The coordinate values corresponding to each sample of `y` along `dim`.
+Must be broadcastable against `y` along that dimension. May be complex,
+matching `y`'s own dtype, for a complex-valued domain.
 
 **dx** (`double`)
-    A uniform spacing between samples, used in place of explicit
-    coordinates.
+
+A uniform spacing between samples, used in place of explicit
+coordinates.
 
 **dim** (`std::int64_t`, default `-1`)
-    The dimension to integrate over. Any other, leading dimensions are
-    treated as independent batch rows (see Batching below).
+
+The dimension to integrate over. Any other, leading dimensions are
+treated as independent batch rows (see Batching below).
 
 ## Returns
 

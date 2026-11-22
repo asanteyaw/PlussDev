@@ -22,10 +22,12 @@ Matching is case-insensitive by default.
 ## Parameters
 
 **needle** (`std::string_view`)
-    The substring to search for within each field name.
+
+The substring to search for within each field name.
 
 **case_sensitive** (`bool`, optional, defaults to `false`)
-    Whether the substring search is case-sensitive.
+
+Whether the substring search is case-sensitive.
 
 ## Returns
 

@@ -21,15 +21,18 @@ baseline-filled region plot.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **x**, **y** (series-convertible)
-    The point coordinates — `y[i]` is the filled region's upper edge at `x[i]`.
+
+The point coordinates — `y[i]` is the filled region's upper edge at `x[i]`.
 
 **base** (`double`, default `0.0`)
-    The baseline the filled region runs from. See [`Pane::ribbon`](../pane/ribbon.md) for
-    the exact semantics (it shifts the bottom edge, not the top — `y` values are drawn
-    exactly where given).
+
+The baseline the filled region runs from. See [`Pane::ribbon`](../pane/ribbon.md) for
+the exact semantics (it shifts the bottom edge, not the top — `y` values are drawn
+exactly where given).
 
 ## Returns
 

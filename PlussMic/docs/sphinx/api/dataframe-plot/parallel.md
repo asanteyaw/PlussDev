@@ -36,16 +36,18 @@ figure altogether.
 ## Parameters
 
 **features** (`pluss::RangeView<std::string_view>`, default `{}`)
-    Numeric features to use as axes, in the given order. Empty (the default) infers every
-    numeric feature in the frame — see [`box()`](box.md)'s important callout for the exact
-    rule and throw text.
+
+Numeric features to use as axes, in the given order. Empty (the default) infers every
+numeric feature in the frame — see [`box()`](box.md)'s important callout for the exact
+rule and throw text.
 
 **class_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    An optional feature used to color/group the per-row lines. Unlike
-    [`scatter()`](scatter.md)'s `hue_feature`, this accepts **any** feature kind — it's
-    converted to text via a Note cast if it isn't already Note-kind, so a numeric class
-    feature works too (each distinct value, stringified, becomes its own class), not just
-    a text-like one.
+
+An optional feature used to color/group the per-row lines. Unlike
+[`scatter()`](scatter.md)'s `hue_feature`, this accepts **any** feature kind — it's
+converted to text via a Note cast if it isn't already Note-kind, so a numeric class
+feature works too (each distinct value, stringified, becomes its own class), not just
+a text-like one.
 
 **options** (`ParallelPlotOptions`)
 

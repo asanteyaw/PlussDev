@@ -30,7 +30,8 @@ Every method on this accessor — not just `strip()` — routes through
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from both edges.
+
+The set of characters to strip from both edges.
 
 ## Returns
 

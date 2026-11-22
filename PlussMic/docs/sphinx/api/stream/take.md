@@ -21,8 +21,9 @@ it to reorder rows, duplicate a row, or select an arbitrary, non-contiguous subs
 ## Parameters
 
 **indices** (`std::span<const std::int64_t>`)
-    The row positions to select, in the order they should appear in the result. Accepts
-    anything convertible to `std::span` — e.g. a `std::vector<std::int64_t>`.
+
+The row positions to select, in the order they should appear in the result. Accepts
+anything convertible to `std::span` — e.g. a `std::vector<std::int64_t>`.
 
 ## Returns
 

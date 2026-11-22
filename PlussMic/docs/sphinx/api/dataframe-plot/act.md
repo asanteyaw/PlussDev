@@ -46,8 +46,9 @@ even though `ActPlotOptions` itself has no explicit minimum-row-count field.
 ## Parameters
 
 **feature** (`std::string_view`)
-    The single numeric feature to autocorrelate against its own lagged copies. Must resolve
-    to a `Series`-kind feature — see the shared-diagnostics note above.
+
+The single numeric feature to autocorrelate against its own lagged copies. Must resolve
+to a `Series`-kind feature — see the shared-diagnostics note above.
 
 **options** (`ActPlotOptions`)
 

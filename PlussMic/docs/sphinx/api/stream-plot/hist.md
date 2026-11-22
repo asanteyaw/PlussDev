@@ -28,12 +28,14 @@ choice, or just the untouched default" ambiguity documented on
 ## Parameters
 
 **bins** (`std::int64_t`, default `20`)
-    Requested bin count, subject to the ambiguity above. Values `<= 0` fall back to
-    `options_.default_bins`.
+
+Requested bin count, subject to the ambiguity above. Values `<= 0` fall back to
+`options_.default_bins`.
 
 **options** (`HistPlotOptions`)
-    The identical struct documented on
-    [`CatalogPlotAccessor::hist`](../catalog-plot/hist.md) (`bins`, `alpha`, `line_width`).
+
+The identical struct documented on
+[`CatalogPlotAccessor::hist`](../catalog-plot/hist.md) (`bins`, `alpha`, `line_width`).
 
 ## Returns
 

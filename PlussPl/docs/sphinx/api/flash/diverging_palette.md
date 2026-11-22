@@ -21,13 +21,16 @@ midpoint.
 ## Parameters
 
 **left** (`Rgba`)
-    The color at index `0`.
+
+The color at index `0`.
 
 **right** (`Rgba`)
-    The color at index `n - 1`.
+
+The color at index `n - 1`.
 
 **n** (`std::int64_t`, default `7`)
-    Number of stops, at least `3` (the ramp needs its two ends and a midpoint); fewer throws `pluss::Error`.
+
+Number of stops, at least `3` (the ramp needs its two ends and a midpoint); fewer throws `pluss::Error`.
 
 ## Returns
 

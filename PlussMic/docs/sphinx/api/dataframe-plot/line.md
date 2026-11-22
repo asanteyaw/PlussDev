@@ -116,16 +116,19 @@ either; an unknown feature name, a non-numeric feature in `include_features`, or
 ## Parameters
 
 **y_feature** (`std::string_view`)
-    A single numeric feature to draw as one line trace.
+
+A single numeric feature to draw as one line trace.
 
 **y_features** (`pluss::RangeView<std::string_view>` or `std::initializer_list<std::string_view>`)
-    Several numeric features, each drawn as its own line trace on the same axes. A legend
-    is shown automatically whenever more than one y-feature is requested (and suppressed
-    for a single feature). At least one y-feature is required — an empty list throws
-    `"DataFrame::plot().line: at least one y feature is required"`.
+
+Several numeric features, each drawn as its own line trace on the same axes. A legend
+is shown automatically whenever more than one y-feature is requested (and suppressed
+for a single feature). At least one y-feature is required — an empty list throws
+`"DataFrame::plot().line: at least one y feature is required"`.
 
 **x_feature** (`std::string_view`)
-    The feature to use as the shared x-axis. See "Choosing the x-axis" above.
+
+The feature to use as the shared x-axis. See "Choosing the x-axis" above.
 
 **options** (`LinePlotOptions`)
 

@@ -21,7 +21,8 @@ stream's own length exactly, or it throws before any state changes.
 ## Parameters
 
 **label** (`const pluss::table::Shelf&`)
-    The row-label axis to attach in place. Must match the stream's own length.
+
+The row-label axis to attach in place. Must match the stream's own length.
 
 ## Returns
 

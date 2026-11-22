@@ -22,13 +22,16 @@ known at runtime; reach for the specific `save_*()` method directly otherwise.
 ## Parameters
 
 **target_type** (`std::string_view`)
-    The output format name. Anything not recognized by the underlying writer throws.
+
+The output format name. Anything not recognized by the underlying writer throws.
 
 **filename** (`std::string_view`)
-    The destination file path.
+
+The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration scribble, translated into the format-specific writer options.
+
+A generic configuration scribble, translated into the format-specific writer options.
 
 ## Returns
 

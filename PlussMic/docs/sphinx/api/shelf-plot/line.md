@@ -41,20 +41,22 @@ index, exactly like a `DataFrame` built without explicit row labels.
 ## Parameters
 
 **x** (`const Shelf&`, optional)
-    A companion shelf used as the x-axis. Must be the same size as the bound shelf — a
-    mismatched size throws `"Shelf::plot: shelf size mismatch"`. Omitted means the
-    x-axis falls back to the resulting frame's own row labels (or a plain case index — see
-    the important callout above), exactly like
-    [`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md) with no `x_feature`
-    and no `default_x_feature` set.
+
+A companion shelf used as the x-axis. Must be the same size as the bound shelf — a
+mismatched size throws `"Shelf::plot: shelf size mismatch"`. Omitted means the
+x-axis falls back to the resulting frame's own row labels (or a plain case index — see
+the important callout above), exactly like
+[`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md) with no `x_feature`
+and no `default_x_feature` set.
 
 **options** (`LinePlotOptions`)
-    The identical struct documented on
-    [`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md)
-    (`alpha`, `line_width`, `y_limit_method`, `align`) — see that page for each field's
-    meaning. `align` is doubly inert at this layer: `x`'s own size check above
-    (`"Shelf::plot: shelf size mismatch"`) throws unconditionally on a mismatch, before
-    any `align`-aware reconciliation could ever run.
+
+The identical struct documented on
+[`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md)
+(`alpha`, `line_width`, `y_limit_method`, `align`) — see that page for each field's
+meaning. `align` is doubly inert at this layer: `x`'s own size check above
+(`"Shelf::plot: shelf size mismatch"`) throws unconditionally on a mismatch, before
+any `align`-aware reconciliation could ever run.
 
 ## Returns
 

@@ -39,26 +39,31 @@ pluss::Error, not the pluss::Error.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Volumetric`.
+
+The target pane. Must be `Volumetric`.
 
 **values** (series-convertible, must be rank ≤ 3 for `flash::isoshell`'s own check, and
 rank-3 exactly to satisfy [`Pane::isoshell`](../pane/isoshell.md)'s own deeper
 requirement — see the important callout above)
-    The volumetric scalar field, indexed `values(x, y, z)`.
+
+The volumetric scalar field, indexed `values(x, y, z)`.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3, four- and five-argument
 overloads)
-    Explicit coordinate axes, matching `values`' three dimensions. Auto-indexed as
-    `0, 1, 2, …` in the single-argument overload.
+
+Explicit coordinate axes, matching `values`' three dimensions. Auto-indexed as
+`0, 1, 2, …` in the single-argument overload.
 
 **level_count** (`int`, default `4`, one- and four-argument overloads)
-    Automatic, evenly-spaced isosurface threshold count — note the default of `4` here,
-    versus `8` for [`flash::ridge3`](ridge3.md)/[`Pane::contour`](../pane/contour.md)/
-    [`Pane::isoband`](../pane/isoband.md).
+
+Automatic, evenly-spaced isosurface threshold count — note the default of `4` here,
+versus `8` for [`flash::ridge3`](ridge3.md)/[`Pane::contour`](../pane/contour.md)/
+[`Pane::isoband`](../pane/isoband.md).
 
 **levels** (series-convertible, must be rank ≤ 3, non-integral type, five-argument
 overload only)
-    Explicit threshold values, replacing automatic spacing.
+
+Explicit threshold values, replacing automatic spacing.
 
 ## Returns
 

@@ -49,10 +49,11 @@ The full chain reads `shelf.group(options).by(key).agg({...})` (one row per grou
 ## Parameters
 
 **options** (`const ShelfGroupOptions&`, optional)
-    `dropnull` (default `true`) excludes rows whose grouping key is `NULL` from every
-    group entirely, rather than collecting them into their own `NULL` group. `sort`
-    (default `false`) sorts the output by group key; when `false`, groups appear in
-    first-occurrence order.
+
+`dropnull` (default `true`) excludes rows whose grouping key is `NULL` from every
+group entirely, rather than collecting them into their own `NULL` group. `sort`
+(default `false`) sorts the output by group key; when `false`, groups appear in
+first-occurrence order.
 
 ## Returns
 

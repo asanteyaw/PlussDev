@@ -55,6 +55,7 @@ when it fires from a `plot3d()` call.
 ## Parameters
 
 **x_feature**, **y_feature**, **z_feature** (`std::string_view`, all required)
+
 The three features providing each row's `x`, `y`, and `z` coordinate — see the note
 above for how each is converted to a numeric value. Unlike the 2D accessor's `x_feature`
 arguments, none of these are optional and there is no frame-row-label fallback.

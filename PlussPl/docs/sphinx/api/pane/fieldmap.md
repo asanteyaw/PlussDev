@@ -27,13 +27,16 @@ Switch on [`scale_guide`](scale_guide.md) to show what the colours mean. The con
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The coordinates of the columns and the rows, or full matrices of coordinates.
+
+The coordinates of the columns and the rows, or full matrices of coordinates.
 
 **z** (`Series`-convertible, rank 2)
-    The field.
+
+The field.
 
 **c** (`Series`-convertible, optional)
-    The values that colour the cells, with as many elements as `z`.
+
+The values that colour the cells, with as many elements as `z`.
 
 ## Returns
 

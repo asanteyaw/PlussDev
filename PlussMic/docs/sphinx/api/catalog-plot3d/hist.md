@@ -28,6 +28,7 @@ requested keys.
 ## Parameters
 
 **x_key**, **y_key** (`std::string_view`, required)
+
 The two keys binned into the 2D histogram grid.
 
 **options** (`pluss::table::Hist3DPlotOptions` or `CatalogHist3DPlotOptions`)

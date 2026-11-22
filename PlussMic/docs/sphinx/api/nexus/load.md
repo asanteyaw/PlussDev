@@ -43,10 +43,12 @@ concern instead of the default Nexus bulk-loader path.
 ## Parameters
 
 **directory** (`std::string_view`)
-    Directory to scan for raw tabular files.
+
+Directory to scan for raw tabular files.
 
 **options** (`const LoadOptions&`, default `{}`)
-    Controls discovery, filtering, and dispatch.
+
+Controls discovery, filtering, and dispatch.
 
 ## LoadOptions
 
@@ -66,42 +68,50 @@ concern instead of the default Nexus bulk-loader path.
 ### Field Semantics
 
 **load**
-    Explicit allow-list. If non-empty, only those tables/files are loaded.
+
+Explicit allow-list. If non-empty, only those tables/files are loaded.
 
 **ignore**
-    Explicit deny-list. If non-empty, everything else is loaded except those tables/files.
+
+Explicit deny-list. If non-empty, everything else is loaded except those tables/files.
 
 ```{important} `load` and `ignore` are mutually exclusive
 Use one or the other. Supplying both is rejected.
 ```
 
 **formats**
-    Allowed source types for discovery. This filters by normalized format tokens, not only by
-    literal extension spelling. For example, `"parquet"` covers both `.parquet` and `.pq`.
+
+Allowed source types for discovery. This filters by normalized format tokens, not only by
+literal extension spelling. For example, `"parquet"` covers both `.parquet` and `.pq`.
 
 **recursive**
-    If `true`, descend into subdirectories. Otherwise only the top level is scanned.
+
+If `true`, descend into subdirectories. Otherwise only the top level is scanned.
 
 **keep_extension**
-    Controls how file names become Nexus table keys.
 
-    - `false` (default): `orders.csv` -> `orders`
-    - `true`: `orders.csv` -> `orders.csv`
+Controls how file names become Nexus table keys.
+
+- `false` (default): `orders.csv` -> `orders`
+- `true`: `orders.csv` -> `orders.csv`
 
 **parallel**
-    Enables concurrent file loading across the directory. In other words, Nexus can load
-    `account.csv`, `loan.csv`, and `trans.json` at the same time instead of loading one file,
-    then the next, then the next. The heavy parsing still delegates to
-    `DataFrame::load(...)` for each individual file.
+
+Enables concurrent file loading across the directory. In other words, Nexus can load
+`account.csv`, `loan.csv`, and `trans.json` at the same time instead of loading one file,
+then the next, then the next. The heavy parsing still delegates to
+`DataFrame::load(...)` for each individual file.
 
 **max_workers**
-    Caps concurrent file loads. Leave empty to let Nexus choose a bounded worker count from
-    hardware concurrency.
+
+Caps concurrent file loads. Leave empty to let Nexus choose a bounded worker count from
+hardware concurrency.
 
 **config**
-    Passed through to the underlying `DataFrame::load(source_type, filepath, config)` calls.
-    This is how you tune delimiter/header-style behavior for text-like formats while keeping
-    Nexus as the coordinator rather than the parser.
+
+Passed through to the underlying `DataFrame::load(source_type, filepath, config)` calls.
+This is how you tune delimiter/header-style behavior for text-like formats while keeping
+Nexus as the coordinator rather than the parser.
 
 ## Returns
 

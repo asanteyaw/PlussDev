@@ -22,7 +22,8 @@ the `chars`-argument overload trims any of the given characters.
 ## Parameters
 
 **chars** (`std::string_view`, one-argument overload only)
-    The set of characters to strip from the right edge.
+
+The set of characters to strip from the right edge.
 
 ## Returns
 

@@ -33,8 +33,9 @@ size against its `shape` parameter. If you want that safety net, use `fold()` in
 ## Parameters
 
 **fn** (`const std::function<Shelf(const Shelf&)>&`)
-    Called exactly once with `*this`. Must return a defined `Shelf` of any length; must
-    not be empty.
+
+Called exactly once with `*this`. Must return a defined `Shelf` of any length; must
+not be empty.
 
 ## Returns
 

@@ -27,13 +27,16 @@ visually overlap; there is no separation logic.
 ## Parameters
 
 **pane** (`Pane&`)
-    The target pane. Must be `Planar` (2D).
+
+The target pane. Must be `Planar` (2D).
 
 **group** (series-convertible)
-    A numeric x-position variable, paired with `values` by index.
+
+A numeric x-position variable, paired with `values` by index.
 
 **values** (series-convertible)
-    The y-axis observation values.
+
+The y-axis observation values.
 
 ## Returns
 

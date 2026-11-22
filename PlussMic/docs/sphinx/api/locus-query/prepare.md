@@ -32,6 +32,7 @@ happens at execution, alongside binding.
 ## Parameter
 
 **statement** (`std::string_view`)
+
 : Owned statement-template text. The caller's string storage need not outlive
   this call.
 

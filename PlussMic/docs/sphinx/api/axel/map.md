@@ -24,9 +24,10 @@ covered by a dedicated method.
 ## Parameters
 
 **fn** (`const std::function<Registry(const Registry&)>&`)
-    Called once per frame, in depth order. Must be non-empty. Must
-    return a *defined* `Registry` for every frame — an undefined result
-    throws.
+
+Called once per frame, in depth order. Must be non-empty. Must
+return a *defined* `Registry` for every frame — an undefined result
+throws.
 
 ## Returns
 

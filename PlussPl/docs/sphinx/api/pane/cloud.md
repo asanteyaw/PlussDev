@@ -28,13 +28,16 @@ The size is the area of the marker, so the radius grows as its square root; the 
 ## Parameters
 
 **x**, **y** (`Series`-convertible)
-    The positions.
+
+The positions.
 
 **size** (`Series`-convertible, optional)
-    The size of each marker, or one size for all.
+
+The size of each marker, or one size for all.
 
 **color** (`Series`-convertible, optional)
-    The value that colours each marker, or one value for all.
+
+The value that colours each marker, or one value for all.
 
 ## Returns
 

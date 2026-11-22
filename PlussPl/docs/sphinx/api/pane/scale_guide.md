@@ -22,7 +22,8 @@ The guide is off by default. Its setter and its getter have different names.
 ## Parameters
 
 **enable** (`bool`, default `true`, setter only)
-    `true` to draw the guide, `false` to leave it out.
+
+`true` to draw the guide, `false` to leave it out.
 
 ## Returns
 

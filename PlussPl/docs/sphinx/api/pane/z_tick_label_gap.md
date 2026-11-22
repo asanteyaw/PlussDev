@@ -20,7 +20,8 @@ The gap must be finite and not negative. Anything else (a negative number, infin
 ## Parameters
 
 **points** (`double`)
-    The gap in drawing units. Finite and not negative.
+
+The gap in drawing units. Finite and not negative.
 
 ## Returns
 

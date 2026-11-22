@@ -31,8 +31,9 @@ fails loudly on a kind mismatch instead of guessing.
 ## Parameters
 
 **label** (`std::string_view` / `std::int64_t` / `const pluss::Timeline&`)
-    The depth label to search for. Its C++ type must match the depth labels' own payload
-    kind; `loc(std::int64_t)` throws immediately if the depth labels aren't `Series`-kind.
+
+The depth label to search for. Its C++ type must match the depth labels' own payload
+kind; `loc(std::int64_t)` throws immediately if the depth labels aren't `Series`-kind.
 
 ## Returns
 

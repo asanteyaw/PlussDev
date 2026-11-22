@@ -25,10 +25,12 @@ Panes that are placed claim their cells first. The panes that are not placed the
 ## Parameters
 
 **row**, **col** (`std::int64_t`)
-    The top-left cell, counted from zero. Not negative.
+
+The top-left cell, counted from zero. Not negative.
 
 **row_span**, **col_span** (`std::int64_t`, default 1 and 1)
-    How many rows and columns the pane covers. Positive.
+
+How many rows and columns the pane covers. Positive.
 
 ## Returns
 

@@ -20,13 +20,16 @@ The defaults put the labels at 1, 2, 3, ..., which is where the bar and box trac
 ## Parameters
 
 **labels** (`pluss::RangeView<std::string_view>` or braced list)
-    The category names, at least one.
+
+The category names, at least one.
 
 **first** (`double`, default 1)
-    The position of the first label. Finite.
+
+The position of the first label. Finite.
 
 **step** (`double`, default 1)
-    The distance between labels. Finite and not zero.
+
+The distance between labels. Finite and not zero.
 
 ## Returns
 

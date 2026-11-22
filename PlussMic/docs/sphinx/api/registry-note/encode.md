@@ -19,8 +19,9 @@ each field's `Note` values with their encoded text form.
 ## Parameters
 
 **encoding** (`std::string_view`, defaults to `"base64"`)
-    The name of the encoding scheme to apply. `"base64"` and `"hex"` are the
-    two schemes exercised in the examples below.
+
+The name of the encoding scheme to apply. `"base64"` and `"hex"` are the
+two schemes exercised in the examples below.
 
 ## Returns
 

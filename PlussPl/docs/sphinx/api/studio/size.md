@@ -21,10 +21,12 @@ The margins around the panes are shares of the size, as in matplotlib and MATLAB
 ## Parameters
 
 **width** (`double`)
-    The figure width. Must be finite and greater than zero.
+
+The figure width. Must be finite and greater than zero.
 
 **height** (`double`)
-    The figure height. Must be finite and greater than zero.
+
+The figure height. Must be finite and greater than zero.
 
 ## Returns
 

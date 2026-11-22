@@ -21,7 +21,8 @@ Lighting needs two things: a mode other than `None` on the trace, and at least o
 ## Parameters
 
 **mode** (`LightingMode`)
-    `None`, `Flat` or `Gouraud`.
+
+`None`, `Flat` or `Gouraud`.
 
 ## Returns
 

@@ -64,12 +64,13 @@ still has the form `[2, 2]` by `[2, 3]`.
 ## Parameter
 
 **other** (`const Series&`)
-    The right operand.
 
-    `other` must be at least one-dimensional, use the same dtype and platform
-    as the left operand, and have a compatible contracted dimension. Leading
-    batch dimensions must be broadcastable when either operand has rank above
-    two.
+The right operand.
+
+`other` must be at least one-dimensional, use the same dtype and platform
+as the left operand, and have a compatible contracted dimension. Leading
+batch dimensions must be broadcastable when either operand has rank above
+two.
 
 ## Returns
 

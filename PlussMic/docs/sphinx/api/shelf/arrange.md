@@ -35,12 +35,14 @@ original relative order — and `NULL` entries are grouped to one end according 
 ## Parameters
 
 **ascending** (`bool`, default `true`)
-    `true` sorts smallest/earliest/alphabetically-first values first; `false`
-    reverses the comparison.
+
+`true` sorts smallest/earliest/alphabetically-first values first; `false`
+reverses the comparison.
 
 **nulls_last** (`bool`, default `true`)
-    `true` places every `NULL` entry after all valid entries, regardless of
-    `ascending`; `false` places them before all valid entries instead.
+
+`true` places every `NULL` entry after all valid entries, regardless of
+`ascending`; `false` places them before all valid entries instead.
 
 ## Returns
 

@@ -29,8 +29,9 @@ explanation and the exact throw message.
 ## Parameters
 
 **form** (`pluss::table::UnicodeForm`, defaults to `NFC`)
-    Which Unicode normalization form to apply — `NFC` (canonical composition, the
-    default) or the library's other supported forms.
+
+Which Unicode normalization form to apply — `NFC` (canonical composition, the
+default) or the library's other supported forms.
 
 ## Returns
 

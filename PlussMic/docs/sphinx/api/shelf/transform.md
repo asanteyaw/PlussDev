@@ -46,14 +46,16 @@ needs no row-count constraint. Those two policies currently perform the same val
 ## Parameters
 
 **fn**
-    Either a per-value callback with the form `ShelfValue(const ShelfValue&)`, or a
-    whole-shelf callback with the form `Shelf(const Shelf&)`. State the lambda parameter
-    type explicitly when both forms could be inferred through a generic lambda; it makes
-    overload selection unambiguous and records the intended granularity.
+
+Either a per-value callback with the form `ShelfValue(const ShelfValue&)`, or a
+whole-shelf callback with the form `Shelf(const Shelf&)`. State the lambda parameter
+type explicitly when both forms could be inferred through a generic lambda; it makes
+overload selection unambiguous and records the intended granularity.
 
 **shape** (`ResultShape`, default `Preserve`, whole-shelf overload only)
-    Validates the row count returned by the callback. `Preserve` requires the input row
-    count; `Reduce` requires exactly one row; `Infer` and `Expand` accept any row count.
+
+Validates the row count returned by the callback. `Preserve` requires the input row
+count; `Reduce` requires exactly one row; `Infer` and `Expand` accept any row count.
 
 ## Returns
 

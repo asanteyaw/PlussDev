@@ -27,10 +27,12 @@ here for a case-insensitive substring search.
 ## Parameters
 
 **needle** (`std::string_view`)
-    The substring to search for within each key name.
+
+The substring to search for within each key name.
 
 **case_sensitive** (`bool`, optional, defaults to `true`)
-    Whether the substring search is case-sensitive.
+
+Whether the substring search is case-sensitive.
 
 ## Returns
 

@@ -23,7 +23,8 @@ semantics), so a partial match anywhere in the middle is not enough.
 ## Parameters
 
 **pattern** (`std::string_view`)
-    A regular expression the entire value must match, start to end.
+
+A regular expression the entire value must match, start to end.
 
 ## Returns
 

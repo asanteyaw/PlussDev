@@ -15,10 +15,12 @@ Extracts high-frequency keywords from one text stream.
 ## Parameters
 
 **field**
-    Name of the target stream in the catalog.
+
+Name of the target stream in the catalog.
 
 **top_n**
-    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
+
+Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 ## Returns
 
