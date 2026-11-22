@@ -38,6 +38,7 @@ struct ResolvedStyle {
   int explicit_height{0};
   int min_width{0};
   int min_height{0};
+  int max_height{0};  // 0 = no cap (only tables honour it: they fit their rows up to this height)
   double explicit_width_ratio{0.0};
   double explicit_height_ratio{0.0};
   bool explicit_width_set{false};
@@ -784,7 +785,12 @@ constexpr int kSortGutterPx = 2 * kSortArrowPx + 6;
 constexpr int kHeaderTextBudgetPx = 200;
 // Every column starts this wide (like a spreadsheet) and is resized by dragging its
 // header border; nothing is sized from the content.
-constexpr int kDefaultColumnPx = 170;
+// A column that has not been resized is as wide as its header and its first kDefaultFitRows
+// values need, between kMinDefaultColumnPx and kMaxDefaultColumnPx, so short data gives a compact
+// table and long text wraps instead of making one column swallow the window.
+constexpr int kMaxDefaultColumnPx = 240;
+constexpr int kMinDefaultColumnPx = 72;
+constexpr std::size_t kDefaultFitRows = 48;
 constexpr int kMinColumnPx = 48;
 constexpr int kResizeHandlePx = 8;
 
@@ -1145,6 +1151,8 @@ void apply_style_property(ResolvedStyle& style,
       style.min_height = clamp_nonneg(parse_css_length_px(first_token, style.font_size));
       style.min_height_ratio = 0.0;
     }
+  } else if (property == "max-height") {
+    style.max_height = clamp_nonneg(parse_css_length_px(first_token, style.font_size));
   } else if (property == "display") {
     style.display = val;
   } else if (property == "position") {
@@ -1452,6 +1460,7 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   style.explicit_height = 0;
   style.min_width = 0;
   style.min_height = 0;
+  style.max_height = 0;
   style.explicit_width_ratio = 0.0;
   style.explicit_height_ratio = 0.0;
   style.min_width_ratio = 0.0;
@@ -1742,7 +1751,65 @@ void collect_table_rows_recursive(const HtmlNode& node,
                                       const ResolvedStyle* parent_style,
                                       const int viewport_width);
 
-[[nodiscard]] TableColumnPlan build_table_column_plan(const std::vector<TableRowData>& rows,
+
+[[nodiscard]] int painted_text_width(std::string_view text,
+                                     int font_size,
+                                     int font_weight,
+                                     std::string_view font_family);
+
+// Width a column needs to show its header and the values of its first `row_limit` rows on one
+// line: the widest text, plus the sort arrows beside a header, plus the cell's own padding and
+// border (read from the cell's resolved style, not assumed). This is the single formula behind
+// both the default width (a few rows, capped) and double-click auto-fit (every row), the way a
+// spreadsheet fits to the widest of its header and values.
+[[nodiscard]] int fit_column_width_px(const HtmlDocument& document,
+                                      const std::vector<TableRowData>& rows,
+                                      const std::size_t source,
+                                      const ResolvedStyle& style,
+                                      const int viewport_width,
+                                      const std::size_t row_limit) {
+  constexpr int kTextSlackPx = 2;  // rounding between measuring and painting text
+  const std::size_t limit = std::min(rows.size(), row_limit);
+  // Header cells and value cells are styled differently (font size, weight, padding), so each
+  // kind is measured with its own resolved style, read once from the first cell of that kind.
+  struct KindStyle {
+    ResolvedStyle style;
+    bool read{false};
+    int widest{0};
+  };
+  KindStyle header{style}, value{style};
+  for (std::size_t r = 0; r < limit; ++r) {
+    if (source >= rows[r].cells.size()) continue;
+    const auto& cell = rows[r].cells[source];
+    KindStyle& kind = cell.is_header ? header : value;
+    if (!kind.read) {
+      kind.read = true;
+      if (cell.node != nullptr) {
+        std::vector<const HtmlNode*> lineage = rows[r].lineage;
+        if (rows[r].node != nullptr) lineage.push_back(rows[r].node);
+        kind.style = resolve_style(document, *cell.node, lineage, &style, viewport_width);
+      }
+    }
+    // Text is wrapped by the layout's own metrics and painted by the native ones; a column
+    // keeps a name on one line only if it is wide enough for whichever is larger.
+    kind.widest = std::max({kind.widest,
+                            painted_text_width(cell.text, kind.style.font_size,
+                                               cell.is_header ? 700 : kind.style.font_weight,
+                                               kind.style.font_family),
+                            layout_math_text(cell.text, kind.style.font_size).width});
+  }
+  const auto chrome_of = [](const ResolvedStyle& cell_style) {
+    return 2 * (std::max(2, cell_style.padding) + cell_style.border) + 4;
+  };
+  int fitted = 0;
+  if (header.read) fitted = std::max(fitted, header.widest + kSortGutterPx + chrome_of(header.style));
+  if (value.read) fitted = std::max(fitted, value.widest + chrome_of(value.style));
+  return fitted + kTextSlackPx;
+}
+
+[[nodiscard]] TableColumnPlan build_table_column_plan(const HtmlDocument& document,
+                                                      const int viewport_width,
+                                                      const std::vector<TableRowData>& rows,
                                                       const ResolvedStyle& table_style,
                                                       const int inner_width,
                                                       const std::vector<int>& declared_widths = {}) {
@@ -1778,7 +1845,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
     }
 
     if (!sticky_left[c]) {
-      desired[c] = kDefaultColumnPx;
+      desired[c] = std::clamp(fit_column_width_px(document, rows, c, table_style, viewport_width, kDefaultFitRows),
+                              kMinDefaultColumnPx, kMaxDefaultColumnPx);
       continue;
     }
     int max_w = 72;
@@ -1802,7 +1870,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
     desired[c] = max_w;
   }
 
-  const int min_col_w = 104;
+  const int min_col_w = kMinDefaultColumnPx;
   const int max_col_w = std::max(260, inner_width * 2);
   for (std::size_t c = 0; c < col_count; ++c) {
     const int width = sticky_left[c]
@@ -1883,6 +1951,19 @@ void collect_table_rows_recursive(const HtmlNode& node,
   return row_height;
 }
 
+// Number of <tr> rows under a table, counted without extracting any cell text.
+[[nodiscard]] std::size_t count_table_rows(const HtmlNode& node) {
+  std::size_t count = 0;
+  for (const auto& child : node.children) {
+    if (child.tag == "tr") {
+      ++count;
+    } else {
+      count += count_table_rows(child);
+    }
+  }
+  return count;
+}
+
 [[nodiscard]] int measure_table_height(const HtmlDocument& document,
                                        const HtmlNode& node,
                                        const int width,
@@ -1903,6 +1984,14 @@ void collect_table_rows_recursive(const HtmlNode& node,
   if (style.explicit_height > 0) {
     return (margin * 2) + (padding * 2) + (border * 2) +
            std::max(style.explicit_height, style.min_height);
+  }
+  // With only a max-height, a table is as tall as its rows need, up to that cap. A table with
+  // enough rows to reach the cap is sized without measuring them (rows are at least one line).
+  if (style.max_height > 0 &&
+      count_table_rows(node) * static_cast<std::size_t>(table_row_floor_height(style)) >=
+          static_cast<std::size_t>(style.max_height)) {
+    return (margin * 2) + (padding * 2) + (border * 2) +
+           std::max(style.max_height, style.min_height);
   }
 
   const auto rows = extract_table_rows(node, lineage);
@@ -1932,7 +2021,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
   const auto declared_widths =
       extract_table_column_widths(document, node, lineage, style, viewport_width, inner_width);
-  const TableColumnPlan plan = build_table_column_plan(rows, style, inner_width, declared_widths);
+  const TableColumnPlan plan = build_table_column_plan(document, viewport_width, rows, style, inner_width, declared_widths);
   int total_rows_height = 0;
   for (const auto& row : rows) {
     total_rows_height += measure_table_row_height(document, row, plan, style, viewport_width);
@@ -1941,6 +2030,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
   int viewport_content_height = total_rows_height;
   if (style.explicit_height > 0) {
     viewport_content_height = style.explicit_height;
+  } else if (style.max_height > 0) {
+    viewport_content_height = std::min(viewport_content_height, style.max_height);
   }
   viewport_content_height = std::max(viewport_content_height, style.min_height);
   return (margin * 2) + (padding * 2) + (border * 2) + viewport_content_height;
@@ -3367,7 +3458,7 @@ int render_table(Scene& scene,
     } else {
       const auto declared_widths =
           extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
-      plan = build_table_column_plan(rows, style, content_w, declared_widths);
+      plan = build_table_column_plan(document, viewport_width, rows, style, content_w, declared_widths);
     }
     const std::vector<int> base_widths = plan.widths;
     if (width_overrides != nullptr) {
@@ -3379,22 +3470,7 @@ int render_table(Scene& scene,
             const auto source = plan.source_indices.size() > static_cast<std::size_t>(column)
                                     ? plan.source_indices[static_cast<std::size_t>(column)]
                                     : static_cast<std::size_t>(column);
-            int widest = 0;
-            bool has_header = false;
-            for (std::size_t r = 0; r < rows.size(); ++r) {
-              if (source >= rows[r].cells.size()) continue;
-              const auto& cell = rows[r].cells[source];
-              has_header = has_header || cell.is_header;
-              widest = std::max(widest, painted_text_width(cell.text, style.font_size,
-                                                           cell.is_header ? 700 : style.font_weight,
-                                                           style.font_family) +
-                                            (cell.is_header ? kSortGutterPx : 0));
-            }
-            // The header reserves separate sort controls and cell padding during painting.
-            // Leave enough room for those controls so an auto-fitted name stays on one line.
-            target = std::clamp(widest + 2 * (std::max(2, style.padding) + style.border) +
-                                    (has_header ? 40 : 12),
-                                kMinColumnPx, 4000);
+            target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()), kMinColumnPx, 4000);
           }
           plan.widths[static_cast<std::size_t>(column)] = std::max(kMinColumnPx, target);
         }
@@ -3667,6 +3743,8 @@ int render_table(Scene& scene,
   // click target ("table.sort.asc" / "table.sort.desc"). The active direction of the sorted
   // column is drawn in full strength, every other arrow faint. Because they sit on the
   // headers themselves, nothing has to enumerate columns, however many there are.
+  // Exports leave the sort arrows out, and the room they reserve beside header text with them.
+  const int sort_gutter_px = render_config.table_sort_controls ? kSortGutterPx : 0;
   const auto draw_sort_arrows = [&](const int cell_x,
                                     const int cell_w,
                                     const int row_y,
@@ -3677,6 +3755,9 @@ int render_table(Scene& scene,
                                     const int font_px,
                                     const int clip_left,
                                     const int clip_right) {
+    if (!render_config.table_sort_controls) {
+      return;
+    }
     const bool active = sort_target_matches && render_config.table_sort_column >= 0 &&
                         column == static_cast<std::size_t>(render_config.table_sort_column);
     // Inactive arrows: the text colour mixed most of the way into the header's own
@@ -3747,9 +3828,12 @@ int render_table(Scene& scene,
                                                   : Color::rgba(248, 250, 252, 255));
     if (header_row && row_y == content_y) {
       const int header_radius = std::max(0, std::min(style.border_radius, row_h / 2));
-      draw_rect_fill(scene, RectI{content_x, row_y, content_w, row_h}, fill, header_radius);
+      // The band covers the columns only (like a spreadsheet's header), not the empty space to
+      // their right when the columns are narrower than the viewport.
+      const int band_w = std::max(0, std::min(content_w, row_total_w - scroll_x));
+      draw_rect_fill(scene, RectI{content_x, row_y, band_w, row_h}, fill, header_radius);
       if (header_radius > 0 && row_h > header_radius) {
-        scene.add(FillRectCommand{RectI{content_x, row_y + header_radius, content_w, row_h - header_radius}, fill});
+        scene.add(FillRectCommand{RectI{content_x, row_y + header_radius, band_w, row_h - header_radius}, fill});
       }
     } else {
       scene.add(FillRectCommand{RectI{table_origin_x, row_y, row_total_w, row_h}, fill});
@@ -3781,7 +3865,7 @@ int render_table(Scene& scene,
 
       const int cell_padding = std::max(2, cell_style.padding);
       const int text_max_w =
-          std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? kSortGutterPx : 0));
+          std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? sort_gutter_px : 0));
       const int max_lines = header_row ? 3 : 5;
       const auto wrapped = header_row
                                ? layout_header_lines(value, cell_style.font_size, text_max_w, max_lines)
@@ -3877,7 +3961,7 @@ int render_table(Scene& scene,
         sticky_divider = cell_style.border_color;  // themed via `.sticky-left { border-color }`
         const int cell_padding = std::max(2, cell_style.padding);
         const int text_max_w =
-            std::max(20, sticky_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? kSortGutterPx : 0));
+            std::max(20, sticky_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? sort_gutter_px : 0));
         // Every cell here is a row label or its header: names break at _ - . / over up to 3 lines.
         const auto wrapped = layout_header_lines(value, cell_style.font_size, text_max_w, 3);
         if (cell_style.has_background) {

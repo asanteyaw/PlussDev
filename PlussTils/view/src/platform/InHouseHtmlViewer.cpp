@@ -473,6 +473,8 @@ void release_table_heights(window::HtmlDocument& document) {
       "table", {window::HtmlAttribute{"height", "auto"}}});
   document.style_rules.push_back(window::HtmlCssRule{
       ".table-scroll", {window::HtmlAttribute{"max-height", "none"}}});
+  document.style_rules.push_back(window::HtmlCssRule{
+      "table", {window::HtmlAttribute{"max-height", "0"}}});
 }
 
 // The visible virtual table's node, or null.
@@ -1250,6 +1252,7 @@ bool show_inhouse_html_window(const std::string& title,
     cfg.table_scroll_offsets = &export_offsets;
     cfg.draw_top_bar = false;
     cfg.draw_scrollbars = false;
+    cfg.table_sort_controls = false;
     cfg.hit_regions = nullptr;
     cfg.render_stats = nullptr;
     cfg.layout_cache = nullptr;
