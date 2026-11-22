@@ -54,10 +54,10 @@ struct HtmlTableGeometry {
   // shown as this marker repeated across the cell, the way a spreadsheet shows "####".
   std::string numeric_overflow_marker{"#"};
   // Sort arrows: a stacked pair of triangles at the right of a header.
-  double sort_control_em{1.0};      // width of the control
+  double sort_control_em{0.8};      // width of the control
   double sort_pad_em{0.43};         // air between a header's text and the control
-  double sort_triangle_height_em{0.36};
-  double sort_triangle_base_em{0.72};
+  double sort_triangle_height_em{0.3};
+  double sort_triangle_base_em{0.5};
   double sort_triangle_gap_em{0.14};  // between the two triangles (0 = they touch)
   // Virtual (very large) tables, whose rows are fixed height.
   double header_height_em{3.0};
