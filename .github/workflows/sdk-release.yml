@@ -109,17 +109,17 @@ jobs:
           & "$env:VCPKG_ROOT/vcpkg" list | Select-String "sqlite3|libzip|arrow|curl"
           Write-Host "CMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
           New-Item -ItemType Directory -Force probe | Out-Null
-          $probe = @'
-cmake_minimum_required(VERSION 3.28)
-project(probe LANGUAGES CXX)
-message(STATUS "PREFIX=${CMAKE_PREFIX_PATH}")
-foreach(pkg libzip Arrow Parquet CURL)
-  find_package(${pkg} CONFIG)
-  message(STATUS "PROBE ${pkg} found=${${pkg}_FOUND} dir=${${pkg}_DIR}")
-endforeach()
-find_package(SQLite3)
-message(STATUS "PROBE SQLite3 found=${SQLite3_FOUND} ${SQLite3_INCLUDE_DIR} ${SQLite3_LIBRARY}")
-'@
+          $probe = @(
+            'cmake_minimum_required(VERSION 3.28)',
+            'project(probe LANGUAGES CXX)',
+            'message(STATUS "PREFIX=${CMAKE_PREFIX_PATH}")',
+            'foreach(pkg libzip Arrow Parquet CURL)',
+            '  find_package(${pkg} CONFIG)',
+            '  message(STATUS "PROBE ${pkg} found=${${pkg}_FOUND} dir=${${pkg}_DIR}")',
+            'endforeach()',
+            'find_package(SQLite3)',
+            'message(STATUS "PROBE SQLite3 found=${SQLite3_FOUND} ${SQLite3_INCLUDE_DIR} ${SQLite3_LIBRARY}")'
+          )
           Set-Content probe/CMakeLists.txt $probe
           cmake -S probe -B probe/build -T ClangCL -DCMAKE_BUILD_TYPE=Release "-DVCPKG_TARGET_TRIPLET=$env:PLUSSII_VCPKG_TRIPLET" "-DCMAKE_TOOLCHAIN_FILE=$env:PLUSSII_VCPKG_TOOLCHAIN"
 
