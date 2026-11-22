@@ -334,54 +334,69 @@ class CocoaWindowShell final : public IWindowShell {
         [content addSubview:host_.toolbar];
 
         host_.menu_buttons = [NSMutableArray array];
-        // Laid out right to left from "Save As": the last menu sits closest to it.
-        CGFloat right_edge = content_bounds.size.width - 104.0 - 8.0;
-        for (std::size_t index = config.menus.size(); index-- > 0;) {
-          const auto& menu = config.menus[index];
-          NSPopUpButton* button = [[NSPopUpButton alloc]
-              initWithFrame:NSMakeRect(std::max<CGFloat>(12.0, right_edge - 92.0), 8.0, 92.0, 30.0)
-                  pullsDown:YES];
-          right_edge -= 92.0 + 8.0;
+        // Toolbar geometry: one set of values drives every button. Each button is as wide as
+        // its own title needs (sizeToFit), so "Save As" is never clipped and a longer menu
+        // title simply makes its button wider.
+        const CGFloat toolbar_margin = 12.0;  // gap to the window edge
+        const CGFloat toolbar_gap = 8.0;      // gap between neighbouring buttons
+        const CGFloat button_height = 30.0;
+        const CGFloat button_y = std::round((toolbar_height - button_height) / 2.0);
+        NSFont* button_font = [NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold];
+        auto make_pull_down = ^NSPopUpButton*(NSString* title) {
+          NSPopUpButton* button = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0.0, button_y, 0.0, button_height)
+                                                              pullsDown:YES];
           [button setAutoresizingMask:NSViewMinXMargin];
           [button setBezelStyle:NSBezelStyleRounded];
-          [button setFont:[NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold]];
+          [button setFont:button_font];
+          [button addItemWithTitle:title];
+          [button sizeToFit];
+          NSRect frame = [button frame];
+          frame.size.height = button_height;
+          frame.origin.y = button_y;
+          [button setFrame:frame];
+          return button;
+        };
+        auto place_left_of = ^(NSPopUpButton* button, CGFloat right_edge) {
+          NSRect frame = [button frame];
+          frame.origin.x = std::max<CGFloat>(toolbar_margin, right_edge - frame.size.width);
+          [button setFrame:frame];
+          [host_.toolbar addSubview:button];
+          return frame.origin.x;
+        };
+        CGFloat right_edge = content_bounds.size.width - toolbar_margin;
+        if (show_save_button) {
+          host_.save_button = make_pull_down(@"Save As");
+          right_edge = place_left_of(host_.save_button, right_edge) - toolbar_gap;
+          for (const auto& format : config.save_formats) {
+            NSString* label = [[NSString alloc] initWithBytes:format.label.data()
+                                                      length:format.label.size()
+                                                    encoding:NSUTF8StringEncoding];
+            NSString* extension = [[NSString alloc] initWithBytes:format.extension.data()
+                                                          length:format.extension.size()
+                                                        encoding:NSUTF8StringEncoding];
+            if (label == nil || extension == nil) {
+              continue;
+            }
+            NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label
+                                                         action:@selector(saveAs:)
+                                                  keyEquivalent:@""];
+            [item setTarget:host_];
+            [item setRepresentedObject:extension];
+            [[host_.save_button menu] addItem:item];
+          }
+        } else {
+          host_.save_button = nil;
+        }
+        // Menus sit to the left of "Save As", the last menu closest to it.
+        for (std::size_t index = config.menus.size(); index-- > 0;) {
+          const auto& menu = config.menus[index];
           NSString* title = [[NSString alloc] initWithBytes:menu.title.data()
                                                      length:menu.title.size()
                                                    encoding:NSUTF8StringEncoding];
-          [button addItemWithTitle:(title != nil ? title : @"Menu")];
-          [host_.toolbar addSubview:button];
+          NSPopUpButton* button = make_pull_down(title != nil ? title : @"Menu");
+          right_edge = place_left_of(button, right_edge) - toolbar_gap;
           [host_.menu_buttons addObject:button];
           add_menu_options([button menu], menu.options, menu.id, host_);
-        }
-        if (show_save_button) {
-        host_.save_button = [[NSPopUpButton alloc]
-            initWithFrame:NSMakeRect(
-                std::max<CGFloat>(12.0, content_bounds.size.width - 104.0), 8.0, 92.0, 30.0)
-                pullsDown:YES];
-        [host_.save_button setFrame:NSMakeRect(
-            std::max<CGFloat>(12.0, content_bounds.size.width - 104.0), 8.0, 92.0, 30.0)];
-        [host_.save_button setAutoresizingMask:NSViewMinXMargin];
-        [host_.save_button setBezelStyle:NSBezelStyleRounded];
-        [host_.save_button setFont:[NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold]];
-        [host_.save_button addItemWithTitle:@"Save"];
-        [host_.toolbar addSubview:host_.save_button];
-        for (const auto& format : config.save_formats) {
-          NSString* label = [[NSString alloc] initWithBytes:format.label.data()
-                                                    length:format.label.size()
-                                                  encoding:NSUTF8StringEncoding];
-          NSString* extension = [[NSString alloc] initWithBytes:format.extension.data()
-                                                        length:format.extension.size()
-                                                      encoding:NSUTF8StringEncoding];
-          if (label == nil || extension == nil) {
-            continue;
-          }
-          NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label
-                                                       action:@selector(saveAs:)
-                                                keyEquivalent:@""];
-          [item setTarget:host_];
-          [item setRepresentedObject:extension];
-          [[host_.save_button menu] addItem:item];
-        }
         }
       } else {
         host_.toolbar = nil;

@@ -116,6 +116,7 @@ struct SimpleSelector {
 void reset_render_stats(HtmlRenderStats& stats) {
   stats.document_viewport_rect = RectI{};
   stats.table_viewport_rect = RectI{};
+  stats.table_content_rect = RectI{};
   stats.document_max_scroll_x = 0;
   stats.document_max_scroll_y = 0;
   stats.table_max_scroll_x = 0;
@@ -2829,8 +2830,12 @@ int render_virtual_table(
   const int margin = style.margin;
   const int padding = style.padding;
   const int border = style.border;
+  constexpr int header_h = kVirtualTableHeaderHeightPx;
+  constexpr int row_h = kVirtualTableRowHeightPx;
+  constexpr int row_header_w = 84;
+  constexpr int min_viewport_h = 400;
   const int content_height =
-      std::max({400, style.explicit_height, style.min_height});
+      std::max({min_viewport_h, style.explicit_height, style.min_height});
   const int total_h =
       margin * 2 + padding * 2 + border * 2 + content_height;
   if (y >= bottom) {
@@ -2863,9 +2868,6 @@ int render_virtual_table(
           ? parent_style->background_color
           : style.background_color;
 
-  constexpr int header_h = 42;
-  constexpr int row_h = 38;
-  constexpr int row_header_w = 84;
   constexpr int min_text_column_w = 150;
   constexpr int min_numeric_column_w = 132;
   constexpr int max_column_w = 280;
@@ -2967,6 +2969,14 @@ int render_virtual_table(
       stats.table_max_scroll_x = max_scroll_x;
       stats.table_max_scroll_y = max_scroll_y;
       stats.table_body_row_height_px = row_h;
+      const std::int64_t drawn_body_h = std::min<std::int64_t>(
+          body_viewport_h, std::max<std::int64_t>(0, body_height - scroll_y));
+      const std::int64_t drawn_w = std::min<std::int64_t>(
+          content_w, static_cast<std::int64_t>(row_header_w) + std::max<std::int64_t>(0, data_width - scroll_x));
+      stats.table_content_rect = intersect_rect(
+          interactive_viewport,
+          RectI{content_x, content_y, static_cast<int>(drawn_w),
+                header_h + static_cast<int>(drawn_body_h)});
     }
   }
 
@@ -3541,6 +3551,11 @@ int render_table(Scene& scene,
       stats.table_max_scroll_x = max_scroll_x;
       stats.table_max_scroll_y = max_scroll_y;
       stats.table_body_row_height_px = 0;
+      const int drawn_body_h = std::min(body_viewport_h, std::max(0, body_total_h - scroll_y));
+      const int drawn_w = std::min(content_w, row_total_w - scroll_x);
+      stats.table_content_rect = intersect_rect(
+          interactive_viewport,
+          RectI{content_x, content_y, std::max(0, drawn_w), header_h + drawn_body_h});
     }
     if (!body_order.empty()) {
       const std::size_t sample_count = std::min<std::size_t>(body_order.size(), 12U);

@@ -15,6 +15,11 @@ class VirtualTableModel;
 
 namespace pluss::view::window {
 
+// Fixed row geometry of a virtual table, in logical pixels. The layout draws with these and
+// exports size a full-length table from them, so there is one place to change them.
+inline constexpr int kVirtualTableHeaderHeightPx = 42;
+inline constexpr int kVirtualTableRowHeightPx = 38;
+
 struct HtmlHitRegion {
   RectI rect{};
   std::string action{};
@@ -37,6 +42,9 @@ struct HtmlScrollRegion {
 struct HtmlRenderStats {
   RectI document_viewport_rect{};
   RectI table_viewport_rect{};
+  // The part of the table that is actually drawn: the column headers plus the visible rows,
+  // as wide as the visible columns. Never larger than table_viewport_rect.
+  RectI table_content_rect{};
   int document_max_scroll_x{0};
   int document_max_scroll_y{0};
   int table_max_scroll_x{0};

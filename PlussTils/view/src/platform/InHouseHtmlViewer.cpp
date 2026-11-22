@@ -462,6 +462,36 @@ bool fill_lazy_panel(window::HtmlNode& root,
 
 // True when a table painted from the virtual model is currently on screen (its view is the
 // active one and nothing above it is hidden).
+// Largest page edge, in logical pixels, that an "all rows" export will lay out. Beyond this the
+// image would not open in common viewers, so a taller table is cut at this height.
+constexpr std::int64_t max_export_dimension_px = 16000;
+
+// Lets tables take the height their rows need instead of a fixed or scrolling viewport, by
+// appending rules that come after the page's own stylesheet.
+void release_table_heights(window::HtmlDocument& document) {
+  document.style_rules.push_back(window::HtmlCssRule{
+      "table", {window::HtmlAttribute{"height", "auto"}}});
+  document.style_rules.push_back(window::HtmlCssRule{
+      ".table-scroll", {window::HtmlAttribute{"max-height", "none"}}});
+}
+
+// The visible virtual table's node, or null.
+window::HtmlNode* find_virtual_table_node(window::HtmlNode& node) {
+  if (has_class(node, "hidden") || (has_class(node, "tab-panel") && !has_class(node, "active"))) {
+    return nullptr;
+  }
+  if (node.tag == "table") {
+    const auto* attribute = attribute_value(node, "data-virtual-table");
+    return attribute != nullptr && *attribute == "true" ? &node : nullptr;
+  }
+  for (auto& child : node.children) {
+    if (auto* found = find_virtual_table_node(child)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
 bool virtual_table_visible(const window::HtmlNode& node) {
   if (has_class(node, "hidden") || (has_class(node, "tab-panel") && !has_class(node, "active"))) {
     return false;
@@ -1209,6 +1239,154 @@ bool show_inhouse_html_window(const std::string& title,
   }
 
   bool closed = false;
+  // PNG/PDF exports contain the content only: a plot is re-rendered from its SVG at its natural
+  // size, and a table is re-rendered without scrollbars and cropped to what the layout reports
+  // as drawn (column headers plus rows). Nothing of the window (title bar, toolbar, search box,
+  // scrollbars) is included. With `all_rows`, a table is laid out at its full height instead of
+  // the scrolling viewport, so every row is in the image.
+  const auto export_canvas = [&](window::PixelCanvas& out, const bool all_rows = false) -> bool {
+    window::HtmlRenderConfig cfg = render_cfg;
+    const auto export_offsets = scroll_model.table_offsets_px();
+    cfg.table_scroll_offsets = &export_offsets;
+    cfg.draw_top_bar = false;
+    cfg.draw_scrollbars = false;
+    cfg.hit_regions = nullptr;
+    cfg.render_stats = nullptr;
+    cfg.layout_cache = nullptr;
+    window::SizeI logical = size;  // logical (unscaled) page size to lay out
+    window::RectI crop{};          // logical rectangle to keep
+    window::HtmlDocument export_document;
+    const window::HtmlDocument* doc = &document;
+    if (!svg_payload.empty()) {
+      const auto svg_at = svg_payload.find("<svg");
+      const std::string head =
+          svg_at == std::string::npos
+              ? std::string{}
+              : std::string(svg_payload.substr(svg_at, svg_payload.find('>', svg_at) - svg_at));
+      const auto number_after = [&](const std::string& key) -> double {
+        const auto at = head.find(key);
+        return at == std::string::npos ? 0.0 : std::atof(head.c_str() + at + key.size());
+      };
+      double w = number_after(" width=\"");
+      double h = number_after(" height=\"");
+      if (w <= 0.0 || h <= 0.0) {
+        if (const auto vb = head.find("viewBox=\""); vb != std::string::npos) {
+          double x0 = 0.0, y0 = 0.0;
+          std::sscanf(head.c_str() + vb + 9, "%lf %lf %lf %lf", &x0, &y0, &w, &h);
+        }
+      }
+      if (w <= 0.0 || h <= 0.0) {
+        return false;
+      }
+      export_document = window::parse_html_document(svg_payload, "plot");
+      doc = &export_document;
+      logical = window::SizeI{static_cast<int>(std::lround(w)), static_cast<int>(std::lround(h))};
+      cfg.root_padding_px = 0;
+      cfg.enable_document_scroll = false;
+      cfg.document_scroll_x_px = 0;
+      cfg.document_scroll_y_px = 0;
+      cfg.widget_scale = 1.0;
+    } else {
+      cfg.enable_document_scroll = false;
+      cfg.document_scroll_x_px = 0;
+      cfg.document_scroll_y_px = 0;
+      window::HtmlRenderStats stats{};
+      cfg.render_stats = &stats;
+      std::vector<window::HtmlHitRegion> scratch;
+      cfg.hit_regions = &scratch;
+      if (all_rows && virtual_table_model == nullptr) {
+        // An ordinary table: drop the fixed heights so it takes the height its rows need.
+        export_document = document;
+        release_table_heights(export_document);
+        doc = &export_document;
+        cfg.enable_document_scroll = true;
+        (void)window::build_html_document_scene(*doc, logical, cfg);
+        logical.height += std::max(0, stats.document_max_scroll_y);
+        cfg.enable_document_scroll = false;
+        stats = window::HtmlRenderStats{};
+      } else if (all_rows) {
+        // Give the table node the height that holds every row, then let the page grow to fit it.
+        const std::int64_t rows = virtual_row_order != nullptr
+                                      ? static_cast<std::int64_t>(virtual_row_order->size())
+                                      : virtual_table_model->row_count();
+        const std::int64_t table_h = window::kVirtualTableHeaderHeightPx +
+                                     rows * window::kVirtualTableRowHeightPx;
+        export_document = document;
+        if (auto* table_node = find_virtual_table_node(export_document.root)) {
+          table_node->style.height_px = static_cast<int>(std::min<std::int64_t>(table_h, max_export_dimension_px));
+        }
+        doc = &export_document;
+        cfg.enable_document_scroll = true;
+        (void)window::build_html_document_scene(*doc, logical, cfg);
+        logical.height += std::max(0, stats.document_max_scroll_y);
+        cfg.enable_document_scroll = false;
+        stats = window::HtmlRenderStats{};
+      }
+      (void)window::build_html_document_scene(*doc, logical, cfg);
+      if (!stats.has_table || stats.table_content_rect.width <= 0 || stats.table_content_rect.height <= 0) {
+        return false;
+      }
+      crop = stats.table_content_rect;
+      cfg.render_stats = nullptr;
+      cfg.hit_regions = nullptr;
+    }
+    const auto scaled = [&](const int logical_px) {
+      return std::max(1, static_cast<int>(std::lround(logical_px * backing_scale)));
+    };
+    const window::SizeI canvas_size{scaled(logical.width), scaled(logical.height)};
+    const auto scene = window::scale_scene(window::build_html_document_scene(*doc, logical, cfg), backing_scale);
+    window::PixelCanvas full(canvas_size);
+    full.clear(runtime_cfg.background);
+    std::vector<window::RenderEvent> events;
+    window::SoftwareRenderer renderer;
+    if (!renderer.render(scene, full, events)) {
+      return false;
+    }
+    const auto bytes = full.bytes();
+    const std::size_t stride = static_cast<std::size_t>(canvas_size.width) * 4U;
+    const auto pixel = [&](const int x, const int y) {
+      return bytes.data() + static_cast<std::size_t>(y) * stride + static_cast<std::size_t>(x) * 4U;
+    };
+    // The kept rectangle, in canvas pixels. A plot keeps the bounding box of everything that is
+    // not page background; a table keeps the layout's content rectangle.
+    int x0 = 0, y0 = 0, x1 = canvas_size.width, y1 = canvas_size.height;
+    if (!svg_payload.empty()) {
+      const auto bg = runtime_cfg.background;
+      x0 = canvas_size.width;
+      y0 = canvas_size.height;
+      x1 = 0;
+      y1 = 0;
+      for (int y = 0; y < canvas_size.height; ++y) {
+        for (int x = 0; x < canvas_size.width; ++x) {
+          const auto* q = pixel(x, y);
+          if (q[0] != bg.r || q[1] != bg.g || q[2] != bg.b) {
+            x0 = std::min(x0, x);
+            x1 = std::max(x1, x + 1);
+            y0 = std::min(y0, y);
+            y1 = std::max(y1, y + 1);
+          }
+        }
+      }
+      if (x1 <= x0 || y1 <= y0) {
+        out = std::move(full);
+        return true;
+      }
+    } else {
+      x0 = std::clamp(static_cast<int>(std::lround(crop.x * backing_scale)), 0, canvas_size.width - 1);
+      y0 = std::clamp(static_cast<int>(std::lround(crop.y * backing_scale)), 0, canvas_size.height - 1);
+      x1 = std::clamp(static_cast<int>(std::lround((crop.x + crop.width) * backing_scale)), x0 + 1, canvas_size.width);
+      y1 = std::clamp(static_cast<int>(std::lround((crop.y + crop.height) * backing_scale)), y0 + 1, canvas_size.height);
+    }
+    window::PixelCanvas cropped(window::SizeI{x1 - x0, y1 - y0});
+    for (int y = y0; y < y1; ++y) {
+      for (int x = x0; x < x1; ++x) {
+        const auto* q = pixel(x, y);
+        cropped.set_pixel(window::PointI{x - x0, y - y0}, window::Color::rgba(q[0], q[1], q[2], q[3]));
+      }
+    }
+    out = std::move(cropped);
+    return true;
+  };
   const auto save_as = [&](const std::string_view extension) {
     if (last_presented_frame_id < last_submitted_frame_id &&
         !present_latest(true)) {
@@ -1222,11 +1400,10 @@ bool show_inhouse_html_window(const std::string& title,
     if (path.empty()) {
       return false;
     }
-    if (extension == "png") {
-      return window::save_canvas(presented_canvas, path);
-    }
-    if (extension == "pdf") {
-      return shell->save_canvas_pdf(presented_canvas, path);
+    if (extension == "png" || extension == "pdf") {
+      window::PixelCanvas exported;
+      const window::PixelCanvas& image = export_canvas(exported) ? exported : presented_canvas;
+      return extension == "png" ? window::save_canvas(image, path) : shell->save_canvas_pdf(image, path);
     }
     if (extension == "svg") {
       return !live_svg.empty() && write_text_file(path, live_svg);
@@ -1412,6 +1589,19 @@ bool show_inhouse_html_window(const std::string& title,
                  event.note.rfind("png-to:", 0) == 0) {
         // Test hook: write the last presented frame to a file without a save dialog.
         (void)window::save_canvas(presented_canvas, event.note.substr(7));
+      } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
+                 event.note.rfind("export-png-to:", 0) == 0) {
+        // Test hook: write the content-only export (what Save As PNG writes) without a dialog.
+        window::PixelCanvas exported;
+        if (export_canvas(exported)) {
+          (void)window::save_canvas(exported, event.note.substr(14));
+        }
+      } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
+                 event.note.rfind("export-all-png-to:", 0) == 0) {
+        window::PixelCanvas exported;
+        if (export_canvas(exported, true)) {
+          (void)window::save_canvas(exported, event.note.substr(18));
+        }
       } else if (event.kind == window::ShellEventKind::ShortcutCommand) {
         table_scroll_damage_only = false;
         if (event.note.rfind("view:", 0) == 0) {
