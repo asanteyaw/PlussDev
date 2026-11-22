@@ -36,7 +36,7 @@ in every catalog in the stack.
 
 **options** (`const Scatter3DPlotOptions&`)
 
-The identical struct documented on
+The identical options documented on
 [`AtlasPlotAccessor::cloud3`](../atlas-plot/cloud3.md) (`scene`, `trace`,
 `default_marker_size`).
 

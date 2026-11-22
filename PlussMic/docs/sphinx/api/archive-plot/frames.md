@@ -89,7 +89,7 @@ The key drawn from each selected catalog, one line trace per catalog.
 
 **options** (`const pluss::table::AtlasFramesPlotOptions&`)
 
-The identical struct documented on
+The identical options documented on
 [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md) (`mode`, `show_grid`,
 `rows`, `cols`, `grid_gap_x`, `grid_gap_y`, `line_width`).
 

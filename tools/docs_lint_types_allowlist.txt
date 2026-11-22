@@ -58,4 +58,3 @@ type | PlussTils/docs/* | Sale | user record that the example prints
 type | docs/sphinx/plussma_optimization_user_guide.md | MyObjective | user objective that the example passes to the optimizer
 type | docs/sphinx/kit.md | Metrics | user type in namespace mylib showing how to add output_render
 type | PlussPl/docs/* | PairCase | local example row of pair-plot settings
-prose | PlussMic/docs/sphinx/api/archive-plot/* | struct | TEMPORARY: another change is rewriting the Archive plot pages; remove this entry once they are converted

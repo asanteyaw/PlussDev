@@ -44,7 +44,7 @@ catalog in the (possibly depth-selected) stack.
 
 **options** (`const Surface3DPlotOptions&`)
 
-The identical struct documented on
+The identical options documented on
 [`AtlasPlotAccessor::surface`](../atlas-plot/surface.md) (`scene`, `trace`).
 
 ## Returns

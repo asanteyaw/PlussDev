@@ -29,7 +29,7 @@ The numeric key to reduce per depth level. Must exist and be numeric in every ca
 
 **options** (`const AtlasDepthPlotOptions&`)
 
-The identical struct documented on
+The identical options documented on
 [`AtlasPlotAccessor::depth`](../atlas-plot/depth.md) (`center`, `lower`,
 `upper`, `show_grid`, `center_trace_width`, `band_trace_width`).
 

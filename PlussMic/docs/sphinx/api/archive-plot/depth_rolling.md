@@ -28,7 +28,7 @@ The numeric key to reduce per depth level and smooth.
 
 **options** (`const AtlasDepthRollingPlotOptions&`)
 
-The identical struct documented on
+The identical options documented on
 [`AtlasPlotAccessor::depth_rolling`](../atlas-plot/depth_rolling.md)
 (`statistic`, `window`, `show_raw`, `show_grid`, `raw_line_width`,
 `rolling_line_width`).
