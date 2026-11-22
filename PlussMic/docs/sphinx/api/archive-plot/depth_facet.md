@@ -28,11 +28,13 @@ important callout.
 ## Parameters
 
 **keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    Same resolution as [`depth_compare()`](depth_compare.md): empty selects every
-    numeric key in the first catalog.
+
+Same resolution as [`depth_compare()`](depth_compare.md): empty selects every
+numeric key in the first catalog.
 
 **options** (`const ArchiveDepthFacetPlotOptions&`)
-    The settings of the plot.
+
+The settings of the plot.
 
 | Field | Type | Default |
 |---|---|---|

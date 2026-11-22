@@ -37,11 +37,13 @@ method has.
 ## Parameters
 
 **keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    The numeric keys to compare. An empty range selects every numeric key in the **first**
-    catalog only — see the important callout above.
+
+The numeric keys to compare. An empty range selects every numeric key in the **first**
+catalog only — see the important callout above.
 
 **options** (`const ArchiveDepthComparePlotOptions&`)
-    The settings of the plot.
+
+The settings of the plot.
 
 | Field | Type | Default |
 |---|---|---|

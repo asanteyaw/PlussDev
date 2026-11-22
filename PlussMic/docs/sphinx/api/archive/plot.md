@@ -28,12 +28,14 @@ accessor has its own page, with real rendered charts, under
 ## Parameters
 
 **keys** (`const KeySelection&`)
-    Which keys every key-selecting plot of the accessor (`depth_compare`, `depth_facet`, `triplot`) draws when a
-    call names none: `all_keys`, `include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in
-    the call override both. See [Selecting keys](../archive-plot/depth_compare.md#selecting-keys).
+
+Which keys every key-selecting plot of the accessor (`depth_compare`, `depth_facet`, `triplot`) draws when a
+call names none: `all_keys`, `include_keys` or `exclude_keys`. A plot's own `keys` overrides it, and keys named in
+the call override both. See [Selecting keys](../archive-plot/depth_compare.md#selecting-keys).
 
 **options** (`const ArchivePlotOptions&`)
-    The settings each plot of the accessor starts from.
+
+The settings each plot of the accessor starts from.
 
 | Field | Type |
 |---|---|

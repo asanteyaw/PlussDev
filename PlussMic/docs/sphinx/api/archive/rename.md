@@ -23,14 +23,17 @@ names change; payload values, order, and depth labels are untouched.
 ## Parameters
 
 **from** (`std::string_view`, single-pair overload)
-    The existing stream name to rename.
+
+The existing stream name to rename.
 
 **to** (`std::string_view`, single-pair overload)
-    The new name.
+
+The new name.
 
 **mapping** (`std::initializer_list<std::pair<std::string_view, std::string_view>>`,
 multi-pair overload)
-    One or more `{from, to}` pairs to rename in a single call.
+
+One or more `{from, to}` pairs to rename in a single call.
 
 ## Returns
 

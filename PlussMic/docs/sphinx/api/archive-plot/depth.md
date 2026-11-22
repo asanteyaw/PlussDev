@@ -24,12 +24,14 @@ behavior shared by every single/pairwise-key method on this accessor.
 ## Parameters
 
 **key** (`std::string_view`)
-    The numeric key to reduce per depth level. Must exist and be numeric in every catalog.
+
+The numeric key to reduce per depth level. Must exist and be numeric in every catalog.
 
 **options** (`const AtlasDepthPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::depth`](../atlas-plot/depth.md) (`center`, `lower`,
-    `upper`, `show_grid`, `center_trace_width`, `band_trace_width`).
+
+The identical struct documented on
+[`AtlasPlotAccessor::depth`](../atlas-plot/depth.md) (`center`, `lower`,
+`upper`, `show_grid`, `center_trace_width`, `band_trace_width`).
 
 ## Returns
 

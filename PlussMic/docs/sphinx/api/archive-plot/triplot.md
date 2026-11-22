@@ -35,11 +35,13 @@ etc. have.
 ## Parameters
 
 **keys** (`pluss::RangeView<std::string_view>`, defaults to `{}`)
-    The numeric keys to include, at least three. An empty range (the default) selects every
-    numeric key in the first catalog — see the important callout above.
+
+The numeric keys to include, at least three. An empty range (the default) selects every
+numeric key in the first catalog — see the important callout above.
 
 **options** (`const ArchiveTriplotPlotOptions&`)
-    The style of the grid and the key selection.
+
+The style of the grid and the key selection.
 
 | Field | Type | Default |
 |---|---|---|

@@ -67,26 +67,31 @@ same mismatched row counts would throw.
 ## Parameters
 
 **frame_index** (`std::int64_t`, default `0`)
-    Which catalog to bind, for the single-index overload. Negative indices wrap from the
-    end.
+
+Which catalog to bind, for the single-index overload. Negative indices wrap from the
+end.
 
 **frame_indices** (`pluss::RangeView<std::int64_t>`)
-    Which catalogs to include, for the multi-index overloads. Out-of-range or negative
-    indices resolve the same way [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md)
-    documents; duplicates (after normalizing negatives) are deduplicated.
+
+Which catalogs to include, for the multi-index overloads. Out-of-range or negative
+indices resolve the same way [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md)
+documents; duplicates (after normalizing negatives) are deduplicated.
 
 **x_key** (`std::string_view`, optional, comes first)
-    The key used as each catalog's x-axis. When only one key is named it is the y key and each
-    catalog's own record axis is used instead (positional, or the key's own label if it has one — the same
-    self-axis rule [`CatalogPlotAccessor::line`](../catalog-plot/line.md) uses).
+
+The key used as each catalog's x-axis. When only one key is named it is the y key and each
+catalog's own record axis is used instead (positional, or the key's own label if it has one — the same
+self-axis rule [`CatalogPlotAccessor::line`](../catalog-plot/line.md) uses).
 
 **y_key** (`std::string_view`)
-    The key drawn from each selected catalog, one line trace per catalog.
+
+The key drawn from each selected catalog, one line trace per catalog.
 
 **options** (`const pluss::table::AtlasFramesPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::frames`](../atlas-plot/frames.md) (`mode`, `show_grid`,
-    `rows`, `cols`, `grid_gap_x`, `grid_gap_y`, `line_width`).
+
+The identical struct documented on
+[`AtlasPlotAccessor::frames`](../atlas-plot/frames.md) (`mode`, `show_grid`,
+`rows`, `cols`, `grid_gap_x`, `grid_gap_y`, `line_width`).
 
 ## Returns
 

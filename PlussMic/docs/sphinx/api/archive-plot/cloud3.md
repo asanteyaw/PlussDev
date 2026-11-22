@@ -30,13 +30,15 @@ here, all three requested keys are tabelized together (not just one).
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`)
-    The three numeric keys forming each point's 3D position. Must all exist and be numeric
-    in every catalog in the stack.
+
+The three numeric keys forming each point's 3D position. Must all exist and be numeric
+in every catalog in the stack.
 
 **options** (`const Scatter3DPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::cloud3`](../atlas-plot/cloud3.md) (`scene`, `trace`,
-    `default_marker_size`).
+
+The identical struct documented on
+[`AtlasPlotAccessor::cloud3`](../atlas-plot/cloud3.md) (`scene`, `trace`,
+`default_marker_size`).
 
 ## Returns
 

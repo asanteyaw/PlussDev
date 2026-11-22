@@ -38,12 +38,14 @@ does not compile.
 ## Parameters
 
 **key** (`std::string_view`)
-    The numeric key forming the surface's z-axis. Must exist and be numeric in every
-    catalog in the (possibly depth-selected) stack.
+
+The numeric key forming the surface's z-axis. Must exist and be numeric in every
+catalog in the (possibly depth-selected) stack.
 
 **options** (`const Surface3DPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::surface`](../atlas-plot/surface.md) (`scene`, `trace`).
+
+The identical struct documented on
+[`AtlasPlotAccessor::surface`](../atlas-plot/surface.md) (`scene`, `trace`).
 
 ## Returns
 

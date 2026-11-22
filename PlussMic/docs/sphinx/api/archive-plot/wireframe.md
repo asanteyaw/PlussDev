@@ -23,12 +23,14 @@ behavior shared by every single/pairwise-key method on this accessor.
 ## Parameters
 
 **key** (`std::string_view`)
-    The numeric key forming the mesh's z-axis. Must exist and be numeric in every catalog
-    in the stack.
+
+The numeric key forming the mesh's z-axis. Must exist and be numeric in every catalog
+in the stack.
 
 **options** (`const Wireframe3DPlotOptions&`)
-    Same shape as [`Surface3DPlotOptions`](surface.md): `scene`
-    (`Plot3DSceneOptions`) and `trace` (`Plot3DTraceOptions`).
+
+Same shape as [`Surface3DPlotOptions`](surface.md): `scene`
+(`Plot3DSceneOptions`) and `trace` (`Plot3DTraceOptions`).
 
 ## Returns
 

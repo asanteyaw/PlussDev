@@ -23,13 +23,15 @@ behavior shared by every single/pairwise-key method on this accessor.
 ## Parameters
 
 **key** (`std::string_view`)
-    The numeric key to reduce per depth level and smooth.
+
+The numeric key to reduce per depth level and smooth.
 
 **options** (`const AtlasDepthRollingPlotOptions&`)
-    The identical struct documented on
-    [`AtlasPlotAccessor::depth_rolling`](../atlas-plot/depth_rolling.md)
-    (`statistic`, `window`, `show_raw`, `show_grid`, `raw_line_width`,
-    `rolling_line_width`).
+
+The identical struct documented on
+[`AtlasPlotAccessor::depth_rolling`](../atlas-plot/depth_rolling.md)
+(`statistic`, `window`, `show_raw`, `show_grid`, `raw_line_width`,
+`rolling_line_width`).
 
 ## Returns
 
