@@ -35,22 +35,24 @@ interop such as [`flash::Dataset::frame`](dataset_frame.md) when PlussMic is pre
 ## Parameters
 
 **name**
-    The logical dataset name to resolve.
 
-    This must be one of the curated names returned by
-    [`flash::get_dataset_names`](get_dataset_names.md). If `name` is not in that
-    curated family, the function returns `std::nullopt`.
+The logical dataset name to resolve.
 
-    If `name` is recognized but the persisted assets cannot be found or parsed, the
-    function throws a `pluss::Error`. In other words:
+This must be one of the curated names returned by
+[`flash::get_dataset_names`](get_dataset_names.md). If `name` is not in that
+curated family, the function returns `std::nullopt`.
 
-    - unknown name: `std::nullopt`
-    - known name but bad installation or malformed files: exception
+If `name` is recognized but the persisted assets cannot be found or parsed, the
+function throws a `pluss::Error`. In other words:
+
+- unknown name: `std::nullopt`
+- known name but bad installation or malformed files: exception
 
 ## Returns
 
 `std::optional<Dataset>`
-    The loaded dataset when `name` is recognized, otherwise `std::nullopt`.
+
+The loaded dataset when `name` is recognized, otherwise `std::nullopt`.
 
 ## Dataset Surface
 

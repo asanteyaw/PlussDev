@@ -30,23 +30,24 @@ None.
 ## Returns
 
 `Note`
-    A one-dimensional text payload listing the curated dataset names in load order.
 
-    As of **Thursday, August 13, 2026**, the registry contains 13 names:
+A one-dimensional text payload listing the curated dataset names in load order.
 
-    - `tips`
-    - `flights`
-    - `petals`
-    - `exams`
-    - `retail_daily`
-    - `weather_hourly`
-    - `factor_blocks`
-    - `sensor64`
-    - `options_chain`
-    - `customer_funnel`
-    - `commute_modes`
-    - `regimes`
-    - `quality_batches`
+As of **Thursday, August 13, 2026**, the registry contains 13 names:
+
+- `tips`
+- `flights`
+- `petals`
+- `exams`
+- `retail_daily`
+- `weather_hourly`
+- `factor_blocks`
+- `sensor64`
+- `options_chain`
+- `customer_funnel`
+- `commute_modes`
+- `regimes`
+- `quality_batches`
 
 ## Examples
 

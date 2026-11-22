@@ -33,41 +33,31 @@ The bridge preserves:
 ## Parameters
 
 **frame**
-    The source `DataFrame` to export.
 
-    `frame` must be defined. At least one selected feature must also be exportable under
-    the current options.
+The source `DataFrame` to export.
+
+`frame` must be defined. At least one selected feature must also be exportable under
+the current options.
 
 **options**
-    Export policy for feature selection and kind filtering.
 
-    `FromFrameOptions` contains:
+Export policy for feature selection and kind filtering.
 
-    - `features`
+`FromFrameOptions` fields:
 
-      Limits export to the named features and preserves the exact order you pass here.
-      Leave it empty to export every feature in the `DataFrame`’s current order.
-
-    - `include_series`
-
-      When `true`, numeric `Series`-backed columns are allowed through the bridge.
-      When `false`, selecting a numeric feature raises an error.
-
-    - `include_text`
-
-      When `true`, text `Note`-backed columns are allowed through the bridge.
-      When `false`, selecting a text feature raises an error.
-
-    - `include_timeline`
-
-      When `true`, `Timeline`-backed columns are exported into the temporal family.
-      When `false`, selecting a timeline feature raises an error.
+| Field | Effect |
+| --- | --- |
+| `features` | Limits export to the named features and preserves the exact order you pass here. Leave it empty to export every feature in the `DataFrame`’s current order. |
+| `include_series` | When `true`, numeric `Series`-backed columns are allowed through the bridge. When `false`, selecting a numeric feature raises an error. |
+| `include_text` | When `true`, text `Note`-backed columns are allowed through the bridge. When `false`, selecting a text feature raises an error. |
+| `include_timeline` | When `true`, `Timeline`-backed columns are exported into the temporal family. When `false`, selecting a timeline feature raises an error. |
 
 ## Returns
 
 `flash::Dataset`
-    A grouped flash dataset preserving the selected feature order, family labels,
-    values, and missingness.
+
+A grouped flash dataset preserving the selected feature order, family labels,
+values, and missingness.
 
 ## Notes
 

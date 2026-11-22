@@ -31,32 +31,28 @@ order: numeric first, then text, then temporal.
 ## Parameters
 
 **options**
-    Controls ragged handling and the output title.
 
-    `ToFrameOptions` contains:
+Controls ragged handling and the output title.
 
-    - `policy`
+`ToFrameOptions` fields:
 
-      Chooses how ragged dataset families are handled.
+| Field | Effect |
+| --- | --- |
+| `policy` | Chooses how ragged dataset families are handled: `FramePolicy::Strict` or `FramePolicy::PadNull`. |
+| `title` | Optional output title for the reconstructed `DataFrame`. Leave it empty to keep the default unnamed state. |
 
-      `FramePolicy::Strict`
-      : Every feature must have the same length. If any feature length differs, the
-        method throws immediately.
+`FramePolicy` values:
 
-      `FramePolicy::PadNull`
-      : Shorter features are extended to the maximum feature length and the padded rows
-        are marked invalid. Numeric pads become missing numeric cells, text pads become
-        missing text cells, and temporal pads become missing temporal cells.
-
-    - `title`
-
-      Optional output title for the reconstructed `DataFrame`. Leave it empty when you
-      want the returned frame to keep the default unnamed state.
+| Value | Behavior |
+| --- | --- |
+| `FramePolicy::Strict` | Every feature must have the same length. If any feature length differs, the method throws immediately. |
+| `FramePolicy::PadNull` | Shorter features are extended to the maximum feature length and the padded rows are marked invalid. Numeric pads become missing numeric cells, text pads become missing text cells, and temporal pads become missing temporal cells. |
 
 ## Returns
 
 `pluss::table::DataFrame`
-    A rectangular frame rebuilt from the flash dataset.
+
+A rectangular frame rebuilt from the flash dataset.
 
 ## Notes
 
