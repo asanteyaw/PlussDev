@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b763e942af99 -->
+<!-- pluss-signature-hash: 6c4133775549 -->
 
 # ArchivePlotAccessor::triplot
 
@@ -9,13 +9,10 @@
 
 ```cpp
 pluss::pl::Studio ArchivePlotAccessor::triplot() const
-pluss::pl::Studio ArchivePlotAccessor::triplot(const pluss::pl::flash::TriplotOptions& options) const
-pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys) const
-pluss::pl::Studio ArchivePlotAccessor::triplot(const KeySelection& keys,
-                                               const pluss::pl::flash::TriplotOptions& options) const
+pluss::pl::Studio ArchivePlotAccessor::triplot(const ArchiveTriplotPlotOptions& options) const
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::RangeView<std::string_view> keys) const
 pluss::pl::Studio ArchivePlotAccessor::triplot(pluss::RangeView<std::string_view> keys,
-                                               const pluss::pl::flash::TriplotOptions& options) const
+                                               const ArchiveTriplotPlotOptions& options) const
 ```
 
 ## What It Does
@@ -41,13 +38,26 @@ etc. have.
     The numeric keys to include, at least three. An empty range (the default) selects every
     numeric key in the first catalog — see the important callout above.
 
-**keys** (`const KeySelection&`)
-    The key selection, as an alternative to naming the keys.
+**options** (`const ArchiveTriplotPlotOptions&`)
+    The style of the grid and the key selection.
 
-**options** (`const pluss::pl::flash::TriplotOptions&`)
-    The style of the grid (`kind`, `labels`,
-    `max_features`/`max_panels`/`rows`/`cols`/`max_points`, `ridge_levels`, `show_grid`,
-    sizing fields, `auto_size`).
+| Field | Type | Default |
+|---|---|---|
+| `kind` | `pluss::pl::flash::TriplotKind` | `Cloud` |
+| `labels` | `std::vector<std::string>` | empty (the key names) |
+| `max_keys` | `std::int64_t` | `0` (no cap) |
+| `max_panels` | `std::int64_t` | `9` |
+| `rows` | `std::int64_t` | `0` (automatic) |
+| `cols` | `std::int64_t` | `0` (automatic) |
+| `max_points` | `std::int64_t` | `2500` |
+| `ridge_levels` | `std::int64_t` | `8` |
+| `show_grid` | `bool` | `true` |
+| `auto_size` | `bool` | `true` |
+| `min_width`, `min_height` | `double` | `1280.0`, `900.0` |
+| `cell_width`, `cell_height` | `double` | `360.0`, `300.0` |
+| `outer_pad_x`, `outer_pad_y` | `double` | `100.0` |
+| `grid_gap_x`, `grid_gap_y` | `double` | `10.0` |
+| `keys` | `KeySelection` | no knob set |
 
 ## Returns
 
@@ -101,7 +111,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-pluss::pl::flash::TriplotOptions options;
+pluss::kindle::ArchiveTriplotPlotOptions options;
 options.kind = pluss::pl::flash::TriplotKind::Cloud;
 auto chart = archive.plot().triplot(options);
 chart.show();
@@ -132,7 +142,7 @@ chart.show();
 
 ![Output of Example 3](img/triplot-3.svg)
 
-Example 4. Full keys-and-options call, capping `max_features` to `3` (a no-op with exactly
+Example 4. Full keys-and-options call, capping `max_keys` to `3` (a no-op with exactly
 three keys, shown for completeness).
 
 ```cpp
@@ -150,8 +160,8 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-pluss::pl::flash::TriplotOptions options;
-options.max_features = 3;
+pluss::kindle::ArchiveTriplotPlotOptions options;
+options.max_keys = 3;
 auto chart = archive.plot().triplot(
     {"temp_c", "humidity", "pressure"}, options);
 chart.show();
@@ -177,7 +187,7 @@ for (int i = 0; i < 5; ++i) {
 }
 auto archive = pluss::kindle::Archive(catalogs, pluss::kindle::Stream(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = archive.plot().triplot(pluss::kindle::KeySelection{.exclude_keys = {"wind_kph"}});
+auto chart = archive.plot().triplot({.keys = {.exclude_keys = {"wind_kph"}}});
 ```
 
 ![Output of Example 5](img/triplot-5.svg)
@@ -185,7 +195,7 @@ auto chart = archive.plot().triplot(pluss::kindle::KeySelection{.exclude_keys = 
 Example 6. `include_keys`, in the order given.
 
 ```cpp
-auto chart = archive.plot().triplot(pluss::kindle::KeySelection{.include_keys = {"wind_kph", "temp_c", "pressure"}});
+auto chart = archive.plot().triplot({.keys = {.include_keys = {"wind_kph", "temp_c", "pressure"}}});
 ```
 
 ![Output of Example 6](img/triplot-6.svg)
@@ -193,7 +203,7 @@ auto chart = archive.plot().triplot(pluss::kindle::KeySelection{.include_keys = 
 Example 7. Misuse, using the archive of Example 5.
 
 ```cpp
-archive.plot().triplot(pluss::kindle::KeySelection{.include_keys = {"temp_c", "pressure"}});
+archive.plot().triplot({.keys = {.include_keys = {"temp_c", "pressure"}}});
 ```
 
 ```text
@@ -209,7 +219,7 @@ Archive::plot().triplot: unknown key 'wnd_kph'. Did you mean 'wind_kph'? Availab
 ```
 
 ```cpp
-archive.plot().triplot(pluss::kindle::KeySelection{.all_keys = true, .exclude_keys = {"temp_c"}});
+archive.plot().triplot({.keys = {.all_keys = true, .exclude_keys = {"temp_c"}}});
 ```
 
 ```text

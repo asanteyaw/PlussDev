@@ -2052,10 +2052,16 @@ void test_archive_plot_key_selection() {
   expect(archive.plot().depth_facet({"alpha", "beta"}, {.statistic = pluss::table::AtlasDepthStatistic::Min}).panes().size() == 2,
          "Archive depth_facet named keys with options");
   // triplot selects keys too.
-  expect(archive.plot().triplot(KeySelection{.include_keys = {"alpha", "beta", "gamma"}}).panes().size() >= 1, "Archive triplot include_keys");
-  expect(archive.plot().triplot(KeySelection{.exclude_keys = {"delta"}}).panes().size() >= 1, "Archive triplot exclude_keys");
-  expect(archive.plot().triplot(KeySelection{.all_keys = true}).panes().size() >= 1, "Archive triplot all_keys");
+  expect(archive.plot().triplot({.keys = {.include_keys = {"alpha", "beta", "gamma"}}}).panes().size() >= 1, "Archive triplot include_keys");
+  expect(archive.plot().triplot({.keys = {.exclude_keys = {"delta"}}}).panes().size() >= 1, "Archive triplot exclude_keys");
+  expect(archive.plot().triplot({.keys = {.all_keys = true}}).panes().size() >= 1, "Archive triplot all_keys");
   expect(archive.plot().triplot({"alpha", "beta", "delta"}).panes().size() >= 1, "Archive triplot named keys");
+  // Every knob of the triplot options.
+  expect(archive.plot().triplot({.kind = pluss::pl::flash::TriplotKind::Cloud, .max_keys = 3, .max_panels = 3, .rows = 1, .cols = 3,
+                                 .max_points = 50, .show_grid = false, .auto_size = false, .keys = {.all_keys = true}}).panes().size() >= 1,
+         "Archive triplot options: style knobs, max_keys and keys");
+  expect(archive.plot().triplot({"alpha", "beta", "gamma"}, {.max_points = 10}).panes().size() >= 1, "Archive triplot named keys with options");
+  expect(archive.plot(KeySelection{.include_keys = {"alpha", "beta", "gamma"}}).triplot().panes().size() >= 1, "Archive triplot accessor-level keys");
   // Accessor-level selection, per-plot override, names override both.
   const auto narrowed = archive.plot(KeySelection{.include_keys = {"alpha", "beta"}});
   expect(traces(narrowed.depth_compare()) == 2 && narrowed.depth_facet().panes().size() == 2, "Archive accessor-level include_keys");
@@ -2076,7 +2082,7 @@ void test_archive_plot_key_selection() {
          "Archive: " + both);
   const auto both_inc = message([&] { (void)archive.plot().depth_facet({.keys = {.all_keys = true, .include_keys = {"alpha"}}}); });
   expect(has(both_inc, "Archive::plot().depth_facet: all_keys and include_keys cannot be combined") && keys_only(both_inc), "Archive: " + both_inc);
-  const auto inc_exc = message([&] { (void)archive.plot().triplot(KeySelection{.include_keys = {"alpha"}, .exclude_keys = {"beta"}}); });
+  const auto inc_exc = message([&] { (void)archive.plot().triplot({.keys = {.include_keys = {"alpha"}, .exclude_keys = {"beta"}}}); });
   expect(has(inc_exc, "Archive::plot().triplot: include_keys and exclude_keys cannot both be set") && keys_only(inc_exc), "Archive: " + inc_exc);
   const auto unknown = message([&] { (void)archive.plot().depth_compare({.keys = {.include_keys = {"zz"}}}); });
   expect(has(unknown, "unknown key 'zz'") && has(unknown, "Available keys = [alpha, beta, gamma, delta]") && keys_only(unknown), "Archive: " + unknown);
@@ -2092,7 +2098,7 @@ void test_archive_plot_key_selection() {
   expect(has(facet_typo, "Archive::plot().depth_facet: unknown key 'bta'") && keys_only(facet_typo), "Archive: " + facet_typo);
   const auto tri_typo = message([&] { (void)archive.plot().triplot({"alpha", "beta", "gama"}); });
   expect(has(tri_typo, "Archive::plot().triplot: unknown key 'gama'") && has(tri_typo, "Did you mean 'gamma'?") && keys_only(tri_typo), "Archive: " + tri_typo);
-  const auto tri_few = message([&] { (void)archive.plot().triplot(KeySelection{.include_keys = {"alpha", "beta"}}); });
+  const auto tri_few = message([&] { (void)archive.plot().triplot({.keys = {.include_keys = {"alpha", "beta"}}}); });
   expect(has(tri_few, "requires at least three numeric keys; found 2") && keys_only(tri_few), "Archive: " + tri_few);
   for (const auto& where : {std::string("depth"), std::string("depth_rolling"), std::string("surface"), std::string("wireframe")}) {
     const auto single = message([&] {
