@@ -164,6 +164,27 @@ void test_resize_matches_a_fresh_layout() {
          "an incremental resize gives the same height as a fresh layout");
 }
 
+void test_user_sized_columns_leave_no_gap() {
+  const std::string html = table_html(3, 3);
+  const SizeI viewport{1000, 600};
+  const auto initial = render(html, viewport);
+  const int fill = sum(initial.widths);
+  // Narrowing one column hands its space to the others, so the table still fills the width.
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths["grid"][1] = resolve_table_geometry(initial.stats.table_font_px).min_resize * 2;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  const auto narrowed = render(html, viewport, config);
+  expect(narrowed.widths.size() == 3 && narrowed.widths[1] == widths["grid"][1], "the sized column keeps its width");
+  expect(std::abs(sum(narrowed.widths) - fill) <= 3,
+         "the other columns grow into the freed space (" + std::to_string(sum(narrowed.widths)) + " vs " +
+             std::to_string(fill) + ")");
+  // Auto-fit and then back (the override is removed): the original widths return.
+  widths["grid"].clear();
+  const auto restored = render(html, viewport, config);
+  expect(restored.widths == initial.widths, "removing the override restores the original widths");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -189,6 +210,7 @@ int main() {
     test_many_columns_squeeze_then_scroll();
     test_export_leaves_out_sort_arrows();
     test_resize_matches_a_fresh_layout();
+    test_user_sized_columns_leave_no_gap();
     test_pdf_export_writes_a_valid_file();
     std::cout << "[PASS] html_table_layout_tests\n";
     return 0;

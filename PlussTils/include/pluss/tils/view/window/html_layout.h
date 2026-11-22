@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -157,6 +158,9 @@ struct HtmlTableGeometryCacheEntry {
   std::vector<int> base_widths{};
   std::vector<bool> base_single_line{};
   std::vector<bool> column_single_line{};  // after the user's widths are applied
+  std::vector<int> base_natural{};         // each column's natural width, before it is stretched or squeezed
+  std::vector<bool> base_flexible{};       // whether a column may be stretched or squeezed
+  std::shared_ptr<void> measure_state{};   // per-cell measurements a column resize reuses
   std::vector<int> cell_heights{};
 };
 
