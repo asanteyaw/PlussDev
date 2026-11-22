@@ -57,7 +57,7 @@ struct HtmlTableGeometry {
   double sort_control_em{0.8};      // width of the control
   double sort_pad_em{0.43};         // air between a header's text and the control
   double sort_triangle_height_em{0.42};
-  double sort_triangle_base_em{0.5};
+  double sort_triangle_base_em{0.6};
   double sort_triangle_gap_em{0.14};  // between the two triangles (0 = they touch)
   // Virtual (very large) tables, whose rows are fixed height.
   double header_height_em{3.0};
