@@ -2001,7 +2001,8 @@ struct TableMeasureState {
   const int inner = std::max(20, width - ((padding + style.border) * 2) - 4 - gutter);
   int lines = 1;
   if (!squeezed && (state.multiline[at] != 0 || state.text_width[at] > inner)) {
-    const int max_lines = state.header[at] != 0 ? 3 : (state.breaks_names[at] != 0 ? 3 : 5);
+    const int max_lines = state.header[at] != 0 ? geo.header_max_lines
+                                                 : (state.breaks_names[at] != 0 ? geo.label_max_lines : geo.value_max_lines);
     const auto wrapped = state.breaks_names[at] != 0
                              ? layout_header_lines(cell->text, style.font_size, inner, max_lines)
                              : limit_lines(layout_text_lines(cell->text, style, inner), max_lines, style.font_size, inner);
@@ -2035,7 +2036,10 @@ struct TableMeasureState {
   // Header and row-label cells break long names at _ - . / (a label column keeps its width).
   const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
   const bool squeezed = visible < column_plan.single_line.size() && column_plan.single_line[visible];
-  const int max_lines = squeezed ? 1 : (cell.is_header ? 3 : (breaks_names ? 3 : 5));
+  const HtmlTableGeometryPx lines_geo = resolve_table_geometry(table_style.font_size);
+  const int max_lines = squeezed ? 1
+                                  : (cell.is_header ? lines_geo.header_max_lines
+                                                    : (breaks_names ? lines_geo.label_max_lines : lines_geo.value_max_lines));
   const auto wrapped = breaks_names
                            ? layout_header_lines(cell.text, cell_style.font_size, inner_width, max_lines)
                            : limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
@@ -2085,6 +2089,198 @@ struct TableMeasureState {
     }
   }
   return count;
+}
+
+// The render configuration of the pass in progress on this thread. The measuring functions have no
+// configuration of their own, but a table measured there must use the same layout cache and the
+// same user column widths as the table drawn afterwards, or it would be laid out twice.
+thread_local const HtmlRenderConfig* g_layout_config = nullptr;
+
+[[nodiscard]] const HtmlRenderConfig* current_layout_config() noexcept {
+  return g_layout_config;
+}
+
+struct LayoutConfigScope {
+  explicit LayoutConfigScope(const HtmlRenderConfig* config) noexcept : previous(g_layout_config) {
+    g_layout_config = config;
+  }
+  ~LayoutConfigScope() { g_layout_config = previous; }
+  LayoutConfigScope(const LayoutConfigScope&) = delete;
+  LayoutConfigScope& operator=(const LayoutConfigScope&) = delete;
+  const HtmlRenderConfig* previous;
+};
+
+struct TableLayout {
+  TableColumnPlan plan;
+  std::vector<int> row_heights;
+};
+
+// The column widths and row heights of a table, from the cache when the table, its width and the
+// user's column widths are unchanged, and otherwise (re)measured, reusing whatever is still valid.
+// The measuring pass and the drawing pass both come through here, so a table is laid out once per
+// frame and not twice.
+[[nodiscard]] TableLayout compute_table_layout(
+    const HtmlDocument& document,
+    const HtmlNode& node,
+    const std::vector<const HtmlNode*>& lineage,
+    const ResolvedStyle& style,
+    const int viewport_width,
+    const int content_w,
+    const std::vector<TableRowData>& rows,
+    const std::size_t column_count,
+    const std::string& table_target,
+    HtmlLayoutCache* cache,
+    const std::unordered_map<std::string, std::unordered_map<int, int>>* user_widths) {
+  const std::unordered_map<int, int>* width_overrides = nullptr;
+  if (user_widths != nullptr) {
+    const auto found = user_widths->find(table_target);
+    if (found != user_widths->end() && !found->second.empty()) {
+      width_overrides = &found->second;
+    }
+  }
+  const std::uint64_t override_signature = column_override_signature(width_overrides);
+
+  TableColumnPlan plan;
+  std::vector<int> row_heights;
+  bool geometry_cache_hit = false;
+  if (cache != nullptr) {
+    const auto cached = cache->tables.find(table_target);
+    if (cached != cache->tables.end()) {
+      const auto& entry = cached->second;
+      geometry_cache_hit =
+          entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
+          entry.viewport_width == viewport_width &&
+          entry.content_width == content_w &&
+          entry.row_count == rows.size() &&
+          entry.column_count == column_count &&
+          entry.column_override_signature == override_signature &&
+          entry.row_heights.size() == rows.size();
+      if (geometry_cache_hit) {
+        plan.source_indices = entry.source_indices;
+        plan.widths = entry.column_widths;
+        plan.single_line = entry.column_single_line;
+        row_heights = entry.row_heights;
+      }
+    }
+  }
+  if (!geometry_cache_hit) {
+    // A resize changes only the user's column widths. When the table is otherwise the same as
+    // the cached layout, reuse its base widths and per-cell heights and re-measure only the
+    // columns whose width changed, instead of re-planning and re-wrapping the whole table.
+    const HtmlTableGeometryCacheEntry* previous = nullptr;
+    if (cache != nullptr) {
+      const auto cached = cache->tables.find(table_target);
+      if (cached != cache->tables.end()) {
+        const auto& entry = cached->second;
+        const std::size_t visible_columns = entry.source_indices.size();
+        if (entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
+            entry.viewport_width == viewport_width && entry.content_width == content_w &&
+            entry.row_count == rows.size() && entry.column_count == column_count &&
+            visible_columns > 0 && entry.base_widths.size() == visible_columns &&
+            entry.column_widths.size() == visible_columns &&
+            entry.cell_heights.size() == rows.size() * visible_columns) {
+          previous = &entry;
+        }
+      }
+    }
+    std::vector<int> cell_heights;
+    std::vector<bool> column_dirty;
+    std::shared_ptr<TableMeasureState> measure;
+    if (previous != nullptr) {
+      plan.source_indices = previous->source_indices;
+      plan.widths = previous->base_widths;
+      plan.single_line = previous->base_single_line;
+      plan.natural = previous->base_natural;
+      plan.flexible = previous->base_flexible;
+      cell_heights = previous->cell_heights;
+      measure = std::static_pointer_cast<TableMeasureState>(previous->measure_state);
+    } else {
+      const auto declared_widths =
+          extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
+      plan = build_table_column_plan(document, viewport_width, rows, style, content_w, declared_widths);
+      measure = build_measure_state(document, rows, plan, style, viewport_width);
+    }
+    const HtmlTableGeometryPx geometry_px = resolve_table_geometry(style.font_size);
+    const std::vector<int> base_widths = plan.widths;
+    const std::vector<bool> base_single_line = plan.single_line;
+    const std::vector<int> base_natural = plan.natural;
+    const std::vector<bool> base_flexible = plan.flexible;
+    if (width_overrides != nullptr) {
+      // Columns the user has sized keep that width, and the others share what is left, so a
+      // column made narrower hands its space to its neighbours and no gap opens.
+      std::vector<int> natural = plan.natural;
+      std::vector<bool> flexible = plan.flexible;
+      for (const auto& [column, width] : *width_overrides) {
+        if (column < 0 || static_cast<std::size_t>(column) >= natural.size()) {
+          continue;
+        }
+        int target = width;
+        if (width <= 0) {
+          // Double-click on a border: fit the header and every displayed value.
+          const auto source = plan.source_indices[static_cast<std::size_t>(column)];
+          target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()),
+                              geometry_px.min_resize,
+                              static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
+        }
+        natural[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
+        flexible[static_cast<std::size_t>(column)] = false;
+      }
+      std::vector<int> widths;
+      std::vector<bool> squeezed;
+      distribute_columns(natural, flexible, content_w, geometry_px, widths, squeezed);
+      plan.widths = std::move(widths);
+      plan.single_line = std::move(squeezed);
+    }
+    const std::size_t visible_columns = plan.widths.size();
+    // Which columns need their cells measured again: all of them for a fresh layout, otherwise
+    // only those whose width or squeeze state differs from the cached layout.
+    column_dirty.assign(visible_columns, previous == nullptr);
+    if (previous != nullptr) {
+      for (std::size_t c = 0; c < visible_columns; ++c) {
+        column_dirty[c] = plan.widths[c] != previous->column_widths[c] ||
+                          plan.single_line[c] != previous->column_single_line[c];
+      }
+    } else {
+      cell_heights.assign(rows.size() * visible_columns, 0);
+    }
+    const int floor_height = table_row_floor_height(style);
+    row_heights.assign(rows.size(), floor_height);
+    for (std::size_t r = 0; r < rows.size(); ++r) {
+      int row_height = floor_height;
+      for (std::size_t c = 0; c < visible_columns; ++c) {
+        int& cell_h = cell_heights[r * visible_columns + c];
+        if (column_dirty[c]) {
+          const std::size_t source = plan.source_indices[c];
+          const TableCellData* cell = source < rows[r].cells.size() ? &rows[r].cells[source] : nullptr;
+          cell_h = state_cell_height(*measure, geometry_px, cell, r, c, plan.widths[c], plan.single_line[c]);
+        }
+        row_height = std::max(row_height, cell_h);
+      }
+      row_heights[r] = row_height;
+    }
+    if (cache != nullptr) {
+      cache->tables[table_target] =
+          HtmlTableGeometryCacheEntry{
+              .node_identity = reinterpret_cast<std::uintptr_t>(&node),
+              .viewport_width = viewport_width,
+              .content_width = content_w,
+              .row_count = rows.size(),
+              .column_count = column_count,
+              .source_indices = plan.source_indices,
+              .column_widths = plan.widths,
+              .row_heights = row_heights,
+              .column_override_signature = override_signature,
+              .base_widths = base_widths,
+              .base_single_line = base_single_line,
+              .column_single_line = plan.single_line,
+              .base_natural = base_natural,
+              .base_flexible = base_flexible,
+              .measure_state = measure,
+              .cell_heights = std::move(cell_heights),
+          };
+    }
+  }
+  return TableLayout{std::move(plan), std::move(row_heights)};
 }
 
 [[nodiscard]] int measure_table_height(const HtmlDocument& document,
@@ -2142,12 +2338,14 @@ struct TableMeasureState {
     return (margin * 2) + (padding * 2) + (border * 2) + 40;
   }
 
-  const auto declared_widths =
-      extract_table_column_widths(document, node, lineage, style, viewport_width, inner_width);
-  const TableColumnPlan plan = build_table_column_plan(document, viewport_width, rows, style, inner_width, declared_widths);
+  const HtmlRenderConfig* context = current_layout_config();
+  const TableLayout layout = compute_table_layout(
+      document, node, lineage, style, viewport_width, inner_width, rows, col_count,
+      node_instance_target(node, "table"), context != nullptr ? context->layout_cache : nullptr,
+      context != nullptr ? context->table_column_widths : nullptr);
   int total_rows_height = 0;
-  for (const auto& row : rows) {
-    total_rows_height += measure_table_row_height(document, row, plan, style, viewport_width);
+  for (const int row_height : layout.row_heights) {
+    total_rows_height += row_height;
   }
 
   int viewport_content_height = total_rows_height;
@@ -3523,155 +3721,11 @@ int render_table(Scene& scene,
     column_count = std::max(column_count, row.cells.size());
   }
 
-  const std::unordered_map<int, int>* width_overrides = nullptr;
-  if (render_config.table_column_widths != nullptr) {
-    const auto found = render_config.table_column_widths->find(table_target);
-    if (found != render_config.table_column_widths->end() && !found->second.empty()) {
-      width_overrides = &found->second;
-    }
-  }
-  const std::uint64_t override_signature = column_override_signature(width_overrides);
-
-  TableColumnPlan plan;
-  std::vector<int> row_heights;
-  bool geometry_cache_hit = false;
-  if (render_config.layout_cache != nullptr) {
-    const auto cached = render_config.layout_cache->tables.find(table_target);
-    if (cached != render_config.layout_cache->tables.end()) {
-      const auto& entry = cached->second;
-      geometry_cache_hit =
-          entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
-          entry.viewport_width == viewport_width &&
-          entry.content_width == content_w &&
-          entry.row_count == rows.size() &&
-          entry.column_count == column_count &&
-          entry.column_override_signature == override_signature &&
-          entry.row_heights.size() == rows.size();
-      if (geometry_cache_hit) {
-        plan.source_indices = entry.source_indices;
-        plan.widths = entry.column_widths;
-        plan.single_line = entry.column_single_line;
-        row_heights = entry.row_heights;
-      }
-    }
-  }
-  if (!geometry_cache_hit) {
-    // A resize changes only the user's column widths. When the table is otherwise the same as
-    // the cached layout, reuse its base widths and per-cell heights and re-measure only the
-    // columns whose width changed, instead of re-planning and re-wrapping the whole table.
-    const HtmlTableGeometryCacheEntry* previous = nullptr;
-    if (render_config.layout_cache != nullptr) {
-      const auto cached = render_config.layout_cache->tables.find(table_target);
-      if (cached != render_config.layout_cache->tables.end()) {
-        const auto& entry = cached->second;
-        const std::size_t visible_columns = entry.source_indices.size();
-        if (entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
-            entry.viewport_width == viewport_width && entry.content_width == content_w &&
-            entry.row_count == rows.size() && entry.column_count == column_count &&
-            visible_columns > 0 && entry.base_widths.size() == visible_columns &&
-            entry.column_widths.size() == visible_columns &&
-            entry.cell_heights.size() == rows.size() * visible_columns) {
-          previous = &entry;
-        }
-      }
-    }
-    std::vector<int> cell_heights;
-    std::vector<bool> column_dirty;
-    std::shared_ptr<TableMeasureState> measure;
-    if (previous != nullptr) {
-      plan.source_indices = previous->source_indices;
-      plan.widths = previous->base_widths;
-      plan.single_line = previous->base_single_line;
-      plan.natural = previous->base_natural;
-      plan.flexible = previous->base_flexible;
-      cell_heights = previous->cell_heights;
-      measure = std::static_pointer_cast<TableMeasureState>(previous->measure_state);
-    } else {
-      const auto declared_widths =
-          extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
-      plan = build_table_column_plan(document, viewport_width, rows, style, content_w, declared_widths);
-      measure = build_measure_state(document, rows, plan, style, viewport_width);
-    }
-    const HtmlTableGeometryPx geometry_px = resolve_table_geometry(style.font_size);
-    const std::vector<int> base_widths = plan.widths;
-    const std::vector<bool> base_single_line = plan.single_line;
-    const std::vector<int> base_natural = plan.natural;
-    const std::vector<bool> base_flexible = plan.flexible;
-    if (width_overrides != nullptr) {
-      // Columns the user has sized keep that width, and the others share what is left, so a
-      // column made narrower hands its space to its neighbours and no gap opens.
-      std::vector<int> natural = plan.natural;
-      std::vector<bool> flexible = plan.flexible;
-      for (const auto& [column, width] : *width_overrides) {
-        if (column < 0 || static_cast<std::size_t>(column) >= natural.size()) {
-          continue;
-        }
-        int target = width;
-        if (width <= 0) {
-          // Double-click on a border: fit the header and every displayed value.
-          const auto source = plan.source_indices[static_cast<std::size_t>(column)];
-          target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()),
-                              geometry_px.min_resize,
-                              static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
-        }
-        natural[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
-        flexible[static_cast<std::size_t>(column)] = false;
-      }
-      std::vector<int> widths;
-      std::vector<bool> squeezed;
-      distribute_columns(natural, flexible, content_w, geometry_px, widths, squeezed);
-      plan.widths = std::move(widths);
-      plan.single_line = std::move(squeezed);
-    }
-    const std::size_t visible_columns = plan.widths.size();
-    // Which columns need their cells measured again: all of them for a fresh layout, otherwise
-    // only those whose width or squeeze state differs from the cached layout.
-    column_dirty.assign(visible_columns, previous == nullptr);
-    if (previous != nullptr) {
-      for (std::size_t c = 0; c < visible_columns; ++c) {
-        column_dirty[c] = plan.widths[c] != previous->column_widths[c] ||
-                          plan.single_line[c] != previous->column_single_line[c];
-      }
-    } else {
-      cell_heights.assign(rows.size() * visible_columns, 0);
-    }
-    const int floor_height = table_row_floor_height(style);
-    row_heights.assign(rows.size(), floor_height);
-    for (std::size_t r = 0; r < rows.size(); ++r) {
-      int row_height = floor_height;
-      for (std::size_t c = 0; c < visible_columns; ++c) {
-        int& cell_h = cell_heights[r * visible_columns + c];
-        if (column_dirty[c]) {
-          const std::size_t source = plan.source_indices[c];
-          const TableCellData* cell = source < rows[r].cells.size() ? &rows[r].cells[source] : nullptr;
-          cell_h = state_cell_height(*measure, geometry_px, cell, r, c, plan.widths[c], plan.single_line[c]);
-        }
-        row_height = std::max(row_height, cell_h);
-      }
-      row_heights[r] = row_height;
-    }
-    if (render_config.layout_cache != nullptr) {
-      render_config.layout_cache->tables[table_target] =
-          HtmlTableGeometryCacheEntry{
-              .node_identity = reinterpret_cast<std::uintptr_t>(&node),
-              .viewport_width = viewport_width,
-              .content_width = content_w,
-              .row_count = rows.size(),
-              .column_count = column_count,
-              .source_indices = plan.source_indices,
-              .column_widths = plan.widths,
-              .row_heights = row_heights,
-              .column_override_signature = override_signature,
-              .base_widths = base_widths,
-              .base_single_line = base_single_line,
-              .column_single_line = plan.single_line,
-              .base_natural = base_natural,
-              .base_flexible = base_flexible,
-              .measure_state = measure,
-              .cell_heights = std::move(cell_heights),
-          };
-    }
-  }
+  const TableLayout table_layout =
+      compute_table_layout(document, node, lineage, style, viewport_width, content_w, rows, column_count,
+                           table_target, render_config.layout_cache, render_config.table_column_widths);
+  TableColumnPlan plan = table_layout.plan;
+  const std::vector<int>& row_heights = table_layout.row_heights;
   int row_total_w = 0;
   for (const int w : plan.widths) row_total_w += w;
   row_total_w = std::max(40, row_total_w);
@@ -4028,7 +4082,7 @@ int render_table(Scene& scene,
       const int text_max_w =
           std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? sort_gutter_px : 0));
       const bool squeezed = c < plan.single_line.size() && plan.single_line[c];
-      const int max_lines = squeezed ? 1 : (header_row ? 3 : 5);
+      const int max_lines = squeezed ? 1 : (header_row ? table_geo.header_max_lines : table_geo.value_max_lines);
       const auto wrapped = header_row
                                ? layout_header_lines(value, cell_style.font_size, text_max_w, max_lines)
                                : limit_lines(layout_text_lines(value, cell_style, text_max_w),
@@ -4761,6 +4815,7 @@ Color page_background_color(const HtmlDocument& document, const int viewport_wid
 } // namespace
 
 Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewport, const HtmlRenderConfig config) {
+  const LayoutConfigScope layout_scope(&config);
   if (config.render_stats != nullptr) {
     reset_render_stats(*config.render_stats);
   }

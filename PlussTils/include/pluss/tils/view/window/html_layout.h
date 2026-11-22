@@ -31,6 +31,11 @@ struct HtmlTableGeometry {
   double min_resize_em{3.5};        // narrowest a user can drag a column to
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
+  // Lines of text a cell may use before it ends in an ellipsis. A header is one line, so shrinking
+  // a column never makes the header row taller.
+  int header_max_lines{1};
+  int value_max_lines{5};
+  int label_max_lines{3};  // row-label cells
   // Sort arrows: a stacked pair of triangles at the right of a header.
   double sort_control_em{1.0};      // width of the control
   double sort_pad_em{0.43};         // air between a header's text and the control
@@ -54,6 +59,9 @@ struct HtmlTableGeometryPx {
   int squeeze_floor{0};
   int min_resize{0};
   std::size_t fit_sample_rows{0};
+  int header_max_lines{1};
+  int value_max_lines{1};
+  int label_max_lines{1};
   int sort_control{0};
   int sort_pad{0};
   int sort_gutter{0};  // what a header's text leaves for the control: control + pad
@@ -86,6 +94,9 @@ struct HtmlTableGeometryPx {
   out.squeeze_floor = px(g.squeeze_floor_em);
   out.min_resize = px(g.min_resize_em);
   out.fit_sample_rows = g.fit_sample_rows;
+  out.header_max_lines = std::max(1, g.header_max_lines);
+  out.value_max_lines = std::max(1, g.value_max_lines);
+  out.label_max_lines = std::max(1, g.label_max_lines);
   out.sort_control = px(g.sort_control_em);
   out.sort_pad = px(g.sort_pad_em);
   out.sort_gutter = out.sort_control + out.sort_pad;

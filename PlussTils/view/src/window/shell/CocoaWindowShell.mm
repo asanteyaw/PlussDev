@@ -826,7 +826,11 @@ class CocoaWindowShell final : public IWindowShell {
   std::vector<ShellEvent> poll_events() override {
     if (host_ != nil && activation_retries_ > 0) {
       --activation_retries_;
-      force_activation(host_.window);
+      // Ask now and then, not every frame: re-ordering the window 60 times a second made it
+      // flicker for the whole retry period when the app was launched from a background process.
+      if (activation_retries_ % kActivationIntervalFrames == 0) {
+        force_activation(host_.window);
+      }
     }
     @autoreleasepool {
       pump_app_events();
@@ -1325,7 +1329,9 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
   bool open_{false};
-  int activation_retries_{240};  // frames (about 4 s) to keep asking for activation
+  static constexpr int kActivationFrames = 240;          // frames (about 4 s) to keep asking for activation
+  static constexpr int kActivationIntervalFrames = 30;   // ...once every this many frames
+  int activation_retries_{kActivationFrames};
   SizeI last_size_{};
   SizeI bitmap_size_{};
   std::size_t frame_slot_{0};

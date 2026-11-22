@@ -216,6 +216,34 @@ void test_other_columns_absorb_a_resize_in_a_wide_table() {
   expect(std::abs(sum(two.widths) - total) <= 5, "two sized columns still leave the table at its width");
 }
 
+void test_header_never_gets_taller_when_a_column_shrinks() {
+  const std::string html = table_html(5, 3);
+  const SizeI viewport{1400, 600};
+  const auto header_height = [](const Rendered& r) {
+    for (const auto& hit : r.hits) {
+      if (hit.action == "table.sort.column") {
+        return hit.rect.height;
+      }
+    }
+    return -1;
+  };
+  const auto initial = render(html, viewport);
+  const int base = header_height(initial);
+  expect(base > 0, "the header row has a height");
+  const auto geo = resolve_table_geometry(initial.stats.table_font_px);
+  for (const int target : {geo.min_resize, geo.min_resize * 2, geo.squeeze_floor}) {
+    std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+    widths["grid"][2] = target;
+    HtmlRenderConfig config{};
+    config.table_column_widths = &widths;
+    expect(header_height(render(html, viewport, config)) == base,
+           "a header never wraps to a second line when its column is " + std::to_string(target) + " px");
+  }
+  // And a table squeezed by sheer column count keeps one-line headers too.
+  const auto many = render(table_html(30, 3), viewport);
+  expect(header_height(many) == base, "a squeezed table has one-line headers");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -243,6 +271,7 @@ int main() {
     test_resize_matches_a_fresh_layout();
     test_user_sized_columns_leave_no_gap();
     test_other_columns_absorb_a_resize_in_a_wide_table();
+    test_header_never_gets_taller_when_a_column_shrinks();
     test_pdf_export_writes_a_valid_file();
     std::cout << "[PASS] html_table_layout_tests\n";
     return 0;
