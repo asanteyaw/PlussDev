@@ -113,15 +113,22 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN -DPLUSSQIT_ENABLE_MPS=OFF
 
       - name: Build PlussView tests
+        id: build
         run: cmake --build build --config Release --target plussview_html_table_layout_tests plussview_html_scroll_tests plussview_async_compositor_tests plussview_window_smoke --parallel 2
 
       # Layout, sizing, resizing, sort arrows and the PDF writer: no window needed.
-      - name: Run PlussView layout tests
-        run: ctest --test-dir build -C Release -R "plussview_(html_table_layout|html_scroll|async_compositor)_tests" --output-on-failure
+      - name: Run PlussView table layout tests
+        run: ctest --test-dir build -C Release -R "plussview_html_table_layout_tests" --output-on-failure
+
+      # The older scroll and compositor suites. They run as their own step so that one of them failing
+      # does not hide whether the table checks and the window smoke below pass.
+      - name: Run PlussView scroll and compositor tests
+        if: ${{ !cancelled() && steps.build.conclusion == 'success' }}
+        run: ctest --test-dir build -C Release -R "plussview_(html_scroll|async_compositor)_tests" --output-on-failure
 
       # A real window: the viewer shows a table and writes the PNG and PDF that Save As would.
       - name: Table window and export smoke (Linux, under a virtual display)
-        if: runner.os == 'Linux'
+        if: ${{ !cancelled() && steps.build.conclusion == 'success' && runner.os == 'Linux' }}
         run: |
           mkdir -p smoke
           xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
@@ -132,12 +139,12 @@ jobs:
             wait $smoke_pid'
 
       - name: Table window and export smoke (Windows)
-        if: runner.os == 'Windows'
+        if: ${{ !cancelled() && steps.build.conclusion == 'success' && runner.os == 'Windows' }}
         shell: pwsh
         run: '& "build/PlussTils/view/Release/plussview_window_smoke.exe" smoke'
 
       - name: Table window and export smoke (macOS)
-        if: runner.os == 'macOS'
+        if: ${{ !cancelled() && steps.build.conclusion == 'success' && runner.os == 'macOS' }}
         run: build/PlussTils/view/plussview_window_smoke smoke
 
       - name: Upload exports and window screenshots
