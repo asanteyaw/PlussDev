@@ -776,10 +776,18 @@ struct LinearGradientSpec {
   return target;
 }
 
-// Sort arrows at the right edge of every table header: two click targets, each kSortArrowPx
-// wide. Column widths and header text both leave kSortGutterPx for them.
+// Sort arrows at the right edge of every table header: an up triangle stacked directly on a
+// down triangle, each its own click target. The control is kSortArrowPx wide; a header's text
+// leaves kSortGutterPx for it (the control plus a little air).
 constexpr int kSortArrowPx = 14;
-constexpr int kSortGutterPx = 2 * kSortArrowPx + 6;
+constexpr int kSortGutterPad = 6;
+constexpr int kSortGutterPx = kSortArrowPx + kSortGutterPad;
+// Each triangle is kSortTriangleHeightPx tall and kSortTriangleBasePx wide; the pair together is
+// 2 * kSortTriangleHeightPx tall, centred on the header row.
+constexpr int kSortTriangleHeightPx = 5;
+constexpr int kSortTriangleBasePx = 10;
+// Air between the two triangles (0 = they touch).
+constexpr int kSortTriangleGapPx = 0;
 // A header alone never makes a column wider than this much text; longer names wrap onto a
 // second line (and end in "...") so the sort arrows always stay on screen.
 constexpr int kHeaderTextBudgetPx = 200;
@@ -3764,21 +3772,27 @@ int render_table(Scene& scene,
     // background (text drawing ignores alpha), so they recede in any theme.
     const auto mix = [](const int a, const int b) { return static_cast<std::uint8_t>((a * 35 + b * 65) / 100); };
     const Color faint = Color::rgba(mix(ink.r, paper.r), mix(ink.g, paper.g), mix(ink.b, paper.b), 255);
-    const int glyph_px = std::max(9, font_px - 3);
-    const int baseline = row_y + (row_h + glyph_px) / 2 - 2;
-    const int down_x = cell_x + cell_w - 6 - kSortArrowPx;
-    const int up_x = down_x - kSortArrowPx;
+    const int control_x = cell_x + cell_w - kSortGutterPad - kSortArrowPx;
+    const int centre_x = control_x + kSortArrowPx / 2;
+    const int mid_y = row_y + row_h / 2;
     for (int k = 0; k < 2; ++k) {
       const bool up = k == 0;
-      const int gx = up ? up_x : down_x;
       const bool lit = active && (render_config.table_sort_ascending == up);
-      scene.add(TextCommand{PointI{gx + 3, baseline}, up ? "\u25B2" : "\u25BC", glyph_px, lit ? ink : faint});
+      const int base_y = up ? mid_y - kSortTriangleGapPx / 2 : mid_y + (kSortTriangleGapPx - kSortTriangleGapPx / 2);
+      const int tip_y = up ? base_y - kSortTriangleHeightPx : base_y + kSortTriangleHeightPx;
+      scene.add(FillPolygonCommand{
+          {PointI{centre_x - kSortTriangleBasePx / 2, base_y},
+           PointI{centre_x + kSortTriangleBasePx / 2, base_y},
+           PointI{centre_x, tip_y}},
+          lit ? ink : faint});
       if (render_config.hit_regions != nullptr) {
-        const int x0 = std::max(gx, clip_left);
-        const int x1 = std::min(gx + kSortArrowPx, clip_right);
+        const int x0 = std::max(control_x, clip_left);
+        const int x1 = std::min(control_x + kSortArrowPx, clip_right);
         if (x1 > x0) {
+          const int y0 = up ? row_y : mid_y;
+          const int y1 = up ? mid_y : row_y + row_h;
           render_config.hit_regions->push_back(HtmlHitRegion{
-              .rect = RectI{x0, row_y, x1 - x0, row_h},
+              .rect = RectI{x0, y0, x1 - x0, y1 - y0},
               .action = up ? "table.sort.asc" : "table.sort.desc",
               .target = table_target,
               .value = static_cast<int>(column),
