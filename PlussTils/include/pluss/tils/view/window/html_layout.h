@@ -29,6 +29,9 @@ struct HtmlTableGeometry {
   double max_column_em{17.0};       // widest a column starts out before its text wraps
   double squeeze_floor_em{10.0};     // narrowest columns are squeezed to when there are many
   double min_resize_em{3.5};        // narrowest a user can drag a column to
+  // Past the last column the grid carries on as blank columns this wide (a spreadsheet's empty cells),
+  // so a table narrower than its panel never ends in a hole.
+  double continuation_column_em{8.0};
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
   // Lines of text a cell may use before it ends in an ellipsis. Like a spreadsheet, text does not wrap
@@ -64,6 +67,7 @@ struct HtmlTableGeometryPx {
   int max_column{0};
   int squeeze_floor{0};
   int min_resize{0};
+  int continuation_column{0};
   std::size_t fit_sample_rows{0};
   int header_max_lines{1};
   int value_max_lines{1};
@@ -100,6 +104,7 @@ struct HtmlTableGeometryPx {
   out.max_column = px(g.max_column_em);
   out.squeeze_floor = px(g.squeeze_floor_em);
   out.min_resize = px(g.min_resize_em);
+  out.continuation_column = px(g.continuation_column_em);
   out.fit_sample_rows = g.fit_sample_rows;
   out.header_max_lines = std::max(1, g.header_max_lines);
   out.value_max_lines = std::max(1, g.value_max_lines);
@@ -177,8 +182,6 @@ struct HtmlTableGeometryCacheEntry {
   std::vector<int> base_widths{};
   std::vector<bool> base_single_line{};
   std::vector<bool> column_single_line{};  // after the user's widths are applied
-  std::vector<int> base_natural{};         // each column's natural width, before it is stretched or squeezed
-  std::vector<bool> base_flexible{};       // whether a column may be stretched or squeezed
   std::shared_ptr<void> measure_state{};   // per-cell measurements a column resize reuses
   std::vector<int> cell_heights{};
 };
@@ -212,9 +215,6 @@ struct HtmlRenderConfig {
   // User-set column widths (px) per table target, by column index; the viewer fills it as
   // the user drags column borders. Columns without an entry use the default width.
   const std::unordered_map<std::string, std::unordered_map<int, int>>* table_column_widths{nullptr};
-  // The column the user touched last, per table. When every column has been sized by hand and there
-  // is still room, the leftover goes to a different column, so the one just resized keeps its width.
-  const std::unordered_map<std::string, int>* table_last_resized_column{nullptr};
   // The column border under the pointer (its header border is drawn highlighted).
   std::string hover_resize_target{};
   int hover_resize_column{-1};

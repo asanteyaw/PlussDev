@@ -164,34 +164,11 @@ void test_resize_matches_a_fresh_layout() {
          "an incremental resize gives the same height as a fresh layout");
 }
 
-void test_user_sized_columns_leave_no_gap() {
-  const std::string html = table_html(3, 3);
-  const SizeI viewport{1000, 600};
-  const auto initial = render(html, viewport);
-  const int fill = sum(initial.widths);
-  // Narrowing one column hands its space to the others, so the table still fills the width.
-  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
-  widths["grid"][1] = resolve_table_geometry(initial.stats.table_font_px).min_resize * 2;
-  HtmlRenderConfig config{};
-  config.table_column_widths = &widths;
-  const auto narrowed = render(html, viewport, config);
-  expect(narrowed.widths.size() == 3 && narrowed.widths[1] == widths["grid"][1], "the sized column keeps its width");
-  expect(std::abs(sum(narrowed.widths) - fill) <= 3,
-         "the other columns grow into the freed space (" + std::to_string(sum(narrowed.widths)) + " vs " +
-             std::to_string(fill) + ")");
-  // Auto-fit and then back (the override is removed): the original widths return.
-  widths["grid"].clear();
-  const auto restored = render(html, viewport, config);
-  expect(restored.widths == initial.widths, "removing the override restores the original widths");
-}
-
-void test_other_columns_absorb_a_resize_in_a_wide_table() {
-  // With many columns, resizing one must keep the table the width it was: the columns that were
-  // not touched share the difference, as long as they stay above the squeeze floor.
+void test_resizing_changes_only_that_column() {
+  // Like a spreadsheet: the column you size changes alone, and every other column keeps its width.
   const std::string html = table_html(5, 3);
   const SizeI viewport{1400, 600};
   const auto initial = render(html, viewport);
-  const int total = sum(initial.widths);
   const auto geo = resolve_table_geometry(initial.stats.table_font_px);
   for (const int column : {0, 2, 4}) {
     for (const int target : {geo.min_resize * 2, initial.widths[static_cast<std::size_t>(column)] + 60}) {
@@ -200,21 +177,79 @@ void test_other_columns_absorb_a_resize_in_a_wide_table() {
       HtmlRenderConfig config{};
       config.table_column_widths = &widths;
       const auto resized = render(html, viewport, config);
-      expect(resized.widths[static_cast<std::size_t>(column)] == target, "the resized column keeps its width");
-      expect(std::abs(sum(resized.widths) - total) <= 5,
-             "the table keeps its width when column " + std::to_string(column) + " becomes " + std::to_string(target) +
-                 " (" + std::to_string(sum(resized.widths)) + " vs " + std::to_string(total) + ")");
+      // A column scrolled out of view has no handle to read, so only the columns in view are compared.
+      for (std::size_t c = 0; c < std::min(initial.widths.size(), resized.widths.size()); ++c) {
+        if (resized.widths[c] <= 0) {
+          continue;
+        }
+        const int expected = static_cast<int>(c) == column ? target : initial.widths[c];
+        expect(resized.widths[c] == expected, "only column " + std::to_string(column) + " changes (column " +
+                                                  std::to_string(c) + " is " + std::to_string(resized.widths[c]) +
+                                                  ", expected " + std::to_string(expected) + ")");
+      }
     }
   }
-  // Two columns sized by the user: the other three still make up the difference.
+}
+
+void test_a_narrow_table_ends_in_a_continuation_not_a_hole() {
+  const std::string html = table_html(3, 3);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  const auto geo = resolve_table_geometry(initial.stats.table_font_px);
   std::unordered_map<std::string, std::unordered_map<int, int>> widths;
-  widths["grid"][1] = geo.min_resize * 3;
-  widths["grid"][3] = geo.min_resize * 2;
+  for (int column = 0; column < 3; ++column) {
+    widths["grid"][column] = geo.min_resize * 2;  // every column narrow: the columns end well short of the panel
+  }
   HtmlRenderConfig config{};
   config.table_column_widths = &widths;
-  const auto two = render(html, viewport, config);
-  expect(std::abs(sum(two.widths) - total) <= 5, "two sized columns still leave the table at its width");
+  const auto narrow = render(html, viewport, config);
+  expect(sum(narrow.widths) < initial.stats.table_viewport_rect.width, "the columns end short of the panel");
+  expect(narrow.stats.table_viewport_rect.width == initial.stats.table_viewport_rect.width,
+         "the panel keeps its width");
+  // The header band spans the whole panel, with the grid carrying on past the last column.
+  const auto document = parse_html_document(html);
+  HtmlRenderStats stats;
+  config.render_stats = &stats;
+  const auto scene = build_html_document_scene(document, viewport, config);
+  const int panel_right = stats.table_viewport_rect.x + stats.table_viewport_rect.width;
+  int widest_fill = 0;
+  for (const auto& command : scene.commands()) {
+    RectI rect{};
+    bool is_fill = false;
+    if (const auto* fill = std::get_if<FillRectCommand>(&command)) {
+      rect = fill->rect;
+      is_fill = true;
+    } else if (const auto* rounded = std::get_if<FillRoundedRectCommand>(&command)) {
+      rect = rounded->rect;
+      is_fill = true;
+    }
+    if (is_fill && rect.y >= stats.table_viewport_rect.y && rect.y < stats.table_viewport_rect.y + 2) {
+      widest_fill = std::max(widest_fill, rect.x + rect.width);
+    }
+  }
+  expect(widest_fill >= panel_right - 2, "the header band runs to the panel's right edge");
+  // Widening past the panel scrolls instead.
+  widths["grid"][1] = initial.stats.table_viewport_rect.width;
+  const auto wide = render(html, viewport, config);
+  expect(wide.stats.table_max_scroll_x > 0, "a table wider than its panel scrolls sideways");
 }
+
+void test_double_click_fit_and_restore() {
+  const std::string html = table_html(3, 3);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  widths["grid"][1] = 0;  // auto-fit
+  const auto fitted = render(html, viewport, config);
+  expect(fitted.widths[0] == initial.widths[0] && fitted.widths[2] == initial.widths[2],
+         "auto-fitting a column leaves the others as they were");
+  widths["grid"].clear();  // fit again: back to the flexible width
+  const auto restored = render(html, viewport, config);
+  expect(restored.widths == initial.widths, "removing the override restores the original widths");
+}
+
 
 void test_header_never_gets_taller_when_a_column_shrinks() {
   const std::string html = table_html(5, 3);
@@ -244,35 +279,6 @@ void test_header_never_gets_taller_when_a_column_shrinks() {
   expect(header_height(many) == base, "a squeezed table has one-line headers");
 }
 
-void test_sizing_every_column_never_leaves_a_gap() {
-  const std::string html = table_html(3, 3);
-  const SizeI viewport{1400, 600};
-  const auto initial = render(html, viewport);
-  const int total = sum(initial.widths);
-  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
-  std::unordered_map<std::string, int> last;
-  HtmlRenderConfig config{};
-  config.table_column_widths = &widths;
-  config.table_last_resized_column = &last;
-  // Auto-fit (width 0) column 0, then column 1, then column 2: after each step the table still fills.
-  int fitted_last = 0;
-  for (const int column : {0, 1, 2}) {
-    widths["grid"][column] = 0;
-    last["grid"] = column;
-    const auto step = render(html, viewport, config);
-    expect(std::abs(sum(step.widths) - total) <= 5,
-           "auto-fitting column " + std::to_string(column) + " leaves the table at its width (" +
-               std::to_string(sum(step.widths)) + " vs " + std::to_string(total) + ")");
-    fitted_last = step.widths[static_cast<std::size_t>(column)];
-  }
-  // The column just touched keeps its auto-fit width: it is the one the others make room around.
-  HtmlRenderConfig alone{};
-  std::unordered_map<std::string, std::unordered_map<int, int>> one;
-  one["grid"][2] = 0;
-  alone.table_column_widths = &one;
-  const auto expected = render(html, viewport, alone);
-  expect(fitted_last == expected.widths[2], "the column just auto-fitted keeps its fitted width");
-}
 
 [[nodiscard]] std::vector<std::string> drawn_texts(const std::string& html, const SizeI viewport,
                                                   HtmlRenderConfig config = {}) {
@@ -356,10 +362,10 @@ int main() {
     test_many_columns_squeeze_then_scroll();
     test_export_leaves_out_sort_arrows();
     test_resize_matches_a_fresh_layout();
-    test_user_sized_columns_leave_no_gap();
-    test_other_columns_absorb_a_resize_in_a_wide_table();
+    test_resizing_changes_only_that_column();
+    test_a_narrow_table_ends_in_a_continuation_not_a_hole();
+    test_double_click_fit_and_restore();
     test_header_never_gets_taller_when_a_column_shrinks();
-    test_sizing_every_column_never_leaves_a_gap();
     test_resizing_a_column_never_changes_a_row();
     test_a_number_that_does_not_fit_is_marked_and_never_cut();
     test_pdf_export_writes_a_valid_file();

@@ -2132,15 +2132,7 @@ struct TableLayout {
     const std::size_t column_count,
     const std::string& table_target,
     HtmlLayoutCache* cache,
-    const std::unordered_map<std::string, std::unordered_map<int, int>>* user_widths,
-    const std::unordered_map<std::string, int>* last_resized) {
-  int protected_column = -1;  // the column the user touched last
-  if (last_resized != nullptr) {
-    const auto touched = last_resized->find(table_target);
-    if (touched != last_resized->end()) {
-      protected_column = touched->second;
-    }
-  }
+    const std::unordered_map<std::string, std::unordered_map<int, int>>* user_widths) {
   const std::unordered_map<int, int>* width_overrides = nullptr;
   if (user_widths != nullptr) {
     const auto found = user_widths->find(table_target);
@@ -2148,9 +2140,7 @@ struct TableLayout {
       width_overrides = &found->second;
     }
   }
-  // Which column is protected changes the widths too, so it is part of what a cached layout is keyed on.
-  const std::uint64_t override_signature =
-      column_override_signature(width_overrides) ^ std::hash<int>{}(protected_column);
+  const std::uint64_t override_signature = column_override_signature(width_overrides);
 
   TableColumnPlan plan;
   std::vector<int> row_heights;
@@ -2202,8 +2192,6 @@ struct TableLayout {
       plan.source_indices = previous->source_indices;
       plan.widths = previous->base_widths;
       plan.single_line = previous->base_single_line;
-      plan.natural = previous->base_natural;
-      plan.flexible = previous->base_flexible;
       cell_heights = previous->cell_heights;
       measure = std::static_pointer_cast<TableMeasureState>(previous->measure_state);
     } else {
@@ -2215,15 +2203,12 @@ struct TableLayout {
     const HtmlTableGeometryPx geometry_px = resolve_table_geometry(style.font_size);
     const std::vector<int> base_widths = plan.widths;
     const std::vector<bool> base_single_line = plan.single_line;
-    const std::vector<int> base_natural = plan.natural;
-    const std::vector<bool> base_flexible = plan.flexible;
     if (width_overrides != nullptr) {
-      // Columns the user has sized keep that width, and the others share what is left, so a
-      // column made narrower hands its space to its neighbours and no gap opens.
-      std::vector<int> natural = plan.natural;
-      std::vector<bool> flexible = plan.flexible;
+      // Like a spreadsheet, a column the user sizes changes alone: every other column keeps the
+      // width it had. What is left over (or missing) at the table's right edge is shown as a
+      // continuation of the grid, or scrolled to, rather than being handed to the other columns.
       for (const auto& [column, width] : *width_overrides) {
-        if (column < 0 || static_cast<std::size_t>(column) >= natural.size()) {
+        if (column < 0 || static_cast<std::size_t>(column) >= plan.widths.size()) {
           continue;
         }
         int target = width;
@@ -2234,41 +2219,9 @@ struct TableLayout {
                               geometry_px.min_resize,
                               static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
         }
-        natural[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
-        flexible[static_cast<std::size_t>(column)] = false;
+        plan.widths[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
+        plan.single_line[static_cast<std::size_t>(column)] = false;  // a column the user sized is not squeezed
       }
-      // If every column that could stretch has been sized by hand, the table would end short of its
-      // edge. The leftover goes to the sized column nearest the one just touched (the right one on a
-      // tie), never to the one just touched, so what the user just did stays as they did it.
-      long long fixed_total = 0;
-      bool any_flexible = false;
-      for (std::size_t c = 0; c < natural.size(); ++c) {
-        fixed_total += natural[c];
-        any_flexible = any_flexible || flexible[c];
-      }
-      if (!any_flexible && fixed_total < content_w) {
-        int absorber = -1;
-        int best_distance = std::numeric_limits<int>::max();
-        for (const auto& entry : *width_overrides) {
-          const int column = entry.first;
-          if (column < 0 || static_cast<std::size_t>(column) >= natural.size() || column == protected_column) {
-            continue;
-          }
-          const int distance = protected_column < 0 ? 0 : std::abs(column - protected_column);
-          if (distance < best_distance || (distance == best_distance && column > absorber)) {
-            best_distance = distance;
-            absorber = column;
-          }
-        }
-        if (absorber >= 0) {
-          flexible[static_cast<std::size_t>(absorber)] = true;
-        }
-      }
-      std::vector<int> widths;
-      std::vector<bool> squeezed;
-      distribute_columns(natural, flexible, content_w, geometry_px, widths, squeezed);
-      plan.widths = std::move(widths);
-      plan.single_line = std::move(squeezed);
     }
     const std::size_t visible_columns = plan.widths.size();
     // Which columns need their cells measured again: all of them for a fresh layout, otherwise
@@ -2316,8 +2269,6 @@ struct TableLayout {
               .base_widths = base_widths,
               .base_single_line = base_single_line,
               .column_single_line = plan.single_line,
-              .base_natural = base_natural,
-              .base_flexible = base_flexible,
               .measure_state = measure,
               .cell_heights = std::move(cell_heights),
           };
@@ -2385,8 +2336,7 @@ struct TableLayout {
   const TableLayout layout = compute_table_layout(
       document, node, lineage, style, viewport_width, inner_width, rows, col_count,
       node_instance_target(node, "table"), context != nullptr ? context->layout_cache : nullptr,
-      context != nullptr ? context->table_column_widths : nullptr,
-      context != nullptr ? context->table_last_resized_column : nullptr);
+      context != nullptr ? context->table_column_widths : nullptr);
   int total_rows_height = 0;
   for (const int row_height : layout.row_heights) {
     total_rows_height += row_height;
@@ -3767,8 +3717,7 @@ int render_table(Scene& scene,
 
   const TableLayout table_layout =
       compute_table_layout(document, node, lineage, style, viewport_width, content_w, rows, column_count,
-                           table_target, render_config.layout_cache, render_config.table_column_widths,
-                           render_config.table_last_resized_column);
+                           table_target, render_config.layout_cache, render_config.table_column_widths);
   TableColumnPlan plan = table_layout.plan;
   const std::vector<int>& row_heights = table_layout.row_heights;
   int row_total_w = 0;
@@ -4062,6 +4011,8 @@ int render_table(Scene& scene,
     });
 
     const int row_h = row_heights[r];
+    // Rows and their lines run to the panel's right edge, past the columns if need be.
+    const int grid_w = std::max(row_total_w, content_x + content_w - table_origin_x);
 
     // The header band spans the whole viewport (columns may no longer fill it), so it takes
     // the colour of the header cells rather than a fixed one.
@@ -4088,20 +4039,25 @@ int render_table(Scene& scene,
                                                   : Color::rgba(248, 250, 252, 255));
     if (header_row && row_y == content_y) {
       const int header_radius = std::max(0, std::min(style.border_radius, row_h / 2));
-      // The band covers the columns only (like a spreadsheet's header), not the empty space to
-      // their right when the columns are narrower than the viewport.
-      const int band_w = std::max(0, std::min(content_w, row_total_w - scroll_x));
-      draw_rect_fill(scene, RectI{content_x, row_y, band_w, row_h}, fill, header_radius);
+      // The header band runs the full width of the panel: past the last column it is the header of
+      // the blank continuation of the grid.
+      draw_rect_fill(scene, RectI{content_x, row_y, content_w, row_h}, fill, header_radius);
       if (header_radius > 0 && row_h > header_radius) {
-        scene.add(FillRectCommand{RectI{content_x, row_y + header_radius, band_w, row_h - header_radius}, fill});
+        scene.add(FillRectCommand{RectI{content_x, row_y + header_radius, content_w, row_h - header_radius}, fill});
       }
     } else {
-      scene.add(FillRectCommand{RectI{table_origin_x, row_y, row_total_w, row_h}, fill});
+      scene.add(FillRectCommand{RectI{table_origin_x, row_y, grid_w, row_h}, fill});
     }
     scene.add(LineCommand{PointI{table_origin_x, row_y},
-                          PointI{table_origin_x + row_total_w, row_y},
+                          PointI{table_origin_x + grid_w, row_y},
                           1,
                           Color::rgba(216, 222, 228, 255)});
+    // The grid carries on past the last column as blank columns, so a table narrower than its panel
+    // looks like a sheet with empty cells and not like a hole.
+    for (int edge = table_origin_x + row_total_w; edge < content_x + content_w;
+         edge += std::max(1, table_geo.continuation_column)) {
+      scene.add(LineCommand{PointI{edge, row_y}, PointI{edge, row_y + row_h}, 1, Color::rgba(216, 222, 228, 255)});
+    }
 
     for (const std::size_t c : visible_scroll_columns) {
       const std::size_t source_index = plan.source_indices[c];

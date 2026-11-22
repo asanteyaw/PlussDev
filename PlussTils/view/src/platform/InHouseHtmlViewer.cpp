@@ -1003,7 +1003,6 @@ bool show_inhouse_html_window(const std::string& title,
   // Column widths the user has set by dragging header borders (table target -> column -> px),
   // and the drag in progress, if any.
   std::unordered_map<std::string, std::unordered_map<int, int>> table_column_widths;
-  std::unordered_map<std::string, int> table_last_resized_column;  // the column touched last, per table
   struct ResizeDrag {
     bool active{false};
     std::string target{};
@@ -1154,7 +1153,6 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.table_sort_ascending = table_sort_ascending;
     render_cfg.table_sort_target = table_sort_target;
     render_cfg.table_column_widths = &table_column_widths;
-    render_cfg.table_last_resized_column = &table_last_resized_column;
     render_cfg.hover_resize_target = hover_resize_target;
     render_cfg.hover_resize_column = hover_resize_column;
     render_cfg.active_input_target = active_input_target;
@@ -1720,7 +1718,6 @@ bool show_inhouse_html_window(const std::string& title,
         const int dx = static_cast<int>(std::lround(event.x)) - resize_drag.start_x;
         if (dx != 0) fitted_columns.erase({resize_drag.target, resize_drag.column});
         const auto geo = window::resolve_table_geometry(render_stats.table_font_px);
-        table_last_resized_column[resize_drag.target] = resize_drag.column;
         table_column_widths[resize_drag.target][resize_drag.column] = std::clamp(
             resize_drag.start_width + dx, geo.min_resize,
             std::max(geo.min_resize, static_cast<int>(std::lround(size.width * geo.max_autofit_viewports))));
@@ -1767,7 +1764,6 @@ bool show_inhouse_html_window(const std::string& title,
               // Double-click on a border toggles that column: fit to its widest value (width 0 =
               // auto-fit), then back to the default width, then fit again.
               const std::pair<std::string, int> key{hit.target, hit.value};
-              table_last_resized_column[hit.target] = hit.value;
               if (fitted_columns.erase(key) > 0) {
                 table_column_widths[hit.target].erase(hit.value);
               } else {
@@ -1804,7 +1800,6 @@ bool show_inhouse_html_window(const std::string& title,
               (void)save_svg();
             } else if (hit.target == "reset-table-view") {
               table_column_widths.clear();
-              table_last_resized_column.clear();
               fitted_columns.clear();
               layout_cache.clear();
               input_values["table-search"].clear();
