@@ -119,6 +119,7 @@ void reset_render_stats(HtmlRenderStats& stats) {
   stats.document_viewport_rect = RectI{};
   stats.table_viewport_rect = RectI{};
   stats.table_content_rect = RectI{};
+  stats.table_font_px = 0;
   stats.document_max_scroll_x = 0;
   stats.document_max_scroll_y = 0;
   stats.table_max_scroll_x = 0;
@@ -777,33 +778,9 @@ struct LinearGradientSpec {
   return target;
 }
 
-// Sort arrows at the right edge of every table header: an up triangle stacked directly on a
-// down triangle, each its own click target. The control is kSortArrowPx wide; a header's text
-// leaves kSortGutterPx for it (the control plus a little air).
-constexpr int kSortArrowPx = 14;
-constexpr int kSortGutterPad = 6;
-constexpr int kSortGutterPx = kSortArrowPx + kSortGutterPad;
-// Each triangle is kSortTriangleHeightPx tall and kSortTriangleBasePx wide; the pair together is
-// 2 * kSortTriangleHeightPx tall, centred on the header row.
-constexpr int kSortTriangleHeightPx = 5;
-constexpr int kSortTriangleBasePx = 10;
-// Air between the two triangles, so they read as two controls (0 = they touch).
-constexpr int kSortTriangleGapPx = 2;
-// A header alone never makes a column wider than this much text; longer names wrap onto a
-// second line (and end in "...") so the sort arrows always stay on screen.
-constexpr int kHeaderTextBudgetPx = 200;
-// Every column starts this wide (like a spreadsheet) and is resized by dragging its
-// header border; nothing is sized from the content.
-// A column that has not been resized is as wide as its header and its first kDefaultFitRows
-// values need, between kMinDefaultColumnPx and kMaxDefaultColumnPx, so short data gives a compact
-// table and long text wraps instead of making one column swallow the window.
-constexpr int kMaxDefaultColumnPx = 240;
-// When columns outnumber the width they are squeezed together, but not below this (a column
-// that is naturally narrower than this simply keeps its natural width). Past it the table scrolls.
-constexpr int kMinSqueezedColumnPx = 120;
-constexpr int kMinDefaultColumnPx = 72;
-constexpr std::size_t kDefaultFitRows = 48;
-constexpr int kMinColumnPx = 48;
+// Table sizes live in HtmlTableGeometry (html_layout.h), in em, and are resolved against the
+// table's font size where they are used. The one size kept in pixels is the resize handle: it is
+// a pointer target, so its size does not follow the text.
 constexpr int kResizeHandlePx = 8;
 
 // Order-independent fingerprint of a table's user-set column widths.
@@ -1814,7 +1791,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
     return 2 * (std::max(2, cell_style.padding) + cell_style.border) + 4;
   };
   int fitted = 0;
-  if (header.read) fitted = std::max(fitted, header.widest + kSortGutterPx + chrome_of(header.style));
+  const HtmlTableGeometryPx geo = resolve_table_geometry(style.font_size);
+  if (header.read) fitted = std::max(fitted, header.widest + geo.sort_gutter + chrome_of(header.style));
   if (value.read) fitted = std::max(fitted, value.widest + chrome_of(value.style));
   return fitted + kTextSlackPx;
 }
@@ -1838,11 +1816,9 @@ void collect_table_rows_recursive(const HtmlNode& node,
     return plan;
   }
 
-  std::vector<int> desired(col_count, 112);
+  const HtmlTableGeometryPx geo = resolve_table_geometry(table_style.font_size);
+  std::vector<int> desired(col_count, geo.min_column);
   std::vector<bool> sticky_left(col_count, false);
-  constexpr std::size_t kSampleRows = 48;
-  const int probe_cap_px = std::clamp(inner_width * 2, 540, 1600);
-  const std::size_t sample = std::min(rows.size(), kSampleRows);
   for (std::size_t c = 0; c < col_count; ++c) {
     for (std::size_t r = 0; r < rows.size(); ++r) {
       if (c < rows[r].cells.size() && node_has_class(rows[r].cells[c].node, "sticky-left")) {
@@ -1853,47 +1829,26 @@ void collect_table_rows_recursive(const HtmlNode& node,
     const int declared_width = c < declared_widths.size() ? declared_widths[c] : 0;
     if (declared_width > 0) {
       desired[c] = declared_width;
-      continue;
+    } else if (sticky_left[c]) {
+      // A row-label column is as wide as its longest label: it is never squeezed or wrapped.
+      desired[c] = fit_column_width_px(document, rows, c, table_style, viewport_width, rows.size());
+    } else {
+      desired[c] = std::clamp(fit_column_width_px(document, rows, c, table_style, viewport_width, geo.fit_sample_rows),
+                              geo.min_column, geo.max_column);
     }
-
-    if (!sticky_left[c]) {
-      desired[c] = std::clamp(fit_column_width_px(document, rows, c, table_style, viewport_width, kDefaultFitRows),
-                              kMinDefaultColumnPx, kMaxDefaultColumnPx);
-      continue;
-    }
-    int max_w = 72;
-    const std::size_t probe_rows = rows.size();
-    for (std::size_t r = 0; r < probe_rows; ++r) {
-      if (c >= rows[r].cells.size()) continue;
-      const auto& cell = rows[r].cells[c];
-      const std::string probe = sticky_left[c]
-                                    ? cell.text
-                                    : truncate_to_width(cell.text, table_style.font_size, probe_cap_px);
-      const int text_w = layout_math_text(probe, table_style.font_size).width;
-      const int pad = cell.is_header ? 36 + kSortGutterPx : 28;
-      int capped_w = sticky_left[c]
-                         ? text_w + pad
-                         : std::min(probe_cap_px + pad, text_w + pad);
-      if (cell.is_header && !sticky_left[c]) {
-        capped_w = std::min(capped_w, kHeaderTextBudgetPx + pad);
-      }
-      max_w = std::max(max_w, capped_w);
-    }
-    desired[c] = max_w;
   }
 
-  const int min_col_w = kMinDefaultColumnPx;
-  const int max_col_w = std::max(260, inner_width * 2);
+  // No column is ever wider than a few viewport widths, however long its text.
+  const int max_col_w = std::max(geo.max_column, static_cast<int>(std::lround(inner_width * geo.max_autofit_viewports)));
   std::vector<int> natural(col_count, 0);
   std::vector<bool> flexible(col_count, false);  // columns the table may stretch or squeeze
   for (std::size_t c = 0; c < col_count; ++c) {
-    natural[c] = sticky_left[c] ? std::clamp(desired[c], 72, max_col_w)
-                                : std::clamp(desired[c], min_col_w, max_col_w);
+    natural[c] = std::min(desired[c], max_col_w);
     const bool declared = c < declared_widths.size() && declared_widths[c] > 0;
     flexible[c] = !sticky_left[c] && !declared;
   }
   // Like tabs in a browser: with few columns each grows so the table fills the width, and as
-  // columns are added they all shrink together, down to kMinSqueezedColumnPx, after which the
+  // columns are added they all shrink together, down to geometry.squeeze_floor, after which the
   // table scrolls sideways. Extra space is shared in proportion to each column's natural
   // width; a shortfall is taken from each column in proportion to how far it can still shrink.
   std::vector<int> widths = natural;
@@ -1901,7 +1856,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
   long long fixed_total = 0, flex_total = 0, shrinkable_total = 0;
   for (std::size_t c = 0; c < col_count; ++c) {
     (flexible[c] ? flex_total : fixed_total) += natural[c];
-    if (flexible[c]) shrinkable_total += std::max(0, natural[c] - kMinSqueezedColumnPx);
+    if (flexible[c]) shrinkable_total += std::max(0, natural[c] - geo.squeeze_floor);
   }
   const long long room = static_cast<long long>(inner_width) - fixed_total;  // for flexible columns
   if (flex_total > 0 && room > flex_total) {
@@ -1918,7 +1873,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
     const long long need = std::min(flex_total - std::max<long long>(room, 0), shrinkable_total);
     for (std::size_t c = 0; c < col_count; ++c) {
       if (!flexible[c]) continue;
-      const int take = static_cast<int>(need * std::max(0, natural[c] - kMinSqueezedColumnPx) / shrinkable_total);
+      const int take = static_cast<int>(need * std::max(0, natural[c] - geo.squeeze_floor) / shrinkable_total);
       widths[c] = natural[c] - take;
       squeezed[c] = take > 0;
     }
@@ -1958,7 +1913,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
   const int line_height = resolve_line_height_value(cell_style.line_height, cell_style.font_size);
   const int cell_padding = std::max(2, cell_style.padding);
   const int inner_width =
-      std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? kSortGutterPx : 0));
+      std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? resolve_table_geometry(table_style.font_size).sort_gutter : 0));
   // Header and row-label cells break long names at _ - . / (a label column keeps its width).
   const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
   const bool squeezed = visible < column_plan.single_line.size() && column_plan.single_line[visible];
@@ -2990,10 +2945,11 @@ int render_virtual_table(
   const int margin = style.margin;
   const int padding = style.padding;
   const int border = style.border;
-  constexpr int header_h = kVirtualTableHeaderHeightPx;
-  constexpr int row_h = kVirtualTableRowHeightPx;
-  constexpr int row_header_w = 84;
-  constexpr int min_viewport_h = 400;
+  const HtmlTableGeometryPx virtual_geo = resolve_table_geometry(style.font_size);
+  const int header_h = virtual_geo.header_height;
+  const int row_h = virtual_geo.row_height;
+  const int row_header_w = virtual_geo.row_label_width;
+  const int min_viewport_h = virtual_geo.max_viewport_height;
   const int content_height =
       std::max({min_viewport_h, style.explicit_height, style.min_height});
   const int total_h =
@@ -3028,9 +2984,9 @@ int render_virtual_table(
           ? parent_style->background_color
           : style.background_color;
 
-  constexpr int min_text_column_w = 150;
-  constexpr int min_numeric_column_w = 132;
-  constexpr int max_column_w = 280;
+  const int min_text_column_w = virtual_geo.text_column_min;
+  const int min_numeric_column_w = virtual_geo.numeric_column_min;
+  const int max_column_w = virtual_geo.column_max;
   const std::int64_t model_row_count =
       std::max<std::int64_t>(0, model->row_count());
   const auto* row_order = render_config.virtual_row_order;
@@ -3133,6 +3089,7 @@ int render_virtual_table(
           body_viewport_h, std::max<std::int64_t>(0, body_height - scroll_y));
       const std::int64_t drawn_w = std::min<std::int64_t>(
           content_w, static_cast<std::int64_t>(row_header_w) + std::max<std::int64_t>(0, data_width - scroll_x));
+      stats.table_font_px = style.font_size;
       stats.table_content_rect = intersect_rect(
           interactive_viewport,
           RectI{content_x, content_y, static_cast<int>(drawn_w),
@@ -3512,6 +3469,7 @@ int render_table(Scene& scene,
           extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
       plan = build_table_column_plan(document, viewport_width, rows, style, content_w, declared_widths);
     }
+    const HtmlTableGeometryPx geometry_px = resolve_table_geometry(style.font_size);
     const std::vector<int> base_widths = plan.widths;
     const std::vector<bool> base_single_line = plan.single_line;
     if (width_overrides != nullptr) {
@@ -3523,9 +3481,11 @@ int render_table(Scene& scene,
             const auto source = plan.source_indices.size() > static_cast<std::size_t>(column)
                                     ? plan.source_indices[static_cast<std::size_t>(column)]
                                     : static_cast<std::size_t>(column);
-            target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()), kMinColumnPx, 4000);
+            target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()),
+                                geometry_px.min_resize,
+                                static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
           }
-          plan.widths[static_cast<std::size_t>(column)] = std::max(kMinColumnPx, target);
+          plan.widths[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
           if (static_cast<std::size_t>(column) < plan.single_line.size()) {
             plan.single_line[static_cast<std::size_t>(column)] = false;  // a column the user sized wraps again
           }
@@ -3757,6 +3717,7 @@ int render_table(Scene& scene,
       stats.table_body_row_height_px = 0;
       const int drawn_body_h = std::min(body_viewport_h, std::max(0, body_total_h - scroll_y));
       const int drawn_w = std::min(content_w, row_total_w - scroll_x);
+      stats.table_font_px = style.font_size;
       stats.table_content_rect = intersect_rect(
           interactive_viewport,
           RectI{content_x, content_y, std::max(0, drawn_w), header_h + drawn_body_h});
@@ -3802,7 +3763,8 @@ int render_table(Scene& scene,
   // column is drawn in full strength, every other arrow faint. Because they sit on the
   // headers themselves, nothing has to enumerate columns, however many there are.
   // Exports leave the sort arrows out, and the room they reserve beside header text with them.
-  const int sort_gutter_px = render_config.table_sort_controls ? kSortGutterPx : 0;
+  const HtmlTableGeometryPx table_geo = resolve_table_geometry(style.font_size);
+  const int sort_gutter_px = render_config.table_sort_controls ? table_geo.sort_gutter : 0;
   const auto draw_sort_arrows = [&](const int cell_x,
                                     const int cell_w,
                                     const int row_y,
@@ -3822,22 +3784,22 @@ int render_table(Scene& scene,
     // background (text drawing ignores alpha), so they recede in any theme.
     const auto mix = [](const int a, const int b) { return static_cast<std::uint8_t>((a * 35 + b * 65) / 100); };
     const Color faint = Color::rgba(mix(ink.r, paper.r), mix(ink.g, paper.g), mix(ink.b, paper.b), 255);
-    const int control_x = cell_x + cell_w - kSortGutterPad - kSortArrowPx;
-    const int centre_x = control_x + kSortArrowPx / 2;
+    const int control_x = cell_x + cell_w - table_geo.sort_pad - table_geo.sort_control;
+    const int centre_x = control_x + table_geo.sort_control / 2;
     const int mid_y = row_y + row_h / 2;
     for (int k = 0; k < 2; ++k) {
       const bool up = k == 0;
       const bool lit = active && (render_config.table_sort_ascending == up);
-      const int base_y = up ? mid_y - kSortTriangleGapPx / 2 : mid_y + (kSortTriangleGapPx - kSortTriangleGapPx / 2);
-      const int tip_y = up ? base_y - kSortTriangleHeightPx : base_y + kSortTriangleHeightPx;
+      const int base_y = up ? mid_y - table_geo.sort_triangle_gap / 2 : mid_y + (table_geo.sort_triangle_gap - table_geo.sort_triangle_gap / 2);
+      const int tip_y = up ? base_y - table_geo.sort_triangle_height : base_y + table_geo.sort_triangle_height;
       scene.add(FillPolygonCommand{
-          {PointI{centre_x - kSortTriangleBasePx / 2, base_y},
-           PointI{centre_x + kSortTriangleBasePx / 2, base_y},
+          {PointI{centre_x - table_geo.sort_triangle_base / 2, base_y},
+           PointI{centre_x + table_geo.sort_triangle_base / 2, base_y},
            PointI{centre_x, tip_y}},
           lit ? ink : faint});
       if (render_config.hit_regions != nullptr) {
         const int x0 = std::max(control_x, clip_left);
-        const int x1 = std::min(control_x + kSortArrowPx, clip_right);
+        const int x1 = std::min(control_x + table_geo.sort_control, clip_right);
         if (x1 > x0) {
           const int y0 = up ? row_y : mid_y;
           const int y1 = up ? mid_y : row_y + row_h;

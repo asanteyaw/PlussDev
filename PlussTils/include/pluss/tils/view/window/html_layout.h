@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -15,10 +18,89 @@ class VirtualTableModel;
 
 namespace pluss::view::window {
 
-// Fixed row geometry of a virtual table, in logical pixels. The layout draws with these and
-// exports size a full-length table from them, so there is one place to change them.
-inline constexpr int kVirtualTableHeaderHeightPx = 42;
-inline constexpr int kVirtualTableRowHeightPx = 38;
+// Every size a table is laid out with, in em: multiples of the table's own font size, so the
+// geometry scales with the theme and font instead of being tied to a pixel count. This is the one
+// place to change a table's proportions; the layout, the drag limits and the exports all read it
+// through html_table_geometry(). The defaults reproduce the previous look at a 14 px font.
+struct HtmlTableGeometry {
+  // Column widths.
+  double min_column_em{5.0};        // narrowest a column starts out (short content)
+  double max_column_em{17.0};       // widest a column starts out before its text wraps
+  double squeeze_floor_em{10.0};     // narrowest columns are squeezed to when there are many
+  double min_resize_em{3.5};        // narrowest a user can drag a column to
+  double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
+  std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
+  // Sort arrows: a stacked pair of triangles at the right of a header.
+  double sort_control_em{1.0};      // width of the control
+  double sort_pad_em{0.43};         // air between a header's text and the control
+  double sort_triangle_height_em{0.36};
+  double sort_triangle_base_em{0.72};
+  double sort_triangle_gap_em{0.14};  // between the two triangles (0 = they touch)
+  // Virtual (very large) tables, whose rows are fixed height.
+  double header_height_em{3.0};
+  double row_height_em{2.7};
+  double row_label_width_em{6.0};
+  double text_column_min_em{10.7};
+  double numeric_column_min_em{9.4};
+  double column_max_em{20.0};
+  double max_viewport_height_em{28.6};  // tallest a virtual table's viewport is, absent a CSS height
+};
+
+// The geometry of one table resolved to pixels for a given font size.
+struct HtmlTableGeometryPx {
+  int min_column{0};
+  int max_column{0};
+  int squeeze_floor{0};
+  int min_resize{0};
+  std::size_t fit_sample_rows{0};
+  int sort_control{0};
+  int sort_pad{0};
+  int sort_gutter{0};  // what a header's text leaves for the control: control + pad
+  int sort_triangle_height{0};
+  int sort_triangle_base{0};
+  int sort_triangle_gap{0};
+  int header_height{0};
+  int row_height{0};
+  int row_label_width{0};
+  int text_column_min{0};
+  int numeric_column_min{0};
+  int column_max{0};
+  int max_viewport_height{0};
+  double max_autofit_viewports{0.0};
+};
+
+[[nodiscard]] inline HtmlTableGeometry& html_table_geometry() {
+  static HtmlTableGeometry geometry{};
+  return geometry;
+}
+
+[[nodiscard]] inline HtmlTableGeometryPx resolve_table_geometry(const int font_px,
+                                                                const HtmlTableGeometry& g = html_table_geometry()) {
+  const auto px = [font_px](const double em) {
+    return std::max(1, static_cast<int>(std::lround(em * static_cast<double>(std::max(1, font_px)))));
+  };
+  HtmlTableGeometryPx out;
+  out.min_column = px(g.min_column_em);
+  out.max_column = px(g.max_column_em);
+  out.squeeze_floor = px(g.squeeze_floor_em);
+  out.min_resize = px(g.min_resize_em);
+  out.fit_sample_rows = g.fit_sample_rows;
+  out.sort_control = px(g.sort_control_em);
+  out.sort_pad = px(g.sort_pad_em);
+  out.sort_gutter = out.sort_control + out.sort_pad;
+  out.sort_triangle_height = px(g.sort_triangle_height_em);
+  out.sort_triangle_base = px(g.sort_triangle_base_em);
+  out.sort_triangle_gap = g.sort_triangle_gap_em <= 0.0 ? 0 : px(g.sort_triangle_gap_em);
+  out.header_height = px(g.header_height_em);
+  out.row_height = px(g.row_height_em);
+  out.row_label_width = px(g.row_label_width_em);
+  out.text_column_min = px(g.text_column_min_em);
+  out.numeric_column_min = px(g.numeric_column_min_em);
+  out.column_max = px(g.column_max_em);
+  out.max_viewport_height = px(g.max_viewport_height_em);
+  out.max_autofit_viewports = g.max_autofit_viewports;
+  return out;
+}
 
 struct HtmlHitRegion {
   RectI rect{};
@@ -45,6 +127,7 @@ struct HtmlRenderStats {
   // The part of the table that is actually drawn: the column headers plus the visible rows,
   // as wide as the visible columns. Never larger than table_viewport_rect.
   RectI table_content_rect{};
+  int table_font_px{0};  // font size of the table that table_content_rect describes
   int document_max_scroll_x{0};
   int document_max_scroll_y{0};
   int table_max_scroll_x{0};

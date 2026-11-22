@@ -1241,7 +1241,7 @@ std::string html_shell_(std::string_view title,
     }}
     table {{
       width: 100%;
-      max-height: 400px;
+      max-height: 28.6em;  /* about 400px at the table font; tracks the font size */
       margin: 0;
       border-collapse: collapse;
       border-radius: 6px;

@@ -462,8 +462,9 @@ bool fill_lazy_panel(window::HtmlNode& root,
 
 // True when a table painted from the virtual model is currently on screen (its view is the
 // active one and nothing above it is hidden).
-// Largest page edge, in logical pixels, that an "all rows" export will lay out. Beyond this the
-// image would not open in common viewers, so a taller table is cut at this height.
+// Safety bound, in logical pixels, on the page edge an "all rows" export will lay out. Beyond
+// this the image would not open in common viewers, so a taller table is cut at this height. It
+// is a limit of image formats, not a layout choice, so it does not scale with the font.
 constexpr std::int64_t max_export_dimension_px = 16000;
 
 // Lets tables take the height their rows need instead of a fixed or scrolling viewport, by
@@ -1312,8 +1313,8 @@ bool show_inhouse_html_window(const std::string& title,
         const std::int64_t rows = virtual_row_order != nullptr
                                       ? static_cast<std::int64_t>(virtual_row_order->size())
                                       : virtual_table_model->row_count();
-        const std::int64_t table_h = window::kVirtualTableHeaderHeightPx +
-                                     rows * window::kVirtualTableRowHeightPx;
+        const auto geo = window::resolve_table_geometry(render_stats.table_font_px);
+        const std::int64_t table_h = geo.header_height + rows * geo.row_height;
         export_document = document;
         if (auto* table_node = find_virtual_table_node(export_document.root)) {
           table_node->style.height_px = static_cast<int>(std::min<std::int64_t>(table_h, max_export_dimension_px));
@@ -1709,8 +1710,10 @@ bool show_inhouse_html_window(const std::string& title,
         // Dragging a header border: the column follows the pointer, wrapping live.
         const int dx = static_cast<int>(std::lround(event.x)) - resize_drag.start_x;
         if (dx != 0) fitted_columns.erase({resize_drag.target, resize_drag.column});
-        table_column_widths[resize_drag.target][resize_drag.column] =
-            std::clamp(resize_drag.start_width + dx, 48, 4000);
+        const auto geo = window::resolve_table_geometry(render_stats.table_font_px);
+        table_column_widths[resize_drag.target][resize_drag.column] = std::clamp(
+            resize_drag.start_width + dx, geo.min_resize,
+            std::max(geo.min_resize, static_cast<int>(std::lround(size.width * geo.max_autofit_viewports))));
         // No cache flush: the layout notices the changed widths and re-measures only that column.
         table_scroll_damage_only = false;
         needs_render = true;

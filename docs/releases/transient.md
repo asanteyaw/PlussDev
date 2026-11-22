@@ -5,6 +5,7 @@ The latest validated development build. It carries no version number and is repl
 ## Changes since 0.0.6
 
 - PlussView: Save As → PNG and PDF now write only the content. A plot is saved at its own size with no window chrome, and a table is saved from its column headers down, with no title card, search box or scrollbars, cropped to the columns and rows that are shown.
+- PlussView: every table size (column limits, sort-arrow size, row heights) is now one block of values in units of the font size, `HtmlTableGeometry`, so tables scale with the font and the numbers are changed in one place.
 - PlussView: table columns now behave like browser tabs. A few columns grow to fill the window; as more are added they shrink together, down to a minimum width, with the text ending in an ellipsis, and then the table scrolls sideways. Drag a column border, or double-click it, to see the full text of a column.
 - PlussView: tables fit their content. A short table is only as tall as its rows, the header band covers just the columns, and an unresized column is as wide as its header and first values need (up to a limit) instead of a fixed width, so short names no longer wrap.
 - PlussView: the sort arrows are a stacked pair of triangles, which leaves more room for column names.
