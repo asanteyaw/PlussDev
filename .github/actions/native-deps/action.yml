@@ -16,7 +16,7 @@ runs:
           macOS-X64) triplet=x64-osx-release ;;
           Linux-X64) triplet=x64-linux-release ;;
           Linux-ARM64) triplet=arm64-linux-release ;;
-          Windows-X64) triplet=x64-windows-static-release ;;
+          Windows-X64) triplet=x64-windows-static ;;
           *) echo "Unsupported runner ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
         esac
         temp="${RUNNER_TEMP}"
