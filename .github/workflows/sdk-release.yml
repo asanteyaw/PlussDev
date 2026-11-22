@@ -13,6 +13,10 @@ on:
         description: Build only the matrix entry with this name (empty builds all)
         type: string
         default: ''
+      skip:
+        description: Comma-separated matrix entry names to leave out (for example a platform that is still being fixed)
+        type: string
+        default: ''
   schedule:
     - cron: "23 4 * * *"
   push:
@@ -32,6 +36,7 @@ jobs:
         shell: python
         env:
           ONLY: ${{ inputs.only }}
+          SKIP: ${{ inputs.skip }}
         run: |
           import json, os
           # Apple Silicon ships twice: a CPU-only archive and a larger one with the Apple GPU (MPS) backend.
@@ -46,6 +51,8 @@ jobs:
           only = os.environ.get("ONLY", "")
           if only:
               entries = [e for e in entries if e["name"] == only]
+          skip = {n.strip() for n in os.environ.get("SKIP", "").split(",") if n.strip()}
+          entries = [e for e in entries if e["name"] not in skip]
           with open(os.environ["GITHUB_OUTPUT"], "a") as out:
               out.write("matrix=" + json.dumps(entries) + "\n")
 
