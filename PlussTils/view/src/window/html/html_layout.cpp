@@ -1820,47 +1820,66 @@ void collect_table_rows_recursive(const HtmlNode& node,
   return plan;
 }
 
+// Height one cell needs at its column's current width (text wrapped, padding and border added).
+[[nodiscard]] int measure_table_cell_height(const HtmlDocument& document,
+                                            const TableRowData& row,
+                                            const std::vector<const HtmlNode*>& cell_lineage,
+                                            const TableColumnPlan& column_plan,
+                                            const ResolvedStyle& table_style,
+                                            const int viewport_width,
+                                            const std::size_t visible) {
+  const std::size_t source_col = column_plan.source_indices[visible];
+  if (source_col >= row.cells.size()) {
+    return 0;
+  }
+  const auto& cell = row.cells[source_col];
+  const int cell_width = column_plan.widths[visible];
+  ResolvedStyle cell_style = table_style;
+  if (cell.node != nullptr) {
+    cell_style = resolve_style(document, *cell.node, cell_lineage, &table_style, viewport_width);
+  }
+  const int line_height = resolve_line_height_value(cell_style.line_height, cell_style.font_size);
+  const int cell_padding = std::max(2, cell_style.padding);
+  const int inner_width =
+      std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? kSortGutterPx : 0));
+  // Header and row-label cells break long names at _ - . / (a label column keeps its width).
+  const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
+  const int max_lines = cell.is_header ? 3 : (breaks_names ? 3 : 5);
+  const auto wrapped = breaks_names
+                           ? layout_header_lines(cell.text, cell_style.font_size, inner_width, max_lines)
+                           : limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
+                                         max_lines,
+                                         cell_style.font_size,
+                                         inner_width);
+  const int lines = std::max<int>(1, wrapped.size());
+  const int content_h = lines * line_height;
+  return content_h + (cell_padding * 2) + (cell_style.border * 2) + 4;
+}
+
+[[nodiscard]] std::vector<const HtmlNode*> table_cell_lineage(const TableRowData& row) {
+  std::vector<const HtmlNode*> lineage = row.lineage;
+  if (row.node != nullptr) {
+    lineage.push_back(row.node);
+  }
+  return lineage;
+}
+
+// A row is as tall as its tallest cell, and never shorter than one line of the table's text.
+[[nodiscard]] int table_row_floor_height(const ResolvedStyle& table_style) {
+  return std::max(24, table_style.line_height + 8);
+}
+
 [[nodiscard]] int measure_table_row_height(const HtmlDocument& document,
                                            const TableRowData& row,
                                            const TableColumnPlan& column_plan,
                                            const ResolvedStyle& table_style,
                                            const int viewport_width) {
-  int row_height = std::max(24, table_style.line_height + 8);
-  std::vector<const HtmlNode*> cell_lineage = row.lineage;
-  if (row.node != nullptr) {
-    cell_lineage.push_back(row.node);
-  }
-
+  int row_height = table_row_floor_height(table_style);
+  const auto cell_lineage = table_cell_lineage(row);
   for (std::size_t visible = 0; visible < column_plan.source_indices.size(); ++visible) {
-    const std::size_t source_col = column_plan.source_indices[visible];
-    if (source_col >= row.cells.size()) {
-      continue;
-    }
-    const auto& cell = row.cells[source_col];
-    const int cell_width = column_plan.widths[visible];
-    ResolvedStyle cell_style = table_style;
-    if (cell.node != nullptr) {
-      cell_style = resolve_style(document, *cell.node, cell_lineage, &table_style, viewport_width);
-    }
-    const int line_height = resolve_line_height_value(cell_style.line_height, cell_style.font_size);
-    const int cell_padding = std::max(2, cell_style.padding);
-    const int inner_width =
-        std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? kSortGutterPx : 0));
-    // Header and row-label cells break long names at _ - . / (a label column keeps its width).
-    const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
-    const int max_lines = cell.is_header ? 3 : (breaks_names ? 3 : 5);
-    const auto wrapped = breaks_names
-                             ? layout_header_lines(cell.text, cell_style.font_size, inner_width, max_lines)
-                             : limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
-                                           max_lines,
-                                           cell_style.font_size,
-                                           inner_width);
-    const int lines = std::max<int>(1, wrapped.size());
-    const int content_h = lines * line_height;
-    const int box_h = content_h + (cell_padding * 2) + (cell_style.border * 2) + 4;
-    row_height = std::max(row_height, box_h);
+    row_height = std::max(row_height, measure_table_cell_height(document, row, cell_lineage, column_plan,
+                                                                table_style, viewport_width, visible));
   }
-
   return row_height;
 }
 
@@ -3320,9 +3339,37 @@ int render_table(Scene& scene,
     }
   }
   if (!geometry_cache_hit) {
-    const auto declared_widths =
-        extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
-    plan = build_table_column_plan(rows, style, content_w, declared_widths);
+    // A resize changes only the user's column widths. When the table is otherwise the same as
+    // the cached layout, reuse its base widths and per-cell heights and re-measure only the
+    // columns whose width changed, instead of re-planning and re-wrapping the whole table.
+    const HtmlTableGeometryCacheEntry* previous = nullptr;
+    if (render_config.layout_cache != nullptr) {
+      const auto cached = render_config.layout_cache->tables.find(table_target);
+      if (cached != render_config.layout_cache->tables.end()) {
+        const auto& entry = cached->second;
+        const std::size_t visible_columns = entry.source_indices.size();
+        if (entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
+            entry.viewport_width == viewport_width && entry.content_width == content_w &&
+            entry.row_count == rows.size() && entry.column_count == column_count &&
+            visible_columns > 0 && entry.base_widths.size() == visible_columns &&
+            entry.column_widths.size() == visible_columns &&
+            entry.cell_heights.size() == rows.size() * visible_columns) {
+          previous = &entry;
+        }
+      }
+    }
+    std::vector<int> cell_heights;
+    std::vector<bool> column_dirty;
+    if (previous != nullptr) {
+      plan.source_indices = previous->source_indices;
+      plan.widths = previous->base_widths;
+      cell_heights = previous->cell_heights;
+    } else {
+      const auto declared_widths =
+          extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
+      plan = build_table_column_plan(rows, style, content_w, declared_widths);
+    }
+    const std::vector<int> base_widths = plan.widths;
     if (width_overrides != nullptr) {
       for (const auto& [column, width] : *width_overrides) {
         if (column >= 0 && static_cast<std::size_t>(column) < plan.widths.size()) {
@@ -3353,10 +3400,31 @@ int render_table(Scene& scene,
         }
       }
     }
-    row_heights.reserve(rows.size());
-    for (const auto& row : rows) {
-      row_heights.push_back(
-          measure_table_row_height(document, row, plan, style, viewport_width));
+    const std::size_t visible_columns = plan.widths.size();
+    // Which columns need their cells measured again: all of them for a fresh layout, otherwise
+    // only those whose width differs from the cached layout.
+    column_dirty.assign(visible_columns, previous == nullptr);
+    if (previous != nullptr) {
+      for (std::size_t c = 0; c < visible_columns; ++c) {
+        column_dirty[c] = plan.widths[c] != previous->column_widths[c];
+      }
+    } else {
+      cell_heights.assign(rows.size() * visible_columns, 0);
+    }
+    const int floor_height = table_row_floor_height(style);
+    row_heights.assign(rows.size(), floor_height);
+    const bool any_dirty = std::any_of(column_dirty.begin(), column_dirty.end(), [](const bool d) { return d; });
+    for (std::size_t r = 0; r < rows.size(); ++r) {
+      const auto cell_lineage = any_dirty ? table_cell_lineage(rows[r]) : std::vector<const HtmlNode*>{};
+      int row_height = floor_height;
+      for (std::size_t c = 0; c < visible_columns; ++c) {
+        int& cell_h = cell_heights[r * visible_columns + c];
+        if (column_dirty[c]) {
+          cell_h = measure_table_cell_height(document, rows[r], cell_lineage, plan, style, viewport_width, c);
+        }
+        row_height = std::max(row_height, cell_h);
+      }
+      row_heights[r] = row_height;
     }
     if (render_config.layout_cache != nullptr) {
       render_config.layout_cache->tables[table_target] =
@@ -3370,6 +3438,8 @@ int render_table(Scene& scene,
               .column_widths = plan.widths,
               .row_heights = row_heights,
               .column_override_signature = override_signature,
+              .base_widths = base_widths,
+              .cell_heights = std::move(cell_heights),
           };
     }
   }

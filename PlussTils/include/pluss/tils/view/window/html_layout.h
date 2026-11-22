@@ -68,6 +68,11 @@ struct HtmlTableGeometryCacheEntry {
   std::vector<int> column_widths{};
   std::vector<int> row_heights{};
   std::uint64_t column_override_signature{0};  // user-set widths this entry was laid out with
+  // What a column resize reuses, so dragging a border re-measures only the column that moved:
+  // the widths before any user override, and the height each cell needs (row-major, one entry
+  // per row and visible column). A row's height is the largest of its cells.
+  std::vector<int> base_widths{};
+  std::vector<int> cell_heights{};
 };
 
 struct HtmlLayoutCache {

@@ -1708,7 +1708,7 @@ bool show_inhouse_html_window(const std::string& title,
         if (dx != 0) fitted_columns.erase({resize_drag.target, resize_drag.column});
         table_column_widths[resize_drag.target][resize_drag.column] =
             std::clamp(resize_drag.start_width + dx, 48, 4000);
-        layout_cache.clear();
+        // No cache flush: the layout notices the changed widths and re-measures only that column.
         table_scroll_damage_only = false;
         needs_render = true;
       } else if (event.kind == window::ShellEventKind::PointerDrag) {
@@ -1757,7 +1757,6 @@ bool show_inhouse_html_window(const std::string& title,
                 table_column_widths[hit.target][hit.value] = 0;
                 fitted_columns.insert(key);
               }
-              layout_cache.clear();
               table_scroll_damage_only = false;
               needs_render = true;
             } else {
