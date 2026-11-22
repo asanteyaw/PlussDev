@@ -2130,7 +2130,15 @@ struct TableLayout {
     const std::size_t column_count,
     const std::string& table_target,
     HtmlLayoutCache* cache,
-    const std::unordered_map<std::string, std::unordered_map<int, int>>* user_widths) {
+    const std::unordered_map<std::string, std::unordered_map<int, int>>* user_widths,
+    const std::unordered_map<std::string, int>* last_resized) {
+  int protected_column = -1;  // the column the user touched last
+  if (last_resized != nullptr) {
+    const auto touched = last_resized->find(table_target);
+    if (touched != last_resized->end()) {
+      protected_column = touched->second;
+    }
+  }
   const std::unordered_map<int, int>* width_overrides = nullptr;
   if (user_widths != nullptr) {
     const auto found = user_widths->find(table_target);
@@ -2138,7 +2146,9 @@ struct TableLayout {
       width_overrides = &found->second;
     }
   }
-  const std::uint64_t override_signature = column_override_signature(width_overrides);
+  // Which column is protected changes the widths too, so it is part of what a cached layout is keyed on.
+  const std::uint64_t override_signature =
+      column_override_signature(width_overrides) ^ (static_cast<std::uint64_t>(protected_column + 2) * 0x9E3779B97F4A7C15ULL);
 
   TableColumnPlan plan;
   std::vector<int> row_heights;
@@ -2224,6 +2234,33 @@ struct TableLayout {
         }
         natural[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
         flexible[static_cast<std::size_t>(column)] = false;
+      }
+      // If every column that could stretch has been sized by hand, the table would end short of its
+      // edge. The leftover goes to the sized column nearest the one just touched (the right one on a
+      // tie), never to the one just touched, so what the user just did stays as they did it.
+      long long fixed_total = 0;
+      bool any_flexible = false;
+      for (std::size_t c = 0; c < natural.size(); ++c) {
+        fixed_total += natural[c];
+        any_flexible = any_flexible || flexible[c];
+      }
+      if (!any_flexible && fixed_total < content_w) {
+        int absorber = -1;
+        int best_distance = std::numeric_limits<int>::max();
+        for (const auto& entry : *width_overrides) {
+          const int column = entry.first;
+          if (column < 0 || static_cast<std::size_t>(column) >= natural.size() || column == protected_column) {
+            continue;
+          }
+          const int distance = protected_column < 0 ? 0 : std::abs(column - protected_column);
+          if (distance < best_distance || (distance == best_distance && column > absorber)) {
+            best_distance = distance;
+            absorber = column;
+          }
+        }
+        if (absorber >= 0) {
+          flexible[static_cast<std::size_t>(absorber)] = true;
+        }
       }
       std::vector<int> widths;
       std::vector<bool> squeezed;
@@ -2342,7 +2379,8 @@ struct TableLayout {
   const TableLayout layout = compute_table_layout(
       document, node, lineage, style, viewport_width, inner_width, rows, col_count,
       node_instance_target(node, "table"), context != nullptr ? context->layout_cache : nullptr,
-      context != nullptr ? context->table_column_widths : nullptr);
+      context != nullptr ? context->table_column_widths : nullptr,
+      context != nullptr ? context->table_last_resized_column : nullptr);
   int total_rows_height = 0;
   for (const int row_height : layout.row_heights) {
     total_rows_height += row_height;
@@ -3723,7 +3761,8 @@ int render_table(Scene& scene,
 
   const TableLayout table_layout =
       compute_table_layout(document, node, lineage, style, viewport_width, content_w, rows, column_count,
-                           table_target, render_config.layout_cache, render_config.table_column_widths);
+                           table_target, render_config.layout_cache, render_config.table_column_widths,
+                           render_config.table_last_resized_column);
   TableColumnPlan plan = table_layout.plan;
   const std::vector<int>& row_heights = table_layout.row_heights;
   int row_total_w = 0;

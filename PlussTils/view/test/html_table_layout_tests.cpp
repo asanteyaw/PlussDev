@@ -244,6 +244,36 @@ void test_header_never_gets_taller_when_a_column_shrinks() {
   expect(header_height(many) == base, "a squeezed table has one-line headers");
 }
 
+void test_sizing_every_column_never_leaves_a_gap() {
+  const std::string html = table_html(3, 3);
+  const SizeI viewport{1400, 600};
+  const auto initial = render(html, viewport);
+  const int total = sum(initial.widths);
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  std::unordered_map<std::string, int> last;
+  HtmlRenderConfig config{};
+  config.table_column_widths = &widths;
+  config.table_last_resized_column = &last;
+  // Auto-fit (width 0) column 0, then column 1, then column 2: after each step the table still fills.
+  int fitted_last = 0;
+  for (const int column : {0, 1, 2}) {
+    widths["grid"][column] = 0;
+    last["grid"] = column;
+    const auto step = render(html, viewport, config);
+    expect(std::abs(sum(step.widths) - total) <= 5,
+           "auto-fitting column " + std::to_string(column) + " leaves the table at its width (" +
+               std::to_string(sum(step.widths)) + " vs " + std::to_string(total) + ")");
+    fitted_last = step.widths[static_cast<std::size_t>(column)];
+  }
+  // The column just touched keeps its auto-fit width: it is the one the others make room around.
+  HtmlRenderConfig alone{};
+  std::unordered_map<std::string, std::unordered_map<int, int>> one;
+  one["grid"][2] = 0;
+  alone.table_column_widths = &one;
+  const auto expected = render(html, viewport, alone);
+  expect(fitted_last == expected.widths[2], "the column just auto-fitted keeps its fitted width");
+}
+
 void test_pdf_export_writes_a_valid_file() {
   PixelCanvas canvas(SizeI{64, 40});
   canvas.clear(Color::rgba(255, 255, 255, 255));
@@ -272,6 +302,7 @@ int main() {
     test_user_sized_columns_leave_no_gap();
     test_other_columns_absorb_a_resize_in_a_wide_table();
     test_header_never_gets_taller_when_a_column_shrinks();
+    test_sizing_every_column_never_leaves_a_gap();
     test_pdf_export_writes_a_valid_file();
     std::cout << "[PASS] html_table_layout_tests\n";
     return 0;

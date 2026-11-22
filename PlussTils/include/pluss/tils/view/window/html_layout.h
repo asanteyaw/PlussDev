@@ -204,6 +204,9 @@ struct HtmlRenderConfig {
   // User-set column widths (px) per table target, by column index; the viewer fills it as
   // the user drags column borders. Columns without an entry use the default width.
   const std::unordered_map<std::string, std::unordered_map<int, int>>* table_column_widths{nullptr};
+  // The column the user touched last, per table. When every column has been sized by hand and there
+  // is still room, the leftover goes to a different column, so the one just resized keeps its width.
+  const std::unordered_map<std::string, int>* table_last_resized_column{nullptr};
   // The column border under the pointer (its header border is drawn highlighted).
   std::string hover_resize_target{};
   int hover_resize_column{-1};
