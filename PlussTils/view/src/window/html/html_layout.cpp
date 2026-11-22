@@ -90,6 +90,7 @@ struct TableRowData {
 struct TableColumnPlan {
   std::vector<std::size_t> source_indices{};
   std::vector<int> widths{};
+  std::vector<bool> single_line{};  // columns squeezed below their natural width show one line, ending in "..."
   bool truncated{false};
   int ellipsis_width{0};
   int hidden_count{0};
@@ -797,6 +798,9 @@ constexpr int kHeaderTextBudgetPx = 200;
 // values need, between kMinDefaultColumnPx and kMaxDefaultColumnPx, so short data gives a compact
 // table and long text wraps instead of making one column swallow the window.
 constexpr int kMaxDefaultColumnPx = 240;
+// When columns outnumber the width they are squeezed together, but not below this (a column
+// that is naturally narrower than this simply keeps its natural width). Past it the table scrolls.
+constexpr int kMinSqueezedColumnPx = 120;
 constexpr int kMinDefaultColumnPx = 72;
 constexpr std::size_t kDefaultFitRows = 48;
 constexpr int kMinColumnPx = 48;
@@ -1880,12 +1884,49 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
   const int min_col_w = kMinDefaultColumnPx;
   const int max_col_w = std::max(260, inner_width * 2);
+  std::vector<int> natural(col_count, 0);
+  std::vector<bool> flexible(col_count, false);  // columns the table may stretch or squeeze
   for (std::size_t c = 0; c < col_count; ++c) {
-    const int width = sticky_left[c]
-                          ? std::clamp(desired[c], 72, max_col_w)
-                          : std::clamp(desired[c], min_col_w, max_col_w);
+    natural[c] = sticky_left[c] ? std::clamp(desired[c], 72, max_col_w)
+                                : std::clamp(desired[c], min_col_w, max_col_w);
+    const bool declared = c < declared_widths.size() && declared_widths[c] > 0;
+    flexible[c] = !sticky_left[c] && !declared;
+  }
+  // Like tabs in a browser: with few columns each grows so the table fills the width, and as
+  // columns are added they all shrink together, down to kMinSqueezedColumnPx, after which the
+  // table scrolls sideways. Extra space is shared in proportion to each column's natural
+  // width; a shortfall is taken from each column in proportion to how far it can still shrink.
+  std::vector<int> widths = natural;
+  std::vector<bool> squeezed(col_count, false);
+  long long fixed_total = 0, flex_total = 0, shrinkable_total = 0;
+  for (std::size_t c = 0; c < col_count; ++c) {
+    (flexible[c] ? flex_total : fixed_total) += natural[c];
+    if (flexible[c]) shrinkable_total += std::max(0, natural[c] - kMinSqueezedColumnPx);
+  }
+  const long long room = static_cast<long long>(inner_width) - fixed_total;  // for flexible columns
+  if (flex_total > 0 && room > flex_total) {
+    long long given = 0;
+    std::size_t last_flexible = 0;
+    for (std::size_t c = 0; c < col_count; ++c) {
+      if (!flexible[c]) continue;
+      widths[c] = static_cast<int>(room * natural[c] / flex_total);
+      given += widths[c];
+      last_flexible = c;
+    }
+    widths[last_flexible] += static_cast<int>(room - given);  // rounding lands on the last column
+  } else if (flex_total > room && shrinkable_total > 0) {
+    const long long need = std::min(flex_total - std::max<long long>(room, 0), shrinkable_total);
+    for (std::size_t c = 0; c < col_count; ++c) {
+      if (!flexible[c]) continue;
+      const int take = static_cast<int>(need * std::max(0, natural[c] - kMinSqueezedColumnPx) / shrinkable_total);
+      widths[c] = natural[c] - take;
+      squeezed[c] = take > 0;
+    }
+  }
+  for (std::size_t c = 0; c < col_count; ++c) {
     plan.source_indices.push_back(c);
-    plan.widths.push_back(width);
+    plan.widths.push_back(widths[c]);
+    plan.single_line.push_back(squeezed[c]);
   }
 
   if (plan.widths.empty()) {
@@ -1920,7 +1961,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
       std::max(20, cell_width - ((cell_padding + cell_style.border) * 2) - 4 - (cell.is_header ? kSortGutterPx : 0));
   // Header and row-label cells break long names at _ - . / (a label column keeps its width).
   const bool breaks_names = cell.is_header || node_has_class(cell.node, "sticky-left");
-  const int max_lines = cell.is_header ? 3 : (breaks_names ? 3 : 5);
+  const bool squeezed = visible < column_plan.single_line.size() && column_plan.single_line[visible];
+  const int max_lines = squeezed ? 1 : (cell.is_header ? 3 : (breaks_names ? 3 : 5));
   const auto wrapped = breaks_names
                            ? layout_header_lines(cell.text, cell_style.font_size, inner_width, max_lines)
                            : limit_lines(layout_text_lines(cell.text, cell_style, inner_width),
@@ -3433,6 +3475,7 @@ int render_table(Scene& scene,
       if (geometry_cache_hit) {
         plan.source_indices = entry.source_indices;
         plan.widths = entry.column_widths;
+        plan.single_line = entry.column_single_line;
         row_heights = entry.row_heights;
       }
     }
@@ -3462,6 +3505,7 @@ int render_table(Scene& scene,
     if (previous != nullptr) {
       plan.source_indices = previous->source_indices;
       plan.widths = previous->base_widths;
+      plan.single_line = previous->base_single_line;
       cell_heights = previous->cell_heights;
     } else {
       const auto declared_widths =
@@ -3469,6 +3513,7 @@ int render_table(Scene& scene,
       plan = build_table_column_plan(document, viewport_width, rows, style, content_w, declared_widths);
     }
     const std::vector<int> base_widths = plan.widths;
+    const std::vector<bool> base_single_line = plan.single_line;
     if (width_overrides != nullptr) {
       for (const auto& [column, width] : *width_overrides) {
         if (column >= 0 && static_cast<std::size_t>(column) < plan.widths.size()) {
@@ -3481,6 +3526,9 @@ int render_table(Scene& scene,
             target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()), kMinColumnPx, 4000);
           }
           plan.widths[static_cast<std::size_t>(column)] = std::max(kMinColumnPx, target);
+          if (static_cast<std::size_t>(column) < plan.single_line.size()) {
+            plan.single_line[static_cast<std::size_t>(column)] = false;  // a column the user sized wraps again
+          }
         }
       }
     }
@@ -3523,6 +3571,8 @@ int render_table(Scene& scene,
               .row_heights = row_heights,
               .column_override_signature = override_signature,
               .base_widths = base_widths,
+              .base_single_line = base_single_line,
+              .column_single_line = plan.single_line,
               .cell_heights = std::move(cell_heights),
           };
     }
@@ -3880,7 +3930,8 @@ int render_table(Scene& scene,
       const int cell_padding = std::max(2, cell_style.padding);
       const int text_max_w =
           std::max(20, cell_w - ((cell_padding + cell_style.border) * 2) - 2 - (header_row ? sort_gutter_px : 0));
-      const int max_lines = header_row ? 3 : 5;
+      const bool squeezed = c < plan.single_line.size() && plan.single_line[c];
+      const int max_lines = squeezed ? 1 : (header_row ? 3 : 5);
       const auto wrapped = header_row
                                ? layout_header_lines(value, cell_style.font_size, text_max_w, max_lines)
                                : limit_lines(layout_text_lines(value, cell_style, text_max_w),

@@ -72,6 +72,8 @@ struct HtmlTableGeometryCacheEntry {
   // the widths before any user override, and the height each cell needs (row-major, one entry
   // per row and visible column). A row's height is the largest of its cells.
   std::vector<int> base_widths{};
+  std::vector<bool> base_single_line{};
+  std::vector<bool> column_single_line{};  // after the user's widths are applied
   std::vector<int> cell_heights{};
 };
 
