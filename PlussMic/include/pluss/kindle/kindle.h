@@ -1,3 +1,5 @@
 #pragma once
 
-#include "kindle/Kindle.h"
+// Angle brackets: a quoted include resolves to this very file on case-insensitive
+// Windows (Microsoft search rules), so the module headers would never be pulled in.
+#include <kindle/Kindle.h>
