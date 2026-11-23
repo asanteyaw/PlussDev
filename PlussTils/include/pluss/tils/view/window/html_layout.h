@@ -39,7 +39,7 @@ struct HtmlTableGeometry {
   // Past the last column the grid carries on as blank columns this wide (a spreadsheet's empty cells),
   // so a table narrower than its panel never ends in a hole.
   double continuation_column_em{8.0};
-  HtmlTableSlack slack{HtmlTableSlack::Continuation};
+  HtmlTableSlack slack{HtmlTableSlack::LastColumn};
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
   // Lines of text a cell may use before it ends in an ellipsis. Like a spreadsheet, text does not wrap
@@ -76,7 +76,7 @@ struct HtmlTableGeometryPx {
   int squeeze_floor{0};
   int min_resize{0};
   int continuation_column{0};
-  HtmlTableSlack slack{HtmlTableSlack::Continuation};
+  HtmlTableSlack slack{HtmlTableSlack::LastColumn};
   std::size_t fit_sample_rows{0};
   int header_max_lines{1};
   int value_max_lines{1};

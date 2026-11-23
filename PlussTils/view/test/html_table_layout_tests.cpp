@@ -99,6 +99,7 @@ void test_geometry_scales_with_font() {
 }
 
 void test_few_columns_fill_the_width() {
+  const ScopedSlack slack(HtmlTableSlack::Continuation);  // every column has a handle, so their widths sum to the table
   const auto result = render(table_html(3, 3), SizeI{1000, 600});
   expect(result.stats.has_table, "the page has a table");
   expect(result.widths.size() == 3, "three column handles");
@@ -350,6 +351,11 @@ void test_a_number_that_does_not_fit_is_marked_and_never_cut() {
          "text that does not fit ends in an ellipsis");
 }
 
+void test_last_column_takes_the_slack_by_default() {
+  expect(HtmlTableGeometry{}.slack == HtmlTableSlack::LastColumn,
+         "a table's last column is its automatic column unless the geometry says otherwise");
+}
+
 void test_last_column_can_take_the_slack() {
   // The alternative policy: the last column keeps the table at the panel's width, and nothing else moves.
   const std::string html = table_html(5, 3);
@@ -401,7 +407,8 @@ int main() {
     test_resizing_changes_only_that_column();
     test_a_narrow_table_ends_in_a_continuation_not_a_hole();
     test_double_click_fit_and_restore();
-    test_last_column_can_take_the_slack();
+    test_last_column_takes_the_slack_by_default();
+  test_last_column_can_take_the_slack();
     test_header_never_gets_taller_when_a_column_shrinks();
     test_resizing_a_column_never_changes_a_row();
     test_a_number_that_does_not_fit_is_marked_and_never_cut();
