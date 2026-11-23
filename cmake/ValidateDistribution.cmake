@@ -107,6 +107,28 @@ if(NOT native_io_result EQUAL 0)
   message(FATAL_ERROR "Excel/Parquet round trip failed after linking the distribution archive")
 endif()
 
+# The library's own helper checks, built from the archive like any user program. A failure is
+# reported as a warning until they have passed on every platform; then it can be made an error.
+foreach(check IN ITEMS core_info core_settings core_cache core_doc array_file examples)
+  set(check_binary "${consumer_build_dir}/pluss_sdk_check_${check}")
+  if(WIN32)
+    set(check_binary "${consumer_build_dir}/Release/pluss_sdk_check_${check}.exe")
+    if(NOT EXISTS "${check_binary}")
+      set(check_binary "${consumer_build_dir}/pluss_sdk_check_${check}.exe")
+    endif()
+  endif()
+  if(EXISTS "${check_binary}")
+    execute_process(COMMAND "${check_binary}" RESULT_VARIABLE check_result OUTPUT_VARIABLE check_output ERROR_VARIABLE check_error)
+    if(check_result EQUAL 0)
+      message(STATUS "check ${check} passed")
+    else()
+      message(WARNING "check ${check} FAILED against ${DISTRIBUTION_ARCHIVE}:\n${check_output}\n${check_error}")
+    endif()
+  else()
+    message(WARNING "check ${check} was not built from the archive")
+  endif()
+endforeach()
+
 # The pluss command must be able to build and run a program against the archive it came in. This
 # is reported as a warning until it has passed on every platform; then it can be made an error.
 set(pluss_cli_binary "${distribution_dir}/bin/pluss")

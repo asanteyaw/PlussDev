@@ -200,3 +200,12 @@ if(NOT TARGET Pluss::PlussII AND TARGET Pluss::SDK)
 endif()
 
 check_required_components(Pluss)
+
+# Where this download is, for the documentation and other files that sit beside the libraries.
+# pluss::tils::doc reads the bundled documentation from <prefix>/share/pluss/docs.
+foreach(_pluss_target IN ITEMS Pluss::SDK Pluss::PlussII)
+  if(TARGET ${_pluss_target})
+    set_property(TARGET ${_pluss_target} APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS
+      "PLUSS_SDK_PREFIX=\"${PACKAGE_PREFIX_DIR}\"")
+  endif()
+endforeach()

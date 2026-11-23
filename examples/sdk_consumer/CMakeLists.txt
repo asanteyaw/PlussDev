@@ -14,3 +14,22 @@ target_link_libraries(pluss_sdk_consumer PRIVATE Pluss::PlussII)
 # support both with nothing else installed, so this fails if either is missing.
 add_executable(pluss_sdk_native_io native_io.cpp)
 target_link_libraries(pluss_sdk_native_io PRIVATE Pluss::PlussII)
+
+# Checks of the library's own helpers, built as a user would build them: only from the archive's
+# headers and libraries. Each is run by cmake/ValidateDistribution.cmake.
+set(PLUSS_SDK_CHECKS
+    core_info:PlussTils/test/core_info_tests.cpp
+    core_settings:PlussTils/test/core_settings_tests.cpp
+    core_cache:PlussTils/test/core_cache_tests.cpp
+    core_doc:PlussTils/test/core_doc_tests.cpp
+    array_file:PlussQit/tests/array_file_tests.cpp
+    examples:PlussMic/test/examples_tests.cpp)
+foreach(_check IN LISTS PLUSS_SDK_CHECKS)
+  string(REPLACE ":" ";" _parts "${_check}")
+  list(GET _parts 0 _name)
+  list(GET _parts 1 _source)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../${_source}")
+    add_executable(pluss_sdk_check_${_name} "${CMAKE_CURRENT_SOURCE_DIR}/../../${_source}")
+    target_link_libraries(pluss_sdk_check_${_name} PRIVATE Pluss::PlussII)
+  endif()
+endforeach()

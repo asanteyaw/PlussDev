@@ -1,12 +1,16 @@
 #include "pluss/tils/doc.h"
 
+#include "pluss/detail/inflate.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <array>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <unordered_map>
 
@@ -146,15 +150,87 @@ bool plain_path(std::string_view text) {
   });
 }
 
-// The file holding a page on this machine, fetching it if need be.
-fs::path locate(const DocPage& page, std::string* why) {
-  std::error_code ignored;
-  if (const char* folder = std::getenv("PLUSS_DOCS_DIR"); folder != nullptr && *folder != '\0') {
-    const fs::path local = fs::path(folder) / page.source;
-    if (fs::is_regular_file(local, ignored)) return local;
+// The documentation bundled in the download: one file, written by tools/bundle_docs.py.
+struct Packed {
+  std::uint64_t offset{0};
+  std::uint32_t packed{0};
+  std::uint32_t size{0};
+};
+
+struct Pack {
+  fs::path file;
+  std::unordered_map<std::string, Packed> pages;
+};
+
+std::string prefix_of(std::string_view prefix) {
+  if (!prefix.empty()) return std::string(prefix);
+  if (const char* env = std::getenv("PLUSS_PREFIX")) return env;
+  return {};
+}
+
+const Pack* pack_in(std::string_view prefix_text) {
+  static std::mutex lock;
+  static std::map<std::string, Pack> loaded;
+  const std::string prefix = prefix_of(prefix_text);
+  if (prefix.empty()) return nullptr;
+  const std::lock_guard<std::mutex> guard(lock);
+  const auto found = loaded.find(prefix);
+  if (found != loaded.end()) return found->second.file.empty() ? nullptr : &found->second;
+  Pack pack;
+  const fs::path file = fs::path(prefix) / "share" / "pluss" / "docs" / "docs.pack";
+  std::ifstream in(file, std::ios::binary);
+  char magic[8];
+  std::uint32_t count = 0;
+  if (in && in.read(magic, 8) && std::string_view(magic, 8) == "PLDOCPK1" && in.read(reinterpret_cast<char*>(&count), 4)) {
+    pack.file = file;
+    for (std::uint32_t i = 0; i < count; ++i) {
+      std::uint16_t length = 0;
+      in.read(reinterpret_cast<char*>(&length), 2);
+      std::string path(length, '\0');
+      in.read(path.data(), length);
+      Packed entry;
+      in.read(reinterpret_cast<char*>(&entry.offset), 8);
+      in.read(reinterpret_cast<char*>(&entry.packed), 4);
+      in.read(reinterpret_cast<char*>(&entry.size), 4);
+      if (!in) {
+        pack.file.clear();
+        break;
+      }
+      pack.pages.emplace(std::move(path), entry);
+    }
   }
+  const auto stored = loaded.emplace(prefix, std::move(pack)).first;
+  return stored->second.file.empty() ? nullptr : &stored->second;
+}
+
+// A page from the bundle, or nothing.
+std::optional<std::string> bundled(const DocPage& page, std::string_view prefix) {
+  const Pack* pack = pack_in(prefix);
+  if (pack == nullptr) return std::nullopt;
+  const auto entry = pack->pages.find(page.source);
+  if (entry == pack->pages.end()) return std::nullopt;
+  std::ifstream in(pack->file, std::ios::binary);
+  in.seekg(static_cast<std::streamoff>(entry->second.offset));
+  std::string packed(entry->second.packed, '\0');
+  if (!in.read(packed.data(), static_cast<std::streamsize>(packed.size()))) return std::nullopt;
+  try {
+    return pluss::detail::Inflater(packed, entry->second.size).run();
+  } catch (const std::exception&) {
+    return std::nullopt;
+  }
+}
+
+std::optional<std::string> read_text(const fs::path& file) {
+  std::error_code ignored;
+  if (!fs::is_regular_file(file, ignored)) return std::nullopt;
+  std::ifstream in(file, std::ios::binary);
+  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+}
+
+// A page downloaded from the website into the cache; the cached file, or nothing.
+fs::path download(const DocPage& page, std::string* why) {
+  std::error_code ignored;
   const fs::path cached = cache_folder() / page.source;
-  if (fs::is_regular_file(cached, ignored)) return cached;
   if (!plain_path(page.source)) {
     if (why != nullptr) *why = "the page's path is not usable";
     return {};
@@ -169,11 +245,41 @@ fs::path locate(const DocPage& page, std::string* why) {
 #endif
   if (std::system(command.c_str()) != 0 || !fs::is_regular_file(part, ignored)) {
     fs::remove(part, ignored);
-    if (why != nullptr) *why = "it is not in PLUSS_DOCS_DIR or the cache, and downloading " + url + " failed (is curl installed and the network up?)";
+    if (why != nullptr) *why = "it is not in PLUSS_DOCS_DIR, the download's bundled documentation or the cache, and downloading " + url + " failed (is curl installed and the network up?)";
     return {};
   }
   fs::rename(part, cached, ignored);
   return cached;
+}
+
+// The page's text from wherever it is found first: PLUSS_DOCS_DIR, the bundle, the cache, the website.
+std::optional<std::string> page_text(const DocPage& page, std::string_view prefix, std::string* why) {
+  if (const char* folder = std::getenv("PLUSS_DOCS_DIR"); folder != nullptr && *folder != '\0') {
+    if (auto text = read_text(fs::path(folder) / page.source)) return text;
+  }
+  if (auto text = bundled(page, prefix)) return text;
+  if (auto text = read_text(cache_folder() / page.source)) return text;
+  const fs::path file = download(page, why);
+  if (file.empty()) return std::nullopt;
+  return read_text(file);
+}
+
+// A file holding the page, for an editor to open: a source folder's file, the cache's copy, one
+// written from the bundle into the cache, or a download.
+fs::path page_file(const DocPage& page, std::string_view prefix, std::string* why) {
+  std::error_code ignored;
+  if (const char* folder = std::getenv("PLUSS_DOCS_DIR"); folder != nullptr && *folder != '\0') {
+    const fs::path local = fs::path(folder) / page.source;
+    if (fs::is_regular_file(local, ignored)) return local;
+  }
+  const fs::path cached = cache_folder() / page.source;
+  if (fs::is_regular_file(cached, ignored)) return cached;
+  if (auto text = bundled(page, prefix)) {
+    fs::create_directories(cached.parent_path(), ignored);
+    std::ofstream(cached, std::ios::binary | std::ios::trunc) << *text;
+    return cached;
+  }
+  return download(page, why);
 }
 
 // The page as a terminal shows it best: the site's navigation and raw HTML blocks removed, runs of
@@ -305,19 +411,19 @@ std::vector<DocPage> doc_search(std::string_view name, std::size_t limit) {
   return out;
 }
 
-std::string doc_text(const DocPage& page, std::string* why) {
-  const fs::path file = locate(page, why);
-  if (file.empty()) return {};
-  std::ifstream in(file, std::ios::binary);
-  const std::string markdown((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-  return terminal_text(markdown);
+namespace doc_detail {
+
+std::string text_in(const DocPage& page, std::string* why, std::string_view prefix) {
+  const auto raw = page_text(page, prefix, why);
+  return raw ? terminal_text(*raw) : std::string();
 }
 
-std::string doc_file(const DocPage& page, std::string* why) {
-  const fs::path file = locate(page, why);
-  if (file.empty()) return {};
-  return fs::absolute(file).string() + ":1";
+std::string file_in(const DocPage& page, std::string* why, std::string_view prefix) {
+  const fs::path file = page_file(page, prefix, why);
+  return file.empty() ? std::string() : fs::absolute(file).string() + ":1";
 }
+
+}  // namespace doc_detail
 
 namespace {
 
@@ -334,7 +440,9 @@ void not_found(std::string_view name, std::ostream& out) {
 
 }  // namespace
 
-void doc(std::string_view name, std::ostream& out) {
+namespace doc_detail {
+
+void print_in(std::string_view name, std::ostream& out, std::string_view prefix) {
   const auto page = doc_find(name);
   if (!page) {
     not_found(name, out);
@@ -342,7 +450,7 @@ void doc(std::string_view name, std::ostream& out) {
   }
   out << page->title << "  -  " << page->url << "\n\n";
   std::string why;
-  const std::string text = doc_text(*page, &why);
+  const std::string text = text_in(*page, &why, prefix);
   if (text.empty()) {
     out << "(The page could not be read: " << why << ".)\nOpen " << page->url << " instead.\n";
     return;
@@ -350,28 +458,28 @@ void doc(std::string_view name, std::ostream& out) {
   out << text;
 }
 
-void doc_link(std::string_view name, std::ostream& out) {
+void link_in(std::string_view name, std::ostream& out, std::string_view prefix) {
   const auto page = doc_find(name);
   if (!page) {
     not_found(name, out);
     return;
   }
   std::string why;
-  const std::string file = doc_file(*page, &why);
+  const std::string file = file_in(*page, &why, prefix);
   out << page->title << "\n";
   if (!file.empty()) out << "  file: " << file << "\n";
   else out << "  file: (not available: " << why << ")\n";
   out << "  web:  " << page->url << "\n";
 }
 
-bool doc_open(std::string_view name, std::ostream& out) {
+bool open_in(std::string_view name, std::ostream& out, std::string_view prefix) {
   const auto page = doc_find(name);
   if (!page) {
     not_found(name, out);
     return false;
   }
   std::string why;
-  std::string file = doc_file(*page, &why);
+  std::string file = file_in(*page, &why, prefix);
   out << page->title << "\n";
   if (file.empty()) {
     out << "  web:  " << page->url << "\n  (the file could not be fetched: " << why << ")\n";
@@ -391,5 +499,7 @@ bool doc_open(std::string_view name, std::ostream& out) {
 #endif
   return std::system(command.c_str()) == 0;
 }
+
+}  // namespace doc_detail
 
 }  // namespace pluss::tils

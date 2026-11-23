@@ -13,8 +13,10 @@
 // page. A name that matches nothing lists the closest pages.
 //
 // A page is read from PLUSS_DOCS_DIR (a folder laid out like the documentation sources) when that is
-// set, otherwise from a copy kept in the user's cache folder, otherwise it is downloaded from the
-// website once with curl and kept.
+// set, otherwise from the documentation bundled in the PlussII download (share/pluss/docs), otherwise
+// from a copy kept in the user's cache folder, and failing those it is downloaded from the website
+// once with curl and kept. The download's folder is found from PLUSS_SDK_PREFIX, which the CMake
+// package defines for programs that link Pluss::PlussII, or from the PLUSS_PREFIX environment variable.
 
 #include <cstddef>
 #include <iostream>
@@ -39,16 +41,32 @@ struct DocPage {
 // The pages whose titles are closest to `name`, best first.
 [[nodiscard]] std::vector<DocPage> doc_search(std::string_view name, std::size_t limit = 8);
 
+namespace doc_detail {
+std::string text_in(const DocPage& page, std::string* why, std::string_view prefix);
+std::string file_in(const DocPage& page, std::string* why, std::string_view prefix);
+void print_in(std::string_view name, std::ostream& out, std::string_view prefix);
+void link_in(std::string_view name, std::ostream& out, std::string_view prefix);
+bool open_in(std::string_view name, std::ostream& out, std::string_view prefix);
+}  // namespace doc_detail
+
+#ifndef PLUSS_SDK_PREFIX
+#define PLUSS_SDK_PREFIX ""
+#endif
+
 // The page as plain text for a terminal. Empty when it cannot be read; `why` then says why.
-[[nodiscard]] std::string doc_text(const DocPage& page, std::string* why = nullptr);
+[[nodiscard]] inline std::string doc_text(const DocPage& page, std::string* why = nullptr) {
+  return doc_detail::text_in(page, why, PLUSS_SDK_PREFIX);
+}
 
-// Where the page's file is on this machine (fetching it first if needed): path:1, which most
-// editors' terminals turn into a link that opens the file.
-[[nodiscard]] std::string doc_file(const DocPage& page, std::string* why = nullptr);
+// Where the page's file is on this machine (made if need be): path:1, which most editors'
+// terminals turn into a link that opens the file.
+[[nodiscard]] inline std::string doc_file(const DocPage& page, std::string* why = nullptr) {
+  return doc_detail::file_in(page, why, PLUSS_SDK_PREFIX);
+}
 
-void doc(std::string_view name, std::ostream& out = std::cout);
-void doc_link(std::string_view name, std::ostream& out = std::cout);
-bool doc_open(std::string_view name, std::ostream& out = std::cout);
+inline void doc(std::string_view name, std::ostream& out = std::cout) { doc_detail::print_in(name, out, PLUSS_SDK_PREFIX); }
+inline void doc_link(std::string_view name, std::ostream& out = std::cout) { doc_detail::link_in(name, out, PLUSS_SDK_PREFIX); }
+inline bool doc_open(std::string_view name, std::ostream& out = std::cout) { return doc_detail::open_in(name, out, PLUSS_SDK_PREFIX); }
 
 namespace doc_detail {
 

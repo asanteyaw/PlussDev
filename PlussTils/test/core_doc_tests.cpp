@@ -36,9 +36,20 @@ int main() {
   namespace fs = std::filesystem;
   using namespace pluss::tils;
 
+  // The cache folder is a temporary one, so the test neither reads nor leaves anything in the user's.
+  const fs::path home = fs::temp_directory_path() / "pluss_doc_home";
+  std::error_code ignored;
+  fs::remove_all(home, ignored);
+  fs::create_directories(home);
+#if defined(_WIN32)
+  _putenv_s("LOCALAPPDATA", home.string().c_str());
+#else
+  setenv("HOME", home.c_str(), 1);
+  setenv("XDG_CACHE_HOME", home.c_str(), 1);
+#endif
+
   // Pages are read from a folder laid out like the sources, so the test needs no network.
   const fs::path docs = fs::temp_directory_path() / "pluss_doc_test";
-  std::error_code ignored;
   fs::remove_all(docs, ignored);
   write(docs / "PlussQit/docs/sphinx/api/series/sum.md",
         "# Series::sum\n\n[Back to Series API Reference](../../series_api_reference.md)\n\n```{raw} html\n<meta name=\"x\" content=\"y\">\n```\n\n"
@@ -50,6 +61,32 @@ int main() {
 #else
   setenv("PLUSS_DOCS_DIR", docs.c_str(), 1);
 #endif
+
+  // The documentation bundled in a download: a one-page pack made by tools/bundle_docs.py, laid
+  // out as <prefix>/share/pluss/docs/docs.pack. It is read when PLUSS_DOCS_DIR does not have the page.
+  {
+    const fs::path prefix = fs::temp_directory_path() / "pluss_doc_prefix";
+    fs::remove_all(prefix, ignored);
+    const std::string pack = std::string("\x50\x4c\x44\x4f\x43\x50\x4b\x31\x01\x00\x00\x00\x26\x00\x50\x6c\x75\x73\x73\x51\x69\x74\x2f\x64\x6f\x63\x73\x2f\x73\x70\x68\x69\x6e\x78\x2f\x61\x70\x69\x2f\x73\x65\x72\x69\x65\x73\x2f\x73\x75\x6d\x2e\x6d\x64\x44\x00\x00\x00\x00\x00\x00\x00\x35\x00\x00\x00\x36\x00\x00\x00\x53\x56\x08\x4e\x2d\xca\x4c\x2d\xb6\xb2\x2a\x2e\xcd\xe5\xe2\x72\x2b\xca\xcf\x55\x28\xc9\x48\x55\x48\x2a\xcd\x4b\xc9\x49\xb5\x52\x48\x4c\x49\x29\x56\x28\x2d\x00\x8b\xa5\xe6\xa4\xe6\xa6\xe6\x95\x14\xeb\x71\x01\x00", 121);
+    write(prefix / "share/pluss/docs/docs.pack", pack);
+    const auto page = doc_find("Series::sum");
+    std::string why;
+#if defined(_WIN32)
+    _putenv_s("PLUSS_DOCS_DIR", "");
+#else
+    unsetenv("PLUSS_DOCS_DIR");
+#endif
+    const std::string text = doc_detail::text_in(*page, &why, prefix.string());
+    require(text.find("From the bundle: adds up the elements.") != std::string::npos, "a page is read from the bundled documentation: " + why);
+    const std::string file = doc_detail::file_in(*page, &why, prefix.string());
+    require(!file.empty() && file.find("sum.md:1") != std::string::npos, "a bundled page can be written out for an editor");
+    fs::remove_all(prefix, ignored);
+#if defined(_WIN32)
+    _putenv_s("PLUSS_DOCS_DIR", docs.string().c_str());
+#else
+    setenv("PLUSS_DOCS_DIR", docs.c_str(), 1);
+#endif
+  }
 
   // Finding pages by name: exact, case-insensitive, dotted, and a type by its bare name.
   const auto sum = doc_find("Series::sum");
@@ -100,6 +137,7 @@ int main() {
   require(!doc_search("sum", 5).empty() && doc_search("sum", 3).size() <= 3, "doc_search returns at most the limit");
 
   fs::remove_all(docs, ignored);
+  fs::remove_all(home, ignored);
   if (failures == 0) std::cout << "core doc tests passed\n";
   return failures == 0 ? 0 : 1;
 }

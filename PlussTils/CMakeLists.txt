@@ -29,7 +29,22 @@ add_library(PlussTilsCore STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/env/env.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/doc/doc.cpp
 )
-target_include_directories(PlussTilsCore PRIVATE ${PLUSS_DOC_INDEX_DIR})
+target_include_directories(PlussTilsCore PRIVATE ${PLUSS_DOC_INDEX_DIR} ${CMAKE_SOURCE_DIR}/PlussQit/include)
+
+# The documentation, packed into one file beside the libraries, so doc() works with no network.
+option(PLUSS_BUNDLE_DOCS "Install the documentation with the libraries for pluss::tils::doc" ON)
+if(PLUSS_BUNDLE_DOCS AND Python3_Interpreter_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bundle_docs.py)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bundle_docs.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/docs/docs.pack
+        RESULT_VARIABLE _pluss_docs_pack_result
+        OUTPUT_QUIET ERROR_QUIET
+    )
+    if(_pluss_docs_pack_result EQUAL 0 AND EXISTS ${CMAKE_BINARY_DIR}/docs/docs.pack)
+        install(FILES ${CMAKE_BINARY_DIR}/docs/docs.pack DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pluss/docs)
+    else()
+        message(WARNING "Could not pack the documentation; doc() will download pages instead")
+    endif()
+endif()
 add_library(Pluss::TilsCore ALIAS PlussTilsCore)
 target_include_directories(PlussTilsCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
