@@ -10,6 +10,10 @@ add_executable(plussmic_nonfinite_family_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/nonfinite_family_tests.cpp
 )
 target_link_libraries(plussmic_nonfinite_family_tests PRIVATE PlussMic)
+add_executable(plussmic_examples_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/examples_tests.cpp
+)
+target_link_libraries(plussmic_examples_tests PRIVATE PlussMic)
 add_executable(plussmic_atlas_view_smoke
   ${CMAKE_CURRENT_SOURCE_DIR}/atlas_view_smoke.cpp
 )
@@ -109,6 +113,7 @@ target_compile_definitions(plussmic_bi_serve_tests PRIVATE
 
 add_test(NAME plussmic_table_csv COMMAND plussmic_table_csv_tests)
 add_test(NAME plussmic_nonfinite_family COMMAND plussmic_nonfinite_family_tests)
+add_test(NAME plussmic_examples COMMAND plussmic_examples_tests)
 add_test(NAME plussmic_kindle_catalog COMMAND plussmic_kindle_catalog_tests)
 add_test(NAME plussmic_bundle_locus COMMAND plussmic_bundle_locus_tests)
 add_test(NAME plussmic_scribble_model COMMAND plussmic_scribble_model_tests)
