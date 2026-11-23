@@ -1056,6 +1056,21 @@ const ThemePalette& palette_for_(const DisplayTheme theme) {
   return kThemes.front();
 }
 
+// "#rrggbb" laid over "#rrggbb": `share` of the top colour, the rest of the bottom one.
+std::string blend_hex_(const std::string_view top, const std::string_view bottom, const double share) {
+  const auto channel = [](const std::string_view hex, const std::size_t i) {
+    return std::stoi(std::string(hex.substr(1 + 2 * i, 2)), nullptr, 16);
+  };
+  std::string out = "#";
+  for (std::size_t i = 0; i < 3; ++i) {
+    const int v = static_cast<int>(std::lround(share * channel(top, i) + (1.0 - share) * channel(bottom, i)));
+    constexpr std::string_view digits = "0123456789abcdef";
+    out += digits[(v >> 4) & 0xF];
+    out += digits[v & 0xF];
+  }
+  return out;
+}
+
 // The `:root { --token: value; ... }` block every other rule reads through var().
 std::string theme_root_css_(const DisplayOptions& options) {
   const auto& palette = palette_for_(resolve_theme_(options));
@@ -1063,6 +1078,9 @@ std::string theme_root_css_(const DisplayOptions& options) {
   for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
     css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
   }
+  // The tint behind NaN and infinity: the theme's ink laid over its panel at a fixed share. It is
+  // computed here, not with CSS color-mix(), which the built-in renderer does not understand.
+  css += pluss::tils::OutputEngine::format(" --nonfinite-bg: {};", blend_hex_(palette.v[2], palette.v[1], 0.11));
   css += " --shadow: none; }";
   return css;
 }
@@ -1307,7 +1325,7 @@ std::string html_shell_(std::string_view title,
     .nonfinite {{
       /* NaN / inf / -inf are values, not missing data: a neutral tint made from the theme's own ink, never the NULL red. */
       color: var(--title);
-      background: color-mix(in srgb, var(--ink) 11%, transparent);
+      background: var(--nonfinite-bg);
       font-style: italic;
       font-weight: 600;
     }}
