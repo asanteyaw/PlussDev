@@ -841,6 +841,58 @@ void test_table_body_values_share_left_edge() {
          "left-aligned missing values should retain their special cell color");
 }
 
+void test_virtual_table_colours_follow_the_stylesheet() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class KindTable final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 4; }
+    std::int64_t column_count() const noexcept override { return 1; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(std::int64_t) const override { return "x"; }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override {
+      if (row == 0) return VirtualTableCell{.text = "NULL", .missing = true};
+      if (row == 1) return VirtualTableCell{.text = "NAN", .nonfinite = true};
+      if (row == 2) return VirtualTableCell{.text = "INF", .nonfinite = true, .infinite = true};
+      return VirtualTableCell{.text = "1"};
+    }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  } model;
+
+  // Three different backgrounds for the three kinds: the table must paint exactly these.
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>
+  body { margin:0; }
+  table { width:100%; height:300px; }
+  td { background:#ffffff; }
+  .missing { background:#aa0000; }
+  .nonfinite.nan { background:#00aa00; }
+  .nonfinite.inf { background:#0000aa; }
+</style></head><body>
+  <table id="kinds" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+
+  HtmlRenderConfig config{};
+  config.draw_top_bar = false;
+  config.root_padding_px = 0;
+  config.virtual_table_model = &model;
+  const auto scene = build_html_document_scene(document, SizeI{600, 400}, config);
+  const auto has_fill = [&](const Color wanted) {
+    return std::any_of(scene.commands().begin(), scene.commands().end(), [&](const auto& command) {
+      const auto* fill = std::get_if<FillRectCommand>(&command);
+      return fill != nullptr && fill->color.r == wanted.r && fill->color.g == wanted.g && fill->color.b == wanted.b;
+    });
+  };
+  expect(has_fill(Color::rgba(0xaa, 0x00, 0x00, 255)), "a missing cell takes the stylesheet's missing colour");
+  expect(has_fill(Color::rgba(0x00, 0xaa, 0x00, 255)), "a NaN cell takes the stylesheet's NaN colour");
+  expect(has_fill(Color::rgba(0x00, 0x00, 0xaa, 255)), "an infinite cell takes the stylesheet's infinity colour");
+}
+
 void test_virtual_table_only_materializes_viewport_cells() {
   using namespace pluss::view;
   using namespace pluss::view::window;
@@ -981,6 +1033,7 @@ int main() {
     test_table_body_values_share_left_edge();
     test_sticky_case_column_expands_for_text_labels();
     test_virtual_table_only_materializes_viewport_cells();
+    test_virtual_table_colours_follow_the_stylesheet();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
@@ -989,6 +1042,7 @@ int main() {
     std::cout << "[PASS] table_body_values_share_left_edge\n";
     std::cout << "[PASS] sticky_case_column_expands_for_text_labels\n";
     std::cout << "[PASS] virtual_table_only_materializes_viewport_cells\n";
+    std::cout << "[PASS] virtual_table_colours_follow_the_stylesheet\n";
     std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;
   } catch (const std::exception& error) {

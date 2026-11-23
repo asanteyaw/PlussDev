@@ -3255,7 +3255,10 @@ int render_node(Scene& scene,
 
 int render_virtual_table(
     Scene& scene,
+    const HtmlDocument& document,
     const HtmlNode& node,
+    const std::vector<const HtmlNode*>& lineage,
+    const int viewport_width,
     const int x,
     const int y,
     const int width,
@@ -3451,10 +3454,46 @@ int render_virtual_table(
     running_x = x1;
   }
 
+  // Cell colours come from the page's own stylesheet: a probe cell with the tags and classes the
+  // static table uses is resolved, so a theme change repaints a long table exactly like a short one.
+  struct Paint {
+    Color fill;
+    Color text;
+    Color edge;
+  };
+  const auto probe = [&](const char* section, const char* tag, const std::string& classes, const bool even_row) {
+    HtmlNode section_node;
+    section_node.tag = section;
+    HtmlNode row;
+    row.tag = "tr";
+    if (even_row) {
+      row.attributes.push_back(HtmlAttribute{"class", "even"});
+    }
+    HtmlNode cell;
+    cell.tag = tag;
+    if (!classes.empty()) {
+      cell.attributes.push_back(HtmlAttribute{"class", classes});
+    }
+    std::vector<const HtmlNode*> cell_lineage = lineage;
+    cell_lineage.push_back(&node);
+    cell_lineage.push_back(&section_node);
+    cell_lineage.push_back(&row);
+    const ResolvedStyle resolved = resolve_style(document, cell, cell_lineage, &style, viewport_width);
+    return Paint{resolved.has_background ? resolved.background_color : style.background_color, resolved.text_color,
+                 resolved.border_color};
+  };
+  const Paint header_paint = probe("thead", "th", "sortable", false);
+  const Paint sticky_header_paint = probe("thead", "th", "sortable sticky-left", false);
+  const Paint odd_paint = probe("tbody", "td", "", false);
+  const Paint even_paint = probe("tbody", "td", "", true);
+  const Paint sticky_paint = probe("tbody", "td", "sticky-left", false);
+  const Paint missing_paint = probe("tbody", "td", "num missing", false);
+  const Paint nan_paint = probe("tbody", "td", "num nonfinite nan", false);
+  const Paint inf_paint = probe("tbody", "td", "num nonfinite inf", false);
   const Color grid = Color::rgba(216, 222, 228, 255);
-  const Color header_fill = Color::rgba(220, 239, 238, 255);
-  const Color sticky_fill = Color::rgba(237, 246, 247, 255);
-  const Color sticky_header_fill = Color::rgba(204, 232, 230, 255);
+  const Color header_fill = header_paint.fill;
+  const Color sticky_fill = sticky_paint.fill;
+  const Color sticky_header_fill = sticky_header_paint.fill;
   const int font_size = std::max(10, style.font_size);
   const int line_h = resolve_line_height_value(style.line_height, font_size);
 
@@ -3473,7 +3512,7 @@ int render_virtual_table(
             cell_y + std::max(2, ((header ? header_h : row_h) - line_h) / 2);
         draw_text_lines(
             scene, {text}, font_size, header ? 600 : 400, style.font_family,
-            missing ? Color::rgba(201, 54, 43, 255) : style.text_color,
+            missing ? missing_paint.text : (header ? header_paint.text : style.text_color),
             cell_x + pad, text_y, line_h, header ? "center" : "left", text_w);
       };
 
@@ -3519,9 +3558,7 @@ int render_virtual_table(
         row_order != nullptr
             ? (*row_order)[static_cast<std::size_t>(display_row)]
             : display_row;
-    const Color row_fill =
-        (display_row % 2 == 0) ? Color::rgba(255, 255, 255, 255)
-                               : Color::rgba(248, 250, 252, 255);
+    const Color row_fill = (display_row % 2 == 1 ? even_paint : odd_paint).fill;
     scene.add(FillRectCommand{
         RectI{content_x, row_y, content_w, row_h}, row_fill});
     scene.add(LineCommand{PointI{content_x, row_y},
@@ -3532,13 +3569,13 @@ int render_virtual_table(
         scene.add(FillRectCommand{
             RectI{column.x + 1, row_y + 1,
                   std::max(1, column.width - 2), std::max(1, row_h - 2)},
-            Color::rgba(255, 240, 238, 255)});
+            missing_paint.fill});
       } else if (value.nonfinite) {
-        // NaN is violet and infinity blue: noticeable, and never the red of a missing value.
+        // NaN and infinity have their own calm tints (violet, blue), never the red of a missing value.
         scene.add(FillRectCommand{
             RectI{column.x + 1, row_y + 1,
                   std::max(1, column.width - 2), std::max(1, row_h - 2)},
-            value.infinite ? Color::rgba(230, 235, 250, 255) : Color::rgba(236, 232, 254, 255)});
+            value.infinite ? inf_paint.fill : nan_paint.fill});
       }
       scene.add(LineCommand{PointI{column.x, row_y},
                             PointI{column.x, row_y + row_h}, 1, grid});
@@ -3585,7 +3622,7 @@ int render_virtual_table(
   scene.add(LineCommand{
       PointI{content_x + row_header_w, content_y},
       PointI{content_x + row_header_w, content_y + viewport_h}, 2,
-      Color::rgba(79, 137, 148, 255)});
+      sticky_paint.edge});
   mask_rounded_viewport_corners(scene, viewport_clip, style.border_radius,
                                 viewport_surround, true, true);
   if (render_config.clip_table_viewport) {
@@ -3692,7 +3729,7 @@ int render_table(Scene& scene,
   if (render_config.virtual_table_model != nullptr) {
     const HtmlAttribute* virtual_attr = find_attribute(node, "data-virtual-table");
     if (virtual_attr != nullptr && virtual_attr->value == "true") {
-      return render_virtual_table(scene, node, x, y, width, bottom, style,
+      return render_virtual_table(scene, document, node, lineage, viewport_width, x, y, width, bottom, style,
                                   render_config, parent_style);
     }
   }
