@@ -107,4 +107,22 @@ if(NOT native_io_result EQUAL 0)
   message(FATAL_ERROR "Excel/Parquet round trip failed after linking the distribution archive")
 endif()
 
+# The pluss command must be able to build and run a program against the archive it came in. This
+# is reported as a warning until it has passed on every platform; then it can be made an error.
+set(pluss_cli_binary "${distribution_dir}/bin/pluss")
+if(WIN32)
+  set(pluss_cli_binary "${distribution_dir}/bin/pluss.exe")
+endif()
+if(EXISTS "${pluss_cli_binary}")
+  execute_process(COMMAND "${pluss_cli_binary}" doctor
+    RESULT_VARIABLE doctor_result OUTPUT_VARIABLE doctor_output ERROR_VARIABLE doctor_error)
+  if(doctor_result EQUAL 0)
+    message(STATUS "pluss doctor passed against ${DISTRIBUTION_ARCHIVE}")
+  else()
+    message(WARNING "pluss doctor failed against ${DISTRIBUTION_ARCHIVE}:\n${doctor_output}\n${doctor_error}")
+  endif()
+else()
+  message(WARNING "The archive has no bin/pluss command")
+endif()
+
 message(STATUS "Validated PlussII C++ distribution: ${DISTRIBUTION_ARCHIVE}")

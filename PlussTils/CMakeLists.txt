@@ -19,6 +19,22 @@ set_target_properties(PlussTilsCore PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
+# The `pluss` command (run, new, doctor). It needs only the standard library and the generated
+# version header, so it stays small and is installed beside the libraries in bin/.
+option(PLUSS_BUILD_CLI "Build the pluss command-line tool" ON)
+if(PLUSS_BUILD_CLI)
+    add_executable(pluss_cli ${CMAKE_CURRENT_SOURCE_DIR}/tools/pluss_cli/main.cpp)
+    set_target_properties(pluss_cli PROPERTIES
+        OUTPUT_NAME pluss
+        PDB_NAME pluss_cli
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+    target_include_directories(pluss_cli PRIVATE ${CMAKE_BINARY_DIR}/generated)
+    install(TARGETS pluss_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 add_library(PlussTils INTERFACE)
 add_library(Pluss::Tils ALIAS PlussTils)
 
