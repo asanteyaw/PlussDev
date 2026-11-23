@@ -35,11 +35,27 @@ The same call exists on `DataFrame`, `Atlas`, and on plots (`Studio` and the `fl
 
 ## The table window
 
-The window opens on the table. Above it are the frame's title, a search box that filters the visible rows with a Reset button, and three counters: cases, features and the case axis. The missing number in the last row of `revenue` shows as `NAN` in a grey cell, so it cannot be mistaken for a value.
+The window opens on the table. Above it are the frame's title, a search box that filters the visible rows with a Reset button, and three counters: cases, features and the case axis. The number that is not a number in the last row of `revenue` shows as `NAN` in a violet cell. The next section explains the colours.
 
 ![The table window for the sales frame](assets/pv_table.png)
 
 The toolbar above the table has three menus: **Theme**, **View** and **Save As**. The sections below use each in turn.
+
+### Missing, NaN and infinity
+
+The window keeps three different things apart, each with its own background. Only a missing value is red-ish; the other two are values, so they are tinted without any alarm.
+
+| Cell | Meaning | Background |
+|---|---|---|
+| `NULL` | no value was recorded | red-ish |
+| `NAN` | a value that is not a number, such as `0 / 0` | violet |
+| `INF`, `-INF` | an infinite value, such as `120 / 0` | blue |
+
+This frame divides `spend` by `balance`. The fifth balance was never recorded, so its ratio is `NULL`. Rows 1, 3 and 6 divide by a zero balance and give NaN, infinity and negative infinity:
+
+![NULL, NAN, INF and -INF in a table](assets/pv_table_kinds.png)
+
+The frame is the accounts table from the PlussMic guide to missing values, NaN and infinity, which also explains how to find, drop and fill each kind.
 
 ### Views
 
