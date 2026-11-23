@@ -37,9 +37,9 @@
 
 <div class="pluss-card">
 <span class="card-name">PlussView</span>
-<span class="card-model">The built-in renderer</span>
-<p class="card-desc">The scene, canvas, and software renderer underneath DataFrame/Atlas/plot .show() calls. If you want to show your data, call .show() on it, not this.</p>
-<a href="manual/view.html">Read the PlussView manual</a>
+<span class="card-model">The data and plot window</span>
+<p class="card-desc">The window that opens when you call .show() on a DataFrame, Atlas or plot: views, formats, themes, sorting and Save As.</p>
+<a href="manual/view.html">Read the PlussView guide</a>
 </div>
 
 </div>

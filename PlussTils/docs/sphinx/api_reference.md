@@ -10,7 +10,7 @@ family that owns the job you need to perform.
 | Core Utilities | Compact language helpers, output, environment access, conversion, and callable dispatch | `<pluss/tils.h>` | [Core Utilities](api/core.md) |
 | Loaders | Paths, sampling, splitting, batching, and transfer policy | `pluss::loader` | [Loaders](api/loaders.md) |
 | PlussBI | Declarative analytical boards and browser sessions | `<pluss/bi/bi.h>` | [PlussBI](api/bi.md) |
-| PlussView | The built-in renderer underneath `.show()` on `DataFrame`, `Atlas`, and plots -- call `.show()`, not this | `<pluss/tils/view/window/canvas.h>` etc. | [PlussView](api/view.md) |
+| PlussView | The window that opens when you call `.show()` on a `DataFrame`, `Atlas` or plot | none: call `.show()` | [PlussView](api/view.md) |
 
 The umbrella `<pluss/tils.h>` is convenient when an application deliberately
 uses several shelves. Focused headers keep dependencies and compile time more
