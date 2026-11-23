@@ -48,6 +48,7 @@
 manual/series
 manual/note
 manual/timeline
+manual/array_files
 api_reference
 ```
 

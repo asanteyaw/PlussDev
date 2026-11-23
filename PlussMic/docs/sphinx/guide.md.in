@@ -9,6 +9,7 @@ Each page here builds a real workflow end to end with PlussMic: complete program
 5. **Scribble.** Heterogeneous records: mixed JSON, records that hold lists, an event log and layered configuration.
 6. **Bundle.** Multi-table workspaces: a customer table pulled from related tables, health checks, join paths, SQL, persistence and the Locus version.
 7. **Missing, NaN and infinity.** The three ways a number can fail to be a number, how each is asked about, removed and replaced, and how they behave in statistics, files, joins, printing and on every type.
+8. **Example tables.** Five small tables built into the library, for a first program, a guide or a bug report.
 
 ```{toctree}
 :maxdepth: 1
@@ -24,4 +25,5 @@ guide/kindle_streams_archives
 guide/scribble
 guide/bundle
 guide/missing_nan_and_inf
+guide/example_tables
 ```

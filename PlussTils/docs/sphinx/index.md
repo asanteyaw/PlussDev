@@ -65,6 +65,12 @@ manual/tils-suppose-let
 manual/tils-output
 manual/tils-print-options
 manual/tils-env
+manual/tils-info
+manual/tils-settings
+manual/tils-cache
+manual/tils-doc
+manual/tils-cli
+manual/tils-notebook
 manual/tils-aux-transmit
 manual/tils-aux-translate
 manual/tils-aux-scalar-casts
