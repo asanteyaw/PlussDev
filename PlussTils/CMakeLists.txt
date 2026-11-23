@@ -5,9 +5,31 @@ include(GNUInstallDirs)
 add_subdirectory(view)
 add_subdirectory(src/PlussBI)
 
+# The table of documentation pages that pluss::tils::doc searches, written from the documentation
+# sources when this is configured. Without Python, or without the sources (a source archive),
+# it is empty and doc() says no page was found.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+set(PLUSS_DOC_INDEX_DIR ${CMAKE_BINARY_DIR}/generated/pluss/tils)
+file(MAKE_DIRECTORY ${PLUSS_DOC_INDEX_DIR})
+if(Python3_Interpreter_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_doc_index.py)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_doc_index.py ${CMAKE_SOURCE_DIR} ${PLUSS_DOC_INDEX_DIR}/doc_index.inc
+        RESULT_VARIABLE _pluss_doc_index_result
+        OUTPUT_QUIET ERROR_QUIET
+    )
+    if(NOT _pluss_doc_index_result EQUAL 0)
+        message(WARNING "Could not write the documentation index; doc() will find no pages")
+    endif()
+endif()
+if(NOT EXISTS ${PLUSS_DOC_INDEX_DIR}/doc_index.inc)
+    file(WRITE ${PLUSS_DOC_INDEX_DIR}/doc_index.inc "")
+endif()
+
 add_library(PlussTilsCore STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/env/env.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/doc/doc.cpp
 )
+target_include_directories(PlussTilsCore PRIVATE ${PLUSS_DOC_INDEX_DIR})
 add_library(Pluss::TilsCore ALIAS PlussTilsCore)
 target_include_directories(PlussTilsCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -123,6 +145,13 @@ if(BUILD_TESTING)
     target_link_libraries(plusstils_core_cache_tests PRIVATE PlussTils)
     target_compile_features(plusstils_core_cache_tests PRIVATE cxx_std_20)
     add_test(NAME plusstils_core_cache COMMAND plusstils_core_cache_tests)
+
+    add_executable(plusstils_core_doc_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_doc_tests.cpp
+    )
+    target_link_libraries(plusstils_core_doc_tests PRIVATE PlussTilsCore)
+    target_compile_features(plusstils_core_doc_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_doc COMMAND plusstils_core_doc_tests)
 
     add_executable(plusstils_scalar_cast_compat_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/test/scalar_cast_compat_tests.cpp

@@ -7,6 +7,7 @@
 #include "pluss/tils/info.h"
 #include "pluss/tils/settings.h"
 #include "pluss/tils/cache.h"
+#include "pluss/tils/doc.h"
 #include "pluss/tils/view.h"
 
 #if __has_include("pluss/bi/bi.h") && \
