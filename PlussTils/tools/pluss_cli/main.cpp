@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -19,10 +20,12 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 #if defined(_WIN32)
@@ -277,11 +280,126 @@ bool is_source(std::string_view arg) {
   return ext == ".cpp" || ext == ".cc" || ext == ".cxx";
 }
 
-[[nodiscard]] std::optional<fs::path> built_program(const fs::path& build, const std::string& type) {
-  for (const fs::path& candidate : {build / "program", build / (type) / "program", build / "program.exe", build / type / "program.exe"}) {
+// ---- run: one shared project per download, so every program reuses one precompiled header -------
+
+[[nodiscard]] std::optional<fs::path> built_program(const fs::path& dir, const std::string& stem) {
+  for (const fs::path& candidate : {dir / stem, dir / (stem + ".exe")}) {
     if (fs::is_regular_file(candidate)) return candidate;
   }
   return std::nullopt;
+}
+
+// Only one `pluss run` at a time may change the shared project; the others wait their turn.
+class WorkLock {
+ public:
+  explicit WorkLock(const fs::path& work) : path_(work / "lock") {
+    std::error_code ec;
+    fs::create_directories(work, ec);
+    for (int attempt = 0; attempt < 1200; ++attempt) {  // up to a minute, then assume a crashed run left it
+      if (fs::create_directory(path_, ec)) {
+        held_ = true;
+        return;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    held_ = true;
+  }
+  ~WorkLock() {
+    if (held_) {
+      std::error_code ec;
+      fs::remove(path_, ec);
+    }
+  }
+  WorkLock(const WorkLock&) = delete;
+  WorkLock& operator=(const WorkLock&) = delete;
+
+ private:
+  fs::path path_;
+  bool held_{false};
+};
+
+struct Program {
+  std::string id;  // a hash of its source files
+  std::string stem;
+  std::vector<fs::path> sources;
+};
+
+[[nodiscard]] bool is_header(const fs::path& path) {
+  const std::string ext = path.extension().string();
+  return ext == ".h" || ext == ".hpp" || ext == ".hh" || ext == ".hxx" || ext == ".inc";
+}
+
+// True when the built program is newer than its sources and the headers beside them, so nothing
+// needs to be looked at by the build tool at all.
+[[nodiscard]] bool up_to_date(const fs::path& binary, const Program& program) {
+  std::error_code ec;
+  const auto built = fs::last_write_time(binary, ec);
+  if (ec) return false;
+  for (const auto& source : program.sources) {
+    const auto when = fs::last_write_time(source, ec);
+    if (ec || when > built) return false;
+    for (const auto& entry : fs::directory_iterator(source.parent_path(), ec)) {
+      if (is_header(entry.path()) && fs::last_write_time(entry.path(), ec) > built) return false;
+    }
+  }
+  return true;
+}
+
+// A hash of what the program is made from: its sources and the headers beside them. File times are
+// not enough on their own: a file written within a second of the last build can look unchanged to the
+// build tool, and a program that is edited and run in a loop must always run its latest text.
+[[nodiscard]] std::string content_hash(const Program& program) {
+  std::uint64_t h = 0xcbf29ce484222325ULL;
+  const auto feed = [&h](std::string_view text) {
+    for (const char ch : text) {
+      h ^= static_cast<unsigned char>(ch);
+      h *= 0x100000001b3ULL;
+    }
+  };
+  std::vector<fs::path> files(program.sources);
+  std::error_code ec;
+  for (const auto& source : program.sources) {
+    for (const auto& entry : fs::directory_iterator(source.parent_path(), ec)) {
+      if (is_header(entry.path()) && files.size() < 256) files.push_back(entry.path());
+    }
+  }
+  std::sort(files.begin(), files.end());
+  files.erase(std::unique(files.begin(), files.end()), files.end());
+  for (const auto& file : files) {
+    feed(slashes(file));
+    feed(read_text(file));
+  }
+  constexpr std::string_view digits = "0123456789abcdef";
+  std::string out;
+  for (int shift = 60; shift >= 0; shift -= 4) out += digits[(h >> shift) & 0xF];
+  return out;
+}
+
+// What each program was last built from, by content hash.
+[[nodiscard]] std::map<std::string, std::string> read_built(const fs::path& work) {
+  std::map<std::string, std::string> out;
+  std::ifstream in(work / "built.txt");
+  std::string id, hash;
+  while (in >> id >> hash) out[id] = hash;
+  return out;
+}
+
+void write_built(const fs::path& work, const std::map<std::string, std::string>& built) {
+  std::string text;
+  for (const auto& [id, hash] : built) text += id + " " + hash + "\n";
+  write_if_changed(work / "built.txt", text);
+}
+
+// A program whose text changed must be compiled again even if the build tool cannot tell: take its
+// object files away so there is nothing to mistake for current.
+void forget_objects(const fs::path& build, const std::string& id) {
+  std::error_code ec;
+  const fs::path dir = build / "CMakeFiles" / ("p_" + id + ".dir");
+  if (!fs::is_directory(dir, ec)) return;
+  for (const auto& entry : fs::recursive_directory_iterator(dir, ec)) {
+    const std::string ext = entry.path().extension().string();
+    if (entry.is_regular_file(ec) && (ext == ".o" || ext == ".obj")) fs::remove(entry.path(), ec);
+  }
 }
 
 int command_run(const std::vector<std::string>& args) {
@@ -328,44 +446,110 @@ int command_run(const std::vector<std::string>& args) {
     }
   }
 
-  // One build folder per program, so editing it rebuilds incrementally.
-  std::string identity = slashes(prefix) + "|" + PLUSS_VERSION_STRING + "|" + type;
-  for (const auto& source : sources) identity += "|" + slashes(source);
-  const fs::path work = cache_root() / "run" / hash_hex(identity);
+  // One project per download and build type. Every program is a target of it, and they all reuse one
+  // precompiled header of <pluss/pluss.h>, so only the first program pays for parsing the headers.
+  const fs::path work = cache_root() / "run" / hash_hex(slashes(prefix) + "|" + PLUSS_VERSION_STRING + "|" + type);
   const fs::path build = work / "build";
+  const WorkLock lock(work);
   if (clean) {
     std::error_code ignored;
-    fs::remove_all(work, ignored);
+    fs::remove_all(work / "build", ignored);
+    fs::remove(work / "programs.txt", ignored);
   }
 
-  std::string project =
+  Program program;
+  std::string joined;
+  for (const auto& source : sources) joined += slashes(source) + "|";
+  program.id = hash_hex(joined);
+  program.stem = sources.front().stem().string();
+  program.sources = sources;
+
+  // The programs run so far, so none of them is rebuilt when another is added; ones whose files are gone are dropped.
+  std::vector<Program> known;
+  {
+    std::ifstream registry(work / "programs.txt");
+    std::string line;
+    while (std::getline(registry, line)) {
+      const auto tab = line.find('\t');
+      const auto tab2 = line.find('\t', tab == std::string::npos ? 0 : tab + 1);
+      if (tab == std::string::npos || tab2 == std::string::npos) continue;
+      Program other;
+      other.id = line.substr(0, tab);
+      other.stem = line.substr(tab + 1, tab2 - tab - 1);
+      std::istringstream files(line.substr(tab2 + 1));
+      std::string file;
+      bool present = true;
+      while (std::getline(files, file, ';')) {
+        other.sources.emplace_back(file);
+        present = present && fs::is_regular_file(file);
+      }
+      if (present && other.id != program.id) known.push_back(std::move(other));
+    }
+  }
+  known.push_back(program);
+  std::sort(known.begin(), known.end(), [](const Program& x, const Program& y) { return x.id < y.id; });
+  std::string registry_text, project =
       "cmake_minimum_required(VERSION 3.28)\n"
       "project(pluss_run LANGUAGES CXX)\n"
       "set(CMAKE_CXX_STANDARD 20)\n"
       "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n"
       "set(CMAKE_CXX_EXTENSIONS OFF)\n"
       "find_package(Pluss CONFIG REQUIRED)\n"
-      "add_executable(program";
-  for (const auto& source : sources) project += "\n    \"" + slashes(source) + "\"";
-  project += ")\ntarget_link_libraries(program PRIVATE Pluss::PlussII)\n";
-  write_if_changed(work / "CMakeLists.txt", project);
-
-  const Outcome configured = run_program(configure_args(work, build, prefix, type), !verbose);
-  if (configured.code != 0) {
-    std::cerr << configured.output << "\npluss: CMake could not set up the build. Run 'pluss doctor' to see what is missing.\n";
-    return 1;
+      "file(WRITE ${CMAKE_BINARY_DIR}/anchor.cpp \"\")\n"
+      "add_library(pluss_pch STATIC ${CMAKE_BINARY_DIR}/anchor.cpp)\n"
+      "target_link_libraries(pluss_pch PUBLIC Pluss::PlussII)\n"
+      "target_precompile_headers(pluss_pch PUBLIC <pluss/pluss.h>)\n";
+  for (const auto& item : known) {
+    std::string files;
+    for (const auto& source : item.sources) files += (files.empty() ? "" : ";") + slashes(source);
+    registry_text += item.id + "\t" + item.stem + "\t" + files + "\n";
+    project += "add_executable(p_" + item.id;
+    for (const auto& source : item.sources) project += "\n    \"" + slashes(source) + "\"";
+    project += ")\ntarget_link_libraries(p_" + item.id + " PRIVATE pluss_pch Pluss::PlussII)\n"
+               "target_precompile_headers(p_" + item.id + " REUSE_FROM pluss_pch)\n"
+               "set_target_properties(p_" + item.id + " PROPERTIES OUTPUT_NAME \"" + item.stem + "\" RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/bin/" + item.id + "\"";
+    for (const char* config : {"DEBUG", "RELEASE", "RELWITHDEBINFO", "MINSIZEREL"}) {
+      project += std::string(" RUNTIME_OUTPUT_DIRECTORY_") + config + " \"${CMAKE_BINARY_DIR}/bin/" + item.id + "\"";
+    }
+    project += ")\n";
   }
-  const Outcome built = run_program({"cmake", "--build", slashes(build), "--config", type, "--parallel"}, !verbose);
+  const bool changed = write_if_changed(work / "CMakeLists.txt", project);
+  write_if_changed(work / "programs.txt", registry_text);
+
+  const fs::path bin = build / "bin" / program.id;
+  auto built_hashes = read_built(work);
+  const std::string hash = content_hash(program);
+  const bool same_text = built_hashes.count(program.id) != 0 && built_hashes[program.id] == hash;
+  // Nothing to build when the program was made from exactly this text and nothing is newer.
+  if (!changed && !clean && same_text) {
+    if (const auto existing = built_program(bin, program.stem); existing && up_to_date(*existing, program)) {
+      std::vector<std::string> command{existing->string()};
+      for (auto& arg : program_args) command.push_back(std::move(arg));
+      return run_program(command, /*capture=*/false).code;
+    }
+  }
+  if (!same_text) forget_objects(build, program.id);
+
+  if (changed || !fs::exists(build / "CMakeCache.txt")) {
+    const Outcome configured = run_program(configure_args(work, build, prefix, type), !verbose);
+    if (configured.code != 0) {
+      std::cerr << configured.output << "\npluss: CMake could not set up the build. Run 'pluss doctor' to see what is missing.\n";
+      return 1;
+    }
+  }
+  const Outcome built = run_program({"cmake", "--build", slashes(build), "--config", type, "--target", "p_" + program.id, "--parallel"}, !verbose);
   if (built.code != 0) {
     std::cerr << built.output << "\npluss: the build failed.\n";
     return 1;
   }
-  const auto program = built_program(build, type);
-  if (!program) {
+  const auto binary = built_program(bin, program.stem);
+  if (!binary) {
     std::cerr << "pluss: the build finished but there is no program to run.\n";
     return 1;
   }
-  std::vector<std::string> command{program->string()};
+  built_hashes[program.id] = hash;
+  write_built(work, built_hashes);
+  std::vector<std::string> command{binary->string()};
   for (auto& arg : program_args) command.push_back(std::move(arg));
   return run_program(command, /*capture=*/false).code;
 }
@@ -523,7 +707,8 @@ int command_doctor() {
     return 1;
   }
   ok("a test program compiled and linked against this download");
-  const auto program = built_program(build, "RelWithDebInfo");
+  auto program = built_program(build, "program");
+  if (!program) program = built_program(build / "RelWithDebInfo", "program");  // a multi-configuration generator
   if (!program) {
     bad("running the test program", "the build finished but produced no program");
     return 1;

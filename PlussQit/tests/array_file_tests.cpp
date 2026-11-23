@@ -122,6 +122,19 @@ int main() {
     require(values<std::int64_t>(deflated[1].second) == std::vector<std::int64_t>({1, 2, 3, 4}), "a deflated int64 member is read exactly");
   }
 
+  // The checksum matches the standard check value, whole and in pieces, at lengths either side of its 8-byte step.
+  {
+    require(pluss::detail::crc32("123456789") == 0xCBF43926U, "crc32 of the standard check string");
+    require(pluss::detail::crc32("6789", pluss::detail::crc32("12345")) == 0xCBF43926U, "crc32 continues from an earlier value");
+    std::string long_text;
+    for (int i = 0; i < 1000; ++i) long_text += static_cast<char>(i * 7);
+    std::uint32_t piecewise = 0;
+    for (std::size_t at = 0; at < long_text.size(); at += 13) {
+      piecewise = pluss::detail::crc32(std::string_view(long_text).substr(at, 13), piecewise);
+    }
+    require(piecewise == pluss::detail::crc32(long_text), "crc32 in pieces equals crc32 in one go");
+  }
+
   // Mistakes are errors that say what is wrong.
   {
     require(throws([&] { (void)pluss::io::load_npy(write_bytes("pluss_i.npy", "not an array file at all")); }), "a file without the magic bytes is an error");

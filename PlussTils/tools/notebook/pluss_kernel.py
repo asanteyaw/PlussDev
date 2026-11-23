@@ -78,7 +78,19 @@ class PlussKernel(Kernel):
         self._out = queue.Queue()
         self._err = queue.Queue()
         self._proc = None
-        self._start_engine()
+        # The engine takes several seconds to read the PlussII headers. Start it in the background so
+        # the notebook is usable at once: by the time the first cell is written it is usually ready.
+        self._ready = threading.Event()
+        self._start_failure = None
+        threading.Thread(target=self._start_in_background, daemon=True).start()
+
+    def _start_in_background(self):
+        try:
+            self._start_engine()
+        except Exception as error:  # reported by the first cell that needs the engine
+            self._start_failure = error
+        finally:
+            self._ready.set()
 
     # ---- the engine -----------------------------------------------------------------------------
 
@@ -162,6 +174,10 @@ class PlussKernel(Kernel):
         return "\n".join(lines)
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
+        self._ready.wait()
+        if self._start_failure is not None:
+            message = "the C++ engine did not start: %s" % self._start_failure
+            return {"status": "error", "ename": "EngineError", "evalue": message, "traceback": [message]}
         out, err = self._run_text(self._show_last_expression(code))
         failed = "error:" in err
         first_error = next((line for line in err.split("\n") if "error:" in line), err.strip().split("\n")[0] if err.strip() else "")

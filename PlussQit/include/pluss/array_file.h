@@ -72,7 +72,14 @@ inline constexpr std::array<Kind, 14> kKinds{{
 
 // ---- reading and writing a .npy in memory -------------------------------------------------------
 
-[[nodiscard]] inline std::string npy_bytes(const pluss::Series& value) {
+// A Series ready to be written: contiguous on the CPU, with its header text.
+struct Prepared {
+  pluss::Series cpu;
+  std::string header;      // magic, version, length and the aligned dictionary
+  std::size_t data_bytes;  // the size of the data that follows the header
+};
+
+[[nodiscard]] inline Prepared prepare(const pluss::Series& value) {
   PLUSS_CHECK(value.defined(), "pluss::io::save_npy: the Series is undefined");
   pluss::Series cpu = value.is_cpu() ? value : value.to(pluss::codem::Platform::CPU);
   cpu = cpu.contiguous();
@@ -91,24 +98,32 @@ inline constexpr std::array<Kind, 14> kKinds{{
   if (rank == 1) shape += ",";
   shape += ")";
 
-  std::string header = std::string("{'descr': '") + kind.descr + "', 'fortran_order': False, 'shape': " + shape + ", }";
-  // The header ends in a newline and the whole preamble is a multiple of 64 bytes.
+  std::string dict = std::string("{'descr': '") + kind.descr + "', 'fortran_order': False, 'shape': " + shape + ", }";
+  // The dictionary ends in a newline and the whole preamble is a multiple of 64 bytes.
   const std::size_t preamble = 10;
-  std::size_t total = preamble + header.size() + 1;
-  const std::size_t padding = (64 - total % 64) % 64;
-  header.append(padding, ' ');
-  header += '\n';
-  PLUSS_CHECK(header.size() <= 65535, "pluss::io::save_npy: the header is too long for a version 1 file");
+  const std::size_t total = preamble + dict.size() + 1;
+  dict.append((64 - total % 64) % 64, ' ');
+  dict += '\n';
+  PLUSS_CHECK(dict.size() <= 65535, "pluss::io::save_npy: the header is too long for a version 1 file");
 
+  std::string header;
+  header.reserve(preamble + dict.size());
+  header += "\x93NUMPY";
+  header += '\x01';
+  header += '\x00';
+  header += static_cast<char>(dict.size() & 0xFF);
+  header += static_cast<char>((dict.size() >> 8) & 0xFF);
+  header += dict;
+  return Prepared{std::move(cpu), std::move(header), count * kind.size};
+}
+
+// The whole file in memory (a .npz member needs its bytes before it can be written).
+[[nodiscard]] inline std::string npy_bytes(const pluss::Series& value) {
+  const Prepared prepared = prepare(value);
   std::string out;
-  out.reserve(preamble + header.size() + count * kind.size);
-  out += "\x93NUMPY";
-  out += '\x01';
-  out += '\x00';
-  out += static_cast<char>(header.size() & 0xFF);
-  out += static_cast<char>((header.size() >> 8) & 0xFF);
-  out += header;
-  if (count > 0) out.append(reinterpret_cast<const char*>(cpu.raw_data()), count * kind.size);
+  out.reserve(prepared.header.size() + prepared.data_bytes);
+  out += prepared.header;
+  if (prepared.data_bytes > 0) out.append(reinterpret_cast<const char*>(prepared.cpu.raw_data()), prepared.data_bytes);
   return out;
 }
 
@@ -258,9 +273,14 @@ struct Header {
 // ---- files -------------------------------------------------------------------------------------
 
 [[nodiscard]] inline std::string read_file(const std::filesystem::path& path, std::string_view who) {
-  std::ifstream in(path, std::ios::binary);
+  std::ifstream in(path, std::ios::binary | std::ios::ate);
   PLUSS_CHECK(in.good(), std::string(who) + ": cannot open '" + path.string() + "'");
-  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  const auto size = static_cast<std::size_t>(in.tellg());
+  std::string out(size, '\0');
+  in.seekg(0);
+  in.read(out.data(), static_cast<std::streamsize>(size));
+  PLUSS_CHECK(in.good() || in.eof(), std::string(who) + ": reading '" + path.string() + "' failed");
+  return out;
 }
 
 inline void write_file(const std::filesystem::path& path, std::string_view bytes, std::string_view who) {
@@ -297,42 +317,110 @@ inline void put_u32(std::string& out, std::uint32_t v) {
 
 }  // namespace array_detail
 
-// One array, one file.
+// One array, one file. The header and the data are written as they are, with no copy of the data.
 inline void save_npy(const pluss::Series& value, const std::filesystem::path& path) {
-  array_detail::write_file(path, array_detail::npy_bytes(value), "pluss::io::save_npy");
+  const auto prepared = array_detail::prepare(value);
+  std::ofstream out(path, std::ios::binary | std::ios::trunc);
+  PLUSS_CHECK(out.good(), "pluss::io::save_npy: cannot write '" + path.string() + "'");
+  out.write(prepared.header.data(), static_cast<std::streamsize>(prepared.header.size()));
+  if (prepared.data_bytes > 0) {
+    out.write(reinterpret_cast<const char*>(prepared.cpu.raw_data()), static_cast<std::streamsize>(prepared.data_bytes));
+  }
+  out.flush();
+  PLUSS_CHECK(out.good(), "pluss::io::save_npy: writing '" + path.string() + "' failed");
 }
 
+// Read an array. Data that is already in the order and byte order the Series uses is read straight
+// into its storage; anything else is read whole and converted.
 [[nodiscard]] inline pluss::Series load_npy(const std::filesystem::path& path) {
-  const std::string bytes = array_detail::read_file(path, "pluss::io::load_npy");
-  return array_detail::series_from_npy(bytes, path.string());
+  using namespace array_detail;
+  std::ifstream in(path, std::ios::binary);
+  PLUSS_CHECK(in.good(), "pluss::io::load_npy: cannot open '" + path.string() + "'");
+  std::string head(12, '\0');
+  in.read(head.data(), 12);
+  const auto got = static_cast<std::size_t>(in.gcount());
+  head.resize(got);
+  PLUSS_CHECK(got >= 10 && head.compare(0, 6, "\x93NUMPY", 6) == 0, "pluss::io::load_npy: " + path.string() + ": not an array file (the magic bytes are missing)");
+  const int major = static_cast<unsigned char>(head[6]);
+  std::size_t preamble = major == 1 ? 10 : 12;
+  std::size_t length = 0;
+  if (major == 1) {
+    length = static_cast<unsigned char>(head[8]) | (static_cast<std::size_t>(static_cast<unsigned char>(head[9])) << 8);
+  } else if (got >= 12) {
+    for (int i = 0; i < 4; ++i) length |= static_cast<std::size_t>(static_cast<unsigned char>(head[8 + i])) << (8 * i);
+  }
+  std::string header = head;
+  header.resize(preamble + length);
+  if (got < preamble) {
+    return series_from_npy(read_file(path, "pluss::io::load_npy"), path.string());  // lets the parser name the problem
+  }
+  const std::size_t have = got > preamble ? got - preamble : 0;
+  in.read(header.data() + preamble + have, static_cast<std::streamsize>(length > have ? length - have : 0));
+  const Header parsed = parse_header(header, path.string());
+  bool swap = false;
+  const Kind& kind = kind_from(parsed.descr, swap, path.string());
+  if (!parsed.fortran && !swap) {
+    std::uint64_t count = 1;
+    for (const auto extent : parsed.shape) count *= static_cast<std::uint64_t>(extent);
+    const std::uint64_t nbytes = count * kind.size;
+    auto owned = std::make_unique<std::byte[]>(nbytes == 0 ? 1 : static_cast<std::size_t>(nbytes));
+    if (nbytes > 0) {
+      in.read(reinterpret_cast<char*>(owned.get()), static_cast<std::streamsize>(nbytes));
+      PLUSS_CHECK(static_cast<std::uint64_t>(in.gcount()) == nbytes, "pluss::io::load_npy: " + path.string() + ": the data is shorter than the shape says");
+    }
+    std::vector<std::int64_t> strides(parsed.shape.size(), 1);
+    for (std::size_t d = parsed.shape.size(); d-- > 1;) strides[d - 1] = strides[d] * std::max<std::int64_t>(parsed.shape[d], 1);
+    auto* raw = owned.release();
+    pluss::codem::BlobDeleter deleter = [](void* p) { delete[] static_cast<std::byte*>(p); };
+    try {
+      return pluss::series::from_host(raw, parsed.shape, strides, deleter, kind.type);
+    } catch (...) {
+      delete[] raw;
+      throw;
+    }
+  }
+  return series_from_npy(read_file(path, "pluss::io::load_npy"), path.string());
 }
 
 // Several named arrays in one file. The names become the members' names ("x" is stored as x.npy).
+// Each array is written as it is, with no copy of its data.
 inline void save_npz(const std::vector<std::pair<std::string, pluss::Series>>& arrays, const std::filesystem::path& path) {
   using namespace array_detail;
   PLUSS_CHECK(arrays.size() < 65535, "pluss::io::save_npz: too many arrays for a zip file without zip64");
-  std::string body, central;
+  std::ofstream out(path, std::ios::binary | std::ios::trunc);
+  PLUSS_CHECK(out.good(), "pluss::io::save_npz: cannot write '" + path.string() + "'");
+  std::string central;
+  std::uint64_t written = 0;
+  const auto put = [&](const char* data, std::size_t size) {
+    out.write(data, static_cast<std::streamsize>(size));
+    written += size;
+  };
   for (const auto& [name, value] : arrays) {
     PLUSS_CHECK(!name.empty(), "pluss::io::save_npz: an array needs a name");
     const std::string member = name + ".npy";
-    const std::string data = npy_bytes(value);
-    PLUSS_CHECK(data.size() < 0xFFFFFFFFULL && body.size() < 0xFFFFFFFFULL, "pluss::io::save_npz: an array is too large for a zip file without zip64");
-    const std::uint32_t crc = crc32(data);
-    const std::uint32_t offset = static_cast<std::uint32_t>(body.size());
+    const Prepared prepared = prepare(value);
+    const std::uint64_t size = prepared.header.size() + prepared.data_bytes;
+    PLUSS_CHECK(size < 0xFFFFFFFFULL && written < 0xFFFFFFFFULL, "pluss::io::save_npz: an array is too large for a zip file without zip64");
+    const char* data = reinterpret_cast<const char*>(prepared.cpu.raw_data());
+    const std::uint32_t crc = crc32(std::string_view(data, prepared.data_bytes), crc32(prepared.header));
+    const std::uint32_t offset = static_cast<std::uint32_t>(written);
 
-    put_u32(body, 0x04034b50);
-    put_u16(body, 20);  // version needed
-    put_u16(body, 0);   // flags
-    put_u16(body, 0);   // stored
-    put_u16(body, 0);   // time
-    put_u16(body, 0x21);  // date: 1980-01-01
-    put_u32(body, crc);
-    put_u32(body, static_cast<std::uint32_t>(data.size()));
-    put_u32(body, static_cast<std::uint32_t>(data.size()));
-    put_u16(body, static_cast<std::uint32_t>(member.size()));
-    put_u16(body, 0);
-    body += member;
-    body += data;
+    std::string local;
+    put_u32(local, 0x04034b50);
+    put_u16(local, 20);    // version needed
+    put_u16(local, 0);     // flags
+    put_u16(local, 0);     // stored
+    put_u16(local, 0);     // time
+    put_u16(local, 0x21);  // date: 1980-01-01
+    put_u32(local, crc);
+    put_u32(local, static_cast<std::uint32_t>(size));
+    put_u32(local, static_cast<std::uint32_t>(size));
+    put_u16(local, static_cast<std::uint32_t>(member.size()));
+    put_u16(local, 0);
+    local += member;
+    put(local.data(), local.size());
+    put(prepared.header.data(), prepared.header.size());
+    if (prepared.data_bytes > 0) put(data, prepared.data_bytes);
 
     put_u32(central, 0x02014b50);
     put_u16(central, 20);
@@ -342,8 +430,8 @@ inline void save_npz(const std::vector<std::pair<std::string, pluss::Series>>& a
     put_u16(central, 0);
     put_u16(central, 0x21);
     put_u32(central, crc);
-    put_u32(central, static_cast<std::uint32_t>(data.size()));
-    put_u32(central, static_cast<std::uint32_t>(data.size()));
+    put_u32(central, static_cast<std::uint32_t>(size));
+    put_u32(central, static_cast<std::uint32_t>(size));
     put_u16(central, static_cast<std::uint32_t>(member.size()));
     put_u16(central, 0);  // extra
     put_u16(central, 0);  // comment
@@ -353,18 +441,19 @@ inline void save_npz(const std::vector<std::pair<std::string, pluss::Series>>& a
     put_u32(central, offset);
     central += member;
   }
-  std::string file = body;
-  const std::uint32_t central_at = static_cast<std::uint32_t>(file.size());
-  file += central;
-  put_u32(file, 0x06054b50);
-  put_u16(file, 0);
-  put_u16(file, 0);
-  put_u16(file, static_cast<std::uint32_t>(arrays.size()));
-  put_u16(file, static_cast<std::uint32_t>(arrays.size()));
-  put_u32(file, static_cast<std::uint32_t>(central.size()));
-  put_u32(file, central_at);
-  put_u16(file, 0);
-  write_file(path, file, "pluss::io::save_npz");
+  const std::uint32_t central_at = static_cast<std::uint32_t>(written);
+  std::string end = central;
+  put_u32(end, 0x06054b50);
+  put_u16(end, 0);
+  put_u16(end, 0);
+  put_u16(end, static_cast<std::uint32_t>(arrays.size()));
+  put_u16(end, static_cast<std::uint32_t>(arrays.size()));
+  put_u32(end, static_cast<std::uint32_t>(central.size()));
+  put_u32(end, central_at);
+  put_u16(end, 0);
+  put(end.data(), end.size());
+  out.flush();
+  PLUSS_CHECK(out.good(), "pluss::io::save_npz: writing '" + path.string() + "' failed");
 }
 
 [[nodiscard]] inline std::vector<std::pair<std::string, pluss::Series>> load_npz(const std::filesystem::path& path) {

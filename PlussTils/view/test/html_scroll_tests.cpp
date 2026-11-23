@@ -786,7 +786,8 @@ void test_form_control_alignment_and_caret() {
   };
   const int text_right = rightmost_alpha_x(text_canvas);
   const int caret_left = leftmost_alpha_x(caret_canvas);
-  expect(text_right >= 0 && caret_left == text_right + 1,
+  // Touching means no gap; the last glyph column may be shared (text rasterisers differ by a pixel).
+  expect(text_right >= 0 && caret_left >= text_right - 1 && caret_left <= text_right + 1,
          "Retina caret should touch the final rendered glyph without a gap "
          "(text right " +
              std::to_string(text_right) + ", caret left " +
