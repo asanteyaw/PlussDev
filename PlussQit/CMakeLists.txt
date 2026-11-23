@@ -1164,6 +1164,14 @@ if (PLUSSQIT_BUILD_TESTS)
     list(FILTER CODEH_TEST_SOURCES EXCLUDE REGEX ".*/test_codeh_nocatch_smoke\\.cpp$")
   endif()
 
+  # Array files (.npy and .npz): a plain program with no test framework, so it builds everywhere.
+  if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_CODEH)
+    add_executable(plussqit_array_file_tests tests/array_file_tests.cpp)
+    target_link_libraries(plussqit_array_file_tests PRIVATE PlussQit::CodeM PlussQit::CodeN PlussQit::CodeH)
+    target_compile_features(plussqit_array_file_tests PRIVATE cxx_std_20)
+    add_test(NAME plussqit_array_file COMMAND plussqit_array_file_tests)
+  endif()
+
   find_package(Catch2 3 QUIET)
   if (NOT Catch2_FOUND AND PLUSSQIT_FETCH_DEPS)
     FetchContent_Declare(
