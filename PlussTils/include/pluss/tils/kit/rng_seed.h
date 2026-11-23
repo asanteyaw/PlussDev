@@ -42,6 +42,13 @@ inline std::uint64_t rng_seed() {
   return state.base;
 }
 
+// The seed of run `index` from `base`, with no shared state: the same pair always gives the same
+// seed, so results do not depend on which thread or in what order the runs happen. next_rng_seed()
+// is this function applied to the process-wide base and a running counter (1, 2, 3, ...).
+inline std::uint64_t derive_seed(std::uint64_t base, std::uint64_t index) noexcept {
+  return detail::splitmix64_(base + index);
+}
+
 inline std::uint64_t next_rng_seed() {
   std::uint64_t base;
   std::uint64_t offset;
@@ -51,7 +58,7 @@ inline std::uint64_t next_rng_seed() {
     base = state.base;
     offset = ++state.counter;
   }
-  return detail::splitmix64_(base + offset);
+  return derive_seed(base, offset);
 }
 
 inline std::uint64_t seed_or_next(std::uint64_t seed) {

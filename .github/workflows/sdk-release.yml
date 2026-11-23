@@ -64,6 +64,9 @@ jobs:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
+    env:
+      # Read by CMake into pluss/version.h so a build knows which channel it was made for.
+      PLUSS_RELEASE_CHANNEL: ${{ startsWith(github.ref, 'refs/tags/v') && 'steady' || 'transient' }}
 
     steps:
       - name: Checkout

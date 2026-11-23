@@ -4,6 +4,9 @@
 
 #include "pluss/tils/kit.h"
 #include "pluss/tils/env.h"
+#include "pluss/tils/info.h"
+#include "pluss/tils/settings.h"
+#include "pluss/tils/cache.h"
 #include "pluss/tils/view.h"
 
 #if __has_include("pluss/bi/bi.h") && \

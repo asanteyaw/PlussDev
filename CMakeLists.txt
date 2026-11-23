@@ -86,6 +86,24 @@ endif()
 
 project(plussma VERSION 0.0.6 LANGUAGES CXX)
 
+# The header every space can include to learn which build it is. The channel comes from the
+# environment so a release workflow can say "steady" or "transient" without editing command lines.
+set(PLUSS_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(PLUSS_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(PLUSS_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(PLUSS_VERSION_TEXT ${PROJECT_VERSION})
+if(DEFINED ENV{PLUSS_RELEASE_CHANNEL} AND NOT "$ENV{PLUSS_RELEASE_CHANNEL}" STREQUAL "")
+    set(PLUSS_RELEASE_CHANNEL "$ENV{PLUSS_RELEASE_CHANNEL}")
+else()
+    set(PLUSS_RELEASE_CHANNEL "development")
+endif()
+if(CMAKE_BUILD_TYPE)
+    set(PLUSS_BUILD_TYPE_TEXT "${CMAKE_BUILD_TYPE}")
+else()
+    set(PLUSS_BUILD_TYPE_TEXT "multi-config")
+endif()
+configure_file(${CMAKE_SOURCE_DIR}/cmake/version.h.in ${CMAKE_BINARY_DIR}/generated/pluss/version.h @ONLY)
+
 if(MSVC)
     add_compile_options(/utf-8)
 endif()
@@ -106,6 +124,7 @@ if(APPLE)
     endif()
 endif()
 include(GNUInstallDirs)
+install(FILES ${CMAKE_BINARY_DIR}/generated/pluss/version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pluss)
 include(CMakePackageConfigHelpers)
 include(CTest)
 

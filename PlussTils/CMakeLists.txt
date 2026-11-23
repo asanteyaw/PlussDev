@@ -87,6 +87,27 @@ if(BUILD_TESTING)
     target_compile_features(plusstils_core_seed_tests PRIVATE cxx_std_20)
     add_test(NAME plusstils_core_seed COMMAND plusstils_core_seed_tests)
 
+    add_executable(plusstils_core_info_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_info_tests.cpp
+    )
+    target_link_libraries(plusstils_core_info_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_core_info_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_info COMMAND plusstils_core_info_tests)
+
+    add_executable(plusstils_core_settings_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_settings_tests.cpp
+    )
+    target_link_libraries(plusstils_core_settings_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_core_settings_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_settings COMMAND plusstils_core_settings_tests)
+
+    add_executable(plusstils_core_cache_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_cache_tests.cpp
+    )
+    target_link_libraries(plusstils_core_cache_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_core_cache_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_cache COMMAND plusstils_core_cache_tests)
+
     add_executable(plusstils_scalar_cast_compat_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/test/scalar_cast_compat_tests.cpp
     )
