@@ -254,6 +254,12 @@ void test_html_spelling_and_classes() {
   expect(html.substr(nan_cell, nan_at - nan_cell).find("missing") == std::string::npos &&
              html.substr(nan_cell, nan_at - nan_cell).find("nonfinite") != std::string::npos,
          "NaN is styled as a value, never as missing");
+  const auto inf_at = html.find(">INF<");
+  const auto inf_cell = html.rfind("<td", inf_at);
+  expect(html.substr(nan_cell, nan_at - nan_cell).find("nonfinite nan") != std::string::npos,
+         "NaN has its own tint class, which is not red");
+  expect(html.substr(inf_cell, inf_at - inf_cell).find("nonfinite inf") != std::string::npos,
+         "an infinity has its own tint class, which is neither NaN's nor red");
 }
 
 // A replacement value is one value matched against every entry: Timeline replace used to demand equal lengths.

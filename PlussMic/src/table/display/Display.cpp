@@ -1056,6 +1056,12 @@ const ThemePalette& palette_for_(const DisplayTheme theme) {
   return kThemes.front();
 }
 
+// NaN is violet and infinity is blue: noticeable, and neither of them the red of a missing value.
+constexpr std::string_view kNanTint = "#7a5af8";
+constexpr std::string_view kInfTint = "#2f5bd3";
+constexpr double kNanTintShare = 0.14;
+constexpr double kInfTintShare = 0.12;
+
 // "#rrggbb" laid over "#rrggbb": `share` of the top colour, the rest of the bottom one.
 std::string blend_hex_(const std::string_view top, const std::string_view bottom, const double share) {
   const auto channel = [](const std::string_view hex, const std::size_t i) {
@@ -1078,9 +1084,10 @@ std::string theme_root_css_(const DisplayOptions& options) {
   for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
     css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
   }
-  // The tint behind NaN and infinity: the theme's ink laid over its panel at a fixed share. It is
-  // computed here, not with CSS color-mix(), which the built-in renderer does not understand.
-  css += pluss::tils::OutputEngine::format(" --nonfinite-bg: {};", blend_hex_(palette.v[2], palette.v[1], 0.11));
+  // The tints behind NaN and infinity: a calm hue laid over the theme's panel. Only NULL is red-ish.
+  // They are computed here, not with CSS color-mix(), which the built-in renderer does not understand.
+  css += pluss::tils::OutputEngine::format(" --nan-bg: {}; --inf-bg: {};", blend_hex_(kNanTint, palette.v[1], kNanTintShare),
+                                           blend_hex_(kInfTint, palette.v[1], kInfTintShare));
   css += " --shadow: none; }";
   return css;
 }
@@ -1323,11 +1330,16 @@ std::string html_shell_(std::string_view title,
       font-weight: 700;
     }}
     .nonfinite {{
-      /* NaN / inf / -inf are values, not missing data: a neutral tint made from the theme's own ink, never the NULL red. */
+      /* NaN / inf / -inf are values, not missing data: each has its own calm tint, never the NULL red. */
       color: var(--title);
-      background: var(--nonfinite-bg);
       font-style: italic;
       font-weight: 600;
+    }}
+    .nonfinite.nan {{
+      background: var(--nan-bg);
+    }}
+    .nonfinite.inf {{
+      background: var(--inf-bg);
     }}
     .hidden {{
       display: none;
@@ -1690,7 +1702,7 @@ std::string html_shell_(std::string_view title,
           let cls = vt.data.sticky && c === 0 ? 'sticky-left' : '';
           if (vt.data.num[c]) cls += (cls ? ' ' : '') + 'num';
           if (text === 'NULL') cls += (cls ? ' ' : '') + 'missing';
-          else if (text === 'NAN' || text === 'INF' || text === '-INF') cls += (cls ? ' ' : '') + 'nonfinite';
+          else if (text === 'NAN' || text === 'INF' || text === '-INF') cls += (cls ? ' ' : '') + 'nonfinite ' + (text === 'NAN' ? 'nan' : 'inf');
           h += '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + escapeHtml(text) + '</td>';
         }}
         parts.push(h + '</tr>');
@@ -2199,7 +2211,9 @@ std::string render_html_table_body_(const DataFrame& frame,
       const bool missing_cell = is_null && !style.blank_nulls;
       if (numeric || missing_cell) {
         body += " class=\"";
-        body += numeric ? (missing_cell ? "num missing" : (is_nonfinite ? "num nonfinite" : "num")) : "missing";
+        body += numeric ? (missing_cell ? "num missing"
+                                   : (is_nonfinite ? (value == "NaN" ? "num nonfinite nan" : "num nonfinite inf") : "num"))
+                    : "missing";
         body += "\"";
       }
       if (sort_value != shown) {
@@ -2296,6 +2310,7 @@ class DataFrameVirtualTableModel final
         .text = std::move(text),
         .missing = missing,
         .nonfinite = nonfinite,
+        .infinite = nonfinite && text != "NAN",
     };  }
 
   bool row_matches(const std::int64_t row,

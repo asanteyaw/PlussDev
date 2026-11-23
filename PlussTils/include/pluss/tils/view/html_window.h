@@ -19,7 +19,8 @@ enum class BackendPreference : std::uint8_t {
 struct VirtualTableCell {
   std::string text{};
   bool missing{false};    // a NULL cell (no value): drawn in red
-  bool nonfinite{false};  // NaN / inf / -inf: a value, drawn in a neutral tint, never as missing
+  bool nonfinite{false};  // NaN / inf / -inf: a value, drawn in its own calm tint, never as missing
+  bool infinite{false};   // with `nonfinite`: inf / -inf (blue) rather than NaN (violet)
 };
 
 class VirtualTableModel {

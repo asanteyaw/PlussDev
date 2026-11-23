@@ -3534,10 +3534,11 @@ int render_virtual_table(
                   std::max(1, column.width - 2), std::max(1, row_h - 2)},
             Color::rgba(255, 240, 238, 255)});
       } else if (value.nonfinite) {
+        // NaN is violet and infinity blue: noticeable, and never the red of a missing value.
         scene.add(FillRectCommand{
             RectI{column.x + 1, row_y + 1,
                   std::max(1, column.width - 2), std::max(1, row_h - 2)},
-            Color::rgba(236, 238, 242, 255)});
+            value.infinite ? Color::rgba(230, 235, 250, 255) : Color::rgba(236, 232, 254, 255)});
       }
       scene.add(LineCommand{PointI{column.x, row_y},
                             PointI{column.x, row_y + row_h}, 1, grid});
