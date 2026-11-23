@@ -517,6 +517,7 @@ bool virtual_table_visible(const window::HtmlNode& node) {
 //   note:<text>            a toolbar/menu event, e.g. note:view:tab-summary, note:theme:miami
 //   hover-border:<col>     move the pointer onto that column's border
 //   drag-border:<col>:<dx> press on the border, drag dx pixels, release
+//   shot:<path>            save the presented frame as a PNG
 //   dump                   print the active view, its table and the viewer's state
 //   close                  close the window
 std::deque<std::string> scripted_commands() {
@@ -1533,6 +1534,13 @@ bool show_inhouse_html_window(const std::string& title,
           std::fprintf(stderr, "[view-script] menu: %s\n", menu.title.c_str());
           print(menu.options, 1);
         }
+      } else if (command.rfind("shot:", 0) == 0) {
+        // Write the window's presented frame to a PNG (used to produce documentation images).
+        if (last_presented_frame_id < last_submitted_frame_id) {
+          present_latest(true);
+        }
+        const bool saved = window::save_canvas(presented_canvas, command.substr(5));
+        std::fprintf(stderr, "[view-script] shot %s: %s\n", saved ? "saved" : "FAILED", command.c_str() + 5);
       } else if (command == "dump") {
         std::vector<std::string> active;
         collect_active_panels(document.root, active);
