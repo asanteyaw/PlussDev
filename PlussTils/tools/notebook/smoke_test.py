@@ -80,7 +80,7 @@ def main():
         r = run("std::cout << v << std::endl;")
         check("a variable defined again is rebound", r["text"].strip() == "2", r)
         r = run("int broken = ;")
-        check("a compile error is reported", r["error"] is not None and "error" in r["err"], r)
+        check("a compile error is reported", r["error"] is not None and "error" in r["error"], r)
         r = run("std::cout << v << std::endl;")
         check("the engine survives a compile error", r["text"].strip() == "2", r)
         r = run('auto df = pluss::loader::datastore("sales").frame(); df')

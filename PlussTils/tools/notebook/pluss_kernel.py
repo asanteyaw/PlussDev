@@ -220,16 +220,50 @@ class PlussKernel(Kernel):
     # ---- cells ----------------------------------------------------------------------------------
 
     @staticmethod
+    def _last_statement_start(line):
+        """Where the last statement of a line begins: just after its last semicolon outside strings, brackets and braces."""
+        depth, i, start, n = 0, 0, 0, len(line)
+        while i < n:
+            c = line[i]
+            if line.startswith("//", i):
+                break
+            if c in "\"'":
+                j = i + 1
+                while j < n and line[j] != c:
+                    j += 2 if line[j] == "\\" else 1
+                i = j
+            elif c in "([{":
+                depth += 1
+            elif c in ")]}":
+                depth -= 1
+            elif c == ";" and depth == 0:
+                start = i + 1
+            i += 1
+        return start
+
+    @staticmethod
     def _show_last_expression(code):
-        """A cell whose last line is a bare expression shows it, as a notebook does."""
+        """A cell whose last statement is a bare expression shows it, as a notebook does: `df` on its own line, or
+        `auto df = load(); df` on one line."""
         lines = code.rstrip().split("\n")
-        last = lines[-1].strip()
-        if not last or last[-1] in ";{}" or last.startswith(("#", "%", "//")):
+        line = lines[-1]
+        if line.strip().startswith(("#", "%", "//")):
+            return code
+        start = PlussKernel._last_statement_start(line)
+        head, last = line[:start], line[start:].strip()
+        if not last or last[-1] in ";{}":
             return code
         if code.count("{") != code.count("}") or code.count("(") != code.count(")"):
             return code
-        lines[-1] = "pluss::nb::show(" + last + ");"
+        lines[-1] = head + " pluss::nb::show(" + last + ");" if head else "pluss::nb::show(" + last + ");"
         return "\n".join(lines)
+
+    def _fail(self, silent, ename, evalue, text):
+        """Report a failed cell the way a notebook expects: an error message on the output channel (so the cell is
+        marked failed and Run All stops) and an error reply. The text is the traceback shown under the cell."""
+        if not silent:
+            self.send_response(self.iopub_socket, "error", {"ename": ename, "evalue": evalue, "traceback": [text]})
+        return {"status": "error", "ename": ename, "evalue": evalue, "traceback": [text]}
 
     def _guarded(self, code, force_macros=None):
         """The cell as it is sent: a cell with #include lines runs with the renaming macros off, so a header never
@@ -292,25 +326,21 @@ class PlussKernel(Kernel):
             # The engine cannot be interrupted part-way, so it is restarted: the cell stops, earlier cells are gone.
             self._restart_engine()
             message = "Interrupted. The C++ engine was restarted, so the variables and functions from earlier cells are gone: run them again."
-            if not silent:
-                self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": message + "\n"})
-            return {"status": "error", "ename": "KeyboardInterrupt", "evalue": message, "traceback": [message]}
+            return self._fail(silent, "KeyboardInterrupt", message, message)
         except (EngineStopped, BrokenPipeError):
             self._restart_engine()
             message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
                        "It has been restarted, so the variables and functions from earlier cells are gone: run them again.")
-            if not silent:
-                self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": message + "\n"})
-            return {"status": "error", "ename": "EngineRestarted", "evalue": message, "traceback": [message]}
+            return self._fail(silent, "EngineRestarted", message, message)
         out, err = self._tidy(out), self._tidy(err)
         failed = "error:" in err
         first_error = next((line for line in err.split("\n") if "error:" in line), err.strip().split("\n")[0] if err.strip() else "")
         if not silent:
             self._publish(out)
-            if err.strip():
+            if err.strip() and not failed:
                 self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": err})
         if failed:
-            return {"status": "error", "ename": "CompileError", "evalue": first_error, "traceback": [err]}
+            return self._fail(silent, "CompileError", first_error, err)
         return {"status": "ok", "execution_count": self.execution_count, "payload": [], "user_expressions": {}}
 
     def _restart_engine(self):
