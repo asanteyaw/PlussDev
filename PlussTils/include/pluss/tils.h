@@ -1,8 +1,13 @@
 #pragma once
 
-// PlussTils umbrella: utility-oriented APIs spanning aux helpers and view tooling.
+// PlussTils umbrella: every public PlussTils header. Include a single header, such as
+// <pluss/tils/doc.h> or <pluss/tils/kit/output.h>, to take only that part.
 
 #include "pluss/tils/kit.h"
+#include "pluss/tils/print_options.h"
+#include "pluss/tils/suppose.h"
+#include "pluss/tils/let.h"
+#include "pluss/tils/flow.h"
 #include "pluss/tils/env.h"
 #include "pluss/tils/info.h"
 #include "pluss/tils/settings.h"

@@ -23,7 +23,8 @@ set(PLUSS_SDK_CHECKS
     core_cache:PlussTils/test/core_cache_tests.cpp
     core_doc:PlussTils/test/core_doc_tests.cpp
     array_file:PlussQit/tests/array_file_tests.cpp
-    examples:PlussMic/test/examples_tests.cpp)
+    examples:PlussMic/test/examples_tests.cpp
+    umbrellas:examples/sdk_consumer/umbrellas.cpp)
 foreach(_check IN LISTS PLUSS_SDK_CHECKS)
   string(REPLACE ":" ";" _parts "${_check}")
   list(GET _parts 0 _name)
