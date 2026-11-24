@@ -923,3 +923,39 @@ TEST_CASE("PlussPl caps the markers of a very dense scatter at what is visible",
   // 200000 circles written out are tens of megabytes; one marker per cell of the plot stays well under half that.
   REQUIRE(book.to_svg().size() < 12000000);
 }
+
+TEST_CASE("PlussPl turns a long y label vertical beside the axis, and leaves a short or hand-placed one alone", "[plusspl][flash][axis]") {
+  using namespace pluss::pl;
+  const auto x = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}, {4});
+  const auto y = pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0}, {4});
+  const std::string long_label = "Average household income per adult in the region (USD)";
+  const auto label_element = [](const std::string& svg, std::string_view label) {
+    const std::size_t close = svg.find(">" + std::string(label) + "</text>");
+    REQUIRE(close != std::string::npos);
+    return svg.substr(svg.rfind("<text ", close), close - svg.rfind("<text ", close));
+  };
+  const auto x_of = [](const std::string& element) {
+    const std::size_t at = element.find("x=\"");
+    return std::stod(element.substr(at + 3));
+  };
+  {
+    // default placement: too wide to hang upright, so it is turned and sits beside the axis, inside the picture
+    Studio book("long-y-label");
+    flash::lineplot(book.pane2("p").y_label(long_label), x, y);
+    const std::string element = label_element(book.to_svg(), long_label);
+    REQUIRE(element.find("rotate(-90") != std::string::npos);
+    REQUIRE(x_of(element) > 0.0);
+  }
+  {
+    // a short label keeps the default upright placement
+    Studio book("short-y-label");
+    flash::lineplot(book.pane2("p").y_label("gain"), x, y);
+    REQUIRE(label_element(book.to_svg(), "gain").find("rotate(") == std::string::npos);
+  }
+  {
+    // a rotation the caller set is never overridden
+    Studio book("placed-y-label");
+    flash::lineplot(book.pane2("p").y_label(long_label).y_label_rotation(0.0), x, y);
+    REQUIRE(label_element(book.to_svg(), long_label).find("rotate(") == std::string::npos);
+  }
+}

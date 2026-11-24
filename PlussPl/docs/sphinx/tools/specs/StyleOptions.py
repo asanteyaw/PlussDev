@@ -452,6 +452,7 @@ There are 331 values, in the groups below. A pair such as `pane_left_inset` hold
 | `uncentered_y_label_clearance_em` | or this many ems of the tick font | 0.95 |
 | `centered_y_label_baseline_em` | of the axis-label font: a turned label's offset beyond the tick labels | 0.75 |
 | `near_vertical_tolerance_deg` | a label within this of upright-vertical counts as vertical | 20 |
+| `y_label_upright_max_width_share` | a y label left to default placement turns vertical once its upright width passes this share of the pane | 0.15 |
 | `y_label_fit_margin_pt` | kept free along the axis when a vertical label is fitted | 10 |
 | `y_label_fit_floor_pt` | guard: the room a vertical label is fitted to is at least this | 12 |
 | `y_label_fit_min_font_pt` | readability policy: a long label shrinks no further than this, then ends in "..." | 7 |

@@ -2476,12 +2476,25 @@ struct FiniteMinMax {
 // Whether the y-axis label is turned and centred along the axis (the layout and the drawing must agree on this): when
 // the caller asks for it, or explicitly turns the label to near vertical. Otherwise the label sits upright above the
 // axis, right-aligned to it.
-[[nodiscard]] bool y_label_centered_on_axis(const Pane& pane) {
+// A label left to default placement also turns vertical, and moves beside the axis, when upright it would be too wide for
+// the pane: it would otherwise hang out of the pane's left edge and be cut. A label the caller placed (rotation or
+// centring set) is never overridden.
+[[nodiscard]] bool y_label_auto_vertical(const Pane& pane, double axis_font, double outer_width) {
+  const AxisState& axis = pane.y_axis();
+  if (axis.label.empty() || axis.label_centered_explicit || axis.label_rotation_deg.has_value()) {
+    return false;
+  }
+  const double upright_width = static_cast<double>(axis.label.size()) * axis_font * look().estimated_glyph_width_em;
+  return upright_width > look().y_label_upright_max_width_share * outer_width;
+}
+
+[[nodiscard]] bool y_label_centered_on_axis(const Pane& pane, double axis_font, double outer_width) {
   const AxisState& axis = pane.y_axis();
   const double rotation = axis.label_rotation_deg.value_or(0.0);
   const bool near_vertical = std::abs(std::fmod(std::abs(rotation), 180.0) - 90.0) <= look().near_vertical_tolerance_deg;
   return axis.label_centered_on_axis ||
-         (!axis.label_centered_explicit && axis.label_rotation_deg.has_value() && near_vertical);
+         (!axis.label_centered_explicit && axis.label_rotation_deg.has_value() && near_vertical) ||
+         y_label_auto_vertical(pane, axis_font, outer_width);
 }
 
 // Supplied (categorical) x labels that would run into one another are turned the way MATLAB's boxchart turns them: to 30,
@@ -2613,7 +2626,7 @@ struct FiniteMinMax {
       left = std::max(left, y_depth + y_label_pad + y_label_extent);
       // An upright y label hangs to the left of the axis from its right-aligned anchor: it needs its own width, turned by
       // its rotation, beyond the tick-label gap.
-      if (!pane.y_axis().label.empty() && !y_label_centered_on_axis(pane)) {
+      if (!pane.y_axis().label.empty() && !y_label_centered_on_axis(pane, axis_font, outer_width)) {
         const double label_width = static_cast<double>(pane.y_axis().label.size()) * axis_font * look().estimated_glyph_width_em;
         left = std::max(left, resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false) +
                                   text_box_reach(label_width, axis_font, pane.y_axis().label_rotation_deg.value_or(0.0),
@@ -5730,7 +5743,7 @@ void render_planar_axes(
         tick_font * look().uncentered_y_label_clearance_em);
     // Core 2D rule: if caller explicitly rotates y-label near vertical, place it
     // as an axis-centered label (same semantic family as x-axis labels).
-    const bool effective_center_on_axis = center_on_axis || y_label_centered_on_axis(pane);
+    const bool effective_center_on_axis = center_on_axis || y_label_centered_on_axis(pane, axis_label_font, layout.outer.width);
 
     const auto rotated_text_width = [](std::string_view text, double font_size, double rotation_deg) {
       const double w = estimated_text_extent(text, font_size);

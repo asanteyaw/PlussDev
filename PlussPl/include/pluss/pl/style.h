@@ -437,6 +437,7 @@ struct StyleOptions {
   double uncentered_y_label_clearance_em{0.95}; // or this many ems of the tick font
   double centered_y_label_baseline_em{0.75}; // of the axis-label font: a turned label's offset beyond the tick labels
   double near_vertical_tolerance_deg{20.0}; // a label within this of upright-vertical counts as vertical
+  double y_label_upright_max_width_share{0.15}; // a y label left to default placement turns vertical once its upright width passes this share of the pane
   double y_label_fit_margin_pt{10.0}; // kept free along the axis when a vertical label is fitted
   double y_label_fit_floor_pt{12.0}; // guard: the room a vertical label is fitted to is at least this
   double y_label_fit_min_font_pt{7.0}; // readability policy: a long label shrinks no further than this, then ends in "..."
@@ -730,6 +731,7 @@ struct StyleOptions {
   if (!std::isfinite(o.uncentered_y_label_clearance_em)) return "uncentered_y_label_clearance_em";
   if (!std::isfinite(o.centered_y_label_baseline_em)) return "centered_y_label_baseline_em";
   if (!std::isfinite(o.near_vertical_tolerance_deg)) return "near_vertical_tolerance_deg";
+  if (!std::isfinite(o.y_label_upright_max_width_share) || o.y_label_upright_max_width_share <= 0.0) return "y_label_upright_max_width_share";
   if (!std::isfinite(o.y_label_fit_margin_pt)) return "y_label_fit_margin_pt";
   if (!std::isfinite(o.y_label_fit_floor_pt)) return "y_label_fit_floor_pt";
   if (!std::isfinite(o.y_label_fit_min_font_pt)) return "y_label_fit_min_font_pt";
