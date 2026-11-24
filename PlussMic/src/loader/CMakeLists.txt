@@ -140,16 +140,6 @@ if(PLUSSMIC_REQUIRE_PARQUET AND NOT (PLUSSMIC_ARROW_TARGET AND PLUSSMIC_PARQUET_
   message(FATAL_ERROR "PlussMic Parquet support requires Arrow and Parquet C++, but their CMake targets were not found")
 endif()
 
-# Carry the static native libraries inside the distribution.
-if(PLUSSMIC_BUNDLE_NATIVE_DEPS AND PLUSSMIC_NATIVE_BUNDLE_TARGETS)
-  include("${CMAKE_SOURCE_DIR}/cmake/PlussNativeBundle.cmake")
-  pluss_native_bundle(NativeBundle TARGETS ${PLUSSMIC_NATIVE_BUNDLE_TARGETS})
-  add_library(plussmic_native_link INTERFACE)
-  target_link_libraries(plussmic_native_link INTERFACE $<INSTALL_INTERFACE:Pluss::NativeBundle>)
-  install(TARGETS plussmic_native_link EXPORT PlussTargets)
-  target_link_libraries(PlussMic PUBLIC plussmic_native_link)
-endif()
-
 # Optional URL loading support for CSV/TXT/Excel loaders.
 option(PLUSSMIC_FETCH_CURL "Allow CMake to FetchContent libcurl when unavailable" ON)
 option(PLUSSMIC_REQUIRE_CURL "Fail configuration if URL loading cannot be built" OFF)
@@ -194,6 +184,32 @@ endif()
 
 if(PLUSSMIC_REQUIRE_CURL AND NOT PLUSSMIC_CURL_TARGET)
   message(FATAL_ERROR "PlussMic URL loading requires libcurl, but CURL::libcurl was not found")
+endif()
+
+# Windows has no system libcurl for a downloaded archive to find, so a static curl (the vcpkg static triplet the
+# release uses) goes into the native bundle with the other static libraries; PlussConfig.cmake then provides
+# CURL::libcurl from the bundle. Elsewhere curl is resolved on the consumer's machine, as before.
+if(WIN32 AND PLUSSMIC_BUNDLE_NATIVE_DEPS AND PLUSSMIC_CURL_TARGET)
+  get_target_property(_plussmic_curl_alias ${PLUSSMIC_CURL_TARGET} ALIASED_TARGET)
+  if(_plussmic_curl_alias)
+    set(_plussmic_curl_bundle_target ${_plussmic_curl_alias})
+  else()
+    set(_plussmic_curl_bundle_target ${PLUSSMIC_CURL_TARGET})
+  endif()
+  get_target_property(_plussmic_curl_bundle_type ${_plussmic_curl_bundle_target} TYPE)
+  if(_plussmic_curl_bundle_type STREQUAL "STATIC_LIBRARY" OR _plussmic_curl_bundle_type STREQUAL "UNKNOWN_LIBRARY")
+    list(APPEND PLUSSMIC_NATIVE_BUNDLE_TARGETS ${_plussmic_curl_bundle_target})
+  endif()
+endif()
+
+# Carry the static native libraries inside the distribution.
+if(PLUSSMIC_BUNDLE_NATIVE_DEPS AND PLUSSMIC_NATIVE_BUNDLE_TARGETS)
+  include("${CMAKE_SOURCE_DIR}/cmake/PlussNativeBundle.cmake")
+  pluss_native_bundle(NativeBundle TARGETS ${PLUSSMIC_NATIVE_BUNDLE_TARGETS})
+  add_library(plussmic_native_link INTERFACE)
+  target_link_libraries(plussmic_native_link INTERFACE $<INSTALL_INTERFACE:Pluss::NativeBundle>)
+  install(TARGETS plussmic_native_link EXPORT PlussTargets)
+  target_link_libraries(PlussMic PUBLIC plussmic_native_link)
 endif()
 
 if(PLUSSMIC_CURL_TARGET)

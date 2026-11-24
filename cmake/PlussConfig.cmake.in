@@ -55,7 +55,17 @@ if(NOT _pluss_needs_parquet EQUAL -1)
 endif()
 
 if(NOT _pluss_needs_curl EQUAL -1)
-  find_dependency(CURL QUIET)
+  # A Windows archive carries a static libcurl in Pluss::NativeBundle (there is no system one to find).
+  set(_pluss_bundled_curl "")
+  if(WIN32 AND TARGET Pluss::NativeBundle AND NOT TARGET CURL::libcurl)
+    file(GLOB _pluss_bundled_curl "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/pluss-native/*curl*")
+  endif()
+  if(_pluss_bundled_curl)
+    add_library(CURL::libcurl INTERFACE IMPORTED)
+    set_target_properties(CURL::libcurl PROPERTIES INTERFACE_LINK_LIBRARIES "Pluss::NativeBundle")
+  else()
+    find_dependency(CURL QUIET)
+  endif()
 endif()
 
 if(NOT _pluss_needs_x11 EQUAL -1)
