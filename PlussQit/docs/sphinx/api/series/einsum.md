@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Series::einsum
+# pluss::series::einsum
 
 [Back to Series API Reference](../../series_api_reference)
 
 ## Signature
 
 ```cpp
-static Series Series::einsum(std::string_view equation, const std::vector<Series>& operands)
+pluss::Series pluss::series::einsum(std::string_view equation, const std::vector<pluss::Series>& operands)
 ```
 
 ## What It Does
@@ -82,7 +82,7 @@ as its operand has (or, if it contains `...`, at most that many).
 **operands** (`const std::vector<Series>&`)
 
 The operands, in the order of the equation's terms. A braced list works:
-`Series::einsum("ij,jk->ik", {a, b})`. Operands should share a dtype.
+`pluss::series::einsum("ij,jk->ik", {a, b})`. Operands should share a dtype.
 
 ## Returns
 
@@ -106,7 +106,7 @@ Example 1. The matrix product, written explicitly.
 auto a = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
 auto b = pluss::make_series({{1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}});
 
-std::cout << pluss::Series::einsum("ij,jk->ik", {a, b});
+std::cout << pluss::series::einsum("ij,jk->ik", {a, b});
 ```
 
 ### Output
@@ -125,9 +125,9 @@ Example 2. Implicit mode drops the `->`; the output is the letters seen once, al
 auto a = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
 auto b = pluss::make_series({{1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}});
 
-std::cout << pluss::Series::einsum("ij,jk", {a, b}) << "\n";
+std::cout << pluss::series::einsum("ij,jk", {a, b}) << "\n";
 // Implicit output is alphabetical, so "ji" is a transpose, not a copy:
-std::cout << pluss::Series::einsum("ji", {a});
+std::cout << pluss::series::einsum("ji", {a});
 ```
 
 ### Output
@@ -149,9 +149,9 @@ Example 3. Transposing and summing: a letter missing from the output is summed a
 ```cpp
 auto a = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
 
-std::cout << pluss::Series::einsum("ij->ji", {a}) << "\n";   // transpose
-std::cout << pluss::Series::einsum("ij->i", {a}) << "\n";    // row sums
-std::cout << pluss::Series::einsum("ij->", {a});              // grand total
+std::cout << pluss::series::einsum("ij->ji", {a}) << "\n";   // transpose
+std::cout << pluss::series::einsum("ij->i", {a}) << "\n";    // row sums
+std::cout << pluss::series::einsum("ij->", {a});              // grand total
 ```
 
 ### Output
@@ -174,8 +174,8 @@ Example 4. A repeated letter inside one operand reads its diagonal.
 ```cpp
 auto m = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}});
 
-std::cout << pluss::Series::einsum("ii->i", {m}) << "\n";   // diagonal
-std::cout << pluss::Series::einsum("ii->", {m});             // trace
+std::cout << pluss::series::einsum("ii->i", {m}) << "\n";   // diagonal
+std::cout << pluss::series::einsum("ii->", {m});             // trace
 ```
 
 ### Output
@@ -195,8 +195,8 @@ Example 5. Dot products and outer products are one equation each.
 auto u = pluss::make_series({1.0, 2.0, 3.0});
 auto v = pluss::make_series({4.0, 5.0, 6.0});
 
-std::cout << pluss::Series::einsum("i,i->", {u, v}) << "\n";    // dot
-std::cout << pluss::Series::einsum("i,j->ij", {u, v});           // outer
+std::cout << pluss::series::einsum("i,i->", {u, v}) << "\n";    // dot
+std::cout << pluss::series::einsum("i,j->ij", {u, v});           // outer
 ```
 
 ### Output
@@ -218,7 +218,7 @@ Example 6. A batched matrix product keeps the batch letter in the output.
 auto a = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {2, 2, 2});
 auto b = pluss::make_series({1.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 2.0}, {2, 2, 2});
 
-std::cout << pluss::Series::einsum("bij,bjk->bik", {a, b});
+std::cout << pluss::series::einsum("bij,bjk->bik", {a, b});
 ```
 
 ### Output
@@ -240,7 +240,7 @@ auto batch = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {2, 2,
 auto shared = pluss::make_series({{1.0, 1.0}, {0.0, 1.0}});
 
 // `shared` has no batch axis: its ellipsis is empty and broadcasts against batch's.
-std::cout << pluss::Series::einsum("...ij,jk->...ik", {batch, shared});
+std::cout << pluss::series::einsum("...ij,jk->...ik", {batch, shared});
 ```
 
 ### Output
@@ -263,7 +263,7 @@ auto b = pluss::make_series({{0.0, 1.0}, {1.0, 0.0}});
 auto c = pluss::make_series({{1.0, 0.0}, {0.0, 2.0}});
 
 // trace(a * b * c)
-std::cout << pluss::Series::einsum("ij,jk,ki->", {a, b, c});
+std::cout << pluss::series::einsum("ij,jk,ki->", {a, b, c});
 ```
 
 ### Output
@@ -283,7 +283,7 @@ auto b = pluss::make_series({{5.0, 6.0}, {7.0, 8.0}});
 a.tracks_slope_(true);
 b.tracks_slope_(true);
 
-pluss::Series::einsum("ij,jk->", {a, b}).reverse();
+pluss::series::einsum("ij,jk->", {a, b}).reverse();
 
 std::cout << a.sensitivity() << "\n" << b.sensitivity();
 ```
@@ -311,13 +311,13 @@ auto first_line = [](const std::exception& e) {
   std::string msg = e.what();
   return msg.substr(0, msg.find('\n'));
 };
-try { pluss::Series::einsum("ii", {a}); }
+try { pluss::series::einsum("ii", {a}); }
 catch (const std::exception& e) { std::cout << first_line(e) << "\n"; }
-try { pluss::Series::einsum("ij,jk->ik", {a}); }
+try { pluss::series::einsum("ij,jk->ik", {a}); }
 catch (const std::exception& e) { std::cout << first_line(e) << "\n"; }
-try { pluss::Series::einsum("ij,jk->iz", {a, b}); }
+try { pluss::series::einsum("ij,jk->iz", {a, b}); }
 catch (const std::exception& e) { std::cout << first_line(e) << "\n"; }
-try { pluss::Series::einsum("ij,jk->ik", {a, a}); }
+try { pluss::series::einsum("ij,jk->ik", {a, a}); }
 catch (const std::exception& e) { std::cout << first_line(e) << "\n"; }
 ```
 
@@ -349,7 +349,7 @@ einsum: operands do not broadcast for a shared subscript
 
 ## Summary
 
-`Series::einsum(equation, operands)` is a general contraction:
+`pluss::series::einsum(equation, operands)` is a general contraction:
 
 - letters kept in the output stay as axes, other letters are summed
 - implicit mode sorts the output alphabetically; explicit mode (`->`) is

@@ -279,7 +279,7 @@ paired axes into one matrix product:
 
 ## See Also
 
-- [`Series::einsum`](einsum.md): the general letter-based contraction.
+- [`pluss::series::einsum`](einsum.md): the general letter-based contraction.
 - [`Series::bmm`](bmm.md): batched matrix product.
 - [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
   rank-polymorphic matrix product.

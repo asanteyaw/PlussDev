@@ -50,6 +50,9 @@ class Series;
 
 namespace pluss::series {
 CODEM_API codem::Series undefined();
+// Einstein summation (see the contraction notes in Series.h): a free function, because it takes several Series and
+// belongs to none of them. `pluss::series::einsum("ij,jk->ik", {a, b})`.
+CODEM_API codem::Series einsum(std::string_view equation, const std::vector<codem::Series> &operands);
 }
 
 namespace pluss::codem {
@@ -2350,14 +2353,12 @@ public:
   Series tensordot(const Series &other,
                    const std::vector<std::int64_t> &dims_self,
                    const std::vector<std::int64_t> &dims_other) const;
-  // einsum(equation, operands): Einstein summation with torch's grammar --
-  // lower/upper-case subscripts, implicit mode (no "->": output is the labels
-  // seen once, ellipsis axes first, then alphabetical), explicit mode, "..."
-  // broadcasting, repeated subscripts within one operand (diagonal), and
-  // size-1 broadcasting of a shared label. Operands are contracted pairwise
-  // left to right, each pair as one batched matmul.
-  static Series einsum(std::string_view equation,
-                       const std::vector<Series> &operands);
+  // einsum is a free function, pluss::series::einsum(equation, operands): Einstein
+  // summation with torch's grammar -- lower/upper-case subscripts, implicit mode
+  // (no "->": output is the labels seen once, ellipsis axes first, then
+  // alphabetical), explicit mode, "..." broadcasting, repeated subscripts within
+  // one operand (diagonal), and size-1 broadcasting of a shared label. Operands
+  // are contracted pairwise left to right, each pair as one batched matmul.
   std::vector<Series> tensor_split(std::int64_t sections,
                                    std::int64_t dim = 0) const;
   std::vector<Series> tensor_split(pluss::msharp::RangeView::Int indices,

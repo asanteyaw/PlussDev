@@ -266,7 +266,7 @@ pluss::Series contract_with(pluss::RangeView<pluss::Series> x,
       free_labels.push_back(right_labels[static_cast<std::size_t>(i)]);
     }
   }
-  return pluss::Series::einsum(
+  return pluss::series::einsum(
       "..." + left_labels + ",..." + right_labels + "->..." + free_labels,
       {left, right});
 }

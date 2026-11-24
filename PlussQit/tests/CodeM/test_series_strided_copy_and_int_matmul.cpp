@@ -102,7 +102,7 @@ TEST_CASE("integer matmul (int8/uint8/int16/int32/int64), wraparound and batchin
   REQUIRE(r == static_cast<std::int64_t>(static_cast<std::uint64_t>(big) + static_cast<std::uint64_t>(big)));
   // einsum/tensordot on integer operands
   const Series m = make_series(std::vector<std::int64_t>{1, 2, 3, 4}, {2, 2});
-  REQUIRE(flat<std::int64_t>(Series::einsum("ij,jk->ik", {m, m})) == std::vector<std::int64_t>{7, 10, 15, 22});
+  REQUIRE(flat<std::int64_t>(pluss::series::einsum("ij,jk->ik", {m, m})) == std::vector<std::int64_t>{7, 10, 15, 22});
   REQUIRE(flat<std::int64_t>(m.tensordot(m, 1)) == std::vector<std::int64_t>{7, 10, 15, 22});
   // batched
   const Series bt = make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});

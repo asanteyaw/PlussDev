@@ -270,7 +270,9 @@ Series Series::tensordot(const Series &other, const std::vector<std::int64_t> &d
   return tensordot_impl_(*this, other, dims_self, dims_other);
 }
 
-Series Series::einsum(std::string_view equation, const std::vector<Series> &operands) {
+namespace {
+
+Series einsum_(std::string_view equation, const std::vector<Series> &operands) {
   PLUSS_CHECK(!operands.empty(), "einsum: expected at least one operand");
 
   // ---- split "lhs->rhs"
@@ -371,4 +373,14 @@ Series Series::einsum(std::string_view equation, const std::vector<Series> &oper
   return identity ? acc.x : acc.x.permute(ints_(perm));
 }
 
+} // namespace
+
 } // namespace pluss::codem
+
+namespace pluss::series {
+
+codem::Series einsum(std::string_view equation, const std::vector<codem::Series> &operands) {
+  return codem::einsum_(equation, operands);
+}
+
+} // namespace pluss::series

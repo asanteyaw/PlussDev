@@ -764,7 +764,7 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("scatter_reduce_amin", "(int64_t, const Series&, const Series&, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series idx2 = make_series(std::vector<std::int64_t>{0, 1, 2, 0, 1, 2}, {2, 3}).to(ScalarType::Int64); Series src = probe_input(); return s.scatter_reduce_amin(INT64_C(1), idx2, src, true); });
   probe("tensordot", "(const Series&, int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.tensordot(mate, INT64_C(2)); });
   probe("tensordot", "(const Series&, vector<int64_t>, vector<int64_t>)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.tensordot(mate, std::vector<std::int64_t>{1}, std::vector<std::int64_t>{1}); });
-  probe("einsum", "(string_view, vector<Series>)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return Series::einsum("ij,kj->ik", {s, mate}); });
+  probe("einsum", "(string_view, vector<Series>)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return pluss::series::einsum("ij,kj->ik", {s, mate}); });
   probe("isnan", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isnan(); });
   probe("isinf", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isinf(); });
   probe("isfinite", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isfinite(); });
