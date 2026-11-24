@@ -93,6 +93,7 @@ window.PLUSS_API_NAV = {
       "y_categories",
       "y_label",
       "y_label_centered",
+      "y_label_full",
       "y_label_gap",
       "y_label_rotation",
       "y_limit_method",

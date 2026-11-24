@@ -17,6 +17,8 @@ Rotates the y axis label by an explicit angle in degrees. The angle is stored in
 
 The angle must be finite. Infinity and NaN are refused with `pluss::Error` and the stored value is left as it was; every finite number is stored as given, so 90, -90 and 720 are all accepted and are not reduced to a range. It is per axis, and it is read when the figure is rendered.
 
+Setting the angle is also a way of keeping the label where you want it. A y label left to default placement turns vertical and moves beside the axis once its upright width passes `y_label_upright_max_width_share` of the pane (see [`y_label`](y_label.md)); a label with an angle of its own is never moved, so `y_label_rotation(0.0)` keeps a long label upright.
+
 ## Parameters
 
 **degrees** (`double`)
@@ -169,6 +171,47 @@ equal: 1
 ```
 
 ![Output of Example 5](img/y_label_rotation-5-clear_restores.svg)
+
+Example 6. A rotation set by hand switches off the automatic turning of a long label. Left alone, a long y label turns vertical and sits beside the axis; with `y_label_rotation(0.0)` it stays upright at the top, as you asked, and the pane makes room for it at the left.
+
+```cpp
+auto build = [&](bool by_hand) {
+  auto fig = studio("y_label_rotation_long");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label("Average household income per adult in the region (USD per year)");
+  if (by_hand) pane.y_label_rotation(0.0);
+  return fig.to_svg();
+};
+auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};
+const std::string longer = "Average household income per adult in the region (USD per year)";
+std::cout << "left alone:          " << look(build(false), longer) << "\n";
+std::cout << "y_label_rotation(0): " << look(build(true), longer) << "\n";
+auto fig = studio("y_label_rotation_long_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label("Average household income per adult in the region (USD per year)").y_label_rotation(0.0);
+fig.show();
+```
+
+### Output
+
+```text
+left alone:          anchor middle, rotated -90.0000
+y_label_rotation(0): anchor end, upright
+```
+
+![Output of Example 6](img/y_label_rotation-6-long_label.svg)
 
 ## Notes
 

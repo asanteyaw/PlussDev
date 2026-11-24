@@ -817,17 +817,17 @@ pane.y_label("measured value");"""
         slug="y_label_centered",
         title="Pane::y_label_centered",
         signature="Pane& Pane::y_label_centered(bool enable = true) noexcept",
-        intro="""Chooses where the y label stands. By default (`false`) it is written upright, at the top of the axis, ending at the axis: it reads like a heading for the axis and takes no sideways room beyond its own width. With `true` it is turned to run vertically and is centred on the axis, along its length, outside the tick labels.
+        intro="""Chooses where the y label stands. Left alone, the label is placed automatically: while it is short it is written upright at the top of the axis, ending at the axis, like a heading; once its upright width would pass `y_label_upright_max_width_share` of the pane (0.15 by default; see [Style options](../types/StyleOptions.md)) it is turned to run vertically and is centred along the axis, outside the tick labels, so a long name is not cut by the figure's edge. Calling `y_label_centered` makes the choice yours: `true` always turns the label and centres it, `false` always keeps it upright at the top, whatever its length.
 
-The two suit different figures. The upright label reads easily and keeps a long label legible; the centred one takes less width and is the usual convention for a tall, narrow plot. Either way the pane keeps room for the label, so it is never cut by the figure's edge. Only the y axis has the choice; the x label is always centred below its axis.
+The two suit different figures. The upright label reads easily; the centred one takes less width and is the usual convention for a tall, narrow plot. A long upright label takes a wide margin at the left of the pane, which narrows the plot, so the automatic placement turns it; `false` is for the figure where you want the full name upright anyway. Either way the pane keeps room for the label, so it is never cut by the figure's edge. Only the y axis has the choice; the x label is always centred below its axis.
 
-An explicit [`y_label_rotation`](y_label_rotation.md) is applied on top of either placement.""",
+An explicit [`y_label_rotation`](y_label_rotation.md) is applied on top of either placement, and also switches off the automatic turning. A label too long even for the axis is shrunk, and ends in "..." unless [`y_label_full`](y_label_full.md) keeps it whole.""",
         parameters="""**enable** (`bool`, default `true`)
-    `true` to turn the label vertical and centre it on the axis; `false` for the upright label at the top.""",
+    `true` to always turn the label vertical and centre it on the axis; `false` to always keep it upright at the top, however long it is. Not calling this leaves the choice to the automatic placement.""",
         returns="""`Pane&`
     The same pane, for chaining.""",
         examples=[
-            dict(id="default", text="By default the label is upright, with its end at the axis.",
+            dict(id="default", text="Left alone, a short label is upright, with its end at the axis.",
                  code=base.format(n="ycentered_default") + "\n" + LOOK + """
 std::cout << look(fig.to_svg(), "measured value") << "\\n";
 fig.show();"""),
@@ -836,7 +836,7 @@ fig.show();"""),
 pane.y_label_centered();
 std::cout << look(fig.to_svg(), "measured value") << "\\n";
 fig.show();"""),
-            dict(id="off", text="`y_label_centered(false)` is the default again: the figure is the one that never made the call.",
+            dict(id="off", text="For a short label, `y_label_centered(false)` is the figure that never made the call: the automatic placement keeps a short label upright anyway. The next example shows where the two part.",
                  code="""auto build = [&](int mode) {
   auto fig = studio("ycentered_off");
   auto& pane = fig.pane2("p");
@@ -852,15 +852,24 @@ auto& pane = fig.pane2("p");
 pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 pane.y_label("measured value");
 fig.show();"""),
-            dict(id="long", text="A long label stays inside the figure in both placements: the pane makes room for the upright label at its left, and the centred label sits beside the axis.",
+            dict(id="long", text="A long label stays inside the figure in both placements: with `false` the pane makes room for the upright label at its left, and the centred label sits beside the axis.",
                  code="""auto fig = studio("ycentered_long");
 fig.mosaic(1, 2);
 auto& upright = fig.pane2("upright");
 upright.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
-upright.y_label("a rather long measured value in arbitrary units");
+upright.y_label("a rather long measured value in arbitrary units").y_label_centered(false);
 auto& centered = fig.pane2("centered");
 centered.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
 centered.y_label("a rather long measured value in arbitrary units").y_label_centered();
+fig.show();"""),
+            dict(id="auto_long", text="Left alone, a long label chooses for itself. The same long label is turned and centred when the call is not made, and stays upright when `y_label_centered(false)` is the choice.",
+                 code=base.format(n="ycentered_auto_long").replace('pane.y_label("measured value");', 'const std::string longer = "Average household income per adult in the region (USD per year)";\npane.y_label(longer);') + "\n" + LOOK + """
+std::cout << "left alone:               " << look(fig.to_svg(), longer) << "\\n";
+pane.y_label_centered(false);
+std::cout << "y_label_centered(false):  " << look(fig.to_svg(), longer) << "\\n";
+pane.y_label_centered(true);
+std::cout << "y_label_centered(true):   " << look(fig.to_svg(), longer) << "\\n";
+pane.y_label_centered(false);
 fig.show();"""),
             dict(id="rotation", text="With an explicit rotation the label is turned by that angle, and the placement decides where it is anchored.",
                  code=base.format(n="ycentered_rotation") + "\n" + LOOK + """
@@ -868,8 +877,8 @@ pane.y_label_centered().y_label_rotation(-45.0);
 std::cout << look(fig.to_svg(), "measured value") << "\\n";
 fig.show();"""),
         ],
-        notes="- `noexcept`. Only the y axis has this switch.\n- The call has no effect on a pane without a y label.",
-        see=["[`Pane::y_label`](y_label.md): the label.", "[`Pane::y_label_rotation`](y_label_rotation.md): rotate it by hand.", "[`Pane::y_label_gap`](y_label_gap.md): the distance from the tick labels."],
+        notes="- `noexcept`. Only the y axis has this switch.\n- The call has no effect on a pane without a y label.\n- Once called, the automatic placement is off for this axis: `true` and `false` stay in force whatever the label's length.",
+        see=["[`Pane::y_label`](y_label.md): the label.", "[`Pane::y_label_rotation`](y_label_rotation.md): rotate it by hand.", "[`Pane::y_label_full`](y_label_full.md): keep a long turned label whole.", "[`Pane::y_label_gap`](y_label_gap.md): the distance from the tick labels."],
     )
     write("y_label_centered", page)
 
@@ -889,6 +898,133 @@ FIELD = """pane.fieldmap(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2,
 
 def guide_ticks(call):
     return TEXTS
+
+
+Y_FULL_NAME = """std::string name;
+for (int i = 0; i < 3; ++i) name += "Average household income per adult in the region, adjusted for inflation; ";"""
+
+Y_FULL_COUNT = """auto count = [](const std::string& svg, const std::string& word) {
+  std::size_t n = 0;
+  for (auto at = svg.find(word); at != std::string::npos; at = svg.find(word, at + 1)) ++n;
+  return n;
+};"""
+
+
+def y_full_page():
+    page = dict(
+        slug="y_label_full",
+        title="Pane::y_label_full",
+        signature="Pane& Pane::y_label_full(bool enable = true) noexcept",
+        intro="""Keeps the whole text of a long y label. A y label that is turned to run up the axis (by the automatic placement, or by [`y_label_centered`](y_label_centered.md)) is fitted to the length of the axis: its font shrinks until it fits, down to a smallest readable size (`y_label_fit_min_font_pt`, 7 points), and a label that is still too long ends in "...", the text after that point being dropped.
+
+With `y_label_full` the text is never dropped. The label still shrinks to the smallest readable size; if it does not fit even then, it is wrapped at word breaks into several columns, set side by side along the axis, and the pane makes room at its left for each extra column. The columns are `y_label_line_height_em` apart (1.25 times the label font by default; see [Style options](../types/StyleOptions.md)). Nothing else about the label changes: it is still centred beside the axis, outside the tick labels.
+
+The call matters only for a label that is turned and is longer than the axis. A label that fits, an upright label, and a label with an angle of its own ([`y_label_rotation`](y_label_rotation.md)) are drawn exactly as without it. One word longer than the axis cannot be wrapped and runs past the ends of the axis.""",
+        parameters="""**enable** (`bool`, default `true`)
+    `true` to keep the whole label, wrapping it into columns when it is too long for the axis; `false` for the default, where a label too long for the axis ends in "...".""",
+        returns="""`Pane&`
+    The same pane, for chaining.""",
+        examples=[
+            dict(id="fits", text="A label that fits needs nothing. This label is turned and fits the axis at the default size, so the figure is the same with and without `y_label_full`.",
+                 code="""auto build = [&](bool keep) {
+  auto fig = studio("y_label_full_fits");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label("Average household income per adult (USD per year)");
+  if (keep) pane.y_label_full();
+  return fig.to_svg();
+};
+std::cout << "same figure with and without y_label_full: " << (build(true) == build(false)) << "\\n";
+auto fig = studio("y_label_full_fits_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label("Average household income per adult (USD per year)").y_label_full();
+fig.show();"""),
+            dict(id="overlong", text="A label too long for the axis. Left alone it shrinks to the smallest readable size and ends in \"...\"; with `y_label_full` the same label is wrapped into columns and every word is drawn. The counts below are how many times the word \"adult\" appears in the figure (the label has it three times).",
+                 code=Y_FULL_NAME + "\n" + Y_FULL_COUNT + """
+auto build = [&](bool keep) {
+  auto fig = studio("y_label_full_overlong");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label(name);
+  if (keep) pane.y_label_full();
+  return fig.to_svg();
+};
+for (bool keep : {false, true}) {
+  const std::string svg = build(keep);
+  std::cout << (keep ? "y_label_full: " : "default:      ") << count(svg, "adult") << " of 3 phrases drawn, ellipsis " << (svg.find("...</text>") != std::string::npos ? "yes" : "no") << "\\n";
+}
+auto fig = studio("y_label_full_overlong_out");
+fig.mosaic(1, 2);
+auto& cut = fig.pane2("default");
+cut.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+cut.y_label(name);
+auto& whole = fig.pane2("y_label_full");
+whole.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+whole.y_label(name).y_label_full();
+fig.show();"""),
+            dict(id="columns", text="The columns. Each column is a separate piece of text turned to run up the axis, and the pane gains room at its left for each one after the first. Counting the turned texts shows how many columns the label took.",
+                 code=Y_FULL_NAME + """
+auto turned = [](const std::string& svg) {
+  std::size_t n = 0;
+  for (auto at = svg.find("rotate(-90"); at != std::string::npos; at = svg.find("rotate(-90", at + 1)) ++n;
+  return n;
+};
+for (bool keep : {false, true}) {
+  auto fig = studio("y_label_full_columns");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label(name);
+  if (keep) pane.y_label_full();
+  const std::string svg = fig.to_svg();
+  std::cout << (keep ? "y_label_full: " : "default:      ") << turned(svg) << " turned text(s)\\n";
+}
+auto fig = studio("y_label_full_columns_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label(name).y_label_full();
+fig.show();"""),
+            dict(id="by_hand", text="A label you placed yourself is left as you placed it. With `y_label_rotation(0.0)` or `y_label_centered(false)` the label is upright, nothing is cut, and `y_label_full` changes nothing.",
+                 code=Y_FULL_NAME + """
+auto build = [&](int mode, bool keep) {
+  auto fig = studio("y_label_full_by_hand");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label(name);
+  if (mode == 1) pane.y_label_rotation(0.0);
+  if (mode == 2) pane.y_label_centered(false);
+  if (keep) pane.y_label_full();
+  return fig.to_svg();
+};
+std::cout << "rotation 0 set:          same with y_label_full: " << (build(1, true) == build(1, false)) << "\\n";
+std::cout << "y_label_centered(false): same with y_label_full: " << (build(2, true) == build(2, false)) << "\\n";
+auto fig = studio("y_label_full_by_hand_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label(name).y_label_centered(false).y_label_full();
+fig.show();"""),
+            dict(id="off", text="`y_label_full(false)` is the default again: the figure is the one that never made the call.",
+                 code=Y_FULL_NAME + """
+auto build = [&](int mode) {
+  auto fig = studio("y_label_full_off");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label(name);
+  if (mode == 1) pane.y_label_full(true);
+  if (mode == 2) pane.y_label_full(true).y_label_full(false);
+  return fig.to_svg();
+};
+std::cout << "off again == never set: " << (build(2) == build(0)) << ", on != off: " << (build(1) != build(0)) << "\\n";
+auto fig = studio("y_label_full_off_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label(name);
+fig.show();"""),
+        ],
+        notes="- `noexcept`. Only the y axis has this switch.\\n- The call has no effect on a pane without a y label, on an upright label, or on a label that fits the axis.\\n- The smallest readable font is the style option `y_label_fit_min_font_pt`; the distance between columns is `y_label_line_height_em`.\\n- A word longer than the axis cannot be wrapped and runs past its ends.",
+        see=["[`Pane::y_label`](y_label.md): the label.", "[`Pane::y_label_centered`](y_label_centered.md): turn and centre the label, or keep it upright.", "[`Pane::y_label_rotation`](y_label_rotation.md): rotate it by hand.", "[`Pane::y_label_gap`](y_label_gap.md): the distance from the tick labels."],
+    )
+    write("y_label_full", page)
 
 
 def scale_guide_page():
@@ -2081,6 +2217,7 @@ def main():
     axes_visible_page()
     parallel_page()
     y_centered_page()
+    y_full_page()
     scale_guide_page()
     color_limits_page()
     color_limit_method_page()

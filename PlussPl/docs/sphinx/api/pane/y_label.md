@@ -16,6 +16,8 @@ Sets the label of the y axis: the text drawn beside the axis that says what it m
 
 The setter takes any text. An empty string clears the label and gives exactly the figure that never had one, a second call replaces the first, and text between dollar signs is typeset as math. The label is read when the figure is rendered, so it can be set before or after the traces. Its distance from the axis is [`y_label_gap`](y_label_gap.md) and its angle is [`y_label_rotation`](y_label_rotation.md); the axis tick labels are separate ([`y_tick_labels`](y_tick_labels.md)).
 
+The placement of the y label is automatic. While the label is short it stands upright at the top of the axis; once its upright width passes `y_label_upright_max_width_share` of the pane (0.15 by default; see [Style options](../types/StyleOptions.md)) it is turned to run vertically and centred along the axis, outside the tick labels, the way `y_label_centered()` places it. [`y_label_rotation`](y_label_rotation.md) and [`y_label_centered`](y_label_centered.md) are choices of yours that the automatic placement never overrides; [`y_label_full`](y_label_full.md) keeps a long turned label whole.
+
 ## Parameters
 
 **label** (`std::string`)
@@ -39,7 +41,7 @@ std::cout << "before: '" << pane.y_axis().label << "'\n";
 pane.y_label("Elapsed time (s)");
 std::cout << "after: '" << pane.y_axis().label << "'\n";
 std::cout << "drawn: " << (fig.to_svg().find(">Elapsed time (s)<") != std::string::npos) << "\n";
-fig.show();
+fig.save_svg("figure.svg");
 ```
 
 ### Output
@@ -146,6 +148,44 @@ raw markup drawn: 0
 
 ![Output of Example 5](img/y_label-5-math.svg)
 
+Example 6. A long y label turns itself. Left alone, a short label is written upright at the top of the axis; a label whose upright width would pass 15 per cent of the pane is turned to run vertically and is centred beside the axis, so it is not cut by the figure's edge. A rotation set by hand is never overridden: with `y_label_rotation(0.0)` the long label stays upright.
+
+```cpp
+auto fig = studio("y_label_long_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};
+const std::string longer = "Average household income per adult in the region (USD per year)";
+pane.y_label("Income (USD)");
+std::cout << "short label:        " << look(fig.to_svg(), "Income (USD)") << "\n";
+pane.y_label(longer);
+std::cout << "long label:         " << look(fig.to_svg(), longer) << "\n";
+pane.y_label_rotation(0.0);
+std::cout << "long, rotation set: " << look(fig.to_svg(), longer) << "\n";
+pane.clear_y_label_rotation();
+fig.show();
+```
+
+### Output
+
+```text
+short label:        anchor end, upright
+long label:         anchor middle, rotated -90.0000
+long, rotation set: anchor end, upright
+```
+
+![Output of Example 6](img/y_label-6-long_default.svg)
+
 ## Notes
 
 - Not `noexcept`: it moves the text into the pane.
@@ -156,6 +196,7 @@ raw markup drawn: 0
 - [`Pane::y_label_gap`](y_label_gap.md), [`y_label_rotation`](y_label_rotation.md): where and at what angle it is drawn.
 - [`Studio::y_caption`](../studio/y_caption.md): one caption shared by aligned panes.
 - [`Pane::title`](title.md): the title of the pane.
+- [`Pane::y_label_centered`](y_label_centered.md), [`y_label_full`](y_label_full.md): where a long label stands and whether it is kept whole.
 - [`Pane::x_label`](x_label.md): the same setting for the x axis.
 - [`Pane::z_label`](z_label.md): the same setting for the z axis.
 

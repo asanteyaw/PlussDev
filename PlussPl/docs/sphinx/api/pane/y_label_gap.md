@@ -152,9 +152,9 @@ kept after errors: 10
 - [`Pane::z_label_gap`](z_label_gap.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="y_label_centered.html">
+  <a class="prev-link" href="y_label_full.html">
     <span class="label">Previous</span>
-    <span class="title">y_label_centered</span>
+    <span class="title">y_label_full</span>
   </a>
   <a class="next-link" href="y_label_rotation.html">
     <span class="label">Next</span>

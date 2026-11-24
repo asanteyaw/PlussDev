@@ -38,7 +38,7 @@ against.
 
 ## Organization
 
-The full method surface (108 pages) is organized, in reading order via each page's
+The full method surface (109 pages) is organized, in reading order via each page's
 Previous/Next links, into these groups:
 
 - **Identity, title, theme** — `kind`, `title_text`, `title`, `theme_tokens`.
@@ -49,7 +49,7 @@ Previous/Next links, into these groups:
   `x`/`y`/`z_major_grid`, `x`/`y`/`z_minor_grid`.
 - **Tick formatting** — `x`/`y`/`z_tick_format`, `x`/`y`/`z_auto_tick_decimals`,
   `x`/`y`/`z_tick_rotation`, `x`/`y`/`z_tick_label_gap`, `x`/`y`/`z_label_gap`,
-  `x`/`y`/`z_label_rotation`, `x`/`y`/`z_tick_labels`, `y_label_centered`,
+  `x`/`y`/`z_label_rotation`, `x`/`y`/`z_tick_labels`, `y_label_centered`, `y_label_full`,
   `x`/`y`/`z_ticks`, `x`/`y`/`z_categories`.
 - **Legend** — `legend`, `legend_place`, `legend_frame`, `legend_shape`, `scale_guide`.
 - **Caption and cues** — `caption`, `caption_text`, `rule_x`/`y`/`z`, `band_x`/`y`/`z`,
@@ -174,6 +174,7 @@ api/pane/y_auto_tick_decimals
 api/pane/y_categories
 api/pane/y_label
 api/pane/y_label_centered
+api/pane/y_label_full
 api/pane/y_label_gap
 api/pane/y_label_rotation
 api/pane/y_limit_method

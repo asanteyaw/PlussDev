@@ -84,6 +84,50 @@ TEXTS = """auto texts = [](const std::string& svg) {
   return out;
 };"""
 
+YLOOK = r"""auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};"""
+
+Y_LABEL_LONG_CODE = """auto fig = studio("y_label_long_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+%s
+const std::string longer = "Average household income per adult in the region (USD per year)";
+pane.y_label("Income (USD)");
+std::cout << "short label:        " << look(fig.to_svg(), "Income (USD)") << "\\n";
+pane.y_label(longer);
+std::cout << "long label:         " << look(fig.to_svg(), longer) << "\\n";
+pane.y_label_rotation(0.0);
+std::cout << "long, rotation set: " << look(fig.to_svg(), longer) << "\\n";
+pane.clear_y_label_rotation();
+fig.show();""" % YLOOK
+
+Y_ROTATION_LONG_CODE = """auto build = [&](bool by_hand) {
+  auto fig = studio("y_label_rotation_long");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+  pane.y_label("Average household income per adult in the region (USD per year)");
+  if (by_hand) pane.y_label_rotation(0.0);
+  return fig.to_svg();
+};
+%s
+const std::string longer = "Average household income per adult in the region (USD per year)";
+std::cout << "left alone:          " << look(build(false), longer) << "\\n";
+std::cout << "y_label_rotation(0): " << look(build(true), longer) << "\\n";
+auto fig = studio("y_label_rotation_long_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{3, 5, 4, 6});
+pane.y_label("Average household income per adult in the region (USD per year)").y_label_rotation(0.0);
+fig.show();""" % YLOOK
+
 
 def family_label(a):
     A = a
@@ -126,11 +170,16 @@ const std::string svg = fig.to_svg();
 std::cout << "raw markup drawn: " << (svg.find("$\\\\sigma_t$") != std::string::npos) << "\\n";
 fig.show();"""),
     ]
+    y_note = ""
+    if a == "y":
+        ex.append(dict(id="long_default", text="A long y label turns itself. Left alone, a short label is written upright at the top of the axis; a label whose upright width would pass 15 per cent of the pane is turned to run vertically and is centred beside the axis, so it is not cut by the figure's edge. A rotation set by hand is never overridden: with `y_label_rotation(0.0)` the long label stays upright.",
+                       code=Y_LABEL_LONG_CODE))
+        y_note = "\n\nThe placement of the y label is automatic. While the label is short it stands upright at the top of the axis; once its upright width passes `y_label_upright_max_width_share` of the pane (0.15 by default; see [Style options](../types/StyleOptions.md)) it is turned to run vertically and centred along the axis, outside the tick labels, the way `y_label_centered()` places it. [`y_label_rotation`](y_label_rotation.md) and [`y_label_centered`](y_label_centered.md) are choices of yours that the automatic placement never overrides; [`y_label_full`](y_label_full.md) keeps a long turned label whole."
     return dict(
         slug=f"{A}_label", title=f"Pane::{A}_label", signature=f"Pane& Pane::{A}_label(std::string label)",
         intro=f"""Sets the label of the {A} axis: the text drawn beside the axis that says what it measures. It is separate from the pane's own title ([`Pane::title`](title.md), drawn above the whole plot) and from the shared caption of an alignment group ([`Studio::{A}_caption`](../studio/{A}_caption.md), drawn once for several panes); the three can be used together. The text is stored in `{A}_axis().label`, where it can be read back; there is no separate getter.
 
-The setter takes any text. An empty string clears the label and gives exactly the figure that never had one, a second call replaces the first, and text between dollar signs is typeset as math. The label is read when the figure is rendered, so it can be set before or after the traces. Its distance from the axis is [`{A}_label_gap`]({A}_label_gap.md) and its angle is [`{A}_label_rotation`]({A}_label_rotation.md); the axis tick labels are separate ([`{A}_tick_labels`]({A}_tick_labels.md)).""",
+The setter takes any text. An empty string clears the label and gives exactly the figure that never had one, a second call replaces the first, and text between dollar signs is typeset as math. The label is read when the figure is rendered, so it can be set before or after the traces. Its distance from the axis is [`{A}_label_gap`]({A}_label_gap.md) and its angle is [`{A}_label_rotation`]({A}_label_rotation.md); the axis tick labels are separate ([`{A}_tick_labels`]({A}_tick_labels.md)).""" + y_note,
         parameters="""**label** (`std::string`)
     The label text. Empty clears the label.""",
         returns="""`Pane&`
@@ -138,7 +187,7 @@ The setter takes any text. An empty string clears the label and gives exactly th
         examples=ex,
         notes=f"""- Not `noexcept`: it moves the text into the pane.
 - The label of an axis does not change the axis range or its ticks.""",
-        see=[f"[`Pane::{A}_label_gap`]({A}_label_gap.md), [`{A}_label_rotation`]({A}_label_rotation.md): where and at what angle it is drawn.", f"[`Studio::{A}_caption`](../studio/{A}_caption.md): one caption shared by aligned panes.", "[`Pane::title`](title.md): the title of the pane.", *SEE_AXES("label", A)],
+        see=[f"[`Pane::{A}_label_gap`]({A}_label_gap.md), [`{A}_label_rotation`]({A}_label_rotation.md): where and at what angle it is drawn.", f"[`Studio::{A}_caption`](../studio/{A}_caption.md): one caption shared by aligned panes.", "[`Pane::title`](title.md): the title of the pane.", *([f"[`Pane::y_label_centered`](y_label_centered.md), [`y_label_full`](y_label_full.md): where a long label stands and whether it is kept whole."] if a == "y" else []), *SEE_AXES("label", A)],
     )
 
 
@@ -288,11 +337,16 @@ std::cout << "equal: " << (build(true) == build(false)) << "\\n";
 {label_line}
 fig.show();"""),
     ]
+    rot_note = ""
+    if a == "y" and fam == "label_rotation":
+        ex.append(dict(id="long_label", text="A rotation set by hand switches off the automatic turning of a long label. Left alone, a long y label turns vertical and sits beside the axis; with `y_label_rotation(0.0)` it stays upright at the top, as you asked, and the pane makes room for it at the left.",
+                       code=Y_ROTATION_LONG_CODE))
+        rot_note = "\n\nSetting the angle is also a way of keeping the label where you want it. A y label left to default placement turns vertical and moves beside the axis once its upright width passes `y_label_upright_max_width_share` of the pane (see [`y_label`](y_label.md)); a label with an angle of its own is never moved, so `y_label_rotation(0.0)` keeps a long label upright."
     return dict(
         slug=name, title=f"Pane::{name}", signature=f"Pane& Pane::{name}(double degrees)\nPane& Pane::{clear}() noexcept",
         intro=f"""Rotates {what} by an explicit angle in degrees. The angle is stored in `{A}_axis().{field}` as an optional value: empty until set, which means the renderer chooses the angle for the axis. `{name}` stores the angle and `{clear}()` removes it, restoring the automatic choice, so a figure that sets and then clears an angle is exactly the figure that never set one.
 
-The angle must be finite. Infinity and NaN are refused with `pluss::Error` and the stored value is left as it was; every finite number is stored as given, so 90, -90 and 720 are all accepted and are not reduced to a range. It is per axis, and it is read when the figure is rendered.""",
+The angle must be finite. Infinity and NaN are refused with `pluss::Error` and the stored value is left as it was; every finite number is stored as given, so 90, -90 and 720 are all accepted and are not reduced to a range. It is per axis, and it is read when the figure is rendered.""" + rot_note,
         parameters="""**degrees** (`double`)
     The angle in degrees. Finite.""",
         returns="""`Pane&`
