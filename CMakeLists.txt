@@ -616,6 +616,10 @@ add_custom_target(plussii_distribution_stage
     USES_TERMINAL
     COMMENT "Staging PlussII C++ distribution at ${PLUSS_SDK_STAGING_DIR}"
 )
+# The pluss command is installed with the libraries, so it must be built before staging.
+if(TARGET pluss_cli)
+    add_dependencies(plussii_distribution_stage pluss_cli)
+endif()
 add_custom_target(pluss_sdk_stage DEPENDS plussii_distribution_stage)
 
 get_filename_component(_pluss_distribution_stage_parent "${PLUSS_SDK_STAGING_DIR}" DIRECTORY)
