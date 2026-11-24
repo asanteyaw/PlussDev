@@ -264,7 +264,7 @@ tensordot: dims exceeds the rank of an operand
   contracted pair must have equal length (or one must be 1).
 - Name each axis at most once in an axis list.
 - The result's free-axis order is fixed (receiver's, then `other`'s). Use
-  `permute()` or [`einsum()`](einsum.md) when a different order is needed.
+  `permute()` or [`einsum()`](../series_factory/einsum.md) when a different order is needed.
 - Operands should share a dtype; convert with `to()` first if they differ.
 
 ## Summary
@@ -279,7 +279,7 @@ paired axes into one matrix product:
 
 ## See Also
 
-- [`pluss::series::einsum`](einsum.md): the general letter-based contraction.
+- [`pluss::series::einsum`](../series_factory/einsum.md): the general letter-based contraction.
 - [`Series::bmm`](bmm.md): batched matrix product.
 - [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
   rank-polymorphic matrix product.

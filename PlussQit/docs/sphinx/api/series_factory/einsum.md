@@ -2,7 +2,7 @@
 
 # pluss::series::einsum
 
-[Back to Series API Reference](../../series_api_reference)
+[Back to Series Factory API Reference](../../series_factory_api_reference)
 
 ## Signature
 
@@ -361,11 +361,11 @@ einsum: operands do not broadcast for a shared subscript
 
 ## See Also
 
-- [`Series::tensordot`](tensordot.md): contract chosen axis pairs of two
+- [`Series::tensordot`](../series/tensordot.md): contract chosen axis pairs of two
   operands.
-- [`Series::bmm`](bmm.md): the strict batched matrix product `einsum` lowers
+- [`Series::bmm`](../series/bmm.md): the strict batched matrix product `einsum` lowers
   to.
-- [`Series::diagonal`](diagonal.md) and [`Series::trace`](trace.md): the
+- [`Series::diagonal`](../series/diagonal.md) and [`Series::trace`](../series/trace.md): the
   single-operand diagonal cases.
 - [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
   rank-polymorphic matrix product.

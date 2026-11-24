@@ -30,6 +30,7 @@ Use it for:
 - random and distribution factories like `rand`, `randn`, `randint`,
   `bernoulli`, `poisson`, `multinomial`
 - like-factories such as `zeros_like` and `randn_like`
+- contractions over several `Series` at once, like `einsum`
 - complex constructors such as `complex` and `polar`
 - interop constructors such as `from_torch` (torch-enabled builds)
 - explicit absence through the named `pluss::series::undefined()` sentinel factory
@@ -90,6 +91,7 @@ and quantized constructor stub family.
 api/series_factory/arange
 api/series_factory/bernoulli
 api/series_factory/complex
+api/series_factory/einsum
 api/series_factory/empty
 api/series_factory/empty_like
 api/series_factory/eye

@@ -77,7 +77,7 @@ The current handwritten shape and slice/indexing cluster now covers:
 - ordering and rank selection: `argsort`, `sort`, `topk`, `kthvalue`
 - order statistics: `median`, `nanmedian`, `mode`, `quantile`, `nanquantile`
 - cyclic and planar rearrangement: `flip`, `flipud`, `fliplr`, `roll`, `rot90`
-- contractions: `einsum`, `tensordot`
+- contractions: `tensordot` (the several-operand `einsum` is a free function: see the [Series factory reference](series_factory_api_reference.md))
 - matrix diagonal and triangle core: `trace`, `diag`, `diagonal`,
   `diag_embed`, `diagflat`, `diagonal_scatter`, `tril`, `tril_`, `triu`,
   `triu_`
@@ -272,7 +272,6 @@ api/series/dsplit
 api/series/dst
 api/series/dtype
 api/series/ediff1d
-api/series/einsum
 api/series/elu
 api/series/eq
 api/series/equal
