@@ -80,18 +80,13 @@ class route::Route final {
       case Kind::RemainingOfRouter: {
         const auto claimed = remaining_of_->resolve(frame, ordered_names);
         const std::unordered_set<std::int64_t> claimed_set(claimed.begin(), claimed.end());
-        // Ranges filter over the index space rather than a hand-rolled
-        // push_back loop. Not a perf-motivated change -- column counts are
-        // always small (tens, never millions), and there is no Series/
-        // tensor data anywhere in Route to vectorize onto a device;
-        // this is pure host-side name/index bookkeeping. The filter reads
-        // as "every index not already claimed," which is what it is.
-        // Not `const`: libc++'s filter_view::begin()/end() aren't const
-        // member functions (the predicate storage isn't guaranteed
-        // const-callable), so a const view can't be iterated.
-        auto kept_view = std::views::iota(std::int64_t{0}, static_cast<std::int64_t>(ordered_names.size())) |
-                         std::views::filter([&claimed_set](std::int64_t i) { return !claimed_set.contains(i); });
-        return std::vector<std::int64_t>(kept_view.begin(), kept_view.end());
+        // Every index not already claimed. (A filtered range cannot be copied into a vector with every
+        // standard library: over an iota range its iterators only count as input iterators.)
+        std::vector<std::int64_t> kept;
+        for (std::int64_t i = 0, n = static_cast<std::int64_t>(ordered_names.size()); i < n; ++i) {
+          if (!claimed_set.contains(i)) kept.push_back(i);
+        }
+        return kept;
       }
     }
     ::pluss::throw_error("lymph::prep::Route::resolve: unreachable selection kind.");
