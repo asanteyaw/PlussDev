@@ -2488,6 +2488,58 @@ struct FiniteMinMax {
   return upright_width > look().y_label_upright_max_width_share * outer_width;
 }
 
+// How a turned y label is set on an axis `available` points long: the label font shrinks to fit, down to a readable
+// minimum. Past that the text ends in "..." - or, when the caller asked to keep the whole label (y_label_full), it is
+// wrapped at word breaks into several columns side by side. Layout and drawing both ask here, so they agree.
+struct YLabelFit {
+  double font{0.0};
+  std::vector<std::string> columns{};
+};
+
+[[nodiscard]] YLabelFit fit_turned_y_label(const std::string& label, double font, double available, bool keep_whole) {
+  YLabelFit fit{font, {label}};
+  const double needed = static_cast<double>(std::max<std::size_t>(1, label.size())) * font * look().estimated_glyph_width_em;
+  if (needed > available) {
+    fit.font = std::max(look().y_label_fit_min_font_pt, font * (available / needed));
+  }
+  const double extent = static_cast<double>(std::max<std::size_t>(1, label.size())) * fit.font * look().estimated_glyph_width_em;
+  if (extent <= available) {
+    return fit;
+  }
+  const std::size_t max_chars = static_cast<std::size_t>(
+      std::clamp(std::floor(available / std::max(1.0, fit.font * look().estimated_glyph_width_em)), look().y_label_min_chars, look().y_label_max_chars));
+  if (!keep_whole) {
+    if (label.size() > max_chars) {
+      fit.columns = {label.substr(0, max_chars > 3 ? max_chars - 3 : 1) + "..."};
+    }
+    return fit;
+  }
+  fit.columns.clear();
+  std::string line;
+  std::string word;
+  const auto flush_word = [&] {
+    if (word.empty()) return;
+    if (!line.empty() && line.size() + 1 + word.size() > max_chars) {
+      fit.columns.push_back(line);
+      line.clear();
+    }
+    line += (line.empty() ? "" : " ") + word;
+    word.clear();
+  };
+  for (char ch : label) {
+    if (ch == ' ' || ch == '\t' || ch == '\n') flush_word(); else word += ch;
+  }
+  flush_word();
+  if (!line.empty()) fit.columns.push_back(line);
+  return fit;
+}
+
+// Whether a turned y label is near vertical (the fit above applies only then).
+[[nodiscard]] bool y_label_turned_vertical(const Pane& pane) {
+  const double rotation = pane.y_axis().label_rotation_deg.value_or(-90.0);
+  return std::abs(std::fmod(std::abs(rotation), 180.0) - 90.0) <= look().near_vertical_tolerance_deg;
+}
+
 [[nodiscard]] bool y_label_centered_on_axis(const Pane& pane, double axis_font, double outer_width) {
   const AxisState& axis = pane.y_axis();
   const double rotation = axis.label_rotation_deg.value_or(0.0);
@@ -2552,7 +2604,7 @@ struct FiniteMinMax {
     }
     return chars;
   };
-  const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane, double outer_width) {
+  const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane, double outer_width, double outer_height) {
     double top = look().pane_top_inset.of(tight);
     double left = look().pane_left_inset.of(tight);
     const bool axes_visible = pane.axes_visible();
@@ -2626,6 +2678,13 @@ struct FiniteMinMax {
       left = std::max(left, y_depth + y_label_pad + y_label_extent);
       // An upright y label hangs to the left of the axis from its right-aligned anchor: it needs its own width, turned by
       // its rotation, beyond the tick-label gap.
+      // A turned label kept whole (y_label_full) that has to wrap into columns claims a margin for each extra column.
+      if (!pane.y_axis().label.empty() && pane.y_axis().label_full && y_label_centered_on_axis(pane, axis_font, outer_width) &&
+          y_label_turned_vertical(pane)) {
+        const double available = std::max(look().y_label_fit_floor_pt, outer_height - top - bottom - look().y_label_fit_margin_pt);
+        const YLabelFit fit = fit_turned_y_label(pane.y_axis().label, axis_font, available, true);
+        left += static_cast<double>(fit.columns.size() - 1) * fit.font * look().y_label_line_height_em;
+      }
       if (!pane.y_axis().label.empty() && !y_label_centered_on_axis(pane, axis_font, outer_width)) {
         const double label_width = static_cast<double>(pane.y_axis().label.size()) * axis_font * look().estimated_glyph_width_em;
         left = std::max(left, resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false) +
@@ -2776,7 +2835,7 @@ struct FiniteMinMax {
           placement.col,
           placement.row_span,
           placement.col_span);
-      const auto insets = pane_insets(pane, outer.width);
+      const auto insets = pane_insets(pane, outer.width, outer.height);
       layouts[pane_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
@@ -2800,7 +2859,7 @@ struct FiniteMinMax {
           inner_width,
           pane_height,
       };
-      const auto insets = pane_insets(pane, outer.width);
+      const auto insets = pane_insets(pane, outer.width, outer.height);
       layouts[pane_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
@@ -2895,7 +2954,7 @@ struct FiniteMinMax {
         };
       }
       const Rect outer = claim(placement.row, placement.col, placement.row_span, placement.col_span);
-      const auto insets = pane_insets(pane, outer.width);
+      const auto insets = pane_insets(pane, outer.width, outer.height);
       layouts[child_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
@@ -5767,36 +5826,23 @@ void render_planar_axes(
     const auto label_align = effective_center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::End;
     const double label_rotation =
         pane.y_axis().label_rotation_deg.value_or(effective_center_on_axis ? -90.0 : y_label_rotation);
-    double label_font = axis_label_font;
-    std::string label_text = pane.y_axis().label;
-    if (effective_center_on_axis) {
-      const double rotation_mod = std::fmod(std::abs(label_rotation), 180.0);
-      const bool near_vertical = std::abs(rotation_mod - 90.0) <= look().near_vertical_tolerance_deg;
-      if (near_vertical) {
-        const double available = std::max(look().y_label_fit_floor_pt, layout.plot.height - look().y_label_fit_margin_pt);
-        const double needed = estimated_text_extent(label_text, label_font);
-        if (needed > available) {
-          label_font = std::max(look().y_label_fit_min_font_pt, label_font * (available / needed));
-        }
-        const double fitted_extent = estimated_text_extent(label_text, label_font);
-        if (fitted_extent > available) {
-          const std::size_t max_chars = static_cast<std::size_t>(
-              std::clamp(std::floor(available / std::max(1.0, label_font * look().estimated_glyph_width_em)), look().y_label_min_chars, look().y_label_max_chars));
-          if (label_text.size() > max_chars) {
-            label_text = label_text.substr(0, max_chars > 3 ? max_chars - 3 : 1);
-            label_text += "...";
-          }
-        }
-      }
+    YLabelFit fit{axis_label_font, {pane.y_axis().label}};
+    if (effective_center_on_axis && y_label_turned_vertical(pane)) {
+      const double available = std::max(look().y_label_fit_floor_pt, layout.plot.height - look().y_label_fit_margin_pt);
+      fit = fit_turned_y_label(pane.y_axis().label, axis_label_font, available, pane.y_axis().label_full);
     }
-    add_text(
-        list,
-        {label_x, label_y},
-        label_text,
-        label_font,
-        pane.theme_tokens().foreground(),
-        label_align,
-        label_rotation);
+    // Columns of a wrapped label stand side by side; the last one keeps the place a single label would have, nearest the axis.
+    const double column_gap = fit.font * look().y_label_line_height_em;
+    for (std::size_t k = 0; k < fit.columns.size(); ++k) {
+      add_text(
+          list,
+          {label_x - static_cast<double>(fit.columns.size() - 1 - k) * column_gap, label_y},
+          fit.columns[k],
+          fit.font,
+          pane.theme_tokens().foreground(),
+          label_align,
+          label_rotation);
+    }
   }
   add_caption_block(list, pane, layout);
 }

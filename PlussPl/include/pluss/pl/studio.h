@@ -225,6 +225,7 @@ struct AxisState {
   std::optional<double> label_gap{};
   bool label_centered_on_axis{false};
   bool label_centered_explicit{false};
+  bool label_full{false}; // keep the whole label: never shorten a turned label with "..."
   bool tick_labels_visible{true};
   bool major_grid{false};
   bool minor_grid{false};
@@ -675,6 +676,10 @@ class Pane {
   Pane& y_label_rotation(double degrees);
   Pane& z_label_rotation(double degrees);
   Pane& y_label_centered(bool enable = true) noexcept;
+  // A turned y label that is longer than the axis is shrunk to fit and, below the smallest readable size, ends in "...".
+  // y_label_full() keeps the whole text instead: the label still shrinks to that smallest size, then wraps at word
+  // breaks into several columns side by side (the left margin grows by one column each), and is never cut.
+  Pane& y_label_full(bool enable = true) noexcept;
   Pane& clear_x_tick_rotation() noexcept;
   Pane& clear_y_tick_rotation() noexcept;
   Pane& clear_z_tick_rotation() noexcept;

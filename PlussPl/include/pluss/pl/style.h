@@ -440,6 +440,7 @@ struct StyleOptions {
   double y_label_upright_max_width_share{0.15}; // a y label left to default placement turns vertical once its upright width passes this share of the pane
   double y_label_fit_margin_pt{10.0}; // kept free along the axis when a vertical label is fitted
   double y_label_fit_floor_pt{12.0}; // guard: the room a vertical label is fitted to is at least this
+  double y_label_line_height_em{1.25}; // columns of a wrapped y label (y_label_full) are this many ems of the label font apart
   double y_label_fit_min_font_pt{7.0}; // readability policy: a long label shrinks no further than this, then ends in "..."
   double key_min_wrap_chars{4.0}; // guard: a key label wraps to at least this many characters per line
   double y_label_min_chars{4.0}; // guard
@@ -735,6 +736,7 @@ struct StyleOptions {
   if (!std::isfinite(o.y_label_fit_margin_pt)) return "y_label_fit_margin_pt";
   if (!std::isfinite(o.y_label_fit_floor_pt)) return "y_label_fit_floor_pt";
   if (!std::isfinite(o.y_label_fit_min_font_pt)) return "y_label_fit_min_font_pt";
+  if (!std::isfinite(o.y_label_line_height_em) || o.y_label_line_height_em <= 0.0) return "y_label_line_height_em";
   if (!std::isfinite(o.key_min_wrap_chars)) return "key_min_wrap_chars";
   if (!std::isfinite(o.y_label_min_chars)) return "y_label_min_chars";
   if (!std::isfinite(o.y_label_max_chars)) return "y_label_max_chars";

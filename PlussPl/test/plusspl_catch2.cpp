@@ -959,3 +959,31 @@ TEST_CASE("PlussPl turns a long y label vertical beside the axis, and leaves a s
     REQUIRE(label_element(book.to_svg(), long_label).find("rotate(") == std::string::npos);
   }
 }
+
+TEST_CASE("PlussPl keeps the whole name of a turned y label on request, and otherwise ends it in an ellipsis", "[plusspl][flash][axis]") {
+  using namespace pluss::pl;
+  const auto x = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}, {4});
+  const auto y = pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0}, {4});
+  std::string name;
+  for (int i = 0; i < 30; ++i) name += "median adult income ";
+  const auto count = [](const std::string& text, const std::string& word) {
+    std::size_t n = 0;
+    for (std::size_t at = text.find(word); at != std::string::npos; at = text.find(word, at + 1)) ++n;
+    return n;
+  };
+  {
+    Studio book("cut");
+    flash::lineplot(book.pane2("p").y_label(name), x, y);
+    const std::string svg = book.to_svg();
+    REQUIRE(count(svg, "adult") < 30);
+    REQUIRE(svg.find("...</text>") != std::string::npos);
+  }
+  {
+    // kept whole: every word is still there, wrapped into columns, with no ellipsis
+    Studio book("full");
+    flash::lineplot(book.pane2("p").y_label(name).y_label_full(), x, y);
+    const std::string svg = book.to_svg();
+    REQUIRE(count(svg, "adult") == 30);
+    REQUIRE(svg.find("...</text>") == std::string::npos);
+  }
+}

@@ -782,6 +782,11 @@ Pane& Pane::y_label_rotation(double degrees) {
   return *this;
 }
 
+Pane& Pane::y_label_full(bool enable) noexcept {
+  y_axis_.label_full = enable;
+  return *this;
+}
+
 Pane& Pane::y_label_centered(bool enable) noexcept {
   y_axis_.label_centered_on_axis = enable;
   y_axis_.label_centered_explicit = true;
