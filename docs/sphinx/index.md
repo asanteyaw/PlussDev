@@ -113,6 +113,7 @@ target_link_libraries(my_app PRIVATE Pluss::PlussII)
 
 installation
 quickstart
+include
 user_guide
 data_workflows
 numerical_workflows
