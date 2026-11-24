@@ -118,6 +118,13 @@ int main() {
       }
       expect(threw, "wide stencil + multigrid is rejected");
     }
+    // ---- Auto on a bounded 32 x 32 box with an irregular source must converge within the default iteration cap (it used to fall to plain CG, which needs more than 128)
+    {
+      const auto g = box({32, 32}, 0.1);
+      const auto b = bounds_for(g, {0, 1}, 0.0, 0.0);
+      const auto r = spatial::solve_poisson(noise({32, 32}, 9), g, b);
+      expect(r.converged.all().item<bool>() && r.iterations <= 16, "Auto on a 32 x 32 box converges with multigrid, iterations " + std::to_string(r.iterations));
+    }
     std::cout << "poisson multigrid tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";
