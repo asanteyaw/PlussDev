@@ -12,7 +12,7 @@
 #include "pluss/codem/series_factory.h"
 
 #if defined(__APPLE__)
-#include <Accelerate/Accelerate.h>
+#include <vecLib/lapack.h>
 #endif
 
 namespace pluss::subsp::math::linalg {

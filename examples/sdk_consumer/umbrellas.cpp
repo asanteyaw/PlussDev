@@ -65,6 +65,15 @@
 #include <pluss/tils/suppose.h>
 #include <pluss/tils/view.h>
 
+// Names a program is likely to use for its own types. PlussII's headers must not bring in system types
+// of the same name (on macOS, Accelerate once did, through CoreFoundation).
+struct Point {
+  double x, y;
+};
+struct Rect {
+  int left, top;
+};
+
 int main() {
   // Something from each part, so a header that compiles but links to nothing is noticed.
   pluss::tils::Settings settings;
