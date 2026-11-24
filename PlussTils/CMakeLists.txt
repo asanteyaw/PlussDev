@@ -69,6 +69,15 @@ if(PLUSS_BUILD_CLI)
         CXX_EXTENSIONS OFF
     )
     target_include_directories(pluss_cli PRIVATE ${CMAKE_BINARY_DIR}/generated)
+    # The staged download must not carry the build machine's paths. The trace-friendly Release flags
+    # keep line tables, which record the source path, and the command has no use for them.
+    if(NOT MSVC)
+        target_compile_options(pluss_cli PRIVATE -g0
+            -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -ffile-prefix-map=${CMAKE_BINARY_DIR}=.)
+    endif()
+    if(APPLE)
+        target_link_options(pluss_cli PRIVATE -Wl,-S)
+    endif()
     install(TARGETS pluss_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
