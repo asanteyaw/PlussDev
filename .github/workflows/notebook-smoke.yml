@@ -1,0 +1,79 @@
+name: PlussII notebook smoke test
+
+# Runs the notebook kernel from a built PlussII download on a clean machine: it installs the kernel with
+# `pluss kernel install` and runs cells through Jupyter's own client (see PlussTils/tools/notebook/smoke_test.py).
+# Give it the id of a finished "PlussII C++ Release" run whose archives it should test.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Id of the PlussII C++ Release run whose archives are tested
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: macos-15, os: macos-15}
+          - {name: macos-15-intel, os: macos-15-intel}
+          - {name: ubuntu-24.04, os: ubuntu-24.04}
+          - {name: ubuntu-24.04-arm, os: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      JUPYTER_DATA_DIR: ${{ github.workspace }}/jupyter-data
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: PlussTils/tools/notebook
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download the archive
+        uses: actions/download-artifact@v4
+        with:
+          name: plussii-cpp-${{ matrix.name }}
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: archive
+
+      - name: Unpack
+        shell: bash
+        run: |
+          cd archive && unzip -q *.zip && ls
+          prefix=$(dirname "$(dirname "$(find "$PWD" -path '*/bin/pluss' | head -1)")")
+          echo "PREFIX=$prefix" >> "$GITHUB_ENV"
+          chmod +x "$prefix/bin/pluss"
+
+      - name: Install Jupyter's Python packages
+        run: python -m pip install ipykernel jupyter_client
+
+      - name: Install clang-repl (macOS)
+        if: runner.os == 'macOS'
+        run: brew install llvm
+
+      - name: Install clang-repl (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libcurl4-openssl-dev
+          sudo apt-get install -y clang-tools-18 || true
+          ls /usr/lib/llvm-18/bin | grep -i repl || true
+
+      - name: Register the kernel with pluss kernel install
+        run: |
+          export PLUSS_PYTHON=$(which python)
+          "$PREFIX/bin/pluss" kernel install
+          ls "$JUPYTER_DATA_DIR/kernels/pluss"
+
+      - name: Run the notebook smoke test
+        run: python PlussTils/tools/notebook/smoke_test.py "$PREFIX" --use-installed
