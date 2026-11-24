@@ -1,4 +1,4 @@
-// Every umbrella header and every single header the include guide teaches must compile together
+// Every umbrella header and every single header the include guide lists must compile together
 // from an installed download, and each one must stand alone (see docs/sphinx/include.md).
 #include <pluss/pluss.h>
 #include <pluss/tils.h>

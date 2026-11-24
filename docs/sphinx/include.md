@@ -1,6 +1,6 @@
 # Which header to include
 
-PlussII is six spaces, and one header gives you the starting set. Everything else is opt-in: you include it yourself, so a program compiles only what it uses. This page teaches the includes from the single line to the single piece, says what each one gives you, and explains the short aliases.
+PlussII is six spaces, and one header gives you the starting set. Everything else is opt-in: you include it yourself, so a program compiles only what it uses. This page walks through the includes from the single line to the single piece, says what each one gives you, and explains the short aliases.
 
 ## Three levels
 
