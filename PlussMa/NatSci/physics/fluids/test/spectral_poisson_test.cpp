@@ -1,5 +1,6 @@
 // FFT Poisson solve: agrees with the conjugate-gradient solve of the same discrete operator (compact and wide stencils, 1-3 axes, odd/even extents,
 // batches, Float32), reproduces an exact eigenfunction to rounding, handles the wide stencil's alternating null mode, and rejects incompatible data.
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/poisson.h"
 
 #include <cmath>
@@ -94,7 +95,7 @@ int main() {
       bool threw = false;
       try {
         (void)spatial::solve_poisson(pluss::series::make(alt, {8, 8}).add(1.0), grid, o);
-      } catch (const std::domain_error &) {
+      } catch (const pluss::Error &) {
         threw = true;
       }
       expect(threw, "constant (null) component in the rhs is rejected");

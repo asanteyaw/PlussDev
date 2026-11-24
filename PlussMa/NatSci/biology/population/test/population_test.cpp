@@ -68,6 +68,13 @@ void test_predator_prey() {
   const Series eq = inter::predator_prey_equilibrium(1.0, 0.5, 0.75, 0.25, y0.select(-1, 0));
   expect(close(at(eq, 0), 3.0, 1e-14) && close(at(eq, 1), 2.0, 1e-14), "LV equilibrium");
   expect(rate(eq).abs().max().item<double>() < 1e-14, "equilibrium rate zero");
+  // batched coefficients: a per-lane death rate must give a [lanes, 2] equilibrium with both components shaped like the lanes
+  {
+    const Series gamma = vec({0.5, 0.75, 1.0});
+    const Series eq_batch = inter::predator_prey_equilibrium(1.0, 0.5, gamma, 0.25, gamma);
+    expect(eq_batch.size(0) == 3 && eq_batch.size(1) == 2, "batched equilibrium shape");
+    expect(close(at(eq_batch.select(0, 1), 0), 3.0, 1e-14) && close(at(eq_batch.select(0, 1), 1), 2.0, 1e-14), "batched equilibrium values");
+  }
   // Holling
   const Series prey = vec({2.0});
   expect(close(inter::holling2(prey, 0.5, 0.4).host<double>().front(), 1.0 / 1.4, 1e-14), "holling2");
@@ -127,10 +134,10 @@ void test_leslie() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)growth::logistic_rate(vec({1.0}), 1.0, -1.0); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)growth::logistic_rate(vec({1.0}), 1.0, -1.0); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "negative K rejected");
   threw = false;
-  try { (void)stru::leslie(vec({1.0, 1.0}), vec({1.5})); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)stru::leslie(vec({1.0, 1.0}), vec({1.5})); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "survival > 1 rejected");
 }
 

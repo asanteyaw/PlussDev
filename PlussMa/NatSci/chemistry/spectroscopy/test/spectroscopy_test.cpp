@@ -75,6 +75,14 @@ void test_beer_lambert() {
   expect(std::abs(sp::transmittance(a).select(0, 0).item<double>() - 1e-4) <
              1e-12,
          "transmittance");
+  // one absorptivity against two species must not broadcast silently
+  bool threw = false;
+  try {
+    (void)sp::absorbance(pluss::series::make({100.0}).to(F64), c, 2.0);
+  } catch (const pluss::Error &) {
+    threw = true;
+  }
+  expect(threw, "absorbance rejects mismatched species axes");
 }
 
 // Statistical-mechanics cp/R of N2 against the NASA-7 fit (N2 is species 9 in

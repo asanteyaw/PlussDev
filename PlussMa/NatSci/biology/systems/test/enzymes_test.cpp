@@ -55,6 +55,13 @@ int main() {
       expect(max_rel(enz::turnover(mm, conc), std::vector<double>{0.5 * 0.1 / (km + 0.1), 0.5 * 0.5 / (km + 0.5), 0.5 * 2.0 / (km + 2.0), 0.5 * 10.0 / (km + 10.0)}) < 1e-12, "engine MM equals the closed form");
       const auto pi = enz::steady_state(mm, conc).contiguous().host<double>();
       expect(std::abs(pi[0] + pi[1] - 1.0) < 1e-14, "populations sum to one");
+      // a step that reads a concentration the vector does not have, or joins states that do not exist, is rejected
+      bool threw = false;
+      try { (void)enz::turnover(enz::Mechanism{2, {step(0, 1, 10.0, 1), step(1, 0, 1.0)}}, vec({0.5}).unsqueeze(0)); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "species index beyond the concentration vector is rejected");
+      threw = false;
+      try { (void)enz::turnover(enz::Mechanism{2, {step(0, 2, 10.0, 0), step(1, 0, 1.0)}}, vec({0.5}).unsqueeze(0)); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "step to a state that does not exist is rejected");
     }
     // ---- ordered bi-bi and ping-pong with all reverse steps, concentrations [A, B, P, Q], all lanes in one call
     {

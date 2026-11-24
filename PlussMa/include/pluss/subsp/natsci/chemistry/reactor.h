@@ -51,9 +51,25 @@ internal_energy_density(const kinetics::Mechanism &m, const Series &y) {
   return dynamics::matvec(m.composition().transpose(0, 1), concentrations(y));
 }
 
+namespace detail {
+// The starting state has to match the mechanism: one temperature plus one concentration per species, a temperature inside the
+// thermodynamic data and concentrations that are finite and non-negative. (A trial step of the integrator may overshoot the
+// polynomials slightly, so the range is enforced on the state the caller supplies.)
+inline void check_state(const kinetics::Mechanism &m, const Series &y) {
+  dynamics::require(y.defined() && y.dtype().is_floating() && y.dim() >= 1, "reactor: the state must be a floating-point Series [..., 1 + species]");
+  dynamics::require(y.size(-1) == 1 + m.species(),
+                    "reactor: the state needs one temperature and " + std::to_string(m.species()) + " concentrations, got " + std::to_string(y.size(-1) - 1));
+  dynamics::require(y.isfinite().all().item<bool>(), "reactor: the state must be finite");
+  dynamics::require(concentrations(y).ge(0.0).all().item<bool>(), "reactor: concentrations must be non-negative");
+  m.thermo().check(temperature(y));
+}
+} // namespace detail
+
 // dy/dt for the closed constant-volume reactor.
 [[nodiscard]] inline Series rate(const kinetics::Mechanism &m, const Series &y,
                                  bool adiabatic = true) {
+  dynamics::require(y.dim() >= 1 && y.size(-1) == 1 + m.species(),
+                    "reactor: the state needs one temperature and " + std::to_string(m.species()) + " concentrations");
   const Series t = temperature(y);
   const Series c = concentrations(y);
   const auto props = m.thermo().eval(t); // evaluated once for rates and energy
@@ -73,6 +89,7 @@ internal_energy_density(const kinetics::Mechanism &m, const Series &y) {
 [[nodiscard]] inline stiff::Result
 integrate(const kinetics::Mechanism &m, const Series &y0, double t_end,
           bool adiabatic = true, const stiff::Options &options = {}) {
+  detail::check_state(m, y0);
   return stiff::integrate(
       [&](const Series &y) { return rate(m, y, adiabatic); }, y0, 0.0, t_end,
       options);
@@ -84,6 +101,7 @@ integrate(const kinetics::Mechanism &m, const Series &y0, double t_end,
                                        const std::vector<double> &times,
                                        bool adiabatic = true,
                                        const stiff::Options &options = {}) {
+  detail::check_state(m, y0);
   return stiff::integrate_at(
       [&](const Series &y) { return rate(m, y, adiabatic); }, y0, times,
       options);

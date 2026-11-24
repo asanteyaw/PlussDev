@@ -214,7 +214,7 @@ void test_strided_and_failures() {
   bool vector_grad_rejected = false;
   try {
     (void)diff::grad<common::Area, common::Length>(squared_length, x);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     vector_grad_rejected = true;
   }
   expect(vector_grad_rejected,
@@ -233,7 +233,7 @@ void test_strided_and_failures() {
     options.mode = pluss::subsp::math::diff::JacobianMode::Forward;
     (void)diff::jacobian<common::Area, common::Length>(squared_length, x,
                                                        options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     forward_mode_rejected = true;
   }
   expect(forward_mode_rejected,
@@ -244,7 +244,7 @@ void test_strided_and_failures() {
     const auto zero = common::SeriesQuantity<common::Length>::from_si(
         pluss::series::make(0.0));
     (void)diff::elasticity<common::Area, common::Length>(squared_length, zero);
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     zero_elasticity_rejected = true;
   }
   expect(zero_elasticity_rejected,

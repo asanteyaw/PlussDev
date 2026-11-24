@@ -116,6 +116,13 @@ int main() {
       const auto est = bd::dennis_estimate(vec(ref::den_counts), vec(ref::den_times));
       expect(std::abs(est.mu.item<double>() - ref::den_est[0]) < 1e-12 && std::abs(est.sigma2.item<double>() - ref::den_est[1]) < 1e-12, "Dennis estimator vs numpy");
     }
+    // ---- the horizon and the variance must be positive: a negative horizon used to return NaN silently
+    {
+      bool threw_t = false, threw_s = false;
+      try { (void)bd::quasi_extinction_cdf(vec({0.0}), vec({0.04}), vec({2.3}), vec({-5.0})); } catch (const pluss::Error &) { threw_t = true; }
+      try { (void)bd::quasi_extinction_cdf(vec({0.0}), vec({0.0}), vec({2.3}), vec({5.0})); } catch (const pluss::Error &) { threw_s = true; }
+      expect(threw_t && threw_s, "quasi_extinction_cdf rejects a non-positive horizon or variance");
+    }
     std::cout << "birth_death tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

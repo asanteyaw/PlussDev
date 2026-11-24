@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "h2o2_mechanism.h"
 #include "kinetics_reference.h"
 
@@ -100,7 +101,7 @@ void test_thermo() {
   bool threw = false;
   try {
     m.thermo().check(vec({150.0}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "temperature below the NASA range is rejected");
@@ -267,7 +268,7 @@ void test_validation() {
   try {
     (void)kin::Mechanism(h2o2::species(), specs, vec({300.0}),
                          kin::Units::cgs_cal());
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "unknown species rejected");
@@ -277,10 +278,32 @@ void test_validation() {
   try {
     (void)kin::Mechanism(h2o2::species(), specs, vec({300.0}),
                          kin::Units::cgs_cal());
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "non-positive pre-exponential rejected");
+
+  // thermodynamic evaluation outside the NASA validity range is an error, not a silent extrapolation
+  const kin::Mechanism mech(h2o2::species(), h2o2::reactions(), vec({300.0}),
+                            kin::Units::cgs_cal());
+  const Series conc = pluss::series::ones({1, mech.species()}, F64).mul(1e-3);
+  for (const double bad_t : {100.0, 6000.0}) {
+    threw = false;
+    try {
+      (void)mech.equilibrium_constants(vec({bad_t}));
+    } catch (const pluss::Error &) {
+      threw = true;
+    }
+    expect(threw, "equilibrium_constants rejects a temperature outside the data range");
+    threw = false;
+    try {
+      (void)mech.net_production_rates(vec({bad_t}), conc);
+    } catch (const pluss::Error &) {
+      threw = true;
+    }
+    expect(threw, "net_production_rates rejects a temperature outside the data range");
+  }
+  (void)mech.equilibrium_constants(vec({mech.thermo().t_min(), mech.thermo().t_max()}));
 }
 } // namespace
 

@@ -7,6 +7,7 @@
 #include "polymers_reference.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -260,6 +261,26 @@ int main() {
       const double exponent = std::log(d1 / d2) / std::log(4.0);
       expect(exponent > 0.45 && exponent < 0.75, "Zimm D ~ N^-1/2 (fitted exponent " + std::to_string(exponent) + ")");
       expect(std::abs(pd::zimm_diffusion(30, 0.0, 2.0, 1.0) - 1.0 / (30.0 * 2.0)) < 1e-14, "h* = 0 recovers Rouse diffusion");
+      // invalid inputs are refused instead of returning inf or NaN
+      const auto refused = [](const std::function<void()> &call) {
+        try {
+          call();
+        } catch (const pluss::Error &) {
+          return true;
+        }
+        return false;
+      };
+      expect(refused([] { (void)pd::rouse_eigenvalues(1); }), "Rouse needs two beads");
+      expect(refused([] { (void)pd::rouse_relaxation_times(20, vec({0.0}), 1.0, 1.0); }), "Rouse rejects zero friction");
+      expect(refused([] { (void)pd::rouse_relaxation_times(20, vec({1.0}), 0.0, 1.0); }), "Rouse rejects zero bond length");
+      expect(refused([] { (void)pd::rouse_relaxation_times(20, vec({1.0}), 1.0, -1.0); }), "Rouse rejects negative kT");
+      expect(refused([] { (void)pd::rouse_diffusion(20, vec({-1.0}), 1.0); }), "Rouse diffusion rejects negative friction");
+      expect(refused([] { (void)pd::rouse_modulus(vec({-1.0}), vec({1.0}), 1.0, 1.0); }), "Rouse modulus rejects negative time");
+      expect(refused([] { (void)pd::rouse_viscosity(vec({0.0}), 1.0, 1.0); }), "Rouse viscosity rejects zero relaxation time");
+      expect(refused([] { (void)pd::zimm_eigenvalues(30, -0.1); }), "Zimm rejects negative h*");
+      expect(refused([] { (void)pd::zimm_eigenvalues(30, 2.0); }), "Zimm rejects an interaction too strong to be positive definite");
+      expect(refused([] { (void)pd::zimm_diffusion(30, 2.0, 1.0, 1.0); }), "Zimm diffusion rejects h* beyond positive definiteness");
+      expect(refused([] { (void)pd::zimm_relaxation_times(30, 0.15, 0.0, 1.0, 1.0); }), "Zimm rejects zero friction");
     }
 
     // ---- reversible step growth: MIT OCW 10.569 equilibrium formulas, kinetics against ODE integration, distribution against the population balance
@@ -339,6 +360,16 @@ int main() {
         expect(worst < 2e-3, "reversible population balance relaxes to the most probable distribution with p = sqrt(K)/(1+sqrt(K)), worst " + std::to_string(worst));
         expect(std::abs(c0 / total - 1.0 - std::sqrt(keq)) < 5e-3, "X_n of the relaxed distribution is 1 + sqrt(K)");
       }
+    }
+    // ---- out-of-range conversions raise pluss::Error instead of returning inf or negative chain lengths
+    {
+      const auto fails = [](const std::function<void()> &f, const std::string &text) {
+        try { f(); } catch (const pluss::Error &e) { return e.message().find(text) != std::string::npos; }
+        return false;
+      };
+      expect(fails([&] { poly::carothers_degree_of_polymerization(vec({0.5, 1.0})); }, "unbounded"), "carothers at full conversion");
+      expect(fails([&] { poly::carothers_degree_of_polymerization(vec({95.0})); }, "fraction between 0 and 1"), "carothers with a percentage");
+      expect(fails([&] { poly::carothers_degree_of_polymerization(vec({-0.1})); }, "fraction between 0 and 1"), "carothers with negative conversion");
     }
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

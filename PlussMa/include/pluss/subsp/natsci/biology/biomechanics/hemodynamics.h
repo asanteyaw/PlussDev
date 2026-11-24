@@ -54,7 +54,8 @@ inline Complex cexp(const Complex &a) { const Series e = a.re.exp(); return {e.m
 struct J01 final {
   Complex j0, j1;
 };
-inline J01 bessel_j01(const Complex &z) {
+namespace detail {
+inline J01 bessel_j01_recurrence(const Complex &z) {
   const Series mod = z.abs();
   const int top = static_cast<int>(std::ceil(1.2 * mod.max().item<double>())) + 60;
   Complex next{z.re.mul(0.0), z.re.mul(0.0)};             // J_{k+1}
@@ -96,6 +97,21 @@ inline J01 bessel_j01(const Complex &z) {
   const Complex scale_one = cdiv(Complex{z.re.mul(0.0).add(1.0), z.re.mul(0.0)}, sum_even), scale_cos = cdiv(cosz, sum_alt);
   const Complex scale{pluss::series::where(use_cos, scale_cos.re, scale_one.re), pluss::series::where(use_cos, scale_cos.im, scale_one.im)};
   return {cmul(j0, scale), cmul(j1, scale)};
+}
+} // namespace detail
+
+// The recurrence divides by z, so an argument at (or very near) zero, such as the axis of a tube in the Womersley profile, uses the power series
+// J0 = 1 - z^2/4, J1 = z/2 there; every other lane takes the recurrence unchanged.
+inline J01 bessel_j01(const Complex &z) {
+  const Series small = z.abs().lt(1e-6);
+  const Series one = z.re.mul(0.0).add(1.0), zero = z.re.mul(0.0);
+  const Complex safe{pluss::series::where(small, one, z.re), pluss::series::where(small, zero, z.im)};
+  const J01 full = detail::bessel_j01_recurrence(safe);
+  const Series z2_re = z.re.square().sub(z.im.square()), z2_im = z.re.mul(z.im).mul(2.0);
+  const Complex series_j0{z2_re.mul(-0.25).add(1.0), z2_im.mul(-0.25)};
+  const Complex series_j1{z.re.mul(0.5), z.im.mul(0.5)};
+  return {{pluss::series::where(small, series_j0.re, full.j0.re), pluss::series::where(small, series_j0.im, full.j0.im)},
+          {pluss::series::where(small, series_j1.re, full.j1.re), pluss::series::where(small, series_j1.im, full.j1.im)}};
 }
 
 // ---- Windkessel ----------------------------------------------------------------------------------------------------------------

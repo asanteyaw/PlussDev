@@ -296,7 +296,7 @@ void test_failures() {
   try {
     (void)field::make_periodic_grid(
         {2}, {common::ScalarQuantity<common::Length>::from_si(1.0)});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_extent = true;
   }
   expect(bad_extent, "periodic grid accepted a degenerate centered stencil");
@@ -305,7 +305,7 @@ void test_failures() {
   bool shape_mismatch = false;
   try {
     (void)field::gradient(pluss::series::zeros({8, 7}), grid);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     shape_mismatch = true;
   }
   expect(shape_mismatch, "gradient accepted a mismatched spatial shape");
@@ -313,7 +313,7 @@ void test_failures() {
   bool component_mismatch = false;
   try {
     (void)field::divergence(pluss::series::zeros({3, 8, 6}), grid);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     component_mismatch = true;
   }
   expect(component_mismatch,
@@ -322,7 +322,7 @@ void test_failures() {
   bool bad_axis = false;
   try {
     (void)field::partial(pluss::series::zeros({8, 6}), grid, 2);
-  } catch (const std::out_of_range &) {
+  } catch (const pluss::Error &) {
     bad_axis = true;
   }
   expect(bad_axis, "partial derivative accepted an out-of-range axis");

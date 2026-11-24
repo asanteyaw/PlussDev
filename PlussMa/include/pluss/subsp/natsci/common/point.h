@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
 #include <limits>
@@ -17,12 +18,12 @@ public:
         name_(name) {
     if (!(si_scale > 0.0) ||
         !(si_scale <= std::numeric_limits<double>::max())) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::AffineUnit: SI scale must be finite and positive");
     }
     if (!(si_offset >= -std::numeric_limits<double>::max() &&
           si_offset <= std::numeric_limits<double>::max())) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::AffineUnit: SI offset must be finite");
     }
   }
@@ -91,7 +92,7 @@ private:
   explicit Point(Rep value) : si_value_(std::move(value)) {
     if constexpr (std::same_as<Rep, pluss::codem::Series>) {
       if (!si_value_.defined() || !si_value_.dtype().is_floating())
-        throw std::invalid_argument("natsci::common::Point: Series "
+        PLUSS_FAIL("natsci::common::Point: Series "
                                     "representation must be real floating");
     }
   }

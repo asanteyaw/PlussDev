@@ -169,7 +169,7 @@ void test_failures() {
             pluss::series::zeros({2, 3}, pluss::ScalarType::Float64)),
         common::SeriesQuantity<common::Speed>::from_si(
             pluss::series::zeros({2, 3}, pluss::ScalarType::Float64)));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     negative_mass = true;
   }
   expect(negative_mass, "negative body mass was accepted");
@@ -184,7 +184,7 @@ void test_failures() {
         common::SeriesQuantity<common::Speed>::from_si(
             pluss::series::zeros({2, 3}, pluss::ScalarType::Float64)));
     (void)mechanics::gravity(coincident, unit_gravity());
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     collision = true;
   }
   expect(collision, "unsoftened coincident bodies were accepted");
@@ -199,7 +199,7 @@ void test_failures() {
         common::SeriesQuantity<common::Speed>::from_si(
             pluss::series::zeros({2, 2}, pluss::ScalarType::Float64)));
     (void)mechanics::angular_momentum(planar);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wrong_axes = true;
   }
   expect(wrong_axes, "3-D angular momentum accepted a planar state");

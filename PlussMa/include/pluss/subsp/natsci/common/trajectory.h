@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/record.h"
 
 #include <cstdint>
@@ -33,27 +34,27 @@ private:
     detail::require_numeric(coordinate, "natsci::common::Trajectory coordinate",
                             false);
     if (coordinate.dim() < 1)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::Trajectory: coordinate must have rank at least one");
 
     const auto coordinate_shape = coordinate.sizes();
     for (const auto &block : states_.layout().blocks()) {
       if (block.platform != coordinate.platform())
-        throw std::invalid_argument("natsci::common::Trajectory: coordinate "
+        PLUSS_FAIL("natsci::common::Trajectory: coordinate "
                                     "and states must share a platform");
       if (block.sizes.size() < coordinate_shape.size())
-        throw std::invalid_argument("natsci::common::Trajectory: each state "
+        PLUSS_FAIL("natsci::common::Trajectory: each state "
                                     "must retain the coordinate axes");
       for (std::size_t axis = 0; axis < coordinate_shape.size(); ++axis) {
         if (block.sizes[axis] != coordinate_shape[axis])
-          throw std::invalid_argument("natsci::common::Trajectory: state shape "
+          PLUSS_FAIL("natsci::common::Trajectory: state shape "
                                       "does not begin with coordinate shape");
       }
     }
 
     if (ordered_ && coordinate.size(-1) > 1 &&
         !coordinate.diff(1, -1).gt(0.0).all().template item<bool>()) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::Trajectory: coordinate must be strictly increasing");
     }
   }

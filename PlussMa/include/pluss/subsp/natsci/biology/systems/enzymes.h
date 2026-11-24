@@ -85,6 +85,8 @@ inline Series rate_matrix(const Mechanism &m, const Series &conc) {
   const Config cfg = Config{}.with_dtype(conc.scalar_type()).with_platform(conc.platform());
   Series q = pluss::series::zeros({n, n}, cfg);
   for (const auto &st : m.steps) {
+    dynamics::require(st.from >= 0 && st.from < m.states && st.to >= 0 && st.to < m.states, "enzymes::rate_matrix: a step connects states outside 0..states-1");
+    dynamics::require(st.species < conc.size(-1), "enzymes::rate_matrix: a step uses a species index beyond the concentration vector");
     Series rate = st.k.on(conc.select(-1, 0));
     if (st.species >= 0)
       rate = rate.mul(conc.select(-1, st.species));

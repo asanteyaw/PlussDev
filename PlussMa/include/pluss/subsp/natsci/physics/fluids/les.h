@@ -13,6 +13,7 @@
 //  Constants and formulas follow the cited papers as reported by secondary sources (the Ducros-Nicoud-Poinsot WALE note for S^d); the original papers
 //  were not obtained.
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/physics/fluids.h"
 
 #include <cmath>
@@ -166,9 +167,9 @@ inline Series dynamic_smagorinsky(const Series &velocity, const std::vector<std:
 
 inline void require_model(const Closure &c, bool periodic) {
   if (c.constant < -1.0 || !std::isfinite(c.constant) || c.width < 0.0 || !std::isfinite(c.width) || !(c.test_ratio > 1.0))
-    throw std::invalid_argument("natsci::fluids::les: closure constant, width and test ratio must be finite (width >= 0, ratio > 1)");
+    PLUSS_FAIL("natsci::fluids::les: closure constant, width and test ratio must be finite (width >= 0, ratio > 1)");
   if (c.model == Model::DynamicSmagorinsky && !periodic)
-    throw std::invalid_argument("natsci::fluids::les: the dynamic model needs homogeneous directions (periodic grids)");
+    PLUSS_FAIL("natsci::fluids::les: the dynamic model needs homogeneous directions (periodic grids)");
 }
 
 } // namespace detail
@@ -209,7 +210,7 @@ inline void require_model(const Closure &c, bool periodic) {
                                         common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step,
                                         const StepOptions &options = {}, const BodyFn &body = {}) {
   if (options.rule == StepRule::Imex1)
-    throw std::invalid_argument("natsci::fluids::les::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+    PLUSS_FAIL("natsci::fluids::les::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
   const Series ones = pluss::series::zeros_like(state.pressure().si_value()).add(1.0);
   const auto rho = common::SeriesQuantity<Density>::from_si(ones.mul(density.si_value()));
   const auto total = [&](const IncompressibleState &at) {
@@ -237,7 +238,7 @@ inline void require_model(const Closure &c, bool periodic) {
                                         common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step,
                                         const StepOptions &options = {}, const BodyFn &body = {}) {
   if (options.rule == StepRule::Imex1)
-    throw std::invalid_argument("natsci::fluids::les::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+    PLUSS_FAIL("natsci::fluids::les::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
   const Series ones = pluss::series::zeros_like(state.pressure().si_value()).add(1.0);
   const auto rho = common::SeriesQuantity<Density>::from_si(ones.mul(density.si_value()));
   const auto total = [&](const IncompressibleState &at) {

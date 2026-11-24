@@ -135,10 +135,10 @@ void test_mass_action_ssa() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)kin::michaelis_menten(vec({1.0}), 1.0, 0.0); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)kin::michaelis_menten(vec({1.0}), 1.0, 0.0); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "Km<=0 rejected");
   threw = false;
-  try { (void)net::make(mat({{-1, 1}}), mat({{-1, 0}})); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)net::make(mat({{-1, 1}}), mat({{-1, 0}})); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "negative order rejected");
 }
 } // namespace

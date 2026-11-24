@@ -219,7 +219,7 @@ HAND_WRITTEN_PROBES: list[tuple[str, str, list[str], str]] = [
     ("tensordot", "(const Series&, int64_t)", [], "s.tensordot(mate, INT64_C(2))"),
     ("tensordot", "(const Series&, vector<int64_t>, vector<int64_t>)", [],
      "s.tensordot(mate, std::vector<std::int64_t>{1}, std::vector<std::int64_t>{1})"),
-    ("einsum", "(string_view, vector<Series>)", [], 'Series::einsum("ij,kj->ik", {s, mate})'),
+    ("einsum", "(string_view, vector<Series>)", [], 'pluss::series::einsum("ij,kj->ik", {s, mate})'),
     ("isnan", "()", [], "s.isnan()"),
     ("isinf", "()", [], "s.isinf()"),
     ("isfinite", "()", [], "s.isfinite()"),

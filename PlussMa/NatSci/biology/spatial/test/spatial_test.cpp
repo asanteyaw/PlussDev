@@ -73,6 +73,16 @@ int main() {
         worst = std::max(worst, std::abs(ov[i] - u[i] * std::exp(-lam * t)));
       expect(worst < 1e-9, "heat eigenmode decays at the exact discrete rate, worst " + std::to_string(worst));
       expect(rel(lam, d * std::pow(mode * pi / length, 2.0)) < 5e-3, "discrete rate approaches D (n pi / L)^2");
+      bool threw = false;
+      try { (void)sp::integrate(u0, vec({d}), g, nullptr, 0.0, t, 5); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "integrate rejects a step beyond the RK4 diffusion stability limit");
+      // a state without a species axis, or with the wrong number of diffusion coefficients, is rejected
+      threw = false;
+      try { (void)sp::rate(u0.select(0, 0), vec({d}), g, nullptr); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "a state without a species axis is rejected");
+      threw = false;
+      try { (void)sp::rate(u0, vec({d, d, d}), g, nullptr); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "diffusion with the wrong number of species is rejected");
     }
     // ---- Turing analysis of random 2x2 systems against numpy eigenvalues
     {

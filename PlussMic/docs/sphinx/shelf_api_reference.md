@@ -12,21 +12,13 @@ This page documents the full public `Shelf` surface with direct typed-column exa
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
-## Static functions
-
-`Shelf::select` builds a shelf without needing one to start from, so it is called on the type: `Shelf::select({conditions...}, {choices...}, default)`.
-It has its own page, [`select`](api/shelf/select.md), in the method list below.
-
 ## Accessors
 
 `Shelf` exposes nested accessors, each with its own method pages and sidebar:
 
-- `cast()` -> [`cast`](shelf_cast_accessor_api_reference.md)
-- `group()` -> [`group`](shelf_group_accessor_api_reference.md)
 - `label()` -> [`label`](shelf_label_accessor_api_reference.md)
 - `nt()` -> [`nt`](shelf_note_accessor_api_reference.md)
 - `tl()` -> [`tl`](shelf_timeline_accessor_api_reference.md)
-- `sort()` -> [`sort`](shelf_sort_accessor_api_reference.md)
 - `ts()` -> [`ts`](shelf_ts_accessor_api_reference.md)
 - `plot()` -> [`plot`](shelf_plot_api_reference.md)
 
@@ -34,11 +26,8 @@ It has its own page, [`select`](api/shelf/select.md), in the method list below.
 :hidden:
 :maxdepth: 1
 
-shelf_cast_accessor_api_reference
-shelf_group_accessor_api_reference
 shelf_label_accessor_api_reference
 shelf_note_accessor_api_reference
-shelf_sort_accessor_api_reference
 shelf_timeline_accessor_api_reference
 shelf_ts_accessor_api_reference
 shelf_plot_api_reference

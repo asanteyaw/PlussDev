@@ -199,8 +199,13 @@ inline Fit fit(const Series &counts, double dt = 1.0, std::int64_t restarts = 3)
 inline Series extinction_risk(const Fit &f, double threshold, const Series &horizons) {
   dynamics::require(threshold > 0.0, "count_pva::extinction_risk: threshold must be positive");
   const double m = f.filtered_mean - std::log(threshold), sd = std::sqrt(f.filtered_var);
-  const double already = 0.5 * std::erfc(m / (sd * std::sqrt(2.0))); // P(x_d <= 0)
   const Series t = horizons.to(detail::kF64);
+  if (sd < 1e-4) { // the current abundance is known exactly (no observation error): the distance to the threshold is the single number m
+    if (m <= 0.0)
+      return t.mul(0.0).add(1.0);
+    return birth_death::quasi_extinction_cdf(detail::f64({f.parameters.mu}, {1}), detail::f64({f.parameters.sigma2}, {1}), detail::f64({m}, {1}), t);
+  }
+  const double already = 0.5 * std::erfc(m / (sd * std::sqrt(2.0))); // P(x_d <= 0)
   const double hi = m + 9.0 * sd;
   Series upper = t.mul(0.0);
   if (hi > 0.0) {
@@ -221,6 +226,11 @@ inline double ultimate_extinction_risk(const Fit &f, double threshold) {
   const double m = f.filtered_mean - std::log(threshold), sd = std::sqrt(f.filtered_var);
   if (f.parameters.mu <= 0.0)
     return 1.0;
+  if (sd < 1e-4) { // the current abundance is known exactly
+    if (m <= 0.0)
+      return 1.0;
+    return birth_death::ultimate_quasi_extinction(detail::f64({f.parameters.mu}, {1}), detail::f64({f.parameters.sigma2}, {1}), detail::f64({m}, {1})).sum().item<double>();
+  }
   const double already = 0.5 * std::erfc(m / (sd * std::sqrt(2.0)));
   const double hi = m + 9.0 * sd;
   if (hi <= 0.0)

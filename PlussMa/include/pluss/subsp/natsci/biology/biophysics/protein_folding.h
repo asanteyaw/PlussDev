@@ -85,7 +85,9 @@ struct Thermal final {
   Coeff dcp = 0.0;  // heat-capacity change of unfolding (kcal/mol/K)
 };
 inline Series thermal_enthalpy(const Series &t, const Thermal &p) { return p.dh_m.on(t).add(p.dcp.on(t).mul(t.sub(p.tm.on(t)))); }
-inline Series thermal_entropy(const Series &t, const Thermal &p) { return p.dh_m.on(t).div(p.tm.on(t)).add(p.dcp.on(t).mul(t.div(p.tm.on(t)).log())); }
+inline Series thermal_entropy(const Series &t, const Thermal &p) {
+  dynamics::require(t.gt(0.0).all().item<bool>() && p.tm.on(t).gt(0.0).all().item<bool>(), "thermal: temperatures and the melting temperature must be positive (kelvin)");
+  return p.dh_m.on(t).div(p.tm.on(t)).add(p.dcp.on(t).mul(t.div(p.tm.on(t)).log())); }
 inline Series thermal_gibbs(const Series &t, const Thermal &p) { return thermal_enthalpy(t, p).sub(t.mul(thermal_entropy(t, p))); }
 // closed form: Delta H_m (1 - T/T_m) - Delta Cp [T_m - T + T ln(T/T_m)]
 inline Series thermal_gibbs_closed_form(const Series &t, const Thermal &p) {

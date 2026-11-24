@@ -68,11 +68,17 @@ inline double sqrt_eps() { return std::sqrt(std::numeric_limits<double>::epsilon
 // Levenberg-Marquardt for L independent fits of the same model to data y [M] (shared) or [L, M]
 inline Fit levenberg_marquardt(const ModelFn &model, const Series &y, const Series &beta0, const Options &opt = {}) {
   dynamics::require(beta0.dim() == 2, "estimation: beta0 must be [lanes, parameters]");
+  dynamics::require_finite(beta0, "estimation: beta0");
+  dynamics::require_finite(y, "estimation: data");
+  dynamics::require(y.dim() == 1 || (y.dim() == 2 && y.size(0) == beta0.size(0)), "estimation: data must be [observations] or [lanes, observations]");
+  dynamics::require(opt.max_iterations > 0 && opt.tol_x > 0.0 && opt.tol_fun > 0.0 && opt.derivative_step > 0.0, "estimation: options must be positive");
   const std::int64_t l = beta0.size(0), p = beta0.size(1);
   const Series data = y.dim() == 1 ? y.unsqueeze(0).expand({l, y.size(0)}) : y;
   const std::int64_t m = data.size(1);
   Series beta = beta0;
   Series yfit = model(beta);
+  dynamics::require(yfit.dim() == 2 && yfit.size(0) == l && yfit.size(1) == m, "estimation: the model must return [lanes, observations] predictions matching the data");
+  dynamics::require_finite(yfit, "estimation: the model's predictions at beta0");
   Series r = data.sub(yfit);
   Series sse = detail::sse_of(r);
   Series lambda = sse.mul(0.0).add(0.01);
@@ -150,6 +156,7 @@ inline Fit levenberg_marquardt(const ModelFn &model, const Series &y, const Seri
 // ---- critical values -----------------------------------------------------------------------------------------------------
 // Student t quantile for probability q and degrees of freedom nu by bisection on the CDF
 inline double student_t_quantile(double q, double nu) {
+  dynamics::require(q > 0.0 && q < 1.0 && nu > 0.0 && std::isfinite(nu), "student_t_quantile: need 0 < q < 1 and nu > 0");
   const pluss::subsp::stats::distr::StudentT t{nu, 0.0, 1.0};
   const auto cdf = [&](const Series &x) { return t.cdf(x).sub(q); };
   const Series lo = pluss::make_series(std::vector<double>{-1e3}, {1}).to(pluss::ScalarType::Float64), hi = pluss::make_series(std::vector<double>{1e3}, {1}).to(pluss::ScalarType::Float64);
@@ -159,6 +166,7 @@ inline double student_t_quantile(double q, double nu) {
 }
 // chi-square quantile (integer degrees of freedom) by bisection on the CDF
 inline double chi2_quantile(double q, std::int64_t dof) {
+  dynamics::require(q > 0.0 && q < 1.0 && dof > 0, "chi2_quantile: need 0 < q < 1 and dof > 0");
   const pluss::subsp::stats::distr::ChiSquare c{dof};
   const auto cdf = [&](const Series &x) { return c.cdf(x).sub(q); };
   const Series lo = pluss::make_series(std::vector<double>{1e-12}, {1}).to(pluss::ScalarType::Float64), hi = pluss::make_series(std::vector<double>{1e3}, {1}).to(pluss::ScalarType::Float64);
@@ -175,9 +183,14 @@ struct Intervals final {
 };
 // nlparci: beta +- t_{1-alpha/2, n-p} rmse sqrt(diag((J^T J)^{-1}))
 inline Intervals confidence_intervals(const Fit &fit, double alpha = 0.05) {
+  dynamics::require(alpha > 0.0 && alpha < 1.0, "estimation: alpha must lie in (0, 1)");
   const std::int64_t n = fit.observations, p = fit.parameters, nu = n - p;
   dynamics::require(nu > 0, "estimation: need more observations than parameters");
   const Series jtj = fit.jacobian.transpose(1, 2).matmul(fit.jacobian);
+  dynamics::require_finite(jtj, "estimation: the Jacobian at the solution");
+  const Series spectrum = pluss::subsp::linearalg::svd_s(jtj, false);
+  dynamics::require(spectrum.amin(-1, false).gt(spectrum.amax(-1, false).mul(1e-14)).all().item<bool>(),
+                    "estimation: J^T J is singular at the solution (some parameter combination is not identifiable); inspect the profile likelihood");
   const Series inv = pluss::subsp::linearalg::inverse(jtj);
   const Config cfg = Config{}.with_dtype(fit.beta.scalar_type()).with_platform(fit.beta.platform());
   const Series diag = inv.mul(pluss::series::eye(p, cfg)).sum(-1, false);
@@ -200,6 +213,9 @@ struct Profile final {
 // profile of parameter `index` over `grid` [G]: the other parameters are re-fitted from `start` [P] for every grid value (all grid
 // points in one batched Levenberg-Marquardt call). The profiled coordinate is held fixed by zeroing its Jacobian column and step.
 inline Profile profile_likelihood(const ModelFn &model, const Series &y, const Series &start, std::int64_t index, const Series &grid, const Options &opt = {}) {
+  dynamics::require(grid.dim() == 1 && grid.size(0) > 0, "profile_likelihood: grid must be a non-empty vector");
+  dynamics::require(start.dim() == 1 && index >= 0 && index < start.size(0), "profile_likelihood: start must be a parameter vector and index one of its entries");
+  dynamics::require_finite(grid, "profile_likelihood: grid");
   const std::int64_t g = grid.size(0), p = start.size(0);
   std::vector<std::int64_t> keep;
   for (std::int64_t i = 0; i < p; ++i)

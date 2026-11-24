@@ -164,7 +164,7 @@ void test_failures() {
   bool bad_grid = false;
   try {
     (void)grid1(1);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_grid = true;
   }
   expect(bad_grid, "bounded grid accepted an unusable extent");
@@ -175,7 +175,7 @@ void test_failures() {
     (void)spatial::make_bounds<Field>(
         grid, {spatial::value_bc(spatial::Face{0, spatial::Side::Low},
                                  common::ScalarQuantity<Field>::from_si(0.0))});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     missing = true;
   }
   expect(missing, "boundary set accepted a missing face");
@@ -187,7 +187,7 @@ void test_failures() {
                                  common::ScalarQuantity<Field>::from_si(0.0)),
                spatial::value_bc(spatial::Face{0, spatial::Side::Low},
                                  common::ScalarQuantity<Field>::from_si(1.0))});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     duplicate = true;
   }
   expect(duplicate, "boundary set accepted duplicate face rules");
@@ -198,7 +198,7 @@ void test_failures() {
         common::SeriesQuantity<Source>::from_si(pluss::series::ones({4}));
     (void)spatial::solve_poisson(rhs, grid, flux_bounds(grid, 0.0, 0.0),
                                  strict_poisson());
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     incompatible = true;
   }
   expect(incompatible, "all-flux Poisson accepted incompatible source mass");
@@ -211,7 +211,7 @@ void test_failures() {
     options.stencil = spatial::PoissonStencil::Wide;
     (void)spatial::solve_poisson(rhs, grid, value_bounds(grid, 0.0, 0.0),
                                  options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wide_rejected = true;
   }
   expect(wide_rejected, "bounded Poisson accepted the periodic wide stencil");

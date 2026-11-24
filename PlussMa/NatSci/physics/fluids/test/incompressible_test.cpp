@@ -146,7 +146,7 @@ void test_periodic_poisson_batches_and_strides() {
   try {
     (void)spatial::solve_poisson(pluss::series::ones_like(mode), grid,
                                  strict_poisson());
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     incompatible = true;
   }
   expect(incompatible, "periodic Poisson solve accepted a nonzero-mean rhs");
@@ -183,7 +183,7 @@ void test_wide_poisson_null_space() {
     bool rejected = false;
     try {
       (void)spatial::solve_poisson(alternating, grid, options);
-    } catch (const std::domain_error &) {
+    } catch (const pluss::Error &) {
       rejected = true;
     }
     // On odd extents the alternating pattern wraps and is not a null mode, so
@@ -281,7 +281,7 @@ void test_state_and_projection_failures() {
                              common::SeriesQuantity<common::Pressure>::from_si(
                                  pluss::series::zeros({8, 5})),
                              grid);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_pressure = true;
   }
   expect(bad_pressure, "fluid state accepted mismatched pressure storage");
@@ -297,7 +297,7 @@ void test_state_and_projection_failures() {
     (void)fluids::project(state, grid,
                           common::ScalarQuantity<fluids::Density>::from_si(0.0),
                           common::ScalarQuantity<common::Time>::from_si(0.1));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_density = true;
   }
   expect(bad_density, "pressure projection accepted zero density");

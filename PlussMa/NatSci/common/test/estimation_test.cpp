@@ -117,6 +117,28 @@ int main() {
       for (std::size_t i = 1; i < sv.size(); ++i)
         expect(std::abs(sv[i] - sv[0]) < 1e-6 * (1.0 + sv[0]), "flat profile for a structurally non-identifiable parameter");
     }
+    // ---- bad input throws pluss::Error rather than returning NaN
+    {
+      const auto fails = [](const auto &fn) {
+        try {
+          fn();
+        } catch (const pluss::Error &) {
+          return true;
+        }
+        return false;
+      };
+      const Series x = vec({1, 2, 3, 4});
+      const auto lin = [&](const Series &b) { return b.select(-1, 0).unsqueeze(-1).mul(x); };
+      expect(fails([&] { (void)est::levenberg_marquardt(lin, vec({1.0, std::nan(""), 3.0, 4.0}), mat({{1.0}}, 1, 1)); }), "NaN data must throw");
+      expect(fails([&] { (void)est::levenberg_marquardt(lin, vec({1, 2, 3, 4}), mat({{std::nan("")}}, 1, 1)); }), "NaN start must throw");
+      expect(fails([&] { (void)est::student_t_quantile(1.5, 5.0); }), "t quantile needs 0 < q < 1");
+      expect(fails([&] { (void)est::chi2_quantile(0.95, 0); }), "chi2 quantile needs dof > 0");
+      expect(fails([&] { (void)est::profile_likelihood(lin, vec({1, 2, 3, 4}), vec({1.0, 1.0}), 2, vec({0.5, 1.0})); }), "profile index out of range must throw");
+      // two parameters that only appear as a product: J^T J is singular, intervals are refused
+      const auto prod = [&](const Series &b) { return b.select(-1, 0).mul(b.select(-1, 1)).unsqueeze(-1).mul(x); };
+      const auto fit = est::levenberg_marquardt(prod, vec({2.1, 3.9, 6.2, 7.8}), mat({{1.0, 1.0}}, 1, 2));
+      expect(fails([&] { (void)est::confidence_intervals(fit); }), "intervals of a non-identifiable fit must throw");
+    }
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";
     return 1;

@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "../../kinetics/test/h2o2_mechanism.h"
 #include "../../kinetics/test/kinetics_reference.h"
 #include "equilibrium_reference.h"
@@ -208,7 +209,7 @@ void test_validation() {
   try {
     (void)eq::tp(m, vec({2000.0}).squeeze(0), vec({101325.0}).squeeze(0),
                  vec({-1.0, 2.0, 0.0, 0.0}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "negative element totals rejected");
@@ -216,7 +217,7 @@ void test_validation() {
   try {
     (void)eq::tp(m, vec({2000.0}).squeeze(0), vec({101325.0}).squeeze(0),
                  vec({0.0, 0.0, 0.0, 0.0}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "empty system rejected");

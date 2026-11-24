@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <string>
 
 namespace pluss::subsp::natsci::biology::systems::enzyme_fitting {
 
@@ -46,17 +48,47 @@ inline Series flatten_predictions(const std::vector<Series> &at_time) { // each 
   const Series stacked = at_time.front().unsqueeze(-1).unite([&] { std::vector<Series> r; for (std::size_t i = 1; i < at_time.size(); ++i) r.push_back(at_time[i].unsqueeze(-1)); return r; }(), at_time.front().dim()); // [L, K, M]
   return stacked.reshape({stacked.size(0), stacked.size(1) * stacked.size(2)});
 }
+inline void validate(const ProgressData &d, const Series &guess, std::int64_t parameters, const char *who) {
+  const std::string name = who;
+  dynamics::require(d.times.defined() && d.substrate.defined() && d.initial.defined(), name + ": times, substrate and initial must all be given");
+  dynamics::require(d.times.dim() == 1 && d.initial.dim() == 1 && d.substrate.dim() == 2, name + ": times and initial must be 1-D and substrate 2-D [curves, times]");
+  dynamics::require(d.substrate.size(0) == d.initial.size(0) && d.substrate.size(1) == d.times.size(0),
+                    name + ": substrate must be [curves, times] with one row per starting concentration and one column per time");
+  dynamics::require(guess.dim() == 2 && guess.size(1) == parameters, name + ": the starting guess must be [fits, " + std::to_string(parameters) + "]");
+  dynamics::require(guess.abs().gt(0.0).all().item<bool>() && guess.abs().lt(std::numeric_limits<double>::infinity()).all().item<bool>(),
+                    name + ": every starting value must be non-zero and finite (a zero constant makes the rate law undefined)");
+}
 inline Series flatten_data(const Series &substrate) { return substrate.reshape({substrate.size(0) * substrate.size(1)}); }
 [[nodiscard]] inline EnzymeFit finish(const est::ModelFn &model, const ProgressData &d, const Series &guess, const est::Options &opt) {
   EnzymeFit out;
   out.fit = est::levenberg_marquardt(model, flatten_data(d.substrate), guess, opt);
-  out.intervals = est::confidence_intervals(out.fit);
+  // the models use the magnitude of every parameter, so the optimiser may stop at a negative value; report the physical (positive) one, with the Jacobian
+  // taken with respect to it, so the estimate and its confidence interval describe the same quantity
+  const Series sign = pluss::series::where(out.fit.beta.lt(0.0), out.fit.beta.mul(0.0).sub(1.0), out.fit.beta.mul(0.0).add(1.0));
+  out.fit.beta = out.fit.beta.mul(sign);
+  out.fit.jacobian = out.fit.jacobian.mul(sign.unsqueeze(1));
+  // the optimiser's tolerances are relative to the size of the parameters, so a fit that runs off along a flat direction (a constant growing without
+  // bound) can satisfy them. A kinetic constant a million times larger than every starting value is such a runaway: report it as not converged
+  const Series limit = guess.abs().amax(-1, true).mul(1.0e6);
+  const Series sound = out.fit.beta.abs().le(limit).to(out.fit.beta.scalar_type()).amin(-1, false); // 0 where any constant ran away or is not finite
+  out.fit.converged = out.fit.converged.mul(sound.to(out.fit.converged.scalar_type()));
+  try {
+    out.intervals = est::confidence_intervals(out.fit);
+  } catch (const pluss::Error &e) {
+    // a constant that the data cannot determine (a runaway fit, or an inhibition constant for data with no inhibition) makes J^T J singular and has no
+    // interval: keep the fit and report undefined (NaN) intervals instead of losing it. Other failures (too few observations) still throw.
+    if (e.message().find("singular") == std::string::npos)
+      throw;
+    const Series nan = out.fit.beta.mul(std::numeric_limits<double>::quiet_NaN());
+    out.intervals = {nan, nan, nan};
+  }
   return out;
 }
 } // namespace detail
 
 // Global fit of Vmax and Km to all curves with the closed-form integrated rate law (guess [lanes, 2] = (Vmax, Km))
 [[nodiscard]] inline EnzymeFit fit_integrated(const ProgressData &d, const Series &guess, const est::Options &opt = {}) {
+  detail::validate(d, guess, 2, "fit_integrated");
   const std::int64_t k = d.initial.size(0);
   const est::ModelFn model = [&](const Series &beta) { // beta [L, 2]
     const Series vmax = beta.select(1, 0).abs().unsqueeze(-1), km = beta.select(1, 1).abs().unsqueeze(-1); // [L, 1]
@@ -73,6 +105,7 @@ inline Series flatten_data(const Series &substrate) { return substrate.reshape({
 
 // Global fit of Vmax, Km and the product-inhibition constant Kp (guess [lanes, 3]); `steps_per_interval` RK4 steps between consecutive observation times
 [[nodiscard]] inline EnzymeFit fit_product_inhibition(const ProgressData &d, const Series &guess, std::int64_t steps_per_interval = 40, const est::Options &opt = {}) {
+  detail::validate(d, guess, 3, "fit_product_inhibition");
   const std::int64_t k = d.initial.size(0), m = d.times.size(0);
   const auto times = d.times.contiguous().host<double>();
   const est::ModelFn model = [&](const Series &beta) {

@@ -88,6 +88,8 @@ using Reaction = std::function<Series(const Series &)>;
 
 // D_s lap(u_s) + f(u) with per-species diffusion coefficients d [S] (scalar Coeff allowed for one-species systems)
 inline Series rate(const Series &u, const Series &diffusion, const Grid &g, const Reaction &f) {
+  dynamics::require(u.dim() >= g.dim() + 1, "spatial::rate: the state needs a species axis in front of the spatial axes, shape [species, cells...]");
+  dynamics::require(diffusion.dim() == 1 && (diffusion.size(0) == 1 || diffusion.size(0) == u.size(u.dim() - g.dim() - 1)), "spatial::rate: diffusion must hold one coefficient for every species (or a single shared one)");
   std::vector<std::int64_t> shape(static_cast<std::size_t>(u.dim()), 1);
   shape[static_cast<std::size_t>(u.dim() - g.dim() - 1)] = diffusion.size(0);
   const Series d = diffusion.to(u.scalar_type()).to(u.platform()).reshape(shape);
@@ -108,6 +110,10 @@ inline double max_stable_dt(const Grid &g, double d_max) {
 
 // classical RK4 for du/dt = rate(u); `steps` equal steps from t0 to t1
 inline Series integrate(const Series &u0, const Series &diffusion, const Grid &g, const Reaction &f, double t0, double t1, std::int64_t steps) {
+  const double d_max = diffusion.abs().max().item<double>();
+  if (d_max > 0.0 && steps > 0)
+    dynamics::require((t1 - t0) / static_cast<double>(steps) <= 1.39 * max_stable_dt(g, d_max),
+                      "spatial::integrate: the step is too large for the diffusion (RK4 is unstable above about 1.39 times max_stable_dt); use more steps");
   const dynamics::RateFn fn = [&](const Series &u) { return rate(u, diffusion, g, f); };
   return dynamics::simulate(fn, u0, t0, t1, steps);
 }

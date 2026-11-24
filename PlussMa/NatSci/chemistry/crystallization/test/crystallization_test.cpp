@@ -3,6 +3,7 @@
 #include "crystallization_reference.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -110,6 +111,18 @@ int main() {
         const double L = grid.centers[static_cast<std::size_t>(i)];
         expect(std::abs(n.select(0, i).item<double>() / (n0 * std::exp(-L / (g * tau))) - 1.0) < 0.02, "steady CSD is exponential at L = " + std::to_string(L));
       }
+    }
+    // ---- out-of-range inputs raise pluss::Error instead of returning inf, negative or nan values
+    {
+      const auto fails = [](const std::function<void()> &f, const std::string &text) {
+        try { f(); } catch (const pluss::Error &e) { return e.message().find(text) != std::string::npos; }
+        return false;
+      };
+      expect(fails([] { cr::critical_radius(vec({0.8, 1.2}), 0.03, 3e-29, 298.0); }, "greater than 1"), "critical_radius below saturation");
+      expect(fails([] { cr::nucleation_barrier(vec({1.0}), 0.03, 3e-29, 298.0); }, "greater than 1"), "nucleation_barrier at saturation");
+      expect(fails([] { cr::nucleation_rate(vec({0.5}), 1e30, 0.03, 3e-29, 298.0); }, "greater than 1"), "nucleation_rate below saturation");
+      expect(fails([] { cr::avrami_fit(vec({1.0, 2.0, 3.0}), vec({0.2, 1.0, 1.0})); }, "strictly between 0 and 1"), "avrami_fit with finished points");
+      expect(fails([] { cr::avrami_fit(vec({0.0, 2.0, 3.0}), vec({0.2, 0.5, 0.7})); }, "must be positive"), "avrami_fit with time zero");
     }
     std::cout << "crystallization tests passed\n";
   } catch (const std::exception &e) {

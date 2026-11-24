@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/natsci/common/constants.h"
 #include "pluss/subsp/natsci/common/quantity.h"
@@ -71,10 +72,10 @@ inline bool same_shape(const Series &lhs, const Series &rhs) {
 
 inline void require_real_float(const Series &value, const char *name) {
   if (!value.dtype().is_floating())
-    throw std::invalid_argument(std::string("natsci::mechanics::make: ") +
+    PLUSS_FAIL(std::string("natsci::mechanics::make: ") +
                                 name + " must have a real floating dtype");
   if (!value.isfinite().all().host<bool>().front())
-    throw std::invalid_argument(std::string("natsci::mechanics::make: ") +
+    PLUSS_FAIL(std::string("natsci::mechanics::make: ") +
                                 name + " must be finite");
 }
 
@@ -105,7 +106,7 @@ inline PairGeometry pairs(const Bodies &bodies, double softening) {
       displacement.square().sum(-1, true).add(softening * softening);
   const Series safe_distance2 = distance2.add(identity.unsqueeze(-1));
   if (!safe_distance2.gt(0.0).all().host<bool>().front())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::mechanics: distinct bodies occupy the same position; "
         "provide positive softening or separate them");
   return {std::move(displacement), std::move(safe_distance2),
@@ -114,7 +115,7 @@ inline PairGeometry pairs(const Bodies &bodies, double softening) {
 
 inline void require_softening(double softening) {
   if (!(softening >= 0.0) || !std::isfinite(softening))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics: softening must be finite and non-negative");
 }
 
@@ -131,25 +132,25 @@ make(const common::SeriesQuantity<common::Mass> &mass,
   detail::require_real_float(raw_velocity, "velocity");
   detail::require_real_float(raw_mass, "mass");
   if (raw_position.dim() < 2)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: position must have shape "
         "[..., bodies, axes]");
   if (!detail::same_shape(raw_position, raw_velocity))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: position and velocity shapes must match");
   if (raw_position.scalar_type() != raw_velocity.scalar_type() ||
       raw_position.scalar_type() != raw_mass.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: mass, position, and velocity dtypes must "
         "match");
   if (raw_position.platform() != raw_velocity.platform() ||
       raw_position.platform() != raw_mass.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: mass, position, and velocity platforms "
         "must match");
   if (raw_position.size(-2) <= 0 || raw_position.size(-1) <= 0 ||
       raw_position.size(-1) > 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: expected at least one body and one to "
         "three spatial axes");
 
@@ -159,14 +160,14 @@ make(const common::SeriesQuantity<common::Mass> &mass,
   try {
     aligned_mass = raw_mass.expand(mass_shape);
   } catch (const std::exception &) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: mass must broadcast to [..., bodies]");
   }
   if (!aligned_mass.ge(0.0).all().host<bool>().front())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: mass must be non-negative");
   if (!aligned_mass.sum(-1, false).gt(0.0).all().host<bool>().front())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::make: every batch must have positive total mass");
 
   return Bodies(common::SeriesQuantity<common::Mass>::from_si(
@@ -273,7 +274,7 @@ total_energy(
 [[nodiscard]] inline common::SeriesQuantity<common::AngularMomentum>
 angular_momentum(const Bodies &bodies) {
   if (bodies.axes() != 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::angular_momentum: expected exactly three axes");
   return common::SeriesQuantity<common::AngularMomentum>::from_si(
       bodies.position().si_value().cross(momentum(bodies).si_value(), -1).sum(
@@ -297,7 +298,7 @@ template <class AccelerationFn>
                               common::ScalarQuantity<common::Time> step,
                               AccelerationFn &&acceleration) {
   if (!(step.si_value() > 0.0) || !std::isfinite(step.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::leapfrog: step must be finite and positive");
   const double half_step = 0.5 * step.si_value();
   const Series half_position = bodies.position().si_value().add(

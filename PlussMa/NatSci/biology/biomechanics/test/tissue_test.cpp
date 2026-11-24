@@ -104,6 +104,12 @@ int main() {
       b.gamma = 1.2;
       expect(std::abs(ts::artery_stresses(a, lt, lz).theta_minus_radial.host<double>().front() - ts::artery_stresses(b, lt, lz).theta_minus_radial.host<double>().front()) < 1e-12, "kappa = 1/3 is isotropic (fibre angle irrelevant)");
     }
+    {
+      bool a = false, b = false;
+      try { (void)ts::uniaxial_stress(ts::neo_hookean(1.0), vec({0.0})); } catch (const pluss::Error &) { a = true; }
+      try { (void)ts::uniaxial_stress(ts::gent(1.0, 2.0), vec({3.0})); } catch (const pluss::Error &) { b = true; }
+      expect(a && b, "non-positive stretch and a stretch past the Gent limit are rejected");
+    }
     std::cout << "tissue tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

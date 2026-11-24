@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/boundary.h"
 
 #include <cstdint>
@@ -137,7 +138,7 @@ public:
   [[nodiscard]] const FlowBound &at(std::int64_t axis,
                                     boundary_spatial::Side side) const {
     if (axis < 0 || axis >= dim_)
-      throw std::out_of_range(
+      PLUSS_FAIL(
           "natsci::fluids::FlowBounds::at: face axis is out of range");
     return rules_[boundary_spatial::detail::face_slot({axis, side})];
   }
@@ -204,10 +205,10 @@ inline Series target_plane(const FlowBound &rule, const Series &velocity,
 
   Series profile = rule.velocity()->si_value();
   if (profile.scalar_type() != plane.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::vel_ghosts: velocity profile dtype mismatch");
   if (profile.platform() != plane.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::vel_ghosts: velocity profile platform mismatch");
 
   if (profile.dim() == 1 && profile.size(0) == grid.dim()) {
@@ -220,12 +221,12 @@ inline Series target_plane(const FlowBound &rule, const Series &velocity,
   try {
     expanded = zero_like(plane).add(profile);
   } catch (const std::exception &) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::vel_ghosts: velocity profile is not broadcastable "
         "to the face plane");
   }
   if (!boundary_spatial::detail::same_shape(expanded, plane))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::vel_ghosts: velocity profile changed the face shape");
   return expanded;
 }
@@ -242,7 +243,7 @@ inline Series target_plane(const FlowBound &rule, const Series &velocity,
       boundary_spatial::detail::require_vector_layout(field, grid, operation);
   boundary_spatial::detail::require_axis(grid, axis, operation);
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::vel_ghosts: boundary and grid rank mismatch");
 
   std::vector<std::optional<Series>> targets(
@@ -318,7 +319,7 @@ inline Series target_plane(const FlowBound &rule, const Series &velocity,
 [[nodiscard]] inline boundary_spatial::Bounds<boundary_common::Pressure>
 p_bounds(const boundary_spatial::BoxGrid &grid, const FlowBounds &bounds) {
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::p_bounds: boundary and grid rank mismatch");
 
   using PressureFlux =

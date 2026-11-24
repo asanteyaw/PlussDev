@@ -51,7 +51,7 @@ void test_scalar_quantities() {
   try {
     [[maybe_unused]] common::Unit<common::Length> invalid(
         0.0, "bad", "invalid length unit");
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "non-positive unit scale was not rejected");
@@ -116,7 +116,7 @@ void test_independent_uncertainty() {
     [[maybe_unused]] common::Measurement<common::Length> invalid(
         LengthQuantity::from(1.0, common::units::metre),
         LengthQuantity::from(-0.1, common::units::metre));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "negative standard uncertainty was not rejected");

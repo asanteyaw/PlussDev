@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/natsci/chemistry/quantum.h"
 
@@ -214,7 +215,7 @@ void test_contract_failures() {
   bool odd = false;
   try {
     (void)quantum::rhf(valid, 1);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     odd = true;
   }
   expect(odd, "RHF accepted an odd electron count");
@@ -224,7 +225,7 @@ void test_contract_failures() {
     auto bad = valid;
     bad.overlap = pluss::series::make({{1.0, 1.0}, {1.0, 1.0}});
     (void)quantum::rhf(bad, 2);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     singular = true;
   }
   expect(singular, "RHF accepted a singular overlap metric");
@@ -237,7 +238,7 @@ void test_contract_failures() {
                             0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25},
         {2, 2, 2, 2});
     (void)quantum::rhf(bad, 2);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     asymmetric = true;
   }
   expect(asymmetric, "RHF accepted an ERI tensor without pair symmetry");
@@ -247,7 +248,7 @@ void test_contract_failures() {
     quantum::HfOptions options;
     options.diis_space = 1;
     (void)quantum::rhf(valid, 2, options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_diis_space = true;
   }
   expect(bad_diis_space, "RHF accepted a one-vector DIIS subspace");
@@ -257,7 +258,7 @@ void test_contract_failures() {
     quantum::HfOptions options;
     options.diis_rcond = 0.0;
     (void)quantum::rhf(valid, 2, options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_diis_rcond = true;
   }
   expect(bad_diis_rcond, "RHF accepted a non-positive DIIS cutoff");

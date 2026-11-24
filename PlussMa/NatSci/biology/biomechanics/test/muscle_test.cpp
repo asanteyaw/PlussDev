@@ -39,6 +39,11 @@ mu::Params params() {
 
 int main() {
   try {
+    // beyond the maximum shortening speed the force factor is zero, never negative; an activation outside [0,1] is rejected
+    expect(mu::force_velocity(vec({-1.5, -3.0})).min().item<double>() >= 0.0, "force-velocity is not negative past the maximum shortening speed");
+    bool rejected = false;
+    try { (void)mu::isometric_equilibrium(vec({1.5}), vec({0.31}), mu::Params{}); } catch (const pluss::Error &) { rejected = true; }
+    expect(rejected, "activation above 1 is rejected");
     // ---- curves vs the independent implementation (constants parsed from the OpenSim header)
     expect(max_abs(mu::active_force_length(vec(ref::lgrid)), ref::fal) < 1e-13, "active force-length");
     expect(max_abs(mu::passive_force_length(vec(ref::lgrid), 0.6), ref::fpe) < 1e-13, "passive force-length");

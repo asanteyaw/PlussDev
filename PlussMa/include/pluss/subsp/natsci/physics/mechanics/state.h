@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
 #include <cstdint>
@@ -40,16 +41,16 @@ namespace detail {
 inline void require_variational_value(const Series &value,
                                       const char *operation, const char *role) {
   if (!value.defined())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be defined");
   if (!value.dtype().is_floating())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must have a real floating dtype");
   if (value.numel() == 0)
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must not be empty");
   if (!value.isfinite().all().item<bool>())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be finite");
 }
 
@@ -67,20 +68,20 @@ inline void require_variational_layout(const Series &coordinate,
                                        const char *operation,
                                        const char *role) {
   if (!same_variational_shape(coordinate, peer))
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " shape must match coordinate shape");
   if (coordinate.scalar_type() != peer.scalar_type())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " dtype must match coordinate dtype");
   if (coordinate.platform() != peer.platform())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " platform must match coordinate platform");
 }
 
 inline void require_coordinate_axis(const Series &coordinate,
                                     const char *operation) {
   if (coordinate.dim() < 1 || coordinate.size(-1) <= 0)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": coordinate must have shape [..., dof] "
                                 "with dof greater than zero");
 }

@@ -113,7 +113,7 @@ void test_closed_flux_compatibility() {
   try {
     (void)fluids::project(state, grid, bounds, density(), seconds(0.1),
                           strict_projection());
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected,
@@ -290,7 +290,7 @@ void test_steady_controller() {
       (void)fluids::settle(setup.state, grid, setup.bounds, density(),
                            viscosity(0.25), seconds(0.0), step, invalid,
                            setup.body);
-    } catch (const std::invalid_argument &) {
+    } catch (const pluss::Error &) {
       return true;
     }
     return false;

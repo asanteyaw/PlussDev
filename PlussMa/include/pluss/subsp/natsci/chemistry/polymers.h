@@ -114,7 +114,12 @@ inline Series flory_weight_fraction(const Series &x, const Coeff &p) {
 // Carothers equation with stoichiometric ratio r <= 1: X_n = (1 + r)/(1 + r - 2 r p)
 inline Series carothers_degree_of_polymerization(const Series &conversion, const Coeff &r = 1.0) {
   const Series rr = r.on(conversion);
-  return rr.add(1.0).div(rr.add(1.0).sub(rr.mul(conversion).mul(2.0)));
+  if (conversion.amin().item<double>() < 0.0 || conversion.amax().item<double>() > 1.0)
+    PLUSS_FAIL("natsci::polymers::carothers_degree_of_polymerization: the conversion must be a fraction between 0 and 1 (95 percent is 0.95)");
+  const Series denominator = rr.add(1.0).sub(rr.mul(conversion).mul(2.0));
+  if (denominator.amin().item<double>() <= 0.0)
+    PLUSS_FAIL("natsci::polymers::carothers_degree_of_polymerization: the degree of polymerization is unbounded at this conversion (1 + r - 2 r p must stay positive)");
+  return rr.add(1.0).div(denominator);
 }
 // Poisson distribution of a living polymerization with nu monomer units added per initiator (x = 1, 2, ...)
 inline Series poisson_number_fraction(const Series &x, const Coeff &nu) {

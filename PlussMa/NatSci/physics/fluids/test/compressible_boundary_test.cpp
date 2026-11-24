@@ -842,6 +842,33 @@ void test_blended_and_timed_bounds() {
 
 } // namespace
 
+// gas at rest at a pressure outlet is not backflow, even when rounding leaves the normal speed a few ulps below zero after a Runge-Kutta stage
+void test_pressure_outlet_on_gas_at_rest() {
+  constexpr std::int64_t n = 200;
+  const auto grid = grid1(n, 1.0 / n);
+  const Series x = pluss::series::arange(0, n, 1, ScalarType::Float64).add(0.5).div(static_cast<double>(n));
+  const Series left = x.lt(0.5);
+  const Series rho = pluss::series::where(left, pluss::series::full_like(x, 1.0), pluss::series::full_like(x, 0.125));
+  const Series pressure = pluss::series::where(left, pluss::series::full_like(x, 1.0), pluss::series::full_like(x, 0.1));
+  const auto state = make_state(rho, pluss::series::zeros({1, n}, ScalarType::Float64), pressure, grid);
+  const auto rules = gas::bounds(grid, {gas::slip({0, spatial::Side::Low}),
+                                        gas::outlet({0, spatial::Side::High},
+                                                    common::SeriesQuantity<common::Pressure>::from_si(pluss::series::full({}, 0.1, ScalarType::Float64)))});
+  gas::Options options;
+  options.rule = gas::Rule::Rk2;
+  options.flux = gas::FluxScheme::Hllc;
+  const double dt = gas::step_limit(state, grid).si_value().item<double>() * 0.5;
+  auto advanced = state;
+  for (int i = 0; i < 20; ++i)
+    advanced = gas::step(advanced, grid, rules, seconds(dt), {}, options).state;
+  expect(advanced.density().si_value().isfinite().all().item<bool>(), "a pressure outlet on gas at rest failed to advance");
+
+  // real backflow is still refused
+  const auto inward = make_state(pluss::series::ones({n}, ScalarType::Float64), pluss::series::full({1, n}, -0.1, ScalarType::Float64),
+                                 pluss::series::ones({n}, ScalarType::Float64), grid);
+  expect_failure([&] { (void)gas::rate(inward, grid, rules); }, "a pressure outlet accepted a genuine backflow");
+}
+
 int main() {
   try {
     test_fixed_state_and_pressure_outlet();
@@ -855,6 +882,7 @@ int main() {
     test_bounded_weno_reconstruction_and_flow();
     test_characteristic_inlet_contracts();
     test_blended_and_timed_bounds();
+    test_pressure_outlet_on_gas_at_rest();
     std::cout << "NatSci bounded compressible-flow checks passed\n";
     return 0;
   } catch (const std::exception &error) {

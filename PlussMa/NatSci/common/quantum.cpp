@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantum.h"
 
 #include "CodeM/core/TypePromotion.h"
@@ -26,10 +27,10 @@ std::int64_t checked_size(const std::vector<std::int64_t> &spaces,
   std::int64_t total = 1;
   for (const std::int64_t extent : spaces) {
     if (extent <= 0)
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": subsystem sizes must be positive");
     if (total > std::numeric_limits<std::int64_t>::max() / extent)
-      throw std::overflow_error(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                 ": Hilbert-space size overflows int64");
     total *= extent;
   }
@@ -38,21 +39,21 @@ std::int64_t checked_size(const std::vector<std::int64_t> &spaces,
 
 void require_numeric(const Series &value, const char *operation) {
   if (!value.defined())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": expected a defined Series");
   if (!value.dtype().is_floating() && !value.dtype().is_complex())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": values must have a floating or complex dtype");
   if (value.numel() == 0)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": values must not be empty");
   const bool finite = value.dtype().is_complex()
                           ? value.real().isfinite().all().item<bool>() &&
                                 value.imag().isfinite().all().item<bool>()
                           : value.isfinite().all().item<bool>();
   if (!finite)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": values must be finite");
 }
 
@@ -62,7 +63,7 @@ std::vector<std::int64_t> resolve_spaces(std::vector<std::int64_t> spaces,
   if (spaces.empty())
     spaces.push_back(size);
   if (checked_size(spaces, operation) != size)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": subsystem product must match the Hilbert axis");
   return spaces;
@@ -71,22 +72,22 @@ std::vector<std::int64_t> resolve_spaces(std::vector<std::int64_t> spaces,
 void require_same_space(const Ket &left, const Ket &right,
                         const char *operation) {
   if (left.spaces() != right.spaces())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": states must describe the same Hilbert space");
   if (left.value().platform() != right.value().platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": states must share a platform");
 }
 
 void require_same_space(const Op &left, const Op &right,
                         const char *operation) {
   if (left.spaces() != right.spaces())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": operators must describe the same Hilbert space");
   if (left.value().platform() != right.value().platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": operators must share a platform");
 }
 
@@ -169,7 +170,7 @@ Series matmul(const Series &left, const Series &right) {
 
 void require_tolerance(double tolerance, const char *operation) {
   if (!std::isfinite(tolerance) || tolerance < 0.0)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": tolerance must be finite and non-negative");
 }
 
@@ -177,7 +178,7 @@ void require_hermitian(const Op &value, double tolerance,
                        const char *operation) {
   require_tolerance(tolerance, operation);
   if (!is_herm(value, tolerance, tolerance).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": expected a Hermitian operator");
 }
 
@@ -191,7 +192,7 @@ pluss::subsp::linearalg::EigenDecomposition
 require_density(const Op &state, double tolerance, const char *operation) {
   auto decomposition = eigen(state, tolerance, operation);
   if (!decomposition.values.ge(-tolerance).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": density operator must be positive semidefinite");
   const Series tr = trace(state);
   const Series real_ok = tr.real().isclose(tr.real().mul(0.0).add(1.0),
@@ -199,7 +200,7 @@ require_density(const Op &state, double tolerance, const char *operation) {
   const Series imag_ok = tr.dtype().is_complex() ? tr.imag().abs().le(tolerance)
                                                  : tr.mul(0.0).eq(0.0);
   if (!real_ok.logical_and(imag_ok).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": density operator must have unit trace");
   return decomposition;
 }
@@ -214,25 +215,25 @@ Series psd_sqrt(const Op &state, double tolerance, const char *operation) {
 void require_same_space(const Op &op_value, const Ket &state,
                         const char *operation) {
   if (op_value.spaces() != state.spaces())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": operator and state must describe the same "
                                 "Hilbert space");
   if (op_value.value().platform() != state.value().platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": operator and state must share a platform");
 }
 
 std::vector<double> time_values(const Series &times, const char *operation) {
   require_numeric(times, operation);
   if (!times.dtype().is_floating() || times.dim() != 1)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": times must be a one-dimensional real "
                                 "floating Series");
   std::vector<double> values =
       times.to(Platform::CPU, ScalarType::Float64).host<double>();
   for (std::size_t index = 1; index < values.size(); ++index) {
     if (!(values[index] > values[index - 1]))
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": times must be strictly increasing");
   }
   return values;
@@ -261,7 +262,7 @@ void require_solve_options(const SolveOptions &options, const char *operation) {
       !(options.minimum_step >= 0.0) || !std::isfinite(options.minimum_step) ||
       !(options.maximum_step > 0.0) || std::isnan(options.maximum_step) ||
       options.max_steps <= 0 || options.minimum_step > options.maximum_step)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": invalid integration, tolerance, or Planck-scale option");
 }
@@ -270,7 +271,7 @@ Series evolve(const pluss::subsp::math::ode::LinearOdeFn &rhs, Series initial,
               const std::vector<double> &times, std::int64_t trailing_axes,
               const SolveOptions &options) {
   if (options.method == SolveMethod::Krylov)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum: Krylov exponential action requires a "
         "time-independent sparse Hamiltonian");
   std::vector<Series> states;
@@ -323,7 +324,7 @@ void require_sparse_space(const SparseOp &value,
                           const std::vector<std::int64_t> &spaces,
                           Platform platform, const char *operation) {
   if (value.spaces() != spaces || value.map().values().platform() != platform)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": sparse operators and state must share a Hilbert space and "
         "platform");
@@ -361,7 +362,7 @@ void require_sparse_hermitian(
         reverse == canonical.end() ? std::complex<double>{} : reverse->second;
     const double scale = std::max({1.0, std::abs(value), std::abs(paired)});
     if (std::abs(value - std::conj(paired)) > tolerance * scale)
-      throw std::domain_error(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                               ": Hermitian sparse contract is false");
   }
 }
@@ -399,7 +400,7 @@ Ket ket(Series amplitudes, std::vector<std::int64_t> spaces) {
   constexpr const char *operation = "natsci::common::quantum::ket";
   require_numeric(amplitudes, operation);
   if (amplitudes.dim() < 1)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::ket: amplitudes must have shape [..., N]");
   spaces = resolve_spaces(std::move(spaces), amplitudes.size(-1), operation);
   return detail::Access::ket(std::move(amplitudes), std::move(spaces));
@@ -409,7 +410,7 @@ Op op(Series values, std::vector<std::int64_t> spaces) {
   constexpr const char *operation = "natsci::common::quantum::op";
   require_numeric(values, operation);
   if (values.dim() < 2 || values.size(-2) != values.size(-1))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::op: values must have shape [..., N, N]");
   spaces = resolve_spaces(std::move(spaces), values.size(-1), operation);
   return detail::Access::op(std::move(values), std::move(spaces));
@@ -435,13 +436,13 @@ Series norm(const Ket &state) {
 
 Ket normalize(const Ket &state, double tolerance) {
   if (tolerance < 0.0 || !std::isfinite(tolerance))
-    throw std::invalid_argument("natsci::common::quantum::normalize: tolerance "
+    PLUSS_FAIL("natsci::common::quantum::normalize: tolerance "
                                 "must be finite and non-negative");
   if (tolerance == 0.0)
     tolerance = default_tolerance(state.value());
   const Series magnitude = norm(state);
   if (!magnitude.gt(tolerance).all().item<bool>())
-    throw std::domain_error("natsci::common::quantum::normalize: every state "
+    PLUSS_FAIL("natsci::common::quantum::normalize: every state "
                             "must have non-zero norm");
   return detail::Access::ket(state.value().div(magnitude.unsqueeze(-1)),
                              state.spaces());
@@ -462,7 +463,7 @@ Series trace(const Op &value) { return batched_trace(value.value()); }
 
 Series is_herm(const Op &value, double rtol, double atol) {
   if (rtol < 0.0 || atol < 0.0 || !std::isfinite(rtol) || !std::isfinite(atol))
-    throw std::invalid_argument("natsci::common::quantum::is_herm: tolerances "
+    PLUSS_FAIL("natsci::common::quantum::is_herm: tolerances "
                                 "must be finite and non-negative");
   return value.value()
       .isclose(value.value().adjoint(), rtol, atol, false)
@@ -478,11 +479,11 @@ Op density(const Ket &state) {
 
 Series expect(const Op &observable, const Ket &state) {
   if (observable.spaces() != state.spaces())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::expect: observable and state must describe "
         "the same Hilbert space");
   if (observable.value().platform() != state.value().platform())
-    throw std::invalid_argument("natsci::common::quantum::expect: observable "
+    PLUSS_FAIL("natsci::common::quantum::expect: observable "
                                 "and state must share a platform");
   const ScalarType dtype = joint_dtype(observable.value(), state.value());
   const Series amplitudes = cast_to(state.value(), dtype);
@@ -523,21 +524,35 @@ Ket ground(const Op &value, double tolerance) {
 Series entropy(const Op &state, double base, double tolerance) {
   constexpr const char *operation = "natsci::common::quantum::entropy";
   if (!std::isfinite(base) || base <= 0.0 || base == 1.0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::entropy: base must be finite, positive, "
         "and different from one");
   const auto decomposition = require_density(state, tolerance, operation);
   const Series probabilities = decomposition.values.clamp_min(0.0);
   const Series terms = pluss::series::where(probabilities.gt(tolerance), probabilities.mul(probabilities.clamp_min(tolerance).log()), probabilities.mul(0.0));
-  return terms.sum(-1).neg().div(std::log(base));
+  // adding 0.0 turns the -0.0 that negating a zero sum produces (a pure state) into +0.0
+  return terms.sum(-1).neg().add(0.0).div(std::log(base));
 }
 
+namespace {
+// Fidelity is a number between 0 and 1 only for normalised states; an unnormalised ket would be silently clamped to a wrong value.
+void require_unit_norm(const Ket &state, const char *operation) {
+  const double tolerance = std::max(1e-6, 1e3 * default_tolerance(state.value()));
+  if (!norm(state).sub(1.0).abs().le(tolerance).all().item<bool>())
+    PLUSS_FAIL(std::string(operation) +
+               ": states must be normalised (see normalize)");
+}
+} // namespace
+
 Series root_fidelity(const Ket &left, const Ket &right) {
+  require_unit_norm(left, "natsci::common::quantum::root_fidelity");
+  require_unit_norm(right, "natsci::common::quantum::root_fidelity");
   return inner(left, right).abs().clamp(0.0, 1.0);
 }
 
 Series root_fidelity(const Ket &left, const Op &right, double tolerance) {
   require_same_space(right, left, "natsci::common::quantum::root_fidelity");
+  require_unit_norm(left, "natsci::common::quantum::root_fidelity");
   require_density(right, tolerance, "natsci::common::quantum::root_fidelity");
   return expect(right, left).real().clamp(0.0, 1.0).sqrt();
 }
@@ -571,10 +586,10 @@ Series fidelity(const Op &left, const Op &right, double tolerance) {
 
 Ket tensor(const Ket &left, const Ket &right) {
   if (left.value().platform() != right.value().platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::tensor: states must share a platform");
   if (left.size() > std::numeric_limits<std::int64_t>::max() / right.size())
-    throw std::overflow_error(
+    PLUSS_FAIL(
         "natsci::common::quantum::tensor: Hilbert-space size overflows int64");
   const std::int64_t size = left.size() * right.size();
   const Series product =
@@ -587,10 +602,10 @@ Ket tensor(const Ket &left, const Ket &right) {
 
 Op tensor(const Op &left, const Op &right) {
   if (left.value().platform() != right.value().platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::tensor: operators must share a platform");
   if (left.size() > std::numeric_limits<std::int64_t>::max() / right.size())
-    throw std::overflow_error(
+    PLUSS_FAIL(
         "natsci::common::quantum::tensor: Hilbert-space size overflows int64");
   const std::int64_t size = left.size() * right.size();
   const Series product = left.value().unsqueeze(-1).unsqueeze(-3).mul(
@@ -608,10 +623,10 @@ Op partial_trace(const Op &state, std::vector<std::int64_t> keep) {
   const std::int64_t count = static_cast<std::int64_t>(state.spaces().size());
   std::sort(keep.begin(), keep.end());
   if (std::adjacent_find(keep.begin(), keep.end()) != keep.end())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": kept subsystem indices must be unique");
   if (!keep.empty() && (keep.front() < 0 || keep.back() >= count))
-    throw std::out_of_range(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": kept subsystem index is out of range");
 
   std::vector<std::int64_t> traced;
@@ -660,7 +675,7 @@ Op partial_trace(const Op &state, std::vector<std::int64_t> keep) {
 Op unitary(const Op &hamiltonian, double time, double hbar) {
   constexpr const char *operation = "natsci::common::quantum::unitary";
   if (!std::isfinite(time) || !std::isfinite(hbar) || hbar <= 0.0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::unitary: time must be finite and hbar must "
         "be finite and positive");
   require_hermitian(hamiltonian, 1e-9, operation);
@@ -675,7 +690,7 @@ Ket schrod(const Op &hamiltonian, const Ket &initial, const Series &times,
   require_same_space(hamiltonian, initial, operation);
   require_hermitian(hamiltonian, 1e-9, operation);
   if (!std::isfinite(hbar) || hbar <= 0.0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::schrod: hbar must be finite and positive");
   const std::vector<double> checked_times = time_values(times, operation);
   const Series t =
@@ -697,7 +712,7 @@ Ket schrod(const OpFn &hamiltonian, const Ket &initial, const Series &times,
            const SolveOptions &options) {
   constexpr const char *operation = "natsci::common::quantum::schrod";
   if (!hamiltonian)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": Hamiltonian callback is required");
   require_solve_options(options, operation);
   const auto checked_times = time_values(times, operation);
@@ -726,7 +741,7 @@ Ket schrod(const SparseOp &hamiltonian, const Ket &initial, const Series &times,
   require_sparse_space(hamiltonian, initial.spaces(),
                        initial.value().platform(), operation);
   if (!hamiltonian.hermitian())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": sparse Hamiltonian must carry the Hermitian "
                             "contract");
   const auto checked_times = time_values(times, operation);
@@ -748,7 +763,7 @@ Ket schrod(const SparseOp &hamiltonian, const Ket &initial, const Series &times,
           [&](const Series &state) { return rhs(time, state); }, start, {-1},
           time - checked_times.front(), exp_options);
       if (!evolved.converged.all().item<bool>())
-        throw std::runtime_error(
+        PLUSS_FAIL(
             "natsci::common::quantum::schrod: Krylov subspace did not meet "
             "the requested tolerance");
       states.push_back(std::move(evolved.value));
@@ -764,7 +779,7 @@ Channel channel(std::vector<Op> kraus, double tolerance) {
   constexpr const char *operation = "natsci::common::quantum::channel";
   require_tolerance(tolerance, operation);
   if (kraus.empty())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::quantum::channel: at least one Kraus operator is "
         "required");
   const auto spaces = kraus.front().spaces();
@@ -774,7 +789,7 @@ Channel channel(std::vector<Op> kraus, double tolerance) {
   for (std::size_t index = 1; index < kraus.size(); ++index) {
     if (kraus[index].spaces() != spaces ||
         kraus[index].value().platform() != platform)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::quantum::channel: Kraus operators must share a "
           "Hilbert space and platform");
     closure = closure.add(
@@ -784,7 +799,7 @@ Channel channel(std::vector<Op> kraus, double tolerance) {
   if (!closure.isclose(expected, tolerance, tolerance, false)
            .all()
            .item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::common::quantum::channel: Kraus operators are not trace "
         "preserving");
   return detail::Access::channel(std::move(kraus), spaces);
@@ -797,11 +812,11 @@ Op apply(const Channel &map, const Ket &state) {
 Op apply(const Channel &map, const Op &state) {
   constexpr const char *operation = "natsci::common::quantum::apply";
   if (map.spaces() != state.spaces())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": channel and state must describe the same "
                                 "Hilbert space");
   if (map.kraus().front().value().platform() != state.value().platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": channel and state must share a platform");
   const auto apply_one = [&](const Op &kraus) {
     const ScalarType dtype = joint_dtype(kraus.value(), state.value());
@@ -857,7 +872,7 @@ Op lindblad(const OpFn &hamiltonian, const Op &initial, const Series &times,
             const CollapseFn &collapse, const SolveOptions &options) {
   constexpr const char *operation = "natsci::common::quantum::lindblad";
   if (!hamiltonian)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": Hamiltonian callback is required");
   require_density(initial, 1e-9, operation);
   require_solve_options(options, operation);
@@ -908,7 +923,7 @@ Op lindblad(const SparseOp &hamiltonian, const Op &initial, const Series &times,
   require_sparse_space(hamiltonian, initial.spaces(),
                        initial.value().platform(), operation);
   if (!hamiltonian.hermitian())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": sparse Hamiltonian must carry the Hermitian "
                             "contract");
   ScalarType dtype = pluss::codem::promote_types(

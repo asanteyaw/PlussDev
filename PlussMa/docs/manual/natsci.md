@@ -1,10 +1,9 @@
-<!-- generated from natsci.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Natural sciences
 
 The natural-science guides model living, chemical and physical systems as equations that are solved for many cases at once. Every model takes plain quantities in and returns arrays, so a single call can advance a hundred parameter choices or a thousand populations together, and the same program runs on one case or on a batch.
 
 - [Biology](natsci/biology.md)
+- [Chemistry](natsci/chemistry.md)
 - [Physics](natsci/physics.md)
 
 ```{toctree}
@@ -12,5 +11,6 @@ The natural-science guides model living, chemical and physical systems as equati
 :hidden:
 
 natsci/biology
+natsci/chemistry
 natsci/physics
 ```

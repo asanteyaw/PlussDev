@@ -172,7 +172,7 @@ void test_reverse_and_failures() {
   bool missing = false;
   try {
     (void)fluids::flow_bounds(grid, {fluids::no_slip({0, spatial::Side::Low})});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     missing = true;
   }
   expect(missing, "flow boundary set accepted missing faces");
@@ -189,7 +189,7 @@ void test_reverse_and_failures() {
     (void)fluids::vel_ghosts(
         common::SeriesQuantity<common::Speed>::from_si(velocity_values()), grid,
         bad, 0);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_profile = true;
   }
   expect(bad_profile, "velocity reconstruction accepted a malformed profile");

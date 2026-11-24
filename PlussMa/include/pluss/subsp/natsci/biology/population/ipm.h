@@ -96,6 +96,7 @@ inline Series variance_size(const Series &density, const Mesh &m) {
 // ---- spreading speed of an integrodifference equation ---------------------------------------------------------------------------
 // c* = min_{0 < s < s_max} ln(R0 M(s)) / s by golden-section search, all lanes at once (ln_r0 any shape, `mgf` elementwise in s)
 inline Series spreading_speed(const Series &ln_r0, const std::function<Series(const Series &)> &mgf, double s_max, int iterations = 200) {
+  dynamics::require(ln_r0.gt(0.0).all().item<bool>(), "ipm::spreading_speed: ln R0 must be positive (a population with R0 <= 1 does not spread)");
   const double phi = (std::sqrt(5.0) - 1.0) / 2.0;
   Series a = ln_r0.mul(0.0).add(1e-6 * s_max), b = ln_r0.mul(0.0).add(s_max * (1.0 - 1e-9));
   const auto f = [&](const Series &s) { return ln_r0.add(mgf(s).log()).div(s); };

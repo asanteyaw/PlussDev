@@ -182,7 +182,7 @@ void test_failures() {
   bool bad_space = false;
   try {
     (void)quantum::ket(pluss::make_series({1.0, 0.0}), {2, 2});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_space = true;
   }
   expect(bad_space, "ket accepted incompatible subsystem dimensions");
@@ -190,7 +190,7 @@ void test_failures() {
   bool zero_state = false;
   try {
     (void)quantum::normalize(quantum::ket(pluss::make_series({0.0, 0.0})));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     zero_state = true;
   }
   expect(zero_state, "normalize accepted the zero vector");
@@ -198,7 +198,7 @@ void test_failures() {
   bool nonsquare = false;
   try {
     (void)quantum::op(pluss::make_series({{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     nonsquare = true;
   }
   expect(nonsquare, "op accepted a non-square matrix");
@@ -208,7 +208,7 @@ void test_failures() {
     const auto rho = quantum::density(
         quantum::ket(pluss::make_series({1.0, 0.0, 0.0, 0.0}), {2, 2}));
     (void)quantum::partial_trace(rho, {0, 0});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     duplicate = true;
   }
   expect(duplicate, "partial_trace accepted duplicate subsystem indices");

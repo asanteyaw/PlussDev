@@ -36,10 +36,10 @@ The latest validated development build. It carries no version number and is repl
 Free functions now live in the lowercase namespaces, and the types hold only methods. These spellings were removed with no alias left behind:
 
 - `pluss::Series::empty`, `zeros`, `ones`, `full`, `arange`, `linspace`, `eye`, `rand`, `randn` are now `pluss::series::empty`, `zeros`, `ones`, `full`, `arange`, `linspace`, `eye`, `rand`, `randn`, with the same arguments. `pluss::series::arange` now takes `double` for `start`, `end` and `step`, and every function that took a `Platform` has a `pluss::series::` form that takes one. `Series::from_storage` is gone; it was only used inside the library.
-- `pluss::Series::einsum(equation, operands)` is now `pluss::series::einsum(equation, operands)`.
-- `pluss::Timeline::from_ymd`, `from_ymdhms`, `from_epoch_seconds`, `from_epoch_millis`, `from_epoch_micros`, `from_buffer`, `now`, `today`, `yesterday` and `tomorrow` are now `pluss::timeline::` functions of the same names. `Timeline::date_range` (which returned a `std::vector`) is gone: use `pluss::timeline::date_range`, which returns a `Timeline`.
-- `pluss::Duration::range` is now `pluss::duration::range`.
-- `pluss::Note::undefined()` is now `pluss::note::undefined()`.
+- `pluss::series::einsum(equation, operands)` is now `pluss::series::einsum(equation, operands)`.
+- `pluss::timeline::from_ymd`, `from_ymdhms`, `from_epoch_seconds`, `from_epoch_millis`, `from_epoch_micros`, `from_buffer`, `now`, `today`, `yesterday` and `tomorrow` are now `pluss::timeline::` functions of the same names. `Timeline::date_range` (which returned a `std::vector`) is gone: use `pluss::timeline::date_range`, which returns a `Timeline`.
+- `pluss::duration::range` is now `pluss::duration::range`.
+- `pluss::note::undefined()` is now `pluss::note::undefined()`.
 - `pluss::table::examples()` and `example(name)` are now `pluss::loader::datastores()` and `datastore(name)`.
 
 ## Compatibility

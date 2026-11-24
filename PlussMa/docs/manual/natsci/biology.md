@@ -1,5 +1,3 @@
-<!-- generated from biology.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology
 
 Biological models describe how quantities such as population sizes, concentrations and forces change in time. The guides begin with populations: how a single species grows and how its growth is limited.
@@ -25,6 +23,23 @@ Biological models describe how quantities such as population sizes, concentratio
 12. **How does diffusion create patterns?** Turing instability.
 13. **How does blood flow?** Resistance, pulsation, wave speed and the Windkessel.
 
+14. **How do genes control each other?** Switches and clocks made of repressors.
+15. **How do ligands bind?** Depletion, competition and cooperativity.
+
+16. **How does a membrane hold and change a voltage?** Balance voltages, the resting voltage and the action potential.
+17. **How stable is a protein?** Unfolding by denaturant and by temperature.
+18. **How do soft tissues deform?** Hyperelastic stress and stretch.
+19. **How do molecules and populations spread?** Diffusion and invasion fronts.
+
+20. **Which enzyme controls a pathway?** Elasticities and control coefficients.
+21. **How does a delay change a population?** Delayed growth and its stability.
+22. **How do populations structured by size behave?** Integral projection models.
+23. **How do we read extinction risk from counts?** State-space fitting of census data.
+24. **How does DNA melt?** Nearest-neighbour thermodynamics.
+
+25. **How do reaction networks behave?** Rates, steady states and conservation laws.
+26. **Where does evolution of a trait lead?** Singular strategies and branching.
+
 Chapters, in reading order:
 
 - [Biology 1: Growth](biology/bio_01_growth.md)
@@ -40,6 +55,19 @@ Chapters, in reading order:
 - [Biology 11: Muscle](biology/bio_11_muscle.md)
 - [Biology 12: Patterns](biology/bio_12_patterns.md)
 - [Biology 13: Blood Flow](biology/bio_13_blood_flow.md)
+- [Biology 14: Gene Circuits](biology/bio_14_gene_circuits.md)
+- [Biology 15: Binding](biology/bio_15_binding.md)
+- [Biology 16: Membranes](biology/bio_16_membranes.md)
+- [Biology 17: Protein Folding](biology/bio_17_folding.md)
+- [Biology 18: Tissue Mechanics](biology/bio_18_tissue.md)
+- [Biology 19: Diffusion and Fronts](biology/bio_19_diffusion.md)
+- [Biology 20: Metabolic Control](biology/bio_20_control.md)
+- [Biology 21: Delay Models](biology/bio_21_delays.md)
+- [Biology 22: Size-Structured Populations](biology/bio_22_size.md)
+- [Biology 23: Census Data](biology/bio_23_census.md)
+- [Biology 24: Nucleic Acids](biology/bio_24_nucleic.md)
+- [Biology 25: Reaction Networks](biology/bio_25_networks.md)
+- [Biology 26: Adaptive Dynamics](biology/bio_26_adaptation.md)
 
 <!-- apiref:toctree:start -->
 ```{toctree}
@@ -59,5 +87,18 @@ biology/bio_10_proteins
 biology/bio_11_muscle
 biology/bio_12_patterns
 biology/bio_13_blood_flow
+biology/bio_14_gene_circuits
+biology/bio_15_binding
+biology/bio_16_membranes
+biology/bio_17_folding
+biology/bio_18_tissue
+biology/bio_19_diffusion
+biology/bio_20_control
+biology/bio_21_delays
+biology/bio_22_size
+biology/bio_23_census
+biology/bio_24_nucleic
+biology/bio_25_networks
+biology/bio_26_adaptation
 ```
 <!-- apiref:toctree:end -->

@@ -215,7 +215,7 @@ void test_drift_and_failures() {
         common::SeriesQuantity<Coordinate>::from_si(
             pluss::series::make({1.0, 2.0})),
         common::SeriesQuantity<Momentum>::from_si(pluss::series::make({1.0})));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wrong_shape = true;
   }
   expect(wrong_shape, "phase state accepted mismatched canonical arrays");
@@ -234,7 +234,7 @@ void test_drift_and_failures() {
           q.si_value().square());
     };
     (void)mechanics::hamiltonian(invalid, state);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wrong_energy_shape = true;
   }
   expect(wrong_energy_shape,
@@ -250,7 +250,7 @@ void test_drift_and_failures() {
         common::ScalarQuantity<common::Time>::from_si(
             std::numeric_limits<double>::infinity()),
         harmonic_potential, harmonic_kinetic);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     nonfinite_step = true;
   }
   expect(nonfinite_step, "symplectic step accepted infinite time");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
 #include <cmath>
@@ -33,7 +34,7 @@ private:
 
   void require_axis(std::int64_t axis, const char *operation) const {
     if (axis < 0 || axis >= dim())
-      throw std::out_of_range(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                               ": spatial axis is out of range");
   }
 
@@ -53,23 +54,23 @@ private:
 make_periodic_grid(std::vector<std::int64_t> shape,
                    std::vector<ScalarQuantity<Length>> spacing) {
   if (shape.empty() || shape.size() > 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::make_periodic_grid: expected one to three spatial "
         "axes");
   if (shape.size() != spacing.size())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::make_periodic_grid: shape and spacing rank mismatch");
 
   std::vector<double> spacing_si;
   spacing_si.reserve(spacing.size());
   for (std::size_t axis = 0; axis < shape.size(); ++axis) {
     if (shape[axis] < 3)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::spatial::make_periodic_grid: every extent must be at least "
           "three for a centered periodic stencil");
     const double value = spacing[axis].si_value();
     if (!(value > 0.0) || !std::isfinite(value))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::spatial::make_periodic_grid: spacing must be finite and "
           "positive");
     spacing_si.push_back(value);
@@ -81,10 +82,10 @@ namespace detail {
 
 inline void require_numeric_field(const Series &value, const char *operation) {
   if (!value.defined())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": field must be defined");
   if (!value.dtype().is_floating() && !value.dtype().is_complex())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": field must have a floating or complex "
                                 "dtype");
 }
@@ -93,13 +94,13 @@ inline void require_scalar_layout(const Series &value, const PeriodicGrid &grid,
                                   const char *operation) {
   require_numeric_field(value, operation);
   if (value.dim() < grid.dim())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": field rank is smaller than grid rank");
   const std::int64_t first_spatial = value.dim() - grid.dim();
   for (std::int64_t axis = 0; axis < grid.dim(); ++axis) {
     if (value.size(first_spatial + axis) !=
         grid.shape()[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": trailing spatial shape does not match "
                                   "the grid");
   }
@@ -110,16 +111,16 @@ inline std::int64_t require_vector_layout(const Series &value,
                                           const char *operation) {
   require_numeric_field(value, operation);
   if (value.dim() < grid.dim() + 1)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": vector field has no component axis");
   const std::int64_t component_axis = value.dim() - grid.dim() - 1;
   if (value.size(component_axis) != grid.dim())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": component count must equal grid rank");
   for (std::int64_t axis = 0; axis < grid.dim(); ++axis) {
     if (value.size(component_axis + 1 + axis) !=
         grid.shape()[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": trailing spatial shape does not match "
                                   "the grid");
   }
@@ -131,19 +132,19 @@ inline std::int64_t require_tensor_layout(const Series &value,
                                           const char *operation) {
   require_numeric_field(value, operation);
   if (value.dim() < grid.dim() + 2)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": tensor field has fewer than two component "
                                 "axes");
   const std::int64_t row_axis = value.dim() - grid.dim() - 2;
   if (value.size(row_axis) != grid.dim() ||
       value.size(row_axis + 1) != grid.dim())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": both tensor component counts must equal "
                                 "grid rank");
   for (std::int64_t axis = 0; axis < grid.dim(); ++axis) {
     if (value.size(row_axis + 2 + axis) !=
         grid.shape()[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": trailing spatial shape does not match "
                                   "the grid");
   }
@@ -153,7 +154,7 @@ inline std::int64_t require_tensor_layout(const Series &value,
 inline void require_axis(const PeriodicGrid &grid, std::int64_t axis,
                          const char *operation) {
   if (axis < 0 || axis >= grid.dim())
-    throw std::out_of_range(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": spatial axis is out of range");
 }
 
@@ -327,7 +328,7 @@ back_diff(const Series &value, const PeriodicGrid &grid, std::int64_t axis) {
     return partial(y, grid, 0).sub(partial(x, grid, 1));
   }
   if (grid.dim() != 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::curl: curl requires a two- or three-dimensional "
         "grid");
 
@@ -348,19 +349,19 @@ back_diff(const Series &value, const PeriodicGrid &grid, std::int64_t axis) {
       detail::require_vector_layout(velocity, grid, operation);
   detail::require_scalar_layout(value, grid, operation);
   if (velocity.scalar_type() != value.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::advect: velocity and field dtype mismatch");
   if (velocity.platform() != value.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::advect: velocity and field platform mismatch");
   const std::int64_t velocity_batch_rank = velocity_axis;
   const std::int64_t value_batch_rank = value.dim() - grid.dim();
   if (velocity_batch_rank != value_batch_rank)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::advect: velocity and field batch rank mismatch");
   for (std::int64_t axis = 0; axis < value_batch_rank; ++axis) {
     if (velocity.size(axis) != value.size(axis))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::spatial::advect: velocity and field batch shape mismatch");
   }
 

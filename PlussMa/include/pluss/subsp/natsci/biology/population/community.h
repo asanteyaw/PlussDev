@@ -34,7 +34,11 @@ inline Series spectral_abscissa(const Series &a, int squarings = 40) {
 
 // -d I + off-diagonal entries N(0, sigma^2) with probability `connectance` (symmetric pattern), pair correlation tau; `lanes` independent matrices
 inline Series random_community(std::int64_t species, std::int64_t lanes, double sigma, double connectance, double tau, double d, std::uint64_t seed = 0) {
-  dynamics::require(species >= 2 && lanes >= 1 && sigma >= 0.0 && connectance > 0.0 && connectance <= 1.0 && std::abs(tau) <= 1.0, "random_community: invalid arguments");
+  dynamics::require(species >= 2, "random_community: need at least two species");
+  dynamics::require(lanes >= 1, "random_community: need at least one community (lanes >= 1)");
+  dynamics::require(sigma >= 0.0, "random_community: the interaction standard deviation sigma must be non-negative");
+  dynamics::require(connectance > 0.0 && connectance <= 1.0, "random_community: connectance must lie in (0, 1]");
+  dynamics::require(std::abs(tau) <= 1.0, "random_community: the pair correlation tau must lie in [-1, 1]");
   const Config cfg = Config{}.with_dtype(pluss::ScalarType::Float64);
   const std::uint64_t base = pluss::tils::seed_or_next(seed);
   const Series z1 = pluss::series::randn({lanes, species, species}, cfg.dtype, base + 1), z2 = pluss::series::randn({lanes, species, species}, cfg.dtype, base + 2);
@@ -63,7 +67,7 @@ inline Series resident_equilibrium(const Series &r, const Series &a, const Serie
   const Series eye = pluss::series::eye(s, cfg);
   // absent rows become the identity (n_j = 0 equation), present rows are A n = -r restricted to present columns
   const Series mat = m.unsqueeze(-1).mul(a.mul(m.unsqueeze(-2))).add(eye.mul(m.neg().add(1.0)));
-  return dynamics::solve(mat, r.neg().mul(m));
+  return dynamics::solve(mat, r.neg().mul(m).add(0.0)).add(0.0); // + 0.0 turns a negative zero (absent species) into a plain zero
 }
 inline Series invasion_growth_rate(const Series &r, const Series &a, const Series &resident) {
   const Series n = resident_equilibrium(r, a, resident);

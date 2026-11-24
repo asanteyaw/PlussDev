@@ -191,7 +191,7 @@ inline std::pair<double, double> loopless_range_exact(const Network &net, const 
     mp.integer = loop.integer;
     const auto sol = math::milp::solve(mp, mopt);
     dynamics::require(sol.status == math::milp::Status::Optimal, "loopless_range_exact: the loop-law MILP did not reach optimality");
-    ends[side] = (side == 0 ? 1.0 : -1.0) * sol.objective.item<double>();
+    ends[side] = (side == 0 ? 1.0 : -1.0) * sol.objective.item<double>() + 0.0; // + 0.0: a zero bound is +0, not -0
   }
   return {ends[0], ends[1]};
 }

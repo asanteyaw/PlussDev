@@ -1,5 +1,3 @@
-<!-- generated from bio_02_interactions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 2: Interacting Species
 
 Populations rarely live alone. This chapter follows one species preying on another, and then communities of several competing species: where they settle, whether that point is stable, and who can invade.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/diff.h"
 #include "pluss/subsp/natsci/physics/mechanics/state.h"
@@ -91,22 +92,22 @@ inline void require_energy_layout(const Series &energy,
                                   const char *operation) {
   detail::require_variational_value(energy, operation, "callback output");
   if (energy.scalar_type() != coordinate.scalar_type())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": callback output dtype must match state");
   if (energy.platform() != coordinate.platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": callback output platform must match state");
 
   const auto batch = detail::batch_shape(coordinate);
   if (energy.dim() == 0)
     return;
   if (energy.dim() != static_cast<std::int64_t>(batch.size()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": callback output must be scalar or have the state batch shape");
   for (std::int64_t axis = 0; axis < energy.dim(); ++axis)
     if (energy.size(axis) != batch[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": callback output must be scalar or have the state batch shape");
 }
@@ -181,7 +182,7 @@ symplectic_step(const PhaseState<CoordinateDimension> &state,
                     common::ScalarQuantity<common::Time>::from_si(0.0),
                 const VariationalOptions &options = {}) {
   if (!std::isfinite(step.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::mechanics::symplectic_step: step must be finite");
   if (step.si_value() == 0.0)
     return state;

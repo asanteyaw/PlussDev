@@ -21,17 +21,20 @@ namespace pluss::subsp::natsci::biology::population::parasitoid {
 using dynamics::Coeff;
 
 inline Series nicholson_bailey(const Series &state, const Coeff &lambda, const Coeff &a, const Coeff &c) {
+  dynamics::require_species(state, 2, "parasitoid::nicholson_bailey: state (hosts, parasitoids)");
   const Series h = state.select(-1, 0), p = state.select(-1, 1);
   const Series escape = p.mul(a.on(p)).neg().exp();
   return h.mul(lambda.on(h)).mul(escape).unsqueeze(-1).unite(std::vector<Series>{h.mul(c.on(h)).mul(escape.neg().add(1.0)).unsqueeze(-1)}, state.dim() - 1);
 }
 inline Series beddington(const Series &state, const Coeff &r, const Coeff &k, const Coeff &a, const Coeff &c) {
+  dynamics::require_species(state, 2, "parasitoid::beddington: state (hosts, parasitoids)");
   const Series h = state.select(-1, 0), p = state.select(-1, 1);
   const Series growth = h.div(k.on(h)).neg().add(1.0).mul(r.on(h)).sub(p.mul(a.on(p))).exp();
   const Series hit = p.mul(a.on(p)).neg().exp().neg().add(1.0);
   return h.mul(growth).unsqueeze(-1).unite(std::vector<Series>{h.mul(c.on(h)).mul(hit).unsqueeze(-1)}, state.dim() - 1);
 }
 inline Series negative_binomial(const Series &state, const Coeff &lambda, const Coeff &a, const Coeff &c, const Coeff &k) {
+  dynamics::require_species(state, 2, "parasitoid::negative_binomial: state (hosts, parasitoids)");
   const Series h = state.select(-1, 0), p = state.select(-1, 1);
   const Series escape = p.mul(a.on(p)).div(k.on(p)).add(1.0).pow(k.on(p).neg());
   return h.mul(lambda.on(h)).mul(escape).unsqueeze(-1).unite(std::vector<Series>{h.mul(c.on(h)).mul(escape.neg().add(1.0)).unsqueeze(-1)}, state.dim() - 1);
@@ -39,12 +42,12 @@ inline Series negative_binomial(const Series &state, const Coeff &lambda, const 
 
 // interior equilibria; `like` carries the lane shape (a scalar for one parameter set), the result has a trailing axis (H*, P*)
 inline Series nicholson_bailey_equilibrium(const Coeff &lambda, const Coeff &a, const Coeff &c, const Series &like) {
-  const Series lam = lambda.on(like), p = lam.log().div(a.on(like));
+  const Series lam = lambda.on(like).add(like.mul(0.0)), p = lam.log().div(a.on(like)); // the zero broadcasts scalar coefficients to like's batch shape
   const Series h = p.mul(lam).div(c.on(like).mul(lam.sub(1.0)));
   return h.unsqueeze(-1).unite(std::vector<Series>{p.unsqueeze(-1)}, like.dim());
 }
 inline Series negative_binomial_equilibrium(const Coeff &lambda, const Coeff &a, const Coeff &c, const Coeff &k, const Series &like) {
-  const Series lam = lambda.on(like), kk = k.on(like);
+  const Series lam = lambda.on(like).add(like.mul(0.0)), kk = k.on(like);
   const Series p = lam.pow(kk.reciprocal()).sub(1.0).mul(kk).div(a.on(like));          // (1 + aP/k)^k = lambda
   const Series h = p.mul(lam).div(c.on(like).mul(lam.sub(1.0)));
   return h.unsqueeze(-1).unite(std::vector<Series>{p.unsqueeze(-1)}, like.dim());

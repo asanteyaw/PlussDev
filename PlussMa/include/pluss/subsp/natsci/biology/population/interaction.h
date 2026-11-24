@@ -77,8 +77,10 @@ inline Series predator_prey_equilibrium(const Coeff &alpha, const Coeff &beta,
                                         const Coeff &gamma,
                                         const Coeff &delta,
                                         const Series &like) {
-  const Series x = gamma.on(like).div(delta.on(like));
-  const Series y = alpha.on(like).div(beta.on(like));
+  // a coefficient given as a plain number has no lane axes; adding zero*like gives both components the lane shape of `like`
+  const Series lanes = like.mul(0.0);
+  const Series x = gamma.on(like).div(delta.on(like)).add(lanes);
+  const Series y = alpha.on(like).div(beta.on(like)).add(lanes);
   return x.unsqueeze(-1).unite(std::vector<Series>{y.unsqueeze(-1)}, -1);
 }
 

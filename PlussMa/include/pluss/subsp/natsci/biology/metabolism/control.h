@@ -68,6 +68,10 @@ struct Coefficients final {
 inline Coefficients coefficients(const Series &stoichiometry, const Series &elasticity, const Series &conservation = pluss::series::undefined()) {
   dynamics::require(stoichiometry.dim() == 2 && elasticity.dim() >= 2 && elasticity.size(-1) == stoichiometry.size(0) && elasticity.size(-2) == stoichiometry.size(1),
                     "control::coefficients: N must be [S, R] and E [..., R, S]");
+  // a network with conserved moieties makes N E singular; without the conservation matrix the solve would return garbage instead of failing
+  const std::int64_t given = conservation.defined() ? conservation.size(0) : 0;
+  dynamics::require(given >= conservation_laws(stoichiometry).size(0),
+                    "control::coefficients: the network has moiety conservation laws that were not passed (use control::conservation_laws(N)), so N E is singular");
   const Series n = stoichiometry.to(elasticity.scalar_type()).to(elasticity.platform());
   const Series ne = n.matmul(elasticity);                       // [..., S, S]
   const Series net = ne.transpose(-1, -2);

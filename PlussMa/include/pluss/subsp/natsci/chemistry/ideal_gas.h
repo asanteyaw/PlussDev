@@ -16,6 +16,7 @@
 // NASA validity interval. It is lane-wise and differentiable through Series;
 // no cell or species is copied to host memory.
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/chemistry/kinetics.h"
 
 #include <algorithm>
@@ -279,7 +280,7 @@ private:
 
   static void require(bool condition, const std::string &message) {
     if (!condition)
-      throw std::invalid_argument("natsci::chemistry::ideal_gas: " + message);
+      PLUSS_FAIL("natsci::chemistry::ideal_gas: " + message);
   }
 
   Nasa7 nasa_;

@@ -298,6 +298,7 @@ public:
 
   // Equilibrium constants in concentration units: [..., R].
   [[nodiscard]] Series equilibrium_constants(const Series &t) const {
+    thermo_.check(t); // the polynomials are only valid inside their fitted range
     const Series dg_rt = dynamics::matvec(stoich_, thermo_.g_rt(t));
     const Series dn = stoich_.sum(-1, false);
     const Series log_c0 = t.mul(thermo::gas_constant())
@@ -315,6 +316,7 @@ public:
 
   [[nodiscard]] Progress rates_of_progress(const Series &t,
                                            const Series &c) const {
+    thermo_.check(t); // the overloads taking precomputed properties do not check
     return rates_of_progress(t, c, thermo_.eval(t));
   }
   // Same, reusing already-evaluated thermodynamic properties at t.

@@ -148,10 +148,10 @@ void test_validation() {
   bad.infections = [](const Series &x) { return x.mul(0.0); };
   bad.transfers = [](const Series &x) { return x.select(-1, 0).unsqueeze(-1).unite(std::vector<Series>{x.select(-1, 0).unsqueeze(-1)}, -1); };
   bool threw = false;
-  try { (void)epi::next_generation(bad, vec({0.0, 0.0})); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)epi::next_generation(bad, vec({0.0, 0.0})); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "V off-diagonal sign check");
   threw = false;
-  try { (void)epi::final_susceptible(vec({-1.0}), vec({0.9}), vec({0.1})); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)epi::final_susceptible(vec({-1.0}), vec({0.9}), vec({0.1})); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "negative contact number rejected");
 }
 } // namespace

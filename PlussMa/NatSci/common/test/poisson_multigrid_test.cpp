@@ -1,5 +1,6 @@
 // Poisson solves through multigrid-preconditioned CG against the plain CG baseline (bounded Dirichlet / Neumann / mixed ends with inhomogeneous data,
 // all-flux gauge, 1-3 axes, batches) and against the exact spectral inverse on periodic grids; iteration counts must be mesh independent.
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/poisson.h"
 
 #include <cmath>
@@ -112,7 +113,7 @@ int main() {
       try {
         mgo.stencil = spatial::PoissonStencil::Wide;
         (void)spatial::solve_poisson(rhs, g, mgo);
-      } catch (const std::invalid_argument &) {
+      } catch (const pluss::Error &) {
         threw = true;
       }
       expect(threw, "wide stencil + multigrid is rejected");

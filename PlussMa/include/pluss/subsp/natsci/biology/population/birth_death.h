@@ -122,6 +122,8 @@ inline Series ultimate_extinction(const Series &p, std::int64_t max_iterations =
 inline Series normal_cdf(const Series &z) { return z.mul(1.0 / std::sqrt(2.0)).erf().add(1.0).mul(0.5); }
 // drift mu, variance sigma2 (per unit time), distance x_d = ln(N0 / Nc) > 0 above the threshold, horizon t > 0
 inline Series quasi_extinction_cdf(const Series &mu, const Series &sigma2, const Series &x_d, const Series &t) {
+  dynamics::require(sigma2.gt(0.0).all().item<bool>(), "quasi_extinction_cdf: sigma2 must be strictly positive");
+  dynamics::require(t.gt(0.0).all().item<bool>(), "quasi_extinction_cdf: t must be strictly positive");
   const Series s = sigma2.mul(t).sqrt();
   const Series first = normal_cdf(x_d.neg().sub(mu.mul(t)).div(s));
   const Series second = mu.mul(x_d).mul(-2.0).div(sigma2).exp().mul(normal_cdf(x_d.neg().add(mu.mul(t)).div(s)));

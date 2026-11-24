@@ -14,6 +14,8 @@
 #include "pluss/subsp/natsci/common/quantity.h"
 #include "pluss/subsp/natsci/common/record.h"
 #include "pluss/subsp/natsci/common/solve.h"
+#include "pluss/subsp/natsci/common/ssa.h"
+#include "pluss/subsp/natsci/common/stiff.h"
 #include "pluss/subsp/natsci/common/thermo_poly.h"
 #include "pluss/subsp/natsci/common/trajectory.h"
 #include "pluss/subsp/natsci/common/unit.h"

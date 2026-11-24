@@ -1,6 +1,6 @@
 window.PLUSS_API_NAV = {
   "DataFrame": {
-    "title": "DataFrame",
+    "title": "DataFrame API Reference",
     "slug": "dataframe",
     "landing": "dataframe_api_reference.html",
     "methods": [
@@ -208,7 +208,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameCaseStudyAccessor": {
-    "title": "DataFrameCaseStudyAccessor",
+    "title": "case_study",
     "slug": "dataframe-case-study",
     "landing": "dataframe_case_study_accessor_api_reference.html",
     "methods": [
@@ -222,7 +222,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFramePlotAccessor": {
-    "title": "DataFramePlotAccessor",
+    "title": "plot",
     "slug": "dataframe-plot",
     "landing": "dataframe_plot_api_reference.html",
     "methods": [
@@ -252,7 +252,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameNoteAccessor": {
-    "title": "DataFrameNoteAccessor",
+    "title": "nt",
     "slug": "dataframe-note",
     "landing": "dataframe_note_accessor_api_reference.html",
     "methods": [
@@ -283,7 +283,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameTimelineAccessor": {
-    "title": "DataFrameTimelineAccessor",
+    "title": "tl",
     "slug": "dataframe-timeline",
     "landing": "dataframe_timeline_accessor_api_reference.html",
     "methods": [
@@ -322,7 +322,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameLabelAccessor": {
-    "title": "DataFrameLabelAccessor",
+    "title": "labels",
     "slug": "dataframe-label",
     "landing": "dataframe_label_accessor_api_reference.html",
     "methods": [
@@ -361,7 +361,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameFeatureAxisAccessor": {
-    "title": "DataFrameFeatureAxisAccessor",
+    "title": "feataxis",
     "slug": "dataframe-feataxis",
     "landing": "dataframe_feataxis_accessor_api_reference.html",
     "methods": [
@@ -376,7 +376,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFramePlot3DAccessor": {
-    "title": "DataFramePlot3DAccessor",
+    "title": "plot3d",
     "slug": "dataframe-plot3d",
     "landing": "dataframe_plot3d_accessor_api_reference.html",
     "methods": [
@@ -388,7 +388,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameTsAccessor": {
-    "title": "DataFrameTsAccessor",
+    "title": "ts",
     "slug": "dataframe-ts",
     "landing": "dataframe_ts_accessor_api_reference.html",
     "methods": [
@@ -428,7 +428,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameTsWindowAccessor": {
-    "title": "DataFrameTsWindowAccessor",
+    "title": "window",
     "slug": "dataframe-ts-window",
     "landing": "dataframe_ts_window_accessor_api_reference.html",
     "methods": [
@@ -440,7 +440,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameTsResampler": {
-    "title": "DataFrameTsResampler",
+    "title": "resample",
     "slug": "dataframe-ts-resample",
     "landing": "dataframe_ts_resampler_api_reference.html",
     "methods": [
@@ -458,7 +458,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameGroupBuilder": {
-    "title": "DataFrameGroupBuilder",
+    "title": "group",
     "slug": "dataframe-group",
     "landing": "dataframe_group_accessor_api_reference.html",
     "methods": [
@@ -481,7 +481,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "DataFrameSortBuilder": {
-    "title": "DataFrameSortBuilder",
+    "title": "sort",
     "slug": "dataframe-sort",
     "landing": "dataframe_sort_accessor_api_reference.html",
     "methods": [
@@ -499,7 +499,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ContingencyTable": {
-    "title": "ContingencyTable",
+    "title": "contingency",
     "slug": "dataframe-contingency",
     "landing": "dataframe_contingency_accessor_api_reference.html",
     "methods": [
@@ -517,7 +517,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Shelf": {
-    "title": "Shelf",
+    "title": "Shelf API Reference",
     "slug": "shelf",
     "landing": "shelf_api_reference.html",
     "methods": [
@@ -699,7 +699,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ShelfPlotAccessor": {
-    "title": "ShelfPlotAccessor",
+    "title": "plot",
     "slug": "shelf-plot",
     "landing": "shelf_plot_api_reference.html",
     "methods": [
@@ -721,7 +721,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Atlas": {
-    "title": "Atlas",
+    "title": "Atlas API Reference",
     "slug": "atlas",
     "landing": "atlas_api_reference.html",
     "methods": [
@@ -781,7 +781,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AtlasLabelAccessor": {
-    "title": "AtlasLabelAccessor",
+    "title": "label",
     "slug": "atlas-label",
     "landing": "atlas_label_accessor_api_reference.html",
     "methods": [
@@ -802,7 +802,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AtlasTimelineAccessor": {
-    "title": "AtlasTimelineAccessor",
+    "title": "tl",
     "slug": "atlas-timeline",
     "landing": "atlas_timeline_accessor_api_reference.html",
     "methods": [
@@ -840,7 +840,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AtlasTsAccessor": {
-    "title": "AtlasTsAccessor",
+    "title": "ts",
     "slug": "atlas-ts",
     "landing": "atlas_ts_accessor_api_reference.html",
     "methods": [
@@ -859,7 +859,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AtlasTsResampler": {
-    "title": "AtlasTsResampler",
+    "title": "resample",
     "slug": "atlas-ts-resample",
     "landing": "atlas_ts_resampler_api_reference.html",
     "methods": [
@@ -877,7 +877,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AtlasPlotAccessor": {
-    "title": "AtlasPlotAccessor",
+    "title": "plot",
     "slug": "atlas-plot",
     "landing": "atlas_plot_accessor_api_reference.html",
     "methods": [
@@ -893,7 +893,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogPlotAccessor": {
-    "title": "CatalogPlotAccessor",
+    "title": "plot",
     "slug": "catalog-plot",
     "landing": "catalog_plot_accessor_api_reference.html",
     "methods": [
@@ -910,7 +910,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogPlot3DAccessor": {
-    "title": "CatalogPlot3DAccessor",
+    "title": "plot3d",
     "slug": "catalog-plot3d",
     "landing": "catalog_plot3d_accessor_api_reference.html",
     "methods": [
@@ -922,7 +922,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamPlotAccessor": {
-    "title": "StreamPlotAccessor",
+    "title": "plot",
     "slug": "stream-plot",
     "landing": "stream_plot_accessor_api_reference.html",
     "methods": [
@@ -935,7 +935,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchivePlotAccessor": {
-    "title": "ArchivePlotAccessor",
+    "title": "plot",
     "slug": "archive-plot",
     "landing": "archive_plot_accessor_api_reference.html",
     "methods": [
@@ -951,7 +951,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Stream": {
-    "title": "Stream",
+    "title": "Stream API Reference",
     "slug": "stream",
     "landing": "stream_api_reference.html",
     "methods": [
@@ -1044,7 +1044,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Catalog": {
-    "title": "Catalog",
+    "title": "Catalog API Reference",
     "slug": "catalog",
     "landing": "catalog_api_reference.html",
     "methods": [
@@ -1168,7 +1168,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Archive": {
-    "title": "Archive",
+    "title": "Archive API Reference",
     "slug": "archive",
     "landing": "archive_api_reference.html",
     "methods": [
@@ -1237,7 +1237,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Slot": {
-    "title": "Slot",
+    "title": "Slot API Reference",
     "slug": "slot",
     "landing": "slot_api_reference.html",
     "methods": [
@@ -1300,7 +1300,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Registry": {
-    "title": "Registry",
+    "title": "Registry API Reference",
     "slug": "registry",
     "landing": "registry_api_reference.html",
     "methods": [
@@ -1397,7 +1397,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "Axel": {
-    "title": "Axel",
+    "title": "Axel API Reference",
     "slug": "axel",
     "landing": "axel_api_reference.html",
     "methods": [
@@ -1454,7 +1454,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "SlotCastAccessor": {
-    "title": "SlotCastAccessor",
+    "title": "cast",
     "slug": "slot-cast",
     "landing": "slot_cast_accessor_api_reference.html",
     "methods": [
@@ -1465,7 +1465,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "SlotNoteAccessor": {
-    "title": "SlotNoteAccessor",
+    "title": "nt",
     "slug": "slot-note",
     "landing": "slot_note_accessor_api_reference.html",
     "methods": [
@@ -1495,7 +1495,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "SlotTimelineAccessor": {
-    "title": "SlotTimelineAccessor",
+    "title": "tl",
     "slug": "slot-timeline",
     "landing": "slot_timeline_accessor_api_reference.html",
     "methods": [
@@ -1533,7 +1533,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "RegistryFieldAxisAccessor": {
-    "title": "RegistryFieldAxisAccessor",
+    "title": "fieldaxis",
     "slug": "registry-fieldaxis",
     "landing": "registry_fieldaxis_accessor_api_reference.html",
     "methods": [
@@ -1552,7 +1552,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "RegistryCastAccessor": {
-    "title": "RegistryCastAccessor",
+    "title": "cast",
     "slug": "registry-cast",
     "landing": "registry_cast_accessor_api_reference.html",
     "methods": [
@@ -1563,7 +1563,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "RegistryNoteAccessor": {
-    "title": "RegistryNoteAccessor",
+    "title": "nt",
     "slug": "registry-note",
     "landing": "registry_note_accessor_api_reference.html",
     "methods": [
@@ -1589,7 +1589,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "RegistryTimelineAccessor": {
-    "title": "RegistryTimelineAccessor",
+    "title": "tl",
     "slug": "registry-timeline",
     "landing": "registry_timeline_accessor_api_reference.html",
     "methods": [
@@ -1627,7 +1627,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AxelFieldAxisAccessor": {
-    "title": "AxelFieldAxisAccessor",
+    "title": "fieldaxis",
     "slug": "axel-fieldaxis",
     "landing": "axel_fieldaxis_accessor_api_reference.html",
     "methods": [
@@ -1646,7 +1646,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AxelCastAccessor": {
-    "title": "AxelCastAccessor",
+    "title": "cast",
     "slug": "axel-cast",
     "landing": "axel_cast_accessor_api_reference.html",
     "methods": [
@@ -1657,7 +1657,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AxelNoteAccessor": {
-    "title": "AxelNoteAccessor",
+    "title": "nt",
     "slug": "axel-note",
     "landing": "axel_note_accessor_api_reference.html",
     "methods": [
@@ -1683,7 +1683,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "AxelTimelineAccessor": {
-    "title": "AxelTimelineAccessor",
+    "title": "tl",
     "slug": "axel-timeline",
     "landing": "axel_timeline_accessor_api_reference.html",
     "methods": [
@@ -1721,7 +1721,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogNoteAccessor": {
-    "title": "CatalogNoteAccessor",
+    "title": "nt",
     "slug": "catalog-note",
     "landing": "catalog_note_accessor_api_reference.html",
     "methods": [
@@ -1751,7 +1751,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogTimelineAccessor": {
-    "title": "CatalogTimelineAccessor",
+    "title": "tl",
     "slug": "catalog-timeline",
     "landing": "catalog_timeline_accessor_api_reference.html",
     "methods": [
@@ -1789,7 +1789,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogTimeSeriesAccessor": {
-    "title": "CatalogTimeSeriesAccessor",
+    "title": "ts",
     "slug": "catalog-ts",
     "landing": "catalog_ts_accessor_api_reference.html",
     "methods": [
@@ -1802,7 +1802,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogCastAccessor": {
-    "title": "CatalogCastAccessor",
+    "title": "cast",
     "slug": "catalog-cast",
     "landing": "catalog_cast_accessor_api_reference.html",
     "methods": [
@@ -1813,7 +1813,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "CatalogKeyAxisAccessor": {
-    "title": "CatalogKeyAxisAccessor",
+    "title": "keyaxis",
     "slug": "catalog-keyaxis",
     "landing": "catalog_keyaxis_accessor_api_reference.html",
     "methods": [
@@ -1828,7 +1828,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamCastAccessor": {
-    "title": "StreamCastAccessor",
+    "title": "cast",
     "slug": "stream-cast",
     "landing": "stream_cast_accessor_api_reference.html",
     "methods": [
@@ -1839,7 +1839,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamNoteAccessor": {
-    "title": "StreamNoteAccessor",
+    "title": "nt",
     "slug": "stream-note",
     "landing": "stream_note_accessor_api_reference.html",
     "methods": [
@@ -1869,7 +1869,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamTimelineAccessor": {
-    "title": "StreamTimelineAccessor",
+    "title": "tl",
     "slug": "stream-timeline",
     "landing": "stream_timeline_accessor_api_reference.html",
     "methods": [
@@ -1907,7 +1907,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamTimeSeriesAccessor": {
-    "title": "StreamTimeSeriesAccessor",
+    "title": "ts",
     "slug": "stream-ts",
     "landing": "stream_ts_accessor_api_reference.html",
     "methods": [
@@ -1931,7 +1931,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "StreamLabelAccessor": {
-    "title": "StreamLabelAccessor",
+    "title": "lbl",
     "slug": "stream-lbl",
     "landing": "stream_lbl_accessor_api_reference.html",
     "methods": [
@@ -1944,7 +1944,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchiveLabelAccessor": {
-    "title": "ArchiveLabelAccessor",
+    "title": "label",
     "slug": "archive-label",
     "landing": "archive_label_accessor_api_reference.html",
     "methods": [
@@ -1957,7 +1957,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchiveKeyAxisAccessor": {
-    "title": "ArchiveKeyAxisAccessor",
+    "title": "keyaxis",
     "slug": "archive-keyaxis",
     "landing": "archive_keyaxis_accessor_api_reference.html",
     "methods": [
@@ -1972,7 +1972,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchiveCastAccessor": {
-    "title": "ArchiveCastAccessor",
+    "title": "cast",
     "slug": "archive-cast",
     "landing": "archive_cast_accessor_api_reference.html",
     "methods": [
@@ -1983,7 +1983,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchiveTimelineAccessor": {
-    "title": "ArchiveTimelineAccessor",
+    "title": "tl",
     "slug": "archive-timeline",
     "landing": "archive_timeline_accessor_api_reference.html",
     "methods": [
@@ -2021,7 +2021,7 @@ window.PLUSS_API_NAV = {
     ]
   },
   "ArchiveTimeSeriesAccessor": {
-    "title": "ArchiveTimeSeriesAccessor",
+    "title": "ts",
     "slug": "archive-ts",
     "landing": "archive_ts_accessor_api_reference.html",
     "methods": [
@@ -2038,9 +2038,9 @@ window.PLUSS_API_NAV = {
     "slug": "dataframe-cast",
     "landing": "dataframe_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -2152,6 +2152,7 @@ window.PLUSS_API_NAV = {
     "methods": [
       "add",
       "align_to",
+      "calendar",
       "diff",
       "div",
       "eq",
@@ -2173,6 +2174,7 @@ window.PLUSS_API_NAV = {
       "returns",
       "rolling",
       "rolling_block",
+      "sort",
       "sub",
       "timed",
       "zscore_rolling"

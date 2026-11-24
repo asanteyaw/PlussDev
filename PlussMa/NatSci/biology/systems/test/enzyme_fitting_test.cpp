@@ -3,6 +3,7 @@
 #include "enzyme_fit_reference.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -43,6 +44,31 @@ int main() {
       const auto many = ef::fit_integrated(d, starts);
       expect(many.fit.beta.abs().sub(mat({ref::fit1[0], ref::fit1[1], ref::fit1[0], ref::fit1[1], ref::fit1[0], ref::fit1[1]}, {3, 2})).abs().max().item<double>() < 1e-5, "all starting points converge to the same fit");
     }
+    // ---- malformed inputs are rejected with a message that names the problem
+    {
+      const auto rejects = [&](const std::function<void()> &call, const std::string &needle) {
+        try {
+          call();
+        } catch (const pluss::Error &e) {
+          return e.message().find(needle) != std::string::npos;
+        }
+        return false;
+      };
+      expect(rejects([&] { (void)ef::fit_product_inhibition(d, mat({1.0, 1.0}, {1, 2})); }, "starting guess must be"), "a two-column guess for the three-parameter model is rejected");
+      expect(rejects([&] { (void)ef::fit_product_inhibition(d, mat({1.0, 1.0, 0.0}, {1, 3})); }, "non-zero and finite"), "a zero starting constant is rejected");
+      ef::ProgressData bad = d;
+      bad.initial = mat({1.0, 3.0, 5.0}, {3});
+      expect(rejects([&] { (void)ef::fit_integrated(bad, mat({1.0, 1.0}, {1, 2})); }, "one row per starting concentration"), "mismatched curve count is rejected");
+    }
+    // ---- a runaway fit is not reported as converged: from a far-off guess the constants grow without bound along a flat direction of the sum of squares
+    {
+      ef::ProgressData d4{.times = d.times, .substrate = mat(ref::y2, {k, m}), .initial = d.initial};
+      const auto far = ef::fit_product_inhibition(d4, mat({5.0, 0.2, 20.0}, {1, 3}));
+      const auto good = ef::fit_product_inhibition(d4, mat({1.4, 2.5, 1.0}, {1, 3}));
+      expect(far.fit.converged.host<double>().front() == 0.0, "a runaway fit is reported as not converged");
+      expect(std::isnan(far.intervals.standard_error.host<double>().front()), "a runaway fit has undefined intervals");
+      expect(good.fit.converged.host<double>().front() == 1.0, "the sound fit is still converged");
+    }
     // ---- product inhibition by ODE integration
     {
       ef::ProgressData d2{.times = d.times, .substrate = mat(ref::y2, {k, m}), .initial = d.initial};
@@ -51,6 +77,9 @@ int main() {
       for (std::size_t i = 0; i < 3; ++i) {
         expect(std::abs(std::abs(b[i]) - ref::fit2[i]) < 2e-4 * ref::fit2[i], "inhibition parameter " + std::to_string(i) + ": " + std::to_string(std::abs(b[i])) + " vs scipy " + std::to_string(ref::fit2[i]));
         expect(std::abs(se[i] - ref::se2[i]) < 2e-2 * ref::se2[i], "inhibition standard error " + std::to_string(i));
+        // the estimate is reported as the positive physical value and sits inside its own interval, whichever sign the optimiser stopped at
+        const auto lo2 = r.intervals.lower.contiguous().host<double>(), hi2 = r.intervals.upper.contiguous().host<double>();
+        expect(b[i] > 0.0 && lo2[i] < b[i] && b[i] < hi2[i], "inhibition parameter " + std::to_string(i) + " is positive and inside its interval");
       }
       expect(std::abs(r.fit.sse.host<double>().front() - ref::sse2[0]) < 1e-6 * ref::sse2[0], "inhibition sum of squares");
       // with a very weak inhibitor (Kp -> large) the fitted rate law reduces to the plain integrated Michaelis-Menten fit of the same data

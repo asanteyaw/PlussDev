@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "metabolism_reference.h"
 #include "pluss/subsp/natsci/biology.h"
 
@@ -125,6 +126,7 @@ void test_loopless_toy_network() {
     const auto range = mt::loopless_range_exact(net, obj, j, 1.0);
     expect(std::abs(range.first - want_min[static_cast<std::size_t>(j)]) < 1e-6 && std::abs(range.second - want_max[static_cast<std::size_t>(j)]) < 1e-6,
            "exact loop-law MILP range of reaction " + std::to_string(j) + ": [" + std::to_string(range.first) + "," + std::to_string(range.second) + "]");
+    expect(!(range.first == 0.0 && std::signbit(range.first)) && !(range.second == 0.0 && std::signbit(range.second)), "an exact loopless range reports +0, never -0, for a zero end");
   }
 }
 
@@ -146,7 +148,7 @@ void test_gene_rules_parser() {
   bool threw = false;
   try {
     mt::GeneRules bad({"(g1 and"});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "malformed rule is rejected");

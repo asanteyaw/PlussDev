@@ -32,6 +32,12 @@ int main() {
       ++counted;
     }
     expect(counted >= 100, "all reference cases are exercised");
+    {
+      bool threw = false;
+      try { (void)na::duplex_thermodynamics("ATGXGT", na::table("DNA_NN4")); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "a letter that is not a base is rejected");
+      expect(na::duplex_thermodynamics("AT GC 12", na::table("DNA_NN4")).length == 4, "spaces and digits are ignored");
+    }
     // lanes: one call with many concentrations equals the scalar calls
     {
       const auto duplex = na::duplex_thermodynamics("ATGCGTACGTTAGC", na::table("DNA_NN4"));

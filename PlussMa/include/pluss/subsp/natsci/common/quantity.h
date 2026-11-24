@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include <cmath>
 #include "pluss/codem/series_factory.h"
 #include <concepts>
@@ -22,10 +23,10 @@ namespace detail {
 inline void validate_quantity_rep(double) {}
 inline void validate_quantity_rep(const pluss::codem::Series &value) {
   if (!value.defined())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::Quantity: expected a defined Series");
   if (!value.dtype().is_floating() && !value.dtype().is_complex())
-    throw std::invalid_argument("natsci::common::Quantity: Series "
+    PLUSS_FAIL("natsci::common::Quantity: Series "
                                 "representation must be floating or complex");
 }
 

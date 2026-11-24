@@ -7,6 +7,7 @@
 // separate contracts; this layer does not manufacture an incomplete reacting
 // flow model.
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/chemistry/transport.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible.h"
 
@@ -68,15 +69,15 @@ inline void require_layout(const Series &partial, const Series &rho,
                            const spatial::PeriodicGrid &grid,
                            const char *operation) {
   if (!partial.defined() || partial.dim() < grid.dim() + 1)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": species density must add one species axis "
                                 "before the spatial axes");
   const std::int64_t axis = species_axis(partial, grid);
   if (partial.size(axis) < 1)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": at least one species is required");
   if (!gas::detail::same_layout(partial.select(axis, 0), rho))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": each species lane must match gas density "
                                 "shape, dtype, and platform");
 }
@@ -87,14 +88,14 @@ inline void require_partial(const Series &partial, const Series &rho,
   require_layout(partial, rho, grid, operation);
   if (!partial.isfinite().all().item<bool>() ||
       !partial.ge(0.0).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": species partial densities must be finite and "
                             "non-negative");
   const double tolerance =
       partial.scalar_type() == ScalarType::Float32 ? 2e-5 : 2e-12;
   if (!partial.sum(species_axis(partial, grid), false)
            .allclose(rho, tolerance, tolerance))
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": species partial densities must sum to total "
                             "density in every cell");
 }
@@ -159,7 +160,7 @@ inline Diffusion diffusion(const gas::detail::Raw &flow, const Series &partial,
                            const chem_transport::GasTransport &transport) {
   const std::int64_t component = species_axis(partial, grid);
   if (transport.species() != partial.size(component))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::species: transport species count does not "
         "match the state");
 
@@ -319,7 +320,7 @@ struct Access final {
   detail::require_layout(mass_fractions, rho, grid, operation);
   if (!mass_fractions.isfinite().all().item<bool>() ||
       !mass_fractions.ge(0.0).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": mass fractions must be finite and "
                             "non-negative");
   const std::int64_t axis = detail::species_axis(mass_fractions, grid);
@@ -327,7 +328,7 @@ struct Access final {
   const double tolerance =
       mass_fractions.scalar_type() == ScalarType::Float32 ? 2e-5 : 2e-12;
   if (!sum.allclose(pluss::series::ones_like(sum), tolerance, tolerance))
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": mass fractions must sum to one in every cell");
   return State(flow, common::SeriesQuantity<Density>::from_si(
                          mass_fractions.mul(rho.unsqueeze(axis))));
@@ -369,7 +370,7 @@ inline void validate(const Options &options) {
   gas::detail::validate_options(options.flow, "natsci::fluids::gas::species");
   if (!(options.diffusion > 0.0) || !(options.diffusion <= 0.5) ||
       !std::isfinite(options.diffusion))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::species: diffusion must be finite and in "
         "(0, 0.5]");
 }
@@ -378,17 +379,17 @@ inline void validate(const RunOptions &options) {
   validate(options.step);
   if (!(options.safety > 0.0) || !(options.safety <= 1.0) ||
       !std::isfinite(options.safety))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::species::evolve_to: safety must be finite and "
         "in (0, 1]");
   if (!(options.min_step.si_value() >= 0.0) ||
       !std::isfinite(options.min_step.si_value()) ||
       !(options.max_step.si_value() > 0.0) ||
       options.max_step.si_value() < options.min_step.si_value())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::species::evolve_to: step bounds are invalid");
   if (options.max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::species::evolve_to: max_steps must be positive");
 }
 
@@ -559,12 +560,12 @@ struct StepResult final {
   constexpr const char *operation = "natsci::fluids::gas::species::step";
   validate(options);
   if (!(width.si_value() > 0.0) || !std::isfinite(width.si_value()))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": width must be finite and positive");
   const auto limit = limits(state, grid, model, options).allowed;
   if (options.flow.enforce &&
       !limit.si_value().ge(width.si_value()).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": width exceeds the acoustic or diffusion "
                             "stability limit");
 
@@ -668,12 +669,12 @@ evolve_to(const State &initial, const spatial::PeriodicGrid &grid,
             std::min(remaining, std::min(options.max_step.si_value(),
                                          options.safety * stable));
         if (!(width > 0.0) || !std::isfinite(width))
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::species::evolve_to: stability policy "
               "produced no finite positive step");
         if (width < options.min_step.si_value() &&
             remaining > options.min_step.si_value())
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::species::evolve_to: stable step is below "
               "min_step");
         return common::ScalarQuantity<common::Time>::from_si(width);

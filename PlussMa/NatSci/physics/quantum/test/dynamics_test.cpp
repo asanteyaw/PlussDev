@@ -141,6 +141,23 @@ void test_spectrum_entropy_and_fidelity() {
                 std::sqrt(0.5), 1e-12) &&
           close(quantum::fidelity(mixed, mixed).item<double>(), 1.0, 1e-10),
       "pure or mixed-state fidelity convention is incorrect");
+
+  // an unnormalised ket is not a state: fidelity must refuse it instead of clamping the overlap to a wrong number
+  const auto doubled = quantum::ket(pluss::make_series({{2.0, 0.0}, {0.0, 0.0}}));
+  bool refused = false;
+  try {
+    (void)quantum::fidelity(doubled, zero());
+  } catch (const pluss::Error &) {
+    refused = true;
+  }
+  expect(refused, "fidelity accepted an unnormalised ket");
+  refused = false;
+  try {
+    (void)quantum::fidelity(doubled, mixed);
+  } catch (const pluss::Error &) {
+    refused = true;
+  }
+  expect(refused, "fidelity with a density matrix accepted an unnormalised ket");
 }
 
 void test_unitary_and_schrodinger() {
@@ -195,7 +212,7 @@ void test_kraus_channel() {
   bool rejected = false;
   try {
     (void)quantum::channel({quantum::op(k0.value().mul(0.5))});
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "channel accepted an incomplete Kraus family");
@@ -331,7 +348,7 @@ void test_failures() {
   try {
     (void)quantum::spectrum(
         quantum::op(pluss::make_series({{0.0, 1.0}, {0.0, 0.0}})));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     nonhermitian = true;
   }
   expect(nonhermitian, "spectrum accepted a non-Hermitian operator");
@@ -340,7 +357,7 @@ void test_failures() {
   try {
     (void)quantum::schrod(pauli_x(), zero(),
                           pluss::make_series({0.0, 1.0, 1.0}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_times = true;
   }
   expect(bad_times, "Schrodinger solver accepted repeated times");
@@ -349,7 +366,7 @@ void test_failures() {
   try {
     (void)quantum::entropy(
         quantum::op(pluss::make_series({{1.2, 0.0}, {0.0, -0.2}})));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     bad_density = true;
   }
   expect(bad_density, "entropy accepted a non-positive density operator");
@@ -360,7 +377,7 @@ void test_failures() {
                              pluss::make_series(std::vector<std::int64_t>{0}),
                              pluss::make_series(std::vector<std::int64_t>{1}),
                              pluss::make_series({1.0}), {}, true);
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     false_sparse_contract = true;
   }
   expect(false_sparse_contract,

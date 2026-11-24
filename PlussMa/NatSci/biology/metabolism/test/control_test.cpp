@@ -94,6 +94,16 @@ int main() {
     expect(max_diff(dx, ref::dx_dk5) < 5e-6, "dx*/dk5 = C^S dv/dk5: " + std::to_string(max_diff(dx, ref::dx_dk5)));
     // total flux response: dv_r/dk5 (explicit) + E dx*/dk5 should equal the response of the flux, = reference dv/dk5 with x re-solved
     expect(max_diff(dj, ref::dv_dk5) < 5e-6, "dJ/dk5 = C^J dv/dk5: " + std::to_string(max_diff(dj, ref::dv_dk5)));
+    // omitting the conservation matrix of a network that has conservation laws is refused instead of returning a wrong answer
+    {
+      bool refused = false;
+      try {
+        (void)mc::coefficients(n, e);
+      } catch (const pluss::Error &err) {
+        refused = std::string(err.message()).find("conservation laws that were not passed") != std::string::npos;
+      }
+      expect(refused, "coefficients without the conservation matrix is refused");
+    }
     std::cout << "control tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

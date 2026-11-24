@@ -35,6 +35,8 @@ inline double avogadro() { return constants::avogadro_constant.measurement.value
 // ---- Beer-Lambert ------------------------------------------------------------------------------------
 // absorptivity [S] or [..., S], concentration [..., S], path length scalar or [...].
 inline Series absorbance(const Series &absorptivity, const Series &concentration, const dynamics::Coeff &path_length) {
+  dynamics::require(absorptivity.dim() > 0 && concentration.dim() > 0 && absorptivity.size(-1) == concentration.size(-1),
+                    "absorbance: absorptivity and concentration need the same number of species on the last axis");
   return absorptivity.mul(concentration).sum(-1, false).mul(path_length.on(concentration));
 }
 inline Series transmittance(const Series &a) { return a.mul(-std::log(10.0)).exp(); }

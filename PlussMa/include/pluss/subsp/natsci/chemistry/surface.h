@@ -27,8 +27,18 @@ namespace pluss::subsp::natsci::chemistry::surface {
 namespace dynamics = ::pluss::subsp::natsci::common::dynamics;
 using dynamics::Coeff;
 
-inline Series langmuir(const Series &pressure, const Coeff &k) { const Series kp = pressure.mul(k.on(pressure)); return kp.div(kp.add(1.0)); }
-inline Series langmuir_dissociative(const Series &pressure, const Coeff &k) { const Series s = pressure.mul(k.on(pressure)).sqrt(); return s.div(s.add(1.0)); }
+namespace detail {
+// a coverage law needs pressures and binding constants that are not negative (a negative product gives a meaningless or infinite coverage)
+inline Series require_loading(const Series &pressure, const Coeff &k, const char *operation) {
+  if (pressure.amin().item<double>() < 0.0) PLUSS_FAIL(std::string(operation) + ": the pressure must not be negative");
+  const Series kp = pressure.mul(k.on(pressure));
+  if (kp.amin().item<double>() < 0.0) PLUSS_FAIL(std::string(operation) + ": the binding constant must not be negative");
+  return kp;
+}
+} // namespace detail
+
+inline Series langmuir(const Series &pressure, const Coeff &k) { const Series kp = detail::require_loading(pressure, k, "natsci::surface::langmuir"); return kp.div(kp.add(1.0)); }
+inline Series langmuir_dissociative(const Series &pressure, const Coeff &k) { const Series s = detail::require_loading(pressure, k, "natsci::surface::langmuir_dissociative").sqrt(); return s.div(s.add(1.0)); }
 // pressures [..., S] and constants k [S] (or [..., S]); returns theta_i [..., S]
 inline Series langmuir_competitive(const Series &pressures, const Series &k) {
   const Series kp = pressures.mul(k);

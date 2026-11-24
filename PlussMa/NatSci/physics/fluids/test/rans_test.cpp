@@ -5,7 +5,10 @@
 #include <iostream>
 #include <string>
 
-namespace rans = pluss::subsp::natsci::physics::fluids::rans;
+namespace common = pluss::subsp::natsci::common;
+namespace spatial = common::spatial;
+namespace fluids = pluss::subsp::natsci::physics::fluids;
+namespace rans = fluids::rans;
 using pluss::Series;
 
 namespace {
@@ -45,6 +48,29 @@ int main(int argc, char **argv) {
     const double nut_ratio = at_yplus(r.y, r.eddy_viscosity, re, 100.0) * re / (0.41 * 100.0 * (1.0 - 100.0 / re));
     if (verbose) std::cout << "  nu_t / (kappa y+ (1-y) nu) at y+ = 100: " << nut_ratio << "  centreline U+ " << r.velocity.slice(0, o.cells - 1, o.cells).reshape({}).item<double>() << "\n";
     check(std::abs(nut_ratio - 1.0) < 0.3, name + " eddy viscosity follows the mixing length");
+  }
+  // a transport made for one closure must not be accepted by the other: the error names what is missing instead of failing inside the model
+  {
+    const auto h = common::ScalarQuantity<common::Length>::from_si(0.5);
+    const auto grid = spatial::make_periodic_grid({8, 8}, {h, h});
+    const Series zero = pluss::series::zeros({8, 8}, pluss::ScalarType::Float64);
+    const auto state = fluids::make_state(common::SeriesQuantity<common::Speed>::from_si(pluss::series::zeros({2, 8, 8}, pluss::ScalarType::Float64)), common::SeriesQuantity<common::Pressure>::from_si(zero), grid);
+    const auto density = common::ScalarQuantity<fluids::Density>::from_si(1.0);
+    const auto viscosity = common::ScalarQuantity<fluids::KinematicViscosity>::from_si(1e-3);
+    const auto time = common::ScalarQuantity<common::Time>::from_si(0.0), width = common::ScalarQuantity<common::Time>::from_si(0.01);
+    rans::Closure sa, sst;
+    sst.model = rans::Model::KOmegaSST;
+    const auto sa_transport = rans::initial_transport(sa, viscosity, state), sst_transport = rans::initial_transport(sst, viscosity, state);
+    const Series distance = zero.add(1.0);
+    for (const auto &pair : {std::make_pair(sa, sst_transport), std::make_pair(sst, sa_transport)}) {
+      bool refused = false;
+      try {
+        (void)rans::advance(state, pair.second, grid, density, viscosity, pair.first, time, width, {}, {}, distance);
+      } catch (const pluss::Error &e) {
+        refused = std::string(e.message()).find("needs a transport") != std::string::npos;
+      }
+      check(refused, "a transport made for the other closure is refused with a clear message");
+    }
   }
   std::cout << (failures ? "rans_test: failures\n" : "rans_test: all passed\n");
   return failures ? 1 : 0;

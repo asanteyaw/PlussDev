@@ -33,10 +33,17 @@ using dynamics::Coeff;
 inline double boltzmann() { return ::pluss::subsp::natsci::common::constants::codata2022::boltzmann_constant.measurement.value().si_value(); }
 
 // ---- classical nucleation theory ---------------------------------------------------------------------------------------------------
+namespace detail {
+inline void require_supersaturated(const Series &supersaturation, const char *operation) {
+  if (supersaturation.amin().item<double>() <= 1.0) PLUSS_FAIL(std::string(operation) + ": the supersaturation must be greater than 1 (a solution at or below saturation has no critical nucleus)");
+}
+} // namespace detail
 inline Series critical_radius(const Series &supersaturation, const Coeff &gamma, const Coeff &molecular_volume, const Coeff &temperature) {
+  detail::require_supersaturated(supersaturation, "natsci::crystallization::critical_radius");
   return gamma.on(supersaturation).mul(molecular_volume.on(supersaturation)).mul(2.0).div(temperature.on(supersaturation).mul(boltzmann()).mul(supersaturation.log()));
 }
 inline Series nucleation_barrier(const Series &supersaturation, const Coeff &gamma, const Coeff &molecular_volume, const Coeff &temperature) {
+  detail::require_supersaturated(supersaturation, "natsci::crystallization::nucleation_barrier");
   const Series kt_ln_s = temperature.on(supersaturation).mul(boltzmann()).mul(supersaturation.log());
   return gamma.on(supersaturation).pow(3.0).mul(molecular_volume.on(supersaturation).square()).mul(16.0 * std::numbers::pi_v<double> / 3.0).div(kt_ln_s.square());
 }
@@ -52,6 +59,9 @@ struct AvramiFit final {
 };
 // regression of ln(-ln(1 - X)) on ln t over the last axis: slope = n, intercept = ln k
 inline AvramiFit avrami_fit(const Series &t, const Series &x) {
+  if (t.amin().item<double>() <= 0.0) PLUSS_FAIL("natsci::crystallization::avrami_fit: every time must be positive");
+  if (x.amin().item<double>() <= 0.0 || x.amax().item<double>() >= 1.0)
+    PLUSS_FAIL("natsci::crystallization::avrami_fit: every crystallized fraction must lie strictly between 0 and 1 (drop the points at 0 and at 1)");
   const Series lx = t.log(), ly = x.neg().add(1.0).log().neg().log();
   const Series mx = lx.mean(-1, true), my = ly.mean(-1, true);
   const Series slope = lx.sub(mx).mul(ly.sub(my)).sum(-1, false).div(lx.sub(mx).square().sum(-1, false));

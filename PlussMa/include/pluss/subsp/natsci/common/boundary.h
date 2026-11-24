@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/field.h"
 
 #include <cmath>
@@ -38,7 +39,7 @@ private:
 
   void require_axis(std::int64_t axis, const char *operation) const {
     if (axis < 0 || axis >= dim())
-      throw std::out_of_range(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                               ": spatial axis is out of range");
   }
 
@@ -57,21 +58,21 @@ private:
 make_box_grid(std::vector<std::int64_t> shape,
               std::vector<ScalarQuantity<Length>> spacing) {
   if (shape.empty() || shape.size() > 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::make_box_grid: expected one to three spatial axes");
   if (shape.size() != spacing.size())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::make_box_grid: shape and spacing rank mismatch");
 
   std::vector<double> spacing_si;
   spacing_si.reserve(spacing.size());
   for (std::size_t axis = 0; axis < shape.size(); ++axis) {
     if (shape[axis] < 2)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::spatial::make_box_grid: every extent must be at least two");
     const double value = spacing[axis].si_value();
     if (!(value > 0.0) || !std::isfinite(value))
-      throw std::invalid_argument("natsci::spatial::make_box_grid: spacing "
+      PLUSS_FAIL("natsci::spatial::make_box_grid: spacing "
                                   "must be finite and positive");
     spacing_si.push_back(value);
   }
@@ -107,7 +108,7 @@ inline std::size_t face_slot(Face face) {
 inline void require_face(Face face, const BoxGrid &grid,
                          const char *operation) {
   if (face.axis < 0 || face.axis >= grid.dim())
-    throw std::out_of_range(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": face axis is out of range");
 }
 
@@ -117,7 +118,7 @@ order_faces(const BoxGrid &grid, const std::vector<Rule> &rules, FaceOf face_of,
             const char *operation) {
   const auto expected = static_cast<std::size_t>(2 * grid.dim());
   if (rules.size() != expected)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": expected exactly one rule per face");
 
   std::vector<bool> seen(expected, false);
@@ -126,7 +127,7 @@ order_faces(const BoxGrid &grid, const std::vector<Rule> &rules, FaceOf face_of,
     require_face(face, grid, operation);
     const auto slot = face_slot(face);
     if (seen[slot])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": duplicate face rule");
     seen[slot] = true;
   }
@@ -137,7 +138,7 @@ order_faces(const BoxGrid &grid, const std::vector<Rule> &rules, FaceOf face_of,
     for (const Side side : {Side::Low, Side::High}) {
       const auto slot = face_slot({axis, side});
       if (!seen[slot])
-        throw std::invalid_argument(std::string(operation) +
+        PLUSS_FAIL(std::string(operation) +
                                     ": missing face rule");
       for (const auto &rule : rules) {
         const Face face = face_of(rule);
@@ -155,13 +156,13 @@ inline void require_scalar_layout(const Series &value, const BoxGrid &grid,
                                   const char *operation) {
   require_numeric_field(value, operation);
   if (value.dim() < grid.dim())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": field rank is smaller than grid rank");
   const std::int64_t first_spatial = value.dim() - grid.dim();
   for (std::int64_t axis = 0; axis < grid.dim(); ++axis) {
     if (value.size(first_spatial + axis) !=
         grid.shape()[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": trailing spatial shape does not match "
                                   "the grid");
   }
@@ -172,16 +173,16 @@ inline std::int64_t require_vector_layout(const Series &value,
                                           const char *operation) {
   require_numeric_field(value, operation);
   if (value.dim() < grid.dim() + 1)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": vector field has no component axis");
   const std::int64_t component_axis = value.dim() - grid.dim() - 1;
   if (value.size(component_axis) != grid.dim())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": component count must equal grid rank");
   for (std::int64_t axis = 0; axis < grid.dim(); ++axis) {
     if (value.size(component_axis + 1 + axis) !=
         grid.shape()[static_cast<std::size_t>(axis)])
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": trailing spatial shape does not match "
                                   "the grid");
   }
@@ -191,7 +192,7 @@ inline std::int64_t require_vector_layout(const Series &value,
 inline void require_axis(const BoxGrid &grid, std::int64_t axis,
                          const char *operation) {
   if (axis < 0 || axis >= grid.dim())
-    throw std::out_of_range(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": spatial axis is out of range");
 }
 
@@ -211,22 +212,22 @@ face_data(const BoundData &data, const Series &plane, const char *operation) {
 
   const Series &profile = std::get<Series>(data);
   if (profile.scalar_type() != plane.scalar_type())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary profile dtype mismatch");
   if (profile.platform() != plane.platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary profile platform mismatch");
   Series expanded;
   try {
     expanded =
         plane.mul(pluss::codem::make_scalar_like(plane, 0.0)).add(profile);
   } catch (const std::exception &) {
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary profile is not broadcastable to "
                                 "the face plane");
   }
   if (!same_shape(expanded, plane))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary profile changed the face shape");
   return expanded;
 }
@@ -281,7 +282,7 @@ template <DimensionType D> class Bounds final {
 public:
   [[nodiscard]] const Bound<D> &at(std::int64_t axis, Side side) const {
     if (axis < 0 || axis >= dim_)
-      throw std::out_of_range(
+      PLUSS_FAIL(
           "natsci::spatial::Bounds::at: face axis is out of range");
     return rules_[detail::face_slot(Face{axis, side})];
   }
@@ -351,7 +352,7 @@ ghosts(const SeriesQuantity<D> &value, const BoxGrid &grid,
   detail::require_scalar_layout(field, grid, operation);
   detail::require_axis(grid, axis, operation);
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::ghosts: boundary and grid rank mismatch");
 
   const std::int64_t series_axis = field.dim() - grid.dim() + axis;

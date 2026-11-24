@@ -82,8 +82,11 @@ inline Groups protein_groups(const std::vector<std::string> &sequences) {
   for (const std::string &raw : sequences) {
     dynamics::require(!raw.empty(), "protein_groups: empty sequence");
     std::string s;
-    for (char c : raw)
-      s.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(c))));
+    for (char c : raw) {
+      const char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+      dynamics::require(std::string("ACDEFGHIKLMNPQRSTVWY").find(upper) != std::string::npos, "protein_groups: sequences use the twenty one-letter amino-acid codes (A C D E F G H I K L M N P Q R S T V W Y)");
+      s.push_back(upper);
+    }
     counts.push_back(1.0);
     counts.push_back(1.0);
     for (char r : residues) {

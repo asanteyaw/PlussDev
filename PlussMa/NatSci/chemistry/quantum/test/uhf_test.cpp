@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/natsci/chemistry/quantum.h"
 
@@ -170,7 +171,7 @@ void test_contract_failures() {
   bool empty = false;
   try {
     (void)quantum::uhf(valid, 0, 0);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     empty = true;
   }
   expect(empty, "UHF accepted an empty determinant");
@@ -178,7 +179,7 @@ void test_contract_failures() {
   bool overfilled = false;
   try {
     (void)quantum::uhf(valid, 3, 0);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     overfilled = true;
   }
   expect(overfilled, "UHF accepted more same-spin electrons than orbitals");
@@ -189,7 +190,7 @@ void test_contract_failures() {
         valid, 1, 0,
         quantum::UhfGuess{pluss::series::make({{1.0, 0.5}, {0.0, 0.0}}),
                           pluss::series::zeros({2, 2})});
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_guess = true;
   }
   expect(bad_guess, "UHF accepted an asymmetric restart density");

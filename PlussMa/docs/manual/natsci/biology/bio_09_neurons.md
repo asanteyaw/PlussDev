@@ -1,5 +1,3 @@
-<!-- generated from bio_09_neurons.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 9: Neurons
 
 How a neuron turns an input current into a train of spikes.

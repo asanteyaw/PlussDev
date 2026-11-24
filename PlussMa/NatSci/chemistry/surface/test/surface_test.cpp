@@ -4,6 +4,7 @@
 #include "surface_reference.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -99,6 +100,17 @@ int main() {
       const auto sv = ss.state.contiguous().host<double>();
       expect(std::abs(sv[0] - ref::mk_ss[0]) < 1e-10 && std::abs(sv[1] - ref::mk_ss[1]) < 1e-10 && std::abs(sv[2] - ref::mk_ss[2]) < 1e-10, "steady-state coverages vs scipy: " + std::to_string(sv[0]) + ", " + std::to_string(sv[1]));
       expect(std::abs(kr * sv[0] * sv[1] - ref::mk_ss[3]) < 1e-10, "turnover frequency");
+    }
+    // ---- out-of-range inputs raise pluss::Error instead of returning inf or meaningless coverages
+    {
+      const auto fails = [](const std::function<void()> &f, const std::string &text) {
+        try { f(); } catch (const pluss::Error &e) { return e.message().find(text) != std::string::npos; }
+        return false;
+      };
+      namespace sf = pluss::subsp::natsci::chemistry::surface;
+      expect(fails([&] { sf::langmuir(vec({-1.0, 1.0}), 1.0); }, "pressure must not be negative"), "langmuir with negative pressure");
+      expect(fails([&] { sf::langmuir(vec({1.0}), -2.0); }, "binding constant must not be negative"), "langmuir with negative constant");
+      expect(fails([&] { sf::langmuir_dissociative(vec({-1.0}), 1.0); }, "pressure must not be negative"), "dissociative langmuir with negative pressure");
     }
     std::cout << "surface tests passed\n";
   } catch (const std::exception &e) {

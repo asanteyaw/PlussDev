@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
 #include <cmath>
@@ -20,20 +21,20 @@ template <DimensionType D>
                                     const SeriesQuantity<D> &current,
                                     ScalarQuantity<D> scale) {
   if (!(scale.si_value() > 0.0) || !std::isfinite(scale.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::drift: scale must be finite and positive");
 
   const Series &lhs = reference.si_value();
   const Series &rhs = current.si_value();
   if (lhs.dim() != rhs.dim())
-    throw std::invalid_argument("natsci::common::drift: shape mismatch");
+    PLUSS_FAIL("natsci::common::drift: shape mismatch");
   for (std::int64_t axis = 0; axis < lhs.dim(); ++axis)
     if (lhs.size(axis) != rhs.size(axis))
-      throw std::invalid_argument("natsci::common::drift: shape mismatch");
+      PLUSS_FAIL("natsci::common::drift: shape mismatch");
   if (lhs.scalar_type() != rhs.scalar_type())
-    throw std::invalid_argument("natsci::common::drift: dtype mismatch");
+    PLUSS_FAIL("natsci::common::drift: dtype mismatch");
   if (lhs.platform() != rhs.platform())
-    throw std::invalid_argument("natsci::common::drift: platform mismatch");
+    PLUSS_FAIL("natsci::common::drift: platform mismatch");
 
   const Series absolute = rhs.sub(lhs).abs();
   return {

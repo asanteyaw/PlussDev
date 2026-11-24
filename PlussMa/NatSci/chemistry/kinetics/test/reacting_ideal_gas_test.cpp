@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "h2o2_mechanism.h"
 
 #include <algorithm>
@@ -29,7 +30,7 @@ void expect_failure(const std::function<void()> &call,
   bool failed = false;
   try {
     call();
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     failed = true;
   }
   expect(failed, message);
@@ -165,6 +166,18 @@ void test_failures() {
         (void)gas.temperature(below.sub(1e9), y);
       },
       "out-of-range internal energy was accepted");
+
+  // the reactor refuses a starting state that does not fit the mechanism
+  const auto reactor_mechanism = ::mechanism();
+  const Series good_c = pluss::series::full({1, 10}, 0.1, F64);
+  expect_failure([&] { (void)rea::integrate(reactor_mechanism, rea::make_state(vec({1200.0}), pluss::series::full({1, 9}, 0.1, F64)), 1e-6); },
+                 "reactor accepted a state with too few concentrations");
+  expect_failure([&] { (void)rea::integrate(reactor_mechanism, rea::make_state(vec({5000.0}), good_c), 1e-6); },
+                 "reactor accepted a temperature outside the thermodynamic data");
+  expect_failure([&] { (void)rea::trajectory(reactor_mechanism, rea::make_state(vec({1200.0}), good_c.mul(-1.0)), {0.0, 1e-6}); },
+                 "reactor accepted negative concentrations");
+  expect_failure([&] { (void)rea::rate(reactor_mechanism, pluss::series::full({1, 3}, 1.0, F64)); },
+                 "reactor rate accepted a state of the wrong width");
 
   auto no_mass = h2o2::species();
   for (auto &species : no_mass)

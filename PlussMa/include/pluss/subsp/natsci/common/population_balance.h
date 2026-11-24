@@ -102,6 +102,8 @@ inline Series ssprk3(const RateFn &f, const Series &n0, double t0, double t1, st
     const Series n2 = n.mul(0.75).add(n1.add(f(n1).mul(dt)).mul(0.25));
     n = n.mul(1.0 / 3.0).add(n2.add(f(n2).mul(dt)).mul(2.0 / 3.0));
   }
+  // one host read for the whole run: an unstable step (too few steps for the growth rate and bin width) overflows to inf / NaN
+  dynamics::require(n.isfinite().all().item<bool>(), "ssprk3: the solution became non-finite (a NaN or infinite start, or a step too large for the growth rate)");
   return n;
 }
 
@@ -111,6 +113,9 @@ inline Series ssprk3(const RateFn &f, const Series &n0, double t0, double t1, st
 inline Series growth_rhs(const Series &n, const Grid &g, const Series &growth_at_edges, const Coeff &nucleation_flux = 0.0) {
   const std::int64_t b = g.bins();
   dynamics::require(n.size(-1) == b, "growth_rhs: n must have one entry per bin");
+  dynamics::require(growth_at_edges.size(-1) == b + 1, "growth_rhs: growth_at_edges must have one entry per bin edge (bins + 1)");
+  if (!nucleation_flux.is_series()) // a per-lane Series flux is not read back to the host on every right-hand-side call
+    dynamics::require_nonnegative(nucleation_flux, n.select(-1, 0), "growth_rhs: nucleation_flux");
   const Series first = n.slice(-1, 0, 1, 1), last = n.slice(-1, b - 1, b, 1);
   const Series g0_edge = growth_at_edges.slice(-1, 0, 1, 1);
   // lower ghost cell: linear extrapolation through the inflow state B0 / G(0) at L = 0 (keeps the first cell second order); free outflow

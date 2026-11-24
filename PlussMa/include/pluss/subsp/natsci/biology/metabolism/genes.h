@@ -9,6 +9,7 @@
 // Reference: the semantics of COBRApy's `Gene.knock_out` / `single_gene_deletion` (GPR evaluated, inactive reactions
 // forced to zero flux).
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/biology/metabolism/fba.h"
 
 #include <algorithm>
@@ -106,13 +107,13 @@ struct RuleParser final {
       auto inner = parse_or();
       skip();
       if (pos >= text.size() || text[pos] != ')')
-        throw std::invalid_argument("metabolism: unbalanced parenthesis in gene rule '" + text + "'");
+        PLUSS_FAIL("metabolism: unbalanced parenthesis in gene rule '" + text + "'");
       ++pos;
       return inner;
     }
     const std::string w = peek_word();
     if (w.empty() || is_word(w, "and") || is_word(w, "or"))
-      throw std::invalid_argument("metabolism: malformed gene rule '" + text + "'");
+      PLUSS_FAIL("metabolism: malformed gene rule '" + text + "'");
     consume_word();
     auto node = std::make_unique<RuleNode>();
     node->kind = RuleNode::Kind::Gene;
@@ -143,7 +144,7 @@ public:
       auto tree = parser.parse_or();
       parser.skip();
       if (parser.pos != rule.size())
-        throw std::invalid_argument("metabolism: trailing text in gene rule '" + rule + "'");
+        PLUSS_FAIL("metabolism: trailing text in gene rule '" + rule + "'");
       trees_.push_back(std::move(tree));
     }
   }

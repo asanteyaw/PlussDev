@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "../../kinetics/test/h2o2_mechanism.h"
 #include "transport_reference.h"
 
@@ -236,7 +237,7 @@ void test_validation() {
   bool threw = false;
   try {
     (void)tr::GasTransport(data, pluss::series::make({300.0}).to(F64));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "polar species are rejected");

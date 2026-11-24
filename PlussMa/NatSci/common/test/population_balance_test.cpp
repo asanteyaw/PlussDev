@@ -1,7 +1,9 @@
 // Population balance: growth / nucleation finite volumes and fixed-pivot aggregation / breakage against closed-form solutions.
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/population_balance.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -180,6 +182,27 @@ int main() {
       const double m0_0 = pb::pivot_moment(vec(n0), g, 0.0).item<double>();
       expect(std::abs(pb::pivot_moment(out, g, 0.0).item<double>() / (m0_0 * std::exp(t)) - 1.0) < 2e-2, "breakage: M0 grows like exp(t) (fixed-pivot discretisation)");
       expect(pb::pivot_moment(out, g, 2.0).item<double>() < pb::pivot_moment(vec(n0), g, 2.0).item<double>(), "breakage narrows the distribution");
+    }
+    // ---- argument checks: the growth rate lives on the bin edges, the nucleation rate cannot be negative, a NaN start is reported
+    {
+      const auto g = pb::uniform_grid(0.0, 10.0, 50);
+      const Series n = vec(std::vector<double>(50, 1.0));
+      const auto rejects = [](const std::function<void()> &f) {
+        try {
+          f();
+        } catch (const pluss::Error &) {
+          return true;
+        }
+        return false;
+      };
+      expect(rejects([&] { (void)pb::growth_rhs(n, g, vec(std::vector<double>(50, 1.0)), 0.0); }), "growth_rhs must reject growth rates given at the bin centres");
+      expect(rejects([&] { (void)pb::growth_rhs(n, g, vec(std::vector<double>(55, 1.0)), 0.0); }), "growth_rhs must reject too many growth entries");
+      expect(rejects([&] { (void)pb::growth_rhs(n, g, vec(std::vector<double>(51, 1.0)), -1.0); }), "growth_rhs must reject a negative nucleation rate");
+      std::vector<double> bad(50, 1.0);
+      bad[3] = std::nan("");
+      const Series edges = vec(std::vector<double>(51, 1.0));
+      expect(rejects([&] { (void)pb::ssprk3([&](const Series &y) { return pb::growth_rhs(y, g, edges, 0.0); }, vec(bad), 0.0, 1.0, 20); }),
+             "ssprk3 must report a non-finite solution");
     }
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

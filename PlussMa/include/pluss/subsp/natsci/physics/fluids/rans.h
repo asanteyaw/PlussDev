@@ -18,6 +18,7 @@
 //  The wall-normal operator is a cell-centred finite-volume diffusion on a tanh-stretched grid, advanced in pseudo-time with the sinks implicit, every
 //  solve being a dense Series inverse (the system is tridiagonal and small).
 
+#include "pluss/error.h"
 #include "pluss/codem/codem.h"
 #include "pluss/subsp/linearalg/linearalg.h"
 #include "pluss/subsp/natsci/physics/fluids/les.h"
@@ -27,6 +28,7 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace pluss::subsp::natsci::physics::fluids::rans {
@@ -111,7 +113,7 @@ inline double scalar(const Series &s) { return s.reshape({}).item<double>(); }
 [[nodiscard]] inline ChannelResult solve_channel(const ChannelOptions &o = {}) {
   using namespace detail;
   if (o.cells < 16 || !(o.friction_reynolds > 1.0) || !(o.growth_limit > 0.0) || !(o.first_step > 0.0))
-    throw std::invalid_argument("natsci::fluids::rans::solve_channel: needs cells >= 16, Re_tau > 1 and positive step limits");
+    PLUSS_FAIL("natsci::fluids::rans::solve_channel: needs cells >= 16, Re_tau > 1 and positive step limits");
   const Mesh m = make_mesh(o.cells, o.stretching);
   const double nu = 1.0 / o.friction_reynolds;
   const Series d = m.yc, yplus = m.yc.mul(o.friction_reynolds);
@@ -401,6 +403,13 @@ inline Domain box_domain(const sp::BoxGrid &grid, const fl::FlowBounds &bounds) 
   return dm;
 }
 
+// the transport has to carry the variables of the closure: nu~ for Spalart-Allmaras, k and omega for SST
+inline void require_transport(const Closure &cl, const Transport &t, const char *operation) {
+  const bool ok = cl.model == Model::SpalartAllmaras ? t.nu_tilde.defined() : (t.k.defined() && t.omega.defined());
+  if (!ok)
+    PLUSS_FAIL(std::string(operation) + (cl.model == Model::SpalartAllmaras ? ": the Spalart-Allmaras closure needs a transport that carries nu_tilde (make it with rans::initial_transport using the same closure)"
+                                                                            : ": the k-omega SST closure needs a transport that carries k and omega (make it with rans::initial_transport using the same closure)"));
+}
 inline Series eddy_from(const Domain &dm, const Closure &cl, const Transport &t, const Series &strain, double nu) {
   return cl.model == Model::SpalartAllmaras ? sa_nut(t.nu_tilde, nu) : sst_nut(t.k, t.omega, strain, dm.distance.clamp_min(1e-12), nu);
 }
@@ -426,6 +435,7 @@ inline Series eddy_from(const Domain &dm, const Closure &cl, const Transport &t,
 [[nodiscard]] inline common::SeriesQuantity<fluids::KinematicViscosity> eddy_viscosity(const fluids::IncompressibleState &state, const Transport &transport,
                                                                                     const spatial::BoxGrid &grid, const fluids::FlowBounds &bounds,
                                                                                     const common::ScalarQuantity<fluids::KinematicViscosity> &viscosity, const Closure &closure = {}) {
+  detail::require_transport(closure, transport, "natsci::fluids::rans::eddy_viscosity");
   const detail::Domain dm = detail::box_domain(grid, bounds);
   const std::int64_t ca = state.velocity().si_value().dim() - grid.dim() - 1;
   const Series s = fluids::les::detail::strain_norm(fluids::les::detail::components(fluids::detail::vel_grad(state.velocity(), grid, bounds), ca, grid.dim()));
@@ -437,7 +447,8 @@ inline Series eddy_from(const Domain &dm, const Closure &cl, const Transport &t,
                                          const Closure &closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step,
                                          const fluids::StepOptions &options = {}, const fluids::BodyFn &body = {}) {
   if (options.rule == fluids::StepRule::Imex1)
-    throw std::invalid_argument("natsci::fluids::rans::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+    PLUSS_FAIL("natsci::fluids::rans::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+  detail::require_transport(closure, transport, "natsci::fluids::rans::advance");
   const detail::Domain dm = detail::box_domain(grid, bounds);
   const double nu = viscosity.si_value();
   const Series &velocity = state.velocity().si_value();
@@ -470,7 +481,8 @@ inline Series eddy_from(const Domain &dm, const Closure &cl, const Transport &t,
                                          const Closure &closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step,
                                          const fluids::StepOptions &options = {}, const fluids::BodyFn &body = {}, const Series &wall_distance = pluss::series::undefined()) {
   if (options.rule == fluids::StepRule::Imex1)
-    throw std::invalid_argument("natsci::fluids::rans::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+    PLUSS_FAIL("natsci::fluids::rans::advance: Imex1 needs scalar viscosity; use an explicit rule with a closure");
+  detail::require_transport(closure, transport, "natsci::fluids::rans::advance");
   const detail::Domain dm = detail::periodic_domain(grid, wall_distance);
   const double nu = viscosity.si_value();
   const Series &velocity = state.velocity().si_value();

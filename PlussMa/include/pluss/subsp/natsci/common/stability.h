@@ -19,11 +19,14 @@
 #include "pluss/subsp/math/roots.h"
 #include "pluss/subsp/natsci/common/dynamics.h"
 
+#include <cmath>
+
 namespace pluss::subsp::natsci::common::stability {
 
 // [..., n, n] -> [..., n + 1], coefficients c_0 .. c_n of det(lambda I - A).
 inline Series characteristic_polynomial(const Series &a) {
   dynamics::require_square(a, "stability: Jacobian");
+  dynamics::require_finite(a, "stability: Jacobian");
   const std::int64_t n = a.size(-1);
   const Config cfg = Config{}.with_dtype(a.scalar_type()).with_platform(a.platform());
   const Series eye = pluss::series::eye(n, cfg);
@@ -53,6 +56,9 @@ struct Routh final {
 inline Routh routh(const Series &coeffs, double epsilon = 1e-9) {
   const std::int64_t n = coeffs.size(-1) - 1;
   dynamics::require(n >= 1, "stability: polynomial needs degree >= 1");
+  dynamics::require_finite(coeffs, "stability: polynomial coefficients");
+  dynamics::require(coeffs.select(-1, 0).abs().gt(0.0).all().item<bool>(), "stability: leading coefficient must be non-zero");
+  dynamics::require(std::isfinite(epsilon) && epsilon > 0.0, "stability: epsilon must be positive and finite");
   const std::int64_t width = (n + 2) / 2;
   const Series zero = coeffs.select(-1, 0).mul(0.0);
   const Series zero_col = zero.unsqueeze(-1);

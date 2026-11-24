@@ -65,6 +65,9 @@ int main() {
     const Series counts = vec({1.0}).unsqueeze(0), pka = vec({4.76}).unsqueeze(0), sign = vec({-1.0});
     const double beta = io::buffer_capacity(counts, pka, sign, vec({4.76})).host<double>().front();
     expect(std::abs(beta - std::log(10.0) / 4.0) < 1e-12, "maximum buffer capacity ln10/4 at pH = pK");
+    bool rejected = false;
+    try { (void)io::protein_groups({"KKXRK"}); } catch (const pluss::Error &) { rejected = true; }
+    expect(rejected, "a letter that is not an amino-acid code is rejected");
     std::cout << "ionization tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";

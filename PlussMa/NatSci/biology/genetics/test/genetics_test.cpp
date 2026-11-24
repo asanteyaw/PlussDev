@@ -122,10 +122,10 @@ void test_simulation_vs_exact() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)gen::expected_next(vec({1.5}), gen::Fitness{}); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)gen::expected_next(vec({1.5}), gen::Fitness{}); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "frequency > 1 rejected");
   threw = false;
-  try { (void)gen::moran_transition(1, 1.1); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)gen::moran_transition(1, 1.1); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "Moran N < 2 rejected");
 }
 } // namespace

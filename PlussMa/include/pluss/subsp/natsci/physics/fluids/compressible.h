@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/poisson.h"
 #include "pluss/subsp/natsci/common/solve.h"
 
@@ -128,15 +129,15 @@ inline bool same_layout(const Series &lhs, const Series &rhs) noexcept {
 
 inline void validate_model(const Model &model, const char *operation) {
   if (!(model.gamma > 1.0) || !std::isfinite(model.gamma))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": gamma must be finite and greater than one");
   if (!(model.rho_floor >= 0.0) || !std::isfinite(model.rho_floor) ||
       !(model.p_floor >= 0.0) || !std::isfinite(model.p_floor))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": floors must be finite and non-negative");
   if (!(model.gas_constant.si_value() > 0.0) ||
       !std::isfinite(model.gas_constant.si_value()))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": gas_constant must be finite and positive");
 }
 
@@ -147,7 +148,7 @@ inline void validate_transport(const Transport &transport,
   };
   if (!valid(transport.shear.si_value()) || !valid(transport.bulk.si_value()) ||
       !valid(transport.heat.si_value()))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": transport coefficients must be finite and "
                                 "non-negative");
 }
@@ -162,7 +163,7 @@ inline void validate_sutherland(const SutherlandLaw &law,
       !std::isfinite(law.sutherland_temperature.si_value()) ||
       !(law.prandtl > 0.0) || !std::isfinite(law.prandtl) ||
       !(law.bulk_ratio >= 0.0) || !std::isfinite(law.bulk_ratio))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": Sutherland parameters must be finite, with positive reference "
         "viscosity, temperature, and Prandtl number and non-negative "
@@ -172,19 +173,19 @@ inline void validate_sutherland(const SutherlandLaw &law,
 inline void validate_roe(const RoePolicy &policy, const char *operation) {
   if (!(policy.entropy >= 0.0) || !(policy.entropy <= 1.0) ||
       !std::isfinite(policy.entropy))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": Roe entropy must be finite and in [0, 1]");
   switch (policy.mach) {
   case RoeMach::Classic:
   case RoeMach::Rieper:
     break;
   default:
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": Roe Mach policy is not recognized");
   }
   if (!(policy.mach_floor > 0.0) || !(policy.mach_floor <= 1.0) ||
       !std::isfinite(policy.mach_floor))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) +
         ": Roe Mach floor must be finite and in (0, 1]");
   switch (policy.shock) {
@@ -192,7 +193,7 @@ inline void validate_roe(const RoePolicy &policy, const char *operation) {
   case RoeShock::HFix:
     break;
   default:
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": Roe shock policy is not recognized");
   }
 }
@@ -206,7 +207,7 @@ inline std::int64_t stages(Rule rule, const char *operation) {
   case Rule::Rk3:
     return 3;
   }
-  throw std::invalid_argument(std::string(operation) +
+  PLUSS_FAIL(std::string(operation) +
                               ": rule is not a recognized integrator");
 }
 
@@ -220,7 +221,7 @@ inline void validate_options(const Options &options, const char *operation) {
   case Recon::Weno5:
     break;
   default:
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": recon is not a recognized reconstruction");
   }
   switch (options.flux) {
@@ -229,17 +230,17 @@ inline void validate_options(const Options &options, const char *operation) {
   case FluxScheme::Roe:
     break;
   default:
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": flux is not a recognized scheme");
   }
   validate_roe(options.roe, operation);
   if (!(options.courant > 0.0) || !(options.courant <= 1.0) ||
       !std::isfinite(options.courant))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": courant must be finite and in (0, 1]");
   if (!(options.diffusion > 0.0) || !(options.diffusion <= 0.5) ||
       !std::isfinite(options.diffusion))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": diffusion must be finite and in (0, 0.5]");
   validate_transport(options.transport, operation);
   if (options.sutherland) {
@@ -247,7 +248,7 @@ inline void validate_options(const Options &options, const char *operation) {
     if (options.transport.shear.si_value() != 0.0 ||
         options.transport.bulk.si_value() != 0.0 ||
         options.transport.heat.si_value() != 0.0)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": constant transport and Sutherland transport are mutually "
           "exclusive");
@@ -259,16 +260,16 @@ inline void validate_run(const RunOptions &options) {
   validate_options(options.step, operation);
   if (!(options.safety > 0.0) || !(options.safety <= 1.0) ||
       !std::isfinite(options.safety))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::evolve_to: safety must be finite and in (0, 1]");
   if (!(options.min_step.si_value() >= 0.0) ||
       !std::isfinite(options.min_step.si_value()) ||
       !(options.max_step.si_value() > 0.0) ||
       options.min_step.si_value() > options.max_step.si_value())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::evolve_to: step bounds are invalid");
   if (options.max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::evolve_to: max_steps must be positive");
 }
 
@@ -286,11 +287,11 @@ inline std::int64_t component_axis(const Raw &state, const Grid &grid,
       spatial::detail::require_vector_layout(state.mom, grid, operation);
   spatial::detail::require_scalar_layout(state.energy, grid, operation);
   if (!same_layout(state.rho, state.energy))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": density and energy layouts must match");
   const Series first = state.mom.select(axis, 0);
   if (!same_layout(first, state.rho))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": momentum must add only its component axis");
   return axis;
 }
@@ -366,7 +367,7 @@ inline void require_valid(const Raw &state, const Grid &grid,
   validate_model(model, operation);
   component_axis(state, grid, operation);
   if (!valid(state, grid, model).all().template item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": every cell must have finite positive density "
                             "and pressure");
 }
@@ -394,10 +395,10 @@ inline Series limited_slope(const Series &back, const Series &forward,
     return pluss::series::where(same_sign, back.mul(forward).mul(2.0).div(safe), pluss::series::zeros_like(back));
   }
   case Recon::Weno5:
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas: WENO5 uses face reconstruction, not a slope");
   }
-  throw std::invalid_argument(
+  PLUSS_FAIL(
       "natsci::fluids::gas: recon is not a recognized reconstruction");
 }
 
@@ -855,7 +856,7 @@ inline Flux numerical_flux(const Raw &left, const Raw &right,
   case FluxScheme::Roe:
     return roe_flux(left, right, component, axis, model, roe, wave_floor);
   }
-  throw std::invalid_argument(
+  PLUSS_FAIL(
       "natsci::fluids::gas: flux is not a recognized scheme");
 }
 
@@ -912,7 +913,7 @@ inline std::vector<AxisFlux> axis_fluxes(const Raw &state,
 inline Raw conv_rate(const Raw &state, const spatial::PeriodicGrid &grid,
                      const std::vector<AxisFlux> &fluxes) {
   if (static_cast<std::int64_t>(fluxes.size()) != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas: axis flux count must match grid rank");
   Raw result{pluss::series::zeros_like(state.rho),
              pluss::series::zeros_like(state.mom),
@@ -987,13 +988,13 @@ inline void validate_transport_field(const TransportField &transport,
   const Series &heat = transport.heat.si_value();
   if (!same_layout(shear, state.rho) || !same_layout(bulk, state.rho) ||
       !same_layout(heat, state.rho))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": transport fields must match density "
                                 "shape, dtype, and platform");
   if (!shear.ge(0.0).logical_and(shear.isfinite()).all().item<bool>() ||
       !bulk.ge(0.0).logical_and(bulk.isfinite()).all().item<bool>() ||
       !heat.ge(0.0).logical_and(heat.isfinite()).all().item<bool>())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": transport fields must be finite and "
                                 "non-negative");
 }
@@ -1427,10 +1428,10 @@ limits(const State &state, const spatial::PeriodicGrid &grid,
   detail::validate_model(model, operation);
   detail::validate_transport(transport, operation);
   if (!(courant > 0.0) || !(courant <= 1.0) || !std::isfinite(courant))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::limits: courant must be finite and in (0, 1]");
   if (!(diffusion > 0.0) || !(diffusion <= 0.5) || !std::isfinite(diffusion))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::limits: diffusion must be finite and in (0, "
         "0.5]");
 
@@ -1532,7 +1533,7 @@ struct StepResult final {
   detail::validate_model(model, operation);
   detail::validate_options(options, operation);
   if (!(width.si_value() > 0.0) || !std::isfinite(width.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step: width must be finite and positive");
   const auto limit = options.sutherland
                          ? limits(state, grid, model, *options.sutherland,
@@ -1542,7 +1543,7 @@ struct StepResult final {
                                       options.courant, options.diffusion);
   if (options.enforce &&
       !limit.si_value().ge(width.si_value()).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step: width exceeds the acoustic or diffusion "
         "stability limit");
 
@@ -1646,12 +1647,12 @@ evolve_to(const State &initial, const spatial::PeriodicGrid &grid,
             std::min(remaining, std::min(options.max_step.si_value(),
                                          options.safety * stable));
         if (!(width > 0.0) || !std::isfinite(width))
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stability policy produced no "
               "finite positive step");
         if (width < options.min_step.si_value() &&
             remaining > options.min_step.si_value())
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stable step is below min_step");
         return common::ScalarQuantity<common::Time>::from_si(width);
       },

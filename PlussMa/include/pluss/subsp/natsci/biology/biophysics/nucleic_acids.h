@@ -12,6 +12,7 @@
 // 2004 and 2008, von Ahsen et al. 2001 sodium-equivalent). Mismatch and dangling-end tables of that file are not implemented here.
 // The melting curve (fraction of strands in duplex versus temperature) is the exact two-state equilibrium K(T) = exp(-(dH - T dS)/(R T)).
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/biology/biophysics/nucleic_acid_tables.h"
 #include "pluss/subsp/natsci/biology/dynamics.h"
 
@@ -44,8 +45,9 @@ inline std::string normalise(const std::string &seq) {
     char u = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
     if (u == 'U')
       u = 'T'; // RNA sequences are back-transcribed exactly as the reference implementation does
-    if (u == 'A' || u == 'C' || u == 'G' || u == 'T' || u == 'I')
-      out.push_back(u);
+    dynamics::require(u == 'A' || u == 'C' || u == 'G' || u == 'T' || u == 'I',
+                      std::string("nucleic_acids: '") + ch + "' is not a base (use A, C, G, T or U; spaces and digits are ignored)");
+    out.push_back(u);
   }
   return out;
 }
@@ -194,7 +196,7 @@ inline const Table &table(const std::string &name) {
   if (name == "RNA_NN2") return tables::RNA_NN2;
   if (name == "RNA_NN3") return tables::RNA_NN3;
   if (name == "R_DNA_NN1") return tables::R_DNA_NN1;
-  throw std::invalid_argument("nucleic_acids: unknown table " + name);
+  PLUSS_FAIL("nucleic_acids: unknown table " + name);
 }
 
 } // namespace pluss::subsp::natsci::biology::biophysics::nucleic_acids

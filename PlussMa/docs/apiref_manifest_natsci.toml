@@ -101,11 +101,137 @@ maxdepth = 2
 children = ["bio_13_blood_flow/arteries"]
 
 [[family]]
+path = "natsci/biology/bio_14_gene_circuits"
+page = "manual/natsci/biology/bio_14_gene_circuits.md"
+title = "Biology 14: Gene Circuits"
+maxdepth = 2
+children = ["bio_14_gene_circuits/gene_regulation"]
+
+[[family]]
+path = "natsci/biology/bio_15_binding"
+page = "manual/natsci/biology/bio_15_binding.md"
+title = "Biology 15: Binding"
+maxdepth = 2
+children = ["bio_15_binding/ligand_binding"]
+
+[[family]]
+path = "natsci/biology/bio_16_membranes"
+page = "manual/natsci/biology/bio_16_membranes.md"
+title = "Biology 16: Membranes"
+maxdepth = 2
+children = ["bio_16_membranes/ion_voltages"]
+
+[[family]]
+path = "natsci/biology/bio_17_folding"
+page = "manual/natsci/biology/bio_17_folding.md"
+title = "Biology 17: Protein Folding"
+maxdepth = 2
+children = ["bio_17_folding/unfolding_curves"]
+
+[[family]]
+path = "natsci/biology/bio_18_tissue"
+page = "manual/natsci/biology/bio_18_tissue.md"
+title = "Biology 18: Tissue Mechanics"
+maxdepth = 2
+children = ["bio_18_tissue/stress_and_stretch"]
+
+[[family]]
+path = "natsci/biology/bio_19_diffusion"
+page = "manual/natsci/biology/bio_19_diffusion.md"
+title = "Biology 19: Diffusion and Fronts"
+maxdepth = 2
+children = ["bio_19_diffusion/spreading_and_fronts"]
+
+[[family]]
+path = "natsci/biology/bio_20_control"
+page = "manual/natsci/biology/bio_20_control.md"
+title = "Biology 20: Metabolic Control"
+maxdepth = 2
+children = ["bio_20_control/control_coefficients"]
+
+[[family]]
+path = "natsci/biology/bio_21_delays"
+page = "manual/natsci/biology/bio_21_delays.md"
+title = "Biology 21: Delay Models"
+maxdepth = 2
+children = ["bio_21_delays/delayed_growth"]
+
+[[family]]
+path = "natsci/biology/bio_22_size"
+page = "manual/natsci/biology/bio_22_size.md"
+title = "Biology 22: Size-Structured Populations"
+maxdepth = 2
+children = ["bio_22_size/integral_projection"]
+
+[[family]]
+path = "natsci/biology/bio_23_census"
+page = "manual/natsci/biology/bio_23_census.md"
+title = "Biology 23: Census Data"
+maxdepth = 2
+children = ["bio_23_census/fitting_counts"]
+
+[[family]]
+path = "natsci/biology/bio_24_nucleic"
+page = "manual/natsci/biology/bio_24_nucleic.md"
+title = "Biology 24: Nucleic Acids"
+maxdepth = 2
+children = ["bio_24_nucleic/duplex_melting"]
+
+[[family]]
+path = "natsci/biology/bio_25_networks"
+page = "manual/natsci/biology/bio_25_networks.md"
+title = "Biology 25: Reaction Networks"
+maxdepth = 2
+children = ["bio_25_networks/mass_action_networks"]
+
+[[family]]
+path = "natsci/biology/bio_26_adaptation"
+page = "manual/natsci/biology/bio_26_adaptation.md"
+title = "Biology 26: Adaptive Dynamics"
+maxdepth = 2
+children = ["bio_26_adaptation/singular_strategies"]
+
+[[family]]
 path = "natsci/biology"
 page = "manual/natsci/biology.md"
 title = "Biology"
 maxdepth = 2
-children = ["biology/bio_01_growth", "biology/bio_02_interactions", "biology/bio_03_demography", "biology/bio_04_metabolism", "biology/bio_05_enzymes", "biology/bio_06_epidemics", "biology/bio_07_pharmacokinetics", "biology/bio_08_genetics", "biology/bio_09_neurons", "biology/bio_10_proteins", "biology/bio_11_muscle", "biology/bio_12_patterns", "biology/bio_13_blood_flow"]
+children = ["biology/bio_01_growth", "biology/bio_02_interactions", "biology/bio_03_demography", "biology/bio_04_metabolism", "biology/bio_05_enzymes", "biology/bio_06_epidemics", "biology/bio_07_pharmacokinetics", "biology/bio_08_genetics", "biology/bio_09_neurons", "biology/bio_10_proteins", "biology/bio_11_muscle", "biology/bio_12_patterns", "biology/bio_13_blood_flow", "biology/bio_14_gene_circuits", "biology/bio_15_binding", "biology/bio_16_membranes", "biology/bio_17_folding", "biology/bio_18_tissue", "biology/bio_19_diffusion", "biology/bio_20_control", "biology/bio_21_delays", "biology/bio_22_size", "biology/bio_23_census", "biology/bio_24_nucleic", "biology/bio_25_networks", "biology/bio_26_adaptation"]
+
+[[family]]
+path = "natsci/chemistry/chem_01_surfaces"
+page = "manual/natsci/chemistry/chem_01_surfaces.md"
+title = "Chemistry 1: Surfaces"
+maxdepth = 2
+children = ["chem_01_surfaces/adsorption_isotherms"]
+
+[[family]]
+path = "natsci/chemistry/chem_02_polymers"
+page = "manual/natsci/chemistry/chem_02_polymers.md"
+title = "Chemistry 2: Polymers"
+maxdepth = 2
+children = ["chem_02_polymers/chain_statistics", "chem_02_polymers/gelation"]
+
+[[family]]
+path = "natsci/chemistry/chem_03_crystallization"
+page = "manual/natsci/chemistry/chem_03_crystallization.md"
+title = "Chemistry 3: Crystallization"
+maxdepth = 2
+children = ["chem_03_crystallization/nucleation_and_growth"]
+
+[[family]]
+path = "natsci/chemistry/chem_04_rates"
+page = "manual/natsci/chemistry/chem_04_rates.md"
+title = "Chemistry 4: Reaction Rates"
+maxdepth = 2
+children = ["chem_04_rates/transition_state_theory"]
+
+[[family]]
+path = "natsci/chemistry"
+page = "manual/natsci/chemistry.md"
+title = "Chemistry"
+maxdepth = 2
+children = ["chemistry/chem_01_surfaces", "chemistry/chem_02_polymers", "chemistry/chem_03_crystallization", "chemistry/chem_04_rates"]
 
 [[family]]
 path = "natsci/physics/phys_01_orbits"
@@ -122,11 +248,32 @@ maxdepth = 2
 children = ["phys_02_fluids/taylor_green_vortex"]
 
 [[family]]
+path = "natsci/physics/phys_03_quantum"
+page = "manual/natsci/physics/phys_03_quantum.md"
+title = "Physics 3: Quantum Systems"
+maxdepth = 2
+children = ["phys_03_quantum/driven_two_level_atom", "phys_03_quantum/open_system_decay"]
+
+[[family]]
+path = "natsci/physics/phys_04_thermodynamics"
+page = "manual/natsci/physics/phys_04_thermodynamics.md"
+title = "Physics 4: Thermodynamics"
+maxdepth = 2
+children = ["phys_04_thermodynamics/ideal_gas", "phys_04_thermodynamics/heat_and_work"]
+
+[[family]]
+path = "natsci/physics/phys_05_mechanics"
+page = "manual/natsci/physics/phys_05_mechanics.md"
+title = "Physics 5: Mechanics"
+maxdepth = 2
+children = ["phys_05_mechanics/hamiltons_equations", "phys_05_mechanics/symplectic_integration", "phys_05_mechanics/lagrange_equations"]
+
+[[family]]
 path = "natsci/physics"
 page = "manual/natsci/physics.md"
 title = "Physics"
 maxdepth = 2
-children = ["physics/phys_01_orbits", "physics/phys_02_fluids"]
+children = ["physics/phys_01_orbits", "physics/phys_02_fluids", "physics/phys_03_quantum", "physics/phys_04_thermodynamics", "physics/phys_05_mechanics"]
 
 [[symbol]]
 qualname = "natsci::bio_01_growth::Growth laws"
@@ -276,6 +423,132 @@ page = "manual/natsci/biology/bio_13_blood_flow/arteries.md"
 summary = "Arteries"
 
 [[symbol]]
+qualname = "natsci::bio_14_gene_circuits::Gene regulation"
+kind = "page"
+family = "natsci/biology/bio_14_gene_circuits"
+page = "manual/natsci/biology/bio_14_gene_circuits/gene_regulation.md"
+summary = "Gene regulation"
+
+[[symbol]]
+qualname = "natsci::bio_15_binding::Ligand binding"
+kind = "page"
+family = "natsci/biology/bio_15_binding"
+page = "manual/natsci/biology/bio_15_binding/ligand_binding.md"
+summary = "Ligand binding"
+
+[[symbol]]
+qualname = "natsci::bio_16_membranes::Ion voltages"
+kind = "page"
+family = "natsci/biology/bio_16_membranes"
+page = "manual/natsci/biology/bio_16_membranes/ion_voltages.md"
+summary = "Ion voltages"
+
+[[symbol]]
+qualname = "natsci::bio_17_folding::Unfolding curves"
+kind = "page"
+family = "natsci/biology/bio_17_folding"
+page = "manual/natsci/biology/bio_17_folding/unfolding_curves.md"
+summary = "Unfolding curves"
+
+[[symbol]]
+qualname = "natsci::bio_18_tissue::Stress and stretch"
+kind = "page"
+family = "natsci/biology/bio_18_tissue"
+page = "manual/natsci/biology/bio_18_tissue/stress_and_stretch.md"
+summary = "Stress and stretch"
+
+[[symbol]]
+qualname = "natsci::bio_19_diffusion::Spreading and fronts"
+kind = "page"
+family = "natsci/biology/bio_19_diffusion"
+page = "manual/natsci/biology/bio_19_diffusion/spreading_and_fronts.md"
+summary = "Spreading and fronts"
+
+[[symbol]]
+qualname = "natsci::bio_20_control::Control coefficients"
+kind = "page"
+family = "natsci/biology/bio_20_control"
+page = "manual/natsci/biology/bio_20_control/control_coefficients.md"
+summary = "Control coefficients"
+
+[[symbol]]
+qualname = "natsci::bio_21_delays::Delayed growth"
+kind = "page"
+family = "natsci/biology/bio_21_delays"
+page = "manual/natsci/biology/bio_21_delays/delayed_growth.md"
+summary = "Delayed growth"
+
+[[symbol]]
+qualname = "natsci::bio_22_size::Integral projection models"
+kind = "page"
+family = "natsci/biology/bio_22_size"
+page = "manual/natsci/biology/bio_22_size/integral_projection.md"
+summary = "Integral projection models"
+
+[[symbol]]
+qualname = "natsci::bio_23_census::Fitting counts"
+kind = "page"
+family = "natsci/biology/bio_23_census"
+page = "manual/natsci/biology/bio_23_census/fitting_counts.md"
+summary = "Fitting counts"
+
+[[symbol]]
+qualname = "natsci::bio_24_nucleic::Duplex melting"
+kind = "page"
+family = "natsci/biology/bio_24_nucleic"
+page = "manual/natsci/biology/bio_24_nucleic/duplex_melting.md"
+summary = "Duplex melting"
+
+[[symbol]]
+qualname = "natsci::bio_25_networks::Mass-action networks"
+kind = "page"
+family = "natsci/biology/bio_25_networks"
+page = "manual/natsci/biology/bio_25_networks/mass_action_networks.md"
+summary = "Mass-action networks"
+
+[[symbol]]
+qualname = "natsci::bio_26_adaptation::Singular strategies"
+kind = "page"
+family = "natsci/biology/bio_26_adaptation"
+page = "manual/natsci/biology/bio_26_adaptation/singular_strategies.md"
+summary = "Singular strategies"
+
+[[symbol]]
+qualname = "natsci::chem_01_surfaces::Adsorption isotherms"
+kind = "page"
+family = "natsci/chemistry/chem_01_surfaces"
+page = "manual/natsci/chemistry/chem_01_surfaces/adsorption_isotherms.md"
+summary = "Adsorption isotherms"
+
+[[symbol]]
+qualname = "natsci::chem_02_polymers::Chain statistics"
+kind = "page"
+family = "natsci/chemistry/chem_02_polymers"
+page = "manual/natsci/chemistry/chem_02_polymers/chain_statistics.md"
+summary = "Chain statistics"
+
+[[symbol]]
+qualname = "natsci::chem_02_polymers::Gelation"
+kind = "page"
+family = "natsci/chemistry/chem_02_polymers"
+page = "manual/natsci/chemistry/chem_02_polymers/gelation.md"
+summary = "Gelation"
+
+[[symbol]]
+qualname = "natsci::chem_03_crystallization::Nucleation and growth"
+kind = "page"
+family = "natsci/chemistry/chem_03_crystallization"
+page = "manual/natsci/chemistry/chem_03_crystallization/nucleation_and_growth.md"
+summary = "Nucleation and growth"
+
+[[symbol]]
+qualname = "natsci::chem_04_rates::Transition-state theory"
+kind = "page"
+family = "natsci/chemistry/chem_04_rates"
+page = "manual/natsci/chemistry/chem_04_rates/transition_state_theory.md"
+summary = "Transition-state theory"
+
+[[symbol]]
 qualname = "natsci::phys_01_orbits::Kepler orbits"
 kind = "page"
 family = "natsci/physics/phys_01_orbits"
@@ -288,3 +561,52 @@ kind = "page"
 family = "natsci/physics/phys_02_fluids"
 page = "manual/natsci/physics/phys_02_fluids/taylor_green_vortex.md"
 summary = "The Taylor-Green vortex"
+
+[[symbol]]
+qualname = "natsci::phys_03_quantum::A driven two-level atom"
+kind = "page"
+family = "natsci/physics/phys_03_quantum"
+page = "manual/natsci/physics/phys_03_quantum/driven_two_level_atom.md"
+summary = "A driven two-level atom"
+
+[[symbol]]
+qualname = "natsci::phys_03_quantum::Decay of an excited atom"
+kind = "page"
+family = "natsci/physics/phys_03_quantum"
+page = "manual/natsci/physics/phys_03_quantum/open_system_decay.md"
+summary = "Decay of an excited atom"
+
+[[symbol]]
+qualname = "natsci::phys_04_thermodynamics::The ideal gas"
+kind = "page"
+family = "natsci/physics/phys_04_thermodynamics"
+page = "manual/natsci/physics/phys_04_thermodynamics/ideal_gas.md"
+summary = "The ideal gas"
+
+[[symbol]]
+qualname = "natsci::phys_04_thermodynamics::Heat and work along a path"
+kind = "page"
+family = "natsci/physics/phys_04_thermodynamics"
+page = "manual/natsci/physics/phys_04_thermodynamics/heat_and_work.md"
+summary = "Heat and work along a path"
+
+[[symbol]]
+qualname = "natsci::phys_05_mechanics::Hamilton's equations"
+kind = "page"
+family = "natsci/physics/phys_05_mechanics"
+page = "manual/natsci/physics/phys_05_mechanics/hamiltons_equations.md"
+summary = "Hamilton's equations"
+
+[[symbol]]
+qualname = "natsci::phys_05_mechanics::Symplectic integration"
+kind = "page"
+family = "natsci/physics/phys_05_mechanics"
+page = "manual/natsci/physics/phys_05_mechanics/symplectic_integration.md"
+summary = "Symplectic integration"
+
+[[symbol]]
+qualname = "natsci::phys_05_mechanics::Lagrange's equations"
+kind = "page"
+family = "natsci/physics/phys_05_mechanics"
+page = "manual/natsci/physics/phys_05_mechanics/lagrange_equations.md"
+summary = "Lagrange's equations"

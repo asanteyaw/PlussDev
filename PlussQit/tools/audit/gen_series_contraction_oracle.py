@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate tests/CodeM/test_series_contraction.cpp.
 
-Oracle-driven test for Series::einsum / Series::tensordot: every case is run
+Oracle-driven test for pluss::series::einsum / Series::tensordot: every case is run
 through the live libtorch (python torch from the cpp_env conda env, the same
 build the repo links) and the forward output plus the reverse-mode gradient of
 `loss = sum(out * W)` w.r.t. every operand are embedded as literals. Cases
@@ -160,7 +160,7 @@ void check_einsum(const std::string& eq, const std::vector<Op>& ops, const std::
                   const std::vector<double>& want, const std::vector<std::vector<double>>& wgrad) {
   INFO("einsum " << eq);
   const auto in = tracked(ops);
-  finish(Series::einsum(eq, in), in, oshape, want, wgrad);
+  finish(pluss::series::einsum(eq, in), in, oshape, want, wgrad);
 }
 
 void check_td(const std::vector<Op>& ops, const std::vector<std::int64_t>* da, const std::vector<std::int64_t>* db,
@@ -172,7 +172,7 @@ void check_td(const std::vector<Op>& ops, const std::vector<std::int64_t>* da, c
 }
 }  // namespace
 ''')
-    L.append('TEST_CASE("Series::einsum matches libtorch (forward + reverse)", "[einsum][contraction][oracle]") {')
+    L.append('TEST_CASE("pluss::series::einsum matches libtorch (forward + reverse)", "[einsum][contraction][oracle]") {')
     for i, (eq, shapes) in enumerate(CASES):
         arrs = mk(shapes)
         try:
@@ -181,7 +181,7 @@ void check_td(const std::vector<Op>& ops, const std::vector<std::int64_t>* da, c
             print("torch rejects", eq, shapes, e)
             # keep as expected throw
             ops = ", ".join("{%s, %s}" % (lit(a.flatten().tolist()), shp(a.shape)) for a in arrs)
-            L.append('  SECTION("throws: %s %s") { std::vector<Series> v; %s REQUIRE_THROWS(Series::einsum("%s", v)); }' % (
+            L.append('  SECTION("throws: %s %s") { std::vector<Series> v; %s REQUIRE_THROWS(pluss::series::einsum("%s", v)); }' % (
                 eq, list(shapes), "".join('v.push_back(make_series(%s, %s));' % (lit(a.flatten().tolist()), shp(a.shape)) for a in arrs), eq))
             continue
         ops = ", ".join("{%s, %s}" % (lit(a.flatten().tolist()), shp(a.shape)) for a in arrs)
@@ -196,7 +196,7 @@ void check_td(const std::vector<Op>& ops, const std::vector<std::int64_t>* da, c
         except Exception:
             pass
         arrs = mk(shapes)
-        L.append('  SECTION("throws: %s") { std::vector<Series> v; %s REQUIRE_THROWS(Series::einsum("%s", v)); }' % (
+        L.append('  SECTION("throws: %s") { std::vector<Series> v; %s REQUIRE_THROWS(pluss::series::einsum("%s", v)); }' % (
             eq, "".join('v.push_back(make_series(%s, %s));' % (lit(a.flatten().tolist()), shp(a.shape)) for a in arrs), eq))
     L.append("}\n")
 

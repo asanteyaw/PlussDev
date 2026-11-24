@@ -4,6 +4,7 @@
 // neutral numerical owner used by both physics and chemistry; domain wrappers
 // add units and model semantics without rebuilding the polynomial evaluator.
 
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
@@ -181,7 +182,7 @@ private:
   }
   static void require(bool condition, const std::string &message) {
     if (!condition)
-      throw std::invalid_argument("natsci::thermo: " + message);
+      PLUSS_FAIL("natsci::thermo: " + message);
   }
 
   static bool all_finite(const std::array<double, 7> &values) {

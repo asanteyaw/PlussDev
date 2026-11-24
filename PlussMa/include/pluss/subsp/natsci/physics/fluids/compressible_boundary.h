@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible.h"
 
 #include <algorithm>
@@ -125,10 +126,10 @@ public:
     const spatial::Face face = when_true.face();
     if (face.axis != when_false.face().axis ||
         face.side != when_false.face().side)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::fluids::gas::blend: both rules must target the same face");
     if (mask.scalar_type() != ScalarType::Bool)
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::fluids::gas::blend: mask must have Bool dtype");
     Bound result(face, BoundKind::Blend, std::nullopt, std::nullopt,
                  std::nullopt, std::nullopt);
@@ -252,7 +253,7 @@ class Bounds final {
 public:
   [[nodiscard]] const Bound &at(std::int64_t axis, spatial::Side side) const {
     if (axis < 0 || axis >= dim_)
-      throw std::out_of_range(
+      PLUSS_FAIL(
           "natsci::fluids::gas::Bounds::at: face axis is out of range");
     return rules_[spatial::detail::face_slot({axis, side})];
   }
@@ -295,7 +296,7 @@ inline Series expand(const Series &value, const Series &prototype,
                      const char *operation, const char *role) {
   if (value.scalar_type() != prototype.scalar_type() ||
       value.platform() != prototype.platform())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must match the state dtype and platform");
   Series shaped = value;
   if (components > 0 && value.dim() == 1 && value.size(0) == components) {
@@ -307,10 +308,10 @@ inline Series expand(const Series &value, const Series &prototype,
   try {
     Series result = pluss::series::zeros_like(prototype).add(shaped);
     if (!detail::same_layout(result, prototype))
-      throw std::invalid_argument("shape changed");
+      PLUSS_FAIL("shape changed");
     return result;
   } catch (const std::exception &) {
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " is not broadcastable to the boundary face");
   }
 }
@@ -319,7 +320,7 @@ inline Series expand_mask(const Series &value, const Series &prototype,
                           const char *operation) {
   if (value.scalar_type() != ScalarType::Bool ||
       value.platform() != prototype.platform())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary mask must have Bool dtype and "
                                 "match the state platform");
   try {
@@ -327,10 +328,10 @@ inline Series expand_mask(const Series &value, const Series &prototype,
         pluss::series::zeros_like(prototype).eq(0.0);
     Series result = bool_prototype.logical_and(value);
     if (!detail::same_layout(result, bool_prototype))
-      throw std::invalid_argument("shape changed");
+      PLUSS_FAIL("shape changed");
     return result;
   } catch (const std::exception &) {
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": boundary mask is not broadcastable to "
                                 "the boundary face");
   }
@@ -388,7 +389,7 @@ inline detail::Raw from_primitive(const Primitive &source,
           .logical_and(result.mom.isfinite().all(component, false))
           .logical_and(result.energy.isfinite());
   if (!valid.all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": prescribed boundary state must have finite "
                             "positive density and pressure");
   return result;
@@ -434,7 +435,7 @@ inline detail::Raw characteristic_far(const detail::Raw &inside,
   const Series sound = outgoing.sub(incoming).mul(0.25 * (model.gamma - 1.0));
   const Series valid_sound = sound.gt(0.0).logical_and(sound.isfinite());
   if (!subsonic.logical_not().logical_or(valid_sound).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::boundary: characteristic far field produced "
         "a non-positive sound speed");
 
@@ -481,8 +482,11 @@ inline detail::Raw pressure_outlet(const detail::Raw &inside,
   const Series normal = velocity.select(component, axis).mul(sign);
   const Series sound = pressure.mul(model.gamma).div(inside.rho).sqrt();
   const Series supersonic = normal.ge(sound);
-  if (!supersonic.logical_or(normal.ge(0.0)).all().item<bool>())
-    throw std::domain_error(
+  // gas at rest at the outlet is not backflow: rounding in earlier stages can leave the normal speed a few ulps below zero, so only a speed
+  // that is negative on the scale of the sound speed counts as flow back in
+  const Series slack = sound.mul(-1e-9);
+  if (!supersonic.logical_or(normal.ge(slack)).all().item<bool>())
+    PLUSS_FAIL(
         "natsci::fluids::gas::boundary: pressure outlet encountered "
         "backflow; use a characteristic far field or prescribed state");
 
@@ -492,8 +496,8 @@ inline detail::Raw pressure_outlet(const detail::Raw &inside,
   const Series boundary_normal =
       normal.add(sound.mul(2.0 / (model.gamma - 1.0)))
           .sub(boundary_sound.mul(2.0 / (model.gamma - 1.0)));
-  if (!supersonic.logical_or(boundary_normal.ge(0.0)).all().item<bool>())
-    throw std::domain_error(
+  if (!supersonic.logical_or(boundary_normal.ge(slack)).all().item<bool>())
+    PLUSS_FAIL(
         "natsci::fluids::gas::boundary: target outlet pressure reverses "
         "the boundary flow");
   std::vector<Series> components;
@@ -525,13 +529,13 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
   const double tolerance =
       direction.scalar_type() == ScalarType::Float32 ? 2e-5 : 2e-12;
   if (!norm.sub(1.0).abs().le(tolerance).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::inlet: direction must be a unit vector");
   const double sign = rule.face().side == spatial::Side::Low ? -1.0 : 1.0;
   const Series normal_direction =
       direction.select(component, rule.face().axis).mul(sign);
   if (!normal_direction.lt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::inlet: direction must point into the domain");
 
   const Series inside_pressure = plane_pressure(inside, component, model);
@@ -558,7 +562,7 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
              .logical_and(total_pressure.isfinite())
              .all()
              .item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::inlet: total temperature and pressure must "
           "be finite and positive");
     const Series sound_total =
@@ -581,7 +585,7 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
              .logical_and(high_residual.le(0.0))
              .all()
              .item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::inlet: total conditions and outgoing "
           "characteristic have no subsonic inward solution");
     for (std::int64_t iteration = 0; iteration < 48; ++iteration) {
@@ -610,7 +614,7 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
              .logical_and(speed.isfinite())
              .all()
              .item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::inlet: density and speed must be finite and "
           "positive");
     const Series normal = normal_direction.mul(speed);
@@ -621,7 +625,7 @@ inline detail::Raw characteristic_inlet(const detail::Raw &inside,
              .logical_and(pressure.gt(model.p_floor))
              .all()
              .item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::inlet: density-speed data and outgoing "
           "characteristic do not define a subsonic inlet");
   }
@@ -638,7 +642,7 @@ inline detail::Raw exterior(const detail::Raw &inside,
   constexpr const char *operation = "natsci::fluids::gas::boundary";
   const std::int64_t component = inside.mom.dim() - inside.rho.dim();
   if (component != 1)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::boundary: momentum layout is invalid");
   const std::int64_t component_axis = inside.rho.dim() - grid.dim() + 1;
 
@@ -682,7 +686,7 @@ inline detail::Raw exterior(const detail::Raw &inside,
     const Series target = expand(rule.pressure()->si_value(), p, 0, 0,
                                  operation, "outlet pressure");
     if (!target.gt(model.p_floor).all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::boundary: target outlet pressure must be "
           "finite and positive");
     return pressure_outlet(inside, target, rule, model, component_axis);
@@ -693,7 +697,7 @@ inline detail::Raw exterior(const detail::Raw &inside,
   detail::Raw result{rho, momentum,
                      exterior_pressure.div(model.gamma - 1.0).add(kinetic)};
   if (!exterior_pressure.gt(model.p_floor).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::boundary: pressure outlet reconstruction "
         "produced non-positive exterior pressure");
   return result;
@@ -802,7 +806,7 @@ bounded_weno5_faces(const Series &value, const Series &low, const Series &high,
 inline Series wall_velocity(const Bound &rule, const Series &inside,
                             std::int64_t component, std::int64_t dim) {
   if (rule.kind() != BoundKind::Wall || !rule.wall())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::wall: expected a wall boundary");
   Series value =
       rule.wall()->velocity
@@ -810,10 +814,10 @@ inline Series wall_velocity(const Bound &rule, const Series &inside,
                    "natsci::fluids::gas::wall", "wall velocity")
           : pluss::series::zeros_like(inside);
   if (!value.isfinite().all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::wall: velocity must be finite");
   if (!value.select(component, rule.face().axis).eq(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::wall: normal wall velocity requires a moving-"
         "mesh formulation");
   return value;
@@ -1040,7 +1044,7 @@ inline std::optional<Series> boundary_temperature(const detail::Raw &inside,
         expand(rule.wall()->temperature->si_value(), inside_temperature, 0, 0,
                "natsci::fluids::gas::wall", "wall temperature");
     if (!target.gt(0.0).logical_and(target.isfinite()).all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::wall: temperature must be finite and "
           "positive");
     return target;
@@ -1081,7 +1085,7 @@ inline Series boundary_conduction(
         expand(rule.wall()->flux->si_value(), inside_temperature, 0, 0,
                "natsci::fluids::gas::wall", "wall heat flux");
     if (!outward.isfinite().all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::gas::wall: heat flux must be finite");
     return outward.mul(-sign);
   }
@@ -1324,12 +1328,12 @@ inline detail::Raw rate(const detail::Raw &state, const spatial::BoxGrid &grid,
                         const Transport &transport,
                         const std::optional<SutherlandLaw> &sutherland) {
   if (rules.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::rate: boundary and grid rank mismatch");
   if (recon == Recon::Weno5)
     for (std::int64_t axis = 0; axis < grid.dim(); ++axis)
       if (grid.shape()[static_cast<std::size_t>(axis)] < 5)
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::fluids::gas::rate: bounded WENO5 requires at least "
             "five cells on every spatial axis");
   const std::int64_t component = state.mom.dim() - grid.dim() - 1;
@@ -1444,7 +1448,7 @@ step_limit(const State &state, const spatial::BoxGrid &grid,
   constexpr const char *operation = "natsci::fluids::gas::step_limit";
   detail::validate_model(model, operation);
   if (!(courant > 0.0) || !(courant <= 1.0) || !std::isfinite(courant))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step_limit: courant must be finite and in (0, "
         "1]");
   const Series speed_value = velocity(state, grid).si_value();
@@ -1473,7 +1477,7 @@ step_limit(const State &state, const spatial::BoxGrid &grid, const Model &model,
   constexpr const char *operation = "natsci::fluids::gas::step_limit";
   detail::validate_transport(transport, operation);
   if (!(diffusion > 0.0) || !(diffusion <= 0.5) || !std::isfinite(diffusion))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step_limit: diffusion must be finite and in "
         "(0, 0.5]");
   const Series acoustic = step_limit(state, grid, model, courant).si_value();
@@ -1506,7 +1510,7 @@ step_limit(const State &state, const spatial::BoxGrid &grid, const Model &model,
   constexpr const char *operation = "natsci::fluids::gas::step_limit";
   detail::validate_sutherland(law, operation);
   if (!(diffusion > 0.0) || !(diffusion <= 0.5) || !std::isfinite(diffusion))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step_limit: diffusion must be finite and in "
         "(0, 0.5]");
   const Series acoustic = step_limit(state, grid, model, courant).si_value();
@@ -1542,7 +1546,7 @@ step_at(const State &state, const spatial::BoxGrid &grid, RulesAt &&rules_at,
   detail::validate_model(model, operation);
   boundary_detail::validate_options(options, operation);
   if (!(width.si_value() > 0.0) || !std::isfinite(width.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step: width must be finite and positive");
   const auto limit = options.sutherland
                          ? step_limit(state, grid, model, *options.sutherland,
@@ -1551,7 +1555,7 @@ step_at(const State &state, const spatial::BoxGrid &grid, RulesAt &&rules_at,
                                       options.courant, options.diffusion);
   if (options.enforce &&
       !limit.si_value().ge(width.si_value()).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step: width exceeds the acoustic CFL limit");
 
   const detail::Raw initial = Access::raw(state);
@@ -1615,7 +1619,7 @@ step(const State &state, const spatial::BoxGrid &grid, const BoundFn &rules,
      common::ScalarQuantity<common::Time> width, const Model &model = {},
      const Options &options = {}) {
   if (!rules)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::step: boundary function is empty");
   return boundary_detail::step_at(state, grid, rules, start, width, model,
                                   options);
@@ -1647,7 +1651,7 @@ evolve(const State &initial, const spatial::BoxGrid &grid, const BoundFn &rules,
        common::ScalarQuantity<common::Time> width, std::int64_t steps,
        const Model &model = {}, const Options &options = {}) {
   if (!rules)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::evolve: boundary function is empty");
   boundary_detail::validate_options(options, "natsci::fluids::gas::evolve");
   std::int64_t evaluations = 0;
@@ -1699,12 +1703,12 @@ evolve_to(const State &initial, const spatial::BoxGrid &grid,
             std::min(remaining, std::min(options.max_step.si_value(),
                                          options.safety * stable));
         if (!(width > 0.0) || !std::isfinite(width))
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stability policy produced no "
               "finite positive step");
         if (width < options.min_step.si_value() &&
             remaining > options.min_step.si_value())
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stable step is below min_step");
         return common::ScalarQuantity<common::Time>::from_si(width);
       },
@@ -1718,7 +1722,7 @@ evolve_to(const State &initial, const spatial::BoxGrid &grid,
           common::ScalarQuantity<common::Time> stop, const Model &model = {},
           const RunOptions &options = {}) {
   if (!rules)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::gas::evolve_to: boundary function is empty");
   detail::validate_run(options);
   boundary_detail::validate_options(options.step,
@@ -1750,12 +1754,12 @@ evolve_to(const State &initial, const spatial::BoxGrid &grid,
             std::min(remaining, std::min(options.max_step.si_value(),
                                          options.safety * stable));
         if (!(width > 0.0) || !std::isfinite(width))
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stability policy produced no "
               "finite positive step");
         if (width < options.min_step.si_value() &&
             remaining > options.min_step.si_value())
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::gas::evolve_to: stable step is below min_step");
         return common::ScalarQuantity<common::Time>::from_si(width);
       },

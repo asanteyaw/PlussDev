@@ -1,5 +1,3 @@
-<!-- generated from bio_08_genetics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 8: Genetics
 
 How allele frequencies change under selection and chance.

@@ -82,6 +82,12 @@ int main() {
     std::cerr << "FAILED: " << e.what() << "\n";
     return 1;
   }
+    {
+      bool rejected = false;
+      pf::Thermal p; p.dh_m = 100.0; p.tm = 340.0; p.dcp = 1.5;
+      try { (void)pf::thermal_gibbs(vec({0.0}), p); } catch (const pluss::Error &) { rejected = true; }
+      expect(rejected, "thermal_gibbs rejects a non-positive temperature");
+    }
   std::cout << "protein folding tests passed\n";
   return 0;
 }

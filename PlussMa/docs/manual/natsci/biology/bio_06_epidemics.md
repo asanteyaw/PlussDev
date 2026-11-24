@@ -1,5 +1,3 @@
-<!-- generated from bio_06_epidemics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 6: Epidemics
 
 How an infection spreads through a population and how far it goes.

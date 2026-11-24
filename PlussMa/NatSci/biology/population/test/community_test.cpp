@@ -3,6 +3,7 @@
 #include "community_reference.h"
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -119,6 +120,23 @@ int main() {
       const auto xv = xt.contiguous().host<double>();
       const double decay = std::exp(-2.0 / (sk * sk));
       expect(std::abs(xv[0] - decay) < 1e-6 && std::abs(xv[1] + 0.6 * decay) < 1e-6, "canonical equation flow x(t) = x0 exp(-t / sigma_K^2): " + std::to_string(xv[0]) + " vs " + std::to_string(decay));
+    }
+    // each invalid argument of random_community is named in its message, and an absent species has a plain (not negative) zero equilibrium density
+    {
+      const auto message = [](const std::function<void()> &call) {
+        try {
+          call();
+        } catch (const pluss::Error &e) {
+          return e.message();
+        }
+        return std::string();
+      };
+      expect(message([] { (void)cm::random_community(1, 4, 0.5, 1.0, 0.0, 1.0); }).find("at least two species") != std::string::npos, "one species is named in the message");
+      expect(message([] { (void)cm::random_community(5, 4, 0.5, 1.5, 0.0, 1.0); }).find("connectance") != std::string::npos, "connectance is named in the message");
+      expect(message([] { (void)cm::random_community(5, 4, 0.5, 1.0, 1.5, 1.0); }).find("tau") != std::string::npos, "tau is named in the message");
+      const Series r = pluss::make_series({1.0, 0.8}).to(pluss::ScalarType::Float64), a = pluss::make_series({-1.0, -0.2, -0.3, -1.0}, {2, 2}).to(pluss::ScalarType::Float64);
+      const auto n = cm::resident_equilibrium(r, a, pluss::make_series({1.0, 0.0}).to(pluss::ScalarType::Float64)).contiguous().host<double>();
+      expect(!std::signbit(n[1]), "an absent species has +0, not -0");
     }
     std::cout << "community tests passed\n";
   } catch (const std::exception &e) {

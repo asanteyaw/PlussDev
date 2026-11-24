@@ -1,5 +1,3 @@
-<!-- generated from bio_11_muscle.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 11: Muscle
 
 How a muscle and its tendon produce force.

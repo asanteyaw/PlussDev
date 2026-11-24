@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/math/diff.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
@@ -50,7 +51,7 @@ template <DimensionType OutputDimension, DimensionType InputDimension,
 inline void require_scalar(const Series &value, const char *operation,
                            const char *role) {
   if (value.numel() != 1)
-    throw std::invalid_argument(std::string("natsci::common::diff::") +
+    PLUSS_FAIL(std::string("natsci::common::diff::") +
                                 operation + ": " + role +
                                 " must contain exactly one value");
 }
@@ -112,7 +113,7 @@ jacobian(Fn &&fn, const SeriesQuantity<InputDimension> &input,
   using JacobianDimension =
       DimensionQuotient<OutputDimension, InputDimension>;
   if (options.mode == math_diff::JacobianMode::Forward)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::diff::jacobian: SeriesQuantity callbacks support "
         "reverse mode; use subsp::math::diff with DualTrace for forward mode");
   auto fn_copy = std::forward<Fn>(fn);
@@ -198,7 +199,7 @@ elasticity(Fn &&fn, const SeriesQuantity<InputDimension> &input,
       math_diff::value_and_grad(callback, input.si_value(), policy);
   detail::require_scalar(value, "elasticity", "callback output");
   if (value.eq(0.0).all().template item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::common::diff::elasticity: callback output must be non-zero");
   return SeriesQuantity<Dimensionless>::from_si(
       input.si_value().mul(gradient).div(value));

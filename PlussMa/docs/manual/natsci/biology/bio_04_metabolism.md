@@ -1,5 +1,3 @@
-<!-- generated from bio_04_metabolism.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 4: Metabolism
 
 Constraint-based analysis of metabolic networks: what a network can produce given only its reactions and their limits.

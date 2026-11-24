@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/math/parameter_pack.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
@@ -75,11 +76,11 @@ inline bool same_shape(const Series &lhs, const Series &rhs) noexcept {
 inline void require_numeric(const Series &value, std::string_view where,
                             bool allow_complex = true) {
   if (!value.defined())
-    throw std::invalid_argument(std::string(where) +
+    PLUSS_FAIL(std::string(where) +
                                 ": expected a defined Series");
   if (!value.dtype().is_floating() &&
       !(allow_complex && value.dtype().is_complex())) {
-    throw std::invalid_argument(std::string(where) +
+    PLUSS_FAIL(std::string(where) +
                                 ": expected a floating Series");
   }
 }
@@ -87,11 +88,11 @@ inline void require_numeric(const Series &value, std::string_view where,
 inline void require_same_layout(const Series &value, const Series &peer,
                                 std::string_view where) {
   if (!same_shape(value, peer))
-    throw std::invalid_argument(std::string(where) + ": shape mismatch");
+    PLUSS_FAIL(std::string(where) + ": shape mismatch");
   if (value.scalar_type() != peer.scalar_type())
-    throw std::invalid_argument(std::string(where) + ": dtype mismatch");
+    PLUSS_FAIL(std::string(where) + ": dtype mismatch");
   if (value.platform() != peer.platform())
-    throw std::invalid_argument(std::string(where) + ": platform mismatch");
+    PLUSS_FAIL(std::string(where) + ": platform mismatch");
 }
 
 class RecordStore final {
@@ -101,10 +102,10 @@ public:
   RecordStore(std::vector<RecordMeta> meta, std::vector<Pack::Block> blocks)
       : pack_(std::move(blocks)) {
     if (meta.empty())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common record: expected at least one field");
     if (meta.size() != pack_.size())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common record: metadata size mismatch");
 
     auto schema = std::make_shared<RecordSchema>();
@@ -116,17 +117,17 @@ public:
     for (std::size_t i = 0; i < schema->meta.size(); ++i) {
       const auto &block = pack_[i];
       if (schema->meta[i].name != block.name)
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common record: field order mismatch");
       require_numeric(block.value, "natsci::common record");
       if (block.value.scalar_type() != first.scalar_type())
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common record: fields must share a dtype");
       if (block.value.platform() != first.platform())
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common record: fields must share a platform");
       if (!schema->index.emplace(schema->meta[i].name, i).second)
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common record: duplicate field name");
     }
     schema_ = std::move(schema);
@@ -158,7 +159,7 @@ public:
   [[nodiscard]] SeriesQuantity<D> get(std::string_view name) const {
     const auto pos = position(name);
     if (schema_->meta[pos].dimension != DimensionSignature::of<D>())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common record: dimension mismatch for field '" +
           std::string(name) + "'");
     return SeriesQuantity<D>::from_si(pack_[pos].value);
@@ -173,7 +174,7 @@ public:
   [[nodiscard]] RecordStore
   stack(const std::vector<RecordStore> &sequence) const {
     if (sequence.empty())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common record stack: expected at least one state");
 
     std::vector<Pack::Block> blocks;
@@ -186,7 +187,7 @@ public:
         const auto &record = sequence[step];
         if (record.size() != size() ||
             record.schema_->meta[field] != schema_->meta[field])
-          throw std::invalid_argument(
+          PLUSS_FAIL(
               "natsci::common record stack: state schema changed");
         const auto &value = record.pack_[field].value;
         require_same_layout(value, model.value, "natsci::common record stack");
@@ -215,7 +216,7 @@ private:
   [[nodiscard]] std::size_t position(std::string_view name) const {
     const auto found = schema_->index.find(name);
     if (found == schema_->index.end())
-      throw std::out_of_range("natsci::common record: unknown field '" +
+      PLUSS_FAIL("natsci::common record: unknown field '" +
                               std::string(name) + "'");
     return found->second;
   }
@@ -303,32 +304,32 @@ private:
 
   void validate_bounds_() const {
     if (bounds_->size() != store_.size())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::ParameterSet: bounds size mismatch");
     for (std::size_t i = 0; i < bounds_->size(); ++i) {
       const auto &name = store_.meta()[i].name;
       const auto &value = store_.at(name);
       const auto &bound = (*bounds_)[i];
       if ((bound.lower || bound.upper) && value.dtype().is_complex())
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common::ParameterSet: bounded values must be real");
       if (bound.lower) {
         detail::require_same_layout(value, *bound.lower,
                                     "natsci::common::ParameterSet lower bound");
         if (!value.ge(*bound.lower).all().item<bool>())
-          throw std::invalid_argument(
+          PLUSS_FAIL(
               "natsci::common::ParameterSet: value is below lower bound");
       }
       if (bound.upper) {
         detail::require_same_layout(value, *bound.upper,
                                     "natsci::common::ParameterSet upper bound");
         if (!value.le(*bound.upper).all().item<bool>())
-          throw std::invalid_argument(
+          PLUSS_FAIL(
               "natsci::common::ParameterSet: value is above upper bound");
       }
       if (bound.lower && bound.upper &&
           !bound.lower->le(*bound.upper).all().item<bool>())
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::common::ParameterSet: lower bound exceeds upper bound");
     }
   }

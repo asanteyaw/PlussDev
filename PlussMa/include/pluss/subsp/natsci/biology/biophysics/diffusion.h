@@ -66,7 +66,9 @@ inline Series fisher_kpp_exact(const Series &x, double t, double d, double r,
 // Heat kernel at squared distance r2 for `dims` spatial dimensions.
 inline Series heat_kernel(const Series &r2, const Coeff &d, const Coeff &t,
                           std::int64_t dims) {
+  dynamics::require(dims >= 1, "heat_kernel: dims must be at least 1");
   const Series four_dt = d.on(r2).mul(t.on(r2)).mul(4.0);
+  dynamics::require(four_dt.gt(0.0).all().item<bool>(), "heat_kernel: D and t must be positive");
   return four_dt.mul(3.14159265358979323846).pow(-0.5 * static_cast<double>(dims))
       .mul(r2.div(four_dt).neg().exp());
 }

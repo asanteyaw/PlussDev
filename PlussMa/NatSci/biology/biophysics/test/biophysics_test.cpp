@@ -73,6 +73,12 @@ void test_heat_kernel() {
   const Series exact = dif::heat_kernel(r2, d, 2.5, 1);
   expect(u.sub(exact).abs().max().item<double>() < 2e-5, "heat kernel semigroup property");
   expect(std::abs(u.sum().item<double>() * h - 1.0) < 1e-8, "kernel unit mass");
+  bool threw = false;
+  try { (void)dif::heat_kernel(r2, d, 0.0, 1); } catch (const pluss::Error &) { threw = true; }
+  expect(threw, "heat_kernel rejects t = 0");
+  threw = false;
+  try { (void)dif::heat_kernel(r2, -1.0, 1.0, 1); } catch (const pluss::Error &) { threw = true; }
+  expect(threw, "heat_kernel rejects negative D");
 }
 
 void test_fisher_kpp() {
@@ -285,10 +291,10 @@ void test_cable() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)dif::diffusion_rate(vec({1.0, 2.0, 3.0}), -1.0, grid1d(3, 1.0)); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)dif::diffusion_rate(vec({1.0, 2.0, 3.0}), -1.0, grid1d(3, 1.0)); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "negative D rejected");
   threw = false;
-  try { (void)mem::nernst(vec({1.0}), vec({0.0}), 1.0, 26.7); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)mem::nernst(vec({1.0}), vec({0.0}), 1.0, 26.7); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "zero concentration rejected");
 }
 } // namespace

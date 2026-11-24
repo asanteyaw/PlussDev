@@ -1,5 +1,3 @@
-<!-- generated from phys_02_fluids.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Physics 2: Fluids
 
 Incompressible flow in a periodic box.

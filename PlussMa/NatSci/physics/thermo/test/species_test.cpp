@@ -139,7 +139,7 @@ void test_midpoint_and_failures() {
   const auto rejects = [](auto &&fn) {
     try {
       fn();
-    } catch (const std::invalid_argument &) {
+    } catch (const pluss::Error &) {
       return true;
     }
     return false;

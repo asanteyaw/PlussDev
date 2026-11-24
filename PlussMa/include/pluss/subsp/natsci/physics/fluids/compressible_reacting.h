@@ -12,6 +12,7 @@
 // Cantera's IdealGasReactor source convention and prepares a conservative
 // Strang split with the spatial reacting-flux operator.
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/chemistry/ideal_gas.h"
 #include "pluss/subsp/natsci/chemistry/reactor.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible_species.h"
@@ -36,7 +37,7 @@ public:
         density_floor_(density_floor), pressure_floor_(pressure_floor) {
     if (!(density_floor_ >= 0.0) || !std::isfinite(density_floor_) ||
         !(pressure_floor_ >= 0.0) || !std::isfinite(pressure_floor_))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::fluids::gas::reacting: density and pressure floors must "
           "be finite and non-negative");
     const Series imbalance =
@@ -48,7 +49,7 @@ public:
     const double tolerance =
         imbalance.scalar_type() == ScalarType::Float32 ? 2e-5 : 2e-12;
     if (!imbalance.abs().le(scale.mul(tolerance)).all().item<bool>())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::fluids::gas::reacting: mechanism reactions must conserve "
           "mass with the supplied molar masses");
   }
@@ -119,7 +120,7 @@ inline ThermoState checked_thermo(const Raw &state,
   component_axis(state, grid, operation);
   species::detail::require_partial(state.partial, state.rho, grid, operation);
   if (!state.rho.gt(model.density_floor()).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": density must exceed the model floor");
   const Series y =
       species::detail::to_trailing_species(mass_fractions(state, grid), grid);
@@ -127,7 +128,7 @@ inline ThermoState checked_thermo(const Raw &state,
       specific_internal_energy(state, grid, operation), y);
   const Series p = model.eos().pressure(state.rho, t, y);
   if (!p.gt(model.pressure_floor()).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": pressure must exceed the model floor");
   return {y, t, p};
 }
@@ -216,7 +217,7 @@ primitive(const common::SeriesQuantity<Density> &density,
   spatial::detail::require_scalar_layout(temp, grid, operation);
   if (!gas::detail::same_layout(speed.select(component, 0), rho) ||
       !gas::detail::same_layout(temp, rho))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": primitive fields must share one layout");
   species::detail::require_layout(mass_fractions, rho, grid, operation);
 
@@ -316,7 +317,7 @@ react(const State &state, const spatial::PeriodicGrid &grid,
       const stiff::Options &options = {}) {
   constexpr const char *operation = "natsci::fluids::gas::reacting::react";
   if (!(width.si_value() > 0.0) || !std::isfinite(width.si_value()))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": width must be finite and positive");
   const auto raw = Access::raw(state);
   const auto thermo = detail::checked_thermo(raw, grid, model, operation);
@@ -325,7 +326,7 @@ react(const State &state, const spatial::PeriodicGrid &grid,
       model.mechanism(), chemistry::reactor::make_state(thermo.temperature, c),
       width.si_value(), true, options);
   if (!integrated.converged)
-    throw std::runtime_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                              ": stiff chemistry integration did not "
                              "converge within the step budget");
 
@@ -334,7 +335,7 @@ react(const State &state, const spatial::PeriodicGrid &grid,
       final_c.mul(model.eos().molar_masses()).clamp(0.0, 1e300);
   const Series total_mass = raw_mass.sum(-1, true);
   if (!total_mass.gt(0.0).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": chemistry produced no positive mixture mass");
   const Series final_y = raw_mass.div(total_mass);
   detail::Raw next{raw.rho, raw.mom, raw.energy,

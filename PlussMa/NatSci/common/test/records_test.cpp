@@ -68,7 +68,7 @@ void test_parameter_records() {
   bool wrong_dimension = false;
   try {
     (void)model.get<common::Mass>("length");
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wrong_dimension = true;
   }
   expect(wrong_dimension, "dimension-mismatched parameter access was accepted");
@@ -80,7 +80,7 @@ void test_parameter_records() {
                       common::SeriesQuantity<common::Length>::from_si(
                           pluss::series::make({2.0, 2.0, 2.0})),
                       upper));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_bound = true;
   }
   expect(bad_bound, "parameter bound violation was accepted");
@@ -90,7 +90,7 @@ void test_parameter_records() {
     (void)common::SeriesQuantity<common::Length>::from(
         pluss::series::make({1, 2}, pluss::ScalarType::Int64),
         common::units::centimetre);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     integral_quantity = true;
   }
   expect(integral_quantity,
@@ -132,7 +132,7 @@ void test_state_and_trajectory() {
     const auto bad_time = common::SeriesQuantity<common::Time>::from_si(
         pluss::series::make(std::vector<double>{0, 2, 1, 10, 11, 12}, {2, 3}));
     (void)common::path(bad_time, state);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     unordered = true;
   }
   expect(unordered, "unordered trajectory was accepted");
@@ -231,7 +231,7 @@ void test_covariance() {
             pluss::series::make({1.0, 2.0})),
         common::SeriesQuantity<CovDim>::from_si(
             pluss::series::make({{1.0, 2.0}, {0.0, 1.0}})));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     asymmetric = true;
   }
   expect(asymmetric, "asymmetric covariance was accepted");
@@ -251,7 +251,7 @@ void test_covariance() {
             pluss::series::make({1.0, 2.0})),
         common::SeriesQuantity<CovDim>::from_si(
             pluss::series::make({{1.0, 2.0}, {2.0, 1.0}})));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     indefinite = true;
   }
   expect(indefinite, "indefinite covariance was accepted");
@@ -288,6 +288,21 @@ void test_covariance() {
          "covariance map severed reverse-mode history");
 }
 
+void test_measurement_rejects_non_finite() {
+  const auto fails = [](const auto &fn) {
+    try {
+      fn();
+    } catch (const pluss::Error &) {
+      return true;
+    }
+    return false;
+  };
+  using L = common::ScalarQuantity<common::Length>;
+  expect(fails([&] { (void)common::Measurement<common::Length>(L::from_si(std::nan("")), L::from_si(0.1)); }), "NaN value must throw");
+  expect(fails([&] { (void)common::Measurement<common::Length>(L::from_si(1.0), L::from_si(std::nan(""))); }), "NaN uncertainty must throw");
+  expect(fails([&] { (void)common::Measurement<common::Length>(L::from_si(1.0), L::from_si(-0.1)); }), "negative uncertainty must throw");
+}
+
 } // namespace
 
 int main() {
@@ -297,6 +312,7 @@ int main() {
     test_affine_points();
     test_series_uncertainty();
     test_covariance();
+    test_measurement_rejects_non_finite();
     std::cout << "NatSci common records: all checks passed\n";
     return 0;
   } catch (const std::exception &error) {

@@ -73,7 +73,7 @@ int main() {
       bool threw = false;
       try {
         (void)fluids::project(state, grid, rho, seconds(1.0), strict(spatial::PoissonMethod::Fft));
-      } catch (const std::invalid_argument &) {
+      } catch (const pluss::Error &) {
         threw = true;
       }
       expect(threw, "Fft is rejected for variable density");

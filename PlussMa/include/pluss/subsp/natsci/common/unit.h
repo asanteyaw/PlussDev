@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/dimension.h"
 
 #include <limits>
@@ -15,7 +16,7 @@ public:
       : si_scale_(si_scale), symbol_(symbol), name_(name) {
     if (!(si_scale > 0.0) ||
         !(si_scale <= std::numeric_limits<double>::max())) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::Unit: SI scale must be finite and positive");
     }
   }

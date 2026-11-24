@@ -50,7 +50,10 @@ inline Isotropic yeoh(Coeff c10, Coeff c20, Coeff c30) {
 }
 inline Isotropic gent(Coeff mu, Coeff jm) {
   return {[=](const Series &i1, const Series &) { return i1.sub(3.0).div(jm.on(i1)).neg().add(1.0).log().mul(mu.on(i1)).mul(jm.on(i1)).mul(-0.5); },
-          [=](const Series &i1, const Series &) { return mu.on(i1).mul(0.5).div(i1.sub(3.0).div(jm.on(i1)).neg().add(1.0)); },
+          [=](const Series &i1, const Series &) {
+            dynamics::require(i1.sub(3.0).le(jm.on(i1)).all().item<bool>(), "gent: the deformation exceeds the limiting extensibility (I1 - 3 must not exceed Jm)");
+            return mu.on(i1).mul(0.5).div(i1.sub(3.0).div(jm.on(i1)).neg().add(1.0));
+          },
           [=](const Series &i1, const Series &) { return i1.mul(0.0); }};
 }
 inline Isotropic fung(Coeff c, Coeff b) {
@@ -63,16 +66,19 @@ inline Series first_invariant(const Series &l1, const Series &l2, const Series &
 inline Series second_invariant(const Series &l1, const Series &l2, const Series &l3) { return l1.pow(-2.0).add(l2.pow(-2.0)).add(l3.pow(-2.0)); }
 
 inline Series uniaxial_stress(const Isotropic &m, const Series &lambda) {
+  dynamics::require(lambda.gt(0.0).all().item<bool>(), "uniaxial_stress: stretch ratios must be positive");
   const Series l2 = lambda.pow(-0.5);
   const Series i1 = first_invariant(lambda, l2, l2), i2 = second_invariant(lambda, l2, l2);
   return lambda.square().sub(lambda.reciprocal()).mul(2.0).mul(m.w1(i1, i2).add(m.w2(i1, i2).div(lambda)));
 }
 inline Series equibiaxial_stress(const Isotropic &m, const Series &lambda) {
+  dynamics::require(lambda.gt(0.0).all().item<bool>(), "equibiaxial_stress: stretch ratios must be positive");
   const Series l3 = lambda.pow(-2.0);
   const Series i1 = first_invariant(lambda, lambda, l3), i2 = second_invariant(lambda, lambda, l3);
   return lambda.square().sub(lambda.pow(-4.0)).mul(2.0).mul(m.w1(i1, i2).add(m.w2(i1, i2).mul(lambda.square())));
 }
 inline Series planar_stress_difference(const Isotropic &m, const Series &lambda) { // sigma_1 - sigma_3 in planar tension (l2 = 1)
+  dynamics::require(lambda.gt(0.0).all().item<bool>(), "planar_stress_difference: stretch ratios must be positive");
   const Series l3 = lambda.reciprocal();
   const Series i1 = first_invariant(lambda, lambda.mul(0.0).add(1.0), l3), i2 = second_invariant(lambda, lambda.mul(0.0).add(1.0), l3);
   return lambda.square().sub(lambda.pow(-2.0)).mul(2.0).mul(m.w1(i1, i2).add(m.w2(i1, i2)));

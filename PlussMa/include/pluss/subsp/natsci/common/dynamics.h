@@ -14,6 +14,7 @@
 // States are Series with species on the LAST axis; every leading axis is an
 // independent replicate / parameter-sweep lane and is never looped over.
 
+#include "pluss/error.h"
 #include "pluss/codem/codem.h"
 #include "pluss/subsp/linearalg/linearalg.h"
 #include "pluss/subsp/math/ode.h"
@@ -54,7 +55,7 @@ private:
 
 inline void require(bool condition, const std::string &message) {
   if (!condition)
-    throw std::invalid_argument("natsci: " + message);
+    PLUSS_FAIL("natsci: " + message);
 }
 
 inline void require_float(const Series &value, const char *name) {

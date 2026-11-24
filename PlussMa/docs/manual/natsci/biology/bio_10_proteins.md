@@ -1,5 +1,3 @@
-<!-- generated from bio_10_proteins.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 10: Proteins
 
 What the amino-acid sequence says about a protein's charge.

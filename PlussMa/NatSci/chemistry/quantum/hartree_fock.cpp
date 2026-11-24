@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/chemistry/quantum.h"
 
 #include "pluss/codem/series_factory.h"
@@ -18,7 +19,7 @@ namespace {
 constexpr const char *operation = "natsci::chemistry::quantum::hf";
 
 [[noreturn]] void fail(const std::string &message) {
-  throw std::invalid_argument(std::string(operation) + ": " + message);
+  PLUSS_FAIL(std::string(operation) + ": " + message);
 }
 
 std::vector<std::int64_t> batch_shape(const Series &value,

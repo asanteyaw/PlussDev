@@ -35,6 +35,14 @@ int main() {
         expect(e0 < 1e-12 && e1 < 1e-12, "J0/J1 at z = " + std::to_string(ref::zs_re[i]) + " + " + std::to_string(ref::zs_im[i]) + "i: relative errors " + std::to_string(e0) + ", " + std::to_string(e1));
       }
     }
+    // ---- an argument at zero (the axis of a tube) must give J0 = 1, J1 = 0 and no NaN, also next to ordinary arguments
+    {
+      const hd::J01 b = hd::bessel_j01({vec({0.0, 1.0e-9, 2.0}), vec({0.0, 0.0, 0.0})});
+      const auto j0 = b.j0.re.contiguous().host<double>(), j1 = b.j1.re.contiguous().host<double>(), j0i = b.j0.im.contiguous().host<double>();
+      expect(j0[0] == 1.0 && j1[0] == 0.0 && j0i[0] == 0.0, "J0(0) = 1 and J1(0) = 0");
+      expect(std::abs(j0[1] - 1.0) < 1e-15 && std::abs(j1[1] - 0.5e-9) < 1e-18, "J0, J1 at a tiny argument");
+      expect(std::abs(j0[2] - 0.22389077914123567) < 1e-12 && std::abs(j1[2] - 0.5767248077568734) < 1e-12, "the recurrence is unchanged for an ordinary argument in the same batch");
+    }
     // ---- Womersley flow, wall shear and a velocity point at four frequencies (alpha = 4.7 .. 64)
     {
       const std::size_t n = ref::womersley.size() / 8;

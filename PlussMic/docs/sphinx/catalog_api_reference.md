@@ -16,7 +16,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Catalog` exposes nested accessors, each with its own method pages and sidebar:
 
-- `group()` -> [`group`](catalog_group_accessor_api_reference.md)
 - `plot()` -> [`plot`](catalog_plot_accessor_api_reference.md)
 - `plot3d()` -> [`plot3d`](catalog_plot3d_accessor_api_reference.md)
 - `nt()` -> [`nt`](catalog_note_accessor_api_reference.md)
@@ -29,7 +28,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
-catalog_group_accessor_api_reference
 catalog_plot_accessor_api_reference
 catalog_plot3d_accessor_api_reference
 catalog_note_accessor_api_reference

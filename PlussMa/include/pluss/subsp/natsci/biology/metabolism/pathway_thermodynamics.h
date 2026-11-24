@@ -218,7 +218,7 @@ inline TfaResult thermodynamic_flux_balance(const TfaNetwork &net, const lp::Mip
   out.status = sol.status;
   if (sol.status != lp::SolveStatus::Optimal)
     return out;
-  out.objective = -sol.objective;
+  out.objective = -sol.objective + 0.0; // + 0.0: a zero optimum is +0, not -0
   for (std::int64_t j = 0; j < r; ++j) {
     out.flux.push_back(sol.x[static_cast<std::size_t>(ivf + j)] - sol.x[static_cast<std::size_t>(ivr + j)]);
     out.forward.push_back(sol.x[static_cast<std::size_t>(iz + j)] > 0.5 ? 1 : 0);

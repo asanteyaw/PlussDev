@@ -156,7 +156,7 @@ void test_hyperbola_and_diagnostics() {
   bool rejected_period = false;
   try {
     (void)astro::period(elem, mu(5.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected_period = true;
   }
   expect(rejected_period, "hyperbolic orbit was assigned a period");
@@ -191,7 +191,7 @@ void test_graph_and_failures() {
     (void)simple_elem(pluss::series::make(1.0), pluss::series::make(1.0),
                       pluss::series::make(0.0), pluss::series::make(0.0),
                       pluss::series::make(0.0), pluss::series::make(0.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     parabolic = true;
   }
   expect(parabolic, "parabolic singularity was accepted");
@@ -204,7 +204,7 @@ void test_graph_and_failures() {
                           common::SeriesQuantity<common::Speed>::from_si(
                               pluss::series::make({1.0, 0.0, 0.0})));
     (void)astro::to_elem(state, mu(1.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     radial = true;
   }
   expect(radial, "radial trajectory was assigned a classical orbit plane");
@@ -212,7 +212,7 @@ void test_graph_and_failures() {
   bool bad_mu = false;
   try {
     (void)astro::from_elem(elem, mu(0.0));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_mu = true;
   }
   expect(bad_mu, "non-positive gravitational parameter was accepted");
@@ -553,7 +553,7 @@ void test_universal_failures() {
     (void)astro::advance(zero_velocity,
                          common::ScalarQuantity<common::Time>::from_si(1.0),
                          mu(1.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected_zero_velocity = true;
   }
   expect(rejected_zero_velocity,
@@ -568,7 +568,7 @@ void test_universal_failures() {
   try {
     (void)astro::advance(
         radial, common::ScalarQuantity<common::Time>::from_si(1.0), mu(1.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected_radial = true;
   }
   expect(rejected_radial, "universal propagation accepted radial motion");
@@ -761,7 +761,7 @@ void test_lambert_failures() {
     (void)astro::lambert(
         start, finish, common::ScalarQuantity<common::Time>::from_si(0.0),
         mu(1.0));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_time = true;
   }
   expect(bad_time, "Lambert solve accepted zero flight time");
@@ -773,7 +773,7 @@ void test_lambert_failures() {
         common::SeriesQuantity<common::Length>::from_si(
             pluss::series::make({2.0, 0.0, 0.0})),
         common::ScalarQuantity<common::Time>::from_si(1.0), mu(1.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     collinear = true;
   }
   expect(collinear, "Lambert solve accepted collinear endpoints");

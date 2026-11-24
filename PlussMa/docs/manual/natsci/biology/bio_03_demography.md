@@ -1,5 +1,3 @@
-<!-- generated from bio_03_demography.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 3: Demography and Extinction
 
 Two questions about the future of a population: how fast it grows when individuals differ by stage, and how likely it is to die out by chance.

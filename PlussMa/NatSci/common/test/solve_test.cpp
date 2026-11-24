@@ -108,7 +108,7 @@ void test_linear_interpolation() {
   try {
     (void)solve::interp(coordinate, values, outside,
                         pluss::subsp::math::interp::EdgeMode::Error);
-  } catch (const std::out_of_range &) {
+  } catch (const std::out_of_range &) {   // thrown by math::interp, which is outside NatSci
     rejected = true;
   }
   expect(rejected, "strict interpolation accepted an out-of-domain query");
@@ -186,7 +186,7 @@ void test_flow() {
         },
         initial, common::ScalarQuantity<common::Time>::from_si(0.0),
         common::ScalarQuantity<common::Time>::from_si(1.0), options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     wrong_dimension = true;
   }
   expect(wrong_dimension,
@@ -346,7 +346,7 @@ void test_dimensionless_fit() {
               parameters.get<common::Length>("length").si_value().square());
         },
         initial, invalid_scales);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     bad_scale = true;
   }
   expect(bad_scale, "fit accepted a zero physical scale");

@@ -119,7 +119,7 @@ void test_fitzhugh_nagumo() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)neu::simulate_lif(vec({0.0}), 10.0, 0.0, 1.0, 1.0, 1.0, 0.0, {0.0, 10.0, 8, 0, 1.0}); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)neu::simulate_lif(vec({0.0}), 10.0, 0.0, 1.0, 1.0, 1.0, 0.0, {0.0, 10.0, 8, 0, 1.0}); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "non-positive dt rejected");
 }
 } // namespace

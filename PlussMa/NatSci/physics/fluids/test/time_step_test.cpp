@@ -169,7 +169,7 @@ void test_guard_rejection_and_trajectory() {
   try {
     (void)fluids::advance(moving, grid, density(), viscosity(0.0), seconds(0.0),
                           seconds(1.0));
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "advance accepted a step above its CFL bound");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/poisson.h"
 #include "pluss/subsp/natsci/common/solve.h"
 #include "pluss/subsp/natsci/physics/fluids/boundary.h"
@@ -50,10 +51,10 @@ inline bool same_shape(const Series &lhs, const Series &rhs) noexcept {
 inline void require_real_finite(const Series &value, const char *operation,
                                 const char *role) {
   if (!value.defined() || !value.dtype().is_floating() || value.numel() == 0)
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be a non-empty real floating Series");
   if (!value.isfinite().all().item<bool>())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be finite");
 }
 
@@ -61,7 +62,7 @@ template <common::DimensionType D>
 inline void require_positive(const common::ScalarQuantity<D> &value,
                              const char *operation, const char *role) {
   if (!(value.si_value() > 0.0) || !std::isfinite(value.si_value()))
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be finite and positive");
 }
 
@@ -69,7 +70,7 @@ template <common::DimensionType D>
 inline void require_nonnegative(const common::ScalarQuantity<D> &value,
                                 const char *operation, const char *role) {
   if (!(value.si_value() >= 0.0) || !std::isfinite(value.si_value()))
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be finite and non-negative");
 }
 
@@ -90,14 +91,14 @@ inline void require_prop(const common::SeriesQuantity<D> &property,
   if (!same_shape(value, reference) ||
       value.scalar_type() != reference.scalar_type() ||
       value.platform() != reference.platform())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must match pressure layout, dtype, and "
                                 "platform");
   const bool valid = strictly_positive
                          ? value.gt(0.0).all().template item<bool>()
                          : value.ge(0.0).all().template item<bool>();
   if (!valid)
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 (strictly_positive
                                      ? " must be positive in every cell"
                                      : " must be non-negative in every cell"));
@@ -181,18 +182,18 @@ validated_state(const common::SeriesQuantity<common::Speed> &velocity,
       spatial::detail::require_vector_layout(u, grid, operation);
   spatial::detail::require_scalar_layout(p, grid, operation);
   if (p.dim() != u.dim() - 1)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::make_state: pressure must omit only the velocity "
         "component axis");
   for (std::int64_t axis = 0; axis < p.dim(); ++axis) {
     const std::int64_t velocity_axis = axis < component_axis ? axis : axis + 1;
     if (p.size(axis) != u.size(velocity_axis))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::fluids::make_state: pressure and velocity field shapes "
           "do not match");
   }
   if (u.scalar_type() != p.scalar_type() || u.platform() != p.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::make_state: pressure and velocity must share dtype "
         "and platform");
   return StateAccess::make(velocity, pressure);
@@ -715,7 +716,7 @@ mom_rate(const IncompressibleState &state, const spatial::PeriodicGrid &grid,
   if (!detail::same_shape(rate.si_value(), body) ||
       rate.si_value().scalar_type() != body.scalar_type() ||
       rate.si_value().platform() != body.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::mom_rate: body force must match velocity "
         "layout, dtype, and platform");
   return rate + body_force;
@@ -801,7 +802,7 @@ mom_rate(const IncompressibleState &state, const spatial::PeriodicGrid &grid,
   if (!detail::same_shape(rate.si_value(), body) ||
       rate.si_value().scalar_type() != body.scalar_type() ||
       rate.si_value().platform() != body.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::mom_rate: body force must match velocity "
         "layout, dtype, and platform");
   return rate + body_force;
@@ -836,7 +837,7 @@ mom_rate(const IncompressibleState &state, const spatial::BoxGrid &grid,
          FlowForm form = FlowForm::Advect) {
   constexpr const char *operation = "natsci::fluids::mom_rate";
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::mom_rate: boundary and grid rank mismatch");
   const Series &pressure = state.pressure().si_value();
   detail::require_prop(density, pressure, grid, operation, "density", true);
@@ -858,7 +859,7 @@ mom_rate(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (!detail::same_shape(rate.si_value(), body) ||
       rate.si_value().scalar_type() != body.scalar_type() ||
       rate.si_value().platform() != body.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::mom_rate: body force must match velocity "
         "layout, dtype, and platform");
   return rate + body_force;
@@ -877,7 +878,7 @@ mom_rate(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (!detail::same_shape(rate.si_value(), body) ||
       rate.si_value().scalar_type() != body.scalar_type() ||
       rate.si_value().platform() != body.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::mom_rate: body force must match velocity "
         "layout, dtype, and platform");
   return rate + body_force;
@@ -957,9 +958,9 @@ inline bool pick_multigrid(spatial::PoissonMethod method, const std::vector<std:
 }
 inline void require_pressure_method(spatial::PoissonMethod method, bool multigrid_ok, const char *what) {
   if (method == spatial::PoissonMethod::Fft)
-    throw std::invalid_argument(std::string("natsci::fluids::project: the Fft method needs constant density on a periodic grid (") + what + ")");
+    PLUSS_FAIL(std::string("natsci::fluids::project: the Fft method needs constant density on a periodic grid (") + what + ")");
   if (method == spatial::PoissonMethod::Multigrid && !multigrid_ok)
-    throw std::invalid_argument(std::string("natsci::fluids::project: multigrid needs even periodic extents (") + what + ")");
+    PLUSS_FAIL(std::string("natsci::fluids::project: multigrid needs even periodic extents (") + what + ")");
 }
 // Multigrid-preconditioned CG on the exact bounded operator D(beta G). The centred operator couples cells two apart, so the preconditioner is the
 // multigrid of its 2^d parity sub-lattices (spacing 2h, conductance beta of the cell between, the wall condition reflected on each sub-lattice); the
@@ -1060,7 +1061,7 @@ project_core(const IncompressibleState &state,
              const spatial::PoissonOptions &poisson_options) {
   if (!(poisson_options.mean_tolerance >= 0.0) ||
       !std::isfinite(poisson_options.mean_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: mean_tolerance must be finite and "
         "non-negative");
   const Series &rho = density.si_value();
@@ -1069,7 +1070,7 @@ project_core(const IncompressibleState &state,
   const Series null_part =
       spatial::detail::null_component(rhs, grid, spatial::PoissonStencil::Wide);
   if (!null_part.abs().le(poisson_options.mean_tolerance).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::project: periodic variable-density rhs is not "
         "compatible with the centered operator null space");
   const Series compatible_rhs = rhs.sub(null_part);
@@ -1107,7 +1108,7 @@ project_core(const IncompressibleState &state,
   if (poisson_options.require_convergence &&
       (!solved.converged.all().item<bool>() ||
        solved.breakdown.any().item<bool>()))
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::project: variable-density pressure correction did "
         "not converge");
 
@@ -1142,12 +1143,12 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
       std::same_as<typename decltype(rhs)::dimension, PressureSource>);
 
   if (poisson_options.stencil != spatial::PoissonStencil::Compact)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: bounded projection selects its matched "
         "operator; a periodic wide stencil cannot be requested");
   if (!(poisson_options.mean_tolerance >= 0.0) ||
       !std::isfinite(poisson_options.mean_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: mean_tolerance must be finite and "
         "non-negative");
 
@@ -1159,7 +1160,7 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (gauged) {
     const Series mean = compatible_rhs.mean(axes, true);
     if (!mean.abs().le(poisson_options.mean_tolerance).all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::project: closed bounded flow violates the net "
           "flux compatibility condition");
     compatible_rhs = compatible_rhs.sub(mean);
@@ -1189,7 +1190,7 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (poisson_options.require_convergence &&
       (!solved.converged.all().item<bool>() ||
        solved.breakdown.any().item<bool>()))
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::project: bounded pressure correction did not "
         "converge");
 
@@ -1218,12 +1219,12 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
              const common::SeriesQuantity<common::Frequency> &divergence,
              const spatial::PoissonOptions &poisson_options) {
   if (poisson_options.stencil != spatial::PoissonStencil::Compact)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: bounded projection selects its matched "
         "operator; a periodic wide stencil cannot be requested");
   if (!(poisson_options.mean_tolerance >= 0.0) ||
       !std::isfinite(poisson_options.mean_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: mean_tolerance must be finite and "
         "non-negative");
 
@@ -1237,7 +1238,7 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (gauged) {
     const Series mean = compatible_rhs.mean(axes, true);
     if (!mean.abs().le(poisson_options.mean_tolerance).all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::fluids::project: closed bounded flow violates the net "
           "flux compatibility condition");
     compatible_rhs = compatible_rhs.sub(mean);
@@ -1269,7 +1270,7 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (poisson_options.require_convergence &&
       (!solved.converged.all().item<bool>() ||
        solved.breakdown.any().item<bool>()))
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::project: bounded variable-density pressure "
         "correction did not converge");
 
@@ -1356,7 +1357,7 @@ project(const IncompressibleState &state, const spatial::BoxGrid &grid,
   detail::require_positive(density, operation, "density");
   detail::require_positive(step, operation, "step");
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: boundary and grid rank mismatch");
 
   const DivergenceReport before = div_report(state.velocity(), grid, bounds);
@@ -1384,7 +1385,7 @@ project(const IncompressibleState &state, const spatial::BoxGrid &grid,
         const ProjectionOptions &options = {}) {
   constexpr const char *operation = "natsci::fluids::project";
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::project: boundary and grid rank mismatch");
   detail::require_prop(density, state.pressure().si_value(), grid, operation,
                        "density", true);
@@ -1437,7 +1438,7 @@ step_limit_for_nu(const IncompressibleState &state, const Grid &grid,
   constexpr const char *operation = "natsci::fluids::step_limit";
   if (!(guard.courant > 0.0) || !std::isfinite(guard.courant) ||
       !(guard.diffusion > 0.0) || !std::isfinite(guard.diffusion))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::step_limit: stability coefficients must be finite "
         "and positive");
 
@@ -1465,7 +1466,7 @@ step_limit_for_nu(const IncompressibleState &state, const Grid &grid,
       viscosity_max.platform() != velocity.platform() ||
       !viscosity_max.isfinite().all().item<bool>() ||
       !viscosity_max.ge(0.0).all().item<bool>())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::step_limit: viscosity maximum must be finite, "
         "non-negative, and match the state batch layout");
   const Series conv = pluss::series::where(conv_rate.gt(0.0), pluss::codem::make_scalar_like(conv_rate, guard.courant).div(conv_rate), infinite);
@@ -1609,7 +1610,7 @@ rate_at(const IncompressibleState &state, const spatial::PeriodicGrid &grid,
   if (!same_shape(rate.si_value(), value) ||
       rate.si_value().scalar_type() != value.scalar_type() ||
       rate.si_value().platform() != value.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: body force must match velocity layout, "
         "dtype, and platform");
   return rate + forcing;
@@ -1642,7 +1643,7 @@ rate_at(const IncompressibleState &state, const spatial::BoxGrid &grid,
   if (!same_shape(rate.si_value(), value) ||
       rate.si_value().scalar_type() != value.scalar_type() ||
       rate.si_value().platform() != value.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: body force must match velocity layout, "
         "dtype, and platform");
   return rate + forcing;
@@ -1680,7 +1681,7 @@ diffuse_core(const IncompressibleState &state,
       math::krylov::cg(apply, rhs, vector_axes(rhs, grid.dim()), options, rhs);
   if (!solved.converged.all().item<bool>() ||
       solved.breakdown.any().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::advance: implicit diffusion did not converge");
   return {StateAccess::make(common::SeriesQuantity<common::Speed>::from_si(
                                 std::move(solved.solution)),
@@ -1713,7 +1714,7 @@ diffuse_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
                                  options, rhs);
   if (!solved.converged.all().item<bool>() ||
       solved.breakdown.any().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::advance: bounded implicit diffusion did not "
         "converge");
   return {StateAccess::make(common::SeriesQuantity<common::Speed>::from_si(
@@ -1762,7 +1763,7 @@ advance_stages(const IncompressibleState &state, const Grid &grid,
                const StepOptions &options, Project &&project_stage, Rate &&rate,
                Finalize &&finalize) {
   if (options.rule == StepRule::Imex1)
-    throw std::logic_error(
+    PLUSS_FAIL(
         "natsci::fluids::advance: internal IMEX dispatch was not selected");
   IncompressibleState next = state;
   std::int64_t evaluations = 0;
@@ -1814,7 +1815,7 @@ prepare_step(const IncompressibleState &state, const Grid &grid,
   require_nonnegative(viscosity, operation, "viscosity");
   require_positive(step, operation, "step");
   if (!std::isfinite(time.si_value()))
-    throw std::invalid_argument("natsci::fluids::advance: time must be finite");
+    PLUSS_FAIL("natsci::fluids::advance: time must be finite");
 
   StepLimits limits = step_limit_for(state, grid, viscosity, options.guard);
   const Series &allowed = options.rule == StepRule::Imex1
@@ -1822,7 +1823,7 @@ prepare_step(const IncompressibleState &state, const Grid &grid,
                               : limits.allowed.si_value();
   if (options.guard.enforce &&
       !allowed.ge(step.si_value()).all().template item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         options.rule == StepRule::Imex1
             ? "natsci::fluids::advance: step exceeds the convective "
               "stability limit"
@@ -1840,12 +1841,12 @@ inline StepLimits prepare_step(
   constexpr const char *operation = "natsci::fluids::advance";
   require_positive(step, operation, "step");
   if (!std::isfinite(time.si_value()))
-    throw std::invalid_argument("natsci::fluids::advance: time must be finite");
+    PLUSS_FAIL("natsci::fluids::advance: time must be finite");
   StepLimits limits =
       step_limit(state, grid, density, viscosity, options.guard);
   if (options.guard.enforce &&
       !limits.allowed.si_value().ge(step.si_value()).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::advance: step exceeds a convective or viscous "
         "stability limit");
   return limits;
@@ -1861,12 +1862,12 @@ prepare_step(const IncompressibleState &state, const spatial::BoxGrid &grid,
   constexpr const char *operation = "natsci::fluids::advance";
   require_positive(step, operation, "step");
   if (!std::isfinite(time.si_value()))
-    throw std::invalid_argument("natsci::fluids::advance: time must be finite");
+    PLUSS_FAIL("natsci::fluids::advance: time must be finite");
   StepLimits limits =
       step_limit(state, grid, density, viscosity, options.guard);
   if (options.guard.enforce &&
       !limits.allowed.si_value().ge(step.si_value()).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::fluids::advance: step exceeds a convective or viscous "
         "stability limit");
   return limits;
@@ -1932,7 +1933,7 @@ advance(const IncompressibleState &state, const spatial::PeriodicGrid &grid,
         common::ScalarQuantity<common::Time> step,
         const StepOptions &options = {}, const BodyFn &body = {}) {
   if (options.rule == StepRule::Imex1)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: Imex1 currently requires scalar "
         "viscosity");
   StepLimits limits = detail::prepare_step(state, grid, density, viscosity,
@@ -1967,7 +1968,7 @@ advance(const IncompressibleState &state, const spatial::BoxGrid &grid,
         common::ScalarQuantity<common::Time> step,
         const StepOptions &options = {}, const BodyFn &body = {}) {
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: boundary and grid rank mismatch");
   StepLimits limits = detail::prepare_step(state, grid, density, viscosity,
                                            time, step, options);
@@ -2018,10 +2019,10 @@ advance(const IncompressibleState &state, const spatial::BoxGrid &grid,
         common::ScalarQuantity<common::Time> step,
         const StepOptions &options = {}, const BodyFn &body = {}) {
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: boundary and grid rank mismatch");
   if (options.rule == StepRule::Imex1)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::advance: Imex1 currently requires scalar "
         "viscosity");
   StepLimits limits = detail::prepare_step(state, grid, density, viscosity,
@@ -2092,16 +2093,16 @@ inline FlowPath evolve_steps(const IncompressibleState &initial,
 inline void validate_run(const RunOptions &options) {
   if (!(options.safety > 0.0) || !(options.safety <= 1.0) ||
       !std::isfinite(options.safety))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::evolve_to: safety must be finite and in (0, 1]");
   if (!(options.min_step.si_value() >= 0.0) ||
       !std::isfinite(options.min_step.si_value()) ||
       !(options.max_step.si_value() > 0.0) ||
       options.min_step.si_value() > options.max_step.si_value())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::evolve_to: step bounds are invalid");
   if (options.max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::evolve_to: max_steps must be positive");
 }
 
@@ -2137,12 +2138,12 @@ inline FlowPath evolve_to_steps(const IncompressibleState &initial,
             std::min(remaining, std::min(options.max_step.si_value(),
                                          options.safety * stable));
         if (!(width > 0.0) || !std::isfinite(width))
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::evolve_to: stability policy produced no "
               "finite positive step");
         if (width < options.min_step.si_value() &&
             remaining > options.min_step.si_value())
-          throw std::domain_error(
+          PLUSS_FAIL(
               "natsci::fluids::evolve_to: stable step is below min_step");
         return common::ScalarQuantity<common::Time>::from_si(width);
       },
@@ -2340,19 +2341,19 @@ namespace detail {
 
 inline void validate_steady_options(const SteadyOptions &options) {
   if (options.max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::settle: max_steps must be positive");
   if (options.check_interval <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::settle: check_interval must be positive");
   if (options.required_checks <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::settle: required_checks must be positive");
   if (!(options.absolute_tolerance.si_value() >= 0.0) ||
       !std::isfinite(options.absolute_tolerance.si_value()) ||
       !(options.relative_tolerance >= 0.0) ||
       !std::isfinite(options.relative_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::settle: tolerances must be finite and "
         "non-negative");
 }
@@ -2382,10 +2383,10 @@ settle_steps(const IncompressibleState &initial, const Grid &grid,
              const SteadyOptions &options, Advance &&advance_step) {
   validate_steady_options(options);
   if (!(step.si_value() > 0.0) || !std::isfinite(step.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::fluids::settle: step must be finite and positive");
   if (!std::isfinite(start.si_value()))
-    throw std::invalid_argument("natsci::fluids::settle: start must be finite");
+    PLUSS_FAIL("natsci::fluids::settle: start must be finite");
 
   IncompressibleState current = initial;
   const Series &velocity = current.velocity().si_value();
@@ -2428,7 +2429,7 @@ settle_steps(const IncompressibleState &initial, const Grid &grid,
   }
 
   if (options.require_convergence && !converged.all().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::fluids::settle: steady residual did not converge within "
         "max_steps");
   return {

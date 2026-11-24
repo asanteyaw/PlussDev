@@ -1,5 +1,3 @@
-<!-- generated from bio_12_patterns.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 12: Patterns
 
 How diffusion can create structure from a uniform state.

@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/dynamics.h"
 #include "pluss/subsp/natsci/common/stiff.h"
 
@@ -98,7 +99,7 @@ void test_van_der_pol_and_lanes() {
 
 void test_validation() {
   bool threw = false;
-  try { (void)stiff::integrate([](const Series &y) { return y; }, vec({1.0}), 1.0, 0.0); } catch (const std::invalid_argument &) { threw = true; }
+  try { (void)stiff::integrate([](const Series &y) { return y; }, vec({1.0}), 1.0, 0.0); } catch (const pluss::Error &) { threw = true; }
   expect(threw, "t1 < t0 rejected");
 }
 } // namespace

@@ -85,6 +85,23 @@ void test_identifiability() {
   expect(rank2 == 2.0, "cascade is identifiable, rank " + std::to_string(rank2));
   expect(sens::cramer_rao_std(fim).gt(0.0).all().item<bool>(), "Cramer-Rao std positive");
 }
+void test_rejects_bad_input() {
+  const auto fails = [](const auto &fn) {
+    try {
+      fn();
+    } catch (const pluss::Error &) {
+      return true;
+    }
+    return false;
+  };
+  const auto decay = [](const Series &y, const Series &p) { return y.mul(p.select(-1, 0).unsqueeze(-1).neg()); };
+  expect(fails([&] { (void)sens::trajectory(decay, mk({1.0}, {1}), mk({std::nan("")}, {1}), 0.0, 1.0, 2); }), "NaN parameter must throw");
+  expect(fails([&] { (void)sens::trajectory(decay, mk({1.0}, {1}), mk({0.5}, {1}), 0.0, 1.0, 0); }), "zero samples must throw");
+  // y' = -(a + b) y: a and b are not separately identifiable, the Fisher information is singular and has no finite bound
+  const auto sum_rate = [](const Series &y, const Series &p) { return y.mul(p.select(-1, 0).add(p.select(-1, 1)).unsqueeze(-1).neg()); };
+  const auto s = sens::trajectory(sum_rate, mk({1.0}, {1}), mk({0.3, 0.2}, {2}), 0.0, 4.0, 4);
+  expect(fails([&] { (void)sens::cramer_rao_std(sens::fisher_information(s.dydp)); }), "Cramer-Rao bound of a singular Fisher information must throw");
+}
 } // namespace
 
 int main() {
@@ -93,6 +110,7 @@ int main() {
     test_logistic_two_params();
     test_michaelis_menten_vs_finite_difference_of_simulation();
     test_identifiability();
+    test_rejects_bad_input();
   } catch (const std::exception &e) {
     std::cerr << "FAILED: " << e.what() << "\n";
     return 1;

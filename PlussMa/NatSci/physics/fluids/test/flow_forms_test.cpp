@@ -282,7 +282,7 @@ void test_variable_properties() {
         common::SeriesQuantity<fluids::Density>::from_si(rho_values.index_fill(
             0, pluss::series::make({0}, pluss::ScalarType::Int64), 0.0)),
         common::ScalarQuantity<common::Time>::from_si(dt), options);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "variable-density projection accepted a zero-density cell");
@@ -463,7 +463,7 @@ void test_implicit_diffusion() {
   bool explicit_rejected = false;
   try {
     (void)fluids::advance(state, grid, rho, nu, time, step, explicit_options);
-  } catch (const std::domain_error &) {
+  } catch (const pluss::Error &) {
     explicit_rejected = true;
   }
   expect(explicit_rejected,
@@ -505,7 +505,7 @@ void test_reverse_and_failures() {
   bool rejected = false;
   try {
     (void)spatial::tensor_div(pluss::series::zeros({2, 3, 9, 7}), grid);
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     rejected = true;
   }
   expect(rejected, "tensor_div accepted mismatched tensor component axes");

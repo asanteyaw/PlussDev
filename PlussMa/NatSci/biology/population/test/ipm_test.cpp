@@ -76,6 +76,9 @@ int main() {
     // ---- spreading speed: Gaussian kernel c* = sigma sqrt(2 ln R0); Laplace kernel vs scipy minimisation
     {
       const Series lnr = vec({0.3, 0.7, 1.4});
+      bool threw = false;
+      try { (void)ip::spreading_speed(vec({-0.5}), [](const Series &q) { return q.square().exp(); }, 5.0); } catch (const pluss::Error &) { threw = true; }
+      if (!threw) throw std::runtime_error("spreading_speed must reject ln R0 <= 0");
       const double sigma = 1.3;
       const Series c = ip::spreading_speed(lnr, [&](const Series &s) { return s.square().mul(sigma * sigma / 2.0).exp(); }, 20.0);
       expect(c.sub(lnr.mul(2.0).sqrt().mul(sigma)).abs().max().item<double>() < 1e-9, "Gaussian spreading speed sigma sqrt(2 ln R0)");

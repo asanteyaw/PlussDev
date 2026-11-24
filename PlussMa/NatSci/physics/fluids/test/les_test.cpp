@@ -240,12 +240,12 @@ int main() {
       bool threw = false;
       try {
         (void)les::eddy_viscosity(state, grid, bounds, les::Closure{.model = les::Model::DynamicSmagorinsky});
-      } catch (const std::invalid_argument &) { threw = true; }
+      } catch (const pluss::Error &) { threw = true; }
       expect(threw, "dynamic model rejected on bounded grids");
       threw = false;
       try {
         (void)les::eddy_viscosity(state, grid, bounds, les::Closure{.width = -1.0});
-      } catch (const std::invalid_argument &) { threw = true; }
+      } catch (const pluss::Error &) { threw = true; }
       expect(threw, "negative filter width rejected");
     }
     std::cout << "les tests passed\n";

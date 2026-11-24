@@ -80,7 +80,8 @@ inline Series passive_force_length(const Series &norm_fiber_length, const Coeff 
 inline Series force_velocity(const Series &norm_fiber_velocity) {
   const double d1 = -0.3211346127989808, d2 = -8.149, d3 = -0.374, d4 = 0.8825327733249912;
   const Series t = norm_fiber_velocity.mul(d2).add(d3);
-  return t.add(t.square().add(1.0).sqrt()).log().mul(d1).add(d4);
+  const Series f = t.add(t.square().add(1.0).sqrt()).log().mul(d1).add(d4);
+  return pluss::series::where(f.gt(0.0), f, f.mul(0.0).add(0.0)); // faster shortening than the maximum speed produces no force, never a negative one
 }
 inline Series force_velocity_inverse(const Series &fv_multiplier) {
   const double d1 = -0.3211346127989808, d2 = -8.149, d3 = -0.374, d4 = 0.8825327733249912;
@@ -177,6 +178,7 @@ struct Equilibrium final {
   Series residual = pluss::series::undefined(); // max |f - cos(alpha) f_fiber| over lanes (diagnostic)
 };
 inline Equilibrium isometric_equilibrium(const Series &activation, const Series &mtu_length, const Params &p, int iterations = 80) {
+  dynamics::require(activation.ge(-1e-9).all().item<bool>() && activation.le(1.0 + 1e-9).all().item<bool>(), "isometric_equilibrium: activation must lie between 0 and 1");
   Series lo = activation.mul(0.0), hi = activation.mul(0.0).add(5.0);
   const auto residual_at = [&](const Series &f) {
     const Geometry g = geometry(mtu_length, f, p);

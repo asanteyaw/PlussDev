@@ -39,7 +39,11 @@ inline Sensitivities trajectory(const ParamRateFn &f, const Series &y0, const Se
                                 std::int64_t samples, std::int64_t steps_per_sample = 50, double step = 1e-6) {
   dynamics::require(static_cast<bool>(f), "sensitivity: rate callback is required");
   dynamics::require(y0.dim() >= 1 && p.dim() >= 1, "sensitivity: y0 and p need a species / parameter axis");
-  dynamics::require(step > 0.0, "sensitivity: step must be positive");
+  dynamics::require(step > 0.0 && std::isfinite(step), "sensitivity: step must be positive and finite");
+  dynamics::require(samples > 0 && steps_per_sample > 0, "sensitivity: samples and steps_per_sample must be positive");
+  dynamics::require(std::isfinite(t0) && std::isfinite(t1), "sensitivity: times must be finite");
+  dynamics::require_finite(y0, "sensitivity: initial state");
+  dynamics::require_finite(p, "sensitivity: parameters");
   const std::int64_t n = y0.size(-1), np = p.size(-1);
   std::vector<std::int64_t> lead, s_shape, flat_shape;
   for (std::int64_t i = 0; i + 1 < y0.dim(); ++i)
@@ -71,6 +75,7 @@ inline Sensitivities trajectory(const ParamRateFn &f, const Series &y0, const Se
 // Fisher information from stacked sensitivities [T, ..., n, P]: sum over observation times and outputs.
 inline Series fisher_information(const Series &dydp) {
   dynamics::require(dydp.dim() >= 3, "fisher_information: need [T, ..., n, P]");
+  dynamics::require_finite(dydp, "fisher_information: sensitivities");
   return dydp.transpose(-1, -2).matmul(dydp).sum(0, false); // [..., P, P]
 }
 
@@ -85,6 +90,12 @@ inline Series numerical_rank(const Series &spectrum, double rel_tol = 1e-8) {
 
 // Cramer-Rao lower bound on each parameter's standard deviation, sqrt(diag(FIM^{-1})): [..., P].
 inline Series cramer_rao_std(const Series &fim) {
+  dynamics::require_square(fim, "cramer_rao_std: Fisher information");
+  dynamics::require_finite(fim, "cramer_rao_std: Fisher information");
+  // a (numerically) singular information matrix means some parameter combination is not identifiable: there is no finite bound
+  const Series spectrum = fisher_spectrum(fim);
+  dynamics::require(numerical_rank(spectrum, 1e-12).ge(static_cast<double>(fim.size(-1))).all().item<bool>(),
+                    "cramer_rao_std: the Fisher information is singular (a parameter combination is not identifiable); inspect fisher_spectrum");
   const Series inv = pluss::subsp::linearalg::inverse(fim);
   const std::int64_t np = fim.size(-1);
   const Config cfg = Config{}.with_dtype(fim.scalar_type()).with_platform(fim.platform());
@@ -93,6 +104,7 @@ inline Series cramer_rao_std(const Series &fim) {
 
 // Dimensionless (relative) sensitivities d ln y_i / d ln p_j = (p_j / y_i) S_ij: [..., n, P].
 inline Series normalized(const Series &dydp, const Series &y, const Series &p) {
+  dynamics::require(y.abs().gt(0.0).all().item<bool>(), "normalized: the state must be non-zero (a relative sensitivity divides by y)");
   return dydp.mul(p.unsqueeze(-2)).div(y.unsqueeze(-1));
 }
 

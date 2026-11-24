@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/math/krylov.h"
 #include "pluss/subsp/math/multigrid.h"
 #include "pluss/subsp/natsci/common/boundary.h"
@@ -182,7 +183,7 @@ inline math::krylov::CgResult solve_spd(Apply &&apply, const Series &rhs,
   case PoissonPc::Diag:
     if (!diagonal.defined() ||
         !diagonal.gt(0.0).logical_and(diagonal.isfinite()).all().item<bool>())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::spatial::solve_poisson: diagonal preconditioner must be "
           "finite and positive");
     return math::krylov::pcg(
@@ -190,7 +191,7 @@ inline math::krylov::CgResult solve_spd(Apply &&apply, const Series &rhs,
         [&diagonal](const Series &residual) { return residual.div(diagonal); },
         rhs, axes, options.solve);
   }
-  throw std::invalid_argument(
+  PLUSS_FAIL(
       "natsci::spatial::solve_poisson: unknown preconditioner");
 }
 
@@ -222,27 +223,27 @@ solve_poisson(const Series &rhs, const PeriodicGrid &grid,
   constexpr const char *operation = "natsci::spatial::solve_poisson";
   detail::require_scalar_layout(rhs, grid, operation);
   if (!rhs.dtype().is_floating())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: rhs must have a real floating dtype");
   if (!(options.mean_tolerance >= 0.0) ||
       !std::isfinite(options.mean_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: mean_tolerance must be finite and "
         "non-negative");
 
   const bool wide = options.stencil == PoissonStencil::Wide;
   if (options.method == PoissonMethod::Multigrid && wide)
-    throw std::invalid_argument("natsci::spatial::solve_poisson: the wide stencil is solved by Fft or ConjugateGradient (its parity classes decouple)");
+    PLUSS_FAIL("natsci::spatial::solve_poisson: the wide stencil is solved by Fft or ConjugateGradient (its parity classes decouple)");
   const auto axes = detail::spatial_axes(rhs, grid);
   const Series null_part = detail::null_component(rhs, grid, options.stencil);
   if (!null_part.abs().le(options.mean_tolerance).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: periodic rhs must have zero spatial "
         "mean in every batch lane");
   const Series compatible_rhs = rhs.sub(null_part);
   const bool spectral_ok = rhs.platform() == pluss::Platform::CPU && (rhs.scalar_type() == pluss::ScalarType::Float64 || rhs.scalar_type() == pluss::ScalarType::Float32);
   if (options.method == PoissonMethod::Fft && !spectral_ok)
-    throw std::invalid_argument("natsci::spatial::solve_poisson: the Fft method needs a Float32/Float64 CPU field");
+    PLUSS_FAIL("natsci::spatial::solve_poisson: the Fft method needs a Float32/Float64 CPU field");
   if (options.method == PoissonMethod::Auto || options.method == PoissonMethod::Fft) {
     if (spectral_ok) {
       Series solution = spectral::solve(compatible_rhs, grid, wide);
@@ -258,7 +259,7 @@ solve_poisson(const Series &rhs, const PeriodicGrid &grid,
     auto result = math::multigrid::solve(h, compatible_rhs.neg(), static_cast<std::size_t>(grid.dim()), options.solve);
     Series solution = result.solution.sub(detail::null_component(result.solution, grid, options.stencil));
     if (options.require_convergence && (!result.converged.all().item<bool>() || result.breakdown.any().item<bool>()))
-      throw std::runtime_error("natsci::spatial::solve_poisson: multigrid-preconditioned conjugate gradient did not converge");
+      PLUSS_FAIL("natsci::spatial::solve_poisson: multigrid-preconditioned conjugate gradient did not converge");
     return {std::move(solution), std::move(result.residual_norm), std::move(result.relative_residual), std::move(result.converged), std::move(result.breakdown), result.iterations};
   }
   auto result = detail::solve_spd(
@@ -274,7 +275,7 @@ solve_poisson(const Series &rhs, const PeriodicGrid &grid,
 
   if (options.require_convergence && (!result.converged.all().item<bool>() ||
                                       result.breakdown.any().item<bool>()))
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: conjugate gradient did not converge");
 
   return {std::move(solution),
@@ -316,18 +317,18 @@ solve_poisson(const Series &rhs, const BoxGrid &grid,
   constexpr const char *operation = "natsci::spatial::solve_poisson";
   detail::require_scalar_layout(rhs, grid, operation);
   if (!rhs.dtype().is_floating())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: rhs must have a real floating dtype");
   if (options.stencil != PoissonStencil::Compact)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: the wide stencil is defined for "
         "periodic grids only");
   if (bounds.dim() != grid.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: boundary and grid rank mismatch");
   if (!(options.mean_tolerance >= 0.0) ||
       !std::isfinite(options.mean_tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: mean_tolerance must be finite and "
         "non-negative");
 
@@ -341,18 +342,19 @@ solve_poisson(const Series &rhs, const BoxGrid &grid,
   if (bounds.all_flux()) {
     const Series mean = compatible_rhs.mean(axes, true);
     if (!mean.abs().le(options.mean_tolerance).all().item<bool>())
-      throw std::domain_error(
+      PLUSS_FAIL(
           "natsci::spatial::solve_poisson: all-flux rhs violates the "
           "boundary compatibility condition in at least one batch lane");
     compatible_rhs = compatible_rhs.sub(mean);
   }
 
   if (options.method == PoissonMethod::Fft)
-    throw std::invalid_argument("natsci::spatial::solve_poisson: the Fft method is defined for periodic grids only");
+    PLUSS_FAIL("natsci::spatial::solve_poisson: the Fft method is defined for periodic grids only");
   std::optional<math::multigrid::Hierarchy> hierarchy;
-  // Auto: multigrid once the grid is large enough for its O(1) iteration count to repay the V-cycle (small grids keep the cheap PCG baseline)
+  // Auto: multigrid once the grid is large enough for its O(1) iteration count to repay the V-cycle (small grids keep the cheap PCG baseline: its
+  // iteration count grows like the number of cells per axis, so the default cap of 128 iterations stops being enough at about 32 cells)
   const bool use_multigrid = options.method == PoissonMethod::Multigrid ||
-                             (options.method == PoissonMethod::Auto && *std::max_element(grid.shape().begin(), grid.shape().end()) >= 64);
+                             (options.method == PoissonMethod::Auto && *std::max_element(grid.shape().begin(), grid.shape().end()) >= 32);
   if (use_multigrid)
     hierarchy.emplace(detail::box_problem(grid, bounds), rhs);
   auto result = hierarchy ? math::multigrid::solve(*hierarchy, compatible_rhs.neg(), static_cast<std::size_t>(grid.dim()), options.solve)
@@ -372,7 +374,7 @@ solve_poisson(const Series &rhs, const BoxGrid &grid,
   if (options.require_convergence &&
       (!result.converged.all().template item<bool>() ||
        result.breakdown.any().template item<bool>()))
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::spatial::solve_poisson: conjugate gradient did not converge");
 
   return {std::move(solution),

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/roots.h"
 #include "pluss/subsp/natsci/common/quantity.h"
@@ -170,13 +171,13 @@ inline bool same_shape(const Series &lhs, const Series &rhs) {
 inline void require_real(const Series &value, const char *operation,
                          const char *role) {
   if (!value.defined())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be defined");
   if (!value.dtype().is_floating())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must have a real floating dtype");
   if (!value.isfinite().all().item<bool>())
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " must be finite");
 }
 
@@ -184,7 +185,7 @@ inline void require_options(const OrbitOptions &options,
                             const char *operation) {
   if (!(options.tolerance > 0.0) || options.tolerance >= 1.0 ||
       !std::isfinite(options.tolerance))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": tolerance must be finite and in (0, 1)");
 }
 
@@ -355,13 +356,13 @@ lambert_time_derivatives(const Series &x, const Series &lambda) {
 inline double lambert_tolerance(const Series &like,
                                 const LambertOptions &options) {
   if (options.max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: max_steps must be positive");
   if (options.check_every <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: check_every must be positive");
   if (options.tolerance < 0.0 || !std::isfinite(options.tolerance))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: tolerance must be finite and non-negative");
   if (options.tolerance > 0.0)
     return options.tolerance;
@@ -375,7 +376,7 @@ inline double lambert_tolerance(const Series &like,
   case ScalarType::BFloat16:
     return 5e-2;
   default:
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: expected a real floating dtype");
   }
 }
@@ -383,16 +384,16 @@ inline double lambert_tolerance(const Series &like,
 inline void require_same_layout(const Series &first, const Series &value,
                                 const char *operation, const char *role) {
   if (!same_shape(first, value))
-    throw std::invalid_argument(std::string(operation) + ": " + role +
+    PLUSS_FAIL(std::string(operation) + ": " + role +
                                 " shape must match the other element fields");
   if (first.scalar_type() != value.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) + ": " + role +
         " dtype must match the other element fields (expected dtype id " +
         std::to_string(static_cast<int>(first.scalar_type())) + ", received " +
         std::to_string(static_cast<int>(value.scalar_type())) + ")");
   if (first.platform() != value.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(operation) + ": " + role +
         " platform must match the other element fields");
 }
@@ -403,7 +404,7 @@ mu_on(const common::Quantity<GravParam, Rep> &mu, const Series &like,
       const std::vector<std::int64_t> &batch_shape, const char *operation) {
   if constexpr (std::same_as<std::remove_cvref_t<Rep>, double>) {
     if (!(mu.si_value() > 0.0) || !std::isfinite(mu.si_value()))
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": gravitational parameter must be finite "
                                   "and positive");
     return pluss::series::full(
@@ -413,23 +414,23 @@ mu_on(const common::Quantity<GravParam, Rep> &mu, const Series &like,
     const Series &raw = mu.si_value();
     require_real(raw, operation, "gravitational parameter");
     if (raw.scalar_type() != like.scalar_type())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": gravitational parameter dtype must match the orbit");
     if (raw.platform() != like.platform())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": gravitational parameter platform must match the orbit");
     Series aligned = pluss::series::undefined();
     try {
       aligned = raw.expand(batch_shape);
     } catch (const std::exception &) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": gravitational parameter must broadcast to the orbit batch shape");
     }
     if (!aligned.gt(0.0).all().item<bool>())
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": gravitational parameter must be positive");
     return aligned;
   }
@@ -437,20 +438,20 @@ mu_on(const common::Quantity<GravParam, Rep> &mu, const Series &like,
 
 inline void require_bound(const Elements &elements, const char *operation) {
   if (!elements.ecc().si_value().lt(1.0).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": every orbit must be elliptic");
 }
 
 inline double solve_tolerance(const Series &like, const KeplerOptions &options,
                               const char *operation) {
   if (options.max_steps <= 0)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": max_steps must be positive");
   if (options.check_every <= 0)
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": check_every must be positive");
   if (options.tolerance < 0.0 || !std::isfinite(options.tolerance))
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": tolerance must be finite and non-negative");
   if (options.tolerance > 0.0)
     return options.tolerance;
@@ -464,7 +465,7 @@ inline double solve_tolerance(const Series &like, const KeplerOptions &options,
   case ScalarType::BFloat16:
     return 1e-2;
   default:
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": expected a real floating dtype");
   }
 }
@@ -475,10 +476,10 @@ inline void require_anomaly_pair(const Series &ecc, const Series &anomaly,
   require_real(anomaly, operation, "anomaly");
   require_same_layout(ecc, anomaly, operation, "anomaly");
   if (!ecc.ge(0.0).all().item<bool>())
-    throw std::invalid_argument(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                                 ": eccentricity must be non-negative");
   if (!ecc.ne(1.0).all().item<bool>())
-    throw std::domain_error(std::string(operation) +
+    PLUSS_FAIL(std::string(operation) +
                             ": parabolic anomalies require a universal "
                             "variable representation");
 }
@@ -489,7 +490,7 @@ time_on(const common::Quantity<common::Time, Rep> &time, const Series &like,
         const std::vector<std::int64_t> &batch_shape, const char *operation) {
   if constexpr (std::same_as<std::remove_cvref_t<Rep>, double>) {
     if (!std::isfinite(time.si_value()))
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": elapsed time must be finite");
     return pluss::series::full(
         batch_shape, time.si_value(),
@@ -498,17 +499,17 @@ time_on(const common::Quantity<common::Time, Rep> &time, const Series &like,
     const Series &raw = time.si_value();
     require_real(raw, operation, "elapsed time");
     if (raw.scalar_type() != like.scalar_type())
-      throw std::invalid_argument(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                                   ": elapsed time dtype must match the orbit");
     if (raw.platform() != like.platform())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": elapsed time platform must match the orbit");
     Series aligned = pluss::series::undefined();
     try {
       aligned = raw.expand(batch_shape);
     } catch (const std::exception &) {
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           std::string(operation) +
           ": elapsed time must broadcast to the orbit batch shape");
     }
@@ -526,16 +527,16 @@ make_state(const common::SeriesQuantity<common::Length> &position,
   detail::require_real(r, "natsci::astro::make_state", "position");
   detail::require_real(v, "natsci::astro::make_state", "velocity");
   if (r.dim() < 1 || r.size(-1) != 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_state: position must have shape [..., 3]");
   if (!detail::same_shape(r, v))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_state: position and velocity shapes must match");
   if (r.scalar_type() != v.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_state: position and velocity dtypes must match");
   if (r.platform() != v.platform())
-    throw std::invalid_argument("natsci::astro::make_state: position and "
+    PLUSS_FAIL("natsci::astro::make_state: position and "
                                 "velocity platforms must match");
   return OrbitState(position, velocity);
 }
@@ -569,20 +570,20 @@ make_elem(const common::SeriesQuantity<common::Length> &axis,
   detail::require_same_layout(a, nu, op, "phase");
 
   if (!e.ge(0.0).all().item<bool>())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_elem: eccentricity must be non-negative");
   if (!e.sub(1.0).abs().gt(options.tolerance).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::make_elem: parabolic orbits are singular in this "
         "element set");
   const Series valid_axis = e.lt(1.0).logical_and(a.gt(0.0)).logical_or(
       e.gt(1.0).logical_and(a.lt(0.0)));
   if (!valid_axis.all().item<bool>())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_elem: elliptic orbits require a positive axis "
         "and hyperbolic orbits require a negative axis");
   if (!inc.ge(0.0).logical_and(inc.le(std::numbers::pi)).all().item<bool>())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::make_elem: tilt must lie in [0, pi]");
 
   return Elements(
@@ -607,7 +608,7 @@ energy(const OrbitState &state, const common::Quantity<GravParam, Rep> &mu) {
   const Series &v = state.velocity().si_value();
   const Series radius = r.norm(2.0, -1, false);
   if (!radius.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::energy: position must not coincide with the primary");
   const Series gm =
       detail::mu_on(mu, r, state.batch_shape(), "natsci::astro::energy");
@@ -622,7 +623,7 @@ ecc_vec(const OrbitState &state, const common::Quantity<GravParam, Rep> &mu) {
   const Series &v = state.velocity().si_value();
   const Series radius = r.norm(2.0, -1, false);
   if (!radius.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::ecc_vec: position must not coincide with the primary");
   const Series gm =
       detail::mu_on(mu, r, state.batch_shape(), "natsci::astro::ecc_vec");
@@ -644,13 +645,13 @@ to_elem(const OrbitState &state, const common::Quantity<GravParam, Rep> &mu,
   const Series &v = state.velocity().si_value();
   const Series radius = r.norm(2.0, -1, false);
   if (!radius.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::to_elem: position must not coincide with the primary");
   const Series gm = detail::mu_on(mu, r, state.batch_shape(), op);
   const Series h = r.cross(v, -1);
   const Series hmag = h.norm(2.0, -1, false);
   if (!hmag.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::to_elem: radial trajectories have no orbital plane");
 
   const Series speed2 = v.square().sum(-1, false);
@@ -662,7 +663,7 @@ to_elem(const OrbitState &state, const common::Quantity<GravParam, Rep> &mu,
                           .div(gm.unsqueeze(-1));
   const Series ecc = evec.norm(2.0, -1, false);
   if (!ecc.sub(1.0).abs().gt(options.tolerance).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::to_elem: parabolic orbits are singular in this "
         "element set");
 
@@ -731,11 +732,11 @@ from_elem(const Elements &elements,
       detail::mu_on(mu, a, elements.batch_shape(), "natsci::astro::from_elem");
   const Series p = a.mul(pluss::series::ones_like(e).sub(e.square()));
   if (!p.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::from_elem: semilatus rectum must be positive");
   const Series denom = pluss::series::ones_like(e).add(e.mul(nu.cos()));
   if (!denom.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::from_elem: phase lies beyond a hyperbolic asymptote");
 
   const Series cO = raan.cos();
@@ -803,7 +804,7 @@ period(const Elements &elements, const common::Quantity<GravParam, Rep> &mu) {
   const Series one = pluss::series::ones_like(ecc);
   const Series denom = one.add(ecc.mul(phase.cos()));
   if (!elliptic.logical_or(denom.gt(0.0)).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::to_mean: phase lies beyond a hyperbolic asymptote");
   const Series safe_denom = detail::safe_den(denom, denom.ne(0.0));
 
@@ -889,7 +890,7 @@ solve_mean(const Series &ecc, const Series &mean,
   const Series scale = residual_reference.add(1.0).mul(tolerance);
   const Series converged = residual.abs().le(scale);
   if (options.strict && !converged.all().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::astro::solve_mean: Kepler solve did not converge");
   return {anomaly, residual, converged, solved.iterations};
 }
@@ -954,13 +955,13 @@ advance(const OrbitState &state,
   const Series r0 = r0_vec.norm(2.0, -1, false);
   const Series v0 = v0_vec.norm(2.0, -1, false);
   if (!r0.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::advance: position must not coincide with the primary");
   if (!v0.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::advance: velocity must not be zero");
   if (!r0_vec.cross(v0_vec, -1).norm(2.0, -1, false).gt(0.0).all().item<bool>())
-    throw std::domain_error("natsci::astro::advance: position and velocity "
+    PLUSS_FAIL("natsci::astro::advance: position and velocity "
                             "must define a conic plane");
 
   const Series speed2 = v0_vec.square().sum(-1, false);
@@ -1020,7 +1021,7 @@ advance(const OrbitState &state,
   const Series residual = function(solved.root);
   const Series converged = residual.abs().le(tau.abs().add(1.0).mul(tolerance));
   if (options.strict && !converged.all().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::astro::advance: universal-variable solve did not converge");
 
   const Series chi = solved.root.mul(sqrt_r0);
@@ -1057,16 +1058,16 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   detail::require_real(r1_vec, op, "start position");
   detail::require_real(r2_vec, op, "finish position");
   if (r1_vec.dim() < 1 || r1_vec.size(-1) != 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: positions must have shape [..., 3]");
   if (!detail::same_shape(r1_vec, r2_vec))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: position shapes must match");
   if (r1_vec.scalar_type() != r2_vec.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: position dtypes must match");
   if (r1_vec.platform() != r2_vec.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: position platforms must match");
 
   const std::vector<std::int64_t> batch_shape(
@@ -1074,23 +1075,23 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   const Series gm = detail::mu_on(mu, r1_vec, batch_shape, op);
   const Series time = detail::time_on(flight, r1_vec, batch_shape, op);
   if (!time.gt(0.0).all().item<bool>())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: flight time must be positive");
   const double tolerance = detail::lambert_tolerance(r1_vec, options);
 
   const Series &normal_raw = normal.si_value();
   detail::require_real(normal_raw, op, "reference normal");
   if (normal_raw.scalar_type() != r1_vec.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: reference normal dtype must match positions");
   if (normal_raw.platform() != r1_vec.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: reference normal platform must match positions");
   Series normal_vec = pluss::series::undefined();
   try {
     normal_vec = normal_raw.expand(r1_vec.sizes());
   } catch (const std::exception &) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: reference normal must broadcast to [..., 3]");
   }
 
@@ -1098,10 +1099,10 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   const Series r2 = r2_vec.norm(2.0, -1, false);
   const Series normal_norm = normal_vec.norm(2.0, -1, false);
   if (!r1.gt(0.0).logical_and(r2.gt(0.0)).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::lambert: neither position may coincide with the primary");
   if (!normal_norm.gt(0.0).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::lambert: reference normal must not be zero");
 
   const Series ir1 = r1_vec.div(r1.unsqueeze(-1));
@@ -1109,13 +1110,13 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   const Series plane = ir1.cross(ir2, -1);
   const Series plane_norm = plane.norm(2.0, -1, false);
   if (!plane_norm.gt(1e-12).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::lambert: collinear endpoints do not define a unique transfer plane");
   const Series ih = plane.div(plane_norm.unsqueeze(-1));
   const Series unit_normal = normal_vec.div(normal_norm.unsqueeze(-1));
   const Series orientation = detail::dot(ih, unit_normal);
   if (!orientation.abs().gt(1e-12).all().item<bool>())
-    throw std::domain_error(
+    PLUSS_FAIL(
         "natsci::astro::lambert: reference normal must distinguish the transfer sense");
 
   const Series chord = r2_vec.sub(r1_vec).norm(2.0, -1, false);
@@ -1182,7 +1183,7 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
   const Series converged =
       residual.abs().le(target.abs().add(1.0).mul(tolerance));
   if (options.strict && !converged.all().item<bool>())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::astro::lambert: transfer-time solve did not converge");
 
   const Series y = pluss::series::ones_like(lambda)
@@ -1229,7 +1230,7 @@ template <common::QuantityRep MuRep, common::QuantityRep TimeRep>
     const LambertOptions &options = {}) {
   const Series &like = start.si_value();
   if (!like.defined() || like.dim() < 1 || like.size(-1) != 3)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::astro::lambert: positions must have shape [..., 3]");
   std::vector<std::int64_t> batch_shape(like.sizes().begin(),
                                         like.sizes().end() - 1);

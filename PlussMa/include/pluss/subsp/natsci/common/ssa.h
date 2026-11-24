@@ -60,9 +60,19 @@ inline SsaResult gillespie(const PropensityFn &propensity, const Series &nu,
   Series done = pluss::series::zeros({batch}, cfg).gt(0.0);
   const std::uint64_t base = pluss::tils::seed_or_next(options.seed);
   bool completed = false;
+  // A negative or non-finite propensity is a user error. The check is accumulated on the device and read at the same points as the
+  // completion test, so it adds no host synchronisation per event.
+  Series invalid = pluss::series::zeros({batch}, cfg).gt(0.0);
+  const auto check_propensity = [&]() {
+    dynamics::require(!invalid.any().item<bool>(),
+                      "gillespie: propensities must be finite and non-negative");
+  };
 
   for (std::int64_t event = 0; event < options.max_events; ++event) {
     const Series a = propensity(x);
+    dynamics::require(a.dim() == 2 && a.size(0) == batch && a.size(1) == reactions,
+                      "gillespie: propensity must return [replicates, reactions]");
+    invalid = invalid.logical_or(a.lt(0.0).logical_or(a.isfinite().logical_not()).any(-1, false));
     const Series a0 = a.sum(-1, false);
     const Series r1 = pluss::series::rand({batch}, cfg, base + 2 * event + 1);
     const Series r2 = pluss::series::rand({batch}, cfg, base + 2 * event + 2);
@@ -84,12 +94,14 @@ inline SsaResult gillespie(const PropensityFn &propensity, const Series &nu,
     t = pluss::series::where(fire, t_new, t);
     count = count.add(fired);
     if ((event & 7) == 7 || event + 1 == options.max_events) {
+      check_propensity();
       if (done.all().item<bool>()) {
         completed = true;
         break;
       }
     }
   }
+  check_propensity();
   return {std::move(x), std::move(count), completed};
 }
 

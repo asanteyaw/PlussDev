@@ -31,38 +31,49 @@ struct Result final {
   Series complexes = pluss::series::undefined(); // [..., c]
   Series residual = pluss::series::undefined();  // [...]
   int iterations = 0;
+  bool converged = false; // every lane met opt.tolerance within opt.max_iterations
 };
 
-// stoichiometry [m, c]; ln_k [..., c]; totals [..., m] (> 0).
+// stoichiometry [m, c]; ln_k [..., c]; totals [..., m]. A total is normally positive; a component such as H+ whose "total" is a
+// proton excess may be zero or negative (a base), in which case the solution is found from a small positive starting guess.
+// result.converged is false when max_iterations was reached before the tolerance.
 inline Result solve(const Series &stoichiometry, const Series &ln_k, const Series &totals, const Options &opt = {}) {
   dynamics::require(stoichiometry.dim() == 2, "speciation: stoichiometry must be [components, complexes]");
   const std::int64_t m = stoichiometry.size(0);
   dynamics::require(totals.size(-1) == m, "speciation: totals must have one entry per component");
   dynamics::require(ln_k.size(-1) == stoichiometry.size(1), "speciation: ln_k must have one entry per complex");
-  dynamics::require_positive(totals, "speciation: totals");
+  dynamics::require_finite(totals, "speciation: totals");
   dynamics::require_finite(ln_k, "speciation: ln_k");
   const Series n = stoichiometry.to(totals.scalar_type()).to(totals.platform());
   const Series nt = n.transpose(0, 1);
   const Config cfg = Config{}.with_dtype(totals.scalar_type()).with_platform(totals.platform());
   const Series eye = pluss::series::eye(m, cfg);
 
-  Series u = totals.log();
+  // start from the total where it is positive, and from a small positive value where it is not (excess-of-reactant components)
+  const Series magnitude = totals.abs().amax(-1, true).clamp_min(1e-300);
+  const Series positive = totals.gt(0.0);
+  Series u = pluss::series::where(positive, totals, magnitude.mul(1e-8)).log();
   Series x = totals, c = pluss::series::undefined(), resid = pluss::series::undefined();
   int it = 0;
+  bool converged = false;
   for (; it < opt.max_iterations; ++it) {
     x = u.exp();
     c = ln_k.add(dynamics::matvec(nt, u)).exp();                       // [..., c]
     const Series f = x.add(dynamics::matvec(n, c)).sub(totals);         // [..., m]
-    resid = f.div(totals).abs().amax(-1, false);
-    if (resid.max().item<double>() < opt.tolerance)
+    // relative balance error: against the total where it is positive, against the size of the terms otherwise
+    const Series terms = x.add(dynamics::matvec(n.abs(), c));
+    const Series scale = pluss::series::where(positive, totals, terms).clamp_min(1e-300);
+    resid = f.div(scale).abs().amax(-1, false);
+    if (resid.max().item<double>() < opt.tolerance) {
+      converged = true;
       break;
-    // J = diag(x) + N diag(c) N^T  -> [..., m, m] from one batched matmul
+    }
     const Series j = eye.mul(x.unsqueeze(-1)).add(n.mul(c.unsqueeze(-2)).matmul(nt));
     const Series du = dynamics::solve(j, f).neg();
-    const Series scale = du.abs().amax(-1, true).clamp_min(opt.max_step).reciprocal().mul(opt.max_step);
-    u = u.add(du.mul(scale));
+    const Series stepscale = du.abs().amax(-1, true).clamp_min(opt.max_step).reciprocal().mul(opt.max_step);
+    u = u.add(du.mul(stepscale));
   }
-  return {x, c, resid, it};
+  return {x, c, resid, it, converged};
 }
 
 } // namespace pluss::subsp::natsci::common::speciation

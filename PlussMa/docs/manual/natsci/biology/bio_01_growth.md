@@ -1,5 +1,3 @@
-<!-- generated from bio_01_growth.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-
 # Biology 1: Growth
 
 A population that has room and food multiplies; one that has neither levels off. This chapter looks at the laws that describe both, thresholds below which a population cannot recover, and how age schedules fix a population's growth rate.

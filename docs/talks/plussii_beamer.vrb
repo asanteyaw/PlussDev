@@ -1,0 +1,29 @@
+\frametitle{Errors that point at your line}
+\framesubtitle{Explicit failure over silent degradation -- a real traceback}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.62\textwidth}
+\begin{lstlisting}[style=out,basicstyle=\ttfamily\fontsize{7.4}{9.2}\selectfont\color{pnavy}]
+pluss::exception::Error: Traceback (most recent call last):
+  File "program", in main
+  File "program", in DataFramePlotAccessor::line(...)
+  File "program", in ShelfPlotAccessor::line(...)
+  File "program", in DataFrame::DataFrame(...)
+  File "PlussMic/src/table/DataFrame.cpp", line 2495,
+        in DataFrameImpl::validate_and_reindex_()
+    PLUSS_CHECK(name_to_idx_.find(name) == name_to_idx_.end(),
+                "DataFrame: duplicate column name 'user_id'")
+\end{lstlisting}
+    \end{column}
+    \begin{column}{.38\textwidth}
+      \begin{itemize}[<+->]
+        \footnotesize
+        \item Failures throw one error type with a \hb{stack trace}
+        \item The message says what was wrong \emph{and} the value
+        \item Build in \code{RelWithDebInfo} for file and line in downstream code
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{1.6ex}
+  \onslide<4->{\begin{tcolorbox}[enhanced,colback=pcoral!8,colframe=pcoral,boxrule=.6pt,arc=3pt,left=6pt,right=6pt,top=3pt,bottom=3pt]
+    \small\textbf{Correctness first:} numerically sound behaviour and explicit failure over silent degradation.
+  \end{tcolorbox}}

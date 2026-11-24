@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <string>
 #include <vector>
 
 namespace pluss::subsp::natsci::chemistry::polymer_dynamics {
@@ -42,6 +43,7 @@ inline Series rouse_matrix(std::int64_t n_beads, pluss::ScalarType dtype = pluss
 
 // eigenvalues a_p = 4 sin^2(p pi / 2N), p = 0 .. N-1, [N]
 inline Series rouse_eigenvalues(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64) {
+  dynamics::require(n_beads >= 2, "rouse: need at least two beads");
   std::vector<double> a(static_cast<std::size_t>(n_beads));
   for (std::int64_t p = 0; p < n_beads; ++p) {
     const double s = std::sin(static_cast<double>(p) * std::numbers::pi_v<double> / (2.0 * static_cast<double>(n_beads)));
@@ -52,24 +54,51 @@ inline Series rouse_eigenvalues(std::int64_t n_beads, pluss::ScalarType dtype = 
 
 // relaxation times of the modes p = 1 .. N-1 [..., N-1] for friction zeta, bond length b and thermal energy kT (scalars or lane Series)
 inline Series rouse_relaxation_times(std::int64_t n_beads, const Series &zeta, const Coeff &b, const Coeff &kt) {
+  dynamics::require_positive(zeta, "rouse: friction");
+  dynamics::require_positive(b, zeta, "rouse: bond length");
+  dynamics::require_positive(kt, zeta, "rouse: thermal energy");
   const Series modes = rouse_eigenvalues(n_beads, zeta.scalar_type()).slice(-1, 1, n_beads, 1);
   return zeta.unsqueeze(-1).mul(b.on(zeta).square().unsqueeze(-1)).div(kt.on(zeta).unsqueeze(-1).mul(3.0)).div(modes);
 }
 inline Series rouse_diffusion(std::int64_t n_beads, const Series &zeta, const Coeff &kt) {
+  dynamics::require(n_beads >= 2, "rouse: need at least two beads");
+  dynamics::require_positive(zeta, "rouse: friction");
+  dynamics::require_positive(kt, zeta, "rouse: thermal energy");
   return kt.on(zeta).div(zeta.mul(static_cast<double>(n_beads)));
 }
 // G(t) = c kT sum_p exp(-2 t / tau_p); t [T] (or [..., T]) against relaxation times tau [..., P]: result [..., T]
 inline Series rouse_modulus(const Series &t, const Series &tau, const Coeff &chains_per_volume, const Coeff &kt) {
+  dynamics::require_nonnegative(t, "rouse: time");
+  dynamics::require_positive(tau, "rouse: relaxation times");
+  dynamics::require_positive(chains_per_volume, tau, "rouse: chains per volume");
+  dynamics::require_positive(kt, tau, "rouse: thermal energy");
   const Series decay = t.unsqueeze(-1).mul(-2.0).div(tau.unsqueeze(-2)).exp().sum(-1, false); // sum over modes
   return decay.mul(chains_per_volume.on(decay)).mul(kt.on(decay));
 }
 inline Series rouse_viscosity(const Series &tau, const Coeff &chains_per_volume, const Coeff &kt) {
+  dynamics::require_positive(tau, "rouse: relaxation times");
+  dynamics::require_positive(chains_per_volume, tau, "rouse: chains per volume");
+  dynamics::require_positive(kt, tau, "rouse: thermal energy");
   return tau.sum(-1, false).mul(0.5).mul(chains_per_volume.on(tau.select(-1, 0))).mul(kt.on(tau.select(-1, 0)));
 }
+
+namespace detail {
+// Cholesky factor of the hydrodynamic matrix; the preaveraged Oseen tensor stops being positive definite when h* is too large for the chain
+inline Series hydrodynamic_factor(const Series &h, std::int64_t n_beads, double h_star) {
+  try {
+    return linalg::cholesky(h, false);
+  } catch (const pluss::Error &) {
+    PLUSS_FAIL("natsci::chemistry::polymer_dynamics: the preaveraged hydrodynamic interaction is not positive definite for h* = " +
+               std::to_string(h_star) + " and " + std::to_string(n_beads) + " beads; use a smaller h*");
+  }
+}
+} // namespace detail
 
 // ---- Zimm ------------------------------------------------------------------------------------------------
 // preaveraged Oseen hydrodynamic-interaction matrix H [N, N] for the parameter h*
 inline Series zimm_hydrodynamic_matrix(std::int64_t n_beads, double h_star) {
+  dynamics::require(n_beads >= 2, "zimm: need at least two beads");
+  dynamics::require(std::isfinite(h_star) && h_star >= 0.0, "zimm: the hydrodynamic-interaction parameter h* must be finite and non-negative");
   std::vector<double> h(static_cast<std::size_t>(n_beads * n_beads), 0.0);
   for (std::int64_t i = 0; i < n_beads; ++i)
     for (std::int64_t j = 0; j < n_beads; ++j)
@@ -80,18 +109,25 @@ inline Series zimm_hydrodynamic_matrix(std::int64_t n_beads, double h_star) {
 inline Series zimm_eigenvalues(std::int64_t n_beads, double h_star) {
   const Series a = rouse_matrix(n_beads);
   const Series h = zimm_hydrodynamic_matrix(n_beads, h_star);
-  const Series l = linalg::cholesky(h, false); // H = L L^T, L lower triangular
+  const Series l = detail::hydrodynamic_factor(h, n_beads, h_star); // H = L L^T, L lower triangular
   const Series s = l.transpose(0, 1).matmul(a).matmul(l);
   return linalg::eigh(s.add(s.transpose(0, 1)).mul(0.5)).eigenvalues;
 }
 // relaxation times of the modes p = 1 .. N-1: tau_p = zeta b^2 / (3 kT lambda_p)
 inline Series zimm_relaxation_times(std::int64_t n_beads, double h_star, double zeta, double b, double kt) {
+  dynamics::require(std::isfinite(zeta) && zeta > 0.0, "zimm: friction must be finite and strictly positive");
+  dynamics::require(std::isfinite(b) && b > 0.0, "zimm: bond length must be finite and strictly positive");
+  dynamics::require(std::isfinite(kt) && kt > 0.0, "zimm: thermal energy must be finite and strictly positive");
   const Series lambda = zimm_eigenvalues(n_beads, h_star).slice(-1, 1, n_beads, 1);
   return lambda.reciprocal().mul(zeta * b * b / (3.0 * kt));
 }
 // centre-of-mass diffusion coefficient D = kT / (N^2 zeta) sum_{nm} H_nm
 inline double zimm_diffusion(std::int64_t n_beads, double h_star, double zeta, double kt) {
-  const double total = zimm_hydrodynamic_matrix(n_beads, h_star).sum().item<double>();
+  dynamics::require(std::isfinite(zeta) && zeta > 0.0, "zimm: friction must be finite and strictly positive");
+  dynamics::require(std::isfinite(kt) && kt > 0.0, "zimm: thermal energy must be finite and strictly positive");
+  const Series matrix = zimm_hydrodynamic_matrix(n_beads, h_star);
+  (void)detail::hydrodynamic_factor(matrix, n_beads, h_star); // refuses an interaction too strong to be physical
+  const double total = matrix.sum().item<double>();
   return kt / (static_cast<double>(n_beads) * static_cast<double>(n_beads) * zeta) * total;
 }
 

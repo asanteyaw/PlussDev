@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/constants.h"
 #include "pluss/subsp/natsci/common/point.h"
 #include "pluss/subsp/natsci/common/solve.h"
@@ -31,14 +32,14 @@ inline void require_finite(const Rep &value, const char *operation,
                            const char *role) {
   if constexpr (std::same_as<std::remove_cvref_t<Rep>, double>) {
     if (!std::isfinite(value))
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite");
   } else {
     if (!value.defined() || !value.dtype().is_floating() || value.numel() == 0)
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be a non-empty real floating Series");
     if (!value.isfinite().all().template item<bool>())
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite");
   }
 }
@@ -48,15 +49,15 @@ inline void require_positive(const Rep &value, const char *operation,
                              const char *role) {
   if constexpr (std::same_as<std::remove_cvref_t<Rep>, double>) {
     if (!(value > 0.0) || !std::isfinite(value))
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite and positive");
   } else {
     if (!value.defined() || !value.dtype().is_floating() || value.numel() == 0)
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be a non-empty real floating Series");
     if (!value.isfinite().all().template item<bool>() ||
         !value.gt(0.0).all().template item<bool>())
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite and positive");
   }
 }
@@ -66,15 +67,15 @@ inline void require_above_one(const Rep &value, const char *operation,
                               const char *role) {
   if constexpr (std::same_as<std::remove_cvref_t<Rep>, double>) {
     if (!(value > 1.0) || !std::isfinite(value))
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite and greater than one");
   } else {
     if (!value.defined() || !value.dtype().is_floating() || value.numel() == 0)
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be a non-empty real floating Series");
     if (!value.isfinite().all().template item<bool>() ||
         !value.gt(1.0).all().template item<bool>())
-      throw std::invalid_argument(std::string(operation) + ": " + role +
+      PLUSS_FAIL(std::string(operation) + ": " + role +
                                   " must be finite and greater than one");
   }
 }

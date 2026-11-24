@@ -30,6 +30,19 @@ int main() {
       const double ll = pva::loglik(counts, {ref::fixed[3 * i], ref::fixed[3 * i + 1], ref::fixed[3 * i + 2]});
       expect(std::abs(ll - ref::fixed_ll[i]) < 1e-9 * (1.0 + std::abs(ref::fixed_ll[i])), "Kalman log-likelihood vs numpy: " + std::to_string(ll) + " vs " + std::to_string(ref::fixed_ll[i]));
     }
+    // a current abundance known exactly (no observation error, zero filtered variance) must use the closed-form first-passage law directly
+    {
+      pva::Fit exact;
+      exact.parameters = {0.0076, 0.0093, 0.0};
+      exact.filtered_mean = std::log(240.0);
+      exact.filtered_var = 0.0;
+      const Series horizons = vec({10.0, 100.0});
+      const Series risk = pva::extinction_risk(exact, 200.0, horizons);
+      const Series direct = bd::quasi_extinction_cdf(vec({0.0076, 0.0076}), vec({0.0093, 0.0093}), vec({std::log(1.2), std::log(1.2)}), horizons);
+      expect(risk.allclose(direct, 1e-12, 1e-12) && risk.host<double>()[1] > 0.5, "extinction risk with an exactly known abundance");
+      expect(std::abs(pva::ultimate_extinction_risk(exact, 200.0) - std::exp(-2.0 * 0.0076 * std::log(1.2) / 0.0093)) < 1e-12, "ultimate risk with an exactly known abundance");
+      expect(pva::extinction_risk(exact, 260.0, horizons).host<double>()[0] == 1.0, "a threshold above the current abundance is already crossed");
+    }
     const auto f = pva::fit(counts);
     expect(f.loglik >= ref::mle_ll[0] - 1e-7, "ML fit reaches the reference likelihood: " + std::to_string(f.loglik) + " vs " + std::to_string(ref::mle_ll[0]));
     expect(std::abs(f.parameters.mu - ref::mle[0]) < 2e-4 && rel(f.parameters.sigma2, ref::mle[1]) < 2e-3 && rel(f.parameters.eta2, ref::mle[2]) < 2e-3, "ML estimates vs scipy");

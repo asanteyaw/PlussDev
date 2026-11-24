@@ -1,7 +1,9 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/natsci/common/quantity.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 
@@ -9,36 +11,43 @@ namespace pluss::subsp::natsci::common {
 
 namespace detail {
 
-inline void validate_uncertainty(double, double uncertainty) {
+inline void validate_uncertainty(double value, double uncertainty) {
+  if (!std::isfinite(value) || !std::isfinite(uncertainty))
+    PLUSS_FAIL("natsci::common::Measurement: value and standard "
+                                "uncertainty must be finite");
   if (!(uncertainty >= 0.0))
-    throw std::invalid_argument("natsci::common::Measurement: standard "
+    PLUSS_FAIL("natsci::common::Measurement: standard "
                                 "uncertainty must be non-negative");
 }
 
 inline void validate_uncertainty(const Series &value,
                                  const Series &uncertainty) {
   if (!value.defined() || !uncertainty.defined())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::Measurement: expected defined Series values");
   if (!value.dtype().is_floating() || !uncertainty.dtype().is_floating())
-    throw std::invalid_argument("natsci::common::Measurement: Series values "
+    PLUSS_FAIL("natsci::common::Measurement: Series values "
                                 "must have a real floating dtype");
   if (value.scalar_type() != uncertainty.scalar_type())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::Measurement: value and uncertainty dtype mismatch");
   if (value.platform() != uncertainty.platform())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::Measurement: value and uncertainty platform mismatch");
   if (value.dim() != uncertainty.dim())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::common::Measurement: value and uncertainty shape mismatch");
   for (std::int64_t axis = 0; axis < value.dim(); ++axis) {
     if (value.size(axis) != uncertainty.size(axis))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::common::Measurement: value and uncertainty shape mismatch");
   }
+  if (!value.isfinite().all().item<bool>() ||
+      !uncertainty.isfinite().all().item<bool>())
+    PLUSS_FAIL("natsci::common::Measurement: value and standard "
+                                "uncertainty must be finite");
   if (!uncertainty.ge(0.0).all().item<bool>())
-    throw std::invalid_argument("natsci::common::Measurement: standard "
+    PLUSS_FAIL("natsci::common::Measurement: standard "
                                 "uncertainty must be non-negative");
 }
 

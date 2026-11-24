@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/subsp/math/integ.h"
 #include "pluss/subsp/math/interp.h"
 #include "pluss/subsp/math/ode.h"
@@ -47,7 +48,7 @@ struct RecordAccess final {
   [[nodiscard]] static StateVector
   stack(const std::vector<StateVector> &sequence) {
     if (sequence.empty())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::solve::march: expected at least one state");
     std::vector<::pluss::subsp::natsci::common::detail::RecordStore> stores;
     stores.reserve(sequence.size());
@@ -64,20 +65,20 @@ struct RecordAccess final {
   [[nodiscard]] static Series scale(const ParameterSet &model,
                                     const StateVector &scales) {
     if (model.size() != scales.size())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::solve::fit: scale field count mismatch");
     const auto &model_blocks = model.layout().blocks();
     const auto &scale_blocks = scales.layout().blocks();
     for (std::size_t i = 0; i < model.size(); ++i) {
       if (!same_block_layout(model_blocks[i], scale_blocks[i]) ||
           model.meta()[i].dimension != scales.meta()[i].dimension)
-        throw std::invalid_argument(
+        PLUSS_FAIL(
             "natsci::solve::fit: scales must match parameter names, "
             "dimensions, shapes, dtypes, and platforms");
     }
     const Series flat = scales.flat();
     if (!flat.isfinite().all().item<bool>() || !flat.gt(0.0).all().item<bool>())
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::solve::fit: scales must be finite and strictly positive");
     return flat;
   }
@@ -137,20 +138,20 @@ inline constexpr bool series_quantity_v =
 inline void require_rate(const StateVector &rate, const StateVector &state,
                          DimensionSignature coordinate) {
   if (rate.size() != state.size())
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::solve::flow: derivative field count mismatch");
   const auto &rate_blocks = rate.layout().blocks();
   const auto &state_blocks = state.layout().blocks();
   for (std::size_t i = 0; i < state.size(); ++i) {
     if (!same_block_layout(rate_blocks[i], state_blocks[i]))
-      throw std::invalid_argument(
+      PLUSS_FAIL(
           "natsci::solve::flow: derivative names, shapes, dtypes, and "
           "platforms must match the state");
     DimensionSignature expected = state.meta()[i].dimension;
     for (std::size_t axis = 0; axis < expected.powers.size(); ++axis)
       expected.powers[axis] -= coordinate.powers[axis];
     if (rate.meta()[i].dimension != expected)
-      throw std::invalid_argument("natsci::solve::flow: derivative field has "
+      PLUSS_FAIL("natsci::solve::flow: derivative field has "
                                   "the wrong physical dimension");
   }
 }
@@ -200,15 +201,15 @@ march(StepFn step_fn, const StateVector &initial,
       ScalarQuantity<CoordinateDimension> start,
       ScalarQuantity<CoordinateDimension> step, std::int64_t steps) {
   if (!(step.si_value() > 0.0) || !std::isfinite(step.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::solve::march: step must be finite and positive");
   if (!std::isfinite(start.si_value()))
-    throw std::invalid_argument("natsci::solve::march: start must be finite");
+    PLUSS_FAIL("natsci::solve::march: start must be finite");
   if (steps < 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::solve::march: steps must be non-negative");
   if (steps == std::numeric_limits<std::int64_t>::max())
-    throw std::overflow_error("natsci::solve::march: step count overflows");
+    PLUSS_FAIL("natsci::solve::march: step count overflows");
 
   std::vector<StateVector> states;
   states.reserve(static_cast<std::size_t>(steps) + 1);
@@ -259,10 +260,10 @@ march_to(StepFn step_fn, WidthFn width_fn, const StateVector &initial,
   constexpr const char *operation = "natsci::solve::march_to";
   if (!std::isfinite(start.si_value()) || !std::isfinite(stop.si_value()) ||
       !(stop.si_value() > start.si_value()))
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::solve::march_to: stop must be finite and greater than start");
   if (max_steps <= 0)
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         "natsci::solve::march_to: max_steps must be positive");
 
   std::vector<StateVector> states;
@@ -280,14 +281,14 @@ march_to(StepFn step_fn, WidthFn width_fn, const StateVector &initial,
     const auto at = ScalarQuantity<CoordinateDimension>::from_si(coordinate);
     const auto proposed = std::invoke(width_fn, at, states.back());
     if (!(proposed.si_value() > 0.0) || !std::isfinite(proposed.si_value()))
-      throw std::domain_error(std::string(operation) +
+      PLUSS_FAIL(std::string(operation) +
                               ": width policy returned a non-positive or "
                               "non-finite step");
     const double width =
         std::min(proposed.si_value(), stop.si_value() - coordinate);
     const double next = coordinate + width;
     if (!(next > coordinate) || !std::isfinite(next))
-      throw std::overflow_error(
+      PLUSS_FAIL(
           "natsci::solve::march_to: coordinate cannot advance at machine "
           "precision");
     const auto accepted = ScalarQuantity<CoordinateDimension>::from_si(width);
@@ -297,7 +298,7 @@ march_to(StepFn step_fn, WidthFn width_fn, const StateVector &initial,
     ++completed;
   }
   if (coordinate < stop.si_value())
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "natsci::solve::march_to: max_steps reached before stop");
 
   const Series &prototype = initial.flat();
@@ -599,7 +600,7 @@ template <class Fn>
                   *model, normalized_coordinate.mul(scale));
               const Series objective = std::invoke(fn, physical).si_value();
               if (objective.numel() != 1)
-                throw std::invalid_argument(
+                PLUSS_FAIL(
                     "natsci::solve::fit: objective must return one value");
               return objective.reshape({});
             },

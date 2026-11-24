@@ -68,6 +68,20 @@ void test_marginal_and_known() {
 }
 } // namespace
 
+void test_rejects_bad_input() {
+  const auto fails = [](const auto &fn) {
+    try {
+      fn();
+    } catch (const pluss::Error &) {
+      return true;
+    }
+    return false;
+  };
+  expect(fails([] { (void)stab::unstable_modes(pluss::series::make({{std::nan(""), 1.0}, {0.0, -1.0}}).to(F64)); }), "a NaN Jacobian must throw instead of counting as stable");
+  expect(fails([] { (void)stab::characteristic_polynomial(pluss::series::make({{1.0, -1.0, 0.0}, {0.0, 1.0, -1.0}}).to(F64)); }), "a rectangular matrix must throw");
+  expect(fails([] { (void)stab::routh(pluss::series::make({0.0, 1.0, 2.0}).to(F64)); }), "a zero leading coefficient must throw");
+  expect(fails([] { (void)stab::routh(pluss::series::make({1.0, std::nan(""), 2.0}).to(F64)); }), "a NaN coefficient must throw");
+}
 int main() {
   const auto run = [](const char *name, void (*fn)()) {
     try {
@@ -79,5 +93,6 @@ int main() {
   };
   run("matrices", test_matrices);
   run("marginal_and_known", test_marginal_and_known);
+  run("rejects_bad_input", test_rejects_bad_input);
   std::cout << "NatSci stability checks passed\n";
 }

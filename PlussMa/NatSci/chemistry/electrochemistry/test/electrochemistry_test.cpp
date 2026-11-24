@@ -1,3 +1,4 @@
+#include "pluss/error.h"
 #include "../../kinetics/test/h2o2_mechanism.h"
 
 #include <algorithm>
@@ -221,7 +222,7 @@ void test_polarisation_curve() {
   try {
     (void)ec::polarisation_voltage(vec({2e4}), vec({1.18}), 1.0, 0.5, 5e-5, 1e4,
                                    2.0, vec({353.15}));
-  } catch (const std::invalid_argument &) {
+  } catch (const pluss::Error &) {
     threw = true;
   }
   expect(threw, "current beyond the limiting current is rejected");

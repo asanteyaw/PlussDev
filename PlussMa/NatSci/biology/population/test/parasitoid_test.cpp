@@ -69,6 +69,21 @@ int main() {
       const Series s = vec({12.0, 9.0});
       expect(pa::negative_binomial(s, 2.0, 0.05, 1.0, 1e7).sub(pa::nicholson_bailey(s, 2.0, 0.05, 1.0)).abs().max().item<double>() < 1e-5, "k -> infinity limit is Nicholson-Bailey");
     }
+    // scalar coefficients with a batched `like` must give one equilibrium per element of the batch
+    {
+      const Series like = vec({0.0, 0.0, 0.0});
+      const Series e1 = pa::nicholson_bailey_equilibrium(2.0, 0.05, 1.0, like);
+      const Series e2 = pa::negative_binomial_equilibrium(2.0, 0.05, 1.0, 0.5, like);
+      expect(e1.dim() == 2 && e1.size(0) == 3 && e1.size(1) == 2, "batched Nicholson-Bailey equilibrium shape");
+      expect(e2.dim() == 2 && e2.size(0) == 3 && e2.size(1) == 2, "batched negative-binomial equilibrium shape");
+      expect(e1.select(0, 2).sub(pa::nicholson_bailey_equilibrium(2.0, 0.05, 1.0, like.select(0, 0))).abs().max().item<double>() < 1e-12, "batched equals unbatched");
+    }
+    // a state that is not a (hosts, parasitoids) pair is rejected
+    {
+      bool threw = false;
+      try { pa::nicholson_bailey(vec({1.0, 2.0, 3.0}), 2.0, 0.05, 1.0); } catch (const pluss::Error &) { threw = true; }
+      expect(threw, "a three-component state is rejected");
+    }
     // spectral radius of known matrices (real pair and complex pair)
     {
       const Series a = pluss::make_series(std::vector<double>{2.0, 0.0, 0.0, -3.0, 0.0, -1.0, 1.0, 0.0}, {2, 2, 2}).to(F64);
