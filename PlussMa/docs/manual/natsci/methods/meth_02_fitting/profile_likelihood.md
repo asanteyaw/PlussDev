@@ -365,5 +365,13 @@ Each message names the argument at fault. A profile needs at least two parameter
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nonlinear_fits.html">
+    <span class="label">Previous</span>
+    <span class="title">Fitting a model to data</span>
+  </a>
+  <a class="next-link" href="sensitivities.html">
+    <span class="label">Next</span>
+    <span class="title">Sensitivities and identifiability</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

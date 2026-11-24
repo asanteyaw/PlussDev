@@ -177,7 +177,7 @@ The bypass network has two modes, one using `3` reactions and one using `4`: the
 - Use elementary modes for small and medium networks when you want the complete list of pathways; for a genome-scale model use flux sampling or flux variability instead, because the number of modes grows combinatorially.
 - Mark reversibility through a negative lower bound: nothing else about the bounds changes the modes.
 - Check the result with $S v = 0$ when you build a network by hand: a mode that is not a steady state shows a mistake in the stoichiometry.
-- Raise `max_modes` only if you are sure the enumeration will finish.
+- Raise `max_modes` only if you are sure the search will finish.
 
 ## Pitfalls
 

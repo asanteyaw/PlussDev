@@ -249,5 +249,9 @@ A negative uncertainty is refused and so is a NaN in the value or the uncertaint
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="next-link" href="correlated_measurements.html">
+    <span class="label">Next</span>
+    <span class="title">Correlated measurements</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

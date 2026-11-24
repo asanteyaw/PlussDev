@@ -345,5 +345,13 @@ Each error names the shape rule. A NaN value is refused in the constructor rathe
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="measurements.html">
+    <span class="label">Previous</span>
+    <span class="title">Measurements with an uncertainty</span>
+  </a>
+  <a class="next-link" href="paths_and_drift.html">
+    <span class="label">Next</span>
+    <span class="title">Paths and conservation drift</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

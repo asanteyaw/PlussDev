@@ -344,5 +344,9 @@ A NaN reading is refused (`data must be finite`) instead of being fitted, a star
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="next-link" href="profile_likelihood.html">
+    <span class="label">Next</span>
+    <span class="title">Profile likelihood</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

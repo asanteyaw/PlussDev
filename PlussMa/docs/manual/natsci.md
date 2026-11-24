@@ -5,6 +5,7 @@ The natural-science guides model living, chemical and physical systems as equati
 - [Biology](natsci/biology.md)
 - [Chemistry](natsci/chemistry.md)
 - [Physics](natsci/physics.md)
+- [Methods](natsci/methods.md)
 
 ```{toctree}
 :maxdepth: 3
@@ -13,4 +14,5 @@ The natural-science guides model living, chemical and physical systems as equati
 natsci/biology
 natsci/chemistry
 natsci/physics
+natsci/methods
 ```

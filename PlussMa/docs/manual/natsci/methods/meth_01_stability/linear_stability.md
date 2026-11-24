@@ -296,5 +296,9 @@ Each message names the rule that failed. A NaN in a Jacobian usually means the r
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="next-link" href="continuation.html">
+    <span class="label">Next</span>
+    <span class="title">Following equilibria through a parameter</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

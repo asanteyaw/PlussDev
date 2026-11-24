@@ -192,11 +192,130 @@ maxdepth = 2
 children = ["bio_26_adaptation/singular_strategies"]
 
 [[family]]
+path = "natsci/biology/bio_27_enzyme_fitting"
+page = "manual/natsci/biology/bio_27_enzyme_fitting.md"
+title = "Biology 27: Fitting Enzyme Progress Curves"
+maxdepth = 2
+children = ["bio_27_enzyme_fitting/integrated_fits", "bio_27_enzyme_fitting/product_inhibition"]
+
+[[family]]
+path = "natsci/biology/bio_28_limb_chains"
+page = "manual/natsci/biology/bio_28_limb_chains.md"
+title = "Biology 28: Limb Chains"
+maxdepth = 2
+children = ["bio_28_limb_chains/statics", "bio_28_limb_chains/motion"]
+
+[[family]]
+path = "natsci/biology/bio_29_communities"
+page = "manual/natsci/biology/bio_29_communities.md"
+title = "Biology 29: Community Stability and Assembly"
+maxdepth = 2
+children = ["bio_29_communities/random_communities", "bio_29_communities/assembly"]
+
+[[family]]
+path = "natsci/biology/bio_30_reproduction_numbers"
+page = "manual/natsci/biology/bio_30_reproduction_numbers.md"
+title = "Biology 30: Reproduction Numbers of Structured Epidemics"
+maxdepth = 2
+children = ["bio_30_reproduction_numbers/next_generation", "bio_30_reproduction_numbers/structured_models"]
+
+[[family]]
+path = "natsci/biology/bio_31_gene_knockouts"
+page = "manual/natsci/biology/bio_31_gene_knockouts.md"
+title = "Biology 31: Gene Knockouts"
+maxdepth = 2
+children = ["bio_31_gene_knockouts/gene_rules"]
+
+[[family]]
+path = "natsci/biology/bio_32_flux_space"
+page = "manual/natsci/biology/bio_32_flux_space.md"
+title = "Biology 32: The Flux Space"
+maxdepth = 2
+children = ["bio_32_flux_space/elementary_modes", "bio_32_flux_space/flux_sampling"]
+
+[[family]]
+path = "natsci/biology/bio_33_loopless"
+page = "manual/natsci/biology/bio_33_loopless.md"
+title = "Biology 33: Loopless Flux Analysis"
+maxdepth = 2
+children = ["bio_33_loopless/cycle_free_fluxes"]
+
+[[family]]
+path = "natsci/biology/bio_34_conserved_control"
+page = "manual/natsci/biology/bio_34_conserved_control.md"
+title = "Biology 34: Control With Conserved Moieties"
+maxdepth = 2
+children = ["bio_34_conserved_control/conserved_moieties"]
+
+[[family]]
+path = "natsci/biology/bio_35_thermodynamics"
+page = "manual/natsci/biology/bio_35_thermodynamics.md"
+title = "Biology 35: Biochemical Thermodynamics"
+maxdepth = 2
+children = ["bio_35_thermodynamics/transformed_energies", "bio_35_thermodynamics/pathway_feasibility"]
+
+[[family]]
+path = "natsci/biology/bio_36_maps"
+page = "manual/natsci/biology/bio_36_maps.md"
+title = "Biology 36: Discrete-Time Maps and Chaos"
+maxdepth = 2
+children = ["bio_36_maps/cycles_and_chaos"]
+
+[[family]]
+path = "natsci/biology/bio_37_parasitoids"
+page = "manual/natsci/biology/bio_37_parasitoids.md"
+title = "Biology 37: Host-Parasitoid Maps"
+maxdepth = 2
+children = ["bio_37_parasitoids/nicholson_bailey"]
+
+[[family]]
+path = "natsci/biology/bio_38_metapopulations"
+page = "manual/natsci/biology/bio_38_metapopulations.md"
+title = "Biology 38: Metapopulations and Harvest"
+maxdepth = 2
+children = ["bio_38_metapopulations/occupancy_and_yield"]
+
+[[family]]
+path = "natsci/biology/bio_39_axons"
+page = "manual/natsci/biology/bio_39_axons.md"
+title = "Biology 39: Axons"
+maxdepth = 2
+children = ["bio_39_axons/impulse_conduction"]
+
+[[family]]
+path = "natsci/biology/bio_40_reaction_diffusion"
+page = "manual/natsci/biology/bio_40_reaction_diffusion.md"
+title = "Biology 40: Simulating Reaction-Diffusion"
+maxdepth = 2
+children = ["bio_40_reaction_diffusion/reaction_diffusion"]
+
+[[family]]
+path = "natsci/biology/bio_41_environments"
+page = "manual/natsci/biology/bio_41_environments.md"
+title = "Biology 41: Random Environments"
+maxdepth = 2
+children = ["bio_41_environments/stochastic_growth"]
+
+[[family]]
+path = "natsci/biology/bio_42_ph_linkage"
+page = "manual/natsci/biology/bio_42_ph_linkage.md"
+title = "Biology 42: Proton Linkage"
+maxdepth = 2
+children = ["bio_42_ph_linkage/ph_dependent_binding"]
+
+[[family]]
+path = "natsci/biology/bio_43_mechanisms"
+page = "manual/natsci/biology/bio_43_mechanisms.md"
+title = "Biology 43: Enzyme Mechanisms"
+maxdepth = 2
+children = ["bio_43_mechanisms/bisubstrate_and_allostery"]
+
+[[family]]
 path = "natsci/biology"
 page = "manual/natsci/biology.md"
 title = "Biology"
 maxdepth = 2
-children = ["biology/bio_01_growth", "biology/bio_02_interactions", "biology/bio_03_demography", "biology/bio_04_metabolism", "biology/bio_05_enzymes", "biology/bio_06_epidemics", "biology/bio_07_pharmacokinetics", "biology/bio_08_genetics", "biology/bio_09_neurons", "biology/bio_10_proteins", "biology/bio_11_muscle", "biology/bio_12_patterns", "biology/bio_13_blood_flow", "biology/bio_14_gene_circuits", "biology/bio_15_binding", "biology/bio_16_membranes", "biology/bio_17_folding", "biology/bio_18_tissue", "biology/bio_19_diffusion", "biology/bio_20_control", "biology/bio_21_delays", "biology/bio_22_size", "biology/bio_23_census", "biology/bio_24_nucleic", "biology/bio_25_networks", "biology/bio_26_adaptation"]
+children = ["biology/bio_01_growth", "biology/bio_02_interactions", "biology/bio_03_demography", "biology/bio_04_metabolism", "biology/bio_05_enzymes", "biology/bio_06_epidemics", "biology/bio_07_pharmacokinetics", "biology/bio_08_genetics", "biology/bio_09_neurons", "biology/bio_10_proteins", "biology/bio_11_muscle", "biology/bio_12_patterns", "biology/bio_13_blood_flow", "biology/bio_14_gene_circuits", "biology/bio_15_binding", "biology/bio_16_membranes", "biology/bio_17_folding", "biology/bio_18_tissue", "biology/bio_19_diffusion", "biology/bio_20_control", "biology/bio_21_delays", "biology/bio_22_size", "biology/bio_23_census", "biology/bio_24_nucleic", "biology/bio_25_networks", "biology/bio_26_adaptation", "biology/bio_27_enzyme_fitting", "biology/bio_28_limb_chains", "biology/bio_29_communities", "biology/bio_30_reproduction_numbers", "biology/bio_31_gene_knockouts", "biology/bio_32_flux_space", "biology/bio_33_loopless", "biology/bio_34_conserved_control", "biology/bio_35_thermodynamics", "biology/bio_36_maps", "biology/bio_37_parasitoids", "biology/bio_38_metapopulations", "biology/bio_39_axons", "biology/bio_40_reaction_diffusion", "biology/bio_41_environments", "biology/bio_42_ph_linkage", "biology/bio_43_mechanisms"]
 
 [[family]]
 path = "natsci/chemistry/chem_01_surfaces"
@@ -227,11 +346,116 @@ maxdepth = 2
 children = ["chem_04_rates/transition_state_theory"]
 
 [[family]]
+path = "natsci/chemistry/chem_05_electrochemistry"
+page = "manual/natsci/chemistry/chem_05_electrochemistry.md"
+title = "Chemistry 5: Electrochemistry"
+maxdepth = 2
+children = ["chem_05_electrochemistry/cell_potentials", "chem_05_electrochemistry/electrode_kinetics", "chem_05_electrochemistry/ionic_activities"]
+
+[[family]]
+path = "natsci/chemistry/chem_06_speciation"
+page = "manual/natsci/chemistry/chem_06_speciation.md"
+title = "Chemistry 6: Aqueous Speciation"
+maxdepth = 2
+children = ["chem_06_speciation/complexation_equilibria"]
+
+[[family]]
+path = "natsci/chemistry/chem_07_spectroscopy"
+page = "manual/natsci/chemistry/chem_07_spectroscopy.md"
+title = "Chemistry 7: Spectroscopy"
+maxdepth = 2
+children = ["chem_07_spectroscopy/absorption", "chem_07_spectroscopy/line_shapes", "chem_07_spectroscopy/diatomic_thermodynamics"]
+
+[[family]]
+path = "natsci/chemistry/chem_08_transport"
+page = "manual/natsci/chemistry/chem_08_transport.md"
+title = "Chemistry 8: Gas Transport"
+maxdepth = 2
+children = ["chem_08_transport/pure_gases", "chem_08_transport/mixtures_and_diffusion"]
+
+[[family]]
+path = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase.md"
+title = "Chemistry 9: Gas-Phase Kinetics and Equilibrium"
+maxdepth = 2
+children = ["chem_09_gas_phase/mechanisms", "chem_09_gas_phase/equilibrium_composition", "chem_09_gas_phase/reactors", "chem_09_gas_phase/hydrogen_ignition", "chem_09_gas_phase/mixture_properties"]
+
+[[family]]
+path = "natsci/chemistry/chem_10_hartree_fock"
+page = "manual/natsci/chemistry/chem_10_hartree_fock.md"
+title = "Chemistry 10: Hartree-Fock"
+maxdepth = 2
+children = ["chem_10_hartree_fock/restricted_closed_shell", "chem_10_hartree_fock/unrestricted_open_shell"]
+
+[[family]]
+path = "natsci/chemistry/chem_11_polymer_dynamics"
+page = "manual/natsci/chemistry/chem_11_polymer_dynamics.md"
+title = "Chemistry 11: Polymer dynamics"
+maxdepth = 2
+children = ["chem_11_polymer_dynamics/rouse_chains", "chem_11_polymer_dynamics/zimm_hydrodynamics"]
+
+[[family]]
 path = "natsci/chemistry"
 page = "manual/natsci/chemistry.md"
 title = "Chemistry"
 maxdepth = 2
-children = ["chemistry/chem_01_surfaces", "chemistry/chem_02_polymers", "chemistry/chem_03_crystallization", "chemistry/chem_04_rates"]
+children = ["chemistry/chem_01_surfaces", "chemistry/chem_02_polymers", "chemistry/chem_03_crystallization", "chemistry/chem_04_rates", "chemistry/chem_05_electrochemistry", "chemistry/chem_06_speciation", "chemistry/chem_07_spectroscopy", "chemistry/chem_08_transport", "chemistry/chem_09_gas_phase", "chemistry/chem_10_hartree_fock", "chemistry/chem_11_polymer_dynamics"]
+
+[[family]]
+path = "natsci/methods/meth_01_stability"
+page = "manual/natsci/methods/meth_01_stability.md"
+title = "Methods 1: Stability and Branches"
+maxdepth = 2
+children = ["meth_01_stability/linear_stability", "meth_01_stability/continuation"]
+
+[[family]]
+path = "natsci/methods/meth_02_fitting"
+page = "manual/natsci/methods/meth_02_fitting.md"
+title = "Methods 2: Fitting and Identifiability"
+maxdepth = 2
+children = ["meth_02_fitting/nonlinear_fits", "meth_02_fitting/profile_likelihood", "meth_02_fitting/sensitivities"]
+
+[[family]]
+path = "natsci/methods/meth_03_uncertainty"
+page = "manual/natsci/methods/meth_03_uncertainty.md"
+title = "Methods 3: Measurement and Uncertainty"
+maxdepth = 2
+children = ["meth_03_uncertainty/measurements", "meth_03_uncertainty/correlated_measurements", "meth_03_uncertainty/paths_and_drift"]
+
+[[family]]
+path = "natsci/methods/meth_04_stochastic_kinetics"
+page = "manual/natsci/methods/meth_04_stochastic_kinetics.md"
+title = "Methods 4: Stochastic Kinetics"
+maxdepth = 2
+children = ["meth_04_stochastic_kinetics/gillespie_ensembles"]
+
+[[family]]
+path = "natsci/methods/meth_05_population_balances"
+page = "manual/natsci/methods/meth_05_population_balances.md"
+title = "Methods 5: Population Balances"
+maxdepth = 2
+children = ["meth_05_population_balances/growth_and_nucleation", "meth_05_population_balances/aggregation_and_breakage"]
+
+[[family]]
+path = "natsci/methods/meth_06_stiff_systems"
+page = "manual/natsci/methods/meth_06_stiff_systems.md"
+title = "Methods 6: Stiff Systems"
+maxdepth = 2
+children = ["meth_06_stiff_systems/stiff_integration"]
+
+[[family]]
+path = "natsci/methods/meth_07_grids_and_operators"
+page = "manual/natsci/methods/meth_07_grids_and_operators.md"
+title = "Methods 7: Grids and Operators"
+maxdepth = 2
+children = ["meth_07_grids_and_operators/periodic_operators", "meth_07_grids_and_operators/poisson_solves", "meth_07_grids_and_operators/boxes_and_boundaries"]
+
+[[family]]
+path = "natsci/methods"
+page = "manual/natsci/methods.md"
+title = "Methods"
+maxdepth = 2
+children = ["methods/meth_01_stability", "methods/meth_02_fitting", "methods/meth_03_uncertainty", "methods/meth_04_stochastic_kinetics", "methods/meth_05_population_balances", "methods/meth_06_stiff_systems", "methods/meth_07_grids_and_operators"]
 
 [[family]]
 path = "natsci/physics/phys_01_orbits"
@@ -269,11 +493,67 @@ maxdepth = 2
 children = ["phys_05_mechanics/hamiltons_equations", "phys_05_mechanics/symplectic_integration", "phys_05_mechanics/lagrange_equations"]
 
 [[family]]
+path = "natsci/physics/phys_06_gas_dynamics"
+page = "manual/natsci/physics/phys_06_gas_dynamics.md"
+title = "Physics 6: Gas dynamics"
+maxdepth = 2
+children = ["phys_06_gas_dynamics/shock_tube", "phys_06_gas_dynamics/walls_inlets_outlets", "phys_06_gas_dynamics/viscous_gas"]
+
+[[family]]
+path = "natsci/physics/phys_07_les"
+page = "manual/natsci/physics/phys_07_les.md"
+title = "Physics 7: Large-eddy simulation"
+maxdepth = 2
+children = ["phys_07_les/eddy_viscosity", "phys_07_les/decaying_flow"]
+
+[[family]]
+path = "natsci/physics/phys_08_rans"
+page = "manual/natsci/physics/phys_08_rans.md"
+title = "Physics 8: Reynolds-averaged turbulence"
+maxdepth = 2
+children = ["phys_08_rans/turbulent_channel", "phys_08_rans/coupled_model"]
+
+[[family]]
+path = "natsci/physics/phys_09_kepler_equation"
+page = "manual/natsci/physics/phys_09_kepler_equation.md"
+title = "Physics 9: Kepler's Equation"
+maxdepth = 2
+children = ["phys_09_kepler_equation/solving_kepler_equation"]
+
+[[family]]
+path = "natsci/physics/phys_10_transfers"
+page = "manual/natsci/physics/phys_10_transfers.md"
+title = "Physics 10: Orbit Transfers"
+maxdepth = 2
+children = ["phys_10_transfers/lambert_transfers"]
+
+[[family]]
+path = "natsci/physics/phys_11_nbody"
+page = "manual/natsci/physics/phys_11_nbody.md"
+title = "Physics 11: Gravitating Bodies"
+maxdepth = 2
+children = ["phys_11_nbody/gravitating_bodies"]
+
+[[family]]
+path = "natsci/physics/phys_12_species"
+page = "manual/natsci/physics/phys_12_species.md"
+title = "Physics 12: Species Thermodynamics"
+maxdepth = 2
+children = ["phys_12_species/nasa_species"]
+
+[[family]]
+path = "natsci/physics/phys_13_levels_and_noise"
+page = "manual/natsci/physics/phys_13_levels_and_noise.md"
+title = "Physics 13: Energy Levels and Noise"
+maxdepth = 2
+children = ["phys_13_levels_and_noise/energy_levels", "phys_13_levels_and_noise/quantum_channels"]
+
+[[family]]
 path = "natsci/physics"
 page = "manual/natsci/physics.md"
 title = "Physics"
 maxdepth = 2
-children = ["physics/phys_01_orbits", "physics/phys_02_fluids", "physics/phys_03_quantum", "physics/phys_04_thermodynamics", "physics/phys_05_mechanics"]
+children = ["physics/phys_01_orbits", "physics/phys_02_fluids", "physics/phys_03_quantum", "physics/phys_04_thermodynamics", "physics/phys_05_mechanics", "physics/phys_06_gas_dynamics", "physics/phys_07_les", "physics/phys_08_rans", "physics/phys_09_kepler_equation", "physics/phys_10_transfers", "physics/phys_11_nbody", "physics/phys_12_species", "physics/phys_13_levels_and_noise"]
 
 [[symbol]]
 qualname = "natsci::bio_01_growth::Growth laws"
@@ -514,6 +794,167 @@ page = "manual/natsci/biology/bio_26_adaptation/singular_strategies.md"
 summary = "Singular strategies"
 
 [[symbol]]
+qualname = "natsci::bio_27_enzyme_fitting::Global fits of progress curves"
+kind = "page"
+family = "natsci/biology/bio_27_enzyme_fitting"
+page = "manual/natsci/biology/bio_27_enzyme_fitting/integrated_fits.md"
+summary = "Global fits of progress curves"
+
+[[symbol]]
+qualname = "natsci::bio_27_enzyme_fitting::Product inhibition"
+kind = "page"
+family = "natsci/biology/bio_27_enzyme_fitting"
+page = "manual/natsci/biology/bio_27_enzyme_fitting/product_inhibition.md"
+summary = "Product inhibition"
+
+[[symbol]]
+qualname = "natsci::bio_28_limb_chains::Geometry and holding torques"
+kind = "page"
+family = "natsci/biology/bio_28_limb_chains"
+page = "manual/natsci/biology/bio_28_limb_chains/statics.md"
+summary = "Geometry and holding torques"
+
+[[symbol]]
+qualname = "natsci::bio_28_limb_chains::Moving limbs"
+kind = "page"
+family = "natsci/biology/bio_28_limb_chains"
+page = "manual/natsci/biology/bio_28_limb_chains/motion.md"
+summary = "Moving limbs"
+
+[[symbol]]
+qualname = "natsci::bio_29_communities::Random communities"
+kind = "page"
+family = "natsci/biology/bio_29_communities"
+page = "manual/natsci/biology/bio_29_communities/random_communities.md"
+summary = "Random communities"
+
+[[symbol]]
+qualname = "natsci::bio_29_communities::Assembly and chemostats"
+kind = "page"
+family = "natsci/biology/bio_29_communities"
+page = "manual/natsci/biology/bio_29_communities/assembly.md"
+summary = "Assembly and chemostats"
+
+[[symbol]]
+qualname = "natsci::bio_30_reproduction_numbers::The next-generation matrix"
+kind = "page"
+family = "natsci/biology/bio_30_reproduction_numbers"
+page = "manual/natsci/biology/bio_30_reproduction_numbers/next_generation.md"
+summary = "The next-generation matrix"
+
+[[symbol]]
+qualname = "natsci::bio_30_reproduction_numbers::Stages, strains and vectors"
+kind = "page"
+family = "natsci/biology/bio_30_reproduction_numbers"
+page = "manual/natsci/biology/bio_30_reproduction_numbers/structured_models.md"
+summary = "Stages, strains and vectors"
+
+[[symbol]]
+qualname = "natsci::bio_31_gene_knockouts::Gene rules and deletions"
+kind = "page"
+family = "natsci/biology/bio_31_gene_knockouts"
+page = "manual/natsci/biology/bio_31_gene_knockouts/gene_rules.md"
+summary = "Gene rules and deletions"
+
+[[symbol]]
+qualname = "natsci::bio_32_flux_space::Elementary modes"
+kind = "page"
+family = "natsci/biology/bio_32_flux_space"
+page = "manual/natsci/biology/bio_32_flux_space/elementary_modes.md"
+summary = "Elementary modes"
+
+[[symbol]]
+qualname = "natsci::bio_32_flux_space::Flux sampling"
+kind = "page"
+family = "natsci/biology/bio_32_flux_space"
+page = "manual/natsci/biology/bio_32_flux_space/flux_sampling.md"
+summary = "Flux sampling"
+
+[[symbol]]
+qualname = "natsci::bio_33_loopless::Removing thermodynamic loops"
+kind = "page"
+family = "natsci/biology/bio_33_loopless"
+page = "manual/natsci/biology/bio_33_loopless/cycle_free_fluxes.md"
+summary = "Removing thermodynamic loops"
+
+[[symbol]]
+qualname = "natsci::bio_34_conserved_control::Conservation laws and control"
+kind = "page"
+family = "natsci/biology/bio_34_conserved_control"
+page = "manual/natsci/biology/bio_34_conserved_control/conserved_moieties.md"
+summary = "Conservation laws and control"
+
+[[symbol]]
+qualname = "natsci::bio_35_thermodynamics::Transformed energies and equilibria"
+kind = "page"
+family = "natsci/biology/bio_35_thermodynamics"
+page = "manual/natsci/biology/bio_35_thermodynamics/transformed_energies.md"
+summary = "Transformed energies and equilibria"
+
+[[symbol]]
+qualname = "natsci::bio_35_thermodynamics::Pathway feasibility"
+kind = "page"
+family = "natsci/biology/bio_35_thermodynamics"
+page = "manual/natsci/biology/bio_35_thermodynamics/pathway_feasibility.md"
+summary = "Pathway feasibility"
+
+[[symbol]]
+qualname = "natsci::bio_36_maps::Cycles and chaos in population maps"
+kind = "page"
+family = "natsci/biology/bio_36_maps"
+page = "manual/natsci/biology/bio_36_maps/cycles_and_chaos.md"
+summary = "Cycles and chaos in population maps"
+
+[[symbol]]
+qualname = "natsci::bio_37_parasitoids::Host and parasitoid generations"
+kind = "page"
+family = "natsci/biology/bio_37_parasitoids"
+page = "manual/natsci/biology/bio_37_parasitoids/nicholson_bailey.md"
+summary = "Host and parasitoid generations"
+
+[[symbol]]
+qualname = "natsci::bio_38_metapopulations::Occupancy and yield"
+kind = "page"
+family = "natsci/biology/bio_38_metapopulations"
+page = "manual/natsci/biology/bio_38_metapopulations/occupancy_and_yield.md"
+summary = "Occupancy and yield"
+
+[[symbol]]
+qualname = "natsci::bio_39_axons::Impulse conduction"
+kind = "page"
+family = "natsci/biology/bio_39_axons"
+page = "manual/natsci/biology/bio_39_axons/impulse_conduction.md"
+summary = "Impulse conduction"
+
+[[symbol]]
+qualname = "natsci::bio_40_reaction_diffusion::Reaction and diffusion on a grid"
+kind = "page"
+family = "natsci/biology/bio_40_reaction_diffusion"
+page = "manual/natsci/biology/bio_40_reaction_diffusion/reaction_diffusion.md"
+summary = "Reaction and diffusion on a grid"
+
+[[symbol]]
+qualname = "natsci::bio_41_environments::The stochastic growth rate"
+kind = "page"
+family = "natsci/biology/bio_41_environments"
+page = "manual/natsci/biology/bio_41_environments/stochastic_growth.md"
+summary = "The stochastic growth rate"
+
+[[symbol]]
+qualname = "natsci::bio_42_ph_linkage::pH-dependent binding"
+kind = "page"
+family = "natsci/biology/bio_42_ph_linkage"
+page = "manual/natsci/biology/bio_42_ph_linkage/ph_dependent_binding.md"
+summary = "pH-dependent binding"
+
+[[symbol]]
+qualname = "natsci::bio_43_mechanisms::Bisubstrate, mechanism engine and allostery"
+kind = "page"
+family = "natsci/biology/bio_43_mechanisms"
+page = "manual/natsci/biology/bio_43_mechanisms/bisubstrate_and_allostery.md"
+summary = "Bisubstrate, mechanism engine and allostery"
+
+[[symbol]]
 qualname = "natsci::chem_01_surfaces::Adsorption isotherms"
 kind = "page"
 family = "natsci/chemistry/chem_01_surfaces"
@@ -547,6 +988,237 @@ kind = "page"
 family = "natsci/chemistry/chem_04_rates"
 page = "manual/natsci/chemistry/chem_04_rates/transition_state_theory.md"
 summary = "Transition-state theory"
+
+[[symbol]]
+qualname = "natsci::chem_05_electrochemistry::Cell potentials and the Nernst equation"
+kind = "page"
+family = "natsci/chemistry/chem_05_electrochemistry"
+page = "manual/natsci/chemistry/chem_05_electrochemistry/cell_potentials.md"
+summary = "Cell potentials and the Nernst equation"
+
+[[symbol]]
+qualname = "natsci::chem_05_electrochemistry::Electrode kinetics and cell polarisation"
+kind = "page"
+family = "natsci/chemistry/chem_05_electrochemistry"
+page = "manual/natsci/chemistry/chem_05_electrochemistry/electrode_kinetics.md"
+summary = "Electrode kinetics and cell polarisation"
+
+[[symbol]]
+qualname = "natsci::chem_05_electrochemistry::Ionic strength and activity"
+kind = "page"
+family = "natsci/chemistry/chem_05_electrochemistry"
+page = "manual/natsci/chemistry/chem_05_electrochemistry/ionic_activities.md"
+summary = "Ionic strength and activity"
+
+[[symbol]]
+qualname = "natsci::chem_06_speciation::Complexation and acid-base equilibria"
+kind = "page"
+family = "natsci/chemistry/chem_06_speciation"
+page = "manual/natsci/chemistry/chem_06_speciation/complexation_equilibria.md"
+summary = "Complexation and acid-base equilibria"
+
+[[symbol]]
+qualname = "natsci::chem_07_spectroscopy::Absorption and the Beer-Lambert law"
+kind = "page"
+family = "natsci/chemistry/chem_07_spectroscopy"
+page = "manual/natsci/chemistry/chem_07_spectroscopy/absorption.md"
+summary = "Absorption and the Beer-Lambert law"
+
+[[symbol]]
+qualname = "natsci::chem_07_spectroscopy::Line shapes and broadening"
+kind = "page"
+family = "natsci/chemistry/chem_07_spectroscopy"
+page = "manual/natsci/chemistry/chem_07_spectroscopy/line_shapes.md"
+summary = "Line shapes and broadening"
+
+[[symbol]]
+qualname = "natsci::chem_07_spectroscopy::Diatomic partition functions"
+kind = "page"
+family = "natsci/chemistry/chem_07_spectroscopy"
+page = "manual/natsci/chemistry/chem_07_spectroscopy/diatomic_thermodynamics.md"
+summary = "Diatomic partition functions"
+
+[[symbol]]
+qualname = "natsci::chem_08_transport::Viscosity and conductivity of pure gases"
+kind = "page"
+family = "natsci/chemistry/chem_08_transport"
+page = "manual/natsci/chemistry/chem_08_transport/pure_gases.md"
+summary = "Viscosity and conductivity of pure gases"
+
+[[symbol]]
+qualname = "natsci::chem_08_transport::Mixtures and diffusion"
+kind = "page"
+family = "natsci/chemistry/chem_08_transport"
+page = "manual/natsci/chemistry/chem_08_transport/mixtures_and_diffusion.md"
+summary = "Mixtures and diffusion"
+
+[[symbol]]
+qualname = "natsci::chem_09_gas_phase::Mechanisms and rate constants"
+kind = "page"
+family = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase/mechanisms.md"
+summary = "Mechanisms and rate constants"
+
+[[symbol]]
+qualname = "natsci::chem_09_gas_phase::Equilibrium composition"
+kind = "page"
+family = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase/equilibrium_composition.md"
+summary = "Equilibrium composition"
+
+[[symbol]]
+qualname = "natsci::chem_09_gas_phase::Reactors in time"
+kind = "page"
+family = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase/reactors.md"
+summary = "Reactors in time"
+
+[[symbol]]
+qualname = "natsci::chem_09_gas_phase::Hydrogen ignition"
+kind = "page"
+family = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase/hydrogen_ignition.md"
+summary = "Hydrogen ignition"
+
+[[symbol]]
+qualname = "natsci::chem_09_gas_phase::Mixture properties"
+kind = "page"
+family = "natsci/chemistry/chem_09_gas_phase"
+page = "manual/natsci/chemistry/chem_09_gas_phase/mixture_properties.md"
+summary = "Mixture properties"
+
+[[symbol]]
+qualname = "natsci::chem_10_hartree_fock::Restricted Hartree-Fock"
+kind = "page"
+family = "natsci/chemistry/chem_10_hartree_fock"
+page = "manual/natsci/chemistry/chem_10_hartree_fock/restricted_closed_shell.md"
+summary = "Restricted Hartree-Fock"
+
+[[symbol]]
+qualname = "natsci::chem_10_hartree_fock::Unrestricted Hartree-Fock"
+kind = "page"
+family = "natsci/chemistry/chem_10_hartree_fock"
+page = "manual/natsci/chemistry/chem_10_hartree_fock/unrestricted_open_shell.md"
+summary = "Unrestricted Hartree-Fock"
+
+[[symbol]]
+qualname = "natsci::chem_11_polymer_dynamics::Rouse chains"
+kind = "page"
+family = "natsci/chemistry/chem_11_polymer_dynamics"
+page = "manual/natsci/chemistry/chem_11_polymer_dynamics/rouse_chains.md"
+summary = "Rouse chains"
+
+[[symbol]]
+qualname = "natsci::chem_11_polymer_dynamics::Zimm hydrodynamics"
+kind = "page"
+family = "natsci/chemistry/chem_11_polymer_dynamics"
+page = "manual/natsci/chemistry/chem_11_polymer_dynamics/zimm_hydrodynamics.md"
+summary = "Zimm hydrodynamics"
+
+[[symbol]]
+qualname = "natsci::meth_01_stability::Linear stability of an equilibrium"
+kind = "page"
+family = "natsci/methods/meth_01_stability"
+page = "manual/natsci/methods/meth_01_stability/linear_stability.md"
+summary = "Linear stability of an equilibrium"
+
+[[symbol]]
+qualname = "natsci::meth_01_stability::Following equilibria through a parameter"
+kind = "page"
+family = "natsci/methods/meth_01_stability"
+page = "manual/natsci/methods/meth_01_stability/continuation.md"
+summary = "Following equilibria through a parameter"
+
+[[symbol]]
+qualname = "natsci::meth_02_fitting::Fitting a model to data"
+kind = "page"
+family = "natsci/methods/meth_02_fitting"
+page = "manual/natsci/methods/meth_02_fitting/nonlinear_fits.md"
+summary = "Fitting a model to data"
+
+[[symbol]]
+qualname = "natsci::meth_02_fitting::Profile likelihood"
+kind = "page"
+family = "natsci/methods/meth_02_fitting"
+page = "manual/natsci/methods/meth_02_fitting/profile_likelihood.md"
+summary = "Profile likelihood"
+
+[[symbol]]
+qualname = "natsci::meth_02_fitting::Sensitivities and identifiability"
+kind = "page"
+family = "natsci/methods/meth_02_fitting"
+page = "manual/natsci/methods/meth_02_fitting/sensitivities.md"
+summary = "Sensitivities and identifiability"
+
+[[symbol]]
+qualname = "natsci::meth_03_uncertainty::Measurements with an uncertainty"
+kind = "page"
+family = "natsci/methods/meth_03_uncertainty"
+page = "manual/natsci/methods/meth_03_uncertainty/measurements.md"
+summary = "Measurements with an uncertainty"
+
+[[symbol]]
+qualname = "natsci::meth_03_uncertainty::Correlated measurements"
+kind = "page"
+family = "natsci/methods/meth_03_uncertainty"
+page = "manual/natsci/methods/meth_03_uncertainty/correlated_measurements.md"
+summary = "Correlated measurements"
+
+[[symbol]]
+qualname = "natsci::meth_03_uncertainty::Paths and conservation drift"
+kind = "page"
+family = "natsci/methods/meth_03_uncertainty"
+page = "manual/natsci/methods/meth_03_uncertainty/paths_and_drift.md"
+summary = "Paths and conservation drift"
+
+[[symbol]]
+qualname = "natsci::meth_04_stochastic_kinetics::Gillespie ensembles"
+kind = "page"
+family = "natsci/methods/meth_04_stochastic_kinetics"
+page = "manual/natsci/methods/meth_04_stochastic_kinetics/gillespie_ensembles.md"
+summary = "Gillespie ensembles"
+
+[[symbol]]
+qualname = "natsci::meth_05_population_balances::Growth and nucleation"
+kind = "page"
+family = "natsci/methods/meth_05_population_balances"
+page = "manual/natsci/methods/meth_05_population_balances/growth_and_nucleation.md"
+summary = "Growth and nucleation"
+
+[[symbol]]
+qualname = "natsci::meth_05_population_balances::Aggregation and breakage"
+kind = "page"
+family = "natsci/methods/meth_05_population_balances"
+page = "manual/natsci/methods/meth_05_population_balances/aggregation_and_breakage.md"
+summary = "Aggregation and breakage"
+
+[[symbol]]
+qualname = "natsci::meth_06_stiff_systems::Integrating stiff systems"
+kind = "page"
+family = "natsci/methods/meth_06_stiff_systems"
+page = "manual/natsci/methods/meth_06_stiff_systems/stiff_integration.md"
+summary = "Integrating stiff systems"
+
+[[symbol]]
+qualname = "natsci::meth_07_grids_and_operators::Differential operators on periodic grids"
+kind = "page"
+family = "natsci/methods/meth_07_grids_and_operators"
+page = "manual/natsci/methods/meth_07_grids_and_operators/periodic_operators.md"
+summary = "Differential operators on periodic grids"
+
+[[symbol]]
+qualname = "natsci::meth_07_grids_and_operators::Poisson solves on periodic grids"
+kind = "page"
+family = "natsci/methods/meth_07_grids_and_operators"
+page = "manual/natsci/methods/meth_07_grids_and_operators/poisson_solves.md"
+summary = "Poisson solves on periodic grids"
+
+[[symbol]]
+qualname = "natsci::meth_07_grids_and_operators::Boxes and boundary rules"
+kind = "page"
+family = "natsci/methods/meth_07_grids_and_operators"
+page = "manual/natsci/methods/meth_07_grids_and_operators/boxes_and_boundaries.md"
+summary = "Boxes and boundary rules"
 
 [[symbol]]
 qualname = "natsci::phys_01_orbits::Kepler orbits"
@@ -610,3 +1282,94 @@ kind = "page"
 family = "natsci/physics/phys_05_mechanics"
 page = "manual/natsci/physics/phys_05_mechanics/lagrange_equations.md"
 summary = "Lagrange's equations"
+
+[[symbol]]
+qualname = "natsci::phys_06_gas_dynamics::A shock tube"
+kind = "page"
+family = "natsci/physics/phys_06_gas_dynamics"
+page = "manual/natsci/physics/phys_06_gas_dynamics/shock_tube.md"
+summary = "A shock tube"
+
+[[symbol]]
+qualname = "natsci::phys_06_gas_dynamics::Walls, inlets and outlets"
+kind = "page"
+family = "natsci/physics/phys_06_gas_dynamics"
+page = "manual/natsci/physics/phys_06_gas_dynamics/walls_inlets_outlets.md"
+summary = "Walls, inlets and outlets"
+
+[[symbol]]
+qualname = "natsci::phys_06_gas_dynamics::A viscous gas"
+kind = "page"
+family = "natsci/physics/phys_06_gas_dynamics"
+page = "manual/natsci/physics/phys_06_gas_dynamics/viscous_gas.md"
+summary = "A viscous gas"
+
+[[symbol]]
+qualname = "natsci::phys_07_les::Eddy-viscosity closures"
+kind = "page"
+family = "natsci/physics/phys_07_les"
+page = "manual/natsci/physics/phys_07_les/eddy_viscosity.md"
+summary = "Eddy-viscosity closures"
+
+[[symbol]]
+qualname = "natsci::phys_07_les::Decaying flow with a closure"
+kind = "page"
+family = "natsci/physics/phys_07_les"
+page = "manual/natsci/physics/phys_07_les/decaying_flow.md"
+summary = "Decaying flow with a closure"
+
+[[symbol]]
+qualname = "natsci::phys_08_rans::The turbulent channel"
+kind = "page"
+family = "natsci/physics/phys_08_rans"
+page = "manual/natsci/physics/phys_08_rans/turbulent_channel.md"
+summary = "The turbulent channel"
+
+[[symbol]]
+qualname = "natsci::phys_08_rans::Coupling a model to the flow solver"
+kind = "page"
+family = "natsci/physics/phys_08_rans"
+page = "manual/natsci/physics/phys_08_rans/coupled_model.md"
+summary = "Coupling a model to the flow solver"
+
+[[symbol]]
+qualname = "natsci::phys_09_kepler_equation::Solving Kepler's equation"
+kind = "page"
+family = "natsci/physics/phys_09_kepler_equation"
+page = "manual/natsci/physics/phys_09_kepler_equation/solving_kepler_equation.md"
+summary = "Solving Kepler's equation"
+
+[[symbol]]
+qualname = "natsci::phys_10_transfers::Lambert transfers"
+kind = "page"
+family = "natsci/physics/phys_10_transfers"
+page = "manual/natsci/physics/phys_10_transfers/lambert_transfers.md"
+summary = "Lambert transfers"
+
+[[symbol]]
+qualname = "natsci::phys_11_nbody::Gravitating bodies"
+kind = "page"
+family = "natsci/physics/phys_11_nbody"
+page = "manual/natsci/physics/phys_11_nbody/gravitating_bodies.md"
+summary = "Gravitating bodies"
+
+[[symbol]]
+qualname = "natsci::phys_12_species::Thermodynamic properties of species"
+kind = "page"
+family = "natsci/physics/phys_12_species"
+page = "manual/natsci/physics/phys_12_species/nasa_species.md"
+summary = "Thermodynamic properties of species"
+
+[[symbol]]
+qualname = "natsci::phys_13_levels_and_noise::Energy levels and ground states"
+kind = "page"
+family = "natsci/physics/phys_13_levels_and_noise"
+page = "manual/natsci/physics/phys_13_levels_and_noise/energy_levels.md"
+summary = "Energy levels and ground states"
+
+[[symbol]]
+qualname = "natsci::phys_13_levels_and_noise::Quantum channels and fidelity"
+kind = "page"
+family = "natsci/physics/phys_13_levels_and_noise"
+page = "manual/natsci/physics/phys_13_levels_and_noise/quantum_channels.md"
+summary = "Quantum channels and fidelity"

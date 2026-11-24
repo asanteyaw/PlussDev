@@ -398,5 +398,9 @@ A reference of three samples against a current history of two is refused, and so
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="correlated_measurements.html">
+    <span class="label">Previous</span>
+    <span class="title">Correlated measurements</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

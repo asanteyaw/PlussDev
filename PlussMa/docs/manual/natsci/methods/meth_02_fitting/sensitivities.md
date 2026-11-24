@@ -330,5 +330,9 @@ Each error names the argument. A NaN parameter would otherwise propagate through
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="profile_likelihood.html">
+    <span class="label">Previous</span>
+    <span class="title">Profile likelihood</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->

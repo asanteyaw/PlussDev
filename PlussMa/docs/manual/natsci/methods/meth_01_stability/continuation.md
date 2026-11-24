@@ -404,5 +404,9 @@ A NaN start does not converge onto a branch and is rejected, and a scalar start 
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="linear_stability.html">
+    <span class="label">Previous</span>
+    <span class="title">Linear stability of an equilibrium</span>
+  </a>
 </div>
 <!-- apiref:nav:end -->
