@@ -22,7 +22,7 @@ The kernel starts one C++ interpreter (clang-repl) and loads PlussII into it. Ea
 | anything printed with `std::cout` | the text |
 | a compile error | the compiler's message, naming the line of the cell |
 
-`<pluss/pluss.h>` is already included and `pluss` is available, so a first cell can start with the program. The interpreter starts while the notebook opens, so by the time you have written the first cell it is usually ready.
+`<pluss/pluss.h>`, `<pluss/tils/doc.h>` and `<pluss/tils/kit/datastore.h>` are already included and `pluss` is available, so a first cell can start with the program. The interpreter starts while the notebook opens, so by the time you have written the first cell it is usually ready.
 
 A notebook is meant to be re-run, so the kernel allows it:
 
