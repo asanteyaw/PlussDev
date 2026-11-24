@@ -76,7 +76,7 @@ namespace doc_detail {
 
 template <class T>
 [[nodiscard]] std::string type_text() {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
   std::string_view text = __FUNCSIG__;
   const auto begin = text.find("type_text<") + 10;
   const auto end = text.rfind(">(void)");
