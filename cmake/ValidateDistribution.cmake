@@ -107,8 +107,7 @@ if(NOT native_io_result EQUAL 0)
   message(FATAL_ERROR "Excel/Parquet round trip failed after linking the distribution archive")
 endif()
 
-# The library's own helper checks, built from the archive like any user program. A failure is
-# reported as a warning until they have passed on every platform; then it can be made an error.
+# The library's own helper checks, built from the archive like any user program. A failure fails the build.
 foreach(check IN ITEMS core_info core_settings core_cache core_doc array_file datastore umbrellas)
   set(check_binary "${consumer_build_dir}/pluss_sdk_check_${check}")
   if(WIN32)
@@ -122,15 +121,14 @@ foreach(check IN ITEMS core_info core_settings core_cache core_doc array_file da
     if(check_result EQUAL 0)
       message(STATUS "check ${check} passed")
     else()
-      message(WARNING "check ${check} FAILED against ${DISTRIBUTION_ARCHIVE}:\n${check_output}\n${check_error}")
+      message(FATAL_ERROR "check ${check} FAILED against ${DISTRIBUTION_ARCHIVE}:\n${check_output}\n${check_error}")
     endif()
   else()
-    message(WARNING "check ${check} was not built from the archive")
+    message(FATAL_ERROR "check ${check} was not built from the archive")
   endif()
 endforeach()
 
-# The pluss command must be able to build and run a program against the archive it came in. This
-# is reported as a warning until it has passed on every platform; then it can be made an error.
+# The pluss command must be able to build and run a program against the archive it came in.
 set(pluss_cli_binary "${distribution_dir}/bin/pluss")
 if(WIN32)
   set(pluss_cli_binary "${distribution_dir}/bin/pluss.exe")
@@ -141,10 +139,10 @@ if(EXISTS "${pluss_cli_binary}")
   if(doctor_result EQUAL 0)
     message(STATUS "pluss doctor passed against ${DISTRIBUTION_ARCHIVE}")
   else()
-    message(WARNING "pluss doctor failed against ${DISTRIBUTION_ARCHIVE}:\n${doctor_output}\n${doctor_error}")
+    message(FATAL_ERROR "pluss doctor failed against ${DISTRIBUTION_ARCHIVE}:\n${doctor_output}\n${doctor_error}")
   endif()
 else()
-  message(WARNING "The archive has no bin/pluss command")
+  message(FATAL_ERROR "The archive has no bin/pluss command")
 endif()
 
 message(STATUS "Validated PlussII C++ distribution: ${DISTRIBUTION_ARCHIVE}")
