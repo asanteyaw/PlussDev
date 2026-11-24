@@ -267,6 +267,7 @@ void usage() {
             << "      --verbose               show the build output\n"
             << "      --clean                 discard the cached build first\n"
             << "  pluss new name                                     start a project in a new folder\n"
+            << "  pluss kernel install [options]                     add the PlussII C++ kernel to Jupyter and VS Code\n"
             << "  pluss doctor                                       check that this machine can build\n"
             << "  pluss version                                      print the version\n\n"
             << "Set PLUSS_CMAKE_ARGS to add arguments to the CMake configure step.\n";
@@ -724,6 +725,35 @@ int command_doctor() {
   return problems == 0 ? 0 : 1;
 }
 
+// ---- kernel: the Jupyter kernel that comes with the download -------------------------------------
+
+int command_kernel(const std::vector<std::string>& args) {
+  if (args.empty() || args[0] != "install") {
+    std::cerr << "usage: pluss kernel install [--clang-repl path] [--sysroot path]\n";
+    return 2;
+  }
+  const fs::path prefix = sdk_prefix();
+  const fs::path script = prefix / "share" / "pluss" / "notebook" / "install_kernel.py";
+  if (prefix.empty() || !fs::exists(script)) {
+    std::cerr << "pluss: the notebook kernel files are not in this download (share/pluss/notebook/install_kernel.py).\n";
+    return 1;
+  }
+#if defined(_WIN32)
+  const char* default_python = "python";
+#else
+  const char* default_python = "python3";
+#endif
+  const char* chosen = std::getenv("PLUSS_PYTHON");
+  std::vector<std::string> command{chosen != nullptr && *chosen != '\0' ? chosen : default_python, script.string(), "--prefix", prefix.string()};
+  command.insert(command.end(), args.begin() + 1, args.end());
+  const auto outcome = run_program(command, false);
+  if (outcome.code == 127 || outcome.code < 0) {
+    std::cerr << "pluss: Python was not found. Install Python 3 (or set PLUSS_PYTHON to it) and run this again.\n";
+    return 1;
+  }
+  return outcome.code;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -736,6 +766,7 @@ int main(int argc, char** argv) {
   args.erase(args.begin());
   if (command == "run") return command_run(args);
   if (command == "new") return command_new(args);
+  if (command == "kernel") return command_kernel(args);
   if (command == "doctor") return command_doctor();
   if (command == "version" || command == "--version") {
     std::cout << PLUSS_VERSION_STRING << " " << PLUSS_RELEASE_CHANNEL << "\n";

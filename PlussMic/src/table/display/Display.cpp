@@ -3329,7 +3329,21 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   return out;
 }
 
+// Inside the PlussII notebook the kernel sets PLUSS_NOTEBOOK; a table is then handed back to the notebook as
+// HTML (the marker line the kernel turns into a display message) instead of opening a window.
+static bool show_in_notebook_(const std::string& html) {
+  const char* flag = std::getenv("PLUSS_NOTEBOOK");
+  if (flag == nullptr || *flag == '\0') {
+    return false;
+  }
+  std::cout << "\x1e<<pluss-mime text/html " << html.size() << ">>\n" << html << std::flush;
+  return true;
+}
+
 void show(const DataFrame& frame, const DisplayOptions& options) {
+  if (show_in_notebook_(render_html(frame, options))) {
+    return;
+  }
   const auto backend = resolve_backend_(options);
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
@@ -3389,6 +3403,9 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 void show(const Shelf& shelf, const DisplayOptions& options) {
+  if (show_in_notebook_(render_html(shelf, options))) {
+    return;
+  }
   const auto backend = resolve_backend_(options);
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
@@ -3402,6 +3419,9 @@ void show(const Shelf& shelf, const DisplayOptions& options) {
 }
 
 void show(const Atlas& atlas, const DisplayOptions& options) {
+  if (show_in_notebook_(render_html(atlas, options))) {
+    return;
+  }
   const auto backend = resolve_backend_(options);
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;

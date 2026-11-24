@@ -79,6 +79,9 @@ if(PLUSS_BUILD_CLI)
         target_link_options(pluss_cli PRIVATE -Wl,-S)
     endif()
     install(TARGETS pluss_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    # The Jupyter kernel that `pluss kernel install` registers.
+    install(FILES tools/notebook/pluss_kernel.py tools/notebook/install_kernel.py tools/notebook/make_library.py
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pluss/notebook)
 endif()
 
 add_library(PlussTils INTERFACE)

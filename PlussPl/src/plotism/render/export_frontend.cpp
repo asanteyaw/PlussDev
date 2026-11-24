@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -587,10 +588,21 @@ static bool capture_shown_svg_(const std::string& studio_name, const std::string
   return true;
 }
 
+// Inside the PlussII notebook (the kernel sets PLUSS_NOTEBOOK) a figure goes back to the notebook as an image,
+// through the marker line the kernel turns into a display message, instead of opening a window.
+static bool show_in_notebook_(const std::string& svg) {
+  const char* flag = std::getenv("PLUSS_NOTEBOOK");
+  if (flag == nullptr || *flag == '\0') {
+    return false;
+  }
+  std::cout << "\x1e<<pluss-mime image/svg+xml " << svg.size() << ">>\n" << svg << std::flush;
+  return true;
+}
+
 bool Studio::show(std::string_view title, std::int64_t width, std::int64_t height, bool launch) const {
   const auto window_title = title.empty() ? std::string(name_.empty() ? "PlussPl Plot" : name_) : std::string(title);
   const auto svg_payload = to_svg();
-  if (capture_shown_svg_(name_, svg_payload)) {
+  if (capture_shown_svg_(name_, svg_payload) || show_in_notebook_(svg_payload)) {
     return true;
   }
   const auto html = svg_embed_html(svg_payload, window_title, width, height);
@@ -630,7 +642,7 @@ bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) co
   const auto fallback_title = name_.empty() ? std::string("PlussPl Plot") : name_;
   const auto window_title = options.title.empty() ? fallback_title : options.title;
   const auto svg_payload = to_svg();
-  if (capture_shown_svg_(name_, svg_payload)) {
+  if (capture_shown_svg_(name_, svg_payload) || show_in_notebook_(svg_payload)) {
     return true;
   }
   const auto window_width = std::max<std::int64_t>(640, options.width);

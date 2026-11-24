@@ -34,6 +34,7 @@ MIME = "\x1e<<pluss-mime "
 # output as a marker line the kernel turns into a Jupyter display message.
 PRELUDE = r'''
 #include <pluss/pluss.h>
+#include <pluss/tils/doc.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -118,6 +119,13 @@ class PlussKernel(Kernel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # The engine inherits these: tables and plots go back to the notebook instead of opening a window,
+        # and doc() finds the documentation that came with the download.
+        os.environ["PLUSS_NOTEBOOK"] = "1"
+        include = os.environ.get("PLUSS_INCLUDE", "")
+        if include and not os.environ.get("PLUSS_PREFIX"):
+            os.environ["PLUSS_PREFIX"] = os.path.dirname(include.rstrip("/"))
+        self._words = None
         self._out = queue.Queue()
         self._err = queue.Queue()
         self._proc = None
@@ -276,8 +284,16 @@ class PlussKernel(Kernel):
         if self._start_failure is not None:
             message = "the C++ engine did not start: %s" % self._start_failure
             return {"status": "error", "ename": "EngineError", "evalue": message, "traceback": [message]}
+        self._remember_words(code)
         try:
             out, err = self._run_cell(code)
+        except KeyboardInterrupt:
+            # The engine cannot be interrupted part-way, so it is restarted: the cell stops, earlier cells are gone.
+            self._restart_engine()
+            message = "Interrupted. The C++ engine was restarted, so the variables and functions from earlier cells are gone: run them again."
+            if not silent:
+                self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": message + "\n"})
+            return {"status": "error", "ename": "KeyboardInterrupt", "evalue": message, "traceback": [message]}
         except (EngineStopped, BrokenPipeError):
             self._restart_engine()
             message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
@@ -333,6 +349,64 @@ class PlussKernel(Kernel):
         rest = out[at:]
         if rest:
             self.send_response(self.iopub_socket, "stream", {"name": "stdout", "text": rest})
+
+    # ---- completion and help ----------------------------------------------------------------------
+
+    KEYWORDS = ("auto", "bool", "break", "case", "catch", "char", "class", "const", "constexpr", "continue", "double", "else",
+                "enum", "false", "float", "for", "if", "include", "int", "long", "namespace", "nullptr", "return", "short",
+                "size_t", "static", "std", "string", "struct", "switch", "template", "this", "throw", "true", "try",
+                "typename", "using", "vector", "void", "while", "pluss")
+
+    def _remember_words(self, code):
+        if self._words is None:
+            self._words = set(self.KEYWORDS)
+        self._words.update(re.findall(r"[A-Za-z_]\w{2,}", code))
+        threading.Thread(target=self._scan_headers, daemon=True).start()
+
+    def _scan_headers(self):
+        """The names in the PlussII headers, read once, so completion also offers what the library provides."""
+        if getattr(self, "_scanned", False):
+            return
+        self._scanned = True
+        root = os.path.join(os.environ.get("PLUSS_INCLUDE", ""), "pluss")
+        found = set()
+        for folder, _, files in os.walk(root):
+            for name in files:
+                if name.endswith((".h", ".hpp")):
+                    try:
+                        with open(os.path.join(folder, name), errors="ignore") as handle:
+                            found.update(re.findall(r"\b[a-z][a-z0-9_]{3,}(?=\()", handle.read()))
+                    except OSError:
+                        pass
+        if self._words is None:
+            self._words = set(self.KEYWORDS)
+        self._words.update(found)
+
+    def do_complete(self, code, cursor_pos):
+        start = cursor_pos
+        while start > 0 and (code[start - 1].isalnum() or code[start - 1] == "_"):
+            start -= 1
+        prefix = code[start:cursor_pos]
+        words = self._words or set(self.KEYWORDS)
+        matches = sorted(w for w in words if w.startswith(prefix) and w != prefix) if prefix else []
+        return {"status": "ok", "matches": matches[:200], "cursor_start": start, "cursor_end": cursor_pos, "metadata": {}}
+
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
+        end = cursor_pos
+        while end < len(code) and (code[end].isalnum() or code[end] in "_:"):
+            end += 1
+        start = cursor_pos
+        while start > 0 and (code[start - 1].isalnum() or code[start - 1] in "_:"):
+            start -= 1
+        token = code[start:end].strip(":")
+        if not token or not self._ready.is_set() or self._start_failure is not None:
+            return {"status": "ok", "found": False, "data": {}, "metadata": {}}
+        try:
+            out, _ = self._run_text('pluss::tils::doc("%s");' % token.replace("\\", "").replace('"', ""))
+        except Exception:
+            return {"status": "ok", "found": False, "data": {}, "metadata": {}}
+        out = out.strip()
+        return {"status": "ok", "found": bool(out), "data": {"text/plain": out} if out else {}, "metadata": {}}
 
     def do_shutdown(self, restart):
         if self._proc and self._proc.poll() is None:

@@ -8,7 +8,7 @@
 
 A notebook runs a program a cell at a time and keeps what earlier cells made. PlussII has a preview of a notebook kernel for Jupyter, so you can write C++ cells, keep your variables from one cell to the next, and see tables and plots in the notebook instead of a separate window. It also runs in the notebook support of editors that use Jupyter kernels.
 
-This is a preview. It is in the source tree under `PlussTils/tools/notebook`, it is not installed with the download, and it has been tried on Apple Silicon Macs only.
+This is a preview. It comes with the download (under `share/pluss/notebook`) and is registered with one command, `pluss kernel install`. It has been tried on Apple Silicon Macs only.
 
 ## How it works
 
@@ -24,7 +24,17 @@ The kernel starts one C++ interpreter (clang-repl) and loads PlussII into it. Ea
 
 `<pluss/pluss.h>` is already included and `pluss` is available, so a first cell can start with the program. The interpreter starts while the notebook opens, so by the time you have written the first cell it is usually ready.
 
-What the preview does not do yet: stop a running cell, complete names as you type, show `.show()` windows inline, or run outside macOS.
+A notebook is meant to be re-run, so the kernel allows it:
+
+| You do | What happens |
+|---|---|
+| run a cell again that defines a function, a variable or a type again | the new definition replaces the old one for the cells you run from then on |
+| stop a running cell (the Interrupt button) | the cell stops and the interpreter restarts; earlier variables are gone and the message says so |
+| run code that crashes the interpreter, such as writing through a null pointer | the interpreter restarts and tells you; run the earlier cells again |
+| call `.show()` on a table or a plot | it appears under the cell instead of opening a window |
+| press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the page that `pluss::tils::doc` finds, from the documentation in the download |
+
+What the preview does not do yet: run outside macOS.
 
 ## Worked tour
 
@@ -79,4 +89,10 @@ answer
 
 ## Getting it
 
-You need Jupyter with its kernel package, a clang-repl, and a PlussII download. On macOS the interpreter must be given a system SDK that it can read: the newest Xcode SDK may be newer than the interpreter understands, in which case use an older one from the command line tools. `PlussTils/tools/notebook/README.md` has the installer and its options.
+You need Python with `ipykernel` and `jupyter_client` (`python3 -m pip install ipykernel jupyter_client`), a clang-repl (macOS: `brew install llvm`), and a PlussII download. Then, from the download:
+
+```text
+bin/pluss kernel install
+```
+
+The command finds clang-repl and, on macOS, an SDK that clang-repl can read, builds one shared library of PlussII into `~/.pluss`, and registers the kernel as "PlussII C++" for Jupyter and VS Code. It takes `--clang-repl path` and `--sysroot path` when the defaults are wrong.
