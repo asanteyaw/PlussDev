@@ -894,6 +894,55 @@ void test_virtual_table_colours_follow_the_stylesheet() {
   expect(has_fill(Color::rgba(0x00, 0x00, 0xaa, 255)), "an infinite cell takes the stylesheet's infinity colour");
 }
 
+void test_virtual_table_last_column_takes_the_slack() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class Narrow final : public VirtualTableModel {
+   public:
+    explicit Narrow(const std::int64_t columns) : columns_(columns) {}
+    std::int64_t row_count() const noexcept override { return 20000; }  // long enough to use the virtual path
+    std::int64_t column_count() const noexcept override { return columns_; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(const std::int64_t column) const override { return "c" + std::to_string(column); }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+
+   private:
+    std::int64_t columns_;
+  };
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>body { margin:0; } table { width:100%; height:300px; }</style></head><body>
+  <table id="t" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+  const auto render = [&](const Narrow& model) {
+    HtmlRenderStats stats{};
+    HtmlRenderConfig config{};
+    config.draw_top_bar = false;
+    config.root_padding_px = 0;
+    config.virtual_table_model = &model;
+    config.render_stats = &stats;
+    (void)build_html_document_scene(document, SizeI{900, 400}, config);
+    return stats;
+  };
+
+  // A few narrow columns end well short of the panel on their own: the last one takes the rest, so the table
+  // reaches the panel's right edge and has nothing to scroll sideways.
+  const auto few = render(Narrow(3));
+  expect(few.table_max_scroll_x == 0, "a long table of a few columns does not scroll sideways");
+  expect(few.table_content_rect.width == few.table_viewport_rect.width,
+         "the last column of a long table fills the panel to its right edge");
+
+  // Many columns are wider than the panel: the last column keeps its own width and the table scrolls.
+  const auto many = render(Narrow(60));
+  expect(many.table_max_scroll_x > 0, "a long table wider than the panel still scrolls sideways");
+}
+
 void test_virtual_table_only_materializes_viewport_cells() {
   using namespace pluss::view;
   using namespace pluss::view::window;
@@ -1035,6 +1084,7 @@ int main() {
     test_sticky_case_column_expands_for_text_labels();
     test_virtual_table_only_materializes_viewport_cells();
     test_virtual_table_colours_follow_the_stylesheet();
+    test_virtual_table_last_column_takes_the_slack();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
@@ -1044,6 +1094,7 @@ int main() {
     std::cout << "[PASS] sticky_case_column_expands_for_text_labels\n";
     std::cout << "[PASS] virtual_table_only_materializes_viewport_cells\n";
     std::cout << "[PASS] virtual_table_colours_follow_the_stylesheet\n";
+    std::cout << "[PASS] virtual_table_last_column_takes_the_slack\n";
     std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;
   } catch (const std::exception& error) {

@@ -3371,6 +3371,21 @@ int render_virtual_table(
           };
     }
   }
+  const int scrollable_view_w = std::max(16, content_w - row_header_w);
+  // A long table follows the same rule as a short one: the last column is the automatic column, so it takes
+  // what the other columns leave and the table always reaches the panel's right edge. It never goes below its
+  // own width, so a table with many wide columns still scrolls sideways. This runs after the cached widths are
+  // read, so the cache holds each column's own width and a resized window needs no new measuring.
+  if (virtual_geo.slack == HtmlTableSlack::LastColumn && column_widths.size() > 1) {
+    std::int64_t others = 0;
+    for (std::size_t c = 0; c + 1 < column_widths.size(); ++c) {
+      others += column_widths[c];
+    }
+    const std::int64_t remainder = static_cast<std::int64_t>(scrollable_view_w) - others;
+    if (remainder > column_widths.back()) {
+      column_widths.back() = static_cast<int>(std::min<std::int64_t>(remainder, std::numeric_limits<int>::max()));
+    }
+  }
   for (const int cell_w : column_widths) {
     data_width = std::min<std::int64_t>(
         static_cast<std::int64_t>(std::numeric_limits<int>::max()),
@@ -3378,7 +3393,6 @@ int render_virtual_table(
   }
 
   const int body_viewport_h = std::max(0, viewport_h - header_h);
-  const int scrollable_view_w = std::max(16, content_w - row_header_w);
   const int max_scroll_x = static_cast<int>(std::max<std::int64_t>(
       0, data_width - static_cast<std::int64_t>(scrollable_view_w)));
   const std::int64_t body_height = std::min<std::int64_t>(
