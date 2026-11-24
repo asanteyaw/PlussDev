@@ -428,6 +428,7 @@ window.PLUSS_API_NAV = {
             "title": "Dataset",
             "methods": [
               "Dataset",
+              "ColumnSelection",
               "dataset_from_table",
               "dataset_frame",
               "dataset_nrows",

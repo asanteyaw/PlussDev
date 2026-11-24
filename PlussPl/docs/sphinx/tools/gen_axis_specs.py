@@ -134,7 +134,7 @@ def family_label(a):
     pane_kind = "3D pane" if a == "z" else "pane"
     ex = [
         dict(id="basic", text=f"Setting the {A} label. The label is stored in `{A}_axis().label` and drawn beside the {A} axis.",
-             code=plot(a, f"{A}_label_basic") + f"\nstd::cout << \"before: '\" << pane.{A}_axis().label << \"'\\n\";\npane.{A}_label(\"Elapsed time (s)\");\nstd::cout << \"after: '\" << pane.{A}_axis().label << \"'\\n\";\nstd::cout << \"drawn: \" << (fig.to_svg().find(\">Elapsed time (s)<\") != std::string::npos) << \"\\n\";\nfig.save_svg(\"figure.svg\");"),
+             code=plot(a, f"{A}_label_basic") + f"\nstd::cout << \"before: '\" << pane.{A}_axis().label << \"'\\n\";\npane.{A}_label(\"Elapsed time (s)\");\nstd::cout << \"after: '\" << pane.{A}_axis().label << \"'\\n\";\nstd::cout << \"drawn: \" << (fig.to_svg().find(\">Elapsed time (s)<\") != std::string::npos) << \"\\n\";\nfig.show();"),
         dict(id="replace_clear", text="Replacing and clearing. A second call replaces the text, and an empty string clears it: the figure is then exactly the figure that never had a label.",
              code=f"""auto build = [&](const char* first, const char* second) {{
 {plot(a, f"{A}_label_clear", indent="  ")}

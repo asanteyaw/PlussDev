@@ -41,7 +41,7 @@ std::cout << "before: '" << pane.y_axis().label << "'\n";
 pane.y_label("Elapsed time (s)");
 std::cout << "after: '" << pane.y_axis().label << "'\n";
 std::cout << "drawn: " << (fig.to_svg().find(">Elapsed time (s)<") != std::string::npos) << "\n";
-fig.save_svg("figure.svg");
+fig.show();
 ```
 
 ### Output

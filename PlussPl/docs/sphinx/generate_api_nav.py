@@ -92,6 +92,7 @@ FLASH_FAMILIES = [
                 "title": "Dataset",
                 "methods": [
                     "Dataset",
+                    "ColumnSelection",
                     "dataset_from_table",
                     "dataset_frame",
                     "dataset_nrows",
