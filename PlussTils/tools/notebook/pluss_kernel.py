@@ -60,6 +60,49 @@ auto show(const T& value) -> decltype(std::cout << value, void()) { std::cout <<
 '''
 
 
+class EngineStopped(RuntimeError):
+    """The clang-repl process ended, for example because a cell crashed it."""
+
+
+def rename_identifier(code, base, new):
+    """Replace the identifier `base` by `new` in C++ code, leaving strings, characters and comments alone."""
+    out, i, n = [], 0, len(code)
+    while i < n:
+        c = code[i]
+        if code.startswith("//", i):
+            j = code.find("\n", i)
+            j = n if j < 0 else j
+            out.append(code[i:j])
+            i = j
+        elif code.startswith("/*", i):
+            j = code.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append(code[i:j])
+            i = j
+        elif c in "\"'":
+            j = i + 1
+            while j < n and code[j] != c:
+                j += 2 if code[j] == "\\" else 1
+            out.append(code[i:j + 1])
+            i = j + 1
+        elif c.isalpha() or c == "_":
+            j = i
+            while j < n and (code[j].isalnum() or code[j] == "_"):
+                j += 1
+            word = code[i:j]
+            out.append(new if word == base else word)
+            i = j
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+TYPE_DEFINITION = re.compile(r"\b(?:struct|class|union|enum(?:\s+class|\s+struct)?)\s+(\w+)\s*(?:final\s*)?(?::[^;{]*)?\{")
+VERSION = re.compile(r"(\w+?)__v\d+\b")
+REDEFINED = re.compile(r"redefinition of '(\w+)'")
+
+
 class PlussKernel(Kernel):
     implementation = "pluss"
     implementation_version = "0.0.1"
@@ -108,6 +151,12 @@ class PlussKernel(Kernel):
         return cmd
 
     def _start_engine(self):
+        # A new engine has new queues, so output of one that stopped can never reach the next.
+        self._out = queue.Queue()
+        self._err = queue.Queue()
+        self._versions = {}  # name -> how many times a cell has redefined it
+        self._types = set()  # types defined so far
+        self._macros = {}    # name -> the name its latest definition has
         self._proc = subprocess.Popen(
             self._command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
         )
@@ -151,7 +200,7 @@ class PlussKernel(Kernel):
             while True:
                 chunk = source.get()
                 if chunk is None:
-                    raise RuntimeError("the clang-repl engine stopped")
+                    raise EngineStopped()
                 buffer += chunk
                 if END.encode() in buffer:
                     buffer = buffer.split(END.encode())[0]
@@ -173,12 +222,70 @@ class PlussKernel(Kernel):
         lines[-1] = "pluss::nb::show(" + last + ");"
         return "\n".join(lines)
 
+    def _guarded(self, code, force_macros=None):
+        """The cell as it is sent: a cell with #include lines runs with the renaming macros off, so a header never
+        sees them, and the macros of every redefined name are in force again after it."""
+        macros = self._macros if force_macros is None else force_macros
+        text = code
+        if "#include" in code and macros:
+            text = "".join("#undef %s\n" % base for base in macros) + text
+        if macros:
+            text = text.rstrip("\n") + "\n" + "".join("#undef %s\n#define %s %s\n" % (b, b, m) for b, m in macros.items())
+        return text
+
+    def _tidy(self, text):
+        """What the user reads: the renaming suffix removed and the include chain of the compiler's report dropped."""
+        lines = [l for l in text.split("\n") if not l.startswith("In file included from") and not l.startswith("<<< inputs >>>")
+                 and "included multiple times" not in l]
+        return VERSION.sub(r"\1", "\n".join(lines))
+
+    def _run_cell(self, code):
+        """Run a cell. A name the cell declares again is bound to a new definition, as running a cell again
+        rebinds a name in a notebook: the old definition keeps its place for the code compiled against it."""
+        text = self._show_last_expression(code)
+        macros = dict(self._macros)
+        # The engine cannot recover from a type defined twice, so a type that already exists is renamed up front.
+        for base in TYPE_DEFINITION.findall(text):
+            if base in self._types:
+                version = self._versions.get(base, 1) + 1
+                self._versions[base] = version
+                new = "%s__v%d" % (base, version)
+                macros[base] = new
+                text = rename_identifier(text, base, new)
+        source = text
+        for _ in range(4):
+            out, err = self._run_text(self._guarded(source, macros))
+            names = {VERSION.sub(r"\1", name) for name in REDEFINED.findall(err)}
+            if not names:
+                break
+            for base in names:
+                version = self._versions.get(base, 1) + 1
+                self._versions[base] = version
+                new = "%s__v%d" % (base, version)
+                macros[base] = new
+                source = rename_identifier(source, base, new)
+        else:
+            return out, err
+        if "error:" not in err:
+            self._macros = macros
+            self._types.update(VERSION.sub(r"\1", name) for name in TYPE_DEFINITION.findall(text))
+        return out, err
+
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         self._ready.wait()
         if self._start_failure is not None:
             message = "the C++ engine did not start: %s" % self._start_failure
             return {"status": "error", "ename": "EngineError", "evalue": message, "traceback": [message]}
-        out, err = self._run_text(self._show_last_expression(code))
+        try:
+            out, err = self._run_cell(code)
+        except (EngineStopped, BrokenPipeError):
+            self._restart_engine()
+            message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
+                       "It has been restarted, so the variables and functions from earlier cells are gone: run them again.")
+            if not silent:
+                self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": message + "\n"})
+            return {"status": "error", "ename": "EngineRestarted", "evalue": message, "traceback": [message]}
+        out, err = self._tidy(out), self._tidy(err)
         failed = "error:" in err
         first_error = next((line for line in err.split("\n") if "error:" in line), err.strip().split("\n")[0] if err.strip() else "")
         if not silent:
@@ -188,6 +295,20 @@ class PlussKernel(Kernel):
         if failed:
             return {"status": "error", "ename": "CompileError", "evalue": first_error, "traceback": [err]}
         return {"status": "ok", "execution_count": self.execution_count, "payload": [], "user_expressions": {}}
+
+    def _restart_engine(self):
+        try:
+            if self._proc and self._proc.poll() is None:
+                self._proc.kill()
+        finally:
+            self._ready.clear()
+            try:
+                self._start_engine()
+                self._start_failure = None
+            except Exception as error:
+                self._start_failure = error
+            finally:
+                self._ready.set()
 
     def _publish(self, out):
         """Plain text becomes a stream; each marker becomes a display message."""
