@@ -101,13 +101,13 @@ Output
 
 ```text
 species [1.0000] arrives, growth rate when rare [1.0000]  joins
-   residents [1.0000, 0.0000, 0.0000, 0.0000] equilibrium [1.0000, 0.0000, 0.0000, -0.0000]
+   residents [1.0000, 0.0000, 0.0000, 0.0000] equilibrium [1.0000, 0.0000, 0.0000, 0.0000]
 species [2.0000] arrives, growth rate when rare [0.5000]  joins
-   residents [1.0000, 1.0000, 0.0000, 0.0000] equilibrium [0.7727, 0.5682, 0.0000, -0.0000]
+   residents [1.0000, 1.0000, 0.0000, 0.0000] equilibrium [0.7727, 0.5682, 0.0000, 0.0000]
 species [3.0000] arrives, growth rate when rare [0.1614]  joins
-   residents [1.0000, 1.0000, 1.0000, 0.0000] equilibrium [0.7554, 0.5161, 0.1909, -0.0000]
+   residents [1.0000, 1.0000, 1.0000, 0.0000] equilibrium [0.7554, 0.5161, 0.1909, 0.0000]
 species [4.0000] arrives, growth rate when rare [-0.3583]  fails
-   residents [1.0000, 1.0000, 1.0000, 0.0000] equilibrium [0.7554, 0.5161, 0.1909, -0.0000]
+   residents [1.0000, 1.0000, 1.0000, 0.0000] equilibrium [0.7554, 0.5161, 0.1909, 0.0000]
 ```
 
 Species `1` joins an empty community with its own growth rate `1.0000` and settles at `1.0000`. Species `2` (rate `0.5000` when rare) and species `3` (`0.1614`) join, each reducing the others, and species `4` fails (`-0.3583`), so the assembled community is `{1,2,3}` at `(0.7554, 0.5161, 0.1909)`. This is the same community as the interior equilibrium of the three-species model on the [competition page](../bio_02_interactions/competition.md); invasion is a way to find which species belong to it. The order of arrival can matter when the invasion rates change sign, so assembly is worth repeating in other orders.

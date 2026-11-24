@@ -206,30 +206,6 @@ int main() {
   // a held-out experiment: starting concentration 4, new noise. Predict it from the fit and compare with the measurements
   const auto s0 = vec({4.0});
   const auto held = inhibited(data.times, s0, 0.01, 99);
-  const auto rate = [&](const pluss::Series &x) { return x.mul(-vmax).div(x.sub(s0).neg().div(kp).add(1.0).mul(km).add(x)); };
-    s = dynamics::simulate(rate, s, now, next, 200);
-    now = next;
-    columns.push_back(s.unsqueeze(1));
-  }
-  const pluss::Series clean = columns[0].unite(std::vector<pluss::Series>(columns.begin() + 1, columns.end()), 1);
-  return clean.add(pluss::series::randn({clean.size(0), clean.size(1)}, pluss::ScalarType::Float64, seed).mul(noise));
-}
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
-  fitting::ProgressData data;
-  data.times = vec({0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.5, 8.0, 10.0});
-  data.initial = vec({0.4, 1.0, 2.5, 6.0});
-  data.substrate = inhibited(data.times, data.initial, 0.01, 11);
-  const auto result = fitting::fit_product_inhibition(data, fitting::initial_guess(data, true));
-  const auto beta = flat(result.fit.beta);
-
-  // a held-out experiment: starting concentration 4, new noise. Predict it from the fit and compare with the measurements
-  const auto s0 = vec({4.0});
-  const auto held = inhibited(data.times, s0, 0.01, 99);
-  fitting::ProgressData one{data.times, held, s0};
-  const auto refit = fitting::fit_product_inhibition(one, vec({beta[0], beta[1], beta[2]}).reshape({1, 3}));
   const auto rate = [&](const pluss::Series &x) { return x.mul(-beta[0]).div(x.sub(4.0).neg().div(beta[2]).add(1.0).mul(beta[1]).add(x)); };
   std::vector<double> predicted;
   double now = 0.0;

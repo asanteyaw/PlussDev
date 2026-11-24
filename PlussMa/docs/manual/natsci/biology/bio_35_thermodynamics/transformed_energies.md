@@ -84,7 +84,7 @@ static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.nu
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
-  const double rt_kj = thermo::gas_constant() * 298.15 / 1000.0;
+  const double rt_kj = 8.314462618e-3 * 298.15;   // R T in kJ/mol at 298.15 K
   out.writeln("RT at 298.15 K, kJ/mol ", std::vector<double>{rt_kj});
   // a monoprotic acid HA with formation energy -500 kJ/mol (an illustrative number), pKa 6.5, one hydrogen in the protonated form
   const auto ph = vec({5.0, 6.0, 6.5, 7.0, 8.0, 9.0});
