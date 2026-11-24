@@ -1,24 +1,28 @@
-# Mixture properties
+# Hydrogen ignition
 
-[Back to Chemistry 22: Gas-phase kinetics](../chem_22_gas_kinetics.md)
+[Back to Chemistry 9: Gas-Phase Kinetics and Equilibrium](../chem_09_gas_phase.md)
 
-The same species data that gives the rates also describes the gas as a mixture: how heavy it is, how much energy it stores, how fast sound travels in it. This page builds the ideal-gas model of a mechanism's mixture and uses it to compute the density and the heat capacities, to carry the energy of a burning mixture through a reaction and recover its temperature, and to sweep the properties across a family of compositions.
+Hydrogen and oxygen can sit side by side for a while at a high temperature and then, within a fraction of a millisecond, burn. The delay before that sudden release is the ignition delay, a basic property of a fuel. This page builds the chain-branching core of hydrogen combustion, finds the delay for one mixture, sweeps it over five starting temperatures in a single batch, and shows the exponential growth of the radicals that causes the ignition.
 
 ## How it works
 
-For a mixture with mass fractions {math}`Y_k` (they sum to one) and species molar masses {math}`M_k`, the ideal-gas relations are
+The mechanism has seven species (`H2`, `H`, `O`, `O2`, `OH`, `H2O` and an argon bath) and eight reactions:
 
-```{math}
-\frac{1}{M} = \sum_k \frac{Y_k}{M_k}, \qquad p = \frac{\rho R T}{M}, \qquad e = \sum_k Y_k\,\frac{RT}{M_k}\left(\frac{h_k}{RT} - 1\right),
-```
+| Reaction | Role |
+|---|---|
+| {math}`\mathrm{H}+\mathrm{O_2}\rightleftharpoons\mathrm{O}+\mathrm{OH}` | branching: one radical becomes two |
+| {math}`\mathrm{O}+\mathrm{H_2}\rightleftharpoons\mathrm{H}+\mathrm{OH}` | branching |
+| {math}`\mathrm{OH}+\mathrm{H_2}\rightleftharpoons\mathrm{H}+\mathrm{H_2O}` | propagation, and the source of the product water |
+| {math}`2\,\mathrm{OH}\rightleftharpoons\mathrm{O}+\mathrm{H_2O}` | propagation |
+| `H + OH + M`, `H + H + M`, `O + O + M`, `O + H + M` | recombination with a third body: termination, which also releases heat |
 
-with the heat capacities {math}`c_v = \sum_k Y_k (R/M_k)(c_{p,k}/R - 1)` and {math}`c_p = \sum_k Y_k (R/M_k)\,c_{p,k}/R`, the ratio {math}`\gamma = c_p/c_v` and the speed of sound {math}`a = \sqrt{\gamma p/\rho}`. The enthalpy and entropy of each species come from the NASA-7 polynomials, so the energy contains the heat of formation and a reaction that changes the composition changes the temperature at fixed energy.
+Adding the first three steps gives {math}`\mathrm{H}+3\,\mathrm{H_2}+\mathrm{O_2}\to 2\,\mathrm{H}+2\,\mathrm{H_2O}`: one `H` atom goes in and two come out, so the pool of radicals grows exponentially as {math}`e^{\lambda t}` at a rate {math}`\lambda` that depends on the temperature. The temperature hardly moves until the pool is large, and then the recombination steps release the chemical energy within a very short time. The ignition delay is defined here as the time of the steepest temperature rise, which `reactor::max_slope_time(times, temperature_path)` finds on a sampled path: `temperature_path` has the shape `[len(times), ...]` and the result has the shape `[...]`, one delay per lane.
 
-`pluss::ma::natsci::chemistry::thermo::IdealGas(mechanism)` builds the model from a mechanism that carries molar masses. Its methods take a temperature (or density, or pressure) Series of shape `[...]` and a mass-fraction Series of shape `[..., S]`: `mean_molar_mass(y)`, `concentrations(density, y)`, `density(pressure, t, y)`, `pressure(density, t, y)`, `properties(t, y)` (fields `mean_molar_mass`, `internal_energy`, `enthalpy`, `cv`, `cp` and the method `gamma()`), `internal_energy(t, y)`, `enthalpy(t, y)`, `sound_speed(t, y)` and `temperature(e, y, guess)`. The last inverts the energy for the temperature, with a safeguarded Newton iteration over the whole range of the data, and takes an optional starting guess, for example the previous temperature. The accessors `species()`, `names()`, `molar_masses()`, `t_min()` and `t_max()` describe the model. The energies are per kilogram, the pressure is in pascals, and the Series must have the dtype of the mechanism.
+Because the delay is read from a sampled path it is only as fine as the time grid, and a log-spaced grid covers the many decades between the first reactions and the ignition economically.
 
-## Density, heat capacity and sound speed
+## One mixture, one delay
 
-A mixture of `2` mol of hydrogen, `1` mol of oxygen and `7` mol of argon, converted to mass fractions, at `400`, `800` and `1600` K and `1` atm. The program prints the mean molar mass, the density, the pressure recovered from it, the heat capacities, `gamma` and the speed of sound.
+Two moles of hydrogen, one of oxygen and seven of argon at `1200` K and `1` atm, seeded with a trace of `H` atoms. The program samples `121` times from `0.1 µs` to `10 ms` on a logarithmic grid, prints the temperature at six of them and the ignition delay.
 
 ```cpp
 #include <pluss/ma.h>
@@ -30,8 +34,9 @@ using namespace pluss::tils;
 namespace chemistry = pluss::ma::natsci::chemistry;
 namespace kinetics = chemistry::kinetics;
 namespace reactor = chemistry::reactor;
-namespace thermo = chemistry::thermo;
 using chemistry::thermo::SpeciesData;
+namespace common = pluss::ma::natsci::common;
+static double gas_constant() { return common::constants::codata2022::molar_gas_constant.measurement.value().si_value(); }  // J/(mol K)
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
 
@@ -85,47 +90,36 @@ static kinetics::Mechanism hydrogen() {
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  out.print_defaults(PrintOptions{}.sci(4).with_sep(""));
   const auto mech = hydrogen();
-  const thermo::IdealGas gas(mech);
-  // species order H2, H, O, O2, OH, H2O, AR. Mass fractions of a mixture made of 2 mol H2, 1 mol O2 and 7 mol argon
-  const double m_h2 = 2.0 * 2.016e-3, m_o2 = 31.998e-3, m_ar = 7.0 * 39.95e-3, m = m_h2 + m_o2 + m_ar;
-  const auto y = vec({m_h2 / m, 0.0, 0.0, m_o2 / m, 0.0, 0.0, m_ar / m});
-  out.writeln("mass fractions            ", flat(y));
-  out.writeln("mean molar mass (kg/mol)  ", flat(gas.mean_molar_mass(y)));
-  // density at 1 atm for three temperatures: rho = p M / (R T); lanes are [temperature]
-  const auto t = vec({400.0, 800.0, 1600.0});
-  const auto yy = y.unsqueeze(0).expand({3, 7}, true).contiguous();
-  const auto rho = gas.density(vec({101325.0, 101325.0, 101325.0}), t, yy);
-  out.writeln("density (kg/m^3)          ", flat(rho));
-  out.writeln("pressure back (Pa)        ", flat(gas.pressure(rho, t, yy)));
-  // heat capacities per kilogram and the ratio of specific heats
-  const auto p = gas.properties(t, yy);
-  out.writeln("cv (J/kg/K)               ", flat(p.cv));
-  out.writeln("cp (J/kg/K)               ", flat(p.cp));
-  out.writeln("gamma                     ", flat(p.gamma()));
-  out.writeln("sound speed (m/s)         ", flat(gas.sound_speed(t, yy)));
+  out.writeln("species ", mech.species(), "   reactions ", mech.reactions(), "   elements ", mech.elements().size());
+  // 2 H2 + O2 diluted in argon at 1 atm and 1200 K, seeded with a trace of H atoms; concentrations in mol/m^3 in the order H2, H, O, O2, OH, H2O, AR
+  const double total = 101325.0 / (gas_constant() * 1200.0);
+  const auto y0 = reactor::make_state(vec({1200.0}), vec({0.2 * total, 1e-8 * total, 0.0, 0.1 * total, 0.0, 0.0, 0.7 * total}).reshape({1, 7}));
+  std::vector<double> times;
+  for (int i = 0; i <= 120; ++i) times.push_back(1e-7 * std::pow(10.0, 5.0 * i / 120.0));
+  const auto path = reactor::trajectory(mech, y0, times);
+  const auto temperature = reactor::temperature(path);  // [times, 1]
+  out.writeln("time (s)        ", std::vector<double>{times[0], times[40], times[60], times[80], times[100], times[120]});
+  out.writeln("temperature (K) ", std::vector<double>{flat(temperature)[0], flat(temperature)[40], flat(temperature)[60], flat(temperature)[80], flat(temperature)[100], flat(temperature)[120]});
+  out.writeln("ignition delay  ", flat(reactor::max_slope_time(times, temperature)));
 }
 ```
 
 Output
 
 ```text
-mass fractions            [0.0128, 0.0000, 0.0000, 0.1014, 0.0000, 0.0000, 0.8859]
-mean molar mass (kg/mol)  [0.0316]
-density (kg/m^3)          [0.9618, 0.4809, 0.2404]
-pressure back (Pa)        [101325.0000, 101325.0000, 101325.0000]
-cv (J/kg/K)               [478.4425, 492.0798, 521.3977]
-cp (J/kg/K)               [741.8252, 755.4625, 784.7803]
-gamma                     [1.5505, 1.5352, 1.5051]
-sound speed (m/s)         [404.1657, 568.7576, 796.4216]
+species 7   reactions 8   elements 3
+time (s)        [1.0000e-07, 4.6416e-06, 3.1623e-05, 2.1544e-04, 1.4678e-03, 1.0000e-02]
+temperature (K) [1.2000e+03, 1.2000e+03, 1.2001e+03, 2.8056e+03, 2.9512e+03, 2.9512e+03]
+ignition delay  [6.5013e-05]
 ```
 
-The mean molar mass is `0.0316` kg/mol. The density is `0.9618` kg/m³ at `400` K and half of that for each doubling of the temperature, and the pressure recovered from the density is exactly `101325` Pa. The heat capacities rise with temperature (`cv` from `478` to `521`) and `gamma` falls from `1.55` to `1.51`, the usual trend as more internal motions come alive; the sound speed climbs from `404` to `796` m/s.
+The temperature stays at `1200.0` K for the first `30 µs`, has jumped to `2806` K by `215 µs` and ends at `2951` K. The steepest rise lies at `6.5e-5` s, the ignition delay on this grid.
 
-## Energy conservation through a reaction
+## Delay against starting temperature
 
-The stoichiometric mixture at `1200` K and `1` atm in a rigid vessel is burnt in the reactor. The program computes the internal energy per kilogram at the start, converts the burnt concentrations to mass fractions, and recovers the temperature that goes with that same energy and the new composition.
+The same mixture started at `1000`, `1100`, `1200`, `1300` and `1400` K as five lanes of one batch, with `241` times from `0.1 µs` to `1` s. The program prints the delay, the final temperature and the temperature rise of every lane.
 
 ```cpp
 #include <pluss/ma.h>
@@ -137,8 +131,9 @@ using namespace pluss::tils;
 namespace chemistry = pluss::ma::natsci::chemistry;
 namespace kinetics = chemistry::kinetics;
 namespace reactor = chemistry::reactor;
-namespace thermo = chemistry::thermo;
 using chemistry::thermo::SpeciesData;
+namespace common = pluss::ma::natsci::common;
+static double gas_constant() { return common::constants::codata2022::molar_gas_constant.measurement.value().si_value(); }  // J/(mol K)
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
 
@@ -192,47 +187,42 @@ static kinetics::Mechanism hydrogen() {
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  out.print_defaults(PrintOptions{}.sci(3).with_sep(""));
   const auto mech = hydrogen();
-  const thermo::IdealGas gas(mech);
-  // the same stoichiometric mixture as the reactor example, in a rigid vessel at 1200 K and 1 atm
-  const double total = 101325.0 / (thermo::gas_constant() * 1200.0);
-  const auto c0 = vec({0.2 * total, 1e-8 * total, 0.0, 0.1 * total, 0.0, 0.0, 0.7 * total}).reshape({1, 7});
-  const auto masses = gas.molar_masses();
-  const auto rho = c0.mul(masses).sum(-1, false);                  // kg/m^3
-  const auto y0 = c0.mul(masses).div(rho.unsqueeze(-1));           // mass fractions
-  const auto e0 = gas.internal_energy(vec({1200.0}), y0);          // J/kg
-  out.writeln("density (kg/m^3)               ", flat(rho));
-  out.writeln("internal energy (J/kg)          ", flat(e0));
-  // burn the mixture in the reactor and convert the burnt concentrations back to mass fractions
-  const auto burnt = reactor::integrate(mech, reactor::make_state(vec({1200.0}), c0), 1e-2);
-  const auto c1 = reactor::concentrations(burnt.y);
-  const auto y1 = c1.mul(masses).div(c1.mul(masses).sum(-1, false).unsqueeze(-1));
-  out.writeln("burnt mass fractions H2O, OH    ", std::vector<double>{flat(y1.select(-1, 5))[0], flat(y1.select(-1, 4))[0]});
-  out.writeln("reactor temperature (K)         ", flat(reactor::temperature(burnt.y)));
-  // a rigid adiabatic vessel keeps e fixed: the temperature recovered from e0 and the burnt composition is the reactor's
-  out.writeln("temperature from e0 and burnt Y ", flat(gas.temperature(e0, y1)));
-  // the mass density is unchanged, so is the mass: only the pressure moves
-  out.writeln("pressure before / after (Pa)    ", std::vector<double>{flat(gas.pressure(rho, vec({1200.0}), y0))[0], flat(gas.pressure(rho, gas.temperature(e0, y1), y1))[0]});
+  // five starting temperatures run side by side as lanes: each is stoichiometric H2/O2/Ar at 1 atm, seeded with a trace of H atoms
+  const std::vector<double> starts = {1000.0, 1100.0, 1200.0, 1300.0, 1400.0};
+  std::vector<double> c;
+  for (const double t0 : starts) {
+    const double total = 101325.0 / (gas_constant() * t0);
+    for (const double x : {0.2, 1e-8, 0.0, 0.1, 0.0, 0.0, 0.7}) c.push_back(x * total);
+  }
+  const auto y0 = reactor::make_state(vec(starts), vec(c).reshape({5, 7}));
+  std::vector<double> times;
+  for (int i = 0; i <= 240; ++i) times.push_back(1e-7 * std::pow(10.0, 7.0 * i / 240.0));
+  const auto path = reactor::trajectory(mech, y0, times);  // [times, lanes, 8]
+  const auto temperature = reactor::temperature(path);       // [times, lanes]
+  out.writeln("start (K)           ", starts);
+  out.writeln("ignition delay (s)  ", flat(reactor::max_slope_time(times, temperature)));
+  out.writeln("final T (K)         ", flat(temperature.select(0, 240)));
+  // the heat released: the final temperature rise above the start
+  out.writeln("temperature rise (K)", flat(temperature.select(0, 240).sub(vec(starts))));
 }
 ```
 
 Output
 
 ```text
-density (kg/m^3)               [0.3206]
-internal energy (J/kg)          [363708.9699]
-burnt mass fractions H2O, OH    [0.0843, 0.0121]
-reactor temperature (K)         [2951.2463]
-temperature from e0 and burnt Y [2951.2463]
-pressure before / after (Pa)    [101325.0010, 233563.9556]
+start (K)           [1.000e+03, 1.100e+03, 1.200e+03, 1.300e+03, 1.400e+03]
+ignition delay (s)  [1.788e-04, 9.769e-05, 6.105e-05, 4.080e-05, 2.916e-05]
+final T (K)         [2.921e+03, 2.936e+03, 2.951e+03, 2.966e+03, 2.980e+03]
+temperature rise (K)[1.921e+03, 1.836e+03, 1.751e+03, 1.666e+03, 1.580e+03]
 ```
 
-The mixture has a density of `0.3206` kg/m³ and an energy of `363709` J/kg. After the burn it contains `8.4%` water and `1.2%` hydroxyl by mass. The temperature recovered from the unchanged energy and the burnt composition, `2951.2463` K, is the reactor's own result to every digit shown. The mass in a rigid vessel is fixed, so the pressure follows the temperature and the mole count: from `101325` to `233564` Pa.
+The delay falls from `1.79e-4` s at `1000` K to `2.92e-5` s at `1400` K, a factor of `6`. A fit of {math}`\ln\tau` against {math}`1/T` between the two ends gives an apparent activation temperature of `6.3e3` K, about `53` kJ/mol, below the `71` kJ/mol barrier of the branching step {math}`\mathrm{H}+\mathrm{O_2}`, because several steps contribute. The final temperature rises with the starting temperature (`2921` to `2980` K) but the rise falls from `1921` to `1580` K: the hotter gas ends in a state with more of its energy in dissociated products.
 
-## Sweeping a family of compositions
+## The radicals multiply before the temperature moves
 
-Five mixtures of hydrogen and argon at `500` K with the hydrogen mole fraction from `0` to `1`, converted to mass fractions inside the program and run as the lanes of one batch.
+The `1200` K case again, now looking at the radical concentrations on a uniform grid from `0` to `30 µs`.
 
 ```cpp
 #include <pluss/ma.h>
@@ -244,8 +234,9 @@ using namespace pluss::tils;
 namespace chemistry = pluss::ma::natsci::chemistry;
 namespace kinetics = chemistry::kinetics;
 namespace reactor = chemistry::reactor;
-namespace thermo = chemistry::thermo;
 using chemistry::thermo::SpeciesData;
+namespace common = pluss::ma::natsci::common;
+static double gas_constant() { return common::constants::codata2022::molar_gas_constant.measurement.value().si_value(); }  // J/(mol K)
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
 
@@ -299,62 +290,62 @@ static kinetics::Mechanism hydrogen() {
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  out.print_defaults(PrintOptions{}.sci(4).with_sep(""));
   const auto mech = hydrogen();
-  const thermo::IdealGas gas(mech);
-  // five mixtures of hydrogen and argon, with the hydrogen mole fraction x running from 0 to 1: the lanes are the mixtures
-  const auto x_h2 = vec({0.0, 0.25, 0.5, 0.75, 1.0});
-  const auto zeros = x_h2.mul(0.0);
-  // mole fractions in the species order H2, H, O, O2, OH, H2O, AR, converted to mass fractions Y_k = x_k M_k / sum x M
-  const auto x = x_h2.unsqueeze(-1).unite(std::vector<pluss::Series>{zeros.unsqueeze(-1), zeros.unsqueeze(-1), zeros.unsqueeze(-1), zeros.unsqueeze(-1), zeros.unsqueeze(-1), x_h2.neg().add(1.0).unsqueeze(-1)}, -1);
-  const auto weighted = x.mul(gas.molar_masses());
-  const auto y = weighted.div(weighted.sum(-1, false).unsqueeze(-1));
-  const auto t = x_h2.mul(0.0).add(500.0);
-  const auto p = gas.properties(t, y);
-  out.writeln("x(H2)               ", flat(x_h2));
-  out.writeln("mean molar mass     ", flat(gas.mean_molar_mass(y)));
-  out.writeln("gamma               ", flat(p.gamma()));
-  out.writeln("sound speed (m/s)   ", flat(gas.sound_speed(t, y)));
-  out.writeln("density at 1 atm    ", flat(gas.density(x_h2.mul(0.0).add(101325.0), t, y)));
+  const double total = 101325.0 / (gas_constant() * 1200.0);
+  const auto y0 = reactor::make_state(vec({1200.0}), vec({0.2 * total, 1e-8 * total, 0.0, 0.1 * total, 0.0, 0.0, 0.7 * total}).reshape({1, 7}));
+  // watch the radicals H, O and OH multiply before the temperature moves: a chain reaction grows exponentially
+  const std::vector<double> times = {0.0, 5e-6, 1e-5, 1.5e-5, 2e-5, 2.5e-5, 3e-5};
+  const auto path = reactor::trajectory(mech, y0, times);
+  const auto c = reactor::concentrations(path);  // [times, 1, 7]
+  out.writeln("time (s)        ", times);
+  out.writeln("[H]  (mol/m^3)  ", flat(c.select(-1, 1)));
+  out.writeln("[O]  (mol/m^3)  ", flat(c.select(-1, 2)));
+  out.writeln("[OH] (mol/m^3)  ", flat(c.select(-1, 4)));
+  out.writeln("T (K)           ", flat(reactor::temperature(path)));
+  // the growth rate of the radical pool, from the last two samples of [OH]
+  const auto oh = flat(c.select(-1, 4));
+  out.writeln("growth rate of [OH] (1/s) ", std::log(oh[6] / oh[5]) / 5e-6);
 }
 ```
 
 Output
 
 ```text
-x(H2)               [0.0000, 0.2500, 0.5000, 0.7500, 1.0000]
-mean molar mass     [0.0399, 0.0305, 0.0210, 0.0115, 0.0020]
-gamma               [1.6667, 1.5695, 1.4971, 1.4410, 1.3962]
-sound speed (m/s)   [416.4550, 462.7768, 544.6120, 721.7533, 1696.8267]
-density at 1 atm    [0.9737, 0.7426, 0.5114, 0.2803, 0.0491]
+time (s)        [0.0000e+00, 5.0000e-06, 1.0000e-05, 1.5000e-05, 2.0000e-05, 2.5000e-05, 3.0000e-05]
+[H]  (mol/m^3)  [1.0155e-07, 3.2186e-07, 1.2850e-06, 5.1278e-06, 2.0459e-05, 8.1615e-05, 3.2555e-04]
+[O]  (mol/m^3)  [0.0000e+00, 4.0519e-08, 1.6179e-07, 6.4562e-07, 2.5759e-06, 1.0276e-05, 4.0990e-05]
+[OH] (mol/m^3)  [0.0000e+00, 2.1582e-08, 8.6172e-08, 3.4387e-07, 1.3720e-06, 5.4732e-06, 2.1832e-05]
+T (K)           [1.2000e+03, 1.2000e+03, 1.2000e+03, 1.2000e+03, 1.2000e+03, 1.2000e+03, 1.2000e+03]
+growth rate of [OH] (1/s) 2.7670e+05
 ```
 
-The mean molar mass falls from `0.0399` (argon) to `0.0020` kg/mol (hydrogen). Argon has `gamma = 1.6667`, the monatomic value `5/3`, and hydrogen at this temperature `1.3962`. The speed of sound grows from `416` to `1697` m/s as the light gas takes over, while the density at one atmosphere falls from `0.974` to `0.049` kg/m³.
+Every `5 µs` each radical concentration grows by the same factor of `4` (`[H]` from `3.2e-7` to `1.3e-6` to `5.1e-6` mol/m³), a straight line on a logarithmic scale, which is the signature of the chain reaction. The growth rate of `[OH]` is `2.77e5` per second, {math}`\ln 4/5\,\mu s`. Over the same `30 µs` the temperature stays at `1200` K: the pool must become large before the heat release is felt, which is why the delay looks sudden.
 
 ## Decisions
 
-- Pass mass fractions, not mole fractions. Convert with {math}`Y_k = x_k M_k / \sum_j x_j M_j` using `molar_masses()`, as the last example does.
-- Give `temperature(e, y, guess)` the temperature of the previous step as a guess when you update a state a little at a time; without a guess it starts from an interpolation between the ends of the data range, which is also robust.
-- Build the model from the mechanism you integrate with, so that the energy it assigns to a state is the one the reactor conserves.
-- Keep temperatures inside `t_min()` to `t_max()` of the model; the thermodynamic data are not extrapolated.
+- Use a log-spaced grid from a time far below the expected delay to a time well beyond it, and refine the grid until the delay stops changing in the digits you need; the pitfalls below show how a coarse grid and a short window mislead.
+- Seed the mixture with a trace of `H` atoms if your mechanism, like this one, is a reduced core. The seed sets the first radicals and changes the delay.
+- Run a sweep over starting temperature or pressure as the lanes of one batch. The step is shared, so keep the lanes within a factor of a few in time scale, or the fastest lane is integrated with the steps the slowest one needs.
+- A mechanism without the hydroperoxyl steps, such as this one, is a teaching core. Its high-temperature delays are meaningful as a demonstration of the structure, not as design data for a fuel.
 
 ## Pitfalls
 
-The inputs are validated: mass fractions must be non-negative and sum to one in every lane, the lanes must match in shape, the temperature must lie in the data range and the dtype must be that of the mechanism. A set of mole fractions that happens to sum to one is accepted, and describes a different gas.
+The delay is only as good as the time grid and the window. A coarse grid gives a coarse number, a window that ends before the ignition still returns a number, and the starting radical pool matters.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
 #include <cmath>
-#include <functional>
 
 using namespace pluss::tils;
 namespace chemistry = pluss::ma::natsci::chemistry;
 namespace kinetics = chemistry::kinetics;
 namespace reactor = chemistry::reactor;
-namespace thermo = chemistry::thermo;
 using chemistry::thermo::SpeciesData;
+namespace common = pluss::ma::natsci::common;
+static double gas_constant() { return common::constants::codata2022::molar_gas_constant.measurement.value().si_value(); }  // J/(mol K)
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v).to(pluss::ScalarType::Float64); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
 
@@ -406,52 +397,60 @@ static kinetics::Mechanism hydrogen() {
       vec({300.0}), kinetics::Units::cgs_cal());
 }
 
-static void attempt(OutputEngine &out, const char *label, const std::function<void()> &call) {
-  try { call(); out.writeln(label, "  no error"); } catch (const pluss::Error &e) { out.writeln(label, "  ", e.message()); }
-}
-
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  out.print_defaults(PrintOptions{}.sci(3).with_sep(""));
   const auto mech = hydrogen();
-  const thermo::IdealGas gas(mech);
-  const auto t = vec({800.0});
-  // mass fractions of 2 H2 + O2 + 7 Ar (species order H2, H, O, O2, OH, H2O, AR) next to the percentages and mole fractions a user may type by mistake
-  const auto good = vec({0.0128, 0.0, 0.0, 0.1014, 0.0, 0.0, 0.8858}).reshape({1, 7});
-  const auto percent = vec({20.0, 0.0, 0.0, 10.0, 0.0, 0.0, 70.0}).reshape({1, 7});
-  out.writeln("mean molar mass from mass fractions    ", flat(gas.mean_molar_mass(good)));
-  attempt(out, "percentages instead of fractions: ", [&] { (void)gas.mean_molar_mass(percent); });
-  // mole fractions are not mass fractions: this sums to one, so it is accepted, and describes a different gas
-  const auto mole = vec({0.2, 0.0, 0.0, 0.1, 0.0, 0.0, 0.7}).reshape({1, 7});
-  out.writeln("mole fractions read as mass fractions  ", flat(gas.mean_molar_mass(mole)), "  (the mixture itself has 0.0316)");
-  attempt(out, "temperature below the data:      ", [&] { (void)gas.properties(vec({250.0}), good); });
-  attempt(out, "one temperature, two mixtures:   ", [&] { (void)gas.properties(vec({800.0}), good.unite(std::vector<pluss::Series>{good}, 0)); });
-  attempt(out, "float32 against a float64 model: ", [&] { (void)gas.properties(t.to(pluss::ScalarType::Float32), good.to(pluss::ScalarType::Float32)); });
+  const double total = 101325.0 / (gas_constant() * 1200.0);
+  const auto state = [&](double h_fraction) {
+    return reactor::make_state(vec({1200.0}), vec({0.2 * total, h_fraction * total, 0.0, 0.1 * total, 0.0, 0.0, 0.7 * total}).reshape({1, 7}));
+  };
+  const auto grid = [](int points, double end) {
+    std::vector<double> times;
+    for (int i = 0; i <= points; ++i) times.push_back(1e-7 * std::pow(end / 1e-7, static_cast<double>(i) / points));
+    return times;
+  };
+  const auto delay = [&](double seed, const std::vector<double> &times) {
+    const auto t = reactor::temperature(reactor::trajectory(mech, state(seed), times));
+    return std::make_pair(flat(reactor::max_slope_time(times, t))[0], flat(t.select(0, static_cast<std::int64_t>(times.size()) - 1))[0] - 1200.0);
+  };
+  // 1. the delay is read from a sampled path, so it is only as fine as the grid
+  for (const int points : {20, 80, 320}) out.writeln(points, " points:   ignition delay = ", delay(1e-8, grid(points, 1e-3)).first, " s");
+  // 2. a window that ends before the ignition still returns a number: the steepest rise inside the window, with almost no rise at all
+  const auto early = delay(1e-8, grid(40, 1.8e-5));
+  out.writeln("window ends at 18 us:  'delay' = ", early.first, " s, temperature rise only ", early.second, " K");
+  // 3. the starting radical pool matters: the same mixture without the H seed ignites later
+  out.writeln("seed 1e-8:   delay = ", delay(1e-8, grid(320, 1e-3)).first, " s");
+  out.writeln("no seed:     delay = ", delay(0.0, grid(320, 1e-3)).first, " s");
 }
 ```
 
 Output
 
 ```text
-mean molar mass from mass fractions    [0.0316]
-percentages instead of fractions:   natsci::chemistry::ideal_gas: mass fractions must sum to one in every lane
-mole fractions read as mass fractions  [0.0083]  (the mixture itself has 0.0316)
-temperature below the data:        natsci::thermo: temperature must be inside the common NASA validity range [300.000000, 3500.000000] K
-one temperature, two mixtures:     natsci::chemistry::ideal_gas: temperature shape must match every non-species mass-fraction axis
-float32 against a float64 model:   natsci::chemistry::ideal_gas: mass fractions must match the model floating dtype and platform
+20 points:   ignition delay = 8.155e-05 s
+80 points:   ignition delay = 6.695e-05 s
+320 points:   ignition delay = 6.220e-05 s
+window ends at 18 us:  'delay' = 1.690e-05 s, temperature rise only 1.567e-03 K
+seed 1e-8:   delay = 6.220e-05 s
+no seed:     delay = 1.172e-04 s
 ```
 
-Percentages are refused because they sum to `100`, a temperature of `250` K is outside the data, a single temperature against two mixtures has the wrong shape and a single-precision input against a double-precision model has the wrong dtype. The mole fractions `0.2, 0.1, 0.7` are read as mass fractions without complaint and give a mean molar mass of `0.0083` kg/mol instead of `0.0316`.
+The same mixture gives `8.2e-5`, `6.7e-5` and `6.2e-5` s with `20`, `80` and `320` grid points, so the first two digits need a fine grid. A window that ends at `18 µs` returns `1.7e-5` s although the gas warmed by only `0.0016` K, so check that the temperature rose before you trust the value. Without the `H` seed the delay is `1.17e-4` s instead of `6.2e-5` s.
 
 ## Where next
 
-[The constant-volume reactor](closed_reactor.md) supplies the burnt states used above. [Reaction rates and equilibrium](reaction_rates.md) builds the mechanism that both models share. For the transport properties of the same gases, see [Pure gases](../chem_08_transport/pure_gases.md).
+[Reactors in time](reactors.md) describes the integrator and its options in detail. [Mixture properties](mixture_properties.md) connects the burnt composition and temperature to the thermodynamic state of the gas.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="hydrogen_ignition.html">
+  <a class="prev-link" href="reactors.html">
     <span class="label">Previous</span>
-    <span class="title">Hydrogen ignition</span>
+    <span class="title">Reactors in time</span>
+  </a>
+  <a class="next-link" href="mixture_properties.html">
+    <span class="label">Next</span>
+    <span class="title">Mixture properties</span>
   </a>
 </div>
 <!-- apiref:nav:end -->

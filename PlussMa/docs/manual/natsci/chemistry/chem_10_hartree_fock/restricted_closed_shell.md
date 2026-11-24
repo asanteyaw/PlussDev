@@ -2,78 +2,220 @@
 
 [Back to Chemistry 10: Hartree-Fock](../chem_10_hartree_fock.md)
 
-You have the integrals of a molecule in some atomic-orbital basis, and you want its self-consistent-field energy, orbitals and density for a closed-shell state in which every orbital holds an electron of each spin. This page solves the Roothaan equations with DIIS acceleration, reads the energy, the orbital energies and the density matrix, solves many geometries as the lanes of one call, and differentiates the energy with respect to the integrals. Both pages use one two-orbital model molecule whose integrals are given as numbers, so that nothing depends on a basis-set library: the overlap of the orbitals {math}`S_{12} = 0.2`, a one-electron matrix with diagonal {math}`-1.2` and {math}`-0.4` and off-diagonal {math}`-0.25`, a two-electron tensor with the largest element {math}`(11|11) = 0.53`, and a nuclear repulsion of {math}`0.7` hartree (atomic units).
+Hartree-Fock is the first approximation of quantum chemistry: each electron moves in the average field of all the others, and the best set of orbitals is found by iterating until the field and the orbitals agree. This page runs that calculation for a closed-shell molecule from the integrals that describe its basis functions, and shows what the result contains, how to read the iteration, and how to restart and tune it. It also solves many geometries as the lanes of one call and differentiates the energy through the iteration, so that its derivatives with respect to the integrals come out of the same program.
 
 ## How it works
 
-In the restricted method {math}`N` electrons fill the {math}`N/2` lowest orbitals, each doubly. With the atomic orbitals {math}`\chi_\mu` the orbitals are {math}`\psi_i = \sum_\mu C_{\mu i}\chi_\mu`, the density matrix is {math}`P = 2C_\mathrm{occ}C_\mathrm{occ}^{\top}`, and the Fock matrix is built from the one-electron matrix {math}`h` and the two-electron integrals {math}`(\mu\nu|\lambda\sigma)`,
+
+You supply the integrals over your basis functions; the calculation does not compute them from a geometry. With `n` basis functions (atomic orbitals), the integrals are the overlap matrix `S`, the core Hamiltonian `h` (kinetic energy plus attraction to the nuclei), the electron-repulsion integrals {math}`(\mu\nu|\lambda\sigma)` in chemists' notation, and the repulsion energy of the nuclei {math}`E_{nuc}`. The closed-shell energy is built from a density matrix `P` with {math}`P = 2 C_{occ} C_{occ}^T`, where the occupied orbitals {math}`C_{occ}` are the lowest `N/2` solutions of the Roothaan equations
 
 ```{math}
-F_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma} P_{\lambda\sigma}\left[(\mu\nu|\lambda\sigma) - \tfrac12(\mu\lambda|\nu\sigma)\right],\qquad FC = SC\varepsilon
+F C = S C\,\varepsilon, \qquad F_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma} P_{\lambda\sigma}\left[(\mu\nu|\lambda\sigma) - \tfrac12(\mu\lambda|\nu\sigma)\right].
 ```
 
-The equations are solved by iteration until the Fock matrix and the density agree, and the energy is {math}`E = \tfrac12\mathrm{tr}[P(h+F)] + E_\mathrm{nuc}`. `quantum::AoIntegrals` holds the four inputs, `overlap` {math}`S`, `core` {math}`h`, `eri` and `nuclear_energy`, with optional leading batch axes; `quantum::rhf(integrals, electrons, options)` returns `total_energy`, `electronic_energy`, `orbital_energy`, `coefficients`, `density`, `fock`, the convergence measures `density_rms`, `gradient_rms`, `energy_delta`, `converged` and the iteration counts. Convergence is accelerated by DIIS, a least-squares combination of previous Fock matrices; `HfOptions` sets the tolerances, the iteration limit, the damping and the DIIS subspace. All results are Series, so a solution can be differentiated like any other expression.
+The Fock matrix `F` depends on `P`, so the equations are solved by iteration: guess `P`, build `F`, solve for new orbitals, form a new `P`, repeat. The electronic and total energies are
 
-## The energy, orbitals and density of the model molecule
+```{math}
+E_{el} = \tfrac12 \sum_{\mu\nu} P_{\mu\nu}\,(h_{\mu\nu} + F_{\mu\nu}), \qquad E = E_{el} + E_{nuc}.
+```
 
-The program solves the two-orbital model with two electrons and prints the convergence, the total and the electronic energy, the orbital energies, the density matrix, and the number of electrons it holds.
+The iteration is accelerated by DIIS, which combines the last few Fock matrices to cancel their error {math}`FPS - SPF`; this error is also the orbital gradient that measures convergence. The first guess is the density built from the orbitals of the core Hamiltonian, which a restart replaces with your own density.
+
+`pluss::ma::natsci::chemistry::quantum::rhf(integrals, electrons, options)` runs the calculation. The integrals are the four fields `overlap`, `core`, `eri` and `nuclear_energy`; `overlap` and `core` have shape `[..., n, n]` and `eri` has shape `[..., n, n, n, n]`, and any leading axes are batch lanes that are solved side by side. `rhf(integrals, electrons, initial_density, options)` starts from a density you supply. The options and the result fields are:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `max_iterations` | `64` | iteration budget |
+| `energy_tolerance` | `1e-10` | stop when the energy changes by less than this |
+| `gradient_tolerance` | `1e-8` | and the orbital gradient is below this |
+| `damping` | `0` | fraction of the previous density mixed into each new one |
+| `overlap_cutoff` | `1e-10` | smallest overlap eigenvalue treated as independent |
+| `diis_start`, `diis_space`, `diis_rcond` | `1`, `8`, `1e-12` | first DIIS iteration, number of stored Fock matrices (`0` turns DIIS off), conditioning limit |
+| `verify_symmetry` | `true` | refuse integrals that are not symmetric |
+
+| Result field | Contents |
+|---|---|
+| `total_energy`, `electronic_energy` | {math}`E` and {math}`E_{el}` in hartree, one value per lane |
+| `orbital_energy`, `coefficients` | the orbital energies {math}`\varepsilon` and the orbitals `C` (columns), lowest first |
+| `density`, `fock` | the converged `P` and `F` |
+| `density_rms`, `gradient_rms`, `energy_delta` | how much the density, the gradient and the energy changed on the last iteration |
+| `converged`, `iterations`, `diis_steps` | whether both tolerances were met, and the iteration and DIIS counts | All results are Series, so a solution can be differentiated like any other expression.
+
+## The hydrogen molecule
+
+Two hydrogen atoms `1.4` bohr apart, each carrying one `1s` function, so that `n = 2`. The program supplies the standard integrals for this minimal basis, runs `rhf` for two electrons and prints the energies, the orbital energies and the two orbitals.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <cmath>
-
 using namespace pluss::tils;
-namespace qc = pluss::ma::natsci::chemistry::quantum;
-
+namespace quantum = pluss::ma::natsci::chemistry::quantum;
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
 
-// A model molecule with two atomic orbitals. S is the overlap of the orbitals, h the one-electron (kinetic + nuclear attraction)
-// matrix, eri[p][q][r][s] the two-electron repulsion integrals (pq|rs), and e_nuc the repulsion of the nuclei.
-static qc::AoIntegrals model() {
-  return {
-      pluss::series::make({{1.0, 0.2}, {0.2, 1.0}}),
-      pluss::series::make({{-1.2, -0.25}, {-0.25, -0.4}}),
-      pluss::series::make(std::vector<double>{0.53, 0.06, 0.06, 0.29, 0.06, 0.0125, 0.0125, 0.01,
-                                              0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25},
-                          {2, 2, 2, 2}),
-      pluss::series::make(0.7),
-  };
+// H2 in a minimal basis at a bond length of 1.4 bohr: the two 1s functions on the two nuclei.
+// overlap S, core Hamiltonian h = T + V, and the repulsion integrals (mu nu | lambda sigma) with axes (mu, nu, lambda, sigma).
+static quantum::AoIntegrals h2_integrals() {
+  const double j11 = 0.7746, j12 = 0.5697, x = 0.4441, k12 = 0.2970;
+  const std::vector<double> eri = {
+      // (11|11) (11|12) (11|21) (11|22)     (12|11) (12|12) (12|21) (12|22)
+      j11, x, x, j12, x, k12, k12, x,
+      // (21|11) (21|12) (21|21) (21|22)     (22|11) (22|12) (22|21) (22|22)
+      x, k12, k12, x, j12, x, x, j11};
+  return {pluss::series::make({{1.0, 0.6593}, {0.6593, 1.0}}),
+          pluss::series::make({{-1.1204, -0.9584}, {-0.9584, -1.1204}}),
+          pluss::series::make(eri, {2, 2, 2, 2}),
+          pluss::series::make(1.0 / 1.4)};
 }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
-  const auto r = qc::rhf(model(), 2);   // two electrons in the two-orbital basis
-  out.writeln("converged ", r.converged.item<bool>() ? "yes" : "no", ", iterations ", std::to_string(r.iterations), ", DIIS steps ", std::to_string(r.diis_steps));
-  out.writeln("total energy      ", flat(r.total_energy));
-  out.writeln("electronic energy ", flat(r.electronic_energy));
-  out.writeln("orbital energies  ", flat(r.orbital_energy));
-  out.writeln("density matrix    ", flat(r.density));
-  // the density counts the electrons: trace(P S) = 2
-  out.writeln("electrons         ", flat(r.density.matmul(model().overlap).diagonal(0, -2, -1).sum(-1, false)));
-  out.writeln("gradient rms      ", flat(r.gradient_rms));
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto result = quantum::rhf(h2_integrals(), 2);
+  out.writeln("converged               ", result.converged.item<bool>() ? "yes" : "no", " after ", result.iterations, " iterations");
+  out.writeln("total energy (hartree)  ", result.total_energy.item<double>());
+  out.writeln("electronic energy       ", result.electronic_energy.item<double>());
+  out.writeln("orbital energies        ", flat(result.orbital_energy));
+  out.writeln("bonding orbital C[:,0]  ", flat(result.coefficients.select(1, 0)));
+  out.writeln("antibonding C[:,1]      ", flat(result.coefficients.select(1, 1)));
 }
 ```
 
 Output
 
 ```text
-converged yes, iterations 9, DIIS steps 8
-total energy      [-1.180343]
-electronic energy [-1.880343]
-orbital energies  [-0.685309, 0.221109]
-density matrix    [1.911183, 0.179769, 0.179769, 0.016909]
-electrons         [2.000000]
-gradient rms      [0.000000]
+converged               yes after 1 iterations
+total energy (hartree)  -1.1168
+electronic energy       -1.8310
+orbital energies        [-0.5782, 0.6705]
+bonding orbital C[:,0]  [-0.5489, -0.5489]
+antibonding C[:,1]      [-1.2114, 1.2114]
 ```
 
-The iteration converges in `9` steps, `8` of them DIIS steps, to a total energy of `-1.180343` hartree, of which `-1.880343` is electronic and `0.7` nuclear. The two orbital energies, `-0.685309` and `0.221109`, are the occupied and the empty orbital. The density matrix puts `1.911183` electrons on the first orbital and `0.016909` on the second, with the off-diagonal part `0.179769` that comes from the overlap and the mixing; the trace of {math}`PS` is `2.000000`, the number of electrons.
+The total energy is `-1.1168` hartree, the textbook value for this basis, and the bonding orbital has the lower energy `-0.5782` while the antibonding one sits at `+0.6705`. The bonding orbital has equal coefficients on the two atoms and the antibonding one has opposite signs, as symmetry requires (the overall sign of an orbital is arbitrary). The calculation converged in one iteration: for two identical atoms the core Hamiltonian already has the right symmetry, so its orbitals are the answer.
+
+## A lopsided molecule and what to check
+
+A model with two different basis functions, as in a diatomic of two different atoms: the core energies differ, so the iteration has real work to do. The program prints the convergence and the energies, then checks the density and the orbitals against the conditions they must satisfy.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace quantum = pluss::ma::natsci::chemistry::quantum;
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a lopsided two-orbital model, such as a heteronuclear diatomic: the two basis functions have different core energies, so the
+// converged orbitals are not fixed by symmetry and the iteration has real work to do
+static quantum::AoIntegrals lopsided() {
+  return {pluss::series::make({{1.0, 0.2}, {0.2, 1.0}}),
+          pluss::series::make({{-1.2, -0.25}, {-0.25, -0.4}}),
+          pluss::series::make(std::vector<double>{0.53, 0.06, 0.06, 0.29, 0.06, 0.0125, 0.0125, 0.01, 0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25}, {2, 2, 2, 2}),
+          pluss::series::make(0.7)};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8).with_sep(""));
+  const auto ints = lopsided();
+  quantum::HfOptions options;
+  options.energy_tolerance = 1e-12;
+  options.gradient_tolerance = 1e-11;
+  const auto r = quantum::rhf(ints, 2, options);
+  out.writeln("converged        ", r.converged.item<bool>() ? "yes" : "no", "   iterations = ", r.iterations, "   DIIS steps = ", r.diis_steps);
+  out.writeln("total energy     ", r.total_energy.item<double>());
+  out.writeln("orbital energies ", flat(r.orbital_energy));
+  out.writeln("gradient rms     ", r.gradient_rms.item<double>());
+  // the density matrix P = 2 C_occ C_occ^T counts the electrons through tr(P S) and satisfies P S P = 2 P
+  const auto ps = r.density.matmul(ints.overlap);
+  out.writeln("electrons tr(PS) ", ps.diagonal(0, -2, -1).sum().item<double>());
+  out.writeln("|PSP - 2P| max   ", ps.matmul(r.density).sub(r.density.mul(2.0)).abs().max().item<double>());
+  // the orbitals are orthonormal in the overlap metric: C^T S C = 1
+  out.writeln("C^T S C          ", flat(r.coefficients.transpose(-2, -1).matmul(ints.overlap).matmul(r.coefficients)));
+}
+```
+
+Output
+
+```text
+converged        yes   iterations = 10   DIIS steps = 9
+total energy     -1.18034319
+orbital energies [-0.68530923, 0.22110878]
+gradient rms     0.00000000
+electrons tr(PS) 2.00000000
+|PSP - 2P| max   0.00000000
+C^T S C          [1.00000000, 0.00000000, 0.00000000, 1.00000000]
+```
+
+It converges in `10` iterations, nine of them with DIIS, to `-1.18034319` hartree with a gradient of zero to eight places. The checks hold to the digits shown: the density counts `2.00000000` electrons through {math}`\mathrm{tr}(PS)`, it satisfies {math}`PSP = 2P` (the largest deviation prints as zero), and the orbitals are orthonormal in the overlap metric, {math}`C^T S C` equal to the identity.
+
+## Options, restarts and a budget that is too small
+
+The same lopsided model under five different regimes: the default, DIIS switched off, damping with DIIS off, a restart from the converged density, and an iteration budget of three.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace quantum = pluss::ma::natsci::chemistry::quantum;
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a lopsided two-orbital model, such as a heteronuclear diatomic: the two basis functions have different core energies, so the
+// converged orbitals are not fixed by symmetry and the iteration has real work to do
+static quantum::AoIntegrals lopsided() {
+  return {pluss::series::make({{1.0, 0.2}, {0.2, 1.0}}),
+          pluss::series::make({{-1.2, -0.25}, {-0.25, -0.4}}),
+          pluss::series::make(std::vector<double>{0.53, 0.06, 0.06, 0.29, 0.06, 0.0125, 0.0125, 0.01, 0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25}, {2, 2, 2, 2}),
+          pluss::series::make(0.7)};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8).with_sep(""));
+  const auto ints = lopsided();
+  const auto show = [&](const char *label, const quantum::RhfResult &r) {
+    out.writeln(label, "  converged = ", r.converged.item<bool>() ? "yes" : "no", "  iterations = ", r.iterations, "  DIIS steps = ", r.diis_steps, "  E = ", r.total_energy.item<double>());
+  };
+  quantum::HfOptions base;
+  base.energy_tolerance = 1e-12;
+  base.gradient_tolerance = 1e-11;
+  const auto reference = quantum::rhf(ints, 2, base);
+  show("default (DIIS)       ", reference);
+  // switch off the extrapolation: a plain fixed-point iteration reaches the same energy in more steps
+  auto plain = base;
+  plain.diis_space = 0;
+  show("no DIIS              ", quantum::rhf(ints, 2, plain));
+  // damping mixes a fraction of the previous density into each new one
+  auto damped = plain;
+  damped.damping = 0.5;
+  damped.max_iterations = 200;
+  show("damping 0.5, no DIIS ", quantum::rhf(ints, 2, damped));
+  // restart from a converged density, as a continuation or a hand-made guess would
+  show("restart from density ", quantum::rhf(ints, 2, reference.density, base));
+  // an iteration budget that is too small reports the failure in `converged` instead of pretending
+  auto short_budget = base;
+  short_budget.max_iterations = 3;
+  show("3 iterations allowed ", quantum::rhf(ints, 2, short_budget));
+}
+```
+
+Output
+
+```text
+default (DIIS)         converged = yes  iterations = 10  DIIS steps = 9  E = -1.18034319
+no DIIS                converged = yes  iterations = 19  DIIS steps = 0  E = -1.18034319
+damping 0.5, no DIIS   converged = yes  iterations = 50  DIIS steps = 0  E = -1.18034319
+restart from density   converged = yes  iterations = 1  DIIS steps = 0  E = -1.18034319
+3 iterations allowed   converged = no  iterations = 3  DIIS steps = 2  E = -1.18034319
+```
+
+All regimes that converge reach the same energy, `-1.18034319`. DIIS cuts the work from `19` iterations to `10`; damping with a half-weighted old density takes `50`; a restart from the converged density needs only `1`. With `3` iterations allowed the program reports `converged = no` and the energy it has reached, which is already close, rather than pretending to have finished.
 
 ## Many geometries in one call
 
-Changing the nuclear repulsion changes the energy by a constant, and moving the nuclei changes the one-electron matrix. The program solves three nuclear energies on one lane axis, and three different one-electron matrices (the given one, and shifted up and down) on another. Each lane is a separate SCF problem.
+The lopsided two-orbital model of the previous sections can be solved for many geometries at once. Changing the nuclear repulsion changes the energy by a constant, and moving the nuclei changes the one-electron matrix. The program solves three nuclear energies on one lane axis, and three different one-electron matrices (the given one, and shifted up and down) on another. Each lane is a separate SCF problem.
 
 ```cpp
 #include <pluss/ma.h>
@@ -197,78 +339,76 @@ The energy is `-1.300000`, which is {math}`2(-1.25) + 0.7 + 0.5`. The derivative
 
 ## Decisions
 
-- Use `rhf` for closed-shell states and `uhf` ([Unrestricted Hartree-Fock](unrestricted_open_shell.md)) for open shells; for a closed shell they agree and `rhf` is cheaper.
+- Leave DIIS on unless you are comparing iteration schemes; it is the difference between `10` and `19` iterations above. Use `damping` only when the iteration oscillates, and then together with a larger `max_iterations`.
+- Tighten `energy_tolerance` and `gradient_tolerance` together. The energy error of a converged calculation is second order in the orbital error, so a loose gradient hides behind an apparently converged energy; derivatives and finite differences of the energy need the tight setting, a quick estimate the loose one.
+- Pass an `initial_density` when you are following a molecule through a series of geometries, so that every calculation starts from the previous solution, or when a hand-made guess is better than the core Hamiltonian.
+- Put many calculations in one call by giving the integrals leading batch axes (geometries, nuclear energies, parameter sets): each lane converges on its own and `converged` is reported per lane.
+- Use `rhf` for closed-shell states and [`uhf`](unrestricted_open_shell.md) for open shells; for a closed shell they agree and `rhf` is cheaper.
 - Pass `electrons` as the total number, which must be even and not more than twice the number of orbitals.
-- Tighten `energy_tolerance` and `gradient_tolerance` for derivatives and finite differences of the energy, and loosen them for a quick estimate. Keep the DIIS space between {math}`2` and about {math}`8`.
-- Pass a previous `density` as the initial density when you move a geometry slightly, so the new SCF starts near the answer.
-- Use leading batch axes for geometries or parameter sets: the batch of integrals broadcasts against each other, and each lane converges on its own.
 
 ## Pitfalls
 
-The method has requirements that are checked, and a convergence that is not an error. The program asks for an odd number of electrons, gives it two identical orbitals, asks for too many electrons, and limits the iterations to two.
+The inputs are checked before the iteration starts: the electron count has to be positive, even and fit in the basis; the matrices have to be symmetric; the overlap has to be positive definite above `overlap_cutoff`; and the repulsion tensor has to match the basis size.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-#include <cmath>
-
+#include <functional>
 using namespace pluss::tils;
-namespace qc = pluss::ma::natsci::chemistry::quantum;
+namespace quantum = pluss::ma::natsci::chemistry::quantum;
 
-static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+// a lopsided two-orbital model, such as a heteronuclear diatomic: the two basis functions have different core energies, so the
+// converged orbitals are not fixed by symmetry and the iteration has real work to do
+static quantum::AoIntegrals lopsided() {
+  return {pluss::series::make({{1.0, 0.2}, {0.2, 1.0}}),
+          pluss::series::make({{-1.2, -0.25}, {-0.25, -0.4}}),
+          pluss::series::make(std::vector<double>{0.53, 0.06, 0.06, 0.29, 0.06, 0.0125, 0.0125, 0.01, 0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25}, {2, 2, 2, 2}),
+          pluss::series::make(0.7)};
+}
 
-// A model molecule with two atomic orbitals. S is the overlap of the orbitals, h the one-electron (kinetic + nuclear attraction)
-// matrix, eri[p][q][r][s] the two-electron repulsion integrals (pq|rs), and e_nuc the repulsion of the nuclei.
-static qc::AoIntegrals model() {
-  return {
-      pluss::series::make({{1.0, 0.2}, {0.2, 1.0}}),
-      pluss::series::make({{-1.2, -0.25}, {-0.25, -0.4}}),
-      pluss::series::make(std::vector<double>{0.53, 0.06, 0.06, 0.29, 0.06, 0.0125, 0.0125, 0.01,
-                                              0.06, 0.0125, 0.0125, 0.01, 0.29, 0.01, 0.01, 0.25},
-                          {2, 2, 2, 2}),
-      pluss::series::make(0.7),
-  };
+static void attempt(OutputEngine &out, const char *label, const std::function<void()> &call) {
+  try { call(); out.writeln(label, "  no error"); } catch (const pluss::Error &e) { out.writeln(label, "  ", e.message()); }
 }
 
 int main() {
   OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
-  // an odd number of electrons has no closed-shell description
-  try { qc::rhf(model(), 1); } catch (const pluss::Error &e) { out.writeln("odd electrons   : ", e.message()); }
-  // two identical orbitals: the overlap matrix is singular
-  try {
-    auto bad = model();
-    bad.overlap = pluss::series::make({{1.0, 1.0}, {1.0, 1.0}});
-    qc::rhf(bad, 2);
-  } catch (const pluss::Error &e) { out.writeln("singular overlap: ", e.message()); }
-  // more electrons than orbitals can hold
-  try { qc::uhf(model(), 3, 0); } catch (const pluss::Error &e) { out.writeln("too many electrons: ", e.message()); }
-  // an iteration limit: the call returns, flagged as not converged
-  qc::HfOptions few;
-  few.max_iterations = 2;
-  const auto r = qc::rhf(model(), 2, few);
-  out.writeln("2 iterations: converged ", r.converged.item<bool>() ? "yes" : "no", ", energy ", flat(r.total_energy), ", gradient rms ", flat(r.gradient_rms));
-  const auto ok = qc::rhf(model(), 2);
-  out.writeln("default     : converged ", ok.converged.item<bool>() ? "yes" : "no", ", energy ", flat(ok.total_energy), ", gradient rms ", flat(ok.gradient_rms));
+  const auto ints = lopsided();
+  // a closed-shell calculation needs an even number of electrons that fit in the basis
+  attempt(out, "three electrons:   ", [&] { (void)quantum::rhf(ints, 3); });
+  attempt(out, "six electrons:     ", [&] { (void)quantum::rhf(ints, 6); });
+  // the matrices must be symmetric: a core Hamiltonian typed with one off-diagonal element wrong is refused
+  auto skewed = ints;
+  skewed.core = pluss::series::make({{-1.2, -0.25}, {-0.2, -0.4}});
+  attempt(out, "asymmetric core:   ", [&] { (void)quantum::rhf(skewed, 2); });
+  // two basis functions that are the same function make the overlap singular
+  auto duplicate = ints;
+  duplicate.overlap = pluss::series::make({{1.0, 1.0}, {1.0, 1.0}});
+  attempt(out, "duplicate orbitals:", [&] { (void)quantum::rhf(duplicate, 2); });
+  // the repulsion tensor has to match the basis size
+  auto wrong = ints;
+  wrong.eri = pluss::series::make(std::vector<double>(8, 0.1), {2, 2, 2});
+  attempt(out, "eri of rank three: ", [&] { (void)quantum::rhf(wrong, 2); });
 }
 ```
 
 Output
 
 ```text
-odd electrons   : natsci::chemistry::quantum::hf: RHF requires a positive even electron count
-singular overlap: natsci::chemistry::quantum::hf: overlap must be positive definite above overlap_cutoff
-too many electrons: natsci::chemistry::quantum::hf: each UHF spin population cannot exceed nao
-2 iterations: converged no, energy [-1.180343], gradient rms [0.000038]
-default     : converged yes, energy [-1.180343], gradient rms [0.000000]
+three electrons:       natsci::chemistry::quantum::hf: RHF requires a positive even electron count
+six electrons:         natsci::chemistry::quantum::hf: RHF electron count cannot exceed 2*nao
+asymmetric core:       natsci::chemistry::quantum::hf: overlap and core must be symmetric
+duplicate orbitals:    natsci::chemistry::quantum::hf: overlap must be positive definite above overlap_cutoff
+eri of rank three:     natsci::chemistry::quantum::hf: overlap/core need two matrix axes and eri needs four AO axes
 ```
 
-An odd electron count, a singular overlap matrix (two orbitals that are the same function) and too many electrons are each rejected with a message that says which. An iteration limit that is too small is not an error: the call returns `converged no` with a gradient of `0.000038`, and the energy, to six decimals, already agrees with the converged one, `-1.180343`, which makes it easy to miss. Test `converged`, which judges the energy change and the gradient against the tolerances, not the energy alone.
+Each mistake is refused with a message: three electrons, six electrons in a two-function basis, an asymmetric core Hamiltonian, two identical basis functions (a singular overlap) and a repulsion tensor of the wrong rank.
+
+A calculation that runs out of iterations is not an error. The budget example above returns `converged = no` with an energy that already agrees with the converged one to six decimals, which is easy to miss. Test `converged`, which judges the energy change and the gradient against the tolerances, not the energy alone.
 
 ## Where next
 
-[Unrestricted Hartree-Fock](unrestricted_open_shell.md) removes the requirement that each orbital be doubly occupied. The results are Series, so reverse differentiation applies to any scalar built from them, not only to the energy.
+[Unrestricted Hartree-Fock](unrestricted_open_shell.md) removes the requirement that each orbital be doubly occupied, so that radicals, triplets and stretched bonds can be treated, and uses the same options, results and batching. The results are Series, so reverse differentiation applies to any scalar built from them, not only to the energy. The [quantum mechanics chapter of the physics guide](../../physics/phys_03_quantum.md) describes the states and operators behind these orbitals.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

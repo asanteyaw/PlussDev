@@ -2,7 +2,7 @@
 
 [Back to Chemistry 9: Gas-Phase Kinetics and Equilibrium](../chem_09_gas_phase.md)
 
-You want to know what a mixture of atoms turns into when it has had time to react: which species are present and how much of each, at a given temperature and pressure, at a given volume, or at a given enthalpy. This page solves the equilibrium composition by minimising the Gibbs energy under the conservation of the elements, for the four standard pairs of constraints, and checks the answer against the mass-action law. All three pages use one small system so that every number can be checked by hand: a diatomic {math}`\mathrm{X_2}` that dissociates into two atoms {math}`\mathrm{X}`, {math}`\mathrm{X_2} \rightleftharpoons 2\mathrm{X}`. Its thermodynamic data have constant heat capacities, {math}`c_p/R = 3.5` for {math}`\mathrm{X_2}` and {math}`2.5` for {math}`\mathrm{X}`, and the atom is {math}`\Delta H/R = 12000` K (about {math}`100` kJ/mol) above the molecule.
+You want to know what a mixture of atoms turns into when it has had time to react: which species are present and how much of each, at a given temperature and pressure, at a given volume, or at a given enthalpy. This page solves the equilibrium composition by minimising the Gibbs energy under the conservation of the elements, for the four standard pairs of constraints, and checks the answer against the mass-action law. This page uses the small system of [Mechanisms and rate constants](mechanisms.md) so that every number can be checked by hand: a diatomic {math}`\mathrm{X_2}` that dissociates into two atoms {math}`\mathrm{X}`, {math}`\mathrm{X_2} \rightleftharpoons 2\mathrm{X}`. Its thermodynamic data have constant heat capacities, {math}`c_p/R = 3.5` for {math}`\mathrm{X_2}` and {math}`2.5` for {math}`\mathrm{X}`, and the atom is {math}`\Delta H/R = 12000` K (about {math}`100` kJ/mol) above the molecule.
 
 ## How it works
 
@@ -211,7 +211,7 @@ int main() {
   const auto b0 = pluss::make_series(std::vector<double>{2.0}, {1, 1}).to(pluss::ScalarType::Float64);
   const auto at3000 = eq::tp(m, vec({3000.0}), vec({101325.0}), b0);
   const auto h_rt = m.thermo().h_rt(vec({3000.0}));            // [1, 2] species enthalpy / RT
-  const double rt = chem::thermo::gas_constant() * 3000.0;
+  const double rt = pluss::ma::natsci::common::constants::codata2022::molar_gas_constant.measurement.value().si_value() * 3000.0;
   const double h = (flat(at3000.moles.mul(h_rt))[0] + flat(at3000.moles.mul(h_rt))[1]) * rt;
   out.writeln("enthalpy of the equilibrium mixture at 3000 K (J) ", std::vector<double>{h});
   // given that enthalpy and the pressure, the solver finds the temperature back
