@@ -592,11 +592,12 @@ int command_new(const std::vector<std::string>& args) {
                    "add_executable(" + target + " main.cpp)\n"
                    "target_link_libraries(" + target + " PRIVATE Pluss::PlussII)\n");
   write_if_changed(dir / "main.cpp",
-                   "#include <pluss/pluss.h>\n\n"
+                   "#include <pluss/pluss.h>\n"
+                   "#include <pluss/tils/kit/datastore.h>\n\n"
                    "#include <iostream>\n\n"
                    "int main() {\n"
-                   "  // A built-in example table; pluss::table::examples() lists the others.\n"
-                   "  auto sales = pluss::table::example(\"sales\");\n"
+                   "  // A built-in dataset; pluss::loader::datastores() lists the others.\n"
+                   "  auto sales = pluss::loader::datastore(\"sales\").frame();\n"
                    "  std::cout << sales.head(6) << '\\n';\n"
                    "  std::cout << sales.describe() << '\\n';\n"
                    "}\n");

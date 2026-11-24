@@ -67,6 +67,7 @@ Each line is a check: the download is where `pluss` expects, CMake is new enough
 
 ```cpp
 #include <pluss/pluss.h>
+#include <pluss/tils/kit/datastore.h>
 
 #include <iostream>
 

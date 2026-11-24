@@ -35,6 +35,7 @@ MIME = "\x1e<<pluss-mime "
 PRELUDE = r'''
 #include <pluss/pluss.h>
 #include <pluss/tils/doc.h>
+#include <pluss/tils/kit/datastore.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
