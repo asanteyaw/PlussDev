@@ -86,6 +86,12 @@ endif()
 
 project(plussma VERSION 0.0.6 LANGUAGES CXX)
 
+# Set before any target is created so every library gets it. The static libraries of the download must be usable inside a shared library (the notebook kernel builds one),
+# and a thread_local variable in a non-PIC archive cannot be linked into a shared object on Linux.
+if(NOT WIN32)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 # The header every space can include to learn which build it is. The channel comes from the
 # environment so a release workflow can say "steady" or "transient" without editing command lines.
 set(PLUSS_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -203,11 +209,6 @@ endmacro()
 # ==============================
 # Global configuration
 # ==============================
-# The static libraries of the download must be usable inside a shared library (the notebook kernel builds one),
-# and a thread_local variable in a non-PIC archive cannot be linked into a shared object on Linux.
-if(NOT WIN32)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
