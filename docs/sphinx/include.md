@@ -96,6 +96,7 @@ Finer includes compile faster and show exactly what a file depends on. The price
 | Header | What it gives you |
 |---|---|
 | `<pluss/tils/doc.h>` | reading the documentation from a program |
+| `<pluss/tils/kit/datastore.h>` | ready-made data in every container shape (needs PlussMic) |
 | `<pluss/tils/settings.h>` | settings from defaults, a file, the environment and the command line |
 | `<pluss/tils/cache.h>` | keeping results between runs |
 | `<pluss/tils/info.h>` | version, system and compute platforms |
@@ -117,13 +118,14 @@ The program uses a `Series` and an example table, which come with `<pluss/pluss.
 ```cpp
 // <pluss/pluss.h> gives Qit, Mic and Pl. A PlussTils piece is opt-in: include it yourself.
 #include <pluss/pluss.h>
+#include <pluss/tils/kit/datastore.h>
 #include <pluss/tils/settings.h>
 
 #include <iostream>
 
 int main() {
   auto x = pluss::make_series({1.0, 2.0, 3.0});          // PlussQit, from pluss.h
-  auto sales = pluss::table::example("sales");            // PlussMic, from pluss.h
+  auto sales = pluss::loader::datastore("sales").frame();  // PlussMic, from pluss.h
   pluss::tils::Settings settings;                        // PlussTils, from its own header
   settings.set("rows", 3);
   std::cout << x.sum().item<double>() << " " << sales.head(settings.get<int>("rows")).ncases() << "\n";

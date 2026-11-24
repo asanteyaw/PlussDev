@@ -83,7 +83,7 @@ def main():
         check("a compile error is reported", r["error"] is not None and "error" in r["err"], r)
         r = run("std::cout << v << std::endl;")
         check("the engine survives a compile error", r["text"].strip() == "2", r)
-        r = run('auto df = pluss::table::example("sales"); df')
+        r = run('auto df = pluss::loader::datastore("sales").frame(); df')
         check("a table is shown inline", "text/html" in r["mime"], r)
         r = run("df.show();")
         check(".show() on a table goes inline", "text/html" in r["mime"], r)

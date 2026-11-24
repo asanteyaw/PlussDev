@@ -15,6 +15,11 @@
 #include "pluss/tils/doc.h"
 #include "pluss/tils/view.h"
 
+// Ready-made data for every container shape; it needs PlussMic.
+#if __has_include("pluss/table/table.h") && __has_include("pluss/kindle/kindle.h") && __has_include("pluss/scribble/scribble.h")
+#include "pluss/tils/kit/datastore.h"
+#endif
+
 #if __has_include("pluss/bi/bi.h") && \
     __has_include("pluss/bundle/bundle.h") && \
     __has_include("pluss/table/table.h")

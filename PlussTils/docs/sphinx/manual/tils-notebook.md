@@ -55,7 +55,7 @@ x.sum().item<double>()
 ```
 
 ```cpp
-auto df = pluss::table::example("sales");
+auto df = pluss::loader::datastore("sales").frame();
 df
 ```
 

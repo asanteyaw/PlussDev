@@ -109,7 +109,7 @@ endif()
 
 # The library's own helper checks, built from the archive like any user program. A failure is
 # reported as a warning until they have passed on every platform; then it can be made an error.
-foreach(check IN ITEMS core_info core_settings core_cache core_doc array_file examples umbrellas)
+foreach(check IN ITEMS core_info core_settings core_cache core_doc array_file datastore umbrellas)
   set(check_binary "${consumer_build_dir}/pluss_sdk_check_${check}")
   if(WIN32)
     set(check_binary "${consumer_build_dir}/Release/pluss_sdk_check_${check}.exe")

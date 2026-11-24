@@ -34,6 +34,7 @@
 #include <pluss/pl/views.h>
 #include <pluss/pl/flash.h>
 #include <pluss/tils/doc.h>
+#include <pluss/tils/kit/datastore.h>
 #include <pluss/tils/let.h>
 #include <pluss/tils/flow.h>
 #include <pluss/tils/suppose.h>

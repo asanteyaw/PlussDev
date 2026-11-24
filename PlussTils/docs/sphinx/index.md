@@ -69,6 +69,7 @@ manual/tils-info
 manual/tils-settings
 manual/tils-cache
 manual/tils-doc
+manual/tils-datastore
 manual/tils-cli
 manual/tils-notebook
 manual/tils-aux-transmit

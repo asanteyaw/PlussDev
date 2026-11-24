@@ -71,7 +71,7 @@ Each line is a check: the download is where `pluss` expects, CMake is new enough
 #include <iostream>
 
 int main(int argc, char** argv) {
-  auto sales = pluss::table::example("sales");
+  auto sales = pluss::loader::datastore("sales").frame();
   std::cout << sales.head(3) << '\n';
 
   std::cout << "arguments:";

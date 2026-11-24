@@ -1,7 +1,6 @@
 #pragma once
 
 #include "table/Atlas.h"
-#include "table/Examples.h"
 #include "table/DataFrame.h"
 #include "table/DFDataset.h"
 #include "table/FlashDatasetInterop.h"

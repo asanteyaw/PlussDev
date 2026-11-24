@@ -27,5 +27,4 @@ guide/kindle_streams_archives
 guide/scribble
 guide/bundle
 guide/missing_nan_and_inf
-guide/example_tables
 ```
