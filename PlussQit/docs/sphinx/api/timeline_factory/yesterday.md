@@ -46,5 +46,5 @@ days from today to tomorrow:  1
 ## See Also
 
 - [`today`](today.md): the start of the current day.
-- [`tomorrow`](../timeline_factory/tomorrow.md): the day after today.
+- [`tomorrow`](tomorrow.md): the day after today.
 - [`now`](now.md): the current instant, not rounded to a day.
