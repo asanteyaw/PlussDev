@@ -67,7 +67,9 @@ api/timeline_factory/random
 api/timeline_factory/branch
 api/timeline_factory/time
 api/timeline_factory/today
+api/timeline_factory/tomorrow
 api/timeline_factory/unite
+api/timeline_factory/yesterday
 ```
 
 <div class="pluss-inline-prev-next">

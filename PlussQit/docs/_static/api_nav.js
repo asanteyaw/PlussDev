@@ -950,7 +950,7 @@ window.PLUSS_API_NAV = {
       "arange", "branch", "date", "date_range", "epoch", "format", "from_buffer", "from_epoch",
       "from_epoch_micros", "from_epoch_millis", "from_epoch_seconds", "from_ymd", "from_ymdhms",
       "full", "full_like", "make", "make_timeline", "moment", "now", "print",
-      "rand_between", "random", "time", "today", "unite"
+      "rand_between", "random", "time", "today", "tomorrow", "unite", "yesterday"
     ]
   },
   "Timeline": {
