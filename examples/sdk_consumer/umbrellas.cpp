@@ -66,13 +66,36 @@
 #include <pluss/tils/view.h>
 
 // Names a program is likely to use for its own types. PlussII's headers must not bring in system types
-// of the same name (on macOS, Accelerate once did, through CoreFoundation).
-struct Point {
-  double x, y;
-};
-struct Rect {
-  int left, top;
-};
+// of the same name (on macOS, Accelerate once did, through CoreFoundation, which defines Point and Rect, and
+// MacTypes.h also defines Size, Handle, Fixed, Style, Boolean, Byte, Component and Ptr).
+struct Point { double x, y; };
+struct Rect { int left, top; };
+struct Size { int width, height; };
+struct Handle { int id; };
+struct Fixed { long raw; };
+struct Style { int bold; };
+struct Boolean { bool value; };
+struct Byte { unsigned char value; };
+struct Component { int id; };
+struct Ptr { void* where; };
+struct Region { int id; };
+struct Window { int id; };
+struct Color { float r, g, b; };
+struct Event { int id; };
+struct Rectangle { int w, h; };
+struct Vector { double x, y; };
+struct Matrix { double m[4]; };
+
+// Names that platform headers define as macros. A public header that includes windows.h without
+// WIN32_LEAN_AND_MEAN and NOMINMAX, or the Linux device-number header, would define these for the whole
+// program, and std::min, std::max or a user's own names would stop compiling.
+#if defined(min) || defined(max) || defined(ERROR) || defined(near) || defined(far) || defined(small) || defined(interface) || \
+    defined(IN) || defined(OUT) || defined(OPTIONAL) || defined(DELETE) || defined(CALLBACK) || defined(TRUE) || defined(FALSE)
+#error "a PlussII header defines a platform macro with a common name (min, max, ERROR, near, far, small, interface, IN, OUT, OPTIONAL, DELETE, CALLBACK, TRUE, FALSE)"
+#endif
+#if defined(major) || defined(minor) || defined(makedev)
+#error "a PlussII header defines major, minor or makedev (sys/sysmacros.h)"
+#endif
 
 int main() {
   // Something from each part, so a header that compiles but links to nothing is noticed.
