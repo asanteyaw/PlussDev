@@ -132,7 +132,7 @@ TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][
   const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
   require_close_(flat_cuda.take(idx_cuda).to(pluss::pCPU).host<float>(), flat_cpu.take(idx_cpu).host<float>());
 
-  auto put_cpu = pluss::Series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
+  auto put_cpu = pluss::series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
   auto put_cuda = put_cpu.to(pluss::pCUDA);
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f}, {4});
   const auto src_cuda = src_cpu.to(pluss::pCUDA);
@@ -152,7 +152,7 @@ TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][
       a_cuda.gather(1, gather_idx_cuda).to(pluss::pCPU).host<float>(),
       a_cpu.gather(1, gather_idx_cpu).host<float>());
 
-  const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto scatter_base_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto scatter_base_cuda = scatter_base_cpu.to(pluss::pCUDA);
   require_close_(
       scatter_base_cuda.scatter(1, gather_idx_cuda, a_cuda).to(pluss::pCPU).host<float>(),

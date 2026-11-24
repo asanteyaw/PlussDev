@@ -657,9 +657,9 @@ private:
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
-      group.mu_product_scalar = Series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
-      group.beta2_power = Series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
-      group.decay_power = Series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
+      group.mu_product_scalar = pluss::series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
+      group.beta2_power = pluss::series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
+      group.decay_power = pluss::series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
     }
   }
 

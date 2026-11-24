@@ -87,7 +87,7 @@ auto show = [](std::string_view label, const pluss::Note& note) {
 };
 show("zero", zero);
 show("many", many);
-show("undefined", pluss::Note::undefined());
+show("undefined", pluss::note::undefined());
 ```
 
 ### Output

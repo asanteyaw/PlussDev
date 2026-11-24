@@ -1903,7 +1903,7 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
   bool have_rescue = false;
   double rescue_value = std::numeric_limits<double>::infinity();
   Series rescue_point = setup.flat_initial;
-  Series rescue_objectives = Series::zeros({1}, ScalarType::Float64);
+  Series rescue_objectives = pluss::series::zeros({1}, ScalarType::Float64);
   std::int64_t rescue_calls = 0;
   std::int64_t observed_calls = 0;
   std::int64_t observed_failures = 0;
@@ -1970,7 +1970,7 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
     BlackboxEvaluation failed = base_eval;
     failed.evaluation_ok = false;
     if (!failed.objectives.defined()) {
-      failed.objectives = Series::zeros({1}, ScalarType::Float64);
+      failed.objectives = pluss::series::zeros({1}, ScalarType::Float64);
     }
     return failed;
   };

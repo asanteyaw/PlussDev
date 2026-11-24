@@ -31,7 +31,7 @@ Series as_vector_(const Series& x, const char* op) {
 double first_(const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).host<double>()[0]; }
 
 Series head_(const Series& x, std::int64_t count, Config cfg) {
-  return x.index_select(0, Series::arange(0, count, 1, ScalarType::Int64).to(cfg.platform));
+  return x.index_select(0, pluss::series::arange(0, count, 1, ScalarType::Int64).to(cfg.platform));
 }
 
 Series scalar_index_(std::int64_t index, Config cfg) {

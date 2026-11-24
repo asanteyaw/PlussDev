@@ -74,7 +74,7 @@ TEST_CASE("CUDA bridge enables indexing fallback when strict native is off", "[c
   REQUIRE(take_cuda.platform() == pluss::pCUDA);
   require_close_(take_cuda.to(pluss::pCPU).host<float>(), take_cpu.host<float>());
 
-  auto put_cpu = pluss::Series::zeros({5}, pluss::ScalarType::Float32);
+  auto put_cpu = pluss::series::zeros({5}, pluss::ScalarType::Float32);
   auto put_cuda = put_cpu.to(pluss::pCUDA);
   put_cpu.put_(idx_cpu, src_cpu, /*accumulate=*/false);
   put_cuda.put_(idx_cuda, src_cuda, /*accumulate=*/false);

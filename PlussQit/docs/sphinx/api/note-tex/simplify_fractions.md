@@ -91,7 +91,7 @@ std::cout << std::boolalpha
           << "idempotent="
           << ((once == once.tex().simplify_fractions()).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().simplify_fractions().defined()
+          << pluss::note::undefined().tex().simplify_fractions().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex()

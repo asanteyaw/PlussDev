@@ -680,14 +680,14 @@ void AutoregressiveForecaster::learn(const AutoregressiveBatch& train,
         Series loss = gaussian_nll_(forecast.mean, forecast.scale, mini.target);
 
         if (options.objective_regularization.l1_penalty != 0.0) {
-          Series l1 = Series::full({}, 0.0, loss.scalar_type()).to(loss.platform());
+          Series l1 = pluss::series::full({}, 0.0, loss.scalar_type()).to(loss.platform());
           for (const Series* parameter : parameters) {
             l1 = l1.add(parameter->abs().sum());
           }
           loss = loss.add(l1.mul(options.objective_regularization.l1_penalty));
         }
         if (options.objective_regularization.l2_penalty != 0.0) {
-          Series l2 = Series::full({}, 0.0, loss.scalar_type()).to(loss.platform());
+          Series l2 = pluss::series::full({}, 0.0, loss.scalar_type()).to(loss.platform());
           for (const Series* parameter : parameters) {
             l2 = l2.add(parameter->mul(*parameter).sum());
           }

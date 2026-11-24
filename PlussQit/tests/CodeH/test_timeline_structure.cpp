@@ -49,7 +49,7 @@ TEST_CASE("Timeline concat honors strided operands", "[timeline-structure]") {
       1'704'153'600'000'000'000LL, 22};
   const std::array<std::int64_t, 1> shape{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
   const auto joined = strided.concat(pluss::timeline::date("2024-01-03"));
   REQUIRE(joined.day().host<std::int32_t>() ==
@@ -75,7 +75,7 @@ TEST_CASE("Timeline repeat tiles complete axis-zero blocks",
       1'704'153'600'000'000'000LL, 22};
   const std::array<std::int64_t, 1> shape{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
   REQUIRE(strided.repeat(2).day().host<std::int32_t>() ==
           std::vector<std::int32_t>{1, 2, 1, 2});

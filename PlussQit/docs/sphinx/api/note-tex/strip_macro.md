@@ -80,7 +80,7 @@ same=true
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().tex().strip_macro("bad name");
+  (void)pluss::note::undefined().tex().strip_macro("bad name");
 } catch (const pluss::Error&) {
   std::cout << "strip_macro(bad name): rejected\n";
 }
@@ -101,7 +101,7 @@ const auto once = source.tex().strip_macro("RR");
 std::cout << std::boolalpha
           << "idempotent=" << ((once == once.tex().strip_macro("RR")).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().strip_macro("RR").defined() << '\n';
+          << pluss::note::undefined().tex().strip_macro("RR").defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1})
       .tex().strip_macro("RR");

@@ -7,8 +7,8 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("masked_select basic", "[indexing]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
-  auto m = Series::zeros({2,3}, ScalarType::Bool);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
+  auto m = pluss::series::zeros({2,3}, ScalarType::Bool);
 
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (std::int64_t i=0;i<a.numel();++i) ap[i] = double(i+1);

@@ -87,7 +87,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const Series like = Series::zeros({20000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({20000}, pluss::ScalarType::Float64);
 
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 2.0, 400, 5);
   const Series end = path.w.select(0, 400);
@@ -119,7 +119,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(0));
-  const Series like = Series::zeros({3, 2}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({3, 2}, pluss::ScalarType::Float64);
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 10, 1);
   out.writeln("shape =", path.w.sizes());
 }

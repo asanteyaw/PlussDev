@@ -51,7 +51,7 @@ int main() {
   show("scalar", pluss::note::make("scalar").argsort());
   show("empty", pluss::note::make(std::vector<std::string>{}).argsort());
   rejected("matrix", [&] { (void)words.reshape({2, 2}).argsort(); });
-  rejected("undefined argsort", [&] { (void)pluss::Note::undefined().argsort(); });
+  rejected("undefined argsort", [&] { (void)pluss::note::undefined().argsort(); });
 
   std::cout << "\n=== repeat ===\n";
   const auto vector = pluss::note::make({"a", "b"});
@@ -73,7 +73,7 @@ int main() {
       std::array<std::int64_t, 1>{2});
   show("Bytes preserved", raw.repeat({2}));
   std::cout << "undefined repeat defined=" << std::boolalpha
-            << pluss::Note::undefined().repeat({2}).defined() << '\n';
+            << pluss::note::undefined().repeat({2}).defined() << '\n';
   rejected("too few dimensions", [&] { (void)matrix.repeat({2}); });
   rejected("negative repeat", [&] { (void)vector.repeat({-1}); });
   rejected("rank four", [&] { (void)vector.repeat({1, 1, 1, 1}); });
@@ -94,7 +94,7 @@ int main() {
            .repeat_interleave(2, 0));
   show("Bytes interleave", raw.repeat_interleave(2, 0));
   std::cout << "undefined interleave defined=" << std::boolalpha
-            << pluss::Note::undefined().repeat_interleave(2, 0).defined() << '\n';
+            << pluss::note::undefined().repeat_interleave(2, 0).defined() << '\n';
   rejected("negative interleave", [&] { (void)vector.repeat_interleave(-1, 0); });
   rejected("axis out of range", [&] { (void)matrix.repeat_interleave(2, 2); });
   rejected("scalar axis out of range", [&] {

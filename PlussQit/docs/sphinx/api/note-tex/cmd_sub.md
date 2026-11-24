@@ -106,12 +106,12 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().tex().cmd_sub("bad name", "x");
+  (void)pluss::note::undefined().tex().cmd_sub("bad name", "x");
 } catch (const pluss::Error&) {
   std::cout << "cmd_sub(bad name): rejected\n";
 }
 std::cout << std::boolalpha << "undefined="
-          << pluss::Note::undefined().tex().cmd_sub("alpha", "A").defined()
+          << pluss::note::undefined().tex().cmd_sub("alpha", "A").defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1})

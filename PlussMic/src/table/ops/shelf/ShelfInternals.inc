@@ -48,12 +48,12 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
 
 pluss::Series bool_series_zeros(std::int64_t n) {
   PLUSS_CHECK(n >= 0, "Shelf: bool mask length must be non-negative");
-  return pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  return pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
 }
 
 pluss::Series bool_series_from_u8(const std::vector<std::uint8_t>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto out = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
     p[i] = values[static_cast<std::size_t>(i)] != 0;
@@ -68,7 +68,7 @@ pluss::Series bool_series_from_u8(const pluss::Note& mask) {
 }
 
 pluss::Series int64_index_series(const std::vector<std::int64_t>& values) {
-  auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
@@ -153,7 +153,7 @@ bool is_numeric_series_type(const pluss::Series& s) {
 pluss::Series shelf_non_missing_mask(const Shelf& t) {
   auto valid = detail::has_mask(t)
                    ? *detail::validity_mask(t)
-                   : pluss::Series::ones(
+                   : pluss::series::ones(
                          {t.size()}, pluss::codem::ScalarType::Bool,
                          t.kind() == ShelfKind::Series
                              ? t.as_series().platform()
@@ -186,7 +186,7 @@ pluss::Series shelf_non_missing_mask(const Shelf& t) {
 Shelf shelf_nonfinite_mask(const Shelf& t, nonfinite::Kind kind, bool negate) {
   pluss::Series flags = pluss::series::undefined();
   if (t.kind() != ShelfKind::Series) {
-    flags = pluss::Series::zeros({t.size()}, pluss::codem::ScalarType::Bool);
+    flags = pluss::series::zeros({t.size()}, pluss::codem::ScalarType::Bool);
   } else {
     std::optional<pluss::Series> present;
     if (detail::has_mask(t)) {
@@ -479,7 +479,7 @@ pluss::msharp::intrusive_ptr<detail::ShelfImpl> clone_impl(const detail::ShelfIm
 }
 
 pluss::Series scalar_like_column(const pluss::Series& reference, double value) {
-  return pluss::Series::full({reference.numel()}, value, reference.scalar_type());
+  return pluss::series::full({reference.numel()}, value, reference.scalar_type());
 }
 
 pluss::Series apply_math_series_series(
@@ -497,7 +497,7 @@ pluss::Series apply_math_series_series(
     PLUSS_CHECK(af.numel() == bf.numel(), "Shelf::pow: operand length mismatch");
     const auto av = af.host<double>();
     const auto bv = bf.host<double>();
-    auto out = pluss::Series::empty({af.numel()}, pluss::codem::ScalarType::Float64);
+    auto out = pluss::series::empty({af.numel()}, pluss::codem::ScalarType::Float64);
     auto* p = reinterpret_cast<double*>(out.raw_data());
     for (std::int64_t i = 0; i < af.numel(); ++i) {
       p[i] = std::pow(av[static_cast<std::size_t>(i)], bv[static_cast<std::size_t>(i)]);
@@ -670,7 +670,7 @@ std::optional<pluss::Series> broadcast_validity_mask_to_size(
   if (valid) {
     return std::nullopt;
   }
-  return pluss::Series::zeros({output_size}, pluss::codem::ScalarType::Bool);
+  return pluss::series::zeros({output_size}, pluss::codem::ScalarType::Bool);
 }
 
 std::optional<pluss::Series> combine_validity_masks_broadcast(
@@ -834,7 +834,7 @@ bool compare_numbers(double lhs, double rhs, ShelfBinaryCompareOp op) {
 }
 
 pluss::Series bool_series_from_bools(const std::vector<bool>& values) {
-  auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
   for (std::size_t i = 0; i < values.size(); ++i) {
     p[i] = values[i];

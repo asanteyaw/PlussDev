@@ -96,7 +96,7 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().deaccent().defined() << '\n';
+          << pluss::note::undefined().tex().deaccent().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().deaccent();
 } catch (const pluss::Error&) {

@@ -246,7 +246,7 @@ static Series mps_matmul_batched_dispatch_(const Series& a, const Series& b) {
   out_shape.push_back(m);
   out_shape.push_back(n);
   if (product_shape_(std::span<const std::int64_t>(out_shape.data(), out_shape.size())) == 0) {
-    return Series::empty(out_shape, aa0.scalar_type(), Platform::MPS);
+    return pluss::codem::factory::empty(out_shape, aa0.scalar_type(), Platform::MPS);
   }
 
   const std::size_t out_batch_rank = out_batch.size();
@@ -627,7 +627,7 @@ static Series scalar_like(const Series& self, double value) {
   // Force construction on the target platform scope to avoid leaking a prior
   // scope (e.g. MPS) into CPU-side scalar temporaries.
   ops_internal::PlatformScope scope{self.platform()};
-  return Series::full(std::span<const std::int64_t>{}, value,
+  return pluss::codem::factory::full(std::span<const std::int64_t>{}, value,
                       ops_internal::scalar_operand_dtype(self.scalar_type(), value))
       .to(self.platform());
 }
@@ -697,20 +697,20 @@ static Series& inplace_result_(Series& self, const Series& value) {
 }
 
 static Series bool_scalar(bool value) {
-  Series out = Series::zeros({}, ScalarType::Bool);
+  Series out = pluss::codem::factory::zeros({}, ScalarType::Bool);
   *reinterpret_cast<std::uint8_t*>(out.raw_data()) = value ? 1 : 0;
   return out;
 }
 
 static Series i64_scalar(std::int64_t value) {
-  Series out = Series::zeros({}, ScalarType::Int64);
+  Series out = pluss::codem::factory::zeros({}, ScalarType::Int64);
   *reinterpret_cast<std::int64_t*>(out.raw_data()) = value;
   return out;
 }
 
 static Series i64_vector(std::span<const std::int64_t> values) {
   const std::array<std::int64_t, 1> shape{{static_cast<std::int64_t>(values.size())}};
-  Series out = Series::empty(std::span<const std::int64_t>(shape.data(), shape.size()), ScalarType::Int64);
+  Series out = pluss::codem::factory::empty(std::span<const std::int64_t>(shape.data(), shape.size()), ScalarType::Int64);
   auto* p = reinterpret_cast<std::int64_t*>(out.raw_data());
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(values.size()); ++i) p[i] = values[(std::size_t)i];
   return out;
@@ -779,7 +779,7 @@ static Series alias_view_on_(const Series& base, const Series& view_like) {
       "copy_ backward: expected matching dtype for base/view aliasing");
   const auto storage_offset_elems =
       view_like.storage_offset() / std::max<std::int64_t>(1, view_like.itemsize());
-  return Series::from_storage(
+  return pluss::codem::factory::from_storage(
       base.storage(),
       storage_offset_elems,
       std::vector<std::int64_t>(view_like.sizes().begin(), view_like.sizes().end()),
@@ -817,7 +817,7 @@ static Series make_pre_copy_parent_snapshot_(const Series& root_before) {
 }
 
 static Series make_inplace_bridge_input_snapshot_(const Series& self) {
-  Series snapshot = Series::empty(self.sizes(), self.scalar_type()).to(self.platform());
+  Series snapshot = pluss::codem::factory::empty(self.sizes(), self.scalar_type()).to(self.platform());
   assign_inplace_preserve_storage_(snapshot, self);
   if (!series_tape::recording_enabled() || !series_tape::tracks_slope(self)) {
     return snapshot;
@@ -932,7 +932,7 @@ static void bind_put_backward_index_list_(
     if (series_tape::tracks_slope(self_before)) {
       Series g_self = sens.clone();
       if (!accumulate) {
-        Series zeros = Series::zeros({}, self_before.scalar_type()).to(self_before.platform());
+        Series zeros = pluss::codem::factory::zeros({}, self_before.scalar_type()).to(self_before.platform());
         native::cpu::index_put_inplace(g_self, indices_i64, zeros, /*accumulate=*/false);
       }
       series_tape::accumulate_sensitivity(self_before, g_self);
@@ -973,7 +973,7 @@ static void bind_put_backward_1d_(
     if (series_tape::tracks_slope(self_before)) {
       Series g_self = accumulate ? sens : sens.clone();
       if (!accumulate) {
-        Series zeros = Series::zeros({index_i64.numel()}, self_before.scalar_type()).to(self_before.platform());
+        Series zeros = pluss::codem::factory::zeros({index_i64.numel()}, self_before.scalar_type()).to(self_before.platform());
         auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_raw_);
         g_self = (g_self.*put_fn)(index_i64, zeros, /*accumulate=*/false);
       }
@@ -1190,7 +1190,7 @@ static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
         Series g_root = sens.clone();
         Series g_view = alias_view_on_(g_root, self_before);
         const Series zeros =
-            Series::zeros(g_view.sizes(), g_view.scalar_type()).to(g_view.platform());
+            pluss::codem::factory::zeros(g_view.sizes(), g_view.scalar_type()).to(g_view.platform());
         assign_inplace_preserve_storage_(g_view, zeros);
         if (root_parent_snapshot.defined()) {
           series_tape::accumulate_sensitivity(root_parent_snapshot, g_root);
@@ -1266,7 +1266,7 @@ static Series make_expanded_gather_index_(
     }
   }
   const auto base_off = idx_cpu.storage_offset() / std::max<std::int64_t>(1, idx_cpu.itemsize());
-  Series view_cpu = Series::from_storage(
+  Series view_cpu = pluss::codem::factory::from_storage(
       idx_cpu.storage(),
       base_off,
       std::vector<std::int64_t>(out_shape.begin(), out_shape.end()),
@@ -1339,7 +1339,7 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
       if (sens.scalar_type() != self.scalar_type()) sens = sens.to(self.scalar_type());
       if (sens.platform() != Platform::CPU) sens = sens.to(Platform::CPU, self.scalar_type());
       sens = sens.contiguous();
-      Series base = Series::zeros(self.sizes(), self.scalar_type()).to(Platform::CPU);
+      Series base = pluss::codem::factory::zeros(self.sizes(), self.scalar_type()).to(Platform::CPU);
       Series grad = ops_internal::scatter_add(base, dim, idx_expanded_cpu, sens);
       if (self.platform() != Platform::CPU) grad = grad.to(self.platform(), self.scalar_type()).contiguous();
       series_tape::accumulate_sensitivity(self, grad);
@@ -1758,7 +1758,7 @@ static Series expand_impl(const Series& self, std::span<const std::int64_t> targ
     }
     if (!changed) return out;
     const auto base_off = out.storage_offset() / std::max<std::int64_t>(1, out.itemsize());
-    Series view = Series::from_storage(out.storage(), base_off, out_sizes, out_strides, out.scalar_type());
+    Series view = pluss::codem::factory::from_storage(out.storage(), base_off, out_sizes, out_strides, out.scalar_type());
     // The stride-0 view aliases storage directly, so bind the backward here:
     // sum the upstream gradient back over the broadcast axes.
     if (series_tape::recording_enabled() && series_tape::tracks_slope(self)) {
@@ -1827,7 +1827,7 @@ static Series roll_cpu_blocks_(const Series& self, std::int64_t dim, std::int64_
   for (std::int64_t d = 0; d < dim; ++d) outer *= sizes[(std::size_t)d];
   for (std::int64_t d = dim + 1; d < x.dim(); ++d) inner *= sizes[(std::size_t)d];
   const std::int64_t n = sizes[(std::size_t)dim];
-  Series out = Series::empty(x.sizes(), x.scalar_type());
+  Series out = pluss::codem::factory::empty(x.sizes(), x.scalar_type());
   const auto row = static_cast<std::size_t>(inner) * static_cast<std::size_t>(x.itemsize());
   const std::byte* src = x.raw_data();
   std::byte* dst = reinterpret_cast<std::byte*>(out.raw_mutable_data());
@@ -1983,7 +1983,7 @@ Series rand_work_(pluss::msharp::RangeView::Int sizes, Platform platform, std::u
   if (platform == Platform::MPS && native::mps::supports_uniform_stochastic(stochastic_work_dtype_(platform))) {
     return native::mps::uniform_stochastic(sizes, stochastic_work_dtype_(platform), 0.0, 1.0, seed);
   }
-  Series out = Series::rand(sizes, stochastic_work_dtype_(platform), seed);
+  Series out = pluss::codem::factory::rand(sizes, stochastic_work_dtype_(platform), seed);
   return platform == Platform::CPU ? out : out.to(platform);
 }
 
@@ -1991,7 +1991,7 @@ Series randn_work_(pluss::msharp::RangeView::Int sizes, Platform platform, std::
   if (platform == Platform::MPS && native::mps::supports_normal_stochastic(stochastic_work_dtype_(platform))) {
     return native::mps::normal_stochastic(sizes, stochastic_work_dtype_(platform), 0.0, 1.0, seed);
   }
-  Series out = Series::randn(sizes, stochastic_work_dtype_(platform), seed);
+  Series out = pluss::codem::factory::randn(sizes, stochastic_work_dtype_(platform), seed);
   return platform == Platform::CPU ? out : out.to(platform);
 }
 
@@ -2006,12 +2006,12 @@ static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
   }
   // Explicit Platform::CPU, not the ambient platform scope: this helper is
   // CPU-only by name and by the `p = probs.to(Platform::CPU)...` line just
-  // above, but Series::rand's 3-arg overload resolves its platform from
+  // above, but pluss::series::rand's 3-arg overload resolves its platform from
   // the current PlatformScope, which is still MPS when called from
   // bernoulli_sample_from_probs_mps_ below -- allocating a Float64 tensor
   // under an ambient MPS scope trips Series::to(MPS)'s Float64 guard
   // even though this function never intends to touch MPS at all.
-  auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0, Platform::CPU);
+  auto u = pluss::codem::factory::rand(p.sizes(), ScalarType::Float64, /*seed=*/0, Platform::CPU);
   // torch parity: torch.bernoulli(input) preserves input's own dtype
   // (values 0.0/1.0), it does NOT return a Bool mask -- confirmed against
   // aten/native_functions.yaml's `bernoulli(Tensor self, ...) -> Tensor`
@@ -2051,11 +2051,11 @@ static Series uniform_like_cpu_(const Series& self, double from, double to) {
   if (is_complex_dtype(self.scalar_type())) {
     const ScalarType real_dtype = self.scalar_type() == ScalarType::Complex64
                                       ? ScalarType::Float32 : ScalarType::Float64;
-    Series real = Series::rand(self.sizes(), ScalarType::Float64, 0);
-    Series imag = Series::rand(self.sizes(), ScalarType::Float64, 0);
+    Series real = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, 0);
+    Series imag = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, 0);
     real = add_scalar(mul_scalar(real, to - from), from).to(real_dtype).contiguous();
     imag = add_scalar(mul_scalar(imag, to - from), from).to(real_dtype).contiguous();
-    Series out = Series::empty(self.sizes(), self.scalar_type());
+    Series out = pluss::codem::factory::empty(self.sizes(), self.scalar_type());
     if (self.scalar_type() == ScalarType::Complex64) {
       const auto* rp = reinterpret_cast<const float*>(real.raw_data());
       const auto* ip = reinterpret_cast<const float*>(imag.raw_data());
@@ -2069,7 +2069,7 @@ static Series uniform_like_cpu_(const Series& self, double from, double to) {
     }
     return out;
   }
-  Series x = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series x = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, to - from), from);
   return x.to(Platform::CPU).to(self.scalar_type());
 }
@@ -2116,11 +2116,11 @@ static Series normal_like_cpu_(const Series& self, double mean, double std) {
     const ScalarType real_dtype = self.scalar_type() == ScalarType::Complex64
                                       ? ScalarType::Float32 : ScalarType::Float64;
     const double component_std = std / std::sqrt(2.0);
-    Series real = add_scalar(mul_scalar(Series::randn(self.sizes(), ScalarType::Float64, 0),
+    Series real = add_scalar(mul_scalar(pluss::codem::factory::randn(self.sizes(), ScalarType::Float64, 0),
                                         component_std), mean).to(real_dtype).contiguous();
-    Series imag = mul_scalar(Series::randn(self.sizes(), ScalarType::Float64, 0),
+    Series imag = mul_scalar(pluss::codem::factory::randn(self.sizes(), ScalarType::Float64, 0),
                              component_std).to(real_dtype).contiguous();
-    Series out = Series::empty(self.sizes(), self.scalar_type());
+    Series out = pluss::codem::factory::empty(self.sizes(), self.scalar_type());
     if (self.scalar_type() == ScalarType::Complex64) {
       const auto* rp = reinterpret_cast<const float*>(real.raw_data());
       const auto* ip = reinterpret_cast<const float*>(imag.raw_data());
@@ -2134,7 +2134,7 @@ static Series normal_like_cpu_(const Series& self, double mean, double std) {
     }
     return out;
   }
-  Series x = Series::randn(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series x = pluss::codem::factory::randn(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, std), mean);
   return x.to(Platform::CPU).to(self.scalar_type());
 }
@@ -2172,7 +2172,7 @@ static Series exponential_like_cpu_(const Series& self, double lambda) {
   PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
               "exponential_: receiver must have a floating-point dtype");
   PLUSS_CHECK(lambda > 0.0, "exponential_: expected lambda > 0");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series u = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   u = ops_internal::clamp_min(u, 1e-12);
   Series x = mul_scalar(ops_internal::log(u), -1.0 / lambda);
   return x.to(Platform::CPU).to(self.scalar_type());
@@ -2208,7 +2208,7 @@ static Series geometric_like_cpu_(const Series& self, double p) {
   PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
               "geometric_: receiver must have a floating-point dtype");
   PLUSS_CHECK(p > 0.0 && p < 1.0, "geometric_: expected 0 < p < 1");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series u = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series one_minus_u = ops_internal::sub(scalar_like(u, 1.0), u);
   const double denom = std::log(1.0 - p);
   Series x = ops_internal::floor(div_scalar(ops_internal::log(one_minus_u), denom));
@@ -2246,7 +2246,7 @@ static Series cauchy_like_cpu_(const Series& self, double median, double sigma) 
   PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
               "cauchy_: receiver must have a floating-point dtype");
   PLUSS_CHECK(sigma > 0.0, "cauchy_: expected sigma > 0");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series u = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series centered = sub_scalar(u, 0.5);
   Series t = ops_internal::tan(mul_scalar(centered, kPi));
   Series x = add_scalar(mul_scalar(t, sigma), median);
@@ -2285,7 +2285,7 @@ static Series bernoulli_like_cpu_(const Series& self, double p) {
               "bernoulli_: complex receivers are not supported");
   PLUSS_CHECK(std::isfinite(p) && p >= 0.0 && p <= 1.0,
               "bernoulli_: expected a finite probability in [0, 1]");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series u = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   return ops_internal::lt(u, scalar_like(u, p)).to(Platform::CPU).to(self.scalar_type());
 }
 
@@ -2373,7 +2373,7 @@ static Series dropout_noise_like_(const Series& self, bool feature, double keep)
   noise_shape[0] = self.sizes()[0];
   noise_shape[1] = self.sizes()[1];
   const Series seed =
-      Series::empty(pluss::msharp::RangeView::Int(noise_shape), self.scalar_type(), self.platform());
+      pluss::codem::factory::empty(pluss::msharp::RangeView::Int(noise_shape), self.scalar_type(), self.platform());
   Series noise = bernoulli_like(seed, keep).to(self.scalar_type());
   return expand_impl(noise, self.sizes());
 }
@@ -2406,7 +2406,7 @@ static Series dropout_family_impl_(std::string_view op, const Series& self, doub
   PLUSS_CHECK(p >= 0.0 && p <= 1.0, "dropout: expected 0 <= p <= 1");
   if (!train || p == 0.0 || self.numel() == 0) return self;
   if (p == 1.0) {
-    return Series::zeros(pluss::msharp::RangeView::Int(self.sizes()), self.scalar_type()).to(self.platform());
+    return pluss::codem::factory::zeros(pluss::msharp::RangeView::Int(self.sizes()), self.scalar_type()).to(self.platform());
   }
 
   const bool feature = is_feature_dropout_(op);
@@ -2493,7 +2493,7 @@ static void write_scalar_value_(Series& s, double value) {
       *reinterpret_cast<double*>(s.raw_mutable_data()) = value;
       return;
     default:
-      s = Series::full(s.sizes(), value, s.scalar_type()).to(s.platform());
+      s = pluss::codem::factory::full(s.sizes(), value, s.scalar_type()).to(s.platform());
       return;
   }
 }
@@ -2633,7 +2633,7 @@ template <class Fn>
 static Series unary_f64_impl(const Series& self, Fn&& fn) {
   const auto dt = compat_real_dtype_for_(self);
   auto x = self.to(dt).contiguous();
-  auto out = Series::empty(x.sizes(), dt);
+  auto out = pluss::codem::factory::empty(x.sizes(), dt);
   const auto n = x.numel();
   for (std::int64_t i = 0; i < n; ++i) {
     write_real_(out, i, fn(read_real_(x, i)));
@@ -2645,7 +2645,7 @@ template <class Fn>
 static Series unary_special_impl_(const Series& self, Fn&& fn) {
   const auto dt = special_real_dtype_for_(self);
   auto x = self.to(dt).contiguous();
-  auto out = Series::empty(x.sizes(), dt, x.platform());
+  auto out = pluss::codem::factory::empty(x.sizes(), dt, x.platform());
   for (std::int64_t i = 0; i < out.numel(); ++i) {
     write_real_(out, i, fn(read_real_(x, i)));
   }
@@ -2771,7 +2771,7 @@ static Series zeta_impl(const Series& s, const Series& q) {
   auto shape = SeriesIterator::broadcast_shape(ss.sizes(), qq.sizes());
   auto sse = expand_impl(ss, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto qqe = expand_impl(qq, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, dt);
+  auto out = pluss::codem::factory::empty(shape, dt);
   const auto n = out.numel();
   for (std::int64_t i = 0; i < n; ++i) {
     write_real_(out, i, hurwitz_zeta_scalar(read_real_(sse, i), read_real_(qqe, i)));
@@ -3050,7 +3050,7 @@ static void bind_mov_backward_(
   link->propagate = [self, window, dim, kind](const Series& out_sens) {
     const Series x = self.to(Platform::CPU).to(ScalarType::Float64).contiguous();
     const Series incoming = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous();
-    Series grad = Series::zeros(self.sizes(), ScalarType::Float64);
+    Series grad = pluss::codem::factory::zeros(self.sizes(), ScalarType::Float64);
     const auto d = wrap_dim(dim, x.dim(), "mov*");
     const auto n = x.sizes()[static_cast<std::size_t>(d)];
     std::int64_t outer = 1;
@@ -3122,7 +3122,7 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
   const auto dt = compat_real_dtype_for_(self);
   auto x = self.to(dt).contiguous();
   dim = wrap_dim(dim, x.dim(), "mov*");
-  auto out = Series::empty(x.sizes(), dt);
+  auto out = pluss::codem::factory::empty(x.sizes(), dt);
   const auto nd = x.dim();
   const auto n = x.sizes()[(std::size_t)dim];
   std::int64_t outer = 1;
@@ -3329,7 +3329,7 @@ static void bind_trig_xform_backward_(
   link->propagate = [self, dim, kind](const Series& out_sens) {
     series_tape::NoGradGuard no_grad;
     const Series incoming = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous();
-    Series grad = Series::zeros(self.sizes(), ScalarType::Float64, Platform::CPU);
+    Series grad = pluss::codem::factory::zeros(self.sizes(), ScalarType::Float64, Platform::CPU);
     const auto n = self.sizes()[(std::size_t)dim];
     const auto nd = self.dim();
     std::int64_t outer = 1;
@@ -3445,7 +3445,7 @@ static Series stft_pad_center_(const Series& x, std::int64_t pad, std::string_vi
   if (mode == "constant") {
     std::vector<std::int64_t> psz(x.sizes().begin(), x.sizes().end());
     psz[static_cast<std::size_t>(last)] = pad;
-    const Series z = Series::zeros(psz, x.scalar_type()).to(x.platform());
+    const Series z = pluss::codem::factory::zeros(psz, x.scalar_type()).to(x.platform());
     return z.unite({x, z}, last);
   }
   PLUSS_CHECK(mode == "reflect",
@@ -3503,11 +3503,11 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
   if (window.defined() || win < n_fft) {
     Series w = window.defined()
         ? window.to(complex_transform ? cdt : rdt)
-        : Series::ones({win}, complex_transform ? cdt : rdt).to(x.platform());
+        : pluss::codem::factory::ones({win}, complex_transform ? cdt : rdt).to(x.platform());
     if (win < n_fft) {
       const std::int64_t left = (n_fft - win) / 2;
-      const Series zl = Series::zeros({left}, w.scalar_type()).to(x.platform());
-      const Series zr = Series::zeros({n_fft - win - left}, w.scalar_type()).to(x.platform());
+      const Series zl = pluss::codem::factory::zeros({left}, w.scalar_type()).to(x.platform());
+      const Series zr = pluss::codem::factory::zeros({n_fft - win - left}, w.scalar_type()).to(x.platform());
       w = zl.unite({w, zr}, 0);
     }
     frames = frames.mul(w);
@@ -3532,7 +3532,7 @@ static Series stft_overlap_add_(const Series& frames, std::int64_t hop, std::int
   const std::int64_t batch = frames.sizes()[0];
   const std::int64_t n_frames = frames.sizes()[1];
   const std::int64_t n_fft = frames.sizes()[2];
-  Series idx2d = Series::empty({n_frames * n_fft}, ScalarType::Int64).to(frames.platform());
+  Series idx2d = pluss::codem::factory::empty({n_frames * n_fft}, ScalarType::Int64).to(frames.platform());
   auto* ip = reinterpret_cast<std::int64_t*>(idx2d.raw_mutable_data());
   for (std::int64_t f = 0; f < n_frames; ++f)
     for (std::int64_t p = 0; p < n_fft; ++p)
@@ -3540,7 +3540,7 @@ static Series stft_overlap_add_(const Series& frames, std::int64_t hop, std::int
   Series idx_row = idx2d.reshape({1, n_frames * n_fft});
   Series index = batch == 1 ? idx_row : idx_row.repeat(std::vector<std::int64_t>{batch, 1});
   const Series flat = frames.reshape({batch, n_frames * n_fft});
-  const Series base = Series::zeros({batch, out_len}, frames.scalar_type()).to(frames.platform());
+  const Series base = pluss::codem::factory::zeros({batch, out_len}, frames.scalar_type()).to(frames.platform());
   return base.scatter_add(1, index, flat);
 }
 
@@ -3585,11 +3585,11 @@ static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t ho
 
   // window (centered/padded to n_fft), applied to the reconstructed frames.
   Series w = window.defined() ? window.to(rdt).to(spec.platform())
-                              : Series::ones({win}, rdt).to(spec.platform());
+                              : pluss::codem::factory::ones({win}, rdt).to(spec.platform());
   if (win < n_fft) {
     const std::int64_t left = (n_fft - win) / 2;
-    const Series zl = Series::zeros({left}, rdt).to(spec.platform());
-    const Series zr = Series::zeros({n_fft - win - left}, rdt).to(spec.platform());
+    const Series zl = pluss::codem::factory::zeros({left}, rdt).to(spec.platform());
+    const Series zr = pluss::codem::factory::zeros({n_fft - win - left}, rdt).to(spec.platform());
     w = zl.unite({w, zr}, 0);
   }
   frames = frames.mul(w);
@@ -3616,7 +3616,7 @@ static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t ho
   }
   y = y.div(envelope);
   if (end > expected) {
-    const Series tail = Series::zeros({batch, end - expected}, y.scalar_type()).to(y.platform());
+    const Series tail = pluss::codem::factory::zeros({batch, end - expected}, y.scalar_type()).to(y.platform());
     y = y.unite({tail}, 1);
   }
   if (!was_2d) return y;
@@ -3651,7 +3651,7 @@ static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t
   const auto dt = compat_real_dtype_for_(self);
   auto x = self.to(dt).contiguous();
   dim = wrap_dim(dim, x.dim(), "unwrap");
-  auto out = Series::empty(x.sizes(), dt);
+  auto out = pluss::codem::factory::empty(x.sizes(), dt);
   const auto nd = x.dim();
   const auto n = x.sizes()[(std::size_t)dim];
   std::int64_t outer = 1;
@@ -3744,7 +3744,7 @@ static Series cplxpair_impl(const Series& self) {
   std::stable_sort(real_values.begin(), real_values.end(), [](const Entry& a, const Entry& b) {
     return std::real(a.value) < std::real(b.value);
   });
-  auto out_flat = Series::empty({n}, ScalarType::Complex128);
+  auto out_flat = pluss::codem::factory::empty({n}, ScalarType::Complex128);
   auto* op = reinterpret_cast<Complex128*>(out_flat.raw_data());
   std::vector<std::int64_t> order((std::size_t)n);
   std::int64_t cursor = 0;
@@ -3768,7 +3768,7 @@ static Series cplxpair_impl(const Series& self) {
       series_tape::NoGradGuard no_grad;
       const Series incoming = out_sens.to(Platform::CPU).to(ScalarType::Complex128).contiguous();
       const auto* source = reinterpret_cast<const Complex128*>(incoming.raw_data());
-      Series grad = Series::zeros(self.sizes(), ScalarType::Complex128, Platform::CPU);
+      Series grad = pluss::codem::factory::zeros(self.sizes(), ScalarType::Complex128, Platform::CPU);
       auto* destination = reinterpret_cast<Complex128*>(grad.raw_mutable_data());
       for (std::size_t i = 0; i < order.size(); ++i) destination[order[i]] = source[i];
       series_tape::accumulate_sensitivity(self, cast_like_(grad, self));
@@ -3803,7 +3803,7 @@ static Series nextafter_impl(const Series& self, const Series& other) {
     // float32 kernel on the IEEE bit pattern (MPS has no float64).
     const Series fa = self.to(ScalarType::Float32).contiguous();
     const Series fb = other.to(ScalarType::Float32).contiguous();
-    Series out = Series::empty(SeriesIterator::broadcast_shape(fa.sizes(), fb.sizes()), ScalarType::Float32, Platform::MPS);
+    Series out = pluss::codem::factory::empty(SeriesIterator::broadcast_shape(fa.sizes(), fb.sizes()), ScalarType::Float32, Platform::MPS);
     native::mps::nextafter(fa, fb, out);
     return out;
   }
@@ -3813,7 +3813,7 @@ static Series nextafter_impl(const Series& self, const Series& other) {
     auto shape32 = SeriesIterator::broadcast_shape(self.sizes(), other.sizes());
     auto fa = expand_impl(self, std::span<const std::int64_t>(shape32.data(), shape32.size())).contiguous();
     auto fb = expand_impl(other, std::span<const std::int64_t>(shape32.data(), shape32.size())).contiguous();
-    auto out32 = Series::empty(shape32, ScalarType::Float32);
+    auto out32 = pluss::codem::factory::empty(shape32, ScalarType::Float32);
     const auto* x = reinterpret_cast<const float*>(fa.raw_data());
     const auto* y = reinterpret_cast<const float*>(fb.raw_data());
     auto* z = reinterpret_cast<float*>(out32.raw_data());
@@ -3825,7 +3825,7 @@ static Series nextafter_impl(const Series& self, const Series& other) {
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
   auto aa = expand_impl(a, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto bb = expand_impl(b, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(shape, ScalarType::Float64);
   const auto n = out.numel();
   const auto* ap = reinterpret_cast<const double*>(aa.raw_data());
   const auto* bp = reinterpret_cast<const double*>(bb.raw_data());
@@ -3841,7 +3841,7 @@ static Series nextafter_impl(const Series& self, double toward) {
 static Series random_like_cpu_(const Series& self, double lo, double hi) {
   PLUSS_CHECK(hi > lo, "random_: expected hi > lo");
   PLUSS_CHECK(!is_complex_dtype(self.scalar_type()), "random_: complex receivers are not supported");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  Series u = pluss::codem::factory::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series x = ops_internal::floor(add_scalar(mul_scalar(u, hi - lo), lo));
   return x.to(Platform::CPU).to(self.scalar_type());
 }
@@ -3923,7 +3923,7 @@ static void ensure_bitshift_int_like_(const Series& s) {
 static Series bitshift_scalar_impl(const Series& self, std::int64_t shift, bool left) {
   ensure_bitshift_int_like_(self);
   auto x = self.to(ScalarType::Int64).contiguous();
-  auto out = Series::empty(x.sizes(), ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(x.sizes(), ScalarType::Int64);
   const auto n = x.numel();
   const auto* ip = reinterpret_cast<const std::int64_t*>(x.raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -3943,7 +3943,7 @@ static Series bitshift_series_impl(const Series& self, const Series& other, bool
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
   auto aa = expand_impl(a, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto bb = expand_impl(b, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, ScalarType::Int64);
   const auto n = out.numel();
   const auto* ap = reinterpret_cast<const std::int64_t*>(aa.raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(bb.raw_data());
@@ -3966,7 +3966,7 @@ static Series gcd_impl(const Series& self, const Series& other) {
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
   auto aa = expand_impl(a, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto bb = expand_impl(b, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, ScalarType::Int64);
   const auto n = out.numel();
   const auto* ap = reinterpret_cast<const std::int64_t*>(aa.raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(bb.raw_data());
@@ -3985,7 +3985,7 @@ static Series lcm_impl(const Series& self, const Series& other) {
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
   auto aa = expand_impl(a, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto bb = expand_impl(b, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, ScalarType::Int64);
   const auto n = out.numel();
   const auto* ap = reinterpret_cast<const std::int64_t*>(aa.raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(bb.raw_data());
@@ -4097,7 +4097,7 @@ static Series heaviside_impl(const Series& self, const Series& values) {
   auto shape = SeriesIterator::broadcast_shape(x.sizes(), v.sizes());
   auto xx = expand_impl(x, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto vv = expand_impl(v, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(shape, ScalarType::Float64);
   const auto n = out.numel();
   const auto* xp = reinterpret_cast<const double*>(xx.raw_data());
   const auto* vp = reinterpret_cast<const double*>(vv.raw_data());
@@ -4317,8 +4317,8 @@ static Series median_dim_impl(
   std::vector<std::int64_t> out_sizes(x.sizes().begin(), x.sizes().end());
   if (keepdim) out_sizes[static_cast<std::size_t>(dim)] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series out = Series::empty(out_sizes, ScalarType::Float64);
-  Series index = Series::empty(out_sizes, ScalarType::Int64);
+  Series out = pluss::codem::factory::empty(out_sizes, ScalarType::Float64);
+  Series index = pluss::codem::factory::empty(out_sizes, ScalarType::Int64);
   const auto* input = reinterpret_cast<const double*>(x.raw_data());
   auto* output = reinterpret_cast<double*>(out.raw_mutable_data());
   auto* selected = reinterpret_cast<std::int64_t*>(index.raw_mutable_data());
@@ -4390,7 +4390,7 @@ static Series mode_flat_impl(const Series& self) {
     best = vals.back().first;
     best_index = vals.back().second;
   }
-  auto out = Series::empty({}, ScalarType::Float64);
+  auto out = pluss::codem::factory::empty({}, ScalarType::Float64);
   *reinterpret_cast<double*>(out.raw_data()) = best;
   if (series_tape::recording_enabled() && series_tape::tracks_slope(self) &&
       dtype_of(self.scalar_type()).is_floating()) {
@@ -4398,8 +4398,8 @@ static Series mode_flat_impl(const Series& self) {
     link->op_name = "mode";
     link->parents = {self};
     link->propagate = [self, best_index](const Series& out_sens) {
-      Series flat = Series::zeros({self.numel()}, self.scalar_type()).to(self.platform());
-      const Series index = Series::full({1}, static_cast<double>(best_index), ScalarType::Int64)
+      Series flat = pluss::codem::factory::zeros({self.numel()}, self.scalar_type()).to(self.platform());
+      const Series index = pluss::codem::factory::full({1}, static_cast<double>(best_index), ScalarType::Int64)
                                .to(self.platform());
       const Series source = out_sens.to(self.scalar_type()).reshape({1}).to(self.platform());
       flat = flat.scatter_add(0, index, source);
@@ -4423,8 +4423,8 @@ static Series mode_dim_impl(const Series& self, std::int64_t dim, bool keepdim) 
   std::vector<std::int64_t> out_sizes(x.sizes().begin(), x.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  auto out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), ScalarType::Float64);
-  auto index = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), ScalarType::Float64);
+  auto index = pluss::codem::factory::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), ScalarType::Int64);
   const auto* ip = reinterpret_cast<const double*>(x.raw_data());
   auto* op = reinterpret_cast<double*>(out.raw_data());
   auto* index_out = reinterpret_cast<std::int64_t*>(index.raw_mutable_data());
@@ -4894,7 +4894,7 @@ static Series bind_kthvalue_backward_(
     Series sens = keepdim ? out_sens : out_sens.unsqueeze(dim);
     sens = sens.to(self.platform()).to(self.scalar_type()).contiguous();
     const Series index = index_keepdim.to(self.platform()).contiguous();
-    Series grad = Series::zeros(self.sizes(), self.scalar_type(), self.platform())
+    Series grad = pluss::codem::factory::zeros(self.sizes(), self.scalar_type(), self.platform())
                       .scatter_add(dim, index, sens);
     series_tape::accumulate_sensitivity(self, grad);
   };
@@ -5079,7 +5079,7 @@ static Series bind_selection_permutation_backward_(Series out,
     if (g.dim() + 1 == self.dim()) g = g.unsqueeze(d);
     if (idx.dim() + 1 == self.dim()) idx = idx.unsqueeze(d);
     Series grad_in =
-        Series::zeros(self.sizes(), self.scalar_type(), self.platform())
+        pluss::codem::factory::zeros(self.sizes(), self.scalar_type(), self.platform())
             .scatter_add(d, idx, g);
     series_tape::accumulate_sensitivity(self, grad_in);
   };
@@ -5243,7 +5243,7 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
 static Series tril_triu_impl(const Series& self, std::int64_t diagonal, bool upper) {
   PLUSS_CHECK(self.dim() >= 2, "tril/triu: expected tensor with at least 2 dimensions");
   auto x = self.contiguous();
-  auto out = Series::zeros(x.sizes(), x.scalar_type());
+  auto out = pluss::codem::factory::zeros(x.sizes(), x.scalar_type());
 
   const auto nd = x.dim();
   const auto rows = x.sizes()[(std::size_t)(nd - 2)];
@@ -5308,7 +5308,7 @@ static Series diag_extract_2d(const Series& self, std::int64_t diagonal) {
   const auto row0 = diagonal < 0 ? -diagonal : 0;
   const auto col0 = diagonal > 0 ? diagonal : 0;
   const auto len = std::max<std::int64_t>(0, std::min(rows - row0, cols - col0));
-  auto out = Series::empty({len}, x.scalar_type());
+  auto out = pluss::codem::factory::empty({len}, x.scalar_type());
   const auto item = x.dtype().itemsize;
   const auto* src = x.raw_data();
   auto* dst = reinterpret_cast<std::byte*>(out.raw_data());
@@ -5322,7 +5322,7 @@ static Series diag_extract_2d(const Series& self, std::int64_t diagonal) {
     link->op_name = "diag_extract";
     link->parents = {self};
     link->propagate = [self, diagonal](const Series& out_sens) {
-      Series base = Series::zeros(self.sizes(), self.scalar_type()).to(self.platform());
+      Series base = pluss::codem::factory::zeros(self.sizes(), self.scalar_type()).to(self.platform());
       Series grad = diagonal_scatter_impl(base, cast_like_(out_sens, self), diagonal);
       series_tape::accumulate_sensitivity(self, cast_like_(grad, self));
     };
@@ -5361,7 +5361,7 @@ static Series diagonal_nd_(const Series& self, std::int64_t offset, std::int64_t
   for (std::size_t i = 0; i + 2 < perm.size(); ++i)
     flat_shape[i] = self.sizes()[static_cast<std::size_t>(perm[i])];
   flat_shape.back() = n1 * n2;
-  auto idx = Series::empty({len}, ScalarType::Int64);
+  auto idx = pluss::codem::factory::empty({len}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   for (std::int64_t i = 0; i < len; ++i) ip[i] = (row0 + i) * n2 + (col0 + i);
   return self.permute(std::span<const std::int64_t>(perm.data(), perm.size()))
@@ -5374,7 +5374,7 @@ static Series diag_embed_from_1d(const Series& self, std::int64_t diagonal) {
   PLUSS_CHECK(v.dim() == 1, "diag_embed/diagflat: expected 1D after flatten");
   const auto n = v.numel();
   const auto side = n + std::llabs(diagonal);
-  auto out = Series::zeros({side, side}, v.scalar_type());
+  auto out = pluss::codem::factory::zeros({side, side}, v.scalar_type());
   const auto row0 = diagonal < 0 ? -diagonal : 0;
   const auto col0 = diagonal > 0 ? diagonal : 0;
   const auto item = v.dtype().itemsize;
@@ -5424,7 +5424,7 @@ static Series diag_embed_nd_(const Series& self, std::int64_t offset, std::int64
   std::vector<std::int64_t> plane_shape = batch;
   plane_shape.push_back(side);
   plane_shape.push_back(side);
-  auto idx = Series::empty({n}, ScalarType::Int64);
+  auto idx = pluss::codem::factory::empty({n}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   for (std::int64_t i = 0; i < n; ++i) ip[i] = (row0 + i) * side + (col0 + i);
   std::vector<std::int64_t> idx_view(static_cast<std::size_t>(self.dim()), 1);
@@ -5432,7 +5432,7 @@ static Series diag_embed_nd_(const Series& self, std::int64_t offset, std::int64
   const Series index = idx.to(self.platform()).reshape(idx_view)
                            .expand(std::span<const std::int64_t>(self.sizes().data(), self.sizes().size()), true)
                            .contiguous();
-  const Series base = Series::zeros(flat_shape, self.scalar_type()).to(self.platform());
+  const Series base = pluss::codem::factory::zeros(flat_shape, self.scalar_type()).to(self.platform());
   Series plane = ops_internal::scatter(base, self.dim() - 1, index, self).reshape(plane_shape);
   // Move the plane's axes (last two) to (d1, d2).
   std::vector<std::int64_t> perm(static_cast<std::size_t>(nd_out));
@@ -5498,7 +5498,7 @@ static void bind_cum_extrema_backward_(
   link->propagate = [self, dim, is_max](const Series& out_sens) {
     const Series x = self.to(Platform::CPU).to(ScalarType::Float64).contiguous();
     const Series incoming = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous();
-    Series grad = Series::zeros(self.sizes(), ScalarType::Float64);
+    Series grad = pluss::codem::factory::zeros(self.sizes(), ScalarType::Float64);
     const auto d = wrap_dim(dim, x.dim(), is_max ? "cummax" : "cummin");
     const auto nd = x.dim();
     const auto n = x.sizes()[static_cast<std::size_t>(d)];
@@ -5534,7 +5534,7 @@ static Series cum_extrema_impl(const Series& self, std::int64_t dim, bool is_max
   if (self.platform() == Platform::MPS) return mps_host_bridge_([&] { return cum_extrema_impl(self.to(Platform::CPU), dim, is_max); });
   auto x = self.to(ScalarType::Float64).contiguous();
   dim = wrap_dim(dim, x.dim(), is_max ? "cummax" : "cummin");
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(x.sizes(), ScalarType::Float64);
   const auto* ip = reinterpret_cast<const double*>(x.raw_data());
   auto* op = reinterpret_cast<double*>(out.raw_data());
   const auto nd = x.dim();
@@ -5721,7 +5721,7 @@ static Series factorial_impl(const Series& self) {
   const Platform plat = self.platform();
   const Series idx = self.to(Platform::CPU).to(ScalarType::Int64).contiguous();
   if (idx.numel() == 0) {
-    Series empty = Series::empty(idx.sizes(), ScalarType::Int64, Platform::CPU);
+    Series empty = pluss::codem::factory::empty(idx.sizes(), ScalarType::Int64, Platform::CPU);
     return plat == Platform::CPU ? empty : empty.to(plat);
   }
 
@@ -5737,7 +5737,7 @@ static Series factorial_impl(const Series& self) {
       3628800LL, 39916800LL, 479001600LL, 6227020800LL, 87178291200LL,
       1307674368000LL, 20922789888000LL, 355687428096000LL, 6402373705728000LL,
       121645100408832000LL, 2432902008176640000LL};
-  Series lut = Series::empty({kMaxN + 1}, ScalarType::Int64, Platform::CPU);
+  Series lut = pluss::codem::factory::empty({kMaxN + 1}, ScalarType::Int64, Platform::CPU);
   std::memcpy(lut.raw_mutable_data(), kTable, sizeof(kTable));
 
   Series out = lut.take(idx);  // gather: result shape == idx.sizes()
@@ -5947,7 +5947,7 @@ static Series prelu_impl(const Series& self, double weight) {
   const ScalarType wdt = dtype_of(self.scalar_type()).is_floating()
                              ? self.scalar_type()
                              : compat_real_dtype_for_(self);
-  return prelu_impl(self, Series::full({1}, weight, wdt).to(self.platform()));
+  return prelu_impl(self, pluss::codem::factory::full({1}, weight, wdt).to(self.platform()));
 }
 
 // renorm(p, dim, maxnorm): rescale every sub-tensor select(dim, i) whose p-norm
@@ -5989,7 +5989,7 @@ static Series multinomial_impl_cpu_(const Series& self, std::int64_t num_samples
   std::vector<std::int64_t> out_shape = self.dim() == 1
       ? std::vector<std::int64_t>{num_samples}
       : std::vector<std::int64_t>{rows, num_samples};
-  auto out = Series::empty(out_shape, ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(out_shape, ScalarType::Int64);
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   std::mt19937_64 gen(pluss::tils::seed_or_next(0));
   for (std::int64_t row = 0; row < rows; ++row) {
@@ -6092,7 +6092,7 @@ static Series igamma_impl(const Series& a, const Series& x, bool complement) {
   auto shape = SeriesIterator::broadcast_shape(aa.sizes(), xx.sizes());
   auto abb = expand_impl(aa, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto xbb = expand_impl(xx, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, dt, aa.platform());
+  auto out = pluss::codem::factory::empty(shape, dt, aa.platform());
   const auto n = out.numel();
   for (std::int64_t i = 0; i < n; ++i) {
     const double p = igamma_p_scalar(read_real_(abb, i), read_real_(xbb, i));
@@ -6232,7 +6232,7 @@ static Series as_strided_impl(
       for (std::size_t i = 0; i < output_offsets.size(); ++i) {
         storage_grad[output_offsets[i]] += values[i];
       }
-      grad = Series::empty(input_sizes, ScalarType::Complex128);
+      grad = pluss::codem::factory::empty(input_sizes, ScalarType::Complex128);
       auto* destination = reinterpret_cast<Complex128*>(grad.raw_mutable_data());
       for (std::size_t i = 0; i < parent_offsets.size(); ++i) {
         const auto offset = parent_offsets[i];
@@ -6246,7 +6246,7 @@ static Series as_strided_impl(
       for (std::size_t i = 0; i < output_offsets.size(); ++i) {
         storage_grad[output_offsets[i]] += values[i];
       }
-      grad = Series::empty(input_sizes, ScalarType::Float64);
+      grad = pluss::codem::factory::empty(input_sizes, ScalarType::Float64);
       auto* destination = reinterpret_cast<double*>(grad.raw_mutable_data());
       for (std::size_t i = 0; i < parent_offsets.size(); ++i) {
         const auto offset = parent_offsets[i];
@@ -6333,7 +6333,7 @@ static Series as_strided_scatter_impl(
       series_tape::NoGradGuard no_grad;
       Series sens = cast_like_(out_sens, self).contiguous();
       if (track_self) {
-        Series g_self = Series::zeros(self.sizes(), self.scalar_type()).to(self.platform());
+        Series g_self = pluss::codem::factory::zeros(self.sizes(), self.scalar_type()).to(self.platform());
         const auto itemsize = g_self.itemsize();
         auto* data = reinterpret_cast<std::byte*>(g_self.raw_mutable_data());
         const auto* source = sens.raw_data();
@@ -6395,13 +6395,13 @@ static Series diagonal_scatter_impl(const Series& self, const Series& src, std::
       Series sens = cast_like_(out_sens, self);
       if (series_tape::tracks_slope(self)) {
         Series base = sens.clone();
-        Series zeros = Series::zeros({len}, self.scalar_type()).to(self.platform());
+        Series zeros = pluss::codem::factory::zeros({len}, self.scalar_type()).to(self.platform());
         Series g_self = diagonal_scatter_impl(base, zeros, diagonal);
         series_tape::accumulate_sensitivity(self, cast_like_(g_self, self));
       }
       if (series_tape::tracks_slope(src)) {
         Series diag_grad = diag_extract_2d(sens, diagonal);
-        Series flat_grad = Series::zeros({src.numel()}, src.scalar_type()).to(src.platform());
+        Series flat_grad = pluss::codem::factory::zeros({src.numel()}, src.scalar_type()).to(src.platform());
         if (len > 0) {
           std::vector<std::int64_t> ids(static_cast<std::size_t>(len));
           std::iota(ids.begin(), ids.end(), static_cast<std::int64_t>(0));
@@ -6431,7 +6431,7 @@ static Series select_scatter_impl(const Series& self, const Series& src, std::in
                   std::equal(src.sizes().begin(), src.sizes().end(), expected.begin()),
               "select_scatter: src shape must match self.select(dim, index)");
   auto x = src.unsqueeze(dim);
-  auto idx = Series::full(x.sizes(), static_cast<double>(index), ScalarType::Int64).to(self.platform());
+  auto idx = pluss::codem::factory::full(x.sizes(), static_cast<double>(index), ScalarType::Int64).to(self.platform());
   return ops_internal::scatter(self, dim, idx, x);
 }
 
@@ -6462,7 +6462,7 @@ static Series slice_scatter_impl(
               "slice_scatter: src shape must match the selected slice of self");
   const auto& x = src;
 
-  auto idx = Series::empty(x.sizes(), ScalarType::Int64).to(self.platform()).contiguous();
+  auto idx = pluss::codem::factory::empty(x.sizes(), ScalarType::Int64).to(self.platform()).contiguous();
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_mutable_data());
   std::int64_t outer = 1;
   std::int64_t inner = 1;
@@ -6548,7 +6548,7 @@ static Series index_fill_impl_(
   dim = wrap_dim(dim, self.dim(), "index_fill");
   std::vector<std::int64_t> source_shape(self.sizes().begin(), self.sizes().end());
   source_shape[(std::size_t)dim] = index.numel();
-  const Series source = Series::full(source_shape, value, self.scalar_type()).to(self.platform());
+  const Series source = pluss::codem::factory::full(source_shape, value, self.scalar_type()).to(self.platform());
   const Series expanded_index = expand_axis_index_(self, dim, index, source, "index_fill");
   return ops_internal::scatter(self, dim, expanded_index, source);
 }
@@ -6956,7 +6956,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
     if (op == "isreal") {
       if (!is_complex_dtype(self.scalar_type())) {
-        return Series::ones(self.sizes(), ScalarType::Bool).to(self.platform());
+        return pluss::codem::factory::ones(self.sizes(), ScalarType::Bool).to(self.platform());
       }
       auto im = ops_internal::imag(self);
       return ops_internal::eq(im, scalar_like(im, 0.0));
@@ -7012,7 +7012,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "argmin") return ops_internal::argmin(self);
     if (op == "count_nonzero") {
       auto nz = ops_internal::nonzero(self);
-      Series out = Series::zeros({}, ScalarType::Int64);
+      Series out = pluss::codem::factory::zeros({}, ScalarType::Int64);
       *reinterpret_cast<std::int64_t*>(out.raw_data()) = (nz.dim() > 0) ? nz.sizes()[0] : 0;
       return out;
     }
@@ -7144,10 +7144,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "histogram") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "pinverse") return pluss::subsp::linearalg::pinverse(self, 1e-12);
     if (op == "q_per_channel_axis" || op == "q_zero_point") return i64_scalar(0);
-    if (op == "q_scale") return Series::full({}, 1.0, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
+    if (op == "q_scale") return pluss::codem::factory::full({}, 1.0, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
     if (op == "qscheme") return i64_scalar(0);
-    if (op == "q_per_channel_scales") return Series::ones({1}, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
-    if (op == "q_per_channel_zero_points") return Series::zeros({1}, ScalarType::Int64);
+    if (op == "q_per_channel_scales") return pluss::codem::factory::ones({1}, self.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64);
+    if (op == "q_per_channel_zero_points") return pluss::codem::factory::zeros({1}, ScalarType::Int64);
     if (op == "erfcinv")
       return bind_special_grad_(erfcinv_impl(self), self,
           [](const Series& y) {
@@ -7278,7 +7278,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         const bool keep_int = !is_floating_dtype(self.scalar_type()) &&
                               !is_complex_dtype(self.scalar_type()) && s == std::trunc(s);
         return floor_divide_impl_(
-            self, keep_int ? scalar_like(self, s) : Series::full({}, s, ScalarType::Float64));
+            self, keep_int ? scalar_like(self, s) : pluss::codem::factory::full({}, s, ScalarType::Float64));
       }
       if (op == "pow") return pow_scalar(self, s);
       if (op == "norm") return self.norm(s);
@@ -7650,10 +7650,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       }
       if (op == "fftshift") return shift_impl(self, sizes, /*inverse=*/false);
       if (op == "ifftshift") return shift_impl(self, sizes, /*inverse=*/true);
-      if (op == "new_empty") return Series::empty(sizes, self.scalar_type());
-      if (op == "new_empty_strided") return Series::empty(sizes, self.scalar_type());
-      if (op == "new_zeros") return Series::zeros(sizes, self.scalar_type());
-      if (op == "new_ones") return Series::ones(sizes, self.scalar_type());
+      if (op == "new_empty") return pluss::codem::factory::empty(sizes, self.scalar_type());
+      if (op == "new_empty_strided") return pluss::codem::factory::empty(sizes, self.scalar_type());
+      if (op == "new_zeros") return pluss::codem::factory::zeros(sizes, self.scalar_type());
+      if (op == "new_ones") return pluss::codem::factory::ones(sizes, self.scalar_type());
       if (op == "align_to") return self.permute(sizes);
       if (op == "sum_to_size") return sum_to_size_impl(self, sizes);
       return not_impl(op, args, self);
@@ -7798,7 +7798,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         return split_first_with_sizes(self, sizes, as_i64(args[1]), "split_with_sizes");
       }
       if (op == "tensor_split") return split_first_by_boundaries(self, sizes, as_i64(args[1]), "tensor_split");
-      if (op == "new_full") return Series::full(sizes, as_double(args[1]), self.scalar_type());
+      if (op == "new_full") return pluss::codem::factory::full(sizes, as_double(args[1]), self.scalar_type());
       if (op == "roll") {
         const std::array<std::int64_t, 1> dim_one{{as_i64(args[1])}};
         return roll_impl(self, sizes, std::span<const std::int64_t>(dim_one.data(), dim_one.size()));
@@ -7826,8 +7826,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       auto dims = as_intlist(args[1]);
       if (op == "as_strided" || op == "_reshape_alias") return as_strided_impl(self, shifts, dims);
       if (op == "new_empty_strided") {
-        auto out = Series::empty(shifts, self.scalar_type());
-        return Series::from_storage(out.storage(), /*storage_offset=*/0,
+        auto out = pluss::codem::factory::empty(shifts, self.scalar_type());
+        return pluss::codem::factory::from_storage(out.storage(), /*storage_offset=*/0,
                                     std::vector<std::int64_t>(shifts.begin(), shifts.end()),
                                     std::vector<std::int64_t>(dims.begin(), dims.end()),
                                     self.scalar_type());
@@ -7859,7 +7859,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       // safe inefficiency rather than something worth the correctness risk.
       if (op == "add") return ops_internal::add(self, mul_scalar(other, s));
       if (op == "sub") return ops_internal::sub(self, mul_scalar(other, s));
-      if (op == "where") return ops_internal::where(other, Series::full({}, s, self.scalar_type()).expand_as(self), self);
+      if (op == "where") return ops_internal::where(other, pluss::codem::factory::full({}, s, self.scalar_type()).expand_as(self), self);
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, (std::int64_t)s);
       if (op == "cholesky_solve") return pluss::subsp::linearalg::cholesky_solve(other, self, s != 0.0);
       if (op == "triangular_solve") return pluss::subsp::linearalg::triangular_solve(other, self, s != 0.0, /*unitriangular=*/false);
@@ -7885,7 +7885,7 @@ if (is_numeric_scalar_arg(args[0]) &&
   const auto dim = as_i64(args[0]);
   const Series& other = as_series(args[1]);
   if (op == "index_put" || op == "put") {
-    Series index = Series::full({1}, static_cast<double>(dim), ScalarType::Int64).to(self.platform(), ScalarType::Int64);
+    Series index = pluss::codem::factory::full({1}, static_cast<double>(dim), ScalarType::Int64).to(self.platform(), ScalarType::Int64);
     return put_dispatch_copy_(self, index, other, /*accumulate=*/false);
   }
   if (op == "gather") return self.gather(dim, other);
@@ -8454,7 +8454,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;
     if (op == "sparse_resize_and_clear_") {
-      return inplace_result_(self, Series::zeros(self.sizes(), self.scalar_type()));
+      return inplace_result_(self, pluss::codem::factory::zeros(self.sizes(), self.scalar_type()));
     }
     if (op == "digamma_") { check_special_inplace_dtype_(self, "digamma_"); return assign_inplace_preserve_storage_(self, digamma_impl(self).to(self.scalar_type())); }
     if (op == "erfinv_") { check_special_inplace_dtype_(self, "erfinv_"); return assign_inplace_preserve_storage_(self, erfinv_impl(self).to(self.scalar_type())); }
@@ -8553,7 +8553,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     }
     if (op == "tril_") { return inplace_result_(self, tril_triu_impl(self, /*diagonal=*/0, /*upper=*/false)); }
     if (op == "triu_") { return inplace_result_(self, tril_triu_impl(self, /*diagonal=*/0, /*upper=*/true)); }
-    if (op == "zero_") { return inplace_result_(self, Series::zeros(self.sizes(), self.scalar_type())); }
+    if (op == "zero_") { return inplace_result_(self, pluss::codem::factory::zeros(self.sizes(), self.scalar_type())); }
     if (op == "uniform_") return assign_stochastic_inplace_(self, uniform_like(self, 0.0, 1.0));
     if (op == "normal_") return assign_stochastic_inplace_(self, normal_like(self, 0.0, 1.0));
     if (op == "log_normal_") {
@@ -8582,7 +8582,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "sub_") { return assign_inplace_preserve_storage_(self, sub_scalar(self, s)); }
       if (op == "mul_") { return assign_inplace_preserve_storage_(self, mul_scalar(self, s)); }
       if (op == "div_") { return assign_inplace_preserve_storage_(self, div_scalar(self, s)); }
-      if (op == "fill_") { return inplace_result_(self, Series::full(self.sizes(), s, self.scalar_type())); }
+      if (op == "fill_") { return inplace_result_(self, pluss::codem::factory::full(self.sizes(), s, self.scalar_type())); }
       if (op == "pow_") { return assign_inplace_preserve_storage_(self, pow_scalar(self, s).to(self.scalar_type())); }
       if (op == "float_power_") {
         PLUSS_CHECK(self.scalar_type() == ScalarType::Float64 || self.scalar_type() == ScalarType::Complex128,
@@ -8593,7 +8593,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         const bool keep_int = !is_floating_dtype(self.scalar_type()) &&
                               !is_complex_dtype(self.scalar_type()) && s == std::trunc(s);
         const Series divisor = keep_int ? scalar_like(self, s)
-                                        : Series::full({}, s, ScalarType::Float64).to(self.platform());
+                                        : pluss::codem::factory::full({}, s, ScalarType::Float64).to(self.platform());
         return assign_inplace_preserve_storage_(self, floor_divide_impl_(self, divisor));
       }
       if (op == "fmod_") { return inplace_result_(self, ops_internal::fmod(self, scalar_like(self, s))); }
@@ -8675,8 +8675,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       }
       if (op == "igamma_") { check_special_inplace_dtype_(self, "igamma_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, other, /*complement=*/false).to(self.scalar_type())); }
       if (op == "igammac_") { check_special_inplace_dtype_(self, "igammac_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, other, /*complement=*/true).to(self.scalar_type())); }
-      if (op == "resize_as_") { return inplace_result_(self, Series::empty(other.sizes(), self.scalar_type())); }
-      if (op == "resize_as_sparse_") { return inplace_result_(self, Series::empty(other.sizes(), self.scalar_type())); }
+      if (op == "resize_as_") { return inplace_result_(self, pluss::codem::factory::empty(other.sizes(), self.scalar_type())); }
+      if (op == "resize_as_sparse_") { return inplace_result_(self, pluss::codem::factory::empty(other.sizes(), self.scalar_type())); }
       if (op == "add_") { return assign_inplace_preserve_storage_(self, ops_internal::add(self, other)); }
       if (op == "sub_") { return assign_inplace_preserve_storage_(self, ops_internal::sub(self, other)); }
       if (op == "mul_") { return assign_inplace_preserve_storage_(self, ops_internal::mul(self, other)); }
@@ -8743,7 +8743,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     }
     if (std::holds_alternative<Arg::IntList>(a0)) {
       auto sizes = as_intlist(args[0]);
-      if (op == "resize_") { return inplace_result_(self, Series::empty(sizes, self.scalar_type())); }
+      if (op == "resize_") { return inplace_result_(self, pluss::codem::factory::empty(sizes, self.scalar_type())); }
       if (op == "as_strided_") {
         return inplace_result_(self, as_strided_impl(self, sizes, contiguous_strides(sizes)));
       }
@@ -8835,7 +8835,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const auto index_value = as_i64(args[0]);
       const Series& src = as_series(args[1]);
       if (op == "index_put_" || op == "put_") {
-        Series index = Series::full({1}, static_cast<double>(index_value), ScalarType::Int64)
+        Series index = pluss::codem::factory::full({1}, static_cast<double>(index_value), ScalarType::Int64)
                            .to(self.platform(), ScalarType::Int64);
         return put_dispatch_inplace_(self, index, src, /*accumulate=*/false);
       }

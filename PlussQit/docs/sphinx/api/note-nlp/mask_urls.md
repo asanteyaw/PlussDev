@@ -70,7 +70,7 @@ const auto empty = pluss::note::make(std::vector<std::string>{})
 std::cout << "urls empty dim=" << empty.dim()
           << " numel=" << empty.numel() << '\n';
 std::cout << "urls undefined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().mask_urls().defined() << '\n';
+          << pluss::note::undefined().nlp().mask_urls().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"https://x.io"},

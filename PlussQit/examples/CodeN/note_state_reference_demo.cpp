@@ -47,7 +47,7 @@ void rejected(std::string_view label, Fn&& fn) {
 } // namespace
 
 int main() {
-  const auto absent = pluss::Note::undefined();
+  const auto absent = pluss::note::undefined();
   const auto empty = pluss::note::make(
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   std::cout << std::boolalpha

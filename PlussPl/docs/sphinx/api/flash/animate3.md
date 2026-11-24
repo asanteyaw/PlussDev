@@ -176,7 +176,7 @@ flash::camera3d(
         .view_angle_deg = 30.0,
         .projection = flash::ProjectionKind::Perspective,
     });
-auto sizes = pluss::Series::full({x.numel()}, 7.0, pluss::ScalarType::Float64);
+auto sizes = pluss::series::full({x.numel()}, 7.0, pluss::ScalarType::Float64);
 auto colors = pluss::series::linspace(0.15, 0.95, x.numel(), pluss::ScalarType::Float64);
 auto& tr = flash::cloud3(pane, x, y, z, sizes, colors).label("animate3_example2_companion");
 flash::trace_preset3d(tr, flash::TracePreset3D::Cloud);

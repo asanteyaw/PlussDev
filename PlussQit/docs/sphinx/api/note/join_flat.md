@@ -118,7 +118,7 @@ zero cells bytes=0
 ## Example 6: Undefined Rejects
 
 ```cpp
-try { (void)pluss::Note::undefined().join_flat(","); }
+try { (void)pluss::note::undefined().join_flat(","); }
 catch (const pluss::Error&) {
   std::cout << "join_flat undefined: rejected\n";
 }

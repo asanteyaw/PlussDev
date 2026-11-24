@@ -28,7 +28,7 @@ int main() {
   for (double v : running) std::cout << " " << v;
   std::cout << "   (exact x^3/3: 0.3333 2.6667 9.0000 21.3333)\n";
 
-  const Series fine_x = Series::arange(0.0, 4.0 + 1e-12, 0.05, f64);
+  const Series fine_x = pluss::series::arange(0.0, 4.0 + 1e-12, 0.05, f64);
   std::cout << "81 points             : " << integ::trapezoid(fine_x * fine_x, fine_x).item<double>() << "\n";
 
   const Series rows = pluss::make_series(std::vector<double>{0, 1, 4, 9, 1, 2, 5, 10}, {2, 4}).to(f64);

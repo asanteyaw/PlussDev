@@ -40,7 +40,7 @@ Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
   for (const auto& t: tensors) sum += t.sizes()[(std::size_t)dim];
   out_sizes[(std::size_t)dim] = sum;
 
-  Series out = Series::empty(out_sizes, st);
+  Series out = pluss::codem::factory::empty(out_sizes, st);
 
   // contiguous copies along dim using blocks
   auto dt = out.dtype();
@@ -94,7 +94,7 @@ Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
 
   // Implement as cat of unsqueezed views via reshape (no new API needed): we materialize by copying blocks.
   // We'll build out and fill slice by slice.
-  Series out = Series::empty(out_sizes, tensors[0].scalar_type());
+  Series out = pluss::codem::factory::empty(out_sizes, tensors[0].scalar_type());
   auto out_c = out.contiguous();
   auto dt = out.dtype();
   auto* out_b = const_cast<std::byte*>(out_c.raw_data());

@@ -78,7 +78,7 @@ true
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().fix_linebreaks().defined() << '\n';
+          << pluss::note::undefined().tex().fix_linebreaks().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
       .tex().fix_linebreaks();

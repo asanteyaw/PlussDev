@@ -12,7 +12,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("reshape and expand", "[shape]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto r = a.reshape({3,2});
   REQUIRE(r.sizes()[0] == 3);
   REQUIRE(r.sizes()[1] == 2);
@@ -21,7 +21,7 @@ TEST_CASE("reshape and expand", "[shape]") {
   REQUIRE(e.sizes()[0] == 2);
   REQUIRE(e.sizes()[1] == 3);
 
-  auto b = Series::zeros({1,3}, ScalarType::Float64);
+  auto b = pluss::series::zeros({1,3}, ScalarType::Float64);
   auto be = b.expand(std::vector<std::int64_t>{2,3}, true);
   REQUIRE(be.strides()[0] == 0);
 }
@@ -50,8 +50,8 @@ TEST_CASE("expand_like and repeat_like", "[shape]") {
 }
 
 TEST_CASE("cat and stack", "[cat]") {
-  auto a = Series::zeros({2,2}, ScalarType::Float32);
-  auto b = Series::zeros({2,2}, ScalarType::Float32);
+  auto a = pluss::series::zeros({2,2}, ScalarType::Float32);
+  auto b = pluss::series::zeros({2,2}, ScalarType::Float32);
   auto* ap = reinterpret_cast<float*>(a.raw_data());
   auto* bp = reinterpret_cast<float*>(b.raw_data());
   for (int i=0;i<4;++i) ap[i] = float(i+1);
@@ -68,7 +68,7 @@ TEST_CASE("cat and stack", "[cat]") {
 }
 
 TEST_CASE("unary math + reductions", "[math]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (int i=0;i<6;++i) ap[i] = (double)(i+1);
 

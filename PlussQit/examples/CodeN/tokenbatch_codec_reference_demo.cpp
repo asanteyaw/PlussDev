@@ -101,7 +101,7 @@ int main() {
             << " tokens-defined=" << empty.tokens().defined() << " offsets=";
   show_offsets(empty);
 
-  const auto propagated = pluss::Note::undefined().nlp().tokens();
+  const auto propagated = pluss::note::undefined().nlp().tokens();
   std::cout << "propagated: defined=" << propagated.defined()
             << " empty=" << propagated.empty()
             << " tokens-defined=" << propagated.tokens().defined()
@@ -114,7 +114,7 @@ int main() {
             << " copied-last=" << copied_batch.tokens().at(2) << '\n';
 
   std::cout << "\n=== unpack round trips ===\n";
-  show_round_trip("undefined", pluss::Note::undefined());
+  show_round_trip("undefined", pluss::note::undefined());
   show_round_trip("text scalar", pluss::note::make("alpha"));
   const std::string raw{"a\0b", 3};
   show_round_trip("bytes matrix",
@@ -142,7 +142,7 @@ int main() {
             << " middle=" << static_cast<int>(restored_text.at(0)[1])
             << " second=" << restored_text.at(1) << '\n';
 
-  auto owned = pluss::Note::undefined();
+  auto owned = pluss::note::undefined();
   {
     const auto temporary = pluss::note::make("alpha").pack();
     owned = pluss::note::unpack(temporary);

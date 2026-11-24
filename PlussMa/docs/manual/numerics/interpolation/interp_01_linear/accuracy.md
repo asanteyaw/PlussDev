@@ -20,11 +20,11 @@ const auto f64 = pluss::ScalarType::Float64;
 Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 int main() {
   const double pi = 3.14159265358979323846;
-  const Series queries = Series::arange(0.0, pi, pi / 1000.0, f64);
+  const Series queries = pluss::series::arange(0.0, pi, pi / 1000.0, f64);
   std::cout << std::left << std::setw(10) << "points" << std::setw(16) << "worst error" << "ratio\n";
   double previous = 0.0;
   for (int n : {5, 9, 17, 33, 65}) {
-    const Series x = Series::arange(0.0, pi + 1e-12, pi / (n - 1), f64);
+    const Series x = pluss::series::arange(0.0, pi + 1e-12, pi / (n - 1), f64);
     const auto r = interp::linear(x, x.sin(), queries);
     const double worst = (r - queries.sin()).abs().amax().item<double>();
     std::cout << std::left << std::setw(10) << n << std::scientific << std::setprecision(2) << std::setw(16) << worst;

@@ -29,7 +29,7 @@ a new [`Volumetric`](../studio/pane3.md) pane for you.
 ```{important} point_size sets a UNIFORM marker size for every point -- not read from w or any projected value
 Unlike a per-point size series (as flash::cloud3's own size overload accepts),
 cloud4 always passes a single, uniform size -- max(1.0, options.point_size) -- for
-EVERY projected point, via Series::full(...). There is no way to vary marker size by
+EVERY projected point, via pluss::series::full(...). There is no way to vary marker size by
 the original w coordinate or by projected depth through this function alone; every
 point in the cloud renders at the same size regardless of options.
 ```

@@ -122,7 +122,7 @@ int main() {
   empty.for_each_flat([&](std::string_view) { ++empty_calls; });
   std::cout << "empty calls=" << empty_calls << '\n';
 
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
   std::cout << "\n=== undefined range ===\n"
             << "equal=" << (undefined.begin() == undefined.end()) << '\n';
   show_rejection("undefined copy", [&] {

@@ -333,7 +333,7 @@ Series det_small_real_backward_factor_(const Series& a) {
   }
   const std::int64_t n = a.sizes()[0];
   if (n == 1) {
-    return Series::ones({1, 1}, a.scalar_type()).to(a.platform());
+    return pluss::codem::factory::ones({1, 1}, a.scalar_type()).to(a.platform());
   }
   if (n == 2) {
     const Series a00 = mat_scalar_(a, 0, 0);
@@ -415,10 +415,10 @@ Series triangular_masked_like_(const Series& value, bool upper, bool unitriangul
   const auto nd = value.dim();
   const auto rows_n = value.sizes()[static_cast<std::size_t>(nd - 2)];
   const auto cols_n = value.sizes()[static_cast<std::size_t>(nd - 1)];
-  Series rows = Series::arange(0.0, static_cast<double>(rows_n), 1.0, ScalarType::Int64)
+  Series rows = pluss::codem::factory::arange(0.0, static_cast<double>(rows_n), 1.0, ScalarType::Int64)
                     .reshape({rows_n, 1})
                     .to(value.platform());
-  Series cols = Series::arange(0.0, static_cast<double>(cols_n), 1.0, ScalarType::Int64)
+  Series cols = pluss::codem::factory::arange(0.0, static_cast<double>(cols_n), 1.0, ScalarType::Int64)
                     .reshape({1, cols_n})
                     .to(value.platform());
   const std::int64_t offset = unitriangular ? 1 : 0;
@@ -439,7 +439,7 @@ Series eye_matrix_like_(const Series& matrix) {
       : (matrix.scalar_type() == ScalarType::Complex128
              ? ScalarType::Float64
              : matrix.scalar_type());
-  Series eye = Series::eye(rows, cols, eye_dtype).to(matrix.scalar_type()).to(matrix.platform());
+  Series eye = pluss::codem::factory::eye(rows, cols, eye_dtype).to(matrix.scalar_type()).to(matrix.platform());
   while (eye.dim() < matrix.dim()) {
     eye = eye.unsqueeze(0);
   }
@@ -500,7 +500,7 @@ Series qr_backward_(const Series& q, const Series& r, const Series& grad, bool g
   wide_out = right_triangular_solve_(matrix_adjoint_(r_lead), wide_out, /*upper=*/false, /*unitriangular=*/false);
   std::vector<std::int64_t> tail_shape(wide_out.sizes().begin(), wide_out.sizes().end());
   tail_shape.back() = n - m;
-  Series zeros_tail = Series::zeros(tail_shape, wide_out.scalar_type()).to(wide_out.platform());
+  Series zeros_tail = pluss::codem::factory::zeros(tail_shape, wide_out.scalar_type()).to(wide_out.platform());
   std::vector<Series> tail_parts;
   tail_parts.push_back(zeros_tail);
   wide_out = wide_out.unite(tail_parts, static_cast<std::int64_t>(wide_out.dim()) - 1);
@@ -546,7 +546,7 @@ Series svd_vector_backward_(
   const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
   const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
   const Series gap = svd_gap_matrix_(s);
-  Series core = Series::zeros(gap.sizes(), gap.scalar_type()).to(gap.platform());
+  Series core = pluss::codem::factory::zeros(gap.sizes(), gap.scalar_type()).to(gap.platform());
 
   if (grad_is_u) {
     const Series skew = matrix_adjoint_(u).matmul(grad);
@@ -632,7 +632,7 @@ Series svd_backward_combined_(
   }
   check_svd_phase_invariance_(uhgu, vhgv, s);
 
-  Series core = Series::zeros(gap.sizes(), u.scalar_type()).to(u.platform());
+  Series core = pluss::codem::factory::zeros(gap.sizes(), u.scalar_type()).to(u.platform());
   if (uhgu.has_value()) {
     core = core.add(uhgu->div(gap).mul(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1)));
   }
@@ -674,7 +674,7 @@ void bind_svd_group_backward_(
     bool full_matrices) {
   if (!linalg_tracks_slope_(a)) return;
   const auto state = std::make_shared<SvdBackwardState>();
-  Series carrier = Series::zeros({1}, a.scalar_type()).to(a.platform());
+  Series carrier = pluss::codem::factory::zeros({1}, a.scalar_type()).to(a.platform());
   pluss::codem::series_tape::set_tracks_slope(carrier, true);
 
   auto group_link = std::make_shared<pluss::codem::series_tape::SourceLink>();
@@ -712,7 +712,7 @@ void bind_svd_group_backward_(
       else if (slot == 1) state->grad_s = out_sens;
       else state->grad_vh = out_sens;
       pluss::codem::series_tape::accumulate_sensitivity(
-          carrier, Series::ones({1}, carrier.scalar_type()).to(carrier.platform()));
+          carrier, pluss::codem::factory::ones({1}, carrier.scalar_type()).to(carrier.platform()));
     };
     pluss::codem::series_tape::bind_source_link(output, std::move(link));
   };
@@ -800,7 +800,7 @@ void bind_matrix_power_backward_(const Series& out, const Series& a, std::int64_
     const std::uint64_t magnitude = matrix_power_magnitude_(exponent);
     Series grad = pluss::series::undefined();
     if (magnitude == 0) {
-      grad = Series::zeros(a.sizes(), a.scalar_type()).to(a.platform());
+      grad = pluss::codem::factory::zeros(a.sizes(), a.scalar_type()).to(a.platform());
     } else if (exponent > 0) {
       grad = matrix_power_positive_backward_(a, out_sens, magnitude);
     } else {
@@ -1975,7 +1975,7 @@ inline Series safe_normalize_vec_(const Series& v) {
   const Series n = v.norm(2.0).to(ScalarType::Float32).contiguous();
   const float nv = n.item<float>();
   if (!std::isfinite(nv) || nv <= 1e-12f) {
-    return Series::zeros(v.sizes(), ScalarType::Float32).to(v.platform()).contiguous();
+    return pluss::codem::factory::zeros(v.sizes(), ScalarType::Float32).to(v.platform()).contiguous();
   }
   return v.div(n).to(ScalarType::Float32).contiguous();
 }
@@ -2028,7 +2028,7 @@ inline NativeQrResult qr_mps_device_mgs_(const Series& a) {
     row_scalars.reserve(static_cast<std::size_t>(n));
     for (std::int64_t j = 0; j < n; ++j) {
       if (j < i) {
-        row_scalars.push_back(Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous());
+        row_scalars.push_back(pluss::codem::factory::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous());
       } else if (j == i) {
         row_scalars.push_back(r_ii);
       } else {
@@ -2115,7 +2115,7 @@ inline Series pinverse_mps_native_(const Series& a, double rcond) {
                                    .host<double>();
   const double largest = singular_values.empty() ? 0.0 : singular_values.front();
   const Series keep = decomposition.s.gt(rcond * largest);
-  const Series zeros = Series::zeros(decomposition.s.sizes(), decomposition.s.scalar_type())
+  const Series zeros = pluss::codem::factory::zeros(decomposition.s.sizes(), decomposition.s.scalar_type())
                            .to(Platform::MPS);
   const Series reciprocal = pluss::series::where(keep, decomposition.s.reciprocal(), zeros);
   return matrix_adjoint_(decomposition.vh)
@@ -2535,7 +2535,7 @@ Series det(const Series& a) {
     PLUSS_CHECK(m == n, "subsp::linearalg::det: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "det");
     if (has_zero_extent_(batch)) {
-      return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "det");
@@ -2576,7 +2576,7 @@ Series det(const Series& a) {
     if (mps_native_det_supported_(a)) {
       const auto stats = det_stats_mps_native_(a);
       const double value = stats.singular ? 0.0 : static_cast<double>(stats.sign) * std::exp(stats.logabs);
-      Series out = Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      Series out = pluss::codem::factory::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
       bind_det_backward_(out, a, out);
       return out;
     }
@@ -2621,7 +2621,7 @@ Series inverse(const Series& a) {
     PLUSS_CHECK(m == n, "subsp::linearalg::inverse: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "inverse");
     if (has_zero_extent_(batch)) {
-      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+      return pluss::codem::factory::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
           .to(a.platform())
           .contiguous();
     }
@@ -2711,7 +2711,7 @@ Series cholesky(const Series& a, bool upper) {
     PLUSS_CHECK(m == n, "subsp::linearalg::cholesky: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "cholesky");
     if (has_zero_extent_(batch)) {
-      return finish(Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+      return finish(pluss::codem::factory::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
                         .to(a.platform())
                         .contiguous());
     }
@@ -2770,7 +2770,7 @@ Series logdet(const Series& a) {
     PLUSS_CHECK(m == n, "subsp::linearalg::logdet: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "logdet");
     if (has_zero_extent_(batch)) {
-      return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "logdet");
@@ -2809,7 +2809,7 @@ Series logdet(const Series& a) {
                                ? -std::numeric_limits<float>::infinity()
                                : (stats.sign < 0.0f ? std::numeric_limits<float>::quiet_NaN()
                                                     : static_cast<double>(stats.logabs));
-      Series out = Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      Series out = pluss::codem::factory::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
       bind_logdet_backward_(out, a);
       return out;
     }
@@ -2845,7 +2845,7 @@ Series slogdet(const Series& a) {
     if (has_zero_extent_(batch)) {
       std::vector<std::int64_t> shape = batch;
       shape.push_back(2);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "slogdet");
@@ -2921,7 +2921,7 @@ Series matrix_power(const Series& a, std::int64_t n) {
     PLUSS_CHECK(m == k, "subsp::linearalg::matrix_power: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "matrix_power");
     if (has_zero_extent_(batch)) {
-      return finish(Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+      return finish(pluss::codem::factory::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
                         .to(a.platform())
                         .contiguous());
     }
@@ -2988,7 +2988,7 @@ Series matrix_exp(const Series &a) {
     PLUSS_CHECK(m == k, "subsp::linearalg::matrix_exp: expected square matrices on last two dims");
     const auto batch = batch_shape_(a, 2, "matrix_exp");
     if (has_zero_extent_(batch)) {
-      return finish(Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+      return finish(pluss::codem::factory::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
                         .to(a.platform())
                         .contiguous());
     }
@@ -3053,7 +3053,7 @@ Series pinverse(const Series &a, double rcond) {
     const std::vector<std::int64_t> out_tail{tail[1], tail[0]};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return finish(Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous());
+      return finish(pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous());
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "pinverse");
@@ -3135,7 +3135,7 @@ Series qr_q(const Series& a, bool reduced) {
     const std::vector<std::int64_t> out_tail{m, reduced ? k : m};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "qr_q");
@@ -3200,7 +3200,7 @@ Series qr_r(const Series& a, bool reduced) {
     const std::vector<std::int64_t> out_tail{reduced ? k : m, n};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "qr_r");
@@ -3305,9 +3305,9 @@ SvdDecomposition svd(const Series &a, bool full_matrices) {
     if (has_zero_extent_(batch)) {
       const auto dtype = decomp_fallback_dtype_(a.platform());
       return {
-          Series::zeros(concat_shape_(batch, u_tail), dtype).to(a.platform()).contiguous(),
-          Series::zeros(concat_shape_(batch, s_tail), dtype).to(a.platform()).contiguous(),
-          Series::zeros(concat_shape_(batch, vh_tail), dtype).to(a.platform()).contiguous(),
+          pluss::codem::factory::zeros(concat_shape_(batch, u_tail), dtype).to(a.platform()).contiguous(),
+          pluss::codem::factory::zeros(concat_shape_(batch, s_tail), dtype).to(a.platform()).contiguous(),
+          pluss::codem::factory::zeros(concat_shape_(batch, vh_tail), dtype).to(a.platform()).contiguous(),
       };
     }
 
@@ -3416,7 +3416,7 @@ Series svd_u(const Series& a, bool full_matrices) {
     const std::vector<std::int64_t> out_tail{m, full_matrices ? m : k};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_u");
@@ -3481,7 +3481,7 @@ Series svd_s(const Series& a, bool full_matrices) {
     const std::vector<std::int64_t> out_tail{k};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_s");
@@ -3546,7 +3546,7 @@ Series svd_vh(const Series& a, bool full_matrices) {
     const std::vector<std::int64_t> out_tail{full_matrices ? n : k, n};
     if (has_zero_extent_(batch)) {
       const auto shape = concat_shape_(batch, out_tail);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+      return pluss::codem::factory::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
     Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
     const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_vh");
@@ -3629,7 +3629,7 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
     const std::vector<std::int64_t> out_tail =
         (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{a_tail[0], 1};
     if (has_zero_extent_(out_batch)) {
-      return Series::zeros(
+      return pluss::codem::factory::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(a.platform()))
           .to(a.platform())
@@ -3761,7 +3761,7 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
     const std::vector<std::int64_t> out_tail =
         (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{f_tail[0], 1};
     if (has_zero_extent_(out_batch)) {
-      return Series::zeros(
+      return pluss::codem::factory::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(factor.platform()))
           .to(factor.platform())
@@ -3862,7 +3862,7 @@ Series cholesky_inverse(const Series& factor, bool upper) {
     const auto tail = tail_shape_(factor, 2, "cholesky_inverse");
     const auto batch = batch_shape_(factor, 2, "cholesky_inverse");
     if (has_zero_extent_(batch)) {
-      return finish(Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(factor.platform()))
+      return finish(pluss::codem::factory::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(factor.platform()))
                         .to(factor.platform())
                         .contiguous());
     }
@@ -3912,7 +3912,7 @@ Series cholesky_inverse(const Series& factor, bool upper) {
       const Series native_factor = canonical_mps_native_f32_(factor);
       if (pluss::codem::native::mps::supports_cholesky_factor(native_factor)) {
         const auto n = native_factor.sizes()[0];
-        const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
+        const Series eye = pluss::codem::factory::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
         return finish(pluss::codem::native::mps::cholesky_solve(native_factor, eye, upper));
       }
     }
@@ -3923,7 +3923,7 @@ Series cholesky_inverse(const Series& factor, bool upper) {
         l = l.transpose(0, 1).contiguous();
       }
       const auto n = l.sizes()[0];
-      const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
+      const Series eye = pluss::codem::factory::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
       const Series y = triangular_solve_mps_native_(l, eye, /*upper=*/false, /*unitriangular=*/false);
       return finish(triangular_solve_mps_native_(
           l.transpose(0, 1).contiguous(), y, /*upper=*/true, /*unitriangular=*/false));
@@ -3985,7 +3985,7 @@ Series lu_solve(const Series& lu, const Series& b) {
     const std::vector<std::int64_t> out_tail =
         (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{lu_tail[0], 1};
     if (has_zero_extent_(out_batch)) {
-      return finish(Series::zeros(
+      return finish(pluss::codem::factory::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(lu.platform()))
           .to(lu.platform())

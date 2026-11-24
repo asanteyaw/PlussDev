@@ -104,7 +104,7 @@ Negative values are rejected by the same rule.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().macro_subs().defined() << '\n';
+          << pluss::note::undefined().tex().macro_subs().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
       .tex().macro_subs();

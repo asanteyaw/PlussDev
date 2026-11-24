@@ -83,7 +83,7 @@ is empty.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().packages();
+const auto absent = pluss::note::undefined().tex().packages();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

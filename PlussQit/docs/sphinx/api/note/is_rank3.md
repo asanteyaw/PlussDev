@@ -79,7 +79,7 @@ matrix=true rank3=false
 ## Example 4: Undefined Handles Are Safely False
 
 ```cpp
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "defined=" << absent.defined()
           << " rank3=" << absent.is_rank3() << '\n';

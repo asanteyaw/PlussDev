@@ -300,30 +300,30 @@ int main() {
   show_timeline("index()", idx_from_method.timeline());
 
   // Static non-generated constructors/helpers.
-  const auto t_now = Timeline::now();
-  const auto t_today = Timeline::today();
-  const auto t_yesterday = Timeline::yesterday();
-  const auto t_tomorrow = Timeline::tomorrow();
+  const auto t_now = pluss::timeline::now();
+  const auto t_today = pluss::timeline::today();
+  const auto t_yesterday = pluss::timeline::yesterday();
+  const auto t_tomorrow = pluss::timeline::tomorrow();
   const auto t_from_ts = pluss::timeline::from_epoch(0LL);
   const auto t_from_series = pluss::timeline::from_epoch(t_epoch_vec.to_Series());
   const auto t_from_date = pluss::timeline::date("2024-12-31");
   const auto t_from_time = pluss::timeline::time("23:59:58");
   const auto t_from_dt = pluss::timeline::make("2024-12-31T23:59:58");
-  const auto t_static_range = Timeline::date_range(
+  const auto t_static_range = pluss::timeline::date_range(
       pluss::timeline::date("2024-01-01"),
       pluss::timeline::date("2024-01-03"),
       "day",
       1);
-  show_timeline("Timeline::now()", t_now);
-  show_timeline("Timeline::today()", t_today);
-  show_timeline("Timeline::yesterday()", t_yesterday);
-  show_timeline("Timeline::tomorrow()", t_tomorrow);
+  show_timeline("pluss::timeline::now()", t_now);
+  show_timeline("pluss::timeline::today()", t_today);
+  show_timeline("pluss::timeline::yesterday()", t_yesterday);
+  show_timeline("pluss::timeline::tomorrow()", t_tomorrow);
   show_timeline("pluss::timeline::from_epoch", t_from_ts);
   show_timeline("pluss::timeline::from_epoch", t_from_series);
   show_timeline("pluss::timeline::date", t_from_date);
   show_timeline("pluss::timeline::time", t_from_time);
   show_timeline("pluss::timeline::make", t_from_dt);
-  std::cout << "\nTimeline::date_range count=" << t_static_range.size() << "\n";
+  std::cout << "\npluss::timeline::date_range count=" << t_static_range.numel() << "\n";
 
   // Static dataframe-oriented constructors with 3D input.
   const auto y = pluss::make_series(std::vector<std::int64_t>{2024, 2024, 2024, 2024}, {1, 2, 2});
@@ -332,10 +332,10 @@ int main() {
   const auto h = pluss::make_series(std::vector<std::int64_t>{8, 9, 10, 11}, {1, 2, 2});
   const auto mi = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4}, {1, 2, 2});
   const auto se = pluss::make_series(std::vector<std::int64_t>{5, 6, 7, 8}, {1, 2, 2});
-  const auto t_from_ymd = Timeline::from_ymd(y, mo, d, "UTC");
-  const auto t_from_ymdhms = Timeline::from_ymdhms(y, mo, d, h, mi, se, "UTC");
-  show_timeline("Timeline::from_ymd(3D)", t_from_ymd);
-  show_timeline("Timeline::from_ymdhms(3D)", t_from_ymdhms);
+  const auto t_from_ymd = pluss::timeline::from_ymd(y, mo, d, "UTC");
+  const auto t_from_ymdhms = pluss::timeline::from_ymdhms(y, mo, d, h, mi, se, "UTC");
+  show_timeline("pluss::timeline::from_ymd(3D)", t_from_ymd);
+  show_timeline("pluss::timeline::from_ymdhms(3D)", t_from_ymdhms);
 
   const auto e_ns = t_from_ymdhms.epoch_nanos();
   const auto e_us = t_from_ymdhms.epoch_micros();
@@ -346,9 +346,9 @@ int main() {
   show_series("epoch_millis()", e_ms);
   show_series("epoch_seconds()", e_s);
 
-  show_timeline("from_epoch_micros()", Timeline::from_epoch_micros(e_us, "UTC"));
-  show_timeline("from_epoch_millis()", Timeline::from_epoch_millis(e_ms, "UTC"));
-  show_timeline("from_epoch_seconds()", Timeline::from_epoch_seconds(e_s, "UTC"));
+  show_timeline("from_epoch_micros()", pluss::timeline::from_epoch_micros(e_us, "UTC"));
+  show_timeline("from_epoch_millis()", pluss::timeline::from_epoch_millis(e_ms, "UTC"));
+  show_timeline("from_epoch_seconds()", pluss::timeline::from_epoch_seconds(e_s, "UTC"));
 
   std::vector<std::int64_t> copied_nanos;
   t_from_ymdhms.copy_ticks(std::back_inserter(copied_nanos));

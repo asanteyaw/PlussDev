@@ -83,7 +83,7 @@ The first lane owns four distinct lexemes; the second owns two.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().macro_use();
+const auto absent = pluss::note::undefined().tex().macro_use();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

@@ -229,7 +229,7 @@ struct PReLUOptions {
 // The one activation in this file with a learnable parameter -- follows the
 // same allocate-then-register-then-fill-in-place construction pattern as
 // the engine's other parameterized modules (Fusion, Conv, Embedding, ...):
-// weight_ is allocated via Series::empty() and registered atomically, then
+// weight_ is allocated via pluss::series::empty() and registered atomically, then
 // reset_parameters() only ever mutates it in place via copy_(), so it can
 // never end up registered-but-untracked.
 class PLUSS_API PReLUImpl final : public Module {
@@ -242,7 +242,7 @@ public:
       : PReLUImpl(PReLUOptions{num_parameters, init, std::move(cfg)}) {}
 
   void reset_parameters() {
-    weight_.copy_(Series::full({options_.num_parameters}, options_.init, options_.cfg.dtype, options_.cfg.platform));
+    weight_.copy_(pluss::series::full({options_.num_parameters}, options_.init, options_.cfg.dtype, options_.cfg.platform));
   }
 
   Series forward(const Series& input) const { return input.prelu(weight_); }
@@ -257,7 +257,7 @@ public:
 
 private:
   void register_parameters_() {
-    weight_ = Series::empty({options_.num_parameters}, options_.cfg.dtype, options_.cfg.platform);
+    weight_ = pluss::series::empty({options_.num_parameters}, options_.cfg.dtype, options_.cfg.platform);
     this->parameter_record("weight", weight_);
   }
 

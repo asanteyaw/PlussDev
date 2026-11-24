@@ -152,7 +152,7 @@ TEST_CASE("CodeN perf regression corpus: sort/unique/deduplicate semantics", "[c
   }
 
   SECTION("undefined Note stays undefined through unique/deduplicate") {
-    const auto undef = pluss::Note::undefined();
+    const auto undef = pluss::note::undefined();
     REQUIRE_FALSE(undef.unique().defined());
     REQUIRE_FALSE(undef.deduplicate().defined());
   }

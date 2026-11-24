@@ -98,7 +98,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const Series like = Series::zeros({40000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({40000}, pluss::ScalarType::Float64);
 
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 200, 2);
   const auto r = sde::ito_integral([](double t, const Series &w) { return w * 0.0 + t; }, path);
@@ -128,7 +128,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const Series like = Series::zeros({40000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({40000}, pluss::ScalarType::Float64);
 
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 200, 9);
   const auto ito = sde::ito_integral([](double, const Series &w) { return w; }, path);

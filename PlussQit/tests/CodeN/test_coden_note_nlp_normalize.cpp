@@ -93,10 +93,10 @@ TEST_CASE("Note NLP normalizers preserve shape absence and Text dtype",
   REQUIRE(matrix.nlp().normalize_punct().sizes() ==
           std::vector<std::int64_t>{2, 2});
 
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().clean().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().expand_contractions().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().normalize_numbers().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().normalize_punct().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().clean().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().expand_contractions().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().normalize_numbers().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().normalize_punct().defined());
 
   const auto empty = pluss::note::make(std::vector<std::string>{});
   REQUIRE(empty.nlp().clean().sizes() == std::vector<std::int64_t>{0});

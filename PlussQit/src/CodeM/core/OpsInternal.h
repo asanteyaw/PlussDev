@@ -15,7 +15,10 @@ struct SeriesFactoryAccess {
   }
 };
 
-// Scoped default platform for internal temporaries created via Series::empty(..., dtype).
+// The platform of the innermost PlatformScope, or the CPU when there is none.
+Platform scoped_platform_or_cpu_() noexcept;
+
+// Scoped default platform for internal temporaries created via pluss::codem::factory::empty(..., dtype).
 // Used by dispatch code to keep operation outputs on the active tensor platform.
 class PlatformScope final {
  public:

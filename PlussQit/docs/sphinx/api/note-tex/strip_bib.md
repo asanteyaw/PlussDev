@@ -87,7 +87,7 @@ safe to place in a repeatable cleanup pipeline.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().strip_bib().defined() << '\n';
+          << pluss::note::undefined().tex().strip_bib().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_bib();
 } catch (const pluss::Error&) {

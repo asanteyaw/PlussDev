@@ -278,7 +278,7 @@ TEST_CASE("every content predicate preserves rank and validates its domain",
           std::vector<std::int64_t>{0, 4});
   REQUIRE(empty.is_ascii().bools().empty());
 
-  REQUIRE_THROWS(pluss::Note::undefined().is_alpha());
+  REQUIRE_THROWS(pluss::note::undefined().is_alpha());
   REQUIRE_THROWS(pluss::note::make({true, false}).contains("true"));
   REQUIRE_THROWS(text.regex().match("["));
 

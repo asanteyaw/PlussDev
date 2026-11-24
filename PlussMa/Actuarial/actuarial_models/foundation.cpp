@@ -1,5 +1,6 @@
 #include "pluss/subsp/actuarial/actuarial_models.h"
 
+#include "pluss/codem/series_factory.h"
 #include "pluss/config.h"
 #include "pluss/subsp/actuarial/pricing.h"
 #include "pluss/subsp/actuarial/reserving.h"
@@ -220,7 +221,7 @@ Series ladder_cdf(const Series &age_to_age_factors) {
   PLUSS_CHECK(f.ge(1.0).all().item<bool>(),
               "ladder_cdf: age_to_age_factors must be >= 1");
   if (f.numel() == 0) {
-    return Series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
+    return pluss::series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
         .to(f.platform());
   }
   const Series tail = f.flip(/*dim=*/0).cumprod(/*dim=*/0).flip(/*dim=*/0);

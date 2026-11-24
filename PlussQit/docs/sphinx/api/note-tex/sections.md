@@ -110,7 +110,7 @@ offsets=[0, 0, 0]
 ## Example 4: Undefined State And Dtype
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().sections();
+const auto absent = pluss::note::undefined().tex().sections();
 std::cout << std::boolalpha
           << "tokens defined=" << absent.tokens().defined()
           << " offsets=" << absent.offsets().int_item() << '\n';

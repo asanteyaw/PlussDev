@@ -96,7 +96,7 @@ Series Model::apply_objective_regularization_(const Series& base_loss, const Ste
   const auto& regularization = ctx.recipe->objective_regularization;
   const auto parameters = all_parameters_();
   if (regularization.l1_penalty != 0.0) {
-    Series l1 = Series::full({}, 0.0, base_loss.scalar_type()).to(base_loss.platform());
+    Series l1 = pluss::series::full({}, 0.0, base_loss.scalar_type()).to(base_loss.platform());
     for (const Series* parameter : parameters) {
       if (parameter == nullptr || !parameter->defined()) continue;
       l1 = l1.add(parameter->abs().sum());
@@ -104,7 +104,7 @@ Series Model::apply_objective_regularization_(const Series& base_loss, const Ste
     out = out.add(l1.mul(regularization.l1_penalty));
   }
   if (regularization.l2_penalty != 0.0) {
-    Series l2 = Series::full({}, 0.0, base_loss.scalar_type()).to(base_loss.platform());
+    Series l2 = pluss::series::full({}, 0.0, base_loss.scalar_type()).to(base_loss.platform());
     for (const Series* parameter : parameters) {
       if (parameter == nullptr || !parameter->defined()) continue;
       l2 = l2.add(parameter->mul(*parameter).sum());

@@ -112,7 +112,7 @@ auto report = [](std::string_view label, const pluss::Note& n) {
 };
 
 report("scalar two cells", pluss::note::make({"a", "b"}));
-report("scalar undefined", pluss::Note::undefined());
+report("scalar undefined", pluss::note::undefined());
 ```
 
 ### Output

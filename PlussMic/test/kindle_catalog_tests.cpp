@@ -75,7 +75,7 @@ std::filesystem::path temp_csv_path(std::string_view stem) {
 
 pluss::Series bool_mask(std::initializer_list<bool> values) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto out = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
   std::int64_t i = 0;
   for (const bool v : values) p[i++] = v;

@@ -87,7 +87,7 @@ std::cout << std::boolalpha
           << "idempotent="
           << ((once == once.tex().simplify_roots()).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().simplify_roots().defined() << '\n';
+          << pluss::note::undefined().tex().simplify_roots().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().simplify_roots();
 } catch (const pluss::Error&) {

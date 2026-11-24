@@ -47,8 +47,8 @@ line has almost none.
 ```cpp
 const std::int64_t n = 2000;
 auto dw = pluss::series::randn({n}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 3).mul(std::sqrt(1.0 / n));
-auto brownian = pluss::Series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
-auto line = pluss::Series::linspace(0.0, 1.0, n + 1, pluss::ScalarType::Float64);
+auto brownian = pluss::series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+auto line = pluss::series::linspace(0.0, 1.0, n + 1, pluss::ScalarType::Float64);
 
 std::cout << "brownian " << brownian.antidiff().quadratic_variation() << "\n";
 std::cout << "line     " << line.antidiff().quadratic_variation() << "\n";

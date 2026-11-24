@@ -102,7 +102,7 @@ found in the Note.
 ## Example 4: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().includes();
+const auto absent = pluss::note::undefined().tex().includes();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

@@ -118,6 +118,7 @@ api/note_factory/rand
 api/note_factory/rand_between
 api/note_factory/rep
 api/note_factory/branch
+api/note_factory/undefined
 api/note_factory/unpack
 ```
 

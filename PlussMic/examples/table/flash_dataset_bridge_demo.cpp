@@ -18,7 +18,7 @@ using pluss::table::DataFrame;
 using pluss::table::Shelf;
 
 pluss::Series bool_mask(std::initializer_list<bool> flags) {
-  auto out = pluss::Series::zeros({static_cast<std::int64_t>(flags.size())}, pluss::ScalarType::Bool);
+  auto out = pluss::series::zeros({static_cast<std::int64_t>(flags.size())}, pluss::ScalarType::Bool);
   auto* ptr = reinterpret_cast<bool*>(out.raw_data());
   std::size_t i = 0;
   for (const bool flag : flags) {

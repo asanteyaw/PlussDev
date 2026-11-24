@@ -440,7 +440,7 @@ MPSGraphTensorData* tensor_data_for_write_(const Series& s, MPSShape* shape, id<
 }
 
 Series zeros_like_(const Series& s) {
-  return Series::zeros(s.sizes(), s.scalar_type()).to(s.platform()).contiguous();
+  return pluss::series::zeros(s.sizes(), s.scalar_type()).to(s.platform()).contiguous();
 }
 
 RnnBackwardResult run_single_gate_rnn_backward_(const Series& source,
@@ -458,13 +458,13 @@ RnnBackwardResult run_single_gate_rnn_backward_(const Series& source,
   }
 
   RnnBackwardResult result{};
-  result.grad_source = Series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_recurrent = Series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_input = Series::empty(input_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_source = pluss::series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_recurrent = pluss::series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_input = pluss::series::empty(input_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   if (bias.defined()) {
-    result.grad_bias = Series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+    result.grad_bias = pluss::series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   }
-  result.grad_hx0 = Series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_hx0 = pluss::series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
 
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
@@ -569,16 +569,16 @@ RnnBackwardResult run_gru_backward_(const Series& source,
   }
 
   RnnBackwardResult result{};
-  result.grad_source = Series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_recurrent = Series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_input = Series::empty(input_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_source = pluss::series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_recurrent = pluss::series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_input = pluss::series::empty(input_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   if (bias.defined()) {
-    result.grad_bias = Series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+    result.grad_bias = pluss::series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   }
   if (secondary_bias.defined()) {
-    result.grad_secondary_bias = Series::empty(secondary_bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+    result.grad_secondary_bias = pluss::series::empty(secondary_bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   }
-  result.grad_hx0 = Series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_hx0 = pluss::series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
 
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
@@ -708,13 +708,13 @@ LstmBackwardResult run_lstm_backward_(const Series& source,
   }
 
   LstmBackwardResult result{};
-  result.grad_source = Series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_recurrent = Series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_source = pluss::series::empty(source.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_recurrent = pluss::series::empty(recurrent_weight.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   if (bias.defined()) {
-    result.grad_bias = Series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+    result.grad_bias = pluss::series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   }
-  result.grad_hx0 = Series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  result.grad_cx0 = Series::empty(cx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_hx0 = pluss::series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  result.grad_cx0 = pluss::series::empty(cx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
 
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
@@ -836,10 +836,10 @@ RnnLayerResult run_single_gate_rnn_layer_(const Series& input,
   }
 
   const std::int64_t hidden_size = p.weight_hh.sizes()[0];
-  Series out = Series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
+  Series out = pluss::series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
                    .contiguous();
-  Series z_state = Series::empty(out.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  Series hy = Series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
+  Series z_state = pluss::series::empty(out.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  Series hy = pluss::series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
 
   auto& c = ctx_();
   @autoreleasepool {
@@ -961,11 +961,11 @@ RnnLayerResult run_gru_layer_(const Series& input,
   }
 
   const std::int64_t hidden_size = p.weight_hh.sizes()[1];
-  Series out = Series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
+  Series out = pluss::series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
                    .contiguous();
-  Series z_state = Series::empty({input.sizes()[0], input.sizes()[1], 3 * hidden_size}, ScalarType::Float32, Platform::MPS)
+  Series z_state = pluss::series::empty({input.sizes()[0], input.sizes()[1], 3 * hidden_size}, ScalarType::Float32, Platform::MPS)
                        .contiguous();
-  Series hy = Series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
+  Series hy = pluss::series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
 
   auto& c = ctx_();
   @autoreleasepool {
@@ -1112,12 +1112,12 @@ LstmLayerResult run_lstm_layer_(const Series& input,
                            .matmul(p.weight_ih.transpose(0, 1).contiguous())
                            .reshape({input.sizes()[0], input.sizes()[1], 4 * hidden_size})
                            .contiguous();
-  Series out = Series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
+  Series out = pluss::series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
                    .contiguous();
-  Series cell_state_fwd = Series::empty(out.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  Series z_state = Series::empty(input_gates.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
-  Series hy = Series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
-  Series cy = Series::empty(hy.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  Series cell_state_fwd = pluss::series::empty(out.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  Series z_state = pluss::series::empty(input_gates.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  Series hy = pluss::series::empty({1, hx0.sizes()[0], hx0.sizes()[1]}, ScalarType::Float32, Platform::MPS).contiguous();
+  Series cy = pluss::series::empty(hy.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
 
   auto& c = ctx_();
   @autoreleasepool {

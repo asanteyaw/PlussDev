@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Timeline::from_ymdhms
+# pluss::timeline::from_ymdhms
 
-[Back to Timeline API Reference](../../timeline_api_reference)
+[Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Timeline Timeline::from_ymdhms(
+static Timeline pluss::timeline::from_ymdhms(
     const Series& year,
     const Series& month,
     const Series& day,
@@ -31,7 +31,7 @@ const auto hour = pluss::make_series({6LL, 7LL});
 const auto minute = pluss::make_series(30LL);
 const auto second = pluss::make_series(45LL);
 
-const auto times = pluss::Timeline::from_ymdhms(
+const auto times = pluss::timeline::from_ymdhms(
     year, month, day, hour, minute, second, "UTC");
 std::cout << pluss::timeline::print(times) << '\n';
 ```
@@ -60,8 +60,8 @@ wall times when an explicit fold or gap policy is required.
 
 ## See Also
 
-- [`Timeline::from_ymd`](from_ymd.md)
-- [`Timeline::from_epoch_seconds`](from_epoch_seconds.md)
+- [`pluss::timeline::from_ymd`](from_ymd.md)
+- [`pluss::timeline::from_epoch_seconds`](from_epoch_seconds.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="from_ymd.html"><span class="label">Previous</span><span class="title">from_ymd</span></a>

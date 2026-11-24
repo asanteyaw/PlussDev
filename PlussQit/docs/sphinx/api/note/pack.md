@@ -67,7 +67,7 @@ The 32-byte payload contains four exact Int64 lanes after the 40-byte header.
 ## Example 2: Undefined Is A Serializable State
 
 ```cpp
-const auto encoded = pluss::Note::undefined().pack();
+const auto encoded = pluss::note::undefined().pack();
 const auto restored = pluss::note::unpack(encoded);
 
 std::cout << std::boolalpha

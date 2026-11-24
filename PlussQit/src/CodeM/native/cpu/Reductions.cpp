@@ -123,8 +123,8 @@ static std::pair<Series, Series> extrema_pair_impl_(
   auto out_sizes = std::vector<std::int64_t>(input.sizes().begin(), input.sizes().end());
   if (keepdim) out_sizes[static_cast<std::size_t>(dim)] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series values = Series::empty(out_sizes, input.scalar_type());
-  Series indices = Series::empty(out_sizes, ScalarType::Int64);
+  Series values = pluss::codem::factory::empty(out_sizes, input.scalar_type());
+  Series indices = pluss::codem::factory::empty(out_sizes, ScalarType::Int64);
 
 #define PLUSS_EXTREMA_PAIR_CASE(DTYPE, TYPE, CMP, LOAD)                         \
   case ScalarType::DTYPE:                                                       \
@@ -202,7 +202,7 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series out = Series::empty(out_sizes, aa.scalar_type());
+  Series out = pluss::codem::factory::empty(out_sizes, aa.scalar_type());
   amax_dim(aa, dim, out);
   return out;
 }
@@ -212,7 +212,7 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (nd == 0) {
-    Series out = Series::zeros({}, ScalarType::Int64);
+    Series out = pluss::codem::factory::zeros({}, ScalarType::Int64);
     *reinterpret_cast<std::int64_t*>(out.raw_data()) = 0;
     return out;
   }
@@ -223,7 +223,7 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series out = Series::empty(out_sizes, ScalarType::Int64);
+  Series out = pluss::codem::factory::empty(out_sizes, ScalarType::Int64);
   switch (aa.scalar_type()) {
     case ScalarType::Float64:
       arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, arg_better_max<double>, [](){ return -std::numeric_limits<double>::infinity(); });
@@ -297,7 +297,7 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series out = Series::empty(out_sizes, aa.scalar_type());
+  Series out = pluss::codem::factory::empty(out_sizes, aa.scalar_type());
   amin_dim(aa, dim, out);
   return out;
 }
@@ -307,7 +307,7 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (nd == 0) {
-    Series out = Series::zeros({}, ScalarType::Int64);
+    Series out = pluss::codem::factory::zeros({}, ScalarType::Int64);
     *reinterpret_cast<std::int64_t*>(out.raw_data()) = 0;
     return out;
   }
@@ -318,7 +318,7 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
-  Series out = Series::empty(out_sizes, ScalarType::Int64);
+  Series out = pluss::codem::factory::empty(out_sizes, ScalarType::Int64);
   switch (aa.scalar_type()) {
     case ScalarType::Float64:
       arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, arg_better_min<double>, [](){ return std::numeric_limits<double>::infinity(); });
@@ -389,7 +389,7 @@ Series sum_all(const Series& a) {
   const auto n = aa.numel();
 
   auto make_scalar = [&](ScalarType st) {
-    return Series::empty({}, st);
+    return pluss::codem::factory::empty({}, st);
   };
 
   switch (aa.scalar_type()) {
@@ -571,7 +571,7 @@ Series all_all(const Series& a) {
       throw_error("all_all: dtype not implemented");
   }
 
-  Series out = Series::empty({}, ScalarType::Bool);
+  Series out = pluss::codem::factory::empty({}, ScalarType::Bool);
   *reinterpret_cast<std::uint8_t*>(out.raw_data()) = ok ? 1 : 0;
   return out;
 }
@@ -657,7 +657,7 @@ Series any_all(const Series& a) {
       throw_error("any_all: dtype not implemented");
   }
 
-  Series out = Series::empty({}, ScalarType::Bool);
+  Series out = pluss::codem::factory::empty({}, ScalarType::Bool);
   *reinterpret_cast<std::uint8_t*>(out.raw_data()) = ok ? 1 : 0;
   return out;
 }

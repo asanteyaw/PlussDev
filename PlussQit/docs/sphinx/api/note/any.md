@@ -156,7 +156,7 @@ answer, check `empty()` before reducing.
 try { (void)pluss::note::make({"", "value"}).any(); }
 catch (const pluss::Error&) { std::cout << "any Text: rejected\n"; }
 
-try { (void)pluss::Note::undefined().any(); }
+try { (void)pluss::note::undefined().any(); }
 catch (const pluss::Error&) { std::cout << "any undefined: rejected\n"; }
 ```
 

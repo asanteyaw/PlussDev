@@ -241,8 +241,8 @@ int main() {
 
   // input: [N=1, C=1, D=2, H=2, W=2], weight: [out=1, in=1, kD=2, kH=2, kW=2]
   // -- a kernel that sums the entire volume into one output value
-  const pluss::Series input = pluss::Series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
-  const pluss::Series weight = pluss::Series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series input = pluss::series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series weight = pluss::series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
 
   const pluss::Series y = nn::conv3d(input, weight);
 

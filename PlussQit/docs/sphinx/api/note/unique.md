@@ -174,7 +174,7 @@ Note(shape=[2], dim=1, numel=2, encoding=bytes)
 try { (void)pluss::note::make("x").unique(0); }
 catch (const pluss::Error&) { std::cout << "unique scalar axis: rejected\n"; }
 std::cout << std::boolalpha << "undefined unique defined="
-          << pluss::Note::undefined().unique().defined() << '\n';
+          << pluss::note::undefined().unique().defined() << '\n';
 ```
 
 ### Output

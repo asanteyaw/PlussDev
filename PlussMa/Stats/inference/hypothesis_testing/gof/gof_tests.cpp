@@ -349,8 +349,8 @@ KSTestResult kstest(const Series& x,
   PLUSS_CHECK(n > 0, std::string(op) + ": no finite observations");
 
   const Series fi = pluss::subsp::stats::distr::Normal{mean0, stddev0}.cdf(values).clamp(0.0, 1.0);
-  const Series ecdf_hi = Series::arange(1, n + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(n));
-  const Series ecdf_lo = Series::arange(0, n, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(n));
+  const Series ecdf_hi = pluss::series::arange(1, n + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(n));
+  const Series ecdf_lo = pluss::series::arange(0, n, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(n));
   const double dplus = std::max(0.0, scalar_(ecdf_hi.sub(fi).max()));
   const double dminus = std::max(0.0, scalar_(fi.sub(ecdf_lo).max()));
 

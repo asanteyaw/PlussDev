@@ -336,8 +336,8 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
 
   double durbin_watson = std::numeric_limits<double>::quiet_NaN();
   if (n > 1 && sse > kEps) {
-    const Series idx0 = Series::arange(0, n - 1, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
-    const Series idx1 = Series::arange(1, n, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
+    const Series idx0 = pluss::series::arange(0, n - 1, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
+    const Series idx1 = pluss::series::arange(1, n, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
     const Series d = resid_diag.take(idx1).sub(resid_diag.take(idx0));
     durbin_watson = scalar_(d.mul(d).sum()) / sse;
   }

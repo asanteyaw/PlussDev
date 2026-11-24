@@ -40,7 +40,7 @@ int main() {
   out.writeln("two predictors, degree 3, no cross terms: shape", plain.sizes());
   out.writeln("   columns x1 x1^2 x1^3 x2 x2^2 x2^3; rows", plain.host<double>().array().data);
   out.writeln("two predictors, degree 3, cross terms: shape", crossed.sizes());
-  out.writeln("   the first six columns are the same:", plain.sub(crossed.index_select(1, pluss::Series::arange(0, 6, 1, pluss::ScalarType::Int64))).abs().max().item<double>());
+  out.writeln("   the first six columns are the same:", plain.sub(crossed.index_select(1, pluss::series::arange(0, 6, 1, pluss::ScalarType::Int64))).abs().max().item<double>());
   out.writeln("   rows", crossed.host<double>().array().data);
 
   // A row vector is one column.

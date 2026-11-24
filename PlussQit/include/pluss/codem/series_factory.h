@@ -50,11 +50,11 @@ namespace pluss::series {
   // Factories (create NEW Series). Ops on existing Series live as methods.
   // --------------------------------------------------------------------------
 
-  inline Series empty(pluss::msharp::RangeView::Int sizes, ScalarType dt) { return Series::empty(sizes, dt); }
+  inline Series empty(pluss::msharp::RangeView::Int sizes, ScalarType dt) { return pluss::codem::factory::empty(sizes, dt); }
   inline Series empty(std::initializer_list<std::int64_t> sizes, ScalarType dt) {
     return empty(pluss::msharp::RangeView::Int(sizes), dt);
   }
-  inline Series empty(pluss::msharp::RangeView::Int sizes, Config cfg) { return Series::empty(sizes, cfg.dtype, cfg.platform); }
+  inline Series empty(pluss::msharp::RangeView::Int sizes, Config cfg) { return pluss::codem::factory::empty(sizes, cfg.dtype, cfg.platform); }
   inline Series empty(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return empty(pluss::msharp::RangeView::Int(sizes), cfg);
   }
@@ -71,18 +71,18 @@ namespace pluss::series {
     return empty(sizes, pluss::config(kv));
   }
 
-  inline Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return Series::zeros(sizes, dt); }
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return pluss::codem::factory::zeros(sizes, dt); }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
     return zeros(pluss::msharp::RangeView::Int(sizes), dt);
   }
   inline Series zeros(pluss::msharp::RangeView::Int sizes, Config cfg) {
     const bool route_supported = pluss::cuda::supports_zeros_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::zeros(sizes, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::zeros(sizes, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "zeros", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::zeros(sizes, cfg.dtype),
+        pluss::codem::factory::zeros(sizes, cfg.dtype),
         cfg,
         "zeros",
         route_supported);
@@ -103,18 +103,18 @@ namespace pluss::series {
     return zeros(sizes, pluss::config(kv));
   }
 
-  inline Series ones(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return Series::ones(sizes, dt); }
+  inline Series ones(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return pluss::codem::factory::ones(sizes, dt); }
   inline Series ones(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
     return ones(pluss::msharp::RangeView::Int(sizes), dt);
   }
   inline Series ones(pluss::msharp::RangeView::Int sizes, Config cfg) {
     const bool route_supported = pluss::cuda::supports_ones_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::ones(sizes, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::ones(sizes, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "ones", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::ones(sizes, cfg.dtype),
+        pluss::codem::factory::ones(sizes, cfg.dtype),
         cfg,
         "ones",
         route_supported);
@@ -135,18 +135,18 @@ namespace pluss::series {
     return ones(sizes, pluss::config(kv));
   }
 
-  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, ScalarType dt = ScalarType::Float32) { return Series::full(sizes, fill_value, dt); }
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, ScalarType dt = ScalarType::Float32) { return pluss::codem::factory::full(sizes, fill_value, dt); }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, ScalarType dt = ScalarType::Float32) {
     return full(pluss::msharp::RangeView::Int(sizes), fill_value, dt);
   }
   inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, Config cfg) {
     const bool route_supported = pluss::cuda::supports_full_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::full(sizes, fill_value, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::full(sizes, fill_value, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "full", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::full(sizes, fill_value, cfg.dtype),
+        pluss::codem::factory::full(sizes, fill_value, cfg.dtype),
         cfg,
         "full",
         route_supported);
@@ -188,59 +188,91 @@ namespace pluss::series {
     return full({}, std::numeric_limits<double>::infinity(), cfg);
   }
 
+  // With an explicit platform: the Series is built on that platform directly (the forms the library itself uses).
+  inline Series empty(pluss::msharp::RangeView::Int sizes, ScalarType dt, Platform platform) { return pluss::codem::factory::empty(sizes, dt, platform); }
+  inline Series empty(std::initializer_list<std::int64_t> sizes, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::empty(pluss::msharp::RangeView::Int(sizes), dt, platform);
+  }
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType dt, Platform platform) { return pluss::codem::factory::zeros(sizes, dt, platform); }
+  inline Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::zeros(pluss::msharp::RangeView::Int(sizes), dt, platform);
+  }
+  inline Series ones(pluss::msharp::RangeView::Int sizes, ScalarType dt, Platform platform) { return pluss::codem::factory::ones(sizes, dt, platform); }
+  inline Series ones(std::initializer_list<std::int64_t> sizes, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::ones(pluss::msharp::RangeView::Int(sizes), dt, platform);
+  }
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::full(sizes, fill_value, dt, platform);
+  }
+  inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::full(pluss::msharp::RangeView::Int(sizes), fill_value, dt, platform);
+  }
+  inline Series arange(double start, double end, double step, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::arange(start, end, step, dt, platform);
+  }
+  inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt, Platform platform) {
+    return pluss::codem::factory::linspace(start, end, steps, dt, platform);
+  }
+  inline Series eye(std::int64_t n, std::int64_t m, ScalarType dt, Platform platform) { return pluss::codem::factory::eye(n, m, dt, platform); }
+  inline Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dt, std::uint64_t seed, Platform platform) {
+    return pluss::codem::factory::rand(sizes, dt, seed, platform);
+  }
+  inline Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dt, std::uint64_t seed, Platform platform) {
+    return pluss::codem::factory::randn(sizes, dt, seed, platform);
+  }
   // Ranges / random
-  inline Series arange(std::int64_t end, ScalarType dt = ScalarType::Int64) { return Series::arange(0, end, 1, dt); }
-  inline Series arange(std::int64_t start, std::int64_t end, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, 1, dt); }
-  inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, step, dt); }
-  inline Series arange(std::int64_t start, std::int64_t end, Config cfg) {
+  inline Series arange(double end, ScalarType dt = ScalarType::Int64) { return pluss::codem::factory::arange(0, end, 1, dt); }
+  inline Series arange(double start, double end, ScalarType dt = ScalarType::Int64) { return pluss::codem::factory::arange(start, end, 1, dt); }
+  inline Series arange(double start, double end, double step, ScalarType dt = ScalarType::Int64) { return pluss::codem::factory::arange(start, end, step, dt); }
+  inline Series arange(double start, double end, Config cfg) {
     const ScalarType dt = cfg.has_dtype() ? cfg.dtype : ScalarType::Int64;
     const bool route_supported = pluss::cuda::supports_arange_factory_baseline(dt);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::arange(start, end, 1, dt, Platform::CUDA);
+      return pluss::codem::factory::arange(start, end, 1, dt, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "arange", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::arange(start, end, 1, dt),
+        pluss::codem::factory::arange(start, end, 1, dt),
         cfg,
         "arange",
         route_supported);
   }
-  inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, Config cfg) {
+  inline Series arange(double start, double end, double step, Config cfg) {
     const ScalarType dt = cfg.has_dtype() ? cfg.dtype : ScalarType::Int64;
     const bool route_supported = pluss::cuda::supports_arange_factory_baseline(dt);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::arange(start, end, step, dt, Platform::CUDA);
+      return pluss::codem::factory::arange(start, end, step, dt, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "arange", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::arange(start, end, step, dt),
+        pluss::codem::factory::arange(start, end, step, dt),
         cfg,
         "arange",
         route_supported);
   }
-  inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt = ScalarType::Float32) { return Series::linspace(start, end, steps, dt); }
+  inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt = ScalarType::Float32) { return pluss::codem::factory::linspace(start, end, steps, dt); }
   inline Series linspace(double start, double end, std::int64_t steps, Config cfg) {
     const bool route_supported = pluss::cuda::supports_linspace_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::linspace(start, end, steps, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::linspace(start, end, steps, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "linspace", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::linspace(start, end, steps, cfg.dtype),
+        pluss::codem::factory::linspace(start, end, steps, cfg.dtype),
         cfg,
         "linspace",
         route_supported);
   }
-  inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return Series::eye(n, m, dt); }
-  inline Series eye(std::int64_t n, ScalarType dt) { return Series::eye(n, -1, dt); }
+  inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return pluss::codem::factory::eye(n, m, dt); }
+  inline Series eye(std::int64_t n, ScalarType dt) { return pluss::codem::factory::eye(n, -1, dt); }
   inline Series eye(std::int64_t n, Config cfg) {
     const bool route_supported = pluss::cuda::supports_eye_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::eye(n, -1, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::eye(n, -1, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "eye", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::eye(n, -1, cfg.dtype),
+        pluss::codem::factory::eye(n, -1, cfg.dtype),
         cfg,
         "eye",
         route_supported);
@@ -248,17 +280,17 @@ namespace pluss::series {
   inline Series eye(std::int64_t n, std::int64_t m, Config cfg) {
     const bool route_supported = pluss::cuda::supports_eye_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::eye(n, m, cfg.dtype, Platform::CUDA);
+      return pluss::codem::factory::eye(n, m, cfg.dtype, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "eye", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::eye(n, m, cfg.dtype),
+        pluss::codem::factory::eye(n, m, cfg.dtype),
         cfg,
         "eye",
         route_supported);
   }
 
-  inline Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
+  inline Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return pluss::codem::factory::rand(sizes, dt, seed); }
   inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return rand(pluss::msharp::RangeView::Int(sizes), dt, seed);}
   inline Series rand(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
     if (cfg.platform == Platform::MPS && cfg.dtype != ScalarType::Float64 &&
@@ -267,11 +299,11 @@ namespace pluss::series {
     }
     const bool route_supported = pluss::cuda::supports_rand_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::rand(sizes, cfg.dtype, seed, Platform::CUDA);
+      return pluss::codem::factory::rand(sizes, cfg.dtype, seed, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "rand", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::rand(sizes, cfg.dtype, seed),
+        pluss::codem::factory::rand(sizes, cfg.dtype, seed),
         cfg,
         "rand",
         route_supported);
@@ -324,7 +356,7 @@ namespace pluss::series {
     return rand_btw(lo, hi, pluss::msharp::RangeView::Int(&size, 1), seed);
   }
 
-  inline Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::randn(sizes, dt, seed); }
+  inline Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return pluss::codem::factory::randn(sizes, dt, seed); }
   inline Series randn(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {
     return randn(pluss::msharp::RangeView::Int(sizes), dt, seed);
   }
@@ -335,11 +367,11 @@ namespace pluss::series {
     }
     const bool route_supported = pluss::cuda::supports_randn_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {
-      return Series::randn(sizes, cfg.dtype, seed, Platform::CUDA);
+      return pluss::codem::factory::randn(sizes, cfg.dtype, seed, Platform::CUDA);
     }
     FactoryCore::check_cuda_factory_host_staging_allowed(cfg, "randn", route_supported);
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
-        Series::randn(sizes, cfg.dtype, seed),
+        pluss::codem::factory::randn(sizes, cfg.dtype, seed),
         cfg,
         "randn",
         route_supported);
@@ -360,7 +392,7 @@ namespace pluss::series {
   inline Series randint(std::int64_t lo, std::int64_t hi, pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Int64, std::uint64_t seed = 0) {
     if (hi <= lo) pluss::codem::throw_error("randint: expected hi > lo");
     const double span = static_cast<double>(hi - lo);
-    Series out = Series::rand(sizes, ScalarType::Float64, seed);
+    Series out = pluss::codem::factory::rand(sizes, ScalarType::Float64, seed);
     out = out.mul(span).floor().add(static_cast<double>(lo));
     return out.to(dt);
   }
@@ -379,7 +411,7 @@ namespace pluss::series {
     }
     const bool route_supported = pluss::cuda::supports_arange_factory_baseline(dt);
     if (FactoryCore::should_construct_native_cuda_factory(cfg.with_dtype(dt), route_supported)) {
-      Series out = Series::empty(sizes, dt, Platform::CUDA);
+      Series out = pluss::codem::factory::empty(sizes, dt, Platform::CUDA);
       if (!pluss::codem::native::cuda::run_randint_factory(out, seed, lo, hi)) {
         pluss::codem::throw_error("randint: native CUDA randint kernel failed or dtype unsupported");
       }
@@ -411,7 +443,7 @@ namespace pluss::series {
                          ScalarType dt = ScalarType::Float32) {
     PLUSS_CHECK(steps > 0, "logspace: expected steps > 0");
     PLUSS_CHECK(base > 0.0 && base != 1.0, "logspace: expected base > 0 and base != 1");
-    auto exponents = Series::linspace(start, end, steps, ScalarType::Float64);
+    auto exponents = pluss::codem::factory::linspace(start, end, steps, ScalarType::Float64);
     auto out = exponents.mul(std::log(base)).exp();
     return out.to(dt);
   }
@@ -456,7 +488,7 @@ namespace pluss::series {
     if (cfg.platform == Platform::CUDA &&
         pluss::cuda::native_stochastic_enabled() &&
         route_supported) {
-      Series out = Series::empty({n}, dt, Platform::CUDA);
+      Series out = pluss::codem::factory::empty({n}, dt, Platform::CUDA);
       if (!pluss::codem::native::cuda::run_randperm_factory(out, seed)) {
         pluss::codem::throw_error("randperm: native CUDA randperm kernel failed or dtype unsupported");
       }
@@ -476,7 +508,7 @@ namespace pluss::series {
                        ScalarType dt = ScalarType::Float32,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
-    return Series::randn(sizes, dt, seed).mul(std).add(mean);
+    return pluss::codem::factory::randn(sizes, dt, seed).mul(std).add(mean);
   }
   inline Series normal(double mean,
                        double std,
@@ -492,7 +524,7 @@ namespace pluss::series {
     if (cfg.platform == Platform::CUDA &&
         pluss::cuda::native_stochastic_enabled() &&
         route_supported) {
-      Series out = Series::empty(sizes, cfg.dtype, Platform::CUDA);
+      Series out = pluss::codem::factory::empty(sizes, cfg.dtype, Platform::CUDA);
       if (!pluss::codem::native::cuda::run_normal_factory(out, seed, mean, std)) {
         pluss::codem::throw_error("normal: native CUDA normal kernel failed or dtype unsupported");
       }
@@ -500,7 +532,7 @@ namespace pluss::series {
     }
     FactoryCore::check_cuda_stochastic_host_staging_allowed(cfg, "normal", route_supported);
     return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
-        Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean),
+        pluss::codem::factory::randn(sizes, cfg.dtype, seed).mul(std).add(mean),
         cfg,
         "normal",
         route_supported);
@@ -556,7 +588,7 @@ namespace pluss::series {
     if (cfg.platform == Platform::CUDA &&
         pluss::cuda::native_stochastic_enabled() &&
         route_supported) {
-      Series out = Series::empty(sizes, dt, Platform::CUDA);
+      Series out = pluss::codem::factory::empty(sizes, dt, Platform::CUDA);
       if (!pluss::codem::native::cuda::run_bernoulli_factory(out, seed, p)) {
         pluss::codem::throw_error("bernoulli: native CUDA bernoulli kernel failed or dtype unsupported");
       }
@@ -844,7 +876,7 @@ namespace pluss::series {
       if (route_supported) {
         auto rr = real.contiguous();
         auto ii = imag.contiguous();
-        auto out = Series::empty(real.sizes(), dt, Platform::CUDA);
+        auto out = pluss::codem::factory::empty(real.sizes(), dt, Platform::CUDA);
         if (!pluss::codem::native::cuda::run_complex_factory(rr, ii, out)) {
           pluss::codem::throw_error("complex: native CUDA complex constructor failed");
         }
@@ -853,7 +885,7 @@ namespace pluss::series {
     }
     auto rr = real.to(base_dt).contiguous();
     auto ii = imag.to(base_dt).contiguous();
-    auto out = Series::empty(real.sizes(), dt);
+    auto out = pluss::codem::factory::empty(real.sizes(), dt);
     const auto n = out.numel();
 
     if (dt == ScalarType::Complex64) {
@@ -897,7 +929,7 @@ namespace pluss::series {
       if (route_supported) {
         auto mag = abs.contiguous();
         auto ang = angle.contiguous();
-        auto out = Series::empty(abs.sizes(), dt, Platform::CUDA);
+        auto out = pluss::codem::factory::empty(abs.sizes(), dt, Platform::CUDA);
         if (!pluss::codem::native::cuda::run_polar_factory(mag, ang, out)) {
           pluss::codem::throw_error("polar: native CUDA polar constructor failed");
         }
@@ -906,7 +938,7 @@ namespace pluss::series {
     }
     auto mag = abs.to(base_dt).contiguous();
     auto ang = angle.to(base_dt).contiguous();
-    auto out = Series::empty(abs.sizes(), dt);
+    auto out = pluss::codem::factory::empty(abs.sizes(), dt);
     const auto n = out.numel();
 
     if (dt == ScalarType::Complex64) {
@@ -1061,7 +1093,7 @@ namespace pluss::series {
     return branch(
         conditions,
         choices,
-        pluss::Series::full(
+        pluss::codem::factory::full(
             {},
             default_value ? 1.0 : 0.0,
             pluss::ScalarType::Bool,

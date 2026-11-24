@@ -19,7 +19,7 @@ int main() {
   const std::int64_t steps = 2000;
   const double T = 2.0, h = T / steps;
   const pluss::Series dw = pluss::series::randn({steps, 2}, pluss::Config{}.with_dtype(f64), 11).mul(std::sqrt(h));
-  const pluss::Series w = pluss::Series::zeros({1, 2}, f64).unite({dw.cumsum(0)}, 0);
+  const pluss::Series w = pluss::series::zeros({1, 2}, f64).unite({dw.cumsum(0)}, 0);
   auto f = [](const pluss::Series& /*t*/, const pluss::Series& x) { return x; };  // f(t, w) = w
 
   const pluss::Series qv = w.antidiff().quadratic_variation(0);

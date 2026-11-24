@@ -105,7 +105,7 @@ Series limited_expected_value_by_survival_(const Dist &dist, double cap,
     return scalar_on_(0.0, platform);
   }
   const double h = cap / static_cast<double>(quadrature_steps);
-  const Series idx = Series::arange(0, quadrature_steps, 1, ScalarType::Int64)
+  const Series idx = pluss::series::arange(0, quadrature_steps, 1, ScalarType::Int64)
                          .to(platform, ScalarType::Float64);
   const Series x_mid = idx.add(0.5).mul(h);
   const Series surv = dist.cdf(x_mid).mul(-1.0).add(1.0).maximum(0.0);
@@ -195,7 +195,7 @@ Series poisson_pmf(double lambda, std::int64_t max_count,
                    pluss::codem::Platform platform) {
   validate_nonnegative_scalar_(lambda, "poisson_pmf", "lambda");
   PLUSS_CHECK(max_count >= 0, "poisson_pmf: max_count must be >= 0");
-  const Series k = Series::arange(0, max_count + 1, 1, ScalarType::Int64)
+  const Series k = pluss::series::arange(0, max_count + 1, 1, ScalarType::Int64)
                        .to(platform, ScalarType::Float64);
   const pluss::subsp::stats::distr::Poisson freq(scalar_on_(lambda, platform));
   return freq.pdf(k).to(platform, ScalarType::Float64).contiguous();
@@ -206,7 +206,7 @@ Series negbin_pmf(double r, double p, std::int64_t max_count,
   validate_positive_scalar_(r, "negbin_pmf", "r");
   validate_probability_open_(p, "negbin_pmf", "p");
   PLUSS_CHECK(max_count >= 0, "negbin_pmf: max_count must be >= 0");
-  const Series k = Series::arange(0, max_count + 1, 1, ScalarType::Int64)
+  const Series k = pluss::series::arange(0, max_count + 1, 1, ScalarType::Int64)
                        .to(platform, ScalarType::Float64);
   const pluss::subsp::stats::distr::NegativeBinomial freq(
       scalar_on_(r, platform), scalar_on_(p, platform));

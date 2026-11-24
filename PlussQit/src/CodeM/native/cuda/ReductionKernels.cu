@@ -254,7 +254,7 @@ bool run_float_reduce_all_(ReduceOp op, const Series& a, Series& out) noexcept {
     } else {
       auto sizes = std::vector<std::int64_t>(cur.sizes().begin(), cur.sizes().end());
       sizes.erase(sizes.begin() + d);
-      tmp = Series::empty(sizes, cur.scalar_type(), Platform::CUDA);
+      tmp = pluss::codem::factory::empty(sizes, cur.scalar_type(), Platform::CUDA);
       if (!run_float_reduce_(op, cur, d, tmp)) return false;
       cur = tmp;
     }
@@ -297,7 +297,7 @@ bool run_logical_reduce_all_(bool all_op, const Series& a, Series& out) noexcept
     } else {
       auto sizes = std::vector<std::int64_t>(cur.sizes().begin(), cur.sizes().end());
       sizes.erase(sizes.begin() + d);
-      tmp = Series::empty(sizes, ScalarType::Bool, Platform::CUDA);
+      tmp = pluss::codem::factory::empty(sizes, ScalarType::Bool, Platform::CUDA);
       if (!run_logical_reduce_(all_op, cur, d, tmp)) return false;
       cur = tmp;
     }

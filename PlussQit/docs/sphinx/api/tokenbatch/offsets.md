@@ -111,7 +111,7 @@ boundaries still preserve two rows.
 ## Example 4: Propagated Absence Uses The Canonical Boundary
 
 ```cpp
-const auto batch = pluss::Note::undefined().nlp().tokens();
+const auto batch = pluss::note::undefined().nlp().tokens();
 std::cout << std::boolalpha
           << "tokens-defined=" << batch.tokens().defined()
           << " offsets=[" << batch.offsets().integers().front() << "]\n";

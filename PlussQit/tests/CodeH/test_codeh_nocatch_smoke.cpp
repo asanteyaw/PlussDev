@@ -182,7 +182,7 @@ void test_timeline_local_field_replacement() {
     raw[2] = b;
     const std::array<std::int64_t, 1> shape{2};
     const std::array<std::int64_t, 1> strides{2};
-    const auto strided = pluss::Timeline::from_buffer(
+    const auto strided = pluss::timeline::from_buffer(
         raw, shape, strides, [&](void* p) {
           freed = true;
           std::free(p);
@@ -197,12 +197,12 @@ void test_base_static_and_legacy_surface() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:base_surface\n";
 
-  const Timeline now = Timeline::now();
-  const Timeline today = Timeline::today();
-  const Timeline yesterday = Timeline::yesterday();
-  const Timeline tomorrow = Timeline::tomorrow();
+  const Timeline now = pluss::timeline::now();
+  const Timeline today = pluss::timeline::today();
+  const Timeline yesterday = pluss::timeline::yesterday();
+  const Timeline tomorrow = pluss::timeline::tomorrow();
 
-  expect_true(now.defined() && today.defined(), "Timeline::now/today defined");
+  expect_true(now.defined() && today.defined(), "pluss::timeline::now/today defined");
   expect_true(today.days_between(tomorrow) == 1, "today->tomorrow day distance");
   expect_true(yesterday.days_between(today) == 1, "yesterday->today day distance");
 
@@ -240,10 +240,10 @@ void test_base_static_and_legacy_surface() {
   expect_true(adjusted.isoformat().find("2025-03-01T08:09:10") != std::string::npos,
               "isoformat base helper");
 
-  const auto dr = Timeline::date_range(today, today.add_days(2), "day", 1);
-  expect_true(dr.size() == 3, "base Timeline::date_range");
-  const auto dr_desc = Timeline::date_range(today.add_days(2), today, "day", -1);
-  expect_true(dr_desc.size() == 3, "base Timeline::date_range descending");
+  const auto dr = pluss::timeline::date_range(today, today.add_days(2), "day", 1);
+  expect_true(dr.numel() == 3, "pluss::timeline::date_range");
+  const auto dr_desc = pluss::timeline::date_range(today.add_days(2), today, "day", -1);
+  expect_true(dr_desc.numel() == 3, "pluss::timeline::date_range descending");
 
   const auto rep = today.repeat(3);
   expect_true(rep.numel() == 3, "repeat(3)");
@@ -290,7 +290,7 @@ void test_dataframe_datetime_tranche() {
   const auto mins = pluss::make_series(std::vector<std::int64_t>{5, 6, 7}, {3});
   const auto secs = pluss::make_series(std::vector<std::int64_t>{8, 9, 10}, {3});
 
-  const Timeline ymd = Timeline::from_ymd(years, months, days, "UTC");
+  const Timeline ymd = pluss::timeline::from_ymd(years, months, days, "UTC");
   expect_true(ymd.numel() == 3, "from_ymd builds 1D timeline");
   expect_eq_vec(ymd.year().host<std::int32_t>(), {2024, 2024, 2024},
                 "from_ymd year fields");
@@ -298,7 +298,7 @@ void test_dataframe_datetime_tranche() {
                 "from_ymd day fields");
 
   const Timeline ymdhms =
-      Timeline::from_ymdhms(years, months, days, hours, mins, secs, "UTC");
+      pluss::timeline::from_ymdhms(years, months, days, hours, mins, secs, "UTC");
   expect_eq_vec(ymdhms.hour().host<std::int32_t>(), {10, 11, 12},
                 "from_ymdhms hour fields");
   expect_eq_vec(ymdhms.minute().host<std::int32_t>(), {5, 6, 7},
@@ -313,9 +313,9 @@ void test_dataframe_datetime_tranche() {
   expect_true(epoch_s.numel() == 3 && epoch_ns.numel() == 3,
               "epoch_* conversions preserve shape");
 
-  const auto rt_s = Timeline::from_epoch_seconds(epoch_s, "UTC");
-  const auto rt_ms = Timeline::from_epoch_millis(epoch_ms, "UTC");
-  const auto rt_us = Timeline::from_epoch_micros(epoch_us, "UTC");
+  const auto rt_s = pluss::timeline::from_epoch_seconds(epoch_s, "UTC");
+  const auto rt_ms = pluss::timeline::from_epoch_millis(epoch_ms, "UTC");
+  const auto rt_us = pluss::timeline::from_epoch_micros(epoch_us, "UTC");
   expect_eq_vec(rt_s.ticks(), ymdhms.ticks(),
                 "from_epoch_seconds roundtrip");
   expect_eq_vec(rt_ms.ticks(), ymdhms.ticks(),
@@ -378,7 +378,7 @@ void test_factory_rank_and_printing() {
     auto* raw = static_cast<std::int64_t*>(std::malloc(sizeof(std::int64_t) * epoch_flat.size()));
     std::memcpy(raw, epoch_flat.data(), sizeof(std::int64_t) * epoch_flat.size());
     const std::array<std::int64_t, 3> epoch_strides{6, 3, 1};
-    const auto t_epoch_buf = pluss::codeh::Timeline::from_buffer(
+    const auto t_epoch_buf = pluss::timeline::from_buffer(
         raw,
         std::span<const std::int64_t>(epoch_shape.data(), epoch_shape.size()),
         std::span<const std::int64_t>(epoch_strides.data(), epoch_strides.size()),
@@ -386,11 +386,11 @@ void test_factory_rank_and_printing() {
           timeline_freed = true;
           std::free(p);
         });
-    expect_true(t_epoch_buf.dim() == 3, "Timeline::from_buffer rank");
+    expect_true(t_epoch_buf.dim() == 3, "pluss::timeline::from_buffer rank");
     expect_eq_vec(t_epoch_buf.ticks(), epoch_flat,
-                  "Timeline::from_buffer preserves data");
+                  "pluss::timeline::from_buffer preserves data");
   }
-  expect_true(timeline_freed, "Timeline::from_buffer deleter called");
+  expect_true(timeline_freed, "pluss::timeline::from_buffer deleter called");
 
   const auto t_epoch_nested = pluss::timeline::from_epoch({
       {
@@ -484,7 +484,7 @@ void test_factory_rank_and_printing() {
     raw[2] = 2'000'000'000LL;
     const std::array<std::int64_t, 1> sizes{3};
     const std::array<std::int64_t, 1> strides{1};
-    const auto idx_buf = pluss::Timeline::from_buffer(
+    const auto idx_buf = pluss::timeline::from_buffer(
         raw,
         sizes,
         strides,

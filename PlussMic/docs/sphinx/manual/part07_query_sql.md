@@ -63,7 +63,7 @@ Use a boolean mask when the condition is easier to express in C++ than in the te
 
 ```cpp
 auto values = df.features("age").as_series().host<std::int64_t>();
-auto mask = pluss::Series::zeros(
+auto mask = pluss::series::zeros(
     {static_cast<std::int64_t>(values.size())},
     pluss::codem::ScalarType::Bool);
 

@@ -7,7 +7,7 @@ static void show(const char *label, const pluss::Note &n) { std::cout << label <
 
 int main() {
   // 1. Wall-clock times are meaningless until you say where they were read. Attach a zone with tz_localize; the result is a real instant.
-  auto london_start = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026}), pluss::make_series({11, 11}), pluss::make_series({13, 14}),
+  auto london_start = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026}), pluss::make_series({11, 11}), pluss::make_series({13, 14}),
                                                   pluss::make_series({22, 6}), pluss::make_series({0, 0}), pluss::make_series({0, 0}))
                           .tz_localize("Europe/London");
   show("start, London", london_start.strftime("%a %d %b %H:%M %Z"));
@@ -25,7 +25,7 @@ int main() {
 
   // 4. The night the clocks go back (London, 2026-10-25). A civil day and an elapsed day differ: add_days keeps the wall clock,
   //    adding 24 hours keeps the elapsed time.
-  auto saturday = pluss::Timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(10), pluss::make_series(24), pluss::make_series(12),
+  auto saturday = pluss::timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(10), pluss::make_series(24), pluss::make_series(12),
                                               pluss::make_series(0), pluss::make_series(0))
                       .tz_localize("Europe/London");
   show("Saturday noon", saturday.strftime("%a %d %b %H:%M %Z"));

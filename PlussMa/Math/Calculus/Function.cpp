@@ -2911,7 +2911,7 @@ FunctionAccess::evaluate(const Function &function,
     }
     pluss::Series scalar =
         like ? pluss::codem::make_scalar_like(*like, value)
-             : pluss::Series::full({}, value, pluss::ScalarType::Float64,
+             : pluss::series::full({}, value, pluss::ScalarType::Float64,
                                    pluss::pCPU);
     scalar_cache.emplace_back(value, scalar);
     return scalar;

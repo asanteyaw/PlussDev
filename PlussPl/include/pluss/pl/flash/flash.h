@@ -1024,7 +1024,7 @@ inline void downsample_columns(
     return;
   }
   const auto step = std::max<std::int64_t>(1, (nrows + max_points - 1) / max_points);
-  const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+  const auto idx = pluss::series::arange(0, nrows, step, ScalarType::Int64);
   if (labels != nullptr) {
     const auto sampled_idx = idx.host<std::int64_t>().array().data;
     std::vector<std::string> sampled_labels;
@@ -1229,7 +1229,7 @@ struct FieldmapGrid {
   }
   const Series valid = flat_mask.ne(0.0).reshape(out.sizes());
   const Series fill =
-      Series::full({out.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64).reshape(out.sizes());
+      pluss::series::full({out.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64).reshape(out.sizes());
   // Mask as receiver: keep `out` where the mask is non-zero, the NaN fill elsewhere.
   return pluss::series::where(valid, out, fill);
 }
@@ -2072,7 +2072,7 @@ struct DatasetSchemaColumn {
       const auto any_missing = std::any_of(
           numeric_validity[i].begin(), numeric_validity[i].end(), [](bool v) { return !v; });
       if (any_missing) {
-        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto mask = pluss::series::zeros({row_count}, ScalarType::Bool);
         auto* out = reinterpret_cast<bool*>(mask.raw_data());
         for (std::int64_t row = 0; row < row_count; ++row) {
           out[row] = numeric_validity[i][static_cast<std::size_t>(row)];
@@ -2093,7 +2093,7 @@ struct DatasetSchemaColumn {
       const auto any_missing = std::any_of(
           text_validity[i].begin(), text_validity[i].end(), [](bool v) { return !v; });
       if (any_missing) {
-        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto mask = pluss::series::zeros({row_count}, ScalarType::Bool);
         auto* out = reinterpret_cast<bool*>(mask.raw_data());
         for (std::int64_t row = 0; row < row_count; ++row) {
           out[row] = text_validity[i][static_cast<std::size_t>(row)];
@@ -2114,7 +2114,7 @@ struct DatasetSchemaColumn {
       const auto any_missing = std::any_of(
           temporal_validity[i].begin(), temporal_validity[i].end(), [](bool v) { return !v; });
       if (any_missing) {
-        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto mask = pluss::series::zeros({row_count}, ScalarType::Bool);
         auto* out = reinterpret_cast<bool*>(mask.raw_data());
         for (std::int64_t row = 0; row < row_count; ++row) {
           out[row] = temporal_validity[i][static_cast<std::size_t>(row)];
@@ -5774,8 +5774,8 @@ Studio& lagplot(Studio& studio, Values&& values, const LagPlotOptions& options =
       (options.max_points > 0 && usable > options.max_points)
           ? std::max<std::int64_t>(1, (usable + options.max_points - 1) / options.max_points)
           : 1;
-  const auto idx_x = Series::arange(0, usable, step, ScalarType::Int64);
-  const auto idx_y = Series::arange(lag, lag + usable, step, ScalarType::Int64);
+  const auto idx_x = pluss::series::arange(0, usable, step, ScalarType::Int64);
+  const auto idx_y = pluss::series::arange(lag, lag + usable, step, ScalarType::Int64);
   auto& pane = studio.pane2();
   pane.grid(GridStyle::Major).x_label("x(t)").y_label("x(t + lag)");
   auto& trace = pane.cloud(base.take(idx_x), base.take(idx_y), std::array<double, 1>{options.marker_area});
@@ -5810,8 +5810,8 @@ Studio& acfplot(Studio& studio, Values&& values, const AcfPlotOptions& options =
       acf.push_back(0.0);
       continue;
     }
-    const Series idx_x = Series::arange(0, n - lag, 1, ScalarType::Int64);
-    const Series idx_y = Series::arange(lag, n, 1, ScalarType::Int64);
+    const Series idx_x = pluss::series::arange(0, n - lag, 1, ScalarType::Int64);
+    const Series idx_y = pluss::series::arange(lag, n, 1, ScalarType::Int64);
     const double numerator = detail::scalar_value(centered.take(idx_x).mul(centered.take(idx_y)).sum());
     const double corr = numerator / denom;
     acf.push_back(std::clamp(corr, -1.0, 1.0));
@@ -5847,8 +5847,8 @@ Studio& pacfplot(Studio& studio, Values&& values, const PacfPlotOptions& options
   acf[0] = 1.0;
   if (valid_denom) {
     for (const auto lag : std::views::iota(std::int64_t{1}, max_lag + 1)) {
-      const Series idx_x = Series::arange(0, n - lag, 1, ScalarType::Int64);
-      const Series idx_y = Series::arange(lag, n, 1, ScalarType::Int64);
+      const Series idx_x = pluss::series::arange(0, n - lag, 1, ScalarType::Int64);
+      const Series idx_y = pluss::series::arange(lag, n, 1, ScalarType::Int64);
       const double numerator = detail::scalar_value(centered.take(idx_x).mul(centered.take(idx_y)).sum());
       acf[static_cast<std::size_t>(lag)] = std::clamp(numerator / denom, -1.0, 1.0);
     }
@@ -5932,8 +5932,8 @@ Studio& ccfplot(Studio& studio, X&& x, Y&& y, const CcfPlotOptions& options = {}
       ccf.push_back(0.0);
       continue;
     }
-    const Series idx_x = Series::arange(tail, tail + usable, 1, ScalarType::Int64);
-    const Series idx_y = Series::arange(lead, lead + usable, 1, ScalarType::Int64);
+    const Series idx_x = pluss::series::arange(tail, tail + usable, 1, ScalarType::Int64);
+    const Series idx_y = pluss::series::arange(lead, lead + usable, 1, ScalarType::Int64);
     const double numerator = detail::scalar_value(x_centered.take(idx_x).mul(y_centered.take(idx_y)).sum());
     ccf.push_back(std::clamp(numerator / denom, -1.0, 1.0));
   }

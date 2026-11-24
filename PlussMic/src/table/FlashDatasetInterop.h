@@ -41,7 +41,7 @@ namespace detail {
     const std::vector<bool>& flags,
     Platform platform = Platform::CPU) {
   const auto n = static_cast<std::int64_t>(flags.size());
-  auto out = pluss::Series::zeros({n}, ScalarType::Bool, platform);
+  auto out = pluss::series::zeros({n}, ScalarType::Bool, platform);
   auto host = out.to(Platform::CPU);
   auto* ptr = reinterpret_cast<bool*>(host.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
@@ -92,7 +92,7 @@ namespace detail {
   PLUSS_CHECK(current_size < target_size,
               "flash::Dataset::frame: numeric feature is longer than the selected rectangular size");
   const auto pad = target_size - current_size;
-  const auto tail = pluss::Series::full({pad}, 0.0, values.scalar_type(), values.platform());
+  const auto tail = pluss::series::full({pad}, 0.0, values.scalar_type(), values.platform());
   const auto padded = values.unite({tail}, 0, true);
   auto padded_mask = maybe_padded_validity_(mask, current_size, target_size, values.platform());
   return padded_mask.has_value() ? Shelf(padded, *padded_mask) : Shelf(padded);
@@ -302,7 +302,7 @@ namespace detail {
 
 [[nodiscard]] inline Series implicit_positions_(std::int64_t n) {
   if (n <= 0) {
-    return ::pluss::Series::zeros({0}, ScalarType::Float64);
+    return ::pluss::series::zeros({0}, ScalarType::Float64);
   }
   return ::pluss::series::linspace(0.0,
                                    static_cast<double>(n - 1),
@@ -2255,11 +2255,11 @@ inline Trace& whiskplot(
   const auto xneg = columns.xneg_feature.has_value()
       ? ::pluss::table::detail::continuous_series_from_shelf_(
             xneg_col->filter(keep), "flash::whiskplot(DataFrame)")
-      : ::pluss::Series::zeros({x.numel()}, ScalarType::Float64);
+      : ::pluss::series::zeros({x.numel()}, ScalarType::Float64);
   const auto xpos = columns.xpos_feature.has_value()
       ? ::pluss::table::detail::continuous_series_from_shelf_(
             xpos_col->filter(keep), "flash::whiskplot(DataFrame)")
-      : ::pluss::Series::zeros({x.numel()}, ScalarType::Float64);
+      : ::pluss::series::zeros({x.numel()}, ScalarType::Float64);
   return whiskplot(pane, x, y, yneg, ypos, xneg, xpos);
 }
 

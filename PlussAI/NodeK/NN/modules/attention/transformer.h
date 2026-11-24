@@ -220,13 +220,13 @@ private:
   void sync_parameter_records_() {
     this->clear_parameter_records_();
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-    norm2_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm1_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm2_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm1_weight", norm1_weight_);
     this->parameter_record("norm2_weight", norm2_weight_);
     if (options_.bias) {
-      norm1_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-      norm2_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm1_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm2_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm1_bias", norm1_bias_);
       this->parameter_record("norm2_bias", norm2_bias_);
     }
@@ -405,10 +405,10 @@ private:
     this->clear_parameter_records_();
     if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm_weight", norm_weight_);
     if (options_.bias) {
-      norm_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm_bias", norm_bias_);
     }
   }
@@ -632,16 +632,16 @@ private:
   void sync_parameter_records_() {
     this->clear_parameter_records_();
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm1_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-    norm2_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-    norm3_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm1_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm2_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm3_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm1_weight", norm1_weight_);
     this->parameter_record("norm2_weight", norm2_weight_);
     this->parameter_record("norm3_weight", norm3_weight_);
     if (options_.bias) {
-      norm1_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-      norm2_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
-      norm3_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm1_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm2_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm3_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm1_bias", norm1_bias_);
       this->parameter_record("norm2_bias", norm2_bias_);
       this->parameter_record("norm3_bias", norm3_bias_);
@@ -844,10 +844,10 @@ private:
     this->clear_parameter_records_();
     if (!options_.final_norm) return;
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    norm_weight_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+    norm_weight_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
     this->parameter_record("norm_weight", norm_weight_);
     if (options_.bias) {
-      norm_bias_ = Series::empty({options_.d_model}, cfg.dtype, cfg.platform);
+      norm_bias_ = pluss::series::empty({options_.d_model}, cfg.dtype, cfg.platform);
       this->parameter_record("norm_bias", norm_bias_);
     }
   }

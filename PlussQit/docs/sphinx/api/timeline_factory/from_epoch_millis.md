@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Timeline::from_epoch_millis
+# pluss::timeline::from_epoch_millis
 
-[Back to Timeline API Reference](../../timeline_api_reference)
+[Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Timeline Timeline::from_epoch_millis(
+static Timeline pluss::timeline::from_epoch_millis(
     const Series& epoch_millis,
     std::string_view tz_name = "UTC")
 ```
@@ -20,7 +20,7 @@ Timeline shape; the operation neither flattens nor broadcasts.
 
 ```cpp
 const auto millis = pluss::make_series({-1LL, 0LL, 1'999LL});
-const auto times = pluss::Timeline::from_epoch_millis(millis);
+const auto times = pluss::timeline::from_epoch_millis(millis);
 std::cout << pluss::series::print(times.epoch_nanos()) << '\n';
 ```
 
@@ -41,8 +41,8 @@ reinterpret these absolute epoch counts as local wall-clock values.
 
 ## See Also
 
-- [`Timeline::epoch_millis`](epoch_millis.md)
-- [`Timeline::from_epoch_seconds`](from_epoch_seconds.md)
+- [`Timeline::epoch_millis`](../timeline/epoch_millis.md)
+- [`pluss::timeline::from_epoch_seconds`](from_epoch_seconds.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="from_epoch_micros.html"><span class="label">Previous</span><span class="title">from_epoch_micros</span></a>

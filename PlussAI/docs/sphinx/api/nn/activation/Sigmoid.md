@@ -94,7 +94,7 @@ int main() {
 
   const pluss::Series s_x = sigmoid.forward(x);
   const pluss::Series s_neg_x = sigmoid.forward(neg_x);
-  const pluss::Series one = pluss::Series::full({1}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series one = pluss::series::full({1}, 1.0, pluss::ScalarType::Float64);
 
   std::cout << "sigmoid(2)  = " << s_x << "\n";
   std::cout << "sigmoid(-2) = " << s_neg_x << "\n";

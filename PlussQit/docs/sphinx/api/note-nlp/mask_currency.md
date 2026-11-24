@@ -107,7 +107,7 @@ const auto empty = pluss::note::make(std::vector<std::string>{})
 std::cout << "currency empty dim=" << empty.dim()
           << " numel=" << empty.numel() << '\n';
 std::cout << "currency undefined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().mask_currency().defined() << '\n';
+          << pluss::note::undefined().nlp().mask_currency().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"$1"}, std::array<std::int64_t, 1>{1})

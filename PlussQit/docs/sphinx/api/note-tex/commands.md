@@ -121,7 +121,7 @@ offsets=[0, 2, 3, 3]
 ## Example 5: Undefined Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().commands();
+const auto absent = pluss::note::undefined().tex().commands();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 ```

@@ -326,20 +326,8 @@ public:
   // monotonicity scan.
   TimelineIndexAccessor index(bool require_sorted = true) const;
 
-  // High-priority interop tranche for dataframe-style datetime workflows.
-  // Build Timeline from calendar component columns (Series) and convert back
-  // to epoch units used by pandas/NumPy tooling.
-  static Timeline from_ymd(const pluss::codem::Series& year,
-                           const pluss::codem::Series& month,
-                           const pluss::codem::Series& day,
-                           std::string_view tz_name = "UTC");
-  static Timeline from_ymdhms(const pluss::codem::Series& year,
-                              const pluss::codem::Series& month,
-                              const pluss::codem::Series& day,
-                              const pluss::codem::Series& hour,
-                              const pluss::codem::Series& minute,
-                              const pluss::codem::Series& second,
-                              std::string_view tz_name = "UTC");
+  // Calendar-component and epoch-unit constructors (from_ymd, from_ymdhms, from_epoch_seconds/millis/micros) and the
+  // calendar clocks (yesterday, tomorrow) are pluss::timeline::* free functions.
 
   pluss::codem::Series epoch_nanos() const;
   pluss::codem::Series epoch_micros() const;
@@ -348,22 +336,6 @@ public:
   pluss::codem::Series epoch_days() const;
   pluss::codem::Series span(const Timeline& other,
                             const TimelineSpanOptions& options = {}) const;
-
-  static Timeline from_epoch_seconds(const pluss::codem::Series& epoch_seconds,
-                                     std::string_view tz_name = "UTC");
-  static Timeline from_epoch_millis(const pluss::codem::Series& epoch_millis,
-                                    std::string_view tz_name = "UTC");
-  static Timeline from_epoch_micros(const pluss::codem::Series& epoch_micros,
-                                    std::string_view tz_name = "UTC");
-
-  static Timeline now();
-  static Timeline today();
-  static Timeline yesterday();
-  static Timeline tomorrow();
-  static std::vector<Timeline> date_range(const Timeline& start,
-                                          const Timeline& end,
-                                          std::string_view freq = "day",
-                                          int step = 1);
 
   static void validate_ticks_series(const pluss::codem::Series& ticks) {
     CODEM_CHECK(ticks.defined(), "Timeline: underlying Series is undefined");

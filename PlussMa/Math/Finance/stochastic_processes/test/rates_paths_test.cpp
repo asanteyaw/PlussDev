@@ -22,7 +22,7 @@ void test_zero_coupon_prices_match_simulation() {
   const std::int64_t steps = 120, paths = 80000;
   const double maturity = 3.0, dt = maturity / static_cast<double>(steps);
   const auto discount = [&](const pluss::Series& rate_paths) {
-    const auto integral = rate_paths.index_select(0, pluss::Series::arange(0, steps, 1, pluss::ScalarType::Int64)).sum(0, false) * dt;
+    const auto integral = rate_paths.index_select(0, pluss::series::arange(0, steps, 1, pluss::ScalarType::Int64)).sum(0, false) * dt;
     return (integral * -1.0).exp().mean().item<double>();
   };
   for (const double slope : {0.0, 0.01}) {

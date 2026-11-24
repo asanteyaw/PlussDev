@@ -138,7 +138,7 @@ int main() {
   const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 2000, 4);
 
-  const Series none = Series::zeros({2000, 1}, pluss::ScalarType::Float64);
+  const Series none = pluss::series::zeros({2000, 1}, pluss::ScalarType::Float64);
   const auto f = [](double, const Series &w) { return w; };
   out.writeln("Marcus (no jumps) =", sde::marcus_integral(f, path, none).value.sum().item<double>(), ", Stratonovich =", sde::strat_integral(f, path).value.sum().item<double>());
 }
@@ -167,7 +167,7 @@ int main() {
   const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 100, 4);
 
   try {
-    (void)sde::marcus_integral([](double, const Series &w) { return w; }, path, Series::zeros({5, 1}, pluss::ScalarType::Float64));
+    (void)sde::marcus_integral([](double, const Series &w) { return w; }, path, pluss::series::zeros({5, 1}, pluss::ScalarType::Float64));
   } catch (const std::exception &e) {
     const std::string text(e.what());
     out.writeln(text.substr(0, text.find('\n')));

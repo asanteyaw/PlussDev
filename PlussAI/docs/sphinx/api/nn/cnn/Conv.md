@@ -154,7 +154,7 @@ int main() {
   opts.dilation = {1, 1};
   nn::Conv conv(opts);
 
-  const pluss::Series x = pluss::Series::full({1, 1, 7, 7}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({1, 1, 7, 7}, 1.0, pluss::ScalarType::Float64);
   const pluss::Series y = conv.forward(x);
 
   // out = (padded - dilation*(kernel-1) - 1) / stride + 1, padded = 7 + 2*1 = 9
@@ -285,7 +285,7 @@ int main() {
 
   std::cout << "weight platform after .to(pMPS): " << static_cast<int>(conv->weight().platform()) << "\n";
 
-  const Series x = pluss::Series::full({1, 1, 4, 4}, 1.0, pluss::ScalarType::Float32).to(pluss::pMPS);
+  const Series x = pluss::series::full({1, 1, 4, 4}, 1.0, pluss::ScalarType::Float32).to(pluss::pMPS);
   try {
     const Series y = conv.forward(x);
     std::cout << "conv2d on MPS: OK, platform=" << static_cast<int>(y.platform()) << "\n";

@@ -72,7 +72,7 @@ Series random_stochastic_(pluss::msharp::RangeView::Int sizes,
   if (!stochastic_dtype_supported_(dtype)) {
     fail_(std::string(op_name) + ": currently supports float32 only");
   }
-  Series out = Series::empty(sizes, dtype, Platform::MPS).contiguous();
+  Series out = pluss::codem::factory::empty(sizes, dtype, Platform::MPS).contiguous();
   if (out.numel() == 0) {
     return out;
   }

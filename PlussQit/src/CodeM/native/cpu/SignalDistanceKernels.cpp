@@ -23,7 +23,7 @@ inline std::int64_t wrap_dim_local(std::int64_t dim, std::int64_t nd, const char
 }
 
 Series trig_transform_fallback(const Series& x, std::int64_t dim, TrigTransformKind kind) {
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(x.sizes(), ScalarType::Float64);
   const auto* ip = reinterpret_cast<const double*>(x.raw_data());
   auto* op = reinterpret_cast<double*>(out.raw_data());
 
@@ -91,7 +91,7 @@ Series cdist_kernel(const Series& a, const Series& b, double p) {
   const auto n = bb.sizes()[0];
   const auto d = aa.sizes()[1];
 
-  auto out = Series::empty({m, n}, ScalarType::Float64);
+  auto out = pluss::codem::factory::empty({m, n}, ScalarType::Float64);
   auto* op = reinterpret_cast<double*>(out.raw_data());
 
   if (p == 2.0) {
@@ -160,7 +160,7 @@ Series trig_transform(const Series& self, std::int64_t dim, TrigTransformKind ki
     return trig_transform_fallback(x, dim, kind);
   }
 
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(x.sizes(), ScalarType::Float64);
   const auto* ip = reinterpret_cast<const double*>(x.raw_data());
   auto* op = reinterpret_cast<double*>(out.raw_data());
   const auto nd = x.dim();
@@ -241,7 +241,7 @@ Series hilbert_transform(const Series& self, std::int64_t dim) {
     if (self.scalar_type() == ScalarType::Complex128) {
       return self.contiguous();
     }
-    auto out = Series::empty(self.sizes(), ScalarType::Complex128);
+    auto out = pluss::codem::factory::empty(self.sizes(), ScalarType::Complex128);
     if (self.scalar_type() == ScalarType::Complex64) {
       auto in = self.contiguous();
       const auto n = in.numel();
@@ -269,7 +269,7 @@ Series hilbert_transform(const Series& self, std::int64_t dim) {
   }();
 
   dim = wrap_dim_local(dim, x.dim(), "hilbert");
-  auto out = Series::empty(x.sizes(), ScalarType::Complex128);
+  auto out = pluss::codem::factory::empty(x.sizes(), ScalarType::Complex128);
   const auto* ip = reinterpret_cast<const Complex128*>(x.raw_data());
   auto* op = reinterpret_cast<Complex128*>(out.raw_data());
   const auto nd = x.dim();

@@ -42,7 +42,7 @@ scores=true integers=false
 
 ```cpp
 std::cout << std::boolalpha
-          << "absent=" << pluss::Note::undefined().is_float64() << '\n';
+          << "absent=" << pluss::note::undefined().is_float64() << '\n';
 ```
 
 ### Output

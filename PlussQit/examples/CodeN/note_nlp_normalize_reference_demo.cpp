@@ -79,7 +79,7 @@ int main() {
             << (normalized.nlp().clean() == normalized).all().bool_item() << '\n';
   show("empty", pluss::note::make(std::vector<std::string>{}).nlp().clean());
   std::cout << "undefined defined=" << std::boolalpha
-            << pluss::Note::undefined().nlp().clean().defined() << '\n';
+            << pluss::note::undefined().nlp().clean().defined() << '\n';
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"12"}, std::array<std::int64_t, 1>{1});

@@ -161,19 +161,19 @@ private:
         "pluss::ai::nn::MultiheadAttention: dropout must be in [0,1]");
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    q_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
-    k_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
-    v_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
-    out_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    q_weight_ = pluss::series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    k_weight_ = pluss::series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    v_weight_ = pluss::series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    out_weight_ = pluss::series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
     this->parameter_record("q_weight", q_weight_);
     this->parameter_record("k_weight", k_weight_);
     this->parameter_record("v_weight", v_weight_);
     this->parameter_record("out_weight", out_weight_);
     if (options_.bias) {
-      q_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
-      k_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
-      v_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
-      out_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      q_bias_ = pluss::series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      k_bias_ = pluss::series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      v_bias_ = pluss::series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      out_bias_ = pluss::series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
       this->parameter_record("q_bias", q_bias_);
       this->parameter_record("k_bias", k_bias_);
       this->parameter_record("v_bias", v_bias_);

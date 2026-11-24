@@ -48,6 +48,49 @@ namespace pluss::codem {
 class Series;
 }
 
+// The primitive constructors of Series. They are free functions, not members of Series: pluss::series::* (see
+// pluss/codem/series_factory.h) is the public face and delegates here; library code that needs an exact platform or a
+// raw storage view calls these directly.
+namespace pluss::codem::factory {
+CODEM_API Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
+CODEM_API Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                      Platform platform);
+CODEM_API Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
+CODEM_API Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                      Platform platform);
+CODEM_API Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st);
+CODEM_API Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                     Platform platform);
+CODEM_API Series full(pluss::msharp::RangeView::Int sizes, double value,
+                     ScalarType st);
+CODEM_API Series full(pluss::msharp::RangeView::Int sizes, double value,
+                     ScalarType st, Platform platform);
+CODEM_API Series arange(double start, double end, double step, ScalarType dtype,
+                       Platform platform);
+CODEM_API Series arange(double start, double end, double step, ScalarType dtype);
+CODEM_API Series linspace(double start, double end, std::int64_t steps,
+                         ScalarType dtype, Platform platform);
+CODEM_API Series linspace(double start, double end, std::int64_t steps,
+                         ScalarType dtype);
+CODEM_API Series eye(std::int64_t n, std::int64_t m, ScalarType dtype,
+                    Platform platform);
+CODEM_API Series eye(std::int64_t n, std::int64_t m, ScalarType dtype);
+CODEM_API Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                     std::uint64_t seed, Platform platform);
+CODEM_API Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                     std::uint64_t seed);
+CODEM_API Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                      std::uint64_t seed, Platform platform);
+CODEM_API Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                      std::uint64_t seed);
+CODEM_API Series from_storage(const Storage &storage,
+                             std::int64_t storage_offset,
+                             const std::vector<std::int64_t> &sizes,
+                             const std::vector<std::int64_t> &strides,
+                             ScalarType dtype,
+                             Platform platform = Platform::CPU);
+} // namespace pluss::codem::factory
+
 namespace pluss::series {
 CODEM_API codem::Series undefined();
 // Einstein summation (see the contraction notes in Series.h): a free function, because it takes several Series and
@@ -1776,45 +1819,7 @@ public:
     CalcOptions options_{};
   };
 
-  // Factory helpers (Torch-style free-functions live elsewhere; keep these for
-  // convenience).
-  static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st,
-                      Platform platform);
-  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st,
-                      Platform platform);
-  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st,
-                     Platform platform);
-  static Series full(pluss::msharp::RangeView::Int sizes, double value,
-                     ScalarType st);
-  static Series full(pluss::msharp::RangeView::Int sizes, double value,
-                     ScalarType st, Platform platform);
-  static Series arange(double start, double end, double step, ScalarType dtype,
-                       Platform platform);
-  static Series arange(double start, double end, double step, ScalarType dtype);
-  static Series linspace(double start, double end, std::int64_t steps,
-                         ScalarType dtype, Platform platform);
-  static Series linspace(double start, double end, std::int64_t steps,
-                         ScalarType dtype);
-  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype,
-                    Platform platform);
-  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype);
-  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
-                     std::uint64_t seed, Platform platform);
-  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
-                     std::uint64_t seed);
-  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
-                      std::uint64_t seed, Platform platform);
-  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
-                      std::uint64_t seed);
-  static Series from_storage(const Storage &storage,
-                             std::int64_t storage_offset,
-                             const std::vector<std::int64_t> &sizes,
-                             const std::vector<std::int64_t> &strides,
-                             ScalarType dtype,
-                             Platform platform = Platform::CPU);
+
 
   // Core view/cast helpers used across the library.
   Series contiguous() const;
@@ -2437,7 +2442,7 @@ public:
       total = cpu.numel();
     }
 
-    auto out_cpu = Series::empty({1}, ScalarType::Int64, Platform::CPU);
+    auto out_cpu = pluss::codem::factory::empty({1}, ScalarType::Int64, Platform::CPU);
     reinterpret_cast<std::int64_t *>(out_cpu.raw_data())[0] = total;
     return target_platform == Platform::CPU ? out_cpu
                                             : out_cpu.to(target_platform);
@@ -2632,11 +2637,11 @@ private:
       const bool empty =
           (b.step > 0) ? (b.start >= b.stop) : (b.start <= b.stop);
       if (empty) {
-        Series out = Series::empty({0}, ScalarType::Int64, Platform::CPU);
+        Series out = pluss::codem::factory::empty({0}, ScalarType::Int64, Platform::CPU);
         return platform == Platform::CPU ? out
                                          : out.to(platform, ScalarType::Int64);
       }
-      Series idx = Series::arange(
+      Series idx = pluss::codem::factory::arange(
           static_cast<double>(b.start), static_cast<double>(b.stop),
           static_cast<double>(b.step), ScalarType::Int64);
       if (platform != Platform::CPU) {
@@ -2646,7 +2651,7 @@ private:
     }
 
     const auto idx = materialize_dim_indices_(spec, dim_size);
-    Series out = Series::empty({static_cast<std::int64_t>(idx.size())},
+    Series out = pluss::codem::factory::empty({static_cast<std::int64_t>(idx.size())},
                                ScalarType::Int64, Platform::CPU);
     auto *p = reinterpret_cast<std::int64_t *>(out.raw_data());
     for (std::int64_t i = 0; i < static_cast<std::int64_t>(idx.size()); ++i) {
@@ -3025,7 +3030,7 @@ public:
         values.numel() == 1,
         "Series::index_put_(int64, value): value must be scalar (numel==1)");
     const std::int64_t i = normalize_scalar_index_(index, size(0));
-    Series idx = Series::empty({1}, ScalarType::Int64, Platform::CPU);
+    Series idx = pluss::codem::factory::empty({1}, ScalarType::Int64, Platform::CPU);
     reinterpret_cast<std::int64_t *>(idx.raw_data())[0] = i;
     if (platform() != Platform::CPU) {
       idx = idx.to(platform(), ScalarType::Int64);
@@ -3427,3 +3432,4 @@ inline ExtractSpec::ExtractSpec(const Series &idx) : kind(Kind::AdvancedIndex) {
 #define PLUSS_CODEM_SERIES_COMPLETE
 #include "CodeM/compat/Invoke.h"
 #undef PLUSS_CODEM_SERIES_COMPLETE
+

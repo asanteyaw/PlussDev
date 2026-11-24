@@ -108,7 +108,7 @@ Note storage does not contain Float64 lanes
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().reals();
+  (void)pluss::note::undefined().reals();
 } catch (const pluss::Error& error) {
   const std::string message(error.what());
   std::cout << message.substr(0, message.find('\n')) << '\n';

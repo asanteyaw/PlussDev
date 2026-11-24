@@ -148,10 +148,10 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
-  const pluss::Series weight = pluss::Series::full({6, 4}, 0.1, pluss::ScalarType::Float64);
+  const pluss::Series weight = pluss::series::full({6, 4}, 0.1, pluss::ScalarType::Float64);
 
   // batch=2, seq_len=3, in_features=4
-  const pluss::Series x = pluss::Series::full({2, 3, 4}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({2, 3, 4}, 1.0, pluss::ScalarType::Float64);
   const pluss::Series y = nn::fusion(x, weight);
 
   std::cout << "input shape:  [" << x.sizes()[0] << ", " << x.sizes()[1] << ", " << x.sizes()[2] << "]\n";

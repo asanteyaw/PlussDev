@@ -30,7 +30,7 @@ TEST_CASE("Timeline coarse epoch constructors preserve shape and reject overflow
           "[timeline-storage]") {
   const auto seconds = pluss::make_series(
       {{-1LL, 0LL}, {1LL, pluss::Timeline::kNaT}});
-  const auto rebuilt = pluss::Timeline::from_epoch_seconds(seconds, "America/New_York");
+  const auto rebuilt = pluss::timeline::from_epoch_seconds(seconds, "America/New_York");
   REQUIRE(rebuilt.ticks() ==
           std::vector<std::int64_t>{-1'000'000'000LL, 0, 1'000'000'000LL,
                                     pluss::Timeline::kNaT});
@@ -38,13 +38,13 @@ TEST_CASE("Timeline coarse epoch constructors preserve shape and reject overflow
   REQUIRE(rebuilt.tz() == "America/New_York");
 
   const auto too_large = pluss::make_series({std::int64_t{9'223'372'037}});
-  REQUIRE_THROWS(pluss::Timeline::from_epoch_seconds(too_large));
+  REQUIRE_THROWS(pluss::timeline::from_epoch_seconds(too_large));
 
   const auto millis = pluss::make_series({-1LL, 0LL, 1'999LL});
-  REQUIRE(pluss::Timeline::from_epoch_millis(millis).ticks() ==
+  REQUIRE(pluss::timeline::from_epoch_millis(millis).ticks() ==
           std::vector<std::int64_t>{-1'000'000LL, 0, 1'999'000'000LL});
   const auto micros = pluss::make_series({-1LL, 0LL, 1'999'999LL});
-  REQUIRE(pluss::Timeline::from_epoch_micros(micros).ticks() ==
+  REQUIRE(pluss::timeline::from_epoch_micros(micros).ticks() ==
           std::vector<std::int64_t>{-1'000LL, 0, 1'999'999'000LL});
 }
 
@@ -53,7 +53,7 @@ TEST_CASE("Timeline component constructors broadcast scalars and reject invalid 
   const auto year = pluss::make_series(2024LL);
   const auto month = pluss::make_series({2LL, 3LL});
   const auto day = pluss::make_series({29LL, pluss::Timeline::kNaT});
-  const auto dates = pluss::Timeline::from_ymd(year, month, day, "UTC");
+  const auto dates = pluss::timeline::from_ymd(year, month, day, "UTC");
   REQUIRE(dates.sizes().vec() == std::vector<std::int64_t>{2});
   REQUIRE(dates.year().host<std::int32_t>() ==
           std::vector<std::int32_t>{2024, -1});
@@ -61,16 +61,16 @@ TEST_CASE("Timeline component constructors broadcast scalars and reject invalid 
   const auto hour = pluss::make_series({6LL, 7LL});
   const auto minute = pluss::make_series(30LL);
   const auto second = pluss::make_series(45LL);
-  const auto times = pluss::Timeline::from_ymdhms(
+  const auto times = pluss::timeline::from_ymdhms(
       year, month, pluss::make_series({29LL, 1LL}), hour, minute, second, "UTC");
   REQUIRE(times.hour().host<std::int32_t>() ==
           std::vector<std::int32_t>{6, 7});
   REQUIRE(times.minute().host<std::int32_t>() ==
           std::vector<std::int32_t>{30, 30});
 
-  REQUIRE_THROWS(pluss::Timeline::from_ymd(
+  REQUIRE_THROWS(pluss::timeline::from_ymd(
       year, pluss::make_series(2LL), pluss::make_series(30LL)));
-  REQUIRE_THROWS(pluss::Timeline::from_ymdhms(
+  REQUIRE_THROWS(pluss::timeline::from_ymdhms(
       year, pluss::make_series(1LL), pluss::make_series(1LL),
       pluss::make_series(24LL), minute, second));
 }
@@ -85,7 +85,7 @@ TEST_CASE("Timeline buffer bridge honors strides and owns through its deleter",
     raw[2] = 2'000'000'000LL;
     const std::array<std::int64_t, 1> shape{2};
     const std::array<std::int64_t, 1> strides{2};
-    const auto t = pluss::Timeline::from_buffer(
+    const auto t = pluss::timeline::from_buffer(
         raw, shape, strides,
         [&](void* p) { released = true; std::free(p); }, "UTC");
     REQUIRE(t.ticks() == std::vector<std::int64_t>{0, 2'000'000'000LL});

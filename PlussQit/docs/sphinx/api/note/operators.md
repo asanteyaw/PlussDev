@@ -238,7 +238,7 @@ try {
          pluss::note::make(std::vector<std::int64_t>{3, 4}));
 } catch (const pluss::Error&) { std::cout << "native dtype: rejected\n"; }
 
-try { (void)(pluss::note::make("x") + pluss::Note::undefined()); }
+try { (void)(pluss::note::make("x") + pluss::note::undefined()); }
 catch (const pluss::Error&) { std::cout << "undefined: rejected\n"; }
 ```
 
@@ -486,7 +486,7 @@ try { (void)(ints == reals); }
 catch (const pluss::Error&) { std::cout << "mixed dtype: rejected\n"; }
 try { (void)(ints == "2"); }
 catch (const pluss::Error&) { std::cout << "string against Int64: rejected\n"; }
-try { (void)(ints == pluss::Note::undefined()); }
+try { (void)(ints == pluss::note::undefined()); }
 catch (const pluss::Error&) { std::cout << "undefined: rejected\n"; }
 ```
 

@@ -47,23 +47,23 @@ int main() {
   std::cout << "\n\n";
 
   heading("location_scale_degenerate_cases");
-  auto normal = pluss::Series::empty({3}, pluss::ScalarType::Float64);
+  auto normal = pluss::series::empty({3}, pluss::ScalarType::Float64);
   normal.normal_(3.5, 0.0);
   pluss::series::print(std::cout, normal);
   std::cout << '\n';
-  auto uniform = pluss::Series::empty({3}, pluss::ScalarType::Float64);
+  auto uniform = pluss::series::empty({3}, pluss::ScalarType::Float64);
   uniform.uniform_(-2.0, -2.0);
   pluss::series::print(std::cout, uniform);
   std::cout << "\n\n";
 
   heading("discrete_random_on_float_storage");
-  auto random = pluss::Series::empty({8}, pluss::ScalarType::Float64);
+  auto random = pluss::series::empty({8}, pluss::ScalarType::Float64);
   random.random_(5, 6);
   pluss::series::print(std::cout, random);
   std::cout << "\n\n";
 
   heading("distribution_invariants");
-  auto values = pluss::Series::empty({64}, pluss::ScalarType::Float64);
+  auto values = pluss::series::empty({64}, pluss::ScalarType::Float64);
   values.exponential_(2.0);
   bool exponential_nonnegative = true;
   for (double value : values.host<double>()) exponential_nonnegative &= value >= 0.0;

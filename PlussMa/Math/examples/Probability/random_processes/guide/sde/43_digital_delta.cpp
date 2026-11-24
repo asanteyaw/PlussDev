@@ -15,7 +15,7 @@ int main() {
   const auto f64 = pluss::ScalarType::Float64;
   const double r = 0.02, sg = 0.3, x0 = 100.0, K = 100.0, T = 1.0;
   const std::int64_t paths = 400000;
-  const pluss::Series y0 = pluss::Series::full({paths}, x0, f64);
+  const pluss::Series y0 = pluss::series::full({paths}, x0, f64);
   sde::SdeOptions o;
   o.steps = 1;  // GBM is solved exactly below from W_T, so one step of the scheme is not used
   o.seed = 77;

@@ -268,7 +268,7 @@ Next highest-impact aggressive family:
 ## Patch 134 Focus (current)
 - [x] Add explicit CUDA readiness API (`pluss::cuda::is_ready` / `is_usable`) and wire `platform_available(Platform::CUDA)` to runtime probe.
 - [x] Add CMake CUDA probe gate (`PLUSSQIT_ENABLE_CUDA`) with `CUDAToolkit` detection and `PLUSS_HAS_CUDA` compile definition.
-- [x] Keep fail-loud CUDA Series semantics until native kernels exist (`Series::empty(..., CUDA)` / `Series::platform(CUDA)` still hard-fail by contract).
+- [x] Keep fail-loud CUDA Series semantics until native kernels exist (`pluss::series::empty(..., CUDA)` / `Series::platform(CUDA)` still hard-fail by contract).
 - [x] Make CUDA backend-info and bootstrap tests runtime-aware so suites pass coherently on both CUDA and non-CUDA hosts.
 
 ## Patch 135 Focus (current)

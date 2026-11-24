@@ -66,7 +66,7 @@ static Series broadcast_src_contig(const Series& src, const Series& index_like) 
   // Make a contiguous src expanded to index_like shape (very explicit/safe).
   auto s = src.contiguous();
   auto ish = index_like.sizes();
-  Series out = Series::empty(ish, s.scalar_type());
+  Series out = pluss::codem::factory::empty(ish, s.scalar_type());
   PLUSS_CHECK(out.is_contiguous(), "broadcast_src_contig: internal");
   PLUSS_CHECK(index_like.is_contiguous(), "broadcast_src_contig: expects contiguous index");
   // Iterate over index_like linear index and map to src index with broadcasting.

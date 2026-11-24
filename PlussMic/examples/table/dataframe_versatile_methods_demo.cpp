@@ -26,7 +26,7 @@ int main() {
   df.head(8);
 
   const auto ages = df.features("age").as_series().host<std::int64_t>();
-  auto mask = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   for (std::size_t i = 0; i < ages.size(); ++i) {
     keep[i] = ages[i] >= 45;
@@ -53,7 +53,7 @@ int main() {
       "is_senior",
       [](const pluss::table::DataFrame& frame) {
         const auto values = frame.features("age").as_series().host<std::int64_t>();
-        auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
+        auto out = pluss::series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < values.size(); ++i) {
           p[i] = values[i] >= 50;

@@ -73,7 +73,7 @@ const auto shape = empty.sizes();
 std::cout << "empty sizes=[" << shape[0] << ", " << shape[1] << "]\n";
 
 try {
-  (void)pluss::Note::undefined().sizes();
+  (void)pluss::note::undefined().sizes();
 } catch (const pluss::Error&) {
   std::cout << "undefined.sizes(): rejected\n";
 }

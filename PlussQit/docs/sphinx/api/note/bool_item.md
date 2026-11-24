@@ -116,7 +116,7 @@ bool_item wrong dtype: rejected
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().bool_item();
+  (void)pluss::note::undefined().bool_item();
 } catch (const pluss::Error&) {
   std::cout << "bool_item undefined: rejected\n";
 }

@@ -129,7 +129,7 @@ float_item wrong dtype: rejected
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().float_item();
+  (void)pluss::note::undefined().float_item();
 } catch (const pluss::Error&) {
   std::cout << "float_item undefined: rejected\n";
 }

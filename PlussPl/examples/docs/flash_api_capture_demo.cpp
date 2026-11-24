@@ -1277,7 +1277,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
             .view_angle_deg = 30.0,
             .projection = ProjectionKind::Perspective,
         });
-    auto sizes = Series::full({x.numel()}, 7.0, ScalarType::Float64);
+    auto sizes = pluss::series::full({x.numel()}, 7.0, ScalarType::Float64);
     auto colors = series::linspace(0.15, 0.95, x.numel(), ScalarType::Float64);
     auto& tr = cloud3(pane, x, y, z, sizes, colors).label("animate3_example2_companion");
     trace_preset3d(tr, TracePreset3D::Cloud);

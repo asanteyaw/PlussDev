@@ -119,7 +119,7 @@ TEST_CASE("CodeN TextRef owns its cell past the parent Note", "[coden][patch20]"
 
 TEST_CASE("CodeN Note metadata distinguishes rank absence and empty extents",
           "[coden][note-metadata]") {
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
   REQUIRE_FALSE(undefined.defined());
   REQUIRE_FALSE(undefined.is_scalar());
   REQUIRE_FALSE(undefined.is_vector());

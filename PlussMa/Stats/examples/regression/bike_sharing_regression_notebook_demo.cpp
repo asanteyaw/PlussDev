@@ -324,7 +324,7 @@ int main() {
   //======== End Cell Ten-B =====
   const std::int64_t aux_rows = std::min<std::int64_t>(2500, n_train);
   const std::vector<std::string> ext_predictor_names = numeric_feature_cols;
-  const Series aux_idx = Series::arange(0, aux_rows, 1, pluss::ScalarType::Int64).to(pluss::pCPU, pluss::ScalarType::Int64);
+  const Series aux_idx = pluss::series::arange(0, aux_rows, 1, pluss::ScalarType::Int64).to(pluss::pCPU, pluss::ScalarType::Int64);
   const Series x_aux = x_train_ext.index_select(0, aux_idx);
   const Series y_aux = y_train.index_select(0, aux_idx);
 

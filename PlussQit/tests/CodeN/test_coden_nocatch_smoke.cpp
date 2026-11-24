@@ -552,7 +552,7 @@ void test_perf_regression_corpus_ops() {
   expect_true(dedup2.numel() == 2, "deduplicate retains two first-seen distinct values on repeated-empty corpus");
   expect_true(dedup2.at(0) == "" && dedup2.at(1) == "alpha", "deduplicate keeps first-seen order on repeated-empty corpus");
 
-  const auto undef = pluss::Note::undefined();
+  const auto undef = pluss::note::undefined();
   expect_true(!undef.unique().defined(), "unique(undefined) remains undefined");
   expect_true(!undef.deduplicate().defined(), "deduplicate(undefined) remains undefined");
 }

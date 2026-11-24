@@ -76,7 +76,7 @@ const auto once = pluss::make_note(
 std::cout << std::boolalpha
           << "idempotent=" << ((once == once.tex().strip_fonts()).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().strip_fonts().defined() << '\n';
+          << pluss::note::undefined().tex().strip_fonts().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_fonts();
 } catch (const pluss::Error&) {

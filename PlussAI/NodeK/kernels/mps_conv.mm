@@ -259,7 +259,7 @@ Series run_conv3d_backward_input_(const std::vector<std::int64_t>& input_sizes,
                                   const Series& weight,
                                   const Conv3dGeometry& g) {
   auto& c = ctx_();
-  Series grad_input = Series::empty(input_sizes, ScalarType::Float32, Platform::MPS).contiguous();
+  Series grad_input = pluss::series::empty(input_sizes, ScalarType::Float32, Platform::MPS).contiguous();
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
     MPSShape* grad_shape = mps_shape_(grad_output.sizes());
@@ -293,7 +293,7 @@ Series run_conv3d_backward_weight_(const std::vector<std::int64_t>& weight_sizes
                                    const Series& input,
                                    const Conv3dGeometry& g) {
   auto& c = ctx_();
-  Series grad_weight = Series::empty(weight_sizes, ScalarType::Float32, Platform::MPS).contiguous();
+  Series grad_weight = pluss::series::empty(weight_sizes, ScalarType::Float32, Platform::MPS).contiguous();
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
     MPSShape* grad_shape = mps_shape_(grad_output.sizes());
@@ -325,7 +325,7 @@ Series run_conv3d_backward_weight_(const std::vector<std::int64_t>& weight_sizes
 Series run_conv3d_(const Series& input, const Series& weight, const Series& bias, const Conv3dGeometry& g) {
   auto& c = ctx_();
   const std::vector<std::int64_t> out_sizes = conv3d_output_sizes_(input, weight, g);
-  Series output = Series::empty(out_sizes, ScalarType::Float32, Platform::MPS).contiguous();
+  Series output = pluss::series::empty(out_sizes, ScalarType::Float32, Platform::MPS).contiguous();
   @autoreleasepool {
     MPSGraph* graph = [[MPSGraph alloc] init];
     MPSShape* input_shape = mps_shape_(input.sizes());

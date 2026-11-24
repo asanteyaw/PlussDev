@@ -636,7 +636,7 @@ double hjm_zcb_mc(double maturity,
   validate_hjm_(params, "hjm_zcb_mc");
   const double dt = maturity / static_cast<double>(steps);
   const auto sim = hjm_paths(steps, paths, dt, params, options, cfg, options.seed);
-  const Series integral = sim.rate.index_select(0, Series::arange(0, steps, 1, ScalarType::Int64)).sum(0, false).mul(dt);
+  const Series integral = sim.rate.index_select(0, pluss::series::arange(0, steps, 1, ScalarType::Int64)).sum(0, false).mul(dt);
   return integral.mul(-1.0).exp().mean().item<double>();
 }
 

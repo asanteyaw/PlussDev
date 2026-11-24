@@ -88,7 +88,7 @@ The first source cell owns tokens `[0, 4)`, the second owns the empty interval
 ## Example 3: Undefined Has A Closed Empty Offset Domain
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().bibliography_keys();
+const auto absent = pluss::note::undefined().tex().bibliography_keys();
 std::cout << std::boolalpha << "undefined tokens="
           << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";

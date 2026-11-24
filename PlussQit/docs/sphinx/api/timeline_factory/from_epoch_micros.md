@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Timeline::from_epoch_micros
+# pluss::timeline::from_epoch_micros
 
-[Back to Timeline API Reference](../../timeline_api_reference)
+[Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Timeline Timeline::from_epoch_micros(
+static Timeline pluss::timeline::from_epoch_micros(
     const Series& epoch_micros,
     std::string_view tz_name = "UTC")
 ```
@@ -24,7 +24,7 @@ local clock depends on the chosen zone.
 
 ```cpp
 const auto micros = pluss::make_series({-1LL, 0LL, 1'999'999LL});
-const auto times = pluss::Timeline::from_epoch_micros(micros);
+const auto times = pluss::timeline::from_epoch_micros(micros);
 std::cout << pluss::series::print(times.epoch_nanos()) << '\n';
 ```
 
@@ -42,8 +42,8 @@ use an integer Series when fractional handling must be explicit.
 
 ## See Also
 
-- [`Timeline::epoch_micros`](epoch_micros.md)
-- [`Timeline::from_epoch_millis`](from_epoch_millis.md)
+- [`Timeline::epoch_micros`](../timeline/epoch_micros.md)
+- [`pluss::timeline::from_epoch_millis`](from_epoch_millis.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="epoch_days.html"><span class="label">Previous</span><span class="title">epoch_days</span></a>

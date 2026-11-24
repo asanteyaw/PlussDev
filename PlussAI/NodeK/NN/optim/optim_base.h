@@ -420,7 +420,7 @@ protected:
   }
 
   static Series scalar_on_(double value, const Series& like) {
-    return Series::full({}, value, like.scalar_type(), like.platform());
+    return pluss::series::full({}, value, like.scalar_type(), like.platform());
   }
 
   static bool is_complex_(const Series& x) {

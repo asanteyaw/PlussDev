@@ -19,7 +19,7 @@ int main() {
   sde::WienerPath tripled = standard;
   tripled.w = standard.w.mul(3.0);                                  // volatility 3
   sde::WienerPath smooth = standard;
-  smooth.w = pluss::Series::linspace(0.0, 1.0, 2001, f64).unsqueeze(1);  // a straight line
+  smooth.w = pluss::series::linspace(0.0, 1.0, 2001, f64).unsqueeze(1);  // a straight line
 
   for (const auto& item : {std::pair<const char*, sde::WienerPath>{"standard path", standard},
                            {"path times 3", tripled},

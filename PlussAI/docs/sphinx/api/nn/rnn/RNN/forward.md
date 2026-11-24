@@ -198,7 +198,7 @@ int main() {
             << " -- num_layers(2) * dirs(2) = 4 weight blocks\n";
 
   // seq_len=5, batch=3, input_size=4 (time-major, default layout)
-  const pluss::Series x = pluss::Series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
   const auto [output, hidden] = net.forward(x);
 
   std::cout << "output shape: [" << output.sizes()[0] << "," << output.sizes()[1] << "," << output.sizes()[2]

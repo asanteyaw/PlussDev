@@ -130,7 +130,7 @@ std::cout << pluss::note::print(
     pluss::note::make(std::vector<std::string>{}).nlp().remove_code())
           << '\n';
 std::cout << "undefined defined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().remove_code().defined() << '\n';
+          << pluss::note::undefined().nlp().remove_code().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"`x`"},

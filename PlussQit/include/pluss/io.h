@@ -498,7 +498,7 @@ inline void write_note_payload_(
 
 inline pluss::Note read_note_payload_(BinaryReader& reader, const LoadOptions& /*options*/) {
   const bool defined = reader.read_u8("note.defined") != 0;
-  if (!defined) return pluss::Note::undefined();
+  if (!defined) return pluss::note::undefined();
 
   const bool is_bytes = reader.read_u8("note.is_bytes") != 0;
   const auto rank = reader.read_u32("note.rank");
@@ -612,7 +612,7 @@ inline pluss::Timeline read_timeline_payload_(BinaryReader& reader, const LoadOp
   };
 
   try {
-    return pluss::codeh::Timeline::from_buffer(
+    return pluss::timeline::from_buffer(
         raw,
         std::span<const std::int64_t>(sizes.data(), sizes.size()),
         std::span<const std::int64_t>(strides.data(), strides.size()),

@@ -116,11 +116,11 @@ TEST_CASE("Note markup removers preserve shape absence and Text dtype",
   REQUIRE(empty.nlp().remove_headers().sizes() == std::vector<std::int64_t>{0});
   REQUIRE(empty.nlp().remove_html().sizes() == std::vector<std::int64_t>{0});
 
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_emails().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_footers().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_hashtags().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_headers().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_html().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_emails().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_footers().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_hashtags().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_headers().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_html().defined());
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"<b>x</b>"},

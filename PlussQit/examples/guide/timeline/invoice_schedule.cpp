@@ -10,7 +10,7 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 
 int main() {
   using pluss::ScalarType;
-  auto issued = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({9, 10, 10, 11}), pluss::make_series({15, 22, 23, 2}));
+  auto issued = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({9, 10, 10, 11}), pluss::make_series({15, 22, 23, 2}));
   show("issued", issued.strftime("%a %Y-%m-%d"));
 
   // 1. Payment terms are an elapsed length, a Duration: thirty days.
@@ -27,7 +27,7 @@ int main() {
   show("on a business day?", adjusted.is_business_day());
 
   // 3. Payments arrive on these dates. Subtracting two Timelines gives a Duration; comparing it with zero says who was late.
-  auto paid = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({10, 11, 11, 11}), pluss::make_series({14, 24, 23, 20}));
+  auto paid = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({10, 11, 11, 11}), pluss::make_series({14, 24, 23, 20}));
   auto delay = paid - adjusted;
   auto late = delay.gt(pluss::duration::days(0));
   show("late?", late);
@@ -37,7 +37,7 @@ int main() {
   std::cout << "\n";
 
   // 4. Ageing: an invoice unpaid at the reporting date is overdue if the reporting date is later than its due date.
-  auto reporting = pluss::Timeline::from_ymd(pluss::make_series(2026), pluss::make_series(11), pluss::make_series(25));
+  auto reporting = pluss::timeline::from_ymd(pluss::make_series(2026), pluss::make_series(11), pluss::make_series(25));
   auto age = reporting - adjusted;
   show("overdue at 2026-11-25?", age.gt(pluss::duration::days(0)));
   const auto waits = age.host();

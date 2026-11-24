@@ -69,7 +69,7 @@ Series masked_select(const Series& a, const Series& mask) {
     if (mp[mo]) ++count;
   }
 
-  Series out = Series::empty({count}, aa.scalar_type());
+  Series out = pluss::codem::factory::empty({count}, aa.scalar_type());
   auto* out_b = const_cast<std::byte*>(out.raw_data());
 
   std::int64_t j = 0;

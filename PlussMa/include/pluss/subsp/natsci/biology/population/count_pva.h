@@ -205,7 +205,7 @@ inline Series extinction_risk(const Fit &f, double threshold, const Series &hori
   Series upper = t.mul(0.0);
   if (hi > 0.0) {
     constexpr std::int64_t n = 2001;
-    const Series x = Series::linspace(0.0, hi, n, detail::kF64);
+    const Series x = pluss::series::linspace(0.0, hi, n, detail::kF64);
     std::vector<double> w(n);
     for (std::int64_t i = 0; i < n; ++i)
       w[i] = (i == 0 || i == n - 1) ? 1.0 : (i % 2 ? 4.0 : 2.0);
@@ -226,7 +226,7 @@ inline double ultimate_extinction_risk(const Fit &f, double threshold) {
   if (hi <= 0.0)
     return already;
   constexpr std::int64_t n = 2001;
-  const Series x = Series::linspace(0.0, hi, n, detail::kF64);
+  const Series x = pluss::series::linspace(0.0, hi, n, detail::kF64);
   std::vector<double> w(n);
   for (std::int64_t i = 0; i < n; ++i)
     w[i] = (i == 0 || i == n - 1) ? 1.0 : (i % 2 ? 4.0 : 2.0);

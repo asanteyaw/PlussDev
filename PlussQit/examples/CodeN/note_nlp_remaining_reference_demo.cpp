@@ -40,7 +40,7 @@ void rejected(std::string_view name, Fn&& fn) {
 template <typename Fn>
 void dtype_contract(std::string_view name, Fn&& fn) {
   std::cout << name << " undefined-defined=" << std::boolalpha
-            << fn(pluss::Note::undefined()).defined() << " Bytes=";
+            << fn(pluss::note::undefined()).defined() << " Bytes=";
   try {
     (void)fn(pluss::note::bytes(std::vector<std::string>{"text"},
                                  std::array<std::int64_t, 1>{1}));
@@ -56,7 +56,7 @@ void dtype_contract(std::string_view name, Fn&& fn) {
 // each method's own page shows its own method, not a generic stand-in.
 template <typename Fn>
 void dtype_contract_tb(std::string_view name, Fn&& fn) {
-  const auto batch = fn(pluss::Note::undefined());
+  const auto batch = fn(pluss::note::undefined());
   std::cout << name << " tokens-defined=" << std::boolalpha
             << batch.tokens().defined() << " offset0="
             << batch.offsets().integers()[0] << " Bool=";
@@ -161,8 +161,8 @@ int main() {
   show_batch("acronyms matrix", matrix.nlp().acronyms());
   show_note("empty score", pluss::note::make(std::vector<std::string>{}).nlp().sentiment());
   std::cout << "undefined language defined=" << std::boolalpha
-            << pluss::Note::undefined().nlp().language().defined() << '\n';
-  const auto undefined_terms = pluss::Note::undefined().nlp().terms();
+            << pluss::note::undefined().nlp().language().defined() << '\n';
+  const auto undefined_terms = pluss::note::undefined().nlp().terms();
   std::cout << "undefined terms: batch-defined=" << undefined_terms.defined()
             << " tokens-defined=" << undefined_terms.tokens().defined()
             << " offsets=[" << undefined_terms.offsets().integers()[0] << "]\n";

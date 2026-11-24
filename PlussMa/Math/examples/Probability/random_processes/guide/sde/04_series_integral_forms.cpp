@@ -13,7 +13,7 @@ int main() {
   const auto f64 = pluss::ScalarType::Float64;
   const std::int64_t steps = 500;
   const pluss::Series dw = pluss::series::randn({steps, 2}, pluss::Config{}.with_dtype(f64), 3).mul(std::sqrt(1.0 / steps));
-  const pluss::Series w = pluss::Series::zeros({1, 2}, f64).unite({dw.cumsum(0)}, 0);  // [steps + 1, 2]
+  const pluss::Series w = pluss::series::zeros({1, 2}, f64).unite({dw.cumsum(0)}, 0);  // [steps + 1, 2]
 
   // f(t, w) = t * w: the integrand depends on time and on the path value.
   auto f = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(t); };
@@ -25,13 +25,13 @@ int main() {
 
   // An explicit grid: the same samples, read as if time ran faster at the end. The increments of the path are
   // unchanged, only the times fed to f differ.
-  const pluss::Series grid = pluss::Series::linspace(0.0, 1.0, steps + 1, f64).pow(2.0);
+  const pluss::Series grid = pluss::series::linspace(0.0, 1.0, steps + 1, f64).pow(2.0);
   const auto warped = w.calc.antidiff.ito(f, grid).host<double>();
   std::cout << "warped grid, Ito:           " << warped[0] << "  " << warped[1] << "\n";
 
   // The same path stored with time on the last axis: pass dim = 1.
   const pluss::Series wt = w.transpose(0, 1).contiguous();  // [2, steps + 1]
-  const auto transposed = wt.calc.antidiff.ito(f, pluss::Series::linspace(0.0, 1.0, steps + 1, f64), 1).host<double>();
+  const auto transposed = wt.calc.antidiff.ito(f, pluss::series::linspace(0.0, 1.0, steps + 1, f64), 1).host<double>();
   std::cout << "time on the last axis:      " << transposed[0] << "  " << transposed[1] << "\n";
 
   // The running integral has the shape of the path and starts at zero.

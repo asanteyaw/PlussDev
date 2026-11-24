@@ -169,7 +169,7 @@ container when edits are needed.
 ## Example 7: Wrong Kinds And Undefined Notes Reject
 
 ```cpp
-try { (void)pluss::Note::undefined().host(); }
+try { (void)pluss::note::undefined().host(); }
 catch (const pluss::Error&) { std::cout << "host undefined: rejected\n"; }
 
 const auto vector_host = pluss::note::make({"a", "b"}).host();

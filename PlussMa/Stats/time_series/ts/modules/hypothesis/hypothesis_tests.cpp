@@ -142,7 +142,7 @@ double coeff_se_(const OlsResult& fit, std::int64_t index, Config cfg) {
 }
 
 Series lagged_column_(const Series& x, std::int64_t start, std::int64_t length) {
-  const Series idx = Series::arange(start, start + length, 1, ScalarType::Int64);
+  const Series idx = pluss::series::arange(start, start + length, 1, ScalarType::Int64);
   return x.take(idx).reshape({length, 1});
 }
 
@@ -367,12 +367,12 @@ AdfResult adf_test(const Series& y, const AdfOptions& options, Config cfg) {
               "subsp::stats::ts::adf_test: lags must be <= number of observations - 3");
 
   const std::int64_t lags = options.lags;
-  const Series y_prev = yv.take(Series::arange(0, n - 1, 1, ScalarType::Int64));
-  const Series y_curr = yv.take(Series::arange(1, n, 1, ScalarType::Int64));
+  const Series y_prev = yv.take(pluss::series::arange(0, n - 1, 1, ScalarType::Int64));
+  const Series y_curr = yv.take(pluss::series::arange(1, n, 1, ScalarType::Int64));
   const Series dy = y_curr.sub(y_prev);
 
   const std::int64_t t = n - 1 - lags;
-  Series response = dy.take(Series::arange(lags, n - 1, 1, ScalarType::Int64)).reshape({t, 1});
+  Series response = dy.take(pluss::series::arange(lags, n - 1, 1, ScalarType::Int64)).reshape({t, 1});
 
   std::vector<Series> cols;
   cols.reserve(static_cast<std::size_t>(lags + 3));
@@ -383,14 +383,14 @@ AdfResult adf_test(const Series& y, const AdfOptions& options, Config cfg) {
     delta_idx = 1;
   }
   if (options.model == AdfModel::TS) {
-    cols.push_back(Series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
+    cols.push_back(pluss::series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
     delta_idx = 2;
   }
 
-  cols.push_back(y_prev.take(Series::arange(lags, n - 1, 1, ScalarType::Int64)).reshape({t, 1}));
+  cols.push_back(y_prev.take(pluss::series::arange(lags, n - 1, 1, ScalarType::Int64)).reshape({t, 1}));
 
   for (std::int64_t i = 1; i <= lags; ++i) {
-    cols.push_back(dy.take(Series::arange(lags - i, n - 1 - i, 1, ScalarType::Int64)).reshape({t, 1}));
+    cols.push_back(dy.take(pluss::series::arange(lags - i, n - 1 - i, 1, ScalarType::Int64)).reshape({t, 1}));
   }
 
   const Series xreg = (cols.size() == 1) ? cols.front()
@@ -438,7 +438,7 @@ KpssResult kpss_test(const Series& y, const KpssOptions& options, Config cfg) {
   cols.reserve(options.trend ? 2 : 1);
   cols.push_back(pluss::series::ones({n, 1}, out_cfg));
   if (options.trend) {
-    cols.push_back(Series::arange(1, n + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({n, 1}));
+    cols.push_back(pluss::series::arange(1, n + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({n, 1}));
   }
   const Series xreg = (cols.size() == 1) ? cols.front()
                                           : cols.front().unite(std::vector<Series>(cols.begin() + 1, cols.end()), 1);
@@ -448,8 +448,8 @@ KpssResult kpss_test(const Series& y, const KpssOptions& options, Config cfg) {
 
   std::vector<double> gamma(static_cast<std::size_t>(lags + 1), 0.0);
   for (std::int64_t j = 0; j <= lags; ++j) {
-    const Series a = resid.take(Series::arange(j, n, 1, ScalarType::Int64));
-    const Series b = resid.take(Series::arange(0, n - j, 1, ScalarType::Int64));
+    const Series a = resid.take(pluss::series::arange(j, n, 1, ScalarType::Int64));
+    const Series b = resid.take(pluss::series::arange(0, n - j, 1, ScalarType::Int64));
     gamma[static_cast<std::size_t>(j)] = scalar_(a.mul(b).sum()) / static_cast<double>(n);
   }
 
@@ -515,8 +515,8 @@ DmResult dm_test(const Series& err_a, const Series& err_b, const DmOptions& opti
   const double gamma0 = scalar_(centered.mul(centered).sum()) / static_cast<double>(n);
   double acov_sum = 0.0;
   for (std::int64_t lag = 1; lag <= lags; ++lag) {
-    const Series left = centered.take(Series::arange(lag, n, 1, ScalarType::Int64));
-    const Series right = centered.take(Series::arange(0, n - lag, 1, ScalarType::Int64));
+    const Series left = centered.take(pluss::series::arange(lag, n, 1, ScalarType::Int64));
+    const Series right = centered.take(pluss::series::arange(0, n - lag, 1, ScalarType::Int64));
     const double gamma = scalar_(left.mul(right).sum()) / static_cast<double>(n);
     acov_sum += gamma;
   }

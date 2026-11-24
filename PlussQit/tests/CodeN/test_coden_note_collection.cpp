@@ -37,7 +37,7 @@ TEST_CASE("Note sort orders complete lanes along the selected axis",
   const auto empty = pluss::note::make(
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   REQUIRE(empty.sort().sizes() == std::vector<std::int64_t>{2, 0});
-  REQUIRE_FALSE(pluss::Note::undefined().sort().defined());
+  REQUIRE_FALSE(pluss::note::undefined().sort().defined());
   REQUIRE_THROWS(values.sort(2));
 }
 
@@ -60,8 +60,8 @@ TEST_CASE("Note join and join_flat differ in result ownership and defaults",
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   REQUIRE(empty.join(",").scalar().empty());
   REQUIRE(empty.join_flat(",").empty());
-  REQUIRE_FALSE(pluss::Note::undefined().join(",").defined());
-  REQUIRE_THROWS(pluss::Note::undefined().join_flat(","));
+  REQUIRE_FALSE(pluss::note::undefined().join(",").defined());
+  REQUIRE_THROWS(pluss::note::undefined().join_flat(","));
 
   const auto raw = pluss::note::bytes(
       std::vector<std::string>{std::string("A\0", 2), "B"},
@@ -128,7 +128,7 @@ TEST_CASE("Note deduplicate preserves first-seen axis slices",
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   REQUIRE(empty.deduplicate(-1).sizes() ==
           std::vector<std::int64_t>{2, 0});
-  REQUIRE_FALSE(pluss::Note::undefined().deduplicate().defined());
+  REQUIRE_FALSE(pluss::note::undefined().deduplicate().defined());
   REQUIRE_THROWS(rows.deduplicate(2));
 
   const auto raw = pluss::note::bytes(

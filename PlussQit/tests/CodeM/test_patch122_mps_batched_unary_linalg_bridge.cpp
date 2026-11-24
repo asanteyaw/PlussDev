@@ -81,7 +81,7 @@ pluss::Series make_spd_batch_(std::int64_t batch, std::int64_t n) {
   spd_parts.reserve(static_cast<std::size_t>(batch));
   for (std::int64_t b = 0; b < batch; ++b) {
     const auto m = raw.select(0, b).contiguous();
-    const auto eye = pluss::Series::eye(n, n, pluss::ScalarType::Float32);
+    const auto eye = pluss::series::eye(n, n, pluss::ScalarType::Float32);
     const auto spd = m.matmul(m.transpose(0, 1)).add(eye.mul(0.75));
     spd_parts.push_back(spd.to(pluss::ScalarType::Float32).contiguous());
   }

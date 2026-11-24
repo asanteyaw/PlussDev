@@ -85,7 +85,7 @@ This is a valid two-row result. Both rows are empty, represented by offsets
 ## Example 4: Propagated Absence Has A Defined Envelope
 
 ```cpp
-const auto batch = pluss::Note::undefined().nlp().tokens();
+const auto batch = pluss::note::undefined().nlp().tokens();
 std::cout << std::boolalpha
           << "batch-defined=" << batch.defined()
           << " tokens-defined=" << batch.tokens().defined()

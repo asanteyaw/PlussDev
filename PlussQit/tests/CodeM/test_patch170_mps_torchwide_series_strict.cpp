@@ -236,7 +236,7 @@ TEST_CASE("MPS strict torchwide indexing/selection/counting parity", "[mps][stri
       2e-4f,
       "gather");
 
-  const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto scatter_base_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto scatter_base_mps = scatter_base_cpu.to(pluss::pMPS);
   require_close_(
       scatter_base_mps.scatter(1, gather_idx_mps, xf_mps).to(pluss::pCPU).host<float>().array().data,

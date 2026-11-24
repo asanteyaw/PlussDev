@@ -155,7 +155,7 @@ ticks[2] = 2'000'000'000LL;
 
 const std::array<std::int64_t, 1> shape{3};
 const std::array<std::int64_t, 1> strides{1};
-const auto times = pluss::Timeline::from_buffer(
+const auto times = pluss::timeline::from_buffer(
     ticks, shape, strides, [](void* p) { std::free(p); },
     "America/Edmonton");
 const auto index = times.index();

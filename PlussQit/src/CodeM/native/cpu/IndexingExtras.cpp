@@ -62,7 +62,7 @@ Series where(const Series& cond, const Series& a, const Series& b) {
   if (aa.scalar_type() != out_dtype) aa = aa.to(out_dtype);
   if (bb.scalar_type() != out_dtype) bb = bb.to(out_dtype);
 
-  Series out = Series::empty(shape, out_dtype);
+  Series out = pluss::codem::factory::empty(shape, out_dtype);
 
   auto a_es = expand_strides(aa.sizes(), aa.strides(), shape);
   auto b_es = expand_strides(bb.sizes(), bb.strides(), shape);
@@ -160,7 +160,7 @@ void masked_fill_inplace(Series& a, const Series& mask, double value) {
   // write scalar bytes once
   std::array<std::uint8_t, 16> buf{};
   PLUSS_CHECK(dt.itemsize <= (std::int64_t)buf.size(), "masked_fill_: dtype too large");
-  Series tmp = Series::full({1}, value, aa.scalar_type());
+  Series tmp = pluss::codem::factory::full({1}, value, aa.scalar_type());
   std::memcpy(buf.data(), tmp.raw_data(), (std::size_t)dt.itemsize);
 
   const auto n = aa.numel();
@@ -196,7 +196,7 @@ Series nonzero(const Series& mask) {
   for (std::int64_t i=0;i<total;++i) if (mp[i]) ++count;
 
   const std::int64_t nd = mm.dim();
-  Series out = Series::empty({count, nd}, ScalarType::Int64);
+  Series out = pluss::codem::factory::empty({count, nd}, ScalarType::Int64);
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
 
   std::vector<std::int64_t> idx((std::size_t)nd, 0);
@@ -219,7 +219,7 @@ Series take(const Series& a, const Series& index) {
 
   const auto* ip = reinterpret_cast<const std::int64_t*>(idx.raw_data());
   const auto n = idx.numel();
-  Series out = Series::empty(idx.sizes(), aa.scalar_type());
+  Series out = pluss::codem::factory::empty(idx.sizes(), aa.scalar_type());
 
   const auto dt = aa.dtype();
   const auto* ap = aa.raw_data();

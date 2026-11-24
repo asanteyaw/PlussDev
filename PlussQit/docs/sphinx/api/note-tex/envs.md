@@ -90,7 +90,7 @@ offsets=[0, 0, 0]
 ## Example 4: Undefined And Invalid Dtypes
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().envs();
+const auto absent = pluss::note::undefined().tex().envs();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

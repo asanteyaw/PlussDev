@@ -92,7 +92,7 @@ Series matmul_2d_core_(const Series& a, const Series& b) {
   const auto N = b.sizes()[1];
   if (K != K2) throw_error("matmul: shape mismatch");
 
-  Series out = Series::empty({M, N}, a.scalar_type());
+  Series out = pluss::codem::factory::empty({M, N}, a.scalar_type());
 
   if (a.scalar_type() == ScalarType::Float64) {
     const auto* A = reinterpret_cast<const double*>(a.raw_data());
@@ -225,7 +225,7 @@ Series batched_matmul_(const Series& a_raw, const Series& b_raw) {
   matrix_output_shape.push_back(n);
   matrix_output_shape.push_back(p);
   if (batch_product == 0) {
-    return Series::empty(matrix_output_shape, a.scalar_type());
+    return pluss::codem::factory::empty(matrix_output_shape, a.scalar_type());
   }
 
   std::vector<Series> pages;
@@ -279,7 +279,7 @@ Series matmul(const Series& a, const Series& b) {
     if (rows == 0 || k == 0) {
       std::vector<std::int64_t> empty_shape(a.sizes().begin(), a.sizes().end() - 1);
       if (b.dim() == 2) empty_shape.push_back(p);
-      return Series::full(std::span<const std::int64_t>(empty_shape.data(), empty_shape.size()), 0.0, a.scalar_type());
+      return pluss::codem::factory::full(std::span<const std::int64_t>(empty_shape.data(), empty_shape.size()), 0.0, a.scalar_type());
     }
     return matmul_2d_core_(a.reshape({rows, k}), b2).reshape(out_shape);
   }
@@ -316,7 +316,7 @@ Series matmul(const Series& a, const Series& b) {
       std::vector<std::int64_t> out_shape = batch;
       out_shape.push_back(n);
       out_shape.push_back(p);
-      Series out = Series::empty(out_shape, a.scalar_type());
+      Series out = pluss::codem::factory::empty(out_shape, a.scalar_type());
       if (count != 0 && n != 0 && p != 0 && k != 0) {
         const Series ac = a.contiguous(), bc = b.contiguous();
         const bool f64 = a.scalar_type() == ScalarType::Float64;
@@ -334,7 +334,7 @@ Series matmul(const Series& a, const Series& b) {
           }
         }
       } else if (count != 0 && n != 0 && p != 0) {
-        out = Series::full(std::span<const std::int64_t>(out_shape.data(), out_shape.size()), 0.0, a.scalar_type()); // k == 0: empty sum
+        out = pluss::codem::factory::full(std::span<const std::int64_t>(out_shape.data(), out_shape.size()), 0.0, a.scalar_type()); // k == 0: empty sum
       }
       return out;
     }

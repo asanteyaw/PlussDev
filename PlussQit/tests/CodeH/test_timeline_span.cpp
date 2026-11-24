@@ -108,7 +108,7 @@ TEST_CASE("Timeline span handles sign broadcasting strides absence and empty sha
       1'704'153'600'000'000'000LL, 222LL};
   const std::array<std::int64_t, 1> shape{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
   REQUIRE(scalar.span(strided).host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{0, 1});

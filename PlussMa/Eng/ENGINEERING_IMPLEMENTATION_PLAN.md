@@ -979,7 +979,7 @@ root-raised-cosine shaping and matched filtering through the existing `signal::c
 signals filter their real and imaginary parts); `noise` and `noise_variance` give reproducible
 noise at a chosen Eb/N0; `to_tones`/`from_tones` (unitary FFT blocks with a cyclic prefix); `ber`, `ser`, `evm` and `theory` judge a
 link. Leading axes are independent frames throughout. Nothing here reimplements an owner:
-convolution is `signal::conv`, random numbers are `Series::randn` with an explicit seed, and
+convolution is `signal::conv`, random numbers are `pluss::series::randn` with an explicit seed, and
 the Q function is `erfc`.
 
 Permanent verification (`eng_comms_test`): unit energy and the Gray nearest-neighbour property

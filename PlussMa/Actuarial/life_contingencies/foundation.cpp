@@ -114,7 +114,7 @@ Series sanitize_lx_(const Series &lx, std::string_view op) {
 Series deterministic_px_lx_(const Series &lx, std::string_view op) {
   const Series l = sanitize_lx_(lx, op);
   if (l.numel() <= 1) {
-    return Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    return pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                          l.platform());
   }
   const Series head =
@@ -136,7 +136,7 @@ Series gompertz_force(const Series &attained_ages, double b, double c) {
   validate_gompertz_params_(b, c, "gompertz_force");
   const Series ages = sanitize_ages_(attained_ages, "gompertz_force");
   if (ages.numel() == 0 || b == 0.0) {
-    return Series::zeros(ages.sizes(), ScalarType::Float64).to(ages.platform());
+    return pluss::series::zeros(ages.sizes(), ScalarType::Float64).to(ages.platform());
   }
   const Series mu = ages.mul(std::log(c)).exp().mul(b);
   PLUSS_CHECK(mu.isfinite().all().item<bool>(),
@@ -191,7 +191,7 @@ Series survival_force(const Series &force) {
   Series mu = sanitize_force_(force, "survival_force");
 
   const Series one =
-      Series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
+      pluss::series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
           .to(mu.platform());
   if (mu.numel() == 0) {
     return one;
@@ -217,7 +217,7 @@ Series curtate_mean(const Series &qx) {
   const Series q = sanitize_qx_(qx, "curtate_mean");
   const Series surv = pluss::subsp::actuarial::survival_curve(q);
   if (q.numel() == 0) {
-    return Series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
+    return pluss::series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
         .to(surv.platform());
   }
   return surv.slice(/*dim=*/0, /*start=*/1, /*end=*/surv.numel(), /*step=*/1)
@@ -229,7 +229,7 @@ Series curtate_curve(const Series &qx) {
   const Series surv = pluss::subsp::actuarial::survival_curve(q);
   const std::int64_t n = q.numel();
   const Series zero1 =
-      Series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
+      pluss::series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
           .to(surv.platform());
   if (n == 0) {
     return zero1;
@@ -258,7 +258,7 @@ Series lx_px(const Series &px, double radix) {
 Series dx_lx(const Series &lx) {
   const Series l = sanitize_lx_(lx, "dx_lx");
   if (l.numel() <= 1) {
-    return Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    return pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                          l.platform());
   }
   const Series head =
@@ -281,7 +281,7 @@ Series select_qx(const Series &select_rates, const Series &ultimate_qx,
   const Series q_select =
       sanitize_qx_(select_rates, "select_qx", "select_rates");
   if (projection_years == 0) {
-    return Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    return pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                          q_select.platform());
   }
 
@@ -305,7 +305,7 @@ Series select_qx(const Series &select_rates, const Series &ultimate_qx,
     const double tail_q =
         q_ultimate.select(/*dim=*/0, /*index=*/0).item<double>();
     tail_part =
-        Series::ones(std::vector<std::int64_t>{tail_need}, ScalarType::Float64)
+        pluss::series::ones(std::vector<std::int64_t>{tail_need}, ScalarType::Float64)
             .to(q_ultimate.platform())
             .mul(tail_q);
   } else {

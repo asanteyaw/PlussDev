@@ -18,7 +18,7 @@ struct CorpusStats {
   std::int64_t unique_term_count = 0;
   Series document_token_counts = pluss::series::undefined();
   Series document_unique_term_counts = pluss::series::undefined();
-  Note vocabulary = Note::undefined();
+  Note vocabulary = pluss::note::undefined();
   Series document_frequency = pluss::series::undefined();
 };
 

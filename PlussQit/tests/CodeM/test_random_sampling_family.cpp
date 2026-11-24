@@ -41,7 +41,7 @@ TEST_CASE("multinomial samples each row and retains batch shape", "[random-sampl
   REQUIRE(draws.host<std::int64_t>() ==
           std::vector<std::int64_t>{1, 1, 1, 1, 0, 0, 0, 0});
 
-  REQUIRE_THROWS(pluss::Series::ones({2, 2, 2}, pluss::ScalarType::Float64).multinomial(1));
+  REQUIRE_THROWS(pluss::series::ones({2, 2, 2}, pluss::ScalarType::Float64).multinomial(1));
   REQUIRE_THROWS(pluss::make_series({0.0, 0.0}).multinomial(1));
   REQUIRE_THROWS(pluss::make_series({0.5, -0.5}).multinomial(1));
   REQUIRE_THROWS(pluss::make_series({0.5, 0.5}).multinomial(3, false));
@@ -49,40 +49,40 @@ TEST_CASE("multinomial samples each row and retains batch shape", "[random-sampl
 }
 
 TEST_CASE("normal uniform and random obey distinct value contracts", "[random-sampling]") {
-  auto normal = pluss::Series::empty({4}, pluss::ScalarType::Float64);
+  auto normal = pluss::series::empty({4}, pluss::ScalarType::Float64);
   auto normal_alias = normal;
   normal.normal_(3.5, 0.0);
   REQUIRE(normal_alias.host<double>() == std::vector<double>{3.5, 3.5, 3.5, 3.5});
   REQUIRE(normal.is_set_to(normal_alias));
 
-  auto uniform = pluss::Series::empty({3}, pluss::ScalarType::Float32);
+  auto uniform = pluss::series::empty({3}, pluss::ScalarType::Float32);
   uniform.uniform_(-2.0, -2.0);
   REQUIRE(uniform.host<float>() == std::vector<float>{-2.0f, -2.0f, -2.0f});
-  REQUIRE_THROWS(pluss::Series::empty({2}, pluss::ScalarType::Int64).uniform_());
+  REQUIRE_THROWS(pluss::series::empty({2}, pluss::ScalarType::Int64).uniform_());
 
-  auto complex_uniform = pluss::Series::empty({2}, pluss::ScalarType::Complex64);
+  auto complex_uniform = pluss::series::empty({2}, pluss::ScalarType::Complex64);
   complex_uniform.uniform_(-2.0, -2.0);
   REQUIRE(complex_uniform.host<std::complex<float>>() ==
           std::vector<std::complex<float>>{{-2.0f, -2.0f}, {-2.0f, -2.0f}});
 
-  auto complex_normal = pluss::Series::empty({2}, pluss::ScalarType::Complex64);
+  auto complex_normal = pluss::series::empty({2}, pluss::ScalarType::Complex64);
   complex_normal.normal_(3.5, 0.0);
   REQUIRE(complex_normal.host<std::complex<float>>() ==
           std::vector<std::complex<float>>{{3.5f, 0.0f}, {3.5f, 0.0f}});
 
-  auto discrete = pluss::Series::empty({32}, pluss::ScalarType::Float64);
+  auto discrete = pluss::series::empty({32}, pluss::ScalarType::Float64);
   discrete.random_(-2, 3);
   for (double value : discrete.host<double>()) {
     REQUIRE(value == std::floor(value));
     REQUIRE(value >= -2.0);
     REQUIRE(value < 3.0);
   }
-  REQUIRE_THROWS(pluss::Series::empty({2}, pluss::ScalarType::Complex64).random_());
-  REQUIRE_THROWS(pluss::Series::empty({2}, pluss::ScalarType::Int8).random_(0, 200));
+  REQUIRE_THROWS(pluss::series::empty({2}, pluss::ScalarType::Complex64).random_());
+  REQUIRE_THROWS(pluss::series::empty({2}, pluss::ScalarType::Int8).random_(0, 200));
 }
 
 TEST_CASE("remaining in-place distributions validate domains and mutate aliases", "[random-sampling]") {
-  auto values = pluss::Series::empty({64}, pluss::ScalarType::Float64);
+  auto values = pluss::series::empty({64}, pluss::ScalarType::Float64);
   auto alias = values;
 
   values.exponential_(2.0);

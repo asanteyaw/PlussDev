@@ -2109,7 +2109,7 @@ static TokenBatch tokenbatch_from_note(const Note& x, const char* op, TokenizeFn
   if (!x.defined()) {
     NoteImpl::Int64Storage offsets{0};
     return TokenBatchFactoryAccess::make(
-        Note::undefined(), note_from_int64_storage(::std::move(offsets),
+        pluss::note::undefined(), note_from_int64_storage(::std::move(offsets),
                                                    ::std::array<::std::int64_t, 1>{1}));
   }
   const auto& impl = NoteAccess::impl(x);
@@ -2186,7 +2186,7 @@ static TokenBatch tokenbatch_from_note_pair(const Note& x,
   if (!x.defined() || !other.defined()) {
     NoteImpl::Int64Storage offsets{0};
     return TokenBatchFactoryAccess::make(
-        Note::undefined(), note_from_int64_storage(::std::move(offsets),
+        pluss::note::undefined(), note_from_int64_storage(::std::move(offsets),
                                                    ::std::array<::std::int64_t, 1>{1}));
   }
   const auto& x_impl = NoteAccess::impl(x);
@@ -2271,7 +2271,7 @@ static Note transform_note_pair(const Note& x,
                                 const Note& other,
                                 const char* op,
                                 TransformPairFn&& fn) {
-  if (!x.defined() || !other.defined()) return Note::undefined();
+  if (!x.defined() || !other.defined()) return pluss::note::undefined();
   const auto& x_impl = NoteAccess::impl(x);
   const auto& y_impl = NoteAccess::impl(other);
   PLUSS_CHECK(!x_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (lhs is bytes)");
@@ -2311,7 +2311,7 @@ static Note transform_note_pair_to_float64(const Note& x,
                                            const Note& other,
                                            const char* op,
                                            TransformPairFn&& fn) {
-  if (!x.defined() || !other.defined()) return Note::undefined();
+  if (!x.defined() || !other.defined()) return pluss::note::undefined();
   const auto& x_impl = NoteAccess::impl(x);
   const auto& y_impl = NoteAccess::impl(other);
   PLUSS_CHECK(!x_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (lhs is bytes)");
@@ -5298,7 +5298,7 @@ static void require_text_note(const NoteImpl& impl, const char* op) {
 
 template <class Transform>
 static Note transform_note_text(const Note& x, const char* op, Transform&& fn) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, op);
 
@@ -5320,7 +5320,7 @@ static Note transform_note_text(const Note& x, const char* op, Transform&& fn) {
 // so these produce a real Float64 Note instead of a formatted Text Note.
 template <class Transform>
 static Note transform_note_text_to_float64(const Note& x, const char* op, Transform&& fn) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, op);
 
@@ -5333,7 +5333,7 @@ static Note transform_note_text_to_float64(const Note& x, const char* op, Transf
 
 template <class Transform>
 static Note transform_note_any(const Note& x, Transform&& fn) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -5350,7 +5350,7 @@ template <class Estimate, class Transform>
 static Note transform_note_any_reserve(const Note& x,
                                        Estimate&& estimate,
                                        Transform&& fn) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::size_t total_bytes = 0;
@@ -5372,7 +5372,7 @@ template <class Transform>
 static Note transform_note_with_encoding(const Note& x,
                                          NoteDType out_encoding,
                                          Transform&& fn) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -5598,7 +5598,7 @@ Note nlp_subjectivity(const Note& x) {
       [](auto s) { return clamp01(subjectivity_score_text(s)); });
 }
 Note to_utf8_strict(const Note& x) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   for (::std::int64_t i = 0; i < impl->numel(); ++i) {
     PLUSS_CHECK(is_valid_utf8_text(impl->bytes_at(i)), "Note::to_utf8_strict found invalid UTF-8 payload");
@@ -5992,7 +5992,7 @@ Note rstrip(const Note& x, ::std::string_view chars) {
 }
 
 Note replace(const Note& x, ::std::string_view from, ::std::string_view to) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -6382,14 +6382,14 @@ Note contiguous(const Note& x) {
 }
 
 Note flatten(const Note& x) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::array<::std::int64_t, 1> sizes{impl->numel()};
   return reshape(x, ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
 }
 
 Note unsqueeze(const Note& x, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
   PLUSS_CHECK(old_dim < 3, "inserting an axis would exceed Note max rank 3");
@@ -6405,7 +6405,7 @@ Note unsqueeze(const Note& x, ::std::int64_t dim) {
 }
 
 Note squeeze(const Note& x, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
   if (old_dim == 0) return x;
@@ -6423,7 +6423,7 @@ Note squeeze(const Note& x, ::std::int64_t dim) {
 }
 
 Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t input_dim = impl->dim();
   PLUSS_CHECK(static_cast<::std::int64_t>(repeats.size()) >= input_dim,
@@ -6478,7 +6478,7 @@ Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
 }
 
 Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   PLUSS_CHECK(repeats >= 0, "repeat_interleave repeats must be >= 0");
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
@@ -6757,7 +6757,7 @@ NoteImpl::Int64Storage note_argsort_indices_1d(
 }
 
 Note sort(const Note& x, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const auto old_dim = impl->dim();
   if (old_dim == 0) return x;
@@ -6940,7 +6940,7 @@ Note distinct_slices(const Note& x, ::std::int64_t dim, bool sorted) {
 } // namespace
 
 Note unique(const Note& x, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   if (dim != kFlattenedDistinct) return distinct_slices(x, dim, true);
   const auto& impl = NoteAccess::impl(x);
 
@@ -6993,7 +6993,7 @@ Note unique(const Note& x, ::std::int64_t dim) {
 }
 
 Note deduplicate(const Note& x, ::std::int64_t dim) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   if (dim != kFlattenedDistinct) return distinct_slices(x, dim, false);
   const auto& impl = NoteAccess::impl(x);
 
@@ -7067,7 +7067,7 @@ Note normalize(const Note& x, ::std::int64_t form) {
         return normalized;
       });
 #else
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, "Note::normalize");
   for (::std::int64_t i = 0; i < impl->numel(); ++i) {
@@ -7100,7 +7100,7 @@ Note casefold(const Note& x, ::std::string_view locale) {
       });
 #else
   (void)locale;
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, "Note::casefold");
   for (::std::int64_t i = 0; i < impl->numel(); ++i) {
@@ -7142,7 +7142,7 @@ Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view
 
 Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl,
                    ::std::int64_t flags) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   // flags: bit 0 (1) case-insensitive, bit 1 (2) multiline `^`/`$`.
   const ::std::regex re = make_findall_regex(pattern, flags);
   const auto& impl = NoteAccess::impl(x);
@@ -7395,7 +7395,7 @@ TokenBatch align_sentences(const Note& x, const Note& other) {
 }
 
 Note join(const Note& x, ::std::string_view sep) {
-  if (!x.defined()) return Note::undefined();
+  if (!x.defined()) return pluss::note::undefined();
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, "Note::join");
   ::std::string out;

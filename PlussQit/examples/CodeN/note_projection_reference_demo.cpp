@@ -60,7 +60,7 @@ int main() {
             << "rank3=" << one_tensor.scalar() << '\n'
             << "empty text bytes=" << pluss::note::make("").scalar().size() << '\n';
   rejected("scalar two cells", [&] { (void)pluss::note::make({"a", "b"}).scalar(); });
-  rejected("scalar undefined", [&] { (void)pluss::Note::undefined().scalar(); });
+  rejected("scalar undefined", [&] { (void)pluss::note::undefined().scalar(); });
 
   const auto grid = pluss::note::make(
       std::vector<std::string>{"r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2"},
@@ -76,7 +76,7 @@ int main() {
   std::cout << "empty shape=";
   print_shape(empty_tensor.sizes_view());
   std::cout << " vector size=" << empty_tensor.vector().size() << '\n';
-  rejected("vector undefined", [&] { (void)pluss::Note::undefined().vector(); });
+  rejected("vector undefined", [&] { (void)pluss::note::undefined().vector(); });
 
   std::cout << "\n=== matrix promotion ===\nscalar=";
   print_matrix(scalar.matrix());
@@ -98,7 +98,7 @@ int main() {
     (void)pluss::note::make(std::vector<std::string>{"x"},
                             std::array<std::int64_t, 3>{1, 1, 1}).matrix();
   });
-  rejected("matrix undefined", [&] { (void)pluss::Note::undefined().matrix(); });
+  rejected("matrix undefined", [&] { (void)pluss::note::undefined().matrix(); });
 
   const auto cube = pluss::note::make(
       std::vector<std::string>{"000", "001", "010", "011", "100", "101", "110", "111"},
@@ -131,7 +131,7 @@ int main() {
       std::vector<std::string>{}, std::array<std::int64_t, 3>{0, 4, 5}).slabs();
   std::cout << "slabs=" << no_slabs.size() << '\n';
   rejected("slabs rank1", [&] { (void)pluss::note::make({"x"}).slabs(); });
-  rejected("slabs undefined", [&] { (void)pluss::Note::undefined().slabs(); });
+  rejected("slabs undefined", [&] { (void)pluss::note::undefined().slabs(); });
 
   std::cout << "\n=== borrowed bytes ===\n";
   const std::array<std::byte, 3> raw{std::byte{'A'}, std::byte{0}, std::byte{'B'}};
@@ -160,5 +160,5 @@ int main() {
   std::cout << "view data stable=" << std::boolalpha
             << (view.data() == grid.sizes_view().data())
             << " copy independent=" << (copy.data() != view.data()) << '\n';
-  rejected("sizes_view undefined", [&] { (void)pluss::Note::undefined().sizes_view(); });
+  rejected("sizes_view undefined", [&] { (void)pluss::note::undefined().sizes_view(); });
 }

@@ -69,7 +69,7 @@ pluss::Series reshape_validity(
   for (const auto& block : blocks) {
     auto mask = detail::has_mask(block)
         ? *detail::validity_mask(block)
-        : pluss::Series::ones(
+        : pluss::series::ones(
               {block.size()},
               pluss::codem::ScalarType::Bool,
               platform);
@@ -212,7 +212,7 @@ Shelf null_singleton_like(const Shelf& reference) {
   } else if (reference.kind() == ShelfKind::Timeline) {
     platform = reference.as_timeline().epoch_nanos().platform();
   }
-  return detail::with_mask(out, pluss::Series::zeros(
+  return detail::with_mask(out, pluss::series::zeros(
       {1}, pluss::codem::ScalarType::Bool, platform));
 }
 
@@ -349,7 +349,7 @@ DataFrame DataFrame::lengthen(
   output.emplace_back(value_name, concatenate_reshape_shelves(value_blocks));
 
   Shelf output_cases = fresh_cases
-      ? Shelf(pluss::Series::arange(
+      ? Shelf(pluss::series::arange(
             0.0,
             static_cast<double>(tiled_rows.size()),
             1.0,

@@ -96,7 +96,7 @@ Series trim_zero_lag_(const Series& corr, bool include_zero_lag) {
   if (include_zero_lag || corr.numel() <= 1) {
     return corr;
   }
-  return corr.take(Series::arange(1, corr.numel(), 1, ScalarType::Int64));
+  return corr.take(pluss::series::arange(1, corr.numel(), 1, ScalarType::Int64));
 }
 
 CorrPlotPayload corr_payload_(const Series& x,
@@ -116,7 +116,7 @@ CorrPlotPayload corr_payload_(const Series& x,
   corr = trim_zero_lag_(corr, options.include_zero_lag);
 
   const std::int64_t lag_start = options.include_zero_lag ? 0 : 1;
-  const Series lags = Series::arange(lag_start,
+  const Series lags = pluss::series::arange(lag_start,
                                      lag_start + corr.numel(),
                                      1,
                                      ScalarType::Int64)
@@ -149,7 +149,7 @@ ResidualPlotPayload residuals_payload(const Series& residuals, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const Series res = as_vector_(residuals, "residuals_payload").to(out_cfg.platform, out_cfg.dtype);
   PLUSS_CHECK(res.numel() > 0, "subsp::stats::ts::plot::residuals_payload: requires non-empty residual series");
-  const Series idx = Series::arange(0, res.numel(), 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype);
+  const Series idx = pluss::series::arange(0, res.numel(), 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype);
   return ResidualPlotPayload{
       .index = idx,
       .residuals = res,

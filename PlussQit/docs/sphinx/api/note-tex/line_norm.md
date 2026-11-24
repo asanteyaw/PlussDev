@@ -97,7 +97,7 @@ removes whitespace from the collapsed empty run.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().line_norm().defined() << '\n';
+          << pluss::note::undefined().tex().line_norm().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
       .tex().line_norm();

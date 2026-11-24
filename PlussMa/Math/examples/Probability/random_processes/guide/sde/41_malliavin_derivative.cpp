@@ -24,7 +24,7 @@ int main() {
 
   // The path form takes the path W itself (n + 1 samples starting at 0) and differentiates with respect to its
   // increments, so F sees W rebuilt from them.
-  const pluss::Series w = pluss::Series::zeros({1}, f64).unite({dw.cumsum(0)}, 0);
+  const pluss::Series w = pluss::series::zeros({1}, f64).unite({dw.cumsum(0)}, 0);
   const pluss::Series d_max = w.calc.diff.malliavin_path([](const pluss::Series& path) { return path.amax(0); });
   std::cout << "W at the grid:";
   for (double v : w.host<double>()) std::cout << " " << v;

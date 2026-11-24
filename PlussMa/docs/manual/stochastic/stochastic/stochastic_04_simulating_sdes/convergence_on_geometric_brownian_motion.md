@@ -20,7 +20,7 @@ int main() {
   const auto f64 = pluss::ScalarType::Float64;
   const double mu = 0.2, sg = 0.5, x0 = 1.0, T = 1.0;
   const std::int64_t paths = 20000;
-  const pluss::Series y0 = pluss::Series::full({paths}, x0, f64);
+  const pluss::Series y0 = pluss::series::full({paths}, x0, f64);
 
   std::cout << std::fixed << std::setprecision(5);
   std::cout << "steps   Euler-Maruyama   Milstein   Heun (Stratonovich form)\n";

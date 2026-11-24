@@ -482,7 +482,7 @@ private:
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
-      group.step_scalar = Series::full({}, 0.0, anchor->scalar_type()).to(anchor->platform());
+      group.step_scalar = pluss::series::full({}, 0.0, anchor->scalar_type()).to(anchor->platform());
     }
   }
 

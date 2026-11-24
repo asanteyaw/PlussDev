@@ -147,7 +147,7 @@ std::vector<std::string> tokenize_ascii_words(std::string_view text) {
 
 pluss::Series bool_series_from_mask(const std::vector<bool>& keep) {
   const auto n = static_cast<std::int64_t>(keep.size());
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < n; ++i) p[i] = keep[static_cast<std::size_t>(i)];
   return mask;
@@ -218,7 +218,7 @@ std::optional<pluss::Series> optional_mask_from_valid(const std::vector<bool>& v
   if (all_valid) return std::nullopt;
 
   const auto n = static_cast<std::int64_t>(valid.size());
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < n; ++i) p[i] = valid[static_cast<std::size_t>(i)];
   return mask;

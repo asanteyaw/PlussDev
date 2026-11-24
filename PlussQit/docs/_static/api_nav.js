@@ -695,7 +695,6 @@ window.PLUSS_API_NAV = {
       "to_utf8_strict",
       "to_windows1252_lossy",
       "transpose",
-      "undefined",
       "unique",
       "unquote",
       "unsqueeze",
@@ -932,7 +931,7 @@ window.PLUSS_API_NAV = {
       "arange", "branch", "bytes", "empty", "empty_bytes_like", "empty_like", "format",
       "from_lines", "from_words", "full", "full_bytes_like", "full_like",
       "make", "perm", "print", "rand", "rand_between", "rep",
-      "unpack"
+      "undefined", "unpack"
     ]
   },
   "TokenBatch": {
@@ -948,7 +947,8 @@ window.PLUSS_API_NAV = {
     "slug": "timeline_factory",
     "landing": "timeline_factory_api_reference.html",
     "methods": [
-      "arange", "branch", "date", "date_range", "epoch", "format", "from_epoch",
+      "arange", "branch", "date", "date_range", "epoch", "format", "from_buffer", "from_epoch",
+      "from_epoch_micros", "from_epoch_millis", "from_epoch_seconds", "from_ymd", "from_ymdhms",
       "full", "full_like", "make", "make_timeline", "moment", "now", "print",
       "rand_between", "random", "time", "today", "unite"
     ]
@@ -971,7 +971,6 @@ window.PLUSS_API_NAV = {
       "concat",
       "copy_ticks",
       "date",
-      "date_range",
       "day",
       "day_scalar",
       "dayofyear",
@@ -989,12 +988,6 @@ window.PLUSS_API_NAV = {
       "fill_like",
       "fill_nat",
       "floor",
-      "from_buffer",
-      "from_epoch_micros",
-      "from_epoch_millis",
-      "from_epoch_seconds",
-      "from_ymd",
-      "from_ymdhms",
       "ge",
       "gt",
       "host",

@@ -100,7 +100,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().sqrt_pow().defined()
+          << pluss::note::undefined().tex().sqrt_pow().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})

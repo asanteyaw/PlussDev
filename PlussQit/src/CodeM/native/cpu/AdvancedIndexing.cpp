@@ -161,7 +161,7 @@ static Series expand_int64_to_shape_contig(const Series& idx, const std::vector<
   }
 
   // Use generic broadcast from ScatterKernels approach but specialized for int64.
-  Series out = Series::empty(shape, ScalarType::Int64);
+  Series out = pluss::codem::factory::empty(shape, ScalarType::Int64);
   const auto nd = (std::int64_t)shape.size();
   std::vector<std::int64_t> sizes_src(ic.sizes().begin(), ic.sizes().end());
   std::vector<std::int64_t> strides_src(ic.strides().begin(), ic.strides().end());
@@ -212,7 +212,7 @@ static Series expand_bool_to_shape_contig(const Series& mask, const std::vector<
     if (same) return mc;
   }
 
-  Series out = Series::empty(shape, ScalarType::Bool);
+  Series out = pluss::codem::factory::empty(shape, ScalarType::Bool);
   const auto nd = (std::int64_t)shape.size();
   std::vector<std::int64_t> sizes_src(mc.sizes().begin(), mc.sizes().end());
   std::vector<std::int64_t> strides_src(mc.strides().begin(), mc.strides().end());
@@ -680,7 +680,7 @@ if (indices.size() == 1 && indices[0].scalar_type() == ScalarType::Bool) {
   std::vector<std::int64_t> out_shape = bshape;
   for (std::int64_t d=k; d<nd; ++d) out_shape.push_back(a.sizes()[(std::size_t)d]);
 
-  Series out = Series::empty(out_shape, a.scalar_type());
+  Series out = pluss::codem::factory::empty(out_shape, a.scalar_type());
 
   // Important: do not force `a.contiguous()` here.
   // For large permuted inputs this can materialize multi-GB temporaries and OOM.

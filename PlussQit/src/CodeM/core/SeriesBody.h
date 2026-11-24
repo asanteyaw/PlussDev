@@ -17,20 +17,20 @@ namespace pluss::codem {
 // Scalar constants / factories (CPU-only).
 inline Series nan(ScalarType dtype=ScalarType::Float32) {
   const double v = std::numeric_limits<double>::quiet_NaN();
-  return Series::full({}, v, dtype);
+  return pluss::codem::factory::full({}, v, dtype);
 }
 inline Series inf(ScalarType dtype=ScalarType::Float32) {
   const double v = std::numeric_limits<double>::infinity();
-  return Series::full({}, v, dtype);
+  return pluss::codem::factory::full({}, v, dtype);
 }
 inline Series neg_inf(ScalarType dtype=ScalarType::Float32) {
   const double v = -std::numeric_limits<double>::infinity();
-  return Series::full({}, v, dtype);
+  return pluss::codem::factory::full({}, v, dtype);
 }
 
 // Create a scalar Series (rvalue-style), similar to torch::tensor(scalar).
 inline Series value(double v, ScalarType dtype = ScalarType::Float32) {
-  return Series::full({}, v, dtype);
+  return pluss::codem::factory::full({}, v, dtype);
 }
 
 
@@ -41,22 +41,22 @@ inline Series value(double v, ScalarType dtype = ScalarType::Float32) {
 // beyond a double's 2^53 mantissa survive intact -- the same exact-path
 // convention used by pluss::detail::to_series (nested_series_literal.h) and
 // pluss::codem::factories::infer (ValueInitList.h) below. Falls back to the
-// double-based Series::full for a floating-point target dtype, where the
+// double-based pluss::series::full for a floating-point target dtype, where the
 // cast is intentional anyway.
 template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
 inline Series value(T v, ScalarType dtype = ScalarType::Int64) {
   if (pluss::codem::dtype_of(dtype).is_integral()) {
     const std::int64_t iv = static_cast<std::int64_t>(v);
-    Series tmp = Series::empty({}, ScalarType::Int64);
+    Series tmp = pluss::codem::factory::empty({}, ScalarType::Int64);
     std::memcpy(tmp.raw_mutable_data(), &iv, sizeof(std::int64_t));
-    Series out = Series::empty({}, dtype);
+    Series out = pluss::codem::factory::empty({}, dtype);
     out.copy_(tmp.to(dtype), false);
     return out;
   }
-  return Series::full({}, static_cast<double>(v), dtype);
+  return pluss::codem::factory::full({}, static_cast<double>(v), dtype);
 }
 inline Series value(bool v, ScalarType dtype = ScalarType::Bool) {
-  return Series::full({}, v ? 1.0 : 0.0, dtype);
+  return pluss::codem::factory::full({}, v ? 1.0 : 0.0, dtype);
 }
 
 // Nested initializer_list: infer shape and flatten. Supports up to 7D (enforced by depth check).
@@ -76,16 +76,16 @@ inline Series value(std::initializer_list<T> list, ScalarType dtype = ScalarType
         pluss::codem::dtype_of(dtype).is_complex()
             ? dtype
             : (dtype == ScalarType::Float64 ? ScalarType::Complex128 : ScalarType::Complex64);
-    Series tmp = Series::empty(inf.sizes, ScalarType::Complex128);
+    Series tmp = pluss::codem::factory::empty(inf.sizes, ScalarType::Complex128);
     std::memcpy(
         tmp.raw_mutable_data(),
         inf.data_cx.data(),
         sizeof(std::complex<double>) * static_cast<std::size_t>(tmp.numel()));
     return (cdt == ScalarType::Complex128) ? tmp : tmp.to(cdt);
   }
-  Series out = Series::empty(inf.sizes, dtype);
+  Series out = pluss::codem::factory::empty(inf.sizes, dtype);
   if (inf.leaf_is_exact_integer && pluss::codem::dtype_of(dtype).is_integral()) {
-    Series tmp = Series::empty(inf.sizes, ScalarType::Int64);
+    Series tmp = pluss::codem::factory::empty(inf.sizes, ScalarType::Int64);
     std::memcpy(
         tmp.raw_mutable_data(),
         inf.data_i64.data(),
@@ -93,7 +93,7 @@ inline Series value(std::initializer_list<T> list, ScalarType dtype = ScalarType
     out.copy_(tmp.to(dtype), false);
     return out;
   }
-  Series tmp = Series::empty(inf.sizes, ScalarType::Float64);
+  Series tmp = pluss::codem::factory::empty(inf.sizes, ScalarType::Float64);
   std::memcpy(
       tmp.raw_mutable_data(),
       inf.data.data(),
@@ -179,7 +179,7 @@ inline Series make_series(std::span<const T> data, std::span<const std::int64_t>
     else return ScalarType::Complex128;
   }();
 
-  Series src = Series::empty(sizes, src_dt, cfg.platform).contiguous();
+  Series src = pluss::codem::factory::empty(sizes, src_dt, cfg.platform).contiguous();
   const std::size_t n = (std::size_t)src.numel();
   PLUSS_CHECK(data.size() == n, "make_series: data size mismatch with sizes");
   std::memcpy(src.raw_data(), data.data(), n * sizeof(U));

@@ -82,7 +82,7 @@ TEST_CASE("CodeN TeX tail projections preserve shape and validate modes",
 
   for (const auto mode : {-1, 3}) {
     try {
-      (void)(mode < 0 ? source : pluss::Note::undefined())
+      (void)(mode < 0 ? source : pluss::note::undefined())
           .tex().to_latex(mode);
       FAIL("invalid LaTeX mode was accepted");
     } catch (const pluss::Error& error) {
@@ -94,7 +94,7 @@ TEST_CASE("CodeN TeX tail projections preserve shape and validate modes",
 
 TEST_CASE("CodeN TeX tail methods propagate state and reject non-text",
           "[coden][tex]") {
-  const auto absent = pluss::Note::undefined();
+  const auto absent = pluss::note::undefined();
   REQUIRE_FALSE(absent.tex().subsections().tokens().defined());
   REQUIRE_FALSE(absent.tex().subsubsections().tokens().defined());
   REQUIRE_FALSE(absent.tex().tables().tokens().defined());

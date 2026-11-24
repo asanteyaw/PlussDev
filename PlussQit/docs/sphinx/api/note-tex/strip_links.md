@@ -81,7 +81,7 @@ receiver unchanged=true idempotent=true
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().strip_links().defined() << '\n';
+          << pluss::note::undefined().tex().strip_links().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_links();
 } catch (const pluss::Error&) {

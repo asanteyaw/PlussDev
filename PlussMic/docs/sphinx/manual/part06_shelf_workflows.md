@@ -62,7 +62,7 @@ You can attach a validity mask at construction time:
 
 ```cpp
 auto values = pluss::make_series({4.0, 1.0, 0.0, 3.0, 2.0});
-auto valid = pluss::Series::zeros({5}, pluss::codem::ScalarType::Bool);
+auto valid = pluss::series::zeros({5}, pluss::codem::ScalarType::Bool);
 auto* valid_ptr = reinterpret_cast<bool*>(valid.raw_data());
 valid_ptr[0] = true;
 valid_ptr[1] = true;

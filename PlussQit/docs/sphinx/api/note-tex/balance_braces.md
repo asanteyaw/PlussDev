@@ -64,7 +64,7 @@ const bool idempotent =
     (repaired.tex().balance_braces() == repaired).all().bool_item();
 std::cout << std::boolalpha << "idempotent=" << idempotent
           << " undefined="
-          << pluss::Note::undefined().tex().balance_braces().defined()
+          << pluss::note::undefined().tex().balance_braces().defined()
           << '\n';
 ```
 

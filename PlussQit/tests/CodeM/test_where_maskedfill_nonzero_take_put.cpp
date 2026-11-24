@@ -9,12 +9,12 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("where broadcast + type promotion", "[indexing]") {
-  auto cond = Series::zeros({2,1}, ScalarType::Bool);
+  auto cond = pluss::series::zeros({2,1}, ScalarType::Bool);
   auto* cp = reinterpret_cast<std::uint8_t*>(cond.raw_data());
   cp[0] = 1; cp[1] = 0; // [[T],[F]]
 
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
-  auto b = Series::zeros({1,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
+  auto b = pluss::series::zeros({1,3}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (int i=0;i<6;++i) ap[i] = 10.0 + i;
   auto* bp = reinterpret_cast<double*>(b.raw_data());
@@ -34,11 +34,11 @@ TEST_CASE("where broadcast + type promotion", "[indexing]") {
 }
 
 TEST_CASE("masked_fill and nonzero", "[indexing]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float32);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float32);
   auto* ap = reinterpret_cast<float*>(a.raw_data());
   for (int i=0;i<6;++i) ap[i] = float(i);
 
-  auto m = Series::zeros({2,3}, ScalarType::Bool);
+  auto m = pluss::series::zeros({2,3}, ScalarType::Bool);
   auto* mp = reinterpret_cast<std::uint8_t*>(m.raw_data());
   mp[0]=1; mp[5]=1;
 
@@ -57,11 +57,11 @@ TEST_CASE("masked_fill and nonzero", "[indexing]") {
 }
 
 TEST_CASE("take/put", "[indexing]") {
-  auto a = Series::zeros({6}, ScalarType::Float64);
+  auto a = pluss::series::zeros({6}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (int i=0;i<6;++i) ap[i] = double(i+1);
 
-  auto idx = Series::zeros({3}, ScalarType::Int64);
+  auto idx = pluss::series::zeros({3}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   ip[0] = 0; ip[1] = 3; ip[2] = -1;
 
@@ -71,7 +71,7 @@ TEST_CASE("take/put", "[indexing]") {
   REQUIRE(tp[1] == 4.0);
   REQUIRE(tp[2] == 6.0);
 
-  auto src = Series::zeros({3}, ScalarType::Float64);
+  auto src = pluss::series::zeros({3}, ScalarType::Float64);
   auto* sp = reinterpret_cast<double*>(src.raw_data());
   sp[0]=10; sp[1]=20; sp[2]=30;
 

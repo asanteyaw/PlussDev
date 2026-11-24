@@ -82,7 +82,7 @@ std::cout << std::boolalpha
           << "idempotent="
           << ((once == once.tex().graphics_tags()).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().graphics_tags().defined() << '\n';
+          << pluss::note::undefined().tex().graphics_tags().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1})
       .tex().graphics_tags();

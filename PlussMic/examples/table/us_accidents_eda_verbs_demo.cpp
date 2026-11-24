@@ -340,7 +340,7 @@ std::optional<std::string> note_at(const Shelf& t, std::int64_t row) {
 }
 
 Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
-  auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
@@ -348,7 +348,7 @@ Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
 }
 
 Shelf make_f64_shelf(const std::vector<double>& values) {
-  auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Float64);
+  auto out = pluss::series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(double));
   }

@@ -384,7 +384,7 @@ int main() {
     // characteristic-function-style integrand this module needs to
     // support for e.g. Heston/Fourier-inversion pricing work). The node
     // array itself stays real (QuadraOptions::dtype controls the real
-    // node dtype fed to Series::linspace, independent of what the
+    // node dtype fed to pluss::series::linspace, independent of what the
     // integrand returns -- same dtype/output-dtype independence
     // established for aleatoria()); only `fn`'s own `.to(Complex128)`
     // determines the complex path.
@@ -585,7 +585,7 @@ int main() {
     // Complex-valued integrand: f(x) = x + i*x^2, so int_0^1 f = 0.5 + i/3
     // -- a genuinely complex closed form (distinct real/imaginary parts),
     // not just a real value cast to complex. `AleatoriaOptions::dtype`
-    // controls the REAL sample-point dtype fed to Series::rand (which
+    // controls the REAL sample-point dtype fed to pluss::series::rand (which
     // only supports floating dtypes) -- it is deliberately independent of
     // what the integrand itself returns; the complex path is exercised
     // entirely through `f`'s own `.to(Complex128)`, and

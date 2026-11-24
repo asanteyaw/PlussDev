@@ -31,7 +31,7 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 
 int main() {
   using pluss::ScalarType;
-  auto issued = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({9, 10, 10, 11}), pluss::make_series({15, 22, 23, 2}));
+  auto issued = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({9, 10, 10, 11}), pluss::make_series({15, 22, 23, 2}));
   show("issued", issued.strftime("%a %Y-%m-%d"));
 
   // 1. Payment terms are an elapsed length, a Duration: thirty days.
@@ -48,7 +48,7 @@ int main() {
   show("on a business day?", adjusted.is_business_day());
 
   // 3. Payments arrive on these dates. Subtracting two Timelines gives a Duration; comparing it with zero says who was late.
-  auto paid = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({10, 11, 11, 11}), pluss::make_series({14, 24, 23, 20}));
+  auto paid = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026, 2026}), pluss::make_series({10, 11, 11, 11}), pluss::make_series({14, 24, 23, 20}));
   auto delay = paid - adjusted;
   auto late = delay.gt(pluss::duration::days(0));
   show("late?", late);
@@ -58,7 +58,7 @@ int main() {
   std::cout << "\n";
 
   // 4. Ageing: an invoice unpaid at the reporting date is overdue if the reporting date is later than its due date.
-  auto reporting = pluss::Timeline::from_ymd(pluss::make_series(2026), pluss::make_series(11), pluss::make_series(25));
+  auto reporting = pluss::timeline::from_ymd(pluss::make_series(2026), pluss::make_series(11), pluss::make_series(25));
   auto age = reporting - adjusted;
   show("overdue at 2026-11-25?", age.gt(pluss::duration::days(0)));
   const auto waits = age.host();
@@ -101,7 +101,7 @@ static void show(const char *label, const pluss::Note &n) { std::cout << label <
 
 int main() {
   // 1. Wall-clock times are meaningless until you say where they were read. Attach a zone with tz_localize; the result is a real instant.
-  auto london_start = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026}), pluss::make_series({11, 11}), pluss::make_series({13, 14}),
+  auto london_start = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026}), pluss::make_series({11, 11}), pluss::make_series({13, 14}),
                                                   pluss::make_series({22, 6}), pluss::make_series({0, 0}), pluss::make_series({0, 0}))
                           .tz_localize("Europe/London");
   show("start, London", london_start.strftime("%a %d %b %H:%M %Z"));
@@ -119,7 +119,7 @@ int main() {
 
   // 4. The night the clocks go back (London, 2026-10-25). A civil day and an elapsed day differ: add_days keeps the wall clock,
   //    adding 24 hours keeps the elapsed time.
-  auto saturday = pluss::Timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(10), pluss::make_series(24), pluss::make_series(12),
+  auto saturday = pluss::timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(10), pluss::make_series(24), pluss::make_series(12),
                                               pluss::make_series(0), pluss::make_series(0))
                       .tz_localize("Europe/London");
   show("Saturday noon", saturday.strftime("%a %d %b %H:%M %Z"));
@@ -169,7 +169,7 @@ A local time that does not exist, and a zone that is not available, are both ref
 #include <iostream>
 
 int main() {
-  auto local = pluss::Timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(3), pluss::make_series(29), pluss::make_series(1),
+  auto local = pluss::timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(3), pluss::make_series(29), pluss::make_series(1),
                                            pluss::make_series(30), pluss::make_series(0));
   // 1. 01:30 on 2026-03-29 never happens in London: the clocks jump from 01:00 to 02:00. The default is to refuse.
   try {

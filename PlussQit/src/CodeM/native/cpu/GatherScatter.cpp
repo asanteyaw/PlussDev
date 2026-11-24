@@ -299,7 +299,7 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
 
   auto in = input.contiguous();
   auto idx = index.contiguous();
-  Series out = Series::empty(std::vector<std::int64_t>(idx.sizes().begin(), idx.sizes().end()), input.scalar_type());
+  Series out = pluss::codem::factory::empty(std::vector<std::int64_t>(idx.sizes().begin(), idx.sizes().end()), input.scalar_type());
 
   if (can_use_2d_fast_path_(in, dim, idx) && out.is_contiguous()) {
     gather_2d_fast_(in, dim, idx, out);

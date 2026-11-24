@@ -121,7 +121,7 @@ int_item wrong dtype: rejected
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().int_item();
+  (void)pluss::note::undefined().int_item();
 } catch (const pluss::Error&) {
   std::cout << "int_item undefined: rejected\n";
 }

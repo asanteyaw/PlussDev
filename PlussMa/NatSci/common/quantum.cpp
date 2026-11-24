@@ -121,7 +121,7 @@ Series identity(const Series &like, std::int64_t size) {
     dtype = ScalarType::Float32;
   else if (dtype == ScalarType::Complex128)
     dtype = ScalarType::Float64;
-  Series result = Series::eye(size, size, dtype, like.platform());
+  Series result = pluss::series::eye(size, size, dtype, like.platform());
   return result.scalar_type() == like.scalar_type()
              ? result
              : result.to(like.scalar_type());

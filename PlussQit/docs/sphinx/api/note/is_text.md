@@ -31,7 +31,7 @@ well when absence must be reported separately.
 ```cpp
 const auto text = pluss::note::make("alpha");
 const auto bytes = pluss::note::bytes(std::string_view{"A\0B", 3});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "text=" << text.is_text()
           << " bytes=" << bytes.is_text()

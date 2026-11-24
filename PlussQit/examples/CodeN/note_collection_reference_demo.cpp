@@ -48,7 +48,7 @@ int main() {
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   show("zero cells", no_cells.join(","));
   std::cout << "undefined join defined=" << std::boolalpha
-            << pluss::Note::undefined().join(",").defined() << '\n';
+            << pluss::note::undefined().join(",").defined() << '\n';
 
   const auto raw = pluss::note::bytes(
       std::vector<std::string>{std::string("A\0", 2), "B"},
@@ -71,7 +71,7 @@ int main() {
             << static_cast<int>(static_cast<unsigned char>(flat_raw[2])) << ','
             << static_cast<int>(static_cast<unsigned char>(flat_raw[3])) << '\n';
   rejected("join_flat undefined", [&] {
-    (void)pluss::Note::undefined().join_flat(",");
+    (void)pluss::note::undefined().join_flat(",");
   });
 
   const auto sortable = matrix({"b", "2", "a", "3", "b", "1"}, 3, 2);
@@ -84,7 +84,7 @@ int main() {
   show("scalar", pluss::note::make("x").sort());
   show("empty matrix", no_cells.sort());
   std::cout << "undefined sort defined="
-            << pluss::Note::undefined().sort().defined() << '\n';
+            << pluss::note::undefined().sort().defined() << '\n';
   rejected("sort axis 2", [&] { (void)sortable.sort(2); });
 
   const auto raw_values = pluss::note::bytes(
@@ -108,7 +108,7 @@ int main() {
   show("raw bytes", raw_values.unique());
   rejected("unique scalar axis", [&] { (void)pluss::note::make("x").unique(0); });
   std::cout << "undefined unique defined="
-            << pluss::Note::undefined().unique().defined() << '\n';
+            << pluss::note::undefined().unique().defined() << '\n';
 
   std::cout << "\n=== deduplicate first seen ===\n";
   show("flattened", repeated_rows.deduplicate());
@@ -117,6 +117,6 @@ int main() {
   show("three equal empty slices", empty_slices.deduplicate(1));
   show("raw bytes", raw_values.deduplicate());
   std::cout << "undefined deduplicate defined="
-            << pluss::Note::undefined().deduplicate().defined() << '\n';
+            << pluss::note::undefined().deduplicate().defined() << '\n';
   rejected("deduplicate axis 2", [&] { (void)repeated_rows.deduplicate(2); });
 }

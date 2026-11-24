@@ -77,7 +77,7 @@ validity-mask presence.
 using namespace pluss;
 using namespace pluss::table;
 
-auto mask = Series::zeros({3}, ScalarType::Bool);
+auto mask = pluss::series::zeros({3}, ScalarType::Bool);
 auto* ptr = reinterpret_cast<bool*>(mask.raw_data());
 ptr[0] = true;
 ptr[1] = false;

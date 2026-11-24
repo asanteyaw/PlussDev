@@ -72,7 +72,7 @@ Series select_first_coords_(
     std::optional<std::int64_t> lane_dim,
     bool per_batch) {
   if (all_coords.size(0) == 0) {
-    return Series::empty({0, source.dim()}, ScalarType::Int64, source.platform());
+    return pluss::codem::factory::empty({0, source.dim()}, ScalarType::Int64, source.platform());
   }
   if (!lane_dim.has_value() && !per_batch) {
     return all_coords.select(0, 0).unsqueeze(0);
@@ -118,7 +118,7 @@ Series select_first_coords_(
 
   const auto selected_count = static_cast<std::int64_t>(
       std::count(seen.begin(), seen.end(), true));
-  Series selected = Series::empty({selected_count, rank}, ScalarType::Int64, Platform::CPU);
+  Series selected = pluss::codem::factory::empty({selected_count, rank}, ScalarType::Int64, Platform::CPU);
   auto* selected_data = reinterpret_cast<std::int64_t*>(selected.raw_mutable_data());
   std::int64_t out_row = 0;
   for (std::int64_t lane = 0; lane < lane_count; ++lane) {

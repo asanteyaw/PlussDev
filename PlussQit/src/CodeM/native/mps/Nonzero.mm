@@ -189,20 +189,20 @@ Series nonzero(const Series& mask) {
     const bool* mp = reinterpret_cast<const bool*>(mask.raw_data());
     const std::int64_t count = (mp != nullptr && mp[0]) ? 1 : 0;
     const std::array<std::int64_t, 2> out_shape{{count, 0}};
-    return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+    return pluss::codem::factory::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
                          ScalarType::Int64,
                          Platform::MPS);
   }
   if (mask.numel() == 0) {
     const std::array<std::int64_t, 2> out_shape{{0, mask.dim()}};
-    return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+    return pluss::codem::factory::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
                          ScalarType::Int64,
                          Platform::MPS);
   }
 
   NonzeroMetaHost meta;
   validate_mask_(mask, meta);
-  Series out_full = Series::zeros({mask.numel(), mask.dim()}, ScalarType::Int64).to(Platform::MPS).contiguous();
+  Series out_full = pluss::codem::factory::zeros({mask.numel(), mask.dim()}, ScalarType::Int64).to(Platform::MPS).contiguous();
 
   @autoreleasepool {
     const std::size_t mask_bytes = static_cast<std::size_t>(mask.numel()) * sizeof(std::uint8_t);
@@ -260,7 +260,7 @@ Series nonzero(const Series& mask) {
         mask.numel());
     if (count <= 0) {
       const std::array<std::int64_t, 2> out_shape{{0, mask.dim()}};
-      return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+      return pluss::codem::factory::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
                            ScalarType::Int64,
                            Platform::MPS);
     }
@@ -269,7 +269,7 @@ Series nonzero(const Series& mask) {
     }
     const std::array<std::int64_t, 2> trim_shape{{count, mask.dim()}};
     Series out_trimmed =
-        Series::empty(std::span<const std::int64_t>(trim_shape.data(), trim_shape.size()),
+        pluss::codem::factory::empty(std::span<const std::int64_t>(trim_shape.data(), trim_shape.size()),
                       ScalarType::Int64,
                       Platform::MPS)
             .contiguous();

@@ -202,7 +202,7 @@ inline Series sigma_prime_(const DiffusionFn& sigma, double t, const Series& y, 
     pluss::subsp::math::diff::detail::set_tracks_slope_(leaf, true);
   }
   const Series s = sigma(t, leaf, theta);
-  Series zero = Series::zeros(y.sizes(), y.scalar_type(), y.platform());
+  Series zero = pluss::series::zeros(y.sizes(), y.scalar_type(), y.platform());
   if (!pluss::subsp::math::diff::detail::has_reverse_path_(s)) return zero;
   pluss::codem::series_tape::clear_sensitivity(leaf);
   if (theta.defined() && theta.tracks_slope()) pluss::codem::series_tape::clear_sensitivity(theta);
@@ -263,7 +263,7 @@ inline SdeResult fluctua(const DriftFn& mu, const DiffusionFn& sigma, const Seri
 
   SdeResult result;
   Series y = y0;
-  Series w_accum = Series::zeros(y0.sizes(), y0.scalar_type(), y0.platform());
+  Series w_accum = pluss::series::zeros(y0.sizes(), y0.scalar_type(), y0.platform());
   double t = t0;
   for (std::int64_t i = 0; i < options.steps; ++i) {
     const Series dw_i = dw.select(0, i);
@@ -460,7 +460,7 @@ inline WienerPath simulate_wiener_path(const Series& like, double t0, double t1,
   }
   const double h = (t1 - t0) / static_cast<double>(steps);
   const Series dw = detail::wiener_increments_(like, steps, h, seed);
-  const Series zero = Series::zeros(like.sizes(), like.scalar_type(), like.platform()).unsqueeze(0);
+  const Series zero = pluss::series::zeros(like.sizes(), like.scalar_type(), like.platform()).unsqueeze(0);
   const Series w = zero.unite({dw.cumsum(0)}, 0);
 
   WienerPath path;
@@ -711,11 +711,11 @@ inline JumpPath simulate_jump_diffusion_path(const Series& like, double t0, doub
   for (std::int64_t d = 0; d < like.dim(); ++d) sizes.push_back(like.size(d));
   const auto cfg = Config{}.with_dtype(like.scalar_type()).with_platform(like.platform());
   const Series brownian = pluss::series::randn(pluss::msharp::RangeView::Int(sizes), cfg, seed).mul(volatility * std::sqrt(h));
-  const Series u = Series::rand(pluss::msharp::RangeView::Int(sizes), like.scalar_type(), seed + 1, like.platform());
+  const Series u = pluss::series::rand(pluss::msharp::RangeView::Int(sizes), like.scalar_type(), seed + 1, like.platform());
   const Series size = pluss::series::randn(pluss::msharp::RangeView::Int(sizes), cfg, seed + 2).mul(jump_stddev).add(jump_mean);
   const Series mask = u.lt(jump_rate * h).to(like.scalar_type());
   const Series increments = brownian.add(drift * h).add(mask.mul(size));
-  const Series zero = Series::zeros(like.sizes(), like.scalar_type(), like.platform()).unsqueeze(0);
+  const Series zero = pluss::series::zeros(like.sizes(), like.scalar_type(), like.platform()).unsqueeze(0);
   JumpPath out;
   out.path.w = zero.unite({increments.cumsum(0)}, 0);
   out.path.t0 = t0;

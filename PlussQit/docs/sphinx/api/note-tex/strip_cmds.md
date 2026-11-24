@@ -82,7 +82,7 @@ optional and required groups.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().strip_cmds().defined() << '\n';
+          << pluss::note::undefined().tex().strip_cmds().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_cmds();
 } catch (const pluss::Error&) {

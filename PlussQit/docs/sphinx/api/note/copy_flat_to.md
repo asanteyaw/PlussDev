@@ -128,7 +128,7 @@ size=5 hex=4100427fff
 
 ```cpp
 std::vector<std::string_view> out;
-try { pluss::Note::undefined().copy_flat_to(std::back_inserter(out)); }
+try { pluss::note::undefined().copy_flat_to(std::back_inserter(out)); }
 catch (const pluss::Error&) { std::cout << "undefined copy: rejected\n"; }
 
 const auto ints = pluss::note::make(std::vector<std::int64_t>{3, 1, 4});

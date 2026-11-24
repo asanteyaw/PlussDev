@@ -64,7 +64,7 @@ Series resize_axis(const Series &input, std::int64_t n, std::int64_t dim,
                                       input.sizes().end());
   pad_shape[static_cast<std::size_t>(dim)] = n - current;
   const Series padding =
-      Series::zeros(pad_shape, input.scalar_type()).to(input.platform());
+      pluss::codem::factory::zeros(pad_shape, input.scalar_type()).to(input.platform());
   return input.unite({padding}, dim, true);
 }
 

@@ -66,7 +66,7 @@ empty distance=0 equal=true
 ## Example 3: Undefined Means No Range
 
 ```cpp
-const auto value = pluss::Note::undefined();
+const auto value = pluss::note::undefined();
 std::cout << std::boolalpha
           << "equal=" << (value.begin() == value.end()) << '\n';
 ```

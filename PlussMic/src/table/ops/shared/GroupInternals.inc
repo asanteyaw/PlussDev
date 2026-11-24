@@ -6,7 +6,7 @@ std::string group_owned_name_(std::string_view value) {
 
 pluss::Series group_bool_mask_(const std::vector<bool>& values,
                                pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  auto out = pluss::Series::empty(
+  auto out = pluss::series::empty(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Bool,
       platform);
@@ -19,7 +19,7 @@ pluss::Series group_bool_mask_(const std::vector<bool>& values,
 
 pluss::Series group_i64_series_(const std::vector<std::int64_t>& values,
                                 pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  auto out = pluss::Series::empty(
+  auto out = pluss::series::empty(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Int64,
       platform);
@@ -35,7 +35,7 @@ Shelf group_i64_shelf_(const std::vector<std::int64_t>& values) {
 
 Shelf group_f64_shelf_(const std::vector<double>& values,
                          const std::vector<bool>& valid = {}) {
-  auto out = pluss::Series::empty(
+  auto out = pluss::series::empty(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
@@ -835,11 +835,11 @@ Shelf group_count_shelf_(const GroupState_& state,
         : state.included_group_ids_cpu.to(platform);
   }
 
-  auto counts = pluss::Series::zeros(
+  auto counts = pluss::series::zeros(
       {state.ngroups},
       pluss::codem::ScalarType::Float64,
       platform);
-  auto ones = pluss::Series::ones(
+  auto ones = pluss::series::ones(
       {ids.numel()},
       pluss::codem::ScalarType::Float64,
       platform);
@@ -1066,16 +1066,16 @@ Shelf group_numeric_shelf_(const Shelf& value,
     values = numeric.take(included_rows);
   }
 
-  auto counts = pluss::Series::zeros(
+  auto counts = pluss::series::zeros(
       {state.ngroups},
       pluss::codem::ScalarType::Float64,
       platform);
-  auto ones = pluss::Series::ones(
+  auto ones = pluss::series::ones(
       {ids.numel()},
       pluss::codem::ScalarType::Float64,
       platform);
   counts = counts.scatter_add(0, ids, ones);
-  const auto any_value = counts.gt(pluss::Series::zeros(
+  const auto any_value = counts.gt(pluss::series::zeros(
       {state.ngroups},
       pluss::codem::ScalarType::Float64,
       platform));
@@ -1106,7 +1106,7 @@ Shelf group_numeric_shelf_(const Shelf& value,
       out = op == GroupOp::Std
                 ? values.grouped_std(ids, state.ngroups, 1)
                 : values.grouped_var(ids, state.ngroups, 1);
-      validity = counts.gt(pluss::Series::ones(
+      validity = counts.gt(pluss::series::ones(
           {state.ngroups},
           pluss::codem::ScalarType::Float64,
           platform));
@@ -1168,16 +1168,16 @@ Shelf group_temporal_shelf_(const Shelf& value,
     ticks = ticks_all.take(included_rows);
   }
 
-  auto counts = pluss::Series::zeros(
+  auto counts = pluss::series::zeros(
       {state.ngroups},
       pluss::codem::ScalarType::Float64,
       platform);
-  auto reduced = pluss::Series::zeros(
+  auto reduced = pluss::series::zeros(
       {state.ngroups},
       pluss::codem::ScalarType::Int64,
       platform);
   if (ids.numel() > 0) {
-    auto ones = pluss::Series::ones(
+    auto ones = pluss::series::ones(
         {ids.numel()},
         pluss::codem::ScalarType::Float64,
         platform);

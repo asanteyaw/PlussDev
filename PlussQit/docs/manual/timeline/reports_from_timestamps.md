@@ -25,10 +25,10 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 int main() {
   using pluss::ScalarType;
   // Eight tickets: when each was opened and when it was closed (UTC).
-  auto opened = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
+  auto opened = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
                                              pluss::make_series({2, 2, 3, 4, 5, 6, 9, 9}), pluss::make_series({9, 14, 10, 16, 9, 22, 8, 11}),
                                              pluss::make_series({15, 40, 5, 30, 0, 10, 45, 20}), pluss::make_series({0, 0, 0, 0, 0, 0, 0, 0}));
-  auto closed = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
+  auto closed = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
                                              pluss::make_series({2, 3, 3, 6, 5, 9, 9, 10}), pluss::make_series({11, 9, 15, 11, 12, 9, 10, 15}),
                                              pluss::make_series({0, 30, 20, 0, 30, 0, 15, 0}), pluss::make_series({0, 0, 0, 0, 0, 0, 0, 0}));
 
@@ -92,7 +92,7 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 
 int main() {
   // Three customers who started on the 31st, the 30th and the 15th of different months.
-  auto started = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({1, 3, 8}), pluss::make_series({31, 30, 15}));
+  auto started = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({1, 3, 8}), pluss::make_series({31, 30, 15}));
   show("started", started.strftime("%a %d %b %Y"));
 
   // 1. A monthly plan renews on the same day of the month. add_months is a calendar rule: when the month is too short the date
@@ -103,8 +103,8 @@ int main() {
 
   // 2. A second group of customers who started in September on the 30th, the 26th and the 15th. As of 2026-12-10 each is in the
   //    period that began at the renewal two months after the start and ends at the renewal three months after it.
-  auto subscribed = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({9, 9, 9}), pluss::make_series({30, 26, 15}));
-  auto today = pluss::Timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({12, 12, 12}), pluss::make_series({10, 10, 10}));
+  auto subscribed = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({9, 9, 9}), pluss::make_series({30, 26, 15}));
+  auto today = pluss::timeline::from_ymd(pluss::make_series({2026, 2026, 2026}), pluss::make_series({12, 12, 12}), pluss::make_series({10, 10, 10}));
   auto last_renewal = subscribed.add_months(2);
   auto next_renewal = subscribed.add_months(3);
   show("period began", last_renewal.strftime("%a %d %b %Y"));
@@ -175,14 +175,14 @@ int main() {
   for (int s = 1200; s <= 1500; s += 60) offsets.push_back(s);        // gap of 7 min, then 08:20 - 08:25
   for (int s = 1560; s <= 1680; s += 60) offsets.push_back(s);        // 08:26 - 08:28
   for (int s = 1980; s <= 2100; s += 60) offsets.push_back(s);        // gap of 5 min, then 08:33 - 08:35
-  auto beats = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).to(ScalarType::Int64).add(base));
+  auto beats = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).to(ScalarType::Int64).add(base));
   const auto clock = beats.strftime("%H:%M").host();   // keep the owning copy alive while reading it
   std::cout << beats.numel() << " heartbeats from " << clock.vector().front() << " to " << clock.vector().back() << "\n";
 
   // 1. The gap before each heartbeat is the difference of neighbouring instants: shift the axis by one and subtract.
   const auto n = beats.numel();
-  auto later = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 1, n).to(ScalarType::Int64).add(base));
-  auto earlier = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 0, n - 1).to(ScalarType::Int64).add(base));
+  auto later = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 1, n).to(ScalarType::Int64).add(base));
+  auto earlier = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 0, n - 1).to(ScalarType::Int64).add(base));
   auto gaps = later - earlier;                                       // a Duration per pair of neighbouring heartbeats
   const auto gap_ns = gaps.host();
   std::vector<double> gap_minutes;

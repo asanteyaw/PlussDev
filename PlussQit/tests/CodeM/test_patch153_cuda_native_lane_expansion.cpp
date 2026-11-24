@@ -120,7 +120,7 @@ TEST_CASE("CUDA native lane expansion covers dim/layout/dtype widening", "[cuda]
       a_cpu.take(idx_cpu).host<double>());
 
   // Scatter/gather: float64 + broadcast src lane.
-  const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float64);
+  const auto self_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float64);
   const auto idx2_cpu = pluss::make_series(std::vector<std::int64_t>{2, 0, 1, 1, 2, 0}, {2, 3});
   const auto src_cpu = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {1, 3});
   const auto self_cuda = self_cpu.to(pluss::pCUDA);

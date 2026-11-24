@@ -137,7 +137,7 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
       gather_i64_out_cpu.host<std::int64_t>().array().data);
 
   // Scatter lane: int16 exact-roundtrip lane on rank-3 tensor.
-  const auto scatter_base_cpu = pluss::Series::zeros({2, 3, 4}, pluss::ScalarType::Int16);
+  const auto scatter_base_cpu = pluss::series::zeros({2, 3, 4}, pluss::ScalarType::Int16);
   const auto scatter_idx_cpu = pluss::make_series(
       std::vector<std::int64_t>{
           0, 1, 2, 3,  3, 2, 1, 0,
@@ -186,8 +186,8 @@ TEST_CASE("MPS strict gather/scatter rejects unsupported non-exact lane", "[mps]
   }
 
   // Int64 scatter has a native lane (exact 64-bit set); UInt64 still does not.
-  const auto base_i64 = pluss::Series::zeros({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
-  const auto src_i64 = pluss::Series::ones({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
+  const auto base_i64 = pluss::series::zeros({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
+  const auto src_i64 = pluss::series::ones({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
   const auto got_i64 = base_i64.scatter(0, idx, src_i64).to(pluss::pCPU).flatten(0, -1).items<std::int64_t>();
   REQUIRE(got_i64 == std::vector<std::int64_t>{1, 1, 1, 1});
 

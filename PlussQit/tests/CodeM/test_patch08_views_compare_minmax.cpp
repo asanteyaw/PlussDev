@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("permute/transpose/unsqueeze/squeeze views", "[view]") {
-  auto a = Series::zeros({2,3,4}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3,4}, ScalarType::Float64);
   auto p = a.permute(std::vector<std::int64_t>{2,1,0});
   REQUIRE(p.sizes()[0] == 4);
   REQUIRE(p.sizes()[1] == 3);
@@ -27,8 +27,8 @@ TEST_CASE("permute/transpose/unsqueeze/squeeze views", "[view]") {
 }
 
 TEST_CASE("comparisons produce bool", "[cmp]") {
-  auto a = Series::zeros({2,2}, ScalarType::Int64);
-  auto b = Series::zeros({2,2}, ScalarType::Int64);
+  auto a = pluss::series::zeros({2,2}, ScalarType::Int64);
+  auto b = pluss::series::zeros({2,2}, ScalarType::Int64);
   auto* ap = reinterpret_cast<std::int64_t*>(a.raw_data());
   auto* bp = reinterpret_cast<std::int64_t*>(b.raw_data());
   ap[0]=1; ap[1]=2; ap[2]=3; ap[3]=4;
@@ -42,8 +42,8 @@ TEST_CASE("comparisons produce bool", "[cmp]") {
 }
 
 TEST_CASE("minimum/maximum/clamp", "[minmax]") {
-  auto a = Series::zeros({3}, ScalarType::Float32);
-  auto b = Series::zeros({3}, ScalarType::Float32);
+  auto a = pluss::series::zeros({3}, ScalarType::Float32);
+  auto b = pluss::series::zeros({3}, ScalarType::Float32);
   auto* ap = reinterpret_cast<float*>(a.raw_data());
   auto* bp = reinterpret_cast<float*>(b.raw_data());
   ap[0]=1; ap[1]=5; ap[2]=3;

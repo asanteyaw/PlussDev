@@ -116,14 +116,14 @@ TEST_CASE("Note NLP maskers preserve structure and absence",
           std::vector<std::int64_t>{0});
   REQUIRE(empty.nlp().mask_numbers().empty());
 
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_numbers().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_emails().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_urls().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_mentions().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_hashtags().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_dates().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_times().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_currency().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_numbers().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_emails().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_urls().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_mentions().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_hashtags().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_dates().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_times().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_currency().defined());
 }
 
 TEST_CASE("Note NLP maskers require Text dtype", "[coden][nlp_mask]") {
@@ -157,7 +157,7 @@ TEST_CASE("Note PII masking applies category precedence and flags",
       "mail [EMAIL] via [URL] to @ann #team on 2024-01-02 at 7pm for €20 id 42"});
   REQUIRE(text(source.nlp().mask_pii(1 << 20)) == text(source));
   REQUIRE(text(source.nlp().mask_pii(-1)) == text(source.nlp().mask_pii()));
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().mask_pii().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().mask_pii().defined());
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"a@b.io"}, std::array<std::int64_t, 1>{1});

@@ -66,7 +66,7 @@ int main() {
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
   show("concat empty", empty_text + empty_text);
   rejected("concat undefined", [&] {
-    (void)(names + pluss::Note::undefined());
+    (void)(names + pluss::note::undefined());
   });
 
   std::cout << "\n=== repetition ===\n";
@@ -111,7 +111,7 @@ int main() {
   });
   rejected("string against Int64", [&] { (void)(ints == "2"); });
   rejected("comparison undefined", [&] {
-    (void)(lhs == pluss::Note::undefined());
+    (void)(lhs == pluss::note::undefined());
   });
 
   const auto has_a = names.contains("a");
@@ -155,8 +155,8 @@ int main() {
   show("compound all", acceptable.all());
   rejected("any Text", [&] { (void)names.any(); });
   rejected("all Text", [&] { (void)names.all(); });
-  rejected("any undefined", [&] { (void)pluss::Note::undefined().any(); });
-  rejected("all undefined", [&] { (void)pluss::Note::undefined().all(); });
+  rejected("any undefined", [&] { (void)pluss::note::undefined().any(); });
+  rejected("all undefined", [&] { (void)pluss::note::undefined().all(); });
 
   std::cout << "\n=== stream insertion ===\n" << names << '\n';
 }

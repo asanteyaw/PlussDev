@@ -228,7 +228,7 @@ Note(shape=[4], dim=1, numel=4, encoding=bytes)
 
 ```cpp
 std::cout << std::boolalpha
-          << "defined=" << pluss::Note::undefined().repeat({2}).defined()
+          << "defined=" << pluss::note::undefined().repeat({2}).defined()
           << '\n';
 ```
 

@@ -121,7 +121,7 @@ inline Series from_torch(const at::Tensor& t) {
   Storage storage(ptr, nbytes, /*alignment*/1);
   // data_ptr() already points at the view's first logical element. Starting the
   // adopted Storage there means applying storage_offset() again would skip it twice.
-  return Series::from_storage(storage, /*storage_offset=*/0, sizes, strides, st);
+  return pluss::codem::factory::from_storage(storage, /*storage_offset=*/0, sizes, strides, st);
 }
 
 // Convert Series -> torch::Tensor view (zero-copy) when possible.

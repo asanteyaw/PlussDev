@@ -78,7 +78,7 @@ It disappears with that argument, while the final body remains in place.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().strip_color().defined() << '\n';
+          << pluss::note::undefined().tex().strip_color().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_color();
 } catch (const pluss::Error&) {

@@ -134,7 +134,7 @@ Note(shape=[3], dim=1, numel=3, encoding=bytes)
 
 ```cpp
 std::cout << std::boolalpha << "undefined sort defined="
-          << pluss::Note::undefined().sort().defined() << '\n';
+          << pluss::note::undefined().sort().defined() << '\n';
 ```
 
 ### Output

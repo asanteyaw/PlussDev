@@ -14,9 +14,9 @@ TEST_CASE("type promotion basic lattice", "[dtype]") {
 }
 
 TEST_CASE("scatter_add accumulates", "[indexing]") {
-  auto x = Series::zeros({2,3}, ScalarType::Float64);
-  auto idx = Series::zeros({2,2}, ScalarType::Int64);
-  auto src = Series::zeros({2,2}, ScalarType::Float64);
+  auto x = pluss::series::zeros({2,3}, ScalarType::Float64);
+  auto idx = pluss::series::zeros({2,2}, ScalarType::Int64);
+  auto src = pluss::series::zeros({2,2}, ScalarType::Float64);
 
   // idx: place both values into col 1 for each row (accumulate)
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());

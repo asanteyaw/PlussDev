@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
            }},
           pluss::table::DataFrame::DeriveSpec{"Is_RushHour", [](const pluss::table::DataFrame& f) {
              const auto h = f.features("Start_Hour").as_series().host<std::int64_t>();
-             auto out = pluss::Series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
+             auto out = pluss::series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
              auto* p = reinterpret_cast<bool*>(out.raw_data());
              for (std::size_t i = 0; i < h.size(); ++i) {
                const auto hh = h[i];

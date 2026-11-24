@@ -102,7 +102,7 @@ TEST_CASE("MPS strict nonzero parity covers scalar/empty/discontiguous lanes", "
   REQUIRE(scalar_false.nonzero().sizes()[0] == 0);
   REQUIRE(scalar_false.nonzero().sizes()[1] == 0);
 
-  const auto empty_cpu = pluss::Series::zeros({0, 3}, pluss::ScalarType::Float32);
+  const auto empty_cpu = pluss::series::zeros({0, 3}, pluss::ScalarType::Float32);
   const auto empty_mps_nz = empty_cpu.to(pluss::pMPS).nonzero();
   REQUIRE(empty_mps_nz.platform() == pluss::pMPS);
   REQUIRE(empty_mps_nz.sizes()[0] == 0);
@@ -127,7 +127,7 @@ TEST_CASE("MPS nonzero survives concurrent invocation", "[mps][nonzero][threadin
   }
   const ScopedEnvVar fallback_off("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
 
-  const auto x = pluss::Series::ones({256, 256}, pluss::ScalarType::Float32).to(pluss::pMPS);
+  const auto x = pluss::series::ones({256, 256}, pluss::ScalarType::Float32).to(pluss::pMPS);
   std::atomic<bool> failed{false};
   std::vector<std::int64_t> r0;
   std::vector<std::int64_t> r1;
@@ -164,14 +164,14 @@ TEST_CASE("MPS strict int32 indexing/compose lanes match CPU", "[mps][strict][in
       x_cpu.reshape({x_cpu.numel()}).take(idx_flat_cpu).host<std::int32_t>());
 
   auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
-  auto base_put_cpu = pluss::Series::zeros({6}, pluss::ScalarType::Int32);
+  auto base_put_cpu = pluss::series::zeros({6}, pluss::ScalarType::Int32);
   auto base_put_mps = base_put_cpu.to(pluss::pMPS);
   const auto put_src_cpu = pluss::make_series(std::vector<std::int32_t>{7, 8, 9, 10}, {4});
   base_put_cpu = (base_put_cpu.*put_fn)(idx_flat_cpu.reshape({4}), put_src_cpu, /*accumulate=*/false);
   base_put_mps = (base_put_mps.*put_fn)(idx_flat_cpu.reshape({4}).to(pluss::pMPS), put_src_cpu.to(pluss::pMPS), /*accumulate=*/false);
   require_equal_(base_put_mps.to(pluss::pCPU).host<std::int32_t>(), base_put_cpu.host<std::int32_t>());
 
-  auto base_put_acc_cpu = pluss::Series::zeros({6}, pluss::ScalarType::Int32);
+  auto base_put_acc_cpu = pluss::series::zeros({6}, pluss::ScalarType::Int32);
   auto base_put_acc_mps = base_put_acc_cpu.to(pluss::pMPS);
   const auto put_idx_acc_cpu = pluss::make_series(std::vector<std::int64_t>{1, 1, 2, 2}, {4});
   const auto put_src_acc_cpu = pluss::make_series(std::vector<std::int32_t>{2, 3, 4, 5}, {4});
@@ -185,7 +185,7 @@ TEST_CASE("MPS strict int32 indexing/compose lanes match CPU", "[mps][strict][in
       x_cpu.to(pluss::pMPS).gather(1, gather_idx_cpu.to(pluss::pMPS)).to(pluss::pCPU).host<std::int32_t>(),
       x_cpu.gather(1, gather_idx_cpu).host<std::int32_t>());
 
-  const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Int32);
+  const auto scatter_base_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Int32);
   require_equal_(
       scatter_base_cpu.to(pluss::pMPS).scatter(1, gather_idx_cpu.to(pluss::pMPS), x_cpu.to(pluss::pMPS)).to(pluss::pCPU).host<std::int32_t>(),
       scatter_base_cpu.scatter(1, gather_idx_cpu, x_cpu).host<std::int32_t>());
@@ -198,7 +198,7 @@ TEST_CASE("MPS strict int32 indexing/compose lanes match CPU", "[mps][strict][in
           .host<std::int32_t>(),
       scatter_base_cpu.scatter_add(1, scatter_add_idx_cpu, scatter_add_src_cpu).host<std::int32_t>());
 
-  const auto rr_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Int32);
+  const auto rr_base_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Int32);
   require_equal_(
       rr_base_cpu.to(pluss::pMPS).scatter_reduce(
           1,

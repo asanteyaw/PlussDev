@@ -118,7 +118,7 @@ empty calls=0
 
 ```cpp
 try {
-  pluss::Note::undefined().for_each_flat([](std::string_view) {});
+  pluss::note::undefined().for_each_flat([](std::string_view) {});
 } catch (const pluss::Error&) {
   std::cout << "undefined callback: rejected\n";
 }

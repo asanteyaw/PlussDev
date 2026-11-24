@@ -157,7 +157,7 @@ math_blocks(-2): rejected
 ## Example 6: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().math_blocks(-1);
+const auto absent = pluss::note::undefined().tex().math_blocks(-1);
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

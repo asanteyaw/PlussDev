@@ -44,7 +44,7 @@ pluss::codem::Series impl_cmp_duration(const Duration& a, const Duration& b, std
   check_duration_core_(a.nanos_);
   check_duration_core_(b.nanos_);
   const auto out_sizes = broadcast_simple_(a.nanos_.sizes(), b.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(out_sizes, pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(out_sizes, pluss::codem::ScalarType::Bool);
 
   auto it = pluss::codem::SeriesIterator::binary(a.nanos_, b.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
@@ -71,7 +71,7 @@ pluss::codem::Series impl_cmp_duration(const Duration& a, const Duration& b, std
 
 pluss::codem::Series impl_isnat_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::uint8_t*>(out.raw_data());
@@ -83,7 +83,7 @@ pluss::codem::Series impl_isnat_duration(const Duration& a) {
 
 pluss::codem::Series impl_isvalid_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::uint8_t*>(out.raw_data());
@@ -95,7 +95,7 @@ pluss::codem::Series impl_isvalid_duration(const Duration& a) {
 
 Duration impl_abs_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -109,7 +109,7 @@ Duration impl_abs_duration(const Duration& a) {
 
 Duration impl_sign_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -127,7 +127,7 @@ Duration impl_clip_duration(const Duration& a, const Duration& lo, const Duratio
   check_duration_core_(hi.nanos_);
   const auto out_sizes = broadcast_simple_(a.nanos_.sizes(), lo.nanos_.sizes());
   broadcast_simple_(out_sizes, hi.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(out_sizes, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(out_sizes, pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::ternary(a.nanos_, lo.nanos_, hi.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   const auto* lv = reinterpret_cast<const std::int64_t*>(lo.nanos_.raw_data());
@@ -148,7 +148,7 @@ Duration impl_fill_nat_duration(const Duration& a, const Duration& value) {
   check_duration_core_(value.nanos_);
   CODEM_CHECK(value.dim() == 0, "fill_nat: value must be scalar Duration");
   const auto v = reinterpret_cast<const std::int64_t*>(value.nanos_.raw_data())[0];
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -166,7 +166,7 @@ Duration impl_where_duration(const Duration& a, const pluss::codem::Series& mask
   CODEM_CHECK(mask.scalar_type() == pluss::codem::ScalarType::Bool, "where: mask must be bool");
   const auto out_sizes = broadcast_simple_(a.nanos_.sizes(), other.nanos_.sizes());
   broadcast_simple_(out_sizes, mask.sizes());
-  auto out = pluss::codem::Series::empty(out_sizes, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(out_sizes, pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::ternary(a.nanos_, other.nanos_, mask, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   const auto* bv = reinterpret_cast<const std::int64_t*>(other.nanos_.raw_data());
@@ -180,7 +180,7 @@ Duration impl_where_duration(const Duration& a, const pluss::codem::Series& mask
 
 Duration impl_mul_i64(const Duration& a, std::int64_t k) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   const auto* values = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto validation = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   validation.for_each_index([&](std::int64_t, std::int64_t offset,
@@ -202,7 +202,7 @@ Duration impl_mul_i64(const Duration& a, std::int64_t k) {
 Duration impl_div_i64(const Duration& a, std::int64_t k) {
   CODEM_CHECK(k != 0, "Duration::div: division by zero");
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
     return (x == Duration::kNaT) ? Duration::kNaT : (x / k);
   });
@@ -213,7 +213,7 @@ Duration impl_floordiv_i64(const Duration& a, std::int64_t k) {
   // For int64 nanos, / already truncates toward 0; emulate floor for negatives.
   CODEM_CHECK(k != 0, "Duration::floordiv: division by zero");
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
     if (x == Duration::kNaT) return Duration::kNaT;
     const auto q = x / k;
@@ -227,7 +227,7 @@ Duration impl_floordiv_i64(const Duration& a, std::int64_t k) {
 Duration impl_mod_i64(const Duration& a, std::int64_t k) {
   CODEM_CHECK(k != 0, "Duration::mod: division by zero");
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
     return (x == Duration::kNaT) ? Duration::kNaT : (x % k);
   });
@@ -237,7 +237,7 @@ Duration impl_mod_i64(const Duration& a, std::int64_t k) {
 pluss::codem::Series impl_total(const Duration& a, std::string_view unit) {
   check_duration_core_(a.nanos_);
   const auto q = (double)unit_nanos_(unit);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Float64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Float64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<double*>(out.raw_data());
@@ -251,7 +251,7 @@ pluss::codem::Series impl_total(const Duration& a, std::string_view unit) {
 
 pluss::codem::Series impl_component(const Duration& a, std::string_view component) {
   check_duration_core_(a.nanos_);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -302,7 +302,7 @@ pluss::codem::Series impl_component(const Duration& a, std::string_view componen
 Duration impl_round(const Duration& a, std::string_view mode, std::string_view unit) {
   check_duration_core_(a.nanos_);
   const auto q = unit_nanos_(unit);
-  auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.nanos_, out);
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -377,7 +377,7 @@ Duration impl_sort_duration(const Duration& a) {
     if (y == Duration::kNaT) return true;
     return x < y;
   });
-  auto out = pluss::codem::Series::empty({(std::int64_t)v.size()}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty({(std::int64_t)v.size()}, pluss::codem::ScalarType::Int64);
   std::memcpy(out.raw_data(), v.data(), v.size() * sizeof(std::int64_t));
   return Duration(std::move(out));
 }
@@ -394,7 +394,7 @@ Duration impl_unique_duration(const Duration& a) {
     if (!seen.insert(x).second) continue;
     outv.push_back(x);
   }
-  auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
   std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
   return Duration(std::move(out));
 }
@@ -415,7 +415,7 @@ pluss::codem::Series impl_argsort_duration(const Duration& a) {
     if (x == y) return i < j;
     return x < y;
   });
-  auto out = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty({n}, pluss::codem::ScalarType::Int64);
   std::memcpy(out.raw_data(), idx.data(), idx.size() * sizeof(std::int64_t));
   return out;
 }

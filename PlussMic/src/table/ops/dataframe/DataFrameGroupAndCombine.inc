@@ -195,7 +195,7 @@ ContingencyTensor_ contingency_build_tensor_(
 
   const auto cell_count =
       contingency_checked_product_(std::span<const std::int64_t>(shape.data(), shape.size()), where);
-  auto linear_ids = pluss::Series::zeros(
+  auto linear_ids = pluss::series::zeros(
       {frame.ncases()},
       pluss::codem::ScalarType::Int64,
       pluss::codem::Platform::CPU);
@@ -216,12 +216,12 @@ ContingencyTensor_ contingency_build_tensor_(
 
   const auto active_mask = bool_series_from_keep(included);
   const auto active_ids = linear_ids.masked_select(active_mask);
-  auto counts = pluss::Series::zeros(
+  auto counts = pluss::series::zeros(
       {cell_count},
       pluss::codem::ScalarType::Float64,
       pluss::codem::Platform::CPU);
   if (active_ids.numel() > 0 && cell_count > 0) {
-    auto ones = pluss::Series::ones(
+    auto ones = pluss::series::ones(
         {active_ids.numel()},
         pluss::codem::ScalarType::Float64,
         pluss::codem::Platform::CPU);
@@ -1498,7 +1498,7 @@ pluss::Series ContingencyTable::materialized_values_() const {
   if (normalize_ == Normalize::All) {
     const auto denom = values.sum().item<double>();
     if (denom == 0.0) {
-      return pluss::Series::zeros(values.sizes(), pluss::codem::ScalarType::Float64, values.platform());
+      return pluss::series::zeros(values.sizes(), pluss::codem::ScalarType::Float64, values.platform());
     }
     return values.div(denom);
   }

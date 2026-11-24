@@ -76,7 +76,7 @@ std::cout << "] shape=[" << grid.size(0) << ", " << grid.size(1) << "]\n";
 ## Example 3: A Note Row View Keeps Shared Storage Alive
 
 ```cpp
-pluss::Note row = pluss::Note::undefined();
+pluss::Note row = pluss::note::undefined();
 {
   const auto matrix = pluss::note::make(
       std::vector<std::int64_t>{10, 11, 12, 20, 21, 22},
@@ -121,7 +121,7 @@ Note storage does not contain Int64 lanes
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().integers();
+  (void)pluss::note::undefined().integers();
 } catch (const pluss::Error& error) {
   const std::string message(error.what());
   std::cout << message.substr(0, message.find('\n')) << '\n';

@@ -102,8 +102,8 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 for (const auto bad_body : {false, true}) {
   try {
     (void)(bad_body
-        ? pluss::Note::undefined().tex().set_macro("unit", "{x")
-        : pluss::Note::undefined().tex().set_macro("bad name", "x"));
+        ? pluss::note::undefined().tex().set_macro("unit", "{x")
+        : pluss::note::undefined().tex().set_macro("bad name", "x"));
   } catch (const pluss::Error&) {
     std::cout << (bad_body ? "unbalanced body" : "bad name")
               << ": rejected\n";
@@ -122,7 +122,7 @@ unbalanced body: rejected
 
 ```cpp
 std::cout << std::boolalpha << "undefined="
-          << pluss::Note::undefined().tex().set_macro("unit", "m").defined()
+          << pluss::note::undefined().tex().set_macro("unit", "m").defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex()

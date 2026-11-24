@@ -66,7 +66,7 @@ dim=3 numel=0 empty=true
 ```cpp
 const auto empty = pluss::note::make(
     std::vector<std::string>{}, std::array<std::int64_t, 1>{0});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "empty: defined=" << empty.defined() << " numel=" << empty.numel() << '\n'
           << "absent: defined=" << absent.defined() << " numel=" << absent.numel() << '\n';

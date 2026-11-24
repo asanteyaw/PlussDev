@@ -16,14 +16,14 @@ int main() {
   for (int s = 1200; s <= 1500; s += 60) offsets.push_back(s);        // gap of 7 min, then 08:20 - 08:25
   for (int s = 1560; s <= 1680; s += 60) offsets.push_back(s);        // 08:26 - 08:28
   for (int s = 1980; s <= 2100; s += 60) offsets.push_back(s);        // gap of 5 min, then 08:33 - 08:35
-  auto beats = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).to(ScalarType::Int64).add(base));
+  auto beats = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).to(ScalarType::Int64).add(base));
   const auto clock = beats.strftime("%H:%M").host();   // keep the owning copy alive while reading it
   std::cout << beats.numel() << " heartbeats from " << clock.vector().front() << " to " << clock.vector().back() << "\n";
 
   // 1. The gap before each heartbeat is the difference of neighbouring instants: shift the axis by one and subtract.
   const auto n = beats.numel();
-  auto later = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 1, n).to(ScalarType::Int64).add(base));
-  auto earlier = pluss::Timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 0, n - 1).to(ScalarType::Int64).add(base));
+  auto later = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 1, n).to(ScalarType::Int64).add(base));
+  auto earlier = pluss::timeline::from_epoch_seconds(pluss::make_series(offsets).slice(0, 0, n - 1).to(ScalarType::Int64).add(base));
   auto gaps = later - earlier;                                       // a Duration per pair of neighbouring heartbeats
   const auto gap_ns = gaps.host();
   std::vector<double> gap_minutes;

@@ -107,7 +107,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().vector_norm().defined()
+          << pluss::note::undefined().tex().vector_norm().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().vector_norm();

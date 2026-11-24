@@ -106,7 +106,7 @@ Example 3. The ordinary chain rule: `∫ x² ∘ dx` along a smooth-ish path is 
 
 ```cpp
 auto dw = pluss::series::randn({500}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 5).mul(std::sqrt(1.0 / 500));
-auto path = pluss::Series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+auto path = pluss::series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
 auto square = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(x); };
 
 const double xT = path.select(0, 500).item<double>();

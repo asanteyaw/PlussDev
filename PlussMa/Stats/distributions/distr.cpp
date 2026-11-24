@@ -338,7 +338,7 @@ template <class Fn>
 Series map_series_f64_(const Series& x, Fn&& fn) {
   const ScalarType work_dtype = (x.platform() == pluss::Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
   const Series in = x.to(work_dtype).contiguous();
-  Series out = Series::empty(in.sizes(), work_dtype).to(x.platform(), work_dtype);
+  Series out = pluss::series::empty(in.sizes(), work_dtype).to(x.platform(), work_dtype);
   const std::int64_t n = in.numel();
   if (work_dtype == ScalarType::Float32) {
     const auto* src = reinterpret_cast<const float*>(in.raw_data());

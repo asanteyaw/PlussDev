@@ -585,15 +585,15 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
       if (debug_arith && epoch == 0) {
         const Series p = model->weight().reshape({2});
         const Series g = model->weight().sensitivity().reshape({2});
-        const Series lr = Series::full({}, 5e-2, p.scalar_type()).to(p.platform());
+        const Series lr = pluss::series::full({}, 5e-2, p.scalar_type()).to(p.platform());
         const Series z = pluss::series::zeros_like(p, p.scalar_type());
-        const Series z_mul = z.mul(Series::full({}, 0.9, p.scalar_type()).to(p.platform()));
-        const Series one = Series::full({}, 1.0, p.scalar_type()).to(p.platform());
-        const Series beta1 = Series::full({}, 0.9, p.scalar_type()).to(p.platform());
-        const Series beta2 = Series::full({}, 0.999, p.scalar_type()).to(p.platform());
-        const Series eps = Series::full({}, 1e-8, p.scalar_type()).to(p.platform());
-        const Series b1_corr = Series::full({}, 0.1, p.scalar_type()).to(p.platform());
-        const Series b2_corr = Series::full({}, 0.001, p.scalar_type()).to(p.platform());
+        const Series z_mul = z.mul(pluss::series::full({}, 0.9, p.scalar_type()).to(p.platform()));
+        const Series one = pluss::series::full({}, 1.0, p.scalar_type()).to(p.platform());
+        const Series beta1 = pluss::series::full({}, 0.9, p.scalar_type()).to(p.platform());
+        const Series beta2 = pluss::series::full({}, 0.999, p.scalar_type()).to(p.platform());
+        const Series eps = pluss::series::full({}, 1e-8, p.scalar_type()).to(p.platform());
+        const Series b1_corr = pluss::series::full({}, 0.1, p.scalar_type()).to(p.platform());
+        const Series b2_corr = pluss::series::full({}, 0.001, p.scalar_type()).to(p.platform());
         const Series one_minus_beta1 = one.sub(beta1);
         const Series one_minus_beta2 = one.sub(beta2);
         const Series m1_sim = z.mul(beta1).add(g.mul(one_minus_beta1));
@@ -605,8 +605,8 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
         const Series next_sim = p.sub(delta_sim);
         const Series gb = model->bias().sensitivity().reshape({1});
         const Series zb = pluss::series::zeros_like(gb, gb.scalar_type());
-        const Series one_b = Series::full({}, 1.0, gb.scalar_type()).to(gb.platform());
-        const Series beta1_b = Series::full({}, 0.9, gb.scalar_type()).to(gb.platform());
+        const Series one_b = pluss::series::full({}, 1.0, gb.scalar_type()).to(gb.platform());
+        const Series beta1_b = pluss::series::full({}, 0.9, gb.scalar_type()).to(gb.platform());
         const Series one_minus_beta1_b = one_b.sub(beta1_b);
         const Series zbm = zb.mul(beta1_b);
         const Series m1b_sim = zbm.add(gb.mul(one_minus_beta1_b));

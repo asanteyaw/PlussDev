@@ -12,7 +12,7 @@ Series& Series::fill_(double value) const
 
 ## What It Does
 
-`fill_()` overwrites every element of `self` with the same scalar `value`, in place. There is no out-of-place counterpart on this surface — the closest non-mutating equivalent is `Series::full(sizes, value, dtype)`, which builds a brand-new, fully-`value`-filled `Series` from a shape rather than overwriting an existing one.
+`fill_()` overwrites every element of `self` with the same scalar `value`, in place. There is no out-of-place counterpart on this surface — the closest non-mutating equivalent is `pluss::series::full(sizes, value, dtype)`, which builds a brand-new, fully-`value`-filled `Series` from a shape rather than overwriting an existing one.
 
 Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `fill_()` genuinely mutates the series it's called on, including any other handle sharing the same storage.
 
@@ -43,7 +43,7 @@ data=[9, 9, 9]
 
 ## Gotchas And Failure Modes
 
-- `fill_()` mutates `self`; use `Series::full(sizes, value)` when you want a fresh, independent result instead.
+- `fill_()` mutates `self`; use `pluss::series::full(sizes, value)` when you want a fresh, independent result instead.
 
 ## Summary
 
@@ -51,7 +51,7 @@ Use `fill_()` to overwrite an existing buffer with a constant, e.g. resetting a 
 
 ## See Also
 
-- `Series::full`: builds a new value-filled `Series` from a shape.
+- `pluss::series::full`: builds a new value-filled `Series` from a shape.
 - [`Series::zero`](zero.md): the `fill_(0.0)` special case, with its own dedicated dispatch.
 - [`Series::fill_diagonal`](fill_diagonal.md): fills only the diagonal.
 

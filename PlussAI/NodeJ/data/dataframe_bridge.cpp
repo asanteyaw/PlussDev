@@ -74,7 +74,7 @@ namespace {
       }
       const std::int64_t unknown_code = static_cast<std::int64_t>(map_to_use->categories.size());
 
-      auto out = Series::empty({expected_size}, ScalarType::Float64);
+      auto out = pluss::series::empty({expected_size}, ScalarType::Float64);
       auto* p = reinterpret_cast<double*>(out.raw_data());
       for (std::int64_t i = 0; i < expected_size; ++i) {
         if (!pluss::table::detail::valid_at(shelf, i)) {
@@ -110,7 +110,7 @@ namespace {
       return StatusOr<Series>(std::move(out));
     }
 
-    auto out = Series::empty({expected_size}, ScalarType::Float64);
+    auto out = pluss::series::empty({expected_size}, ScalarType::Float64);
     auto* p = reinterpret_cast<double*>(out.raw_data());
     constexpr std::uint64_t fnv_offset = 1469598103934665603ULL;
     constexpr std::uint64_t fnv_prime = 1099511628211ULL;

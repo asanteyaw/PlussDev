@@ -48,7 +48,7 @@ number of timestamps, but is paid once for a retained accessor rather than by
 every index operation.
 
 A permanent monotonicity cache must not be attached to Timeline storage yet.
-`Timeline::from_buffer()` can borrow mutable external memory, and writes made
+`pluss::timeline::from_buffer()` can borrow mutable external memory, and writes made
 through the external owner cannot update a Timeline mutation generation.
 Caching inside the accessor is safe because it describes the storage state
 that the caller explicitly validated. Callers must not mutate borrowed storage

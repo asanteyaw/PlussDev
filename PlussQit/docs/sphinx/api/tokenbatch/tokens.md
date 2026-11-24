@@ -104,7 +104,7 @@ batch-defined=true tokens-defined=true token-count=0
 ## Example 4: Propagated Absence
 
 ```cpp
-const auto batch = pluss::Note::undefined().nlp().tokens();
+const auto batch = pluss::note::undefined().nlp().tokens();
 std::cout << std::boolalpha
           << "batch-defined=" << batch.defined()
           << " tokens-defined=" << batch.tokens().defined() << '\n';

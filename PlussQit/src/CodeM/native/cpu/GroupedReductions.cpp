@@ -169,7 +169,7 @@ Series grouped_median_impl_(
     medians[static_cast<std::size_t>(group)] = (*lower_it + upper) / 2.0;
   }
 
-  auto out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
+  auto out = pluss::codem::factory::empty({group_count}, ScalarType::Float64, Platform::CPU);
   write_float64_output_(out, medians);
   return out;
 }
@@ -319,7 +319,7 @@ Series grouped_mode_impl_(
     }
   }
 
-  auto out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
+  auto out = pluss::codem::factory::empty({group_count}, ScalarType::Float64, Platform::CPU);
   write_float64_output_(out, modes);
   return out;
 }
@@ -384,8 +384,8 @@ struct MedianBoundsKernel {
       std::int64_t group_count) const {
     std::vector<double> lower, upper;
     grouped_median_bounds_impl_<T>(values, group_ids, group_count, lower, upper);
-    auto lower_out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
-    auto upper_out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
+    auto lower_out = pluss::codem::factory::empty({group_count}, ScalarType::Float64, Platform::CPU);
+    auto upper_out = pluss::codem::factory::empty({group_count}, ScalarType::Float64, Platform::CPU);
     write_float64_output_(lower_out, lower);
     write_float64_output_(upper_out, upper);
     return {lower_out, upper_out};

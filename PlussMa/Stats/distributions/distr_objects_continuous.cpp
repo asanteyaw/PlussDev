@@ -142,7 +142,7 @@ Series confint_from_params_se_2_(const Series& params,
   Series lower = params64.sub(delta);
   const Series upper = params64.add(delta);
   if (clamp_second_lower) {
-    const Series idx = Series::arange(0, 2, 1, ScalarType::Int64)
+    const Series idx = pluss::series::arange(0, 2, 1, ScalarType::Int64)
                            .to(params64.platform(), ScalarType::Int64);
     const Series second = idx.eq(1);
     lower = pluss::series::where(second, lower.clamp_min(0.0), lower);

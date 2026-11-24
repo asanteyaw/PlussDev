@@ -112,7 +112,7 @@ of the single captured token.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().warnings().tokens().defined()
+          << pluss::note::undefined().tex().warnings().tokens().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().warnings();

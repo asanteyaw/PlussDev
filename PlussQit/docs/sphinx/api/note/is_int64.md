@@ -26,7 +26,7 @@ returns `false`.
 ```cpp
 const auto counts = pluss::note::make(std::vector<std::int64_t>{2, 5});
 const auto floats = pluss::note::make(std::vector<double>{2.0, 5.0});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "counts=" << counts.is_int64()
           << " floats=" << floats.is_int64()

@@ -88,7 +88,7 @@ lanes own empty half-open ranges.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().inline_math();
+const auto absent = pluss::note::undefined().tex().inline_math();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 

@@ -58,7 +58,7 @@ TEST_CASE("Timeline period_start preserves shape NaT and strided logical order",
   auto ticks = source.ticks();
   const std::array<std::int64_t, 1> sizes{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       ticks.data(), sizes, strides, {}, "UTC");
   REQUIRE(formatted(strided.period_start("year")) ==
           std::vector<std::string>{

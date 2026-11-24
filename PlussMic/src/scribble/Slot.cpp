@@ -182,12 +182,12 @@ std::string value_type_name(const Slot::Value& value) {
 
 Slot::Value bool_slot_value(bool value) {
   static const pluss::Series* false_scalar = [] {
-    auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+    auto s = pluss::series::zeros({1}, pluss::codem::ScalarType::Bool);
     reinterpret_cast<bool*>(s.raw_data())[0] = false;
     return new pluss::Series(std::move(s));
   }();
   static const pluss::Series* true_scalar = [] {
-    auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+    auto s = pluss::series::zeros({1}, pluss::codem::ScalarType::Bool);
     reinterpret_cast<bool*>(s.raw_data())[0] = true;
     return new pluss::Series(std::move(s));
   }();
@@ -196,7 +196,7 @@ Slot::Value bool_slot_value(bool value) {
 
 pluss::Series validity_mask_from_valid(const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(valid.size());
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* out = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < n; ++i) out[i] = valid[static_cast<std::size_t>(i)];
   return mask;

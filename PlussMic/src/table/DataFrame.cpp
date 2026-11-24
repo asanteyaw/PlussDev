@@ -335,7 +335,7 @@ void validate_bool_mask(const pluss::Series& mask, std::int64_t expected_size, s
 
 pluss::Series bool_series_from_keep(const std::vector<bool>& keep) {
   const auto n = static_cast<std::int64_t>(keep.size());
-  auto out = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
     p[i] = keep[static_cast<std::size_t>(i)];
@@ -347,7 +347,7 @@ Shelf default_cases(std::int64_t nrows) {
   PLUSS_CHECK(nrows >= 0, "DataFrame: nrows must be non-negative");
   std::vector<std::int64_t> idx(static_cast<std::size_t>(nrows));
   std::iota(idx.begin(), idx.end(), static_cast<std::int64_t>(0));
-  auto s = pluss::Series::empty({nrows}, pluss::codem::ScalarType::Int64);
+  auto s = pluss::series::empty({nrows}, pluss::codem::ScalarType::Int64);
   if (!idx.empty()) {
     std::memcpy(s.raw_data(), idx.data(), idx.size() * sizeof(std::int64_t));
   }
@@ -485,7 +485,7 @@ std::string shelf_scalar_string_at(const Shelf& t, std::int64_t row) {
 
 Shelf make_f64_shelf(const std::vector<double>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }
@@ -495,7 +495,7 @@ Shelf make_f64_shelf(const std::vector<double>& values) {
 Shelf make_f64_shelf(const std::vector<double>& values, const std::vector<bool>& valid) {
   PLUSS_CHECK(values.size() == valid.size(), "make_f64_shelf: values/valid length mismatch");
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }
@@ -526,7 +526,7 @@ Shelf make_note_shelf(const std::vector<std::string>& labels) {
 
 Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
@@ -536,7 +536,7 @@ Shelf make_i64_shelf(const std::vector<std::int64_t>& values) {
 Shelf make_i64_shelf(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
   PLUSS_CHECK(values.size() == valid.size(), "make_i64_shelf: values/valid length mismatch");
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
@@ -1265,7 +1265,7 @@ Shelf apply_cmp_shelf_pair(const Shelf& lhs, const Shelf& rhs, BinaryCmpOp op) {
 }
 
 pluss::Series dataframe_column_from_matrix_(const pluss::Series& matrix, std::int64_t column) {
-  auto index = pluss::Series::arange(
+  auto index = pluss::series::arange(
       column,
       column + 1,
       1,
@@ -1275,7 +1275,7 @@ pluss::Series dataframe_column_from_matrix_(const pluss::Series& matrix, std::in
 }
 
 pluss::Series dataframe_scalar_like_matrix_(const pluss::Series& reference, double value) {
-  return pluss::Series::full(
+  return pluss::series::full(
       reference.sizes(),
       value,
       reference.scalar_type(),
@@ -2557,7 +2557,7 @@ Shelf null_shelf_like_(const Shelf& value, std::int64_t size, std::string_view w
   Shelf out;
   switch (value.kind()) {
     case ShelfKind::Series:
-      out = Shelf(pluss::Series::zeros(
+      out = Shelf(pluss::series::zeros(
           {size}, value.as_series().scalar_type(), value.as_series().platform()));
       break;
     case ShelfKind::Note:
@@ -2574,7 +2574,7 @@ Shelf null_shelf_like_(const Shelf& value, std::int64_t size, std::string_view w
       break;
   }
   return clear_assignment_metadata_(detail::with_mask(
-      out, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool)));
+      out, pluss::series::zeros({size}, pluss::codem::ScalarType::Bool)));
 }
 
 Shelf broadcast_assignment_shelf_(const Shelf& value, std::int64_t size, std::string_view where) {

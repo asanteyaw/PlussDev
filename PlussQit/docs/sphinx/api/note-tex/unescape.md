@@ -83,7 +83,7 @@ true
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().unescape().defined() << '\n';
+          << pluss::note::undefined().tex().unescape().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().unescape();
 } catch (const pluss::Error&) {

@@ -481,14 +481,14 @@ private:
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
-      group.one_scalar = Series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
+      group.one_scalar = pluss::series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
       group.learning_rate_scalar =
-          Series::full({}, group.options.learning_rate, anchor->scalar_type()).to(anchor->platform());
-      group.momentum_scalar = Series::full({}, group.options.momentum, anchor->scalar_type()).to(anchor->platform());
+          pluss::series::full({}, group.options.learning_rate, anchor->scalar_type()).to(anchor->platform());
+      group.momentum_scalar = pluss::series::full({}, group.options.momentum, anchor->scalar_type()).to(anchor->platform());
       group.dampening_scalar =
-          Series::full({}, group.options.dampening, anchor->scalar_type()).to(anchor->platform());
+          pluss::series::full({}, group.options.dampening, anchor->scalar_type()).to(anchor->platform());
       group.weight_decay_scalar =
-          Series::full({}, group.options.weight_decay, anchor->scalar_type()).to(anchor->platform());
+          pluss::series::full({}, group.options.weight_decay, anchor->scalar_type()).to(anchor->platform());
     }
   }
 

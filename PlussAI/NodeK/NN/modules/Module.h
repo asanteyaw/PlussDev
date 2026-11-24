@@ -356,7 +356,7 @@ protected:
   // torch::nn::Module::register_parameter (which takes the tensor by value
   // and returns a reference into its own storage, so there is no way to
   // register something before it exists): allocate real storage for a
-  // parameter *before* registering it (e.g. `weight_ = Series::empty(shape,
+  // parameter *before* registering it (e.g. `weight_ = pluss::series::empty(shape,
   // dtype, platform);`), register it once via this method, and do any
   // (possibly repeated) value initialization afterwards with an in-place op
   // (`weight_.uniform_(...)`, `weight_.copy_(...)`) that mutates the
@@ -375,7 +375,7 @@ protected:
         series.defined(),
         "pluss::ai::nn::Module::parameter_record: parameter '" + name +
             "' must be a defined Series before registration -- allocate its "
-            "storage first (e.g. Series::empty(shape, dtype, platform)), "
+            "storage first (e.g. pluss::series::empty(shape, dtype, platform)), "
             "register it, then fill in values afterwards with an in-place op "
             "inside reset_parameters(). Registering an undefined Series and "
             "assigning it a real value later silently leaves it untracked.");

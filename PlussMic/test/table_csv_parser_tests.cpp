@@ -1731,7 +1731,7 @@ void test_versatile_dataframe_families() {
   const auto df = DataFrame::load_csv(fixture_path("bank-full.csv").string(), options);
 
   const auto age = df.features("age").as_series().host<std::int64_t>();
-  auto mask = pluss::Series::zeros({static_cast<std::int64_t>(age.size())}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({static_cast<std::int64_t>(age.size())}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   std::int64_t expected_rows = 0;
   for (std::size_t i = 0; i < age.size(); ++i) {
@@ -2131,7 +2131,7 @@ void test_versatile_dataframe_families() {
   }, "unify(validate='many_to_one') should reject duplicate right keys");
   const auto f0 = df.head(5, false);
   const auto f1 = df.tail(5, false);
-  auto depth_series = pluss::Series::empty({2}, pluss::codem::ScalarType::Int64);
+  auto depth_series = pluss::series::empty({2}, pluss::codem::ScalarType::Int64);
   auto* depth_ptr = reinterpret_cast<std::int64_t*>(depth_series.raw_data());
   depth_ptr[0] = 0;
   depth_ptr[1] = 1;
@@ -2159,7 +2159,7 @@ void test_versatile_dataframe_families() {
   expect(atlas_loc.ncases() == f1.ncases(), "Atlas loc(label) should retrieve labeled frame");
   const auto atlas_sorted = atlas.sort_depth(false, true);
   expect(atlas_sorted.depth() == atlas.depth(), "Atlas sort_depth should preserve depth");
-  auto relabel_series = pluss::Series::empty({2}, pluss::codem::ScalarType::Int64);
+  auto relabel_series = pluss::series::empty({2}, pluss::codem::ScalarType::Int64);
   auto* relabel_ptr = reinterpret_cast<std::int64_t*>(relabel_series.raw_data());
   relabel_ptr[0] = 10;
   relabel_ptr[1] = 11;
@@ -2169,7 +2169,7 @@ void test_versatile_dataframe_families() {
   const auto atlas_label_relabeled = atlas.label().set(pluss::table::Shelf(relabel_series));
   expect(atlas_label_relabeled.loc(static_cast<std::int64_t>(11)).ncases() == f1.ncases(),
          "Atlas::label().set should replace depth labels");
-  auto align_series = pluss::Series::empty({2}, pluss::codem::ScalarType::Int64);
+  auto align_series = pluss::series::empty({2}, pluss::codem::ScalarType::Int64);
   auto* align_ptr = reinterpret_cast<std::int64_t*>(align_series.raw_data());
   align_ptr[0] = 1;
   align_ptr[1] = 0;
@@ -2242,7 +2242,7 @@ void test_versatile_dataframe_families() {
       "is_senior",
       [&](const DataFrame& frame) {
         const auto ages = frame.features("age").as_series().host<std::int64_t>();
-        auto flag = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
+        auto flag = pluss::series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(flag.raw_data());
         for (std::size_t i = 0; i < ages.size(); ++i) {
           p[i] = ages[i] >= 50;
@@ -2579,7 +2579,7 @@ void test_versatile_dataframe_families() {
       "age_in_set",
       [](const DataFrame& frame) {
         const auto ages = frame.features("age").as_series().host<std::int64_t>();
-        auto out = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
+        auto out = pluss::series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < ages.size(); ++i) {
           p[i] = (ages[i] == 30 || ages[i] == 31);
@@ -2620,7 +2620,7 @@ void test_versatile_dataframe_families() {
                             }},
                            {"Is_RushHour", [](const DataFrame& frame) {
                               const auto h = frame.features("Start_Hour").as_series().host<std::int64_t>();
-                              auto out = pluss::Series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
+                              auto out = pluss::series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
                               auto* p = reinterpret_cast<bool*>(out.raw_data());
                               for (std::size_t i = 0; i < h.size(); ++i) {
                                 const auto hh = h[i];
@@ -3083,7 +3083,7 @@ void test_versatile_dataframe_families() {
   expect(!pluss::table::detail::has_mask(miss_note_filled.features("label")),
          "fillnull(string, features) should clear Note validity mask when all nulls are filled");
 
-  auto validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
+  auto validity = pluss::series::zeros({4}, pluss::codem::ScalarType::Bool);
   auto* valid_ptr = reinterpret_cast<bool*>(validity.raw_data());
   valid_ptr[0] = true;
   valid_ptr[1] = false;
@@ -3145,7 +3145,7 @@ void test_versatile_dataframe_families() {
   expect(!pluss::table::detail::validity_mask(miss_bfill.features("score"))->host<bool>().array().data.at(static_cast<std::size_t>(3)),
          "bfill should keep trailing nulls unresolved");
 
-  auto limited_validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
+  auto limited_validity = pluss::series::zeros({4}, pluss::codem::ScalarType::Bool);
   auto* limited_valid_ptr = reinterpret_cast<bool*>(limited_validity.raw_data());
   limited_valid_ptr[0] = true;
   limited_valid_ptr[1] = false;
@@ -3188,7 +3188,7 @@ void test_versatile_dataframe_families() {
              && std::string(mapped_fill.features("label").as_note().at(2)) == "missing",
          "fillnull(FillSpec...) should fill Note features with per-feature scalar Shelves");
 
-  auto null_mask = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
+  auto null_mask = pluss::series::zeros({4}, pluss::codem::ScalarType::Bool);
   auto* null_mask_ptr = reinterpret_cast<bool*>(null_mask.raw_data());
   null_mask_ptr[0] = false;
   null_mask_ptr[1] = true;
@@ -3552,7 +3552,7 @@ void test_replace_exact_and_null_overloads() {
   expect(std::string(substring_names.as_note().at(1)) == "L Kirk",
          "Shelf::replace(string, string) should preserve existing substring semantics");
 
-  auto ts_valid = pluss::Series::zeros({3}, pluss::codem::ScalarType::Bool);
+  auto ts_valid = pluss::series::zeros({3}, pluss::codem::ScalarType::Bool);
   auto* ts_valid_ptr = reinterpret_cast<bool*>(ts_valid.raw_data());
   ts_valid_ptr[0] = true;
   ts_valid_ptr[1] = false;

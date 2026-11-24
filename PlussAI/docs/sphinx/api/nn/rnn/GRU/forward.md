@@ -136,7 +136,7 @@ int main() {
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   // batch_first=true -- [batch=2, seq_len=4, input_size=2]
-  const pluss::Series x = pluss::Series::full({2, 4, 2}, 0.3, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({2, 4, 2}, 0.3, pluss::ScalarType::Float64);
   const auto [output, hidden] = net.forward(x);
 
   std::cout << "output shape: [" << output.sizes()[0] << "," << output.sizes()[1] << "," << output.sizes()[2]
@@ -184,7 +184,7 @@ int main() {
   std::cout << "params()[0].weight_ih shape: [" << net->params()[0].weight_ih.sizes()[0] << ","
             << net->params()[0].weight_ih.sizes()[1] << "] -- [3*hidden_size, input_size]\n";
 
-  const pluss::Series x = pluss::Series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
   const auto [output, hidden] = net.forward(x);
 
   std::cout << "output shape: [" << output.sizes()[0] << "," << output.sizes()[1] << "," << output.sizes()[2]

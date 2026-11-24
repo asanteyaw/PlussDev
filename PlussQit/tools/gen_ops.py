@@ -164,7 +164,7 @@ namespace pluss::codem::ops {{
       cpp.append("  auto aa = (a.scalar_type() == in_dtype) ? a : a.to(in_dtype);")
       cpp.append("  auto bb = (b.scalar_type() == in_dtype) ? b : b.to(in_dtype);")
       cpp.append("  auto shape = SeriesIterator::broadcast_shape(aa.sizes(), bb.sizes());")
-      cpp.append("  Series out = Series::empty(shape, ScalarType::Bool);")
+      cpp.append("  Series out = pluss::codem::factory::empty(shape, ScalarType::Bool);")
       cpp.append(f"  pluss::codem::native::cpu::{name}(aa, bb, out);")
       cpp.append("  return out;")
     elif name in minmax_ops:
@@ -173,17 +173,17 @@ namespace pluss::codem::ops {{
       cpp.append("  auto aa = (a.scalar_type() == out_dtype) ? a : a.to(out_dtype);")
       cpp.append("  auto bb = (b.scalar_type() == out_dtype) ? b : b.to(out_dtype);")
       cpp.append("  auto shape = SeriesIterator::broadcast_shape(aa.sizes(), bb.sizes());")
-      cpp.append("  Series out = Series::empty(shape, out_dtype);")
+      cpp.append("  Series out = pluss::codem::factory::empty(shape, out_dtype);")
       cpp.append(f"  pluss::codem::native::cpu::{name}(aa, bb, out);")
       cpp.append("  return out;")
     elif name in clamp_ops:
       cpp.append("  if (!a.defined()) throw_error(\"op: undefined input\");")
-      cpp.append("  Series out = Series::empty(a.sizes(), a.scalar_type());")
+      cpp.append("  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());")
       cpp.append("  pluss::codem::native::cpu::clamp(a, out, lo, hi);")
       cpp.append("  return out;")
     elif len(arg_names) == 1:
       cpp.append("  if (!a.defined()) throw_error(\"op: undefined input\");")
-      cpp.append("  Series out = Series::empty(a.sizes(), a.scalar_type());")
+      cpp.append("  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());")
       cpp.append(f"  pluss::codem::native::cpu::{name}(a, out);")
       cpp.append("  return out;")
     else:
@@ -192,7 +192,7 @@ namespace pluss::codem::ops {{
       cpp.append("  auto aa = (a.scalar_type() == out_dtype) ? a : a.to(out_dtype);")
       cpp.append("  auto bb = (b.scalar_type() == out_dtype) ? b : b.to(out_dtype);")
       cpp.append("  auto shape = SeriesIterator::broadcast_shape(aa.sizes(), bb.sizes());")
-      cpp.append("  Series out = Series::empty(shape, out_dtype);")
+      cpp.append("  Series out = pluss::codem::factory::empty(shape, out_dtype);")
       cpp.append(f"  pluss::codem::native::cpu::{name}(aa, bb, out);")
       cpp.append("  return out;")
     cpp.append("}")

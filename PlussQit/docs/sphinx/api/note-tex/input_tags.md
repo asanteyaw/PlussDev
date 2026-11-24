@@ -92,7 +92,7 @@ shape=[2, 2]
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().input_tags().defined() << '\n';
+          << pluss::note::undefined().tex().input_tags().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
       .tex().input_tags();

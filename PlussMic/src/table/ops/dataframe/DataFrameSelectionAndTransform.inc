@@ -542,7 +542,7 @@ DataFrame DataFrame::query(std::string_view expression) const {
   auto parser = QueryParser(*this, tokenize_query(text));
   auto eval = parser.parse();
 
-  auto mask = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < ncases(); ++i) {
     keep[i] = eval(i);
@@ -597,7 +597,7 @@ Shelf DataFrame::transform(
     mapped.push_back(value.shelf());
   }
   if (mapped.empty()) {
-    return Shelf(pluss::Series::empty(
+    return Shelf(pluss::series::empty(
         {0}, pluss::codem::ScalarType::Float64));
   }
 
@@ -692,7 +692,7 @@ DataFrame DataFrame::transform(
                  : std::move(mapped);
   }
   if (!output.defined()) {
-    return DataFrame({}, Shelf(pluss::Series::empty(
+    return DataFrame({}, Shelf(pluss::series::empty(
                              {0}, pluss::codem::ScalarType::Int64)));
   }
   return output;

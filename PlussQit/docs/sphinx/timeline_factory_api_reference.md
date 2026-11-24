@@ -48,7 +48,13 @@ api/timeline_factory/date
 api/timeline_factory/date_range
 api/timeline_factory/epoch
 api/timeline_factory/format
+api/timeline_factory/from_buffer
 api/timeline_factory/from_epoch
+api/timeline_factory/from_epoch_micros
+api/timeline_factory/from_epoch_millis
+api/timeline_factory/from_epoch_seconds
+api/timeline_factory/from_ymd
+api/timeline_factory/from_ymdhms
 api/timeline_factory/full
 api/timeline_factory/full_like
 api/timeline_factory/make

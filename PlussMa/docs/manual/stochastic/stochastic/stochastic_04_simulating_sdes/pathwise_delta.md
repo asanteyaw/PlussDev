@@ -20,7 +20,7 @@ int main() {
   const auto f64 = pluss::ScalarType::Float64;
   const double r = 0.03, sg = 0.25, x0 = 100.0, K = 105.0, T = 1.0;
   const std::int64_t paths = 100000;
-  const pluss::Series y0 = pluss::Series::full({paths}, x0, f64);
+  const pluss::Series y0 = pluss::series::full({paths}, x0, f64);
   sde::SdeOptions o;
   o.method = sde::SdeMethod::Milstein;
   o.steps = 64;

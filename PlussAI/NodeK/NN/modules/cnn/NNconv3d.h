@@ -101,12 +101,12 @@ private:
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
     const std::int64_t group_in = options_.in_channels / options_.groups;
-    weight_ = Series::empty(
+    weight_ = pluss::series::empty(
         {options_.out_channels, group_in, options_.kernel_size[0], options_.kernel_size[1], options_.kernel_size[2]},
         cfg.dtype, cfg.platform);
     this->parameter_record("weight", weight_);
     if (options_.bias) {
-      bias_ = Series::empty({options_.out_channels}, cfg.dtype, cfg.platform);
+      bias_ = pluss::series::empty({options_.out_channels}, cfg.dtype, cfg.platform);
       this->parameter_record("bias", bias_);
     }
   }

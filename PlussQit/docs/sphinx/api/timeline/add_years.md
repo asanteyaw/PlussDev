@@ -117,7 +117,7 @@ std::array<std::int64_t, 4> backing{
     1'709'164'800'000'000'004LL, 222LL};
 const std::array<std::int64_t, 1> shape{2};
 const std::array<std::int64_t, 1> strides{2};
-const auto strided = pluss::Timeline::from_buffer(
+const auto strided = pluss::timeline::from_buffer(
     backing.data(), shape, strides, {}, "UTC");
 
 std::cout << pluss::note::print(pluss::timeline::format(

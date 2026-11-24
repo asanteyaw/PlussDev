@@ -5155,12 +5155,12 @@ auto other_t = pluss::make_timeline({"2024-01-02T00:00:00Z", "2024-01-02T01:00:0
 auto out = pluss::codeh::Timeline::date_range(t, other_t, "D", 1);
 ```
 
-### `Timeline::from_epoch_micros`
+### `pluss::timeline::from_epoch_micros`
 
 #### Signature
 
 ```cpp
-Timeline::from_epoch_micros(const pluss::codem::Series& epoch_micros, std::string_view tz_name = "UTC")
+pluss::timeline::from_epoch_micros(const pluss::codem::Series& epoch_micros, std::string_view tz_name = "UTC")
 ```
 
 #### Parameters
@@ -5185,16 +5185,16 @@ Static constructor that creates a value from explicit input fields. Arguments: `
 ```cpp
 auto series_vals = pluss::make_series(std::vector<scalar>{1.0, 2.0}, {2});
 
-auto out = pluss::codeh::Timeline::from_epoch_micros(series_vals, "UTC");
+auto out = pluss::timeline::from_epoch_micros(series_vals, "UTC");
 ```
 
 
-### `Timeline::from_epoch_millis`
+### `pluss::timeline::from_epoch_millis`
 
 #### Signature
 
 ```cpp
-Timeline::from_epoch_millis(const pluss::codem::Series& epoch_millis, std::string_view tz_name = "UTC")
+pluss::timeline::from_epoch_millis(const pluss::codem::Series& epoch_millis, std::string_view tz_name = "UTC")
 ```
 
 #### Parameters
@@ -5219,15 +5219,15 @@ Static constructor that creates a value from explicit input fields. Arguments: `
 ```cpp
 auto series_vals = pluss::make_series(std::vector<scalar>{1.0, 2.0}, {2});
 
-auto out = pluss::codeh::Timeline::from_epoch_millis(series_vals, "UTC");
+auto out = pluss::timeline::from_epoch_millis(series_vals, "UTC");
 ```
 
-### `Timeline::from_epoch_seconds`
+### `pluss::timeline::from_epoch_seconds`
 
 #### Signature
 
 ```cpp
-Timeline::from_epoch_seconds(const pluss::codem::Series& epoch_seconds, std::string_view tz_name = "UTC")
+pluss::timeline::from_epoch_seconds(const pluss::codem::Series& epoch_seconds, std::string_view tz_name = "UTC")
 ```
 
 #### Parameters
@@ -5252,15 +5252,15 @@ Static constructor that creates a value from explicit input fields. Arguments: `
 ```cpp
 auto series_vals = pluss::make_series(std::vector<scalar>{1.0, 2.0}, {2});
 
-auto out = pluss::codeh::Timeline::from_epoch_seconds(series_vals, "UTC");
+auto out = pluss::timeline::from_epoch_seconds(series_vals, "UTC");
 ```
 
-### `Timeline::from_ymd`
+### `pluss::timeline::from_ymd`
 
 #### Signature
 
 ```cpp
-Timeline::from_ymd(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, std::string_view tz_name = "UTC")
+pluss::timeline::from_ymd(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, std::string_view tz_name = "UTC")
 ```
 
 #### Parameters
@@ -5293,15 +5293,15 @@ auto year_col = pluss::make_series(std::vector<std::int64_t>{2024,2024}, {2});
 auto month_col = pluss::make_series(std::vector<std::int64_t>{1,1}, {2});
 auto day_col = pluss::make_series(std::vector<std::int64_t>{10,11}, {2});
 
-auto out = pluss::codeh::Timeline::from_ymd(year_col, month_col, day_col, "UTC");
+auto out = pluss::timeline::from_ymd(year_col, month_col, day_col, "UTC");
 ```
 
-### `Timeline::from_ymdhms`
+### `pluss::timeline::from_ymdhms`
 
 #### Signature
 
 ```cpp
-Timeline::from_ymdhms(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, const pluss::codem::Series& hour, const pluss::codem::Series& minute, const pluss::codem::Series& second, std::string_view tz_name = "UTC")
+pluss::timeline::from_ymdhms(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, const pluss::codem::Series& hour, const pluss::codem::Series& minute, const pluss::codem::Series& second, std::string_view tz_name = "UTC")
 ```
 
 #### Parameters
@@ -5346,7 +5346,7 @@ auto hour_col = pluss::make_series(std::vector<std::int64_t>{8,9}, {2});
 auto minute_col = pluss::make_series(std::vector<std::int64_t>{30,45}, {2});
 auto second_col = pluss::make_series(std::vector<std::int64_t>{0,0}, {2});
 
-auto out = pluss::codeh::Timeline::from_ymdhms(year_col, month_col, day_col, hour_col, minute_col, second_col, "UTC");
+auto out = pluss::timeline::from_ymdhms(year_col, month_col, day_col, hour_col, minute_col, second_col, "UTC");
 ```
 
 ### `Timeline::fromSeries`
@@ -5407,12 +5407,12 @@ Static helper/factory method. Arguments: `std::int64_t timestamp_seconds`.
 auto out = pluss::codeh::Timeline::fromTimestamp(1704067200);
 ```
 
-### `Timeline::now`
+### `pluss::timeline::now`
 
 #### Signature
 
 ```cpp
-Timeline::now()
+pluss::timeline::now()
 ```
 
 #### Parameters
@@ -5431,15 +5431,15 @@ Static constructor that returns a timeline anchored to `now`. No additional argu
 #### Examples
 
 ```cpp
-auto out = pluss::codeh::Timeline::now();
+auto out = pluss::timeline::now();
 ```
 
-### `Timeline::today`
+### `pluss::timeline::today`
 
 #### Signature
 
 ```cpp
-Timeline::today()
+pluss::timeline::today()
 ```
 
 #### Parameters
@@ -5458,15 +5458,15 @@ Static constructor that returns a timeline anchored to `today`. No additional ar
 #### Examples
 
 ```cpp
-auto out = pluss::codeh::Timeline::today();
+auto out = pluss::timeline::today();
 ```
 
-### `Timeline::tomorrow`
+### `pluss::timeline::tomorrow`
 
 #### Signature
 
 ```cpp
-Timeline::tomorrow()
+pluss::timeline::tomorrow()
 ```
 
 #### Parameters
@@ -5485,15 +5485,15 @@ Static constructor that returns a timeline anchored to `tomorrow`. No additional
 #### Examples
 
 ```cpp
-auto out = pluss::codeh::Timeline::tomorrow();
+auto out = pluss::timeline::tomorrow();
 ```
 
-### `Timeline::yesterday`
+### `pluss::timeline::yesterday`
 
 #### Signature
 
 ```cpp
-Timeline::yesterday()
+pluss::timeline::yesterday()
 ```
 
 #### Parameters
@@ -5512,7 +5512,7 @@ Static constructor that returns a timeline anchored to `yesterday`. No additiona
 #### Examples
 
 ```cpp
-auto out = pluss::codeh::Timeline::yesterday();
+auto out = pluss::timeline::yesterday();
 ```
 
 ### `to_epoch_nanos_flat`

@@ -18,7 +18,7 @@ int main() {
   std::cout << "dst=" << dst << "\n";
   std::cout << "same_object=" << (&same == &dst ? "true" : "false") << "\n\n";
 
-  pluss::Series w = pluss::Series::empty({5, 3}, pluss::ScalarType::Float64, pluss::pCPU);
+  pluss::Series w = pluss::series::empty({5, 3}, pluss::ScalarType::Float64, pluss::pCPU);
   w.tracks_slope_(true);
   w.copy_(pluss::make_series({
       {1.0, 1.0, 1.0},

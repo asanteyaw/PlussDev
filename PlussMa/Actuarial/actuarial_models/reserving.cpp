@@ -1,5 +1,6 @@
 #include "pluss/subsp/actuarial/reserving.h"
 
+#include "pluss/codem/series_factory.h"
 #include "pluss/subsp/actuarial/actuarial_models.h"
 
 #include <utility>
@@ -12,10 +13,10 @@ using pluss::codem::Series;
 
 Series factors_(const Series &age_to_age) {
   if (age_to_age.numel() == 0) {
-    return Series::ones({1}, ScalarType::Float64).to(age_to_age.platform());
+    return pluss::series::ones({1}, ScalarType::Float64).to(age_to_age.platform());
   }
   const Series tail = age_to_age.flip(0).cumprod(0).flip(0);
-  const Series one = Series::ones({1}, ScalarType::Float64).to(tail.platform());
+  const Series one = pluss::series::ones({1}, ScalarType::Float64).to(tail.platform());
   return tail.unite({one}, 0);
 }
 
@@ -30,7 +31,7 @@ Latest latest_(const Triangle &triangle) {
   const std::int64_t development = triangle.ndevelopment();
   const Series has_observation = triangle.observed().any(1, false);
   const Series index =
-      Series::arange(0, development, 1, ScalarType::Int64)
+      pluss::series::arange(0, development, 1, ScalarType::Int64)
           .to(triangle.values().platform(), ScalarType::Float64)
           .reshape({1, development});
   const Series latest_development = triangle.observed()

@@ -56,7 +56,7 @@ namespace nn = pluss::ai::nn;
 class RunningCountImpl final : public nn::Module {
 public:
   RunningCountImpl() : nn::Module(true) {
-    count_ = pluss::Series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
+    count_ = pluss::series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
     this->buffer_record("count", count_);
   }
 
@@ -129,7 +129,7 @@ namespace nn = pluss::ai::nn;
 class RunningCountImpl final : public nn::Module {
 public:
   RunningCountImpl() : nn::Module(true) {
-    count_ = pluss::Series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
+    count_ = pluss::series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
     this->buffer_record("count", count_);
   }
 
@@ -181,7 +181,7 @@ namespace nn = pluss::ai::nn;
 class RunningCountImpl final : public nn::Module {
 public:
   RunningCountImpl() : nn::Module(true) {
-    count_ = pluss::Series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
+    count_ = pluss::series::zeros({1}, pluss::ScalarType::Int64, pluss::pCPU);
     this->buffer_record("count", count_);
   }
 

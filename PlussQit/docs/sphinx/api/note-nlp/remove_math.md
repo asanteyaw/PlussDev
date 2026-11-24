@@ -43,7 +43,7 @@ The result is a shape-preserving Text `Note`, not a `TokenBatch`: each cell's re
 ## Example 2: Absence And Dtype Validation
 
 ```cpp
-const auto absent = pluss::Note::undefined().nlp().remove_math();
+const auto absent = pluss::note::undefined().nlp().remove_math();
 std::cout << "defined=" << std::boolalpha << absent.defined() << '\n';
 try {
   (void)pluss::note::bytes(

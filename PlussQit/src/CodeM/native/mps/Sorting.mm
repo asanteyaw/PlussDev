@@ -145,8 +145,8 @@ std::pair<Series, Series> sort_or_topk_impl_(
     out_shape[static_cast<std::size_t>(dim)] = k_or_neg1;
   }
 
-  Series values = Series::zeros(out_shape, compute_dtype).to(Platform::MPS).contiguous();
-  Series indices = Series::zeros(out_shape, ScalarType::Int64).to(Platform::MPS).contiguous();
+  Series values = pluss::codem::factory::zeros(out_shape, compute_dtype).to(Platform::MPS).contiguous();
+  Series indices = pluss::codem::factory::zeros(out_shape, ScalarType::Int64).to(Platform::MPS).contiguous();
 
   @autoreleasepool {
     id<MTLDevice> device = shared_device_mm();

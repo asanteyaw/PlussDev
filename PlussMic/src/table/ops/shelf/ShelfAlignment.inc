@@ -60,7 +60,7 @@ Shelf shelf_case_labels_from_strings_(const std::vector<std::string>& labels) {
 
 pluss::Series bool_series_from_vector_(const std::vector<bool>& values,
                                        pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  auto out = pluss::Series::zeros(
+  auto out = pluss::series::zeros(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Bool,
       pluss::codem::Platform::CPU);
@@ -192,7 +192,7 @@ Shelf null_shelf_like_for_alignment_(const Shelf& like,
   Shelf out;
   switch (like.kind()) {
     case ShelfKind::Series:
-      out = Shelf(pluss::Series::zeros(
+      out = Shelf(pluss::series::zeros(
           {size}, like.as_series().scalar_type(), like.as_series().platform()));
       break;
     case ShelfKind::Note:
@@ -211,7 +211,7 @@ Shelf null_shelf_like_for_alignment_(const Shelf& like,
   return with_alignment_labels_(
       detail::with_mask(
           out,
-          pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool,
+          pluss::series::zeros({size}, pluss::codem::ScalarType::Bool,
                                shelf_payload_platform_(out))),
       labels,
       detail::label_kind(labels));
@@ -557,7 +557,7 @@ Shelf aligned_compare_(const Shelf& left,
   if (lk == ShelfKind::Note && rk == ShelfKind::Note) {
     const auto& ln = lhs.as_note();
     const auto& rn = rhs.as_note();
-    pluss::Note raw = pluss::Note::undefined();
+    pluss::Note raw = pluss::note::undefined();
     switch (op) {
       case ShelfBinaryCompareOp::Eq:
         raw = (ln == rn);

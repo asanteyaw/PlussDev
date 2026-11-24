@@ -34,11 +34,11 @@ Series sanitize_qx_(const Series &qx, std::string_view op) {
 Series discount_powers_(std::int64_t start, std::int64_t end,
                         double interest_rate, const Series &like) {
   if (end <= start) {
-    return Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    return pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                          like.platform());
   }
   const double logv = -std::log1p(interest_rate);
-  return Series::arange(start, end, 1, ScalarType::Int64)
+  return pluss::series::arange(start, end, 1, ScalarType::Int64)
       .to(like.platform(), ScalarType::Float64)
       .mul(logv)
       .exp();
@@ -47,7 +47,7 @@ Series discount_powers_(std::int64_t start, std::int64_t end,
 Series survival_prefix_(const Series &qx_clean) {
   const std::int64_t n = qx_clean.numel();
   const Series one =
-      Series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
+      pluss::series::ones(std::vector<std::int64_t>{1}, ScalarType::Float64)
           .to(qx_clean.platform());
   if (n == 0) {
     return one;
@@ -63,7 +63,7 @@ CommutationTable commutation_from_sanitized_(const Series &qx_clean,
   const std::int64_t n = qx_clean.numel();
   const auto platform = qx_clean.platform();
   const Series zero1 =
-      Series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
+      pluss::series::zeros(std::vector<std::int64_t>{1}, ScalarType::Float64)
           .to(platform);
 
   CommutationTable out{};
@@ -72,10 +72,10 @@ CommutationTable commutation_from_sanitized_(const Series &qx_clean,
       discount_powers_(/*start=*/0, /*end=*/n + 1, interest_rate, qx_clean));
 
   if (n == 0) {
-    out.dx = Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    out.dx = pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                            platform);
     out.N = zero1;
-    out.C = Series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
+    out.C = pluss::series::empty(std::vector<std::int64_t>{0}, ScalarType::Float64,
                           platform);
     out.M = zero1;
     return out;

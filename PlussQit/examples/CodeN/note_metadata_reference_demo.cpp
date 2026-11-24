@@ -78,7 +78,7 @@ int main() {
       std::array<std::int64_t, 3>{2, 2, 2});
   const auto empty = pluss::note::make(
       std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
   const auto bytes = pluss::note::bytes(std::string_view{"A\0B", 3});
   const auto flags = pluss::note::make(std::vector<bool>{true, false});
   const auto counts = pluss::note::make(std::vector<std::int64_t>{2, 5});
@@ -300,7 +300,7 @@ int main() {
   show_lanes(int_grid.integers());
   std::cout << " shape=[" << int_grid.size(0) << ", " << int_grid.size(1)
             << "]\n";
-  pluss::Note retained_row = pluss::Note::undefined();
+  pluss::Note retained_row = pluss::note::undefined();
   {
     const auto source = pluss::note::make(
         std::vector<std::int64_t>{10, 11, 12, 20, 21, 22},

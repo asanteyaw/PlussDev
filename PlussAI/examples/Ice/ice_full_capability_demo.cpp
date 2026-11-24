@@ -334,8 +334,8 @@ int main() {
     const fs::path raw_path = out_dir / "raw_parameters.icemodel";
     ice::io::save_parameters(raw_path.string(), {&a, &b});
 
-    Series a2 = Series::zeros({3, 3}, ScalarType::Float32, pluss::pCPU);
-    Series b2 = Series::zeros({4}, ScalarType::Float32, pluss::pCPU);
+    Series a2 = pluss::series::zeros({3, 3}, ScalarType::Float32, pluss::pCPU);
+    Series b2 = pluss::series::zeros({4}, ScalarType::Float32, pluss::pCPU);
     ice::io::load_parameters(raw_path.string(), {&a2, &b2});
 
     std::cout << "  round-trip max diff = "

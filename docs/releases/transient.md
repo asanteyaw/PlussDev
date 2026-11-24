@@ -31,6 +31,17 @@ The latest validated development build. It carries no version number and is repl
 - PlussView: dragging or double-clicking a column border is much more responsive. Only the column that moved is measured again, instead of the whole table.
 - PlussView: the Save As button is sized from its own title, so the label is never clipped.
 
+## Names that changed
+
+Free functions now live in the lowercase namespaces, and the types hold only methods. These spellings were removed with no alias left behind:
+
+- `pluss::Series::empty`, `zeros`, `ones`, `full`, `arange`, `linspace`, `eye`, `rand`, `randn` are now `pluss::series::empty`, `zeros`, `ones`, `full`, `arange`, `linspace`, `eye`, `rand`, `randn`, with the same arguments. `pluss::series::arange` now takes `double` for `start`, `end` and `step`, and every function that took a `Platform` has a `pluss::series::` form that takes one. `Series::from_storage` is gone; it was only used inside the library.
+- `pluss::Series::einsum(equation, operands)` is now `pluss::series::einsum(equation, operands)`.
+- `pluss::Timeline::from_ymd`, `from_ymdhms`, `from_epoch_seconds`, `from_epoch_millis`, `from_epoch_micros`, `from_buffer`, `now`, `today`, `yesterday` and `tomorrow` are now `pluss::timeline::` functions of the same names. `Timeline::date_range` (which returned a `std::vector`) is gone: use `pluss::timeline::date_range`, which returns a `Timeline`.
+- `pluss::Duration::range` is now `pluss::duration::range`.
+- `pluss::Note::undefined()` is now `pluss::note::undefined()`.
+- `pluss::table::examples()` and `example(name)` are now `pluss::loader::datastores()` and `datastore(name)`.
+
 ## Compatibility
 
 The distribution requires CMake 3.28 or newer and a C++20 compiler. See the download page for the archive for your system.

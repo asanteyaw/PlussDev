@@ -191,7 +191,7 @@ pluss::Series shelf_to_plot_numeric_series(const Shelf& t) {
 
   auto values = numeric_shelf.as_series().to(pluss::codem::ScalarType::Float64);
   if (detail::has_mask(numeric_shelf)) {
-    const auto nan_fill = pluss::Series::full(
+    const auto nan_fill = pluss::series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
@@ -548,7 +548,7 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
             std::string(where) + ": feature '" + name + "' is not a numeric Series");
         auto values = shelf.as_series().to(pluss::codem::ScalarType::Float64).reshape({shelf.as_series().numel()});
         if (detail::has_mask(shelf)) {
-          const auto nan_fill = pluss::Series::full(
+          const auto nan_fill = pluss::series::full(
               {values.numel()},
               std::numeric_limits<double>::quiet_NaN(),
               pluss::codem::ScalarType::Float64);
@@ -1348,7 +1348,7 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked_y(
   apply_axis(pane, axis, options_);
   pane.y_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
 
-  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
+  auto baselines = pluss::series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : resolved_y) {
     auto heights = shelf_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
@@ -1562,7 +1562,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked_y(
   apply_axis(pane, axis, options_);
   pane.y_label(resolved_y.size() == 1 ? std::string(*resolved_y.begin()) : std::string("value"));
 
-  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
+  auto baselines = pluss::series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : resolved_y) {
     auto heights = shelf_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});

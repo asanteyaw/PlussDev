@@ -10,10 +10,10 @@ static void show(const char *label, const pluss::Series &s) { std::cout << label
 int main() {
   using pluss::ScalarType;
   // Eight tickets: when each was opened and when it was closed (UTC).
-  auto opened = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
+  auto opened = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
                                              pluss::make_series({2, 2, 3, 4, 5, 6, 9, 9}), pluss::make_series({9, 14, 10, 16, 9, 22, 8, 11}),
                                              pluss::make_series({15, 40, 5, 30, 0, 10, 45, 20}), pluss::make_series({0, 0, 0, 0, 0, 0, 0, 0}));
-  auto closed = pluss::Timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
+  auto closed = pluss::timeline::from_ymdhms(pluss::make_series({2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026}), pluss::make_series({11, 11, 11, 11, 11, 11, 11, 11}),
                                              pluss::make_series({2, 3, 3, 6, 5, 9, 9, 10}), pluss::make_series({11, 9, 15, 11, 12, 9, 10, 15}),
                                              pluss::make_series({0, 30, 20, 0, 30, 0, 15, 0}), pluss::make_series({0, 0, 0, 0, 0, 0, 0, 0}));
 

@@ -73,7 +73,7 @@ int main() {
 
   pluss::ai::nn::Module::Snapshot snap = layer.snapshot();
 
-  layer->weight().copy_(pluss::Series::zeros({2, 2}, pluss::ScalarType::Float64, pluss::pCPU));
+  layer->weight().copy_(pluss::series::zeros({2, 2}, pluss::ScalarType::Float64, pluss::pCPU));
   std::cout << "mutated weight:  " << layer->weight() << "\n\n";
 
   layer.restore(snap);

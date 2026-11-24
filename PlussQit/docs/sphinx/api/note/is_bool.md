@@ -27,7 +27,7 @@ returns `false`.
 ```cpp
 const auto flags = pluss::note::make(std::vector<bool>{true, false});
 const auto text = pluss::note::make("alpha");
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "flags=" << flags.is_bool()
           << " text=" << text.is_bool()

@@ -54,7 +54,7 @@ For a `TokenBatch`, the offsets above are part of the result, not display metada
 ## Example 2: Absence And Dtype Validation
 
 ```cpp
-const auto absent = pluss::Note::undefined().nlp().keywords(2);
+const auto absent = pluss::note::undefined().nlp().keywords(2);
 std::cout << "tokens-defined=" << std::boolalpha
           << absent.tokens().defined() << " offset0="
           << absent.offsets().integers()[0] << '\n';

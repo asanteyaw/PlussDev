@@ -118,7 +118,7 @@ empty lanes=0 shape=[0, 3]
 
 ```cpp
 for (const auto& value : {pluss::note::make("text"),
-                          pluss::Note::undefined()}) {
+                          pluss::note::undefined()}) {
   try {
     (void)value.bools();
   } catch (const pluss::Error& error) {

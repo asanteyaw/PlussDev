@@ -1,5 +1,6 @@
 #include "pluss/subsp/actuarial/loss.h"
 
+#include "pluss/codem/series_factory.h"
 #include <cmath>
 #include <string>
 #include <string_view>
@@ -71,7 +72,7 @@ LossMeasure mean() {
   return LossMeasure("mean", [](const Series& input) {
     const Series losses = losses_(input, "mean");
     if (losses.numel() == 0) {
-      return Series::zeros({}, ScalarType::Float64).to(losses.platform());
+      return pluss::series::zeros({}, ScalarType::Float64).to(losses.platform());
     }
     return losses.mean();
   });

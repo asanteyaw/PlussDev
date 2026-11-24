@@ -4,7 +4,7 @@
 auto t = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
 auto other_t = pluss::make_timeline({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
 auto dur = pluss::duration_minutes(5);
-auto mask = pluss::Series::ones({2}, pluss::ScalarType::Bool);
+auto mask = pluss::series::ones({2}, pluss::ScalarType::Bool);
 auto series_vals = pluss::make_series(std::vector<double>{1.0, 2.0}, {2});
 auto year_col = pluss::make_series(std::vector<std::int64_t>{2024,2024}, {2});
 auto month_col = pluss::make_series(std::vector<std::int64_t>{1,1}, {2});
@@ -120,13 +120,13 @@ std::vector<pluss::codeh::Timeline> others{other_t};
 - Signature: `pluss::codem::Series epoch_seconds() const`
   Example: `auto out = t.epoch_seconds();`
 - Signature: `Timeline now()`
-  Example: `auto out = pluss::codeh::Timeline::now();`
+  Example: `auto out = pluss::timeline::now();`
 - Signature: `Timeline today()`
-  Example: `auto out = pluss::codeh::Timeline::today();`
+  Example: `auto out = pluss::timeline::today();`
 - Signature: `Timeline yesterday()`
-  Example: `auto out = pluss::codeh::Timeline::yesterday();`
+  Example: `auto out = pluss::timeline::yesterday();`
 - Signature: `Timeline tomorrow()`
-  Example: `auto out = pluss::codeh::Timeline::tomorrow();`
+  Example: `auto out = pluss::timeline::tomorrow();`
 - Signature: `Timeline fromTimestamp(std::int64_t timestamp_seconds)`
   Example: `auto out = pluss::codeh::Timeline::fromTimestamp(1);`
 - Signature: `Timeline fromSeries(const pluss::codem::Series& series)`
@@ -826,12 +826,12 @@ std::vector<pluss::codeh::Timeline> others{other_t};
 - Signature: `std::vector<Timeline> date_range(const Timeline& start, const Timeline& end, std::string_view freq = "D", int step = 1)`
   Example: `auto out = pluss::codeh::Timeline::date_range(t, other_t, "D", 1);`
 - Signature: `Timeline from_ymd(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, std::string_view tz_name = "UTC")`
-  Example: `auto out = pluss::codeh::Timeline::from_ymd(year_col, month_col, day_col, "UTC");`
+  Example: `auto out = pluss::timeline::from_ymd(year_col, month_col, day_col, "UTC");`
 - Signature: `Timeline from_ymdhms(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day, const pluss::codem::Series& hour, const pluss::codem::Series& minute, const pluss::codem::Series& second, std::string_view tz_name = "UTC")`
-  Example: `auto out = pluss::codeh::Timeline::from_ymdhms(year_col, month_col, day_col, hour_col, minute_col, second_col, "UTC");`
+  Example: `auto out = pluss::timeline::from_ymdhms(year_col, month_col, day_col, hour_col, minute_col, second_col, "UTC");`
 - Signature: `Timeline from_epoch_seconds(const pluss::codem::Series& epoch_seconds, std::string_view tz_name = "UTC")`
-  Example: `auto out = pluss::codeh::Timeline::from_epoch_seconds(series_vals, "UTC");`
+  Example: `auto out = pluss::timeline::from_epoch_seconds(series_vals, "UTC");`
 - Signature: `Timeline from_epoch_millis(const pluss::codem::Series& epoch_millis, std::string_view tz_name = "UTC")`
-  Example: `auto out = pluss::codeh::Timeline::from_epoch_millis(series_vals, "UTC");`
+  Example: `auto out = pluss::timeline::from_epoch_millis(series_vals, "UTC");`
 - Signature: `Timeline from_epoch_micros(const pluss::codem::Series& epoch_micros, std::string_view tz_name = "UTC")`
-  Example: `auto out = pluss::codeh::Timeline::from_epoch_micros(series_vals, "UTC");`
+  Example: `auto out = pluss::timeline::from_epoch_micros(series_vals, "UTC");`

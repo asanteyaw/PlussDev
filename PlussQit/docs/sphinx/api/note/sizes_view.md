@@ -102,7 +102,7 @@ vector when storing shape beyond the receiver's lifetime.
 ## Example 5: Undefined Has No Geometry
 
 ```cpp
-try { (void)pluss::Note::undefined().sizes_view(); }
+try { (void)pluss::note::undefined().sizes_view(); }
 catch (const pluss::Error&) {
   std::cout << "sizes_view undefined: rejected\n";
 }

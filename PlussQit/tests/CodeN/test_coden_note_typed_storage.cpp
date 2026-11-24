@@ -107,7 +107,7 @@ TEST_CASE("typed Note storage preserves empty shapes and shared ownership",
 
   auto copied = original;
   REQUIRE(NoteAccess::impl(copied).get() == storage);
-  original = pluss::Note::undefined();
+  original = pluss::note::undefined();
   REQUIRE(copied.defined());
   REQUIRE(NoteAccess::impl(copied)->float64_values()[1] == 4.0);
 
@@ -175,7 +175,7 @@ TEST_CASE("typed Note storage rejects inconsistent states",
 }
 
 TEST_CASE("undefined Note has no dtype", "[coden][typed-storage]") {
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
   REQUIRE_FALSE(undefined.is_text());
   REQUIRE_FALSE(undefined.is_bytes());
   REQUIRE_FALSE(undefined.is_bool());
@@ -232,9 +232,9 @@ TEST_CASE("typed item access is cardinality based and dtype exact",
   REQUIRE_THROWS(pluss::note::make(std::int64_t{1}).bool_item());
   REQUIRE_THROWS(pluss::note::make(1.0).int_item());
   REQUIRE_THROWS(pluss::note::make(std::int64_t{1}).float_item());
-  REQUIRE_THROWS(pluss::Note::undefined().bool_item());
-  REQUIRE_THROWS(pluss::Note::undefined().int_item());
-  REQUIRE_THROWS(pluss::Note::undefined().float_item());
+  REQUIRE_THROWS(pluss::note::undefined().bool_item());
+  REQUIRE_THROWS(pluss::note::undefined().int_item());
+  REQUIRE_THROWS(pluss::note::undefined().float_item());
 }
 
 TEST_CASE("Note row and slab projections share their backing allocations",
@@ -247,7 +247,7 @@ TEST_CASE("Note row and slab projections share their backing allocations",
   REQUIRE(rows.size() == 2);
   REQUIRE(rows[0].integers().data() == base);
   REQUIRE(rows[1].integers().data() == base + 3);
-  matrix = pluss::Note::undefined();
+  matrix = pluss::note::undefined();
   REQUIRE(rows[1].integers()[2] == 22);
 
   const std::array<std::int64_t, 3> cube_shape{2, 2, 2};
@@ -346,7 +346,7 @@ TEST_CASE("Note pack and unpack preserve every closed dtype and shape state",
   const std::array<std::int64_t, 2> shape{2, 2};
   const std::string binary{"a\0b", 3};
   const std::vector<pluss::Note> values{
-      pluss::Note::undefined(),
+      pluss::note::undefined(),
       pluss::note::make("scalar"),
       pluss::note::bytes(std::vector<std::string_view>{binary, "", "z", "q"}, shape),
       pluss::note::make(std::vector<bool>{true, false, false, true}, shape),
@@ -452,7 +452,7 @@ TEST_CASE("Note's generic byte-oriented traversal is Text/Bytes only, by design"
 
   // An undefined Note yields an empty range rather than throwing (matches
   // the pre-existing convention for other accessors on undefined Notes).
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
   REQUIRE(undefined.begin() == undefined.end());
 }
 
@@ -506,7 +506,7 @@ TEST_CASE("closed Bool and Int64 kernels allocate one native output buffer",
           "[coden][typed-storage][pass8][allocation]") {
   const auto text = pluss::note::make({"alpha", "beta", "gamma", "delta"});
 
-  auto mask = pluss::Note::undefined();
+  auto mask = pluss::note::undefined();
   pluss::coden::detail::LaneAllocationSnapshot stats;
   {
     pluss::coden::detail::LaneAllocationScope tracking;
@@ -517,7 +517,7 @@ TEST_CASE("closed Bool and Int64 kernels allocate one native output buffer",
   REQUIRE(stats.bytes ==
           static_cast<std::uint64_t>(text.numel() * sizeof(std::uint8_t)));
 
-  auto lengths = pluss::Note::undefined();
+  auto lengths = pluss::note::undefined();
   {
     pluss::coden::detail::LaneAllocationScope tracking;
     lengths = text.lengths_bytes();
@@ -528,7 +528,7 @@ TEST_CASE("closed Bool and Int64 kernels allocate one native output buffer",
           static_cast<std::uint64_t>(text.numel() * sizeof(std::int64_t)));
 
   const auto other = text.starts_with("a");
-  auto combined = pluss::Note::undefined();
+  auto combined = pluss::note::undefined();
   {
     pluss::coden::detail::LaneAllocationScope tracking;
     combined = mask | other;

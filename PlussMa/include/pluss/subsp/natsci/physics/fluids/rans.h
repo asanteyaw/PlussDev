@@ -70,7 +70,7 @@ struct Mesh {
 inline Mesh make_mesh(std::int64_t n, double stretching) {
   Mesh m;
   m.n = n;
-  const Series u = Series::linspace(0.0, 1.0, n + 1, pluss::ScalarType::Float64);
+  const Series u = pluss::series::linspace(0.0, 1.0, n + 1, pluss::ScalarType::Float64);
   m.yf = stretching > 0.0 ? u.mul(-1.0).add(1.0).mul(stretching).tanh().div(std::tanh(stretching)).mul(-1.0).add(1.0) : u;
   m.dy = m.yf.slice(0, 1, n + 1).sub(m.yf.slice(0, 0, n));
   m.yc = m.yf.slice(0, 1, n + 1).add(m.yf.slice(0, 0, n)).mul(0.5);

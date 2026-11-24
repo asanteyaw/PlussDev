@@ -116,7 +116,7 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
       flat_cpu.take(idx_cpu).host<float>().array().data,
       "take");
 
-  auto put_cpu = pluss::Series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
+  auto put_cpu = pluss::series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
   auto put_mps = put_cpu.to(pluss::pMPS);
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f}, {4});
   const auto src_mps = src_cpu.to(pluss::pMPS);
@@ -137,7 +137,7 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
       a_cpu.gather(1, gather_idx_cpu).host<float>().array().data,
       "gather");
 
-  const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto scatter_base_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto scatter_base_mps = scatter_base_cpu.to(pluss::pMPS);
   require_close_(
       scatter_base_mps.scatter(1, gather_idx_mps, a_mps).to(pluss::pCPU).host<float>().array().data,

@@ -51,7 +51,7 @@ int main() {
       std::array<std::int64_t, 2>{2, 2});
   std::cout << grid.tex().add_math_delimiters() << '\n';
   std::cout << std::boolalpha << "undefined="
-            << pluss::Note::undefined().tex().add_math_delimiters().defined()
+            << pluss::note::undefined().tex().add_math_delimiters().defined()
             << '\n';
   try {
     (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
@@ -84,7 +84,7 @@ int main() {
   const bool braces_idempotent =
       same(braces_balanced.tex().balance_braces(), braces_balanced);
   std::cout << "idempotent=" << braces_idempotent << " undefined="
-            << pluss::Note::undefined().tex().balance_braces().defined() << '\n';
+            << pluss::note::undefined().tex().balance_braces().defined() << '\n';
   require(braces_idempotent,
           "brace balancing is not idempotent");
 
@@ -96,7 +96,7 @@ int main() {
   const bool math_idempotent =
       same(balanced.tex().balance_math_delims(), balanced);
   std::cout << "idempotent=" << math_idempotent << " undefined="
-            << pluss::Note::undefined().tex().balance_math_delims().defined()
+            << pluss::note::undefined().tex().balance_math_delims().defined()
             << '\n';
   require(math_idempotent,
           "math delimiter balancing is not idempotent");
@@ -112,7 +112,7 @@ int main() {
   require(keys.tokens().numel() == 5, "bibliography key count differs");
   require(keys.tokens().at(1) == "lamport94", "citation list was not split");
 
-  const auto absent = pluss::Note::undefined().tex().bibliography_keys();
+  const auto absent = pluss::note::undefined().tex().bibliography_keys();
   std::cout << "undefined tokens=" << absent.tokens().defined() << ' ';
   show_offsets(absent);
 
@@ -183,7 +183,7 @@ int main() {
   require(names.tokens().at(3) == "beta",
           "escaped linebreak was parsed as a named command");
 
-  const auto no_tex = pluss::Note::undefined().tex().command_names();
+  const auto no_tex = pluss::note::undefined().tex().command_names();
   std::cout << "undefined names=" << no_tex.tokens().defined() << ' ';
   show_offsets(no_tex);
 
@@ -286,7 +286,7 @@ int main() {
                    .tex().line_norm().tex().dedup_blank_lines()
             << '\n';
 
-  const auto undefined_tex = pluss::Note::undefined();
+  const auto undefined_tex = pluss::note::undefined();
   std::cout << "undefined transforms="
             << undefined_tex.tex().frac_slash().defined() << ','
             << undefined_tex.tex().pm_signs().defined() << ','
@@ -898,7 +898,7 @@ int main() {
   std::cout << mapped_grid << '\n';
   show_shape(mapped_grid);
   try {
-    (void)pluss::Note::undefined().tex().cmd_sub("bad name", "x");
+    (void)pluss::note::undefined().tex().cmd_sub("bad name", "x");
   } catch (const pluss::Error&) {
     std::cout << "cmd_sub(bad name): rejected\n";
   }
@@ -1009,12 +1009,12 @@ value=\unit)",
   std::cout << defined_grid << '\n';
   show_shape(defined_grid);
   try {
-    (void)pluss::Note::undefined().tex().set_macro("bad name", "x");
+    (void)pluss::note::undefined().tex().set_macro("bad name", "x");
   } catch (const pluss::Error&) {
     std::cout << "set_macro(bad name): rejected\n";
   }
   try {
-    (void)pluss::Note::undefined().tex().set_macro("unit", "{x");
+    (void)pluss::note::undefined().tex().set_macro("unit", "{x");
   } catch (const pluss::Error&) {
     std::cout << "set_macro(unbalanced body): rejected\n";
   }
@@ -1221,7 +1221,7 @@ trailer)",
   }
 
   std::cout << "\n=== tail boundaries ===\n";
-  const auto undefined_tail = pluss::Note::undefined();
+  const auto undefined_tail = pluss::note::undefined();
   std::cout << std::boolalpha << "undefined="
             << undefined_tail.tex().subsections().tokens().defined() << ','
             << undefined_tail.tex().subsubsections().tokens().defined() << ','
@@ -1250,7 +1250,7 @@ trailer)",
   }
 
   std::cout << "\n=== normalization boundaries ===\n";
-  const auto undefined_norm = pluss::Note::undefined();
+  const auto undefined_norm = pluss::note::undefined();
   std::cout << std::boolalpha << "undefined="
             << undefined_norm.tex().set_macro("unit", "m").defined() << ','
             << undefined_norm.tex().simplify_fractions().defined() << ','
@@ -1276,7 +1276,7 @@ trailer)",
   }
 
   std::cout << "\n=== extractor boundaries ===\n";
-  const auto undefined_extract = pluss::Note::undefined();
+  const auto undefined_extract = pluss::note::undefined();
   std::cout << std::boolalpha << "undefined="
             << undefined_extract.tex().args("caption").tokens().defined() << ','
             << undefined_extract.tex().env("proof").tokens().defined() << ','
@@ -1331,7 +1331,7 @@ trailer)",
     std::cout << "env(bad name): rejected\n";
   }
 
-  const auto tex_absent = pluss::Note::undefined();
+  const auto tex_absent = pluss::note::undefined();
   std::cout << std::boolalpha << "undefined="
             << tex_absent.tex().display_math().tokens().defined() << ','
             << tex_absent.tex().env_names().tokens().defined() << ','
@@ -1531,7 +1531,7 @@ trailer)",
           "escape/unescape round trip changed the text");
 
   std::cout << "\n=== final tranche boundaries ===\n";
-  const auto undefined_final = pluss::Note::undefined();
+  const auto undefined_final = pluss::note::undefined();
   std::cout << std::boolalpha << "undefined="
             << undefined_final.tex().to_markdown().defined() << ','
             << undefined_final.tex().todos().tokens().defined() << ','

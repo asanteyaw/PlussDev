@@ -16,7 +16,7 @@ constexpr double kPi = 3.14159265358979323846;
 
 int main() {
   const std::int64_t n = 256;
-  const Series t = Series::linspace(0.0, 2 * kPi, n + 1, pluss::ScalarType::Float64).slice(0, 0, n);
+  const Series t = pluss::series::linspace(0.0, 2 * kPi, n + 1, pluss::ScalarType::Float64).slice(0, 0, n);
   // H[cos kt] = sin kt, H[sin kt] = -cos kt
   for (const double k : {1.0, 3.0, 17.0}) {
     check(maxdiff(sg::hilbert(t.mul(k).cos()), t.mul(k).sin()) < 1e-12, "H cos = sin");

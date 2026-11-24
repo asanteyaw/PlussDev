@@ -7,13 +7,13 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("gather and scatter", "[indexing]") {
-  auto x = Series::zeros({2,3}, ScalarType::Float64);
+  auto x = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto* xp = reinterpret_cast<double*>(x.raw_data());
   // [[1,2,3],[4,5,6]]
   for (int i=0;i<6;++i) xp[i] = double(i+1);
 
   // gather along dim=1 with indices
-  auto idx = Series::zeros({2,2}, ScalarType::Int64);
+  auto idx = pluss::series::zeros({2,2}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   // take cols [2,0] for each row
   ip[0]=2; ip[1]=0;
@@ -30,7 +30,7 @@ TEST_CASE("gather and scatter", "[indexing]") {
   REQUIRE(gp[3] == 4.0);
 
   // scatter back into a copy of x using src=g, writing into cols [1,1] (overwrite)
-  auto idx2 = Series::zeros({2,2}, ScalarType::Int64);
+  auto idx2 = pluss::series::zeros({2,2}, ScalarType::Int64);
   auto* i2 = reinterpret_cast<std::int64_t*>(idx2.raw_data());
   i2[0]=1; i2[1]=1;
   i2[2]=1; i2[3]=1;

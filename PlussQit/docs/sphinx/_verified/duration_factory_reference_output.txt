@@ -179,7 +179,7 @@ Duration(shape=[0], dim=1, numel=0)[  ]
 [9223372036854775806,9223372036854775807]
 
 == range_zero_step ==
-Duration::range step must be non-zero
+pluss::duration::range step must be non-zero
 
 == zeros_scalar ==
 Duration(shape=[], dim=0, numel=1)

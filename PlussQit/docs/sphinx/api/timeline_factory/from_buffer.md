@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Timeline::from_buffer
+# pluss::timeline::from_buffer
 
-[Back to Timeline API Reference](../../timeline_api_reference)
+[Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Timeline Timeline::from_buffer(
+static Timeline pluss::timeline::from_buffer(
     std::int64_t* data,
     std::span<const std::int64_t> sizes,
     std::span<const std::int64_t> strides,
@@ -25,7 +25,7 @@ while `tz_name` controls calendar interpretation and rendering.
 This is the lowest-level Timeline constructor. Use it when another C++
 component already owns a suitably aligned tick buffer, when a strided view must
 remain strided, or when copying a large temporal array would be wasteful. Use
-[`pluss::timeline::from_epoch()`](epoch_nanos.md) when values should instead be
+[`pluss::timeline::from_epoch()`](../timeline/epoch_nanos.md) when values should instead be
 copied into storage managed entirely by Pluss.
 
 Strides are measured in **elements**, not bytes. For `sizes={2}` and
@@ -45,9 +45,9 @@ deleter early.
 
 Because construction is zero-copy, writes through the original pointer are
 observable through the Timeline. Coordinate concurrent access yourself. The
-owning exports [`epoch_nanos()`](epoch_nanos.md),
-[`ticks()`](ticks.md), and
-[`copy_ticks()`](copy_ticks.md) take snapshots instead.
+owning exports [`epoch_nanos()`](../timeline/epoch_nanos.md),
+[`ticks()`](../timeline/ticks.md), and
+[`copy_ticks()`](../timeline/copy_ticks.md) take snapshots instead.
 
 ## Example: Own A Strided Allocation
 
@@ -69,7 +69,7 @@ int main() {
 
     const std::array<std::int64_t, 1> sizes{2};
     const std::array<std::int64_t, 1> strides{2};
-    const auto times = pluss::Timeline::from_buffer(
+    const auto times = pluss::timeline::from_buffer(
         raw, sizes, strides,
         [&](void* p) {
           released = true;
@@ -114,9 +114,9 @@ callback runs only after the Timeline releases the allocation.
 
 ## See Also
 
-- [`Timeline::ticks`](ticks.md)
-- [`Timeline::copy_ticks`](copy_ticks.md)
-- [`Timeline::epoch_nanos`](epoch_nanos.md)
+- [`Timeline::ticks`](../timeline/ticks.md)
+- [`Timeline::copy_ticks`](../timeline/copy_ticks.md)
+- [`Timeline::epoch_nanos`](../timeline/epoch_nanos.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="host.html"><span class="label">Previous</span><span class="title">host</span></a>

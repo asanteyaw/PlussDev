@@ -333,7 +333,7 @@ std::optional<Series> sensitivity(const Series& s) { return sensitivity_copy_(s)
 Series sensitivity_or_zeros(const Series& s) {
   auto sens = sensitivity_copy_(s);
   if (sens.has_value()) return *sens;
-  return Series::zeros(s.sizes(), s.scalar_type()).to(s.platform());
+  return pluss::codem::factory::zeros(s.sizes(), s.scalar_type()).to(s.platform());
 }
 
 void prepare_tracked_leaves(std::span<Series* const> leaves) {
@@ -416,7 +416,7 @@ void backpropagate(const Series& loss,
   } else {
     PLUSS_CHECK(loss.numel() == 1,
                 "series_tape::backpropagate: non-scalar output requires explicit seed");
-    root_sens = Series::ones(loss.sizes(), loss.scalar_type()).to(loss.platform());
+    root_sens = pluss::codem::factory::ones(loss.sizes(), loss.scalar_type()).to(loss.platform());
   }
   if (diagnostics.enabled && diagnostics.check_non_finite && has_non_finite_(*root_sens)) {
     throw_error("series_tape::backpropagate: non-finite root sensitivity detected");
@@ -525,7 +525,7 @@ Series separate(const Series& s) {
   if (!s.defined()) return s;
   std::vector<std::int64_t> sizes(s.sizes().begin(), s.sizes().end());
   std::vector<std::int64_t> strides(s.strides().begin(), s.strides().end());
-  Series out = Series::from_storage(
+  Series out = pluss::codem::factory::from_storage(
       s.storage(),
       s.storage_offset() / std::max<std::int64_t>(1, s.itemsize()),
       sizes,

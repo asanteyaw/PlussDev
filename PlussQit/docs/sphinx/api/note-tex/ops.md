@@ -68,7 +68,7 @@ contributed no math operator.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().ops().tokens().defined() << '\n';
+          << pluss::note::undefined().tex().ops().tokens().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().ops();
 } catch (const pluss::Error&) { std::cout << "operators Int64: rejected\n"; }

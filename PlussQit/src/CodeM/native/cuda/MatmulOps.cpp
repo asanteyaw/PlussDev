@@ -324,7 +324,7 @@ bool run_cublas_2d_gemm_(
   const int m = static_cast<int>(m64);
   const int n = static_cast<int>(n64);
   const int k = static_cast<int>(k64);
-  Series y = Series::empty({m64, n64}, a.scalar_type(), Platform::CUDA);
+  Series y = pluss::codem::factory::empty({m64, n64}, a.scalar_type(), Platform::CUDA);
 
   DeviceInputRef d_a{};
   DeviceInputRef d_b{};

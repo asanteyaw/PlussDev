@@ -20,7 +20,7 @@ int main() {
   const double h = 1.0 / steps;
   auto make_path = [&](std::uint64_t seed) {
     const pluss::Series dw = pluss::series::randn({steps, 1}, pluss::Config{}.with_dtype(f64), seed).mul(std::sqrt(h));
-    return pluss::Series::zeros({1, 1}, f64).unite({dw.cumsum(0)}, 0);
+    return pluss::series::zeros({1, 1}, f64).unite({dw.cumsum(0)}, 0);
   };
   const pluss::Series x = make_path(1), y = make_path(2);
 

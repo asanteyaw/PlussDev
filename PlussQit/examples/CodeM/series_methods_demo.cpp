@@ -46,13 +46,13 @@ int main(int argc, char** argv) {
 
   auto gather_src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40, 50, 60}, {2, 3}).to(run_platform);
   auto gather_idx = pluss::make_series(std::vector<std::int64_t>{2, 1, 0, 0, 1, 2}, {2, 3}).to(run_platform);
-  auto scatter_base = pluss::Series::zeros({2, 3}, ScalarType::Int64).to(run_platform);
+  auto scatter_base = pluss::series::zeros({2, 3}, ScalarType::Int64).to(run_platform);
   auto scatter_val = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3}).to(run_platform);
   auto flat_idx = pluss::make_series(std::vector<std::int64_t>{0, 3, 5}, {3}).to(run_platform);
   auto flat_src = pluss::make_series(std::vector<std::int64_t>{99, 88, 77}, {3}).to(run_platform);
 
-  auto cond = pluss::Series::ones({7}, ScalarType::Bool).to(run_platform);
-  auto mask = pluss::Series::ones({2, 3}, ScalarType::Bool).to(run_platform);
+  auto cond = pluss::series::ones({7}, ScalarType::Bool).to(run_platform);
+  auto mask = pluss::series::ones({2, 3}, ScalarType::Bool).to(run_platform);
   const std::array<std::int64_t, 2> shape_3x2{3, 2};
   const std::array<std::int64_t, 2> perm_10{1, 0};
 

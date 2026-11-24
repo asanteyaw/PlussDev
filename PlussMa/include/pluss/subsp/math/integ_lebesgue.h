@@ -63,8 +63,8 @@ struct LebesgueGrid_ {
 
 inline LebesgueGrid_ lebesgue_grid_(double a, double b, std::int64_t n, double grading, ScalarType dtype,
                                     pluss::codem::Platform platform) {
-  const Series edges = Series::linspace(0.0, 1.0, n + 1, dtype, platform);
-  const Series mids = Series::linspace(0.0, 1.0, n + 1, dtype, platform).slice(0, 0, n)
+  const Series edges = pluss::series::linspace(0.0, 1.0, n + 1, dtype, platform);
+  const Series mids = pluss::series::linspace(0.0, 1.0, n + 1, dtype, platform).slice(0, 0, n)
                           .add(0.5 / static_cast<double>(n));
   const auto map = [&](const Series& u) { return grading == 1.0 ? u.mul(b - a).add(a) : u.pow(grading).mul(b - a).add(a); };
   const Series e = map(edges);

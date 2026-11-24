@@ -71,7 +71,7 @@ namespace ops_internal {
                                std::span<const std::int64_t> sizes);
   // Zero-copy wrap of an already-built Int64 nanoseconds Series -- lets
   // callers (e.g. pluss::duration::zeros) build via Series' own optimized
-  // factories (Series::zeros' memset, etc.) instead of paying for a second
+  // factories (pluss::series::zeros' memset, etc.) instead of paying for a second
   // host-side fill + memcpy through duration_from_nanos.
   Duration duration_from_series(pluss::codem::Series nanos);
 } // namespace ops_internal
@@ -113,9 +113,7 @@ private:
   // already covers that case and is what `pluss::duration::nanos` itself
   // calls.
 
-  // Range factory (like pandas timedelta_range)
-  // Inclusive start; stops before exceeding end.
-  static Duration range(const Duration& start, const Duration& end, const Duration& step);
+  // The inclusive start..end range is built by pluss::duration::range (it needs this friend).
 
 
   friend class Timeline;

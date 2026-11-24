@@ -180,8 +180,8 @@ private:
   // DataFrame overloads of infer()/assess() and reloaded by load(). Left
   // empty/unused (standardized_ stays false) for models that never go
   // through the DataFrame overload, or that do with standardize=false.
-  Series standardize_mean_ = Series::empty({0}, ScalarType::Float32, pluss::pCPU);
-  Series standardize_std_ = Series::empty({0}, ScalarType::Float32, pluss::pCPU);
+  Series standardize_mean_ = pluss::series::empty({0}, ScalarType::Float32, pluss::pCPU);
+  Series standardize_std_ = pluss::series::empty({0}, ScalarType::Float32, pluss::pCPU);
   bool standardized_ = false;
 
   [[nodiscard]] std::vector<Series*> all_parameters_() const;

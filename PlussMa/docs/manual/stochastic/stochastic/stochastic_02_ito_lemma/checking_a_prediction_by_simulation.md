@@ -29,7 +29,7 @@ int main() {
   std::cout << "growth rate of E[X^2] from Ito's lemma: " << rate << "  (2 mu + sigma^2 = " << 2 * mu_c + sg * sg << ")\n";
 
   const std::int64_t paths = 60000;
-  const pluss::Series y0 = pluss::Series::full({paths}, x0, f64);
+  const pluss::Series y0 = pluss::series::full({paths}, x0, f64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::Milstein;
   options.steps = 100;

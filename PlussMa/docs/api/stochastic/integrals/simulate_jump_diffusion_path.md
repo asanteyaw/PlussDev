@@ -99,7 +99,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(3));
-  const Series like = Series::zeros({2000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({2000}, pluss::ScalarType::Float64);
 
   for (const double rate : {1.0, 5.0, 20.0}) {
     const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 5, 0.0, 0.2, rate, 0.0, 0.5);
@@ -132,7 +132,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(3));
-  const Series like = Series::zeros({4000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({4000}, pluss::ScalarType::Float64);
 
   const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 1000, 8, 0.0, 0.0, 4.0, 0.3, 0.1);
   out.writeln("mean X(T) =", jp.path.w.select(0, 1000).mean().sum().item<double>(), ", exact =", 4.0 * 0.3);
@@ -161,7 +161,7 @@ using pluss::Series;
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(3));
-  const Series like = Series::zeros({40000}, pluss::ScalarType::Float64);
+  const Series like = pluss::series::zeros({40000}, pluss::ScalarType::Float64);
 
   const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 200, 3, 0.4, 0.5, 0.0, 0.0, 0.0);
   const Series end = jp.path.w.select(0, 200);

@@ -118,7 +118,7 @@ try {
   std::cout << "matrix rank3: rejected\n";
 }
 
-try { (void)pluss::Note::undefined().matrix(); }
+try { (void)pluss::note::undefined().matrix(); }
 catch (const pluss::Error&) { std::cout << "matrix undefined: rejected\n"; }
 ```
 

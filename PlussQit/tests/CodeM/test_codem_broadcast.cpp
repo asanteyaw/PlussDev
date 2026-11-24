@@ -7,8 +7,8 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("CodeM broadcast add", "[codem]") {
-  auto a = Series::empty({2,3}, ScalarType::Float64);
-  auto b = Series::zeros({1,3}, ScalarType::Float64);
+  auto a = pluss::series::empty({2,3}, ScalarType::Float64);
+  auto b = pluss::series::zeros({1,3}, ScalarType::Float64);
 
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (std::int64_t i = 0; i < a.numel(); ++i) ap[i] = double(i + 1);

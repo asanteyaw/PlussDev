@@ -59,7 +59,7 @@ TEST_CASE("Note argsort orders every closed dtype", "[coden][argsort]") {
           std::vector<std::int64_t>{0});
   REQUIRE(integers(pluss::note::make(std::vector<std::string>{}).argsort()).empty());
   REQUIRE_THROWS(words.reshape({2, 2}).argsort());
-  REQUIRE_THROWS(pluss::Note::undefined().argsort());
+  REQUIRE_THROWS(pluss::note::undefined().argsort());
 }
 
 TEST_CASE("Note repeat copies complete dimensional patterns", "[coden][repeat]") {
@@ -98,7 +98,7 @@ TEST_CASE("Note repeat copies complete dimensional patterns", "[coden][repeat]")
   REQUIRE(integers(ints.repeat({2})) ==
           std::vector<std::int64_t>{1, 2, 1, 2});
 
-  REQUIRE_FALSE(pluss::Note::undefined().repeat({2}).defined());
+  REQUIRE_FALSE(pluss::note::undefined().repeat({2}).defined());
   REQUIRE_THROWS(matrix.repeat({2}));
   REQUIRE_THROWS(vector.repeat({-1}));
   REQUIRE_THROWS(vector.repeat({1, 1, 1, 1}));
@@ -137,7 +137,7 @@ TEST_CASE("Note repeat_interleave expands one selected axis",
   REQUIRE(std::vector<double>(repeated.reals().begin(), repeated.reals().end()) ==
           std::vector<double>{1.5, 1.5, 2.5, 2.5});
 
-  REQUIRE_FALSE(pluss::Note::undefined().repeat_interleave(2, 0).defined());
+  REQUIRE_FALSE(pluss::note::undefined().repeat_interleave(2, 0).defined());
   REQUIRE_THROWS(matrix.repeat_interleave(-1, 0));
   REQUIRE_THROWS(matrix.repeat_interleave(2, 2));
   REQUIRE_THROWS(scalar.repeat_interleave(2, 1));

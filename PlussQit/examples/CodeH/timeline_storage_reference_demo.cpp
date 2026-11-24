@@ -37,19 +37,19 @@ int main() {
   show("epoch_seconds", instants.epoch_seconds());
   show("epoch_days", instants.epoch_days());
 
-  show("from_epoch_micros", pluss::Timeline::from_epoch_micros(
+  show("from_epoch_micros", pluss::timeline::from_epoch_micros(
       pluss::make_series({-1LL, 0LL, 1'999'999LL})).epoch_nanos());
-  show("from_epoch_millis", pluss::Timeline::from_epoch_millis(
+  show("from_epoch_millis", pluss::timeline::from_epoch_millis(
       pluss::make_series({-1LL, 0LL, 1'999LL})).epoch_nanos());
-  show("from_epoch_seconds", pluss::Timeline::from_epoch_seconds(
+  show("from_epoch_seconds", pluss::timeline::from_epoch_seconds(
       pluss::make_series({{-1LL, 0LL}, {1LL, pluss::Timeline::kNaT}}),
       "America/New_York").epoch_nanos());
 
   const auto year = pluss::make_series(2024LL);
   const auto month = pluss::make_series({2LL, 3LL});
-  show("from_ymd", pluss::Timeline::from_ymd(
+  show("from_ymd", pluss::timeline::from_ymd(
       year, month, pluss::make_series({29LL, pluss::Timeline::kNaT}), "UTC"));
-  show("from_ymdhms", pluss::Timeline::from_ymdhms(
+  show("from_ymdhms", pluss::timeline::from_ymdhms(
       year, month, pluss::make_series({29LL, 1LL}),
       pluss::make_series({6LL, 7LL}), pluss::make_series(30LL),
       pluss::make_series(45LL), "UTC"));
@@ -66,7 +66,7 @@ int main() {
     raw[2] = 2'000'000'000LL;
     const std::array<std::int64_t, 1> shape{2};
     const std::array<std::int64_t, 1> strides{2};
-    const auto strided = pluss::Timeline::from_buffer(
+    const auto strided = pluss::timeline::from_buffer(
         raw, shape, strides,
         [&](void* p) { released = true; std::free(p); }, "UTC");
     show("strided_buffer", strided);

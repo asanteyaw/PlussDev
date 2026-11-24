@@ -116,8 +116,8 @@ TEST_CASE("CUDA linalg strict policy is runtime-dynamic", "[cuda][linalg][policy
 TEST_CASE("CUDA linalg route contract rejects non-CUDA tensors", "[cuda][linalg][policy]") {
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar linalg_on("PLUSS_CUDA_NATIVE_LINALG", "1");
-  const auto a_cpu = pluss::Series::eye(4, 4, pluss::ScalarType::Float32);
-  const auto b_cpu = pluss::Series::ones({4, 2}, pluss::ScalarType::Float32);
+  const auto a_cpu = pluss::series::eye(4, 4, pluss::ScalarType::Float32);
+  const auto b_cpu = pluss::series::ones({4, 2}, pluss::ScalarType::Float32);
   REQUIRE(a_cpu.platform() == pluss::pCPU);
   REQUIRE_FALSE(pluss::cuda::supports_det_linalg(a_cpu));
   REQUIRE_FALSE(pluss::cuda::supports_inverse_linalg(a_cpu));

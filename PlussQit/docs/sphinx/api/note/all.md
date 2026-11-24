@@ -170,7 +170,7 @@ identity does.
 try { (void)pluss::note::make({"true", "false"}).all(); }
 catch (const pluss::Error&) { std::cout << "all Text: rejected\n"; }
 
-try { (void)pluss::Note::undefined().all(); }
+try { (void)pluss::note::undefined().all(); }
 catch (const pluss::Error&) { std::cout << "all undefined: rejected\n"; }
 ```
 

@@ -71,7 +71,7 @@ Example 2. The integrand `x²` against a sampled `x`. The Stratonovich value is 
 to `x_T³/3`; the Itô value is not.
 
 ```cpp
-auto x = pluss::Series::linspace(0.0, 1.5, 101, pluss::ScalarType::Float64).add(
+auto x = pluss::series::linspace(0.0, 1.5, 101, pluss::ScalarType::Float64).add(
     pluss::series::randn({101}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 4).mul(0.05));
 auto f = x.mul(x);
 

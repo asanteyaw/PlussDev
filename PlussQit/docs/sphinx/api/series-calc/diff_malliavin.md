@@ -82,7 +82,7 @@ first increment has a nonzero derivative.
 
 ```cpp
 auto dw = pluss::make_series({0.3, -0.5, 0.2, -0.4});
-auto path = pluss::Series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+auto path = pluss::series::zeros({1}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);
 
 auto d = path.calc.diff.malliavin_path([](const pluss::Series& w) { return w.amax(0); });
 

@@ -85,7 +85,7 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().wrap_inline_math("").defined()
+          << pluss::note::undefined().tex().wrap_inline_math("").defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})

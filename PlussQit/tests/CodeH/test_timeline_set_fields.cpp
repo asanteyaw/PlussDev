@@ -57,7 +57,7 @@ TEST_CASE("Timeline field setters follow logical strides and retain timezone",
     raw[2] = 1'709'337'600'000'000'004LL;
     const std::array<std::int64_t, 1> shape{2};
     const std::array<std::int64_t, 1> strides{2};
-    const auto strided = pluss::Timeline::from_buffer(
+    const auto strided = pluss::timeline::from_buffer(
         raw, shape, strides, [&](void* p) {
           released = true;
           std::free(p);

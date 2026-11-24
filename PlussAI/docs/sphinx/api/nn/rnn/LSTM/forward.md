@@ -155,7 +155,7 @@ int main() {
   std::cout << "params()[0].weight_hr shape: [" << net->params()[0].weight_hr.sizes()[0] << ","
             << net->params()[0].weight_hr.sizes()[1] << "] -- [proj_size, hidden_size]\n";
 
-  const pluss::Series x = pluss::Series::full({3, 2, 4}, 0.2, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({3, 2, 4}, 0.2, pluss::ScalarType::Float64);
   const auto [output, state] = net.forward(x);
   const auto [hidden, cell] = state;
 
@@ -213,7 +213,7 @@ int main() {
   std::cout << "params()[0].weight_ih shape: [" << net->params()[0].weight_ih.sizes()[0] << ","
             << net->params()[0].weight_ih.sizes()[1] << "] -- [4*hidden_size, input_size]\n";
 
-  const pluss::Series x = pluss::Series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({5, 3, 4}, 0.1, pluss::ScalarType::Float64);
   const auto [output, state] = net.forward(x);
   const auto [hidden, cell] = state;
 

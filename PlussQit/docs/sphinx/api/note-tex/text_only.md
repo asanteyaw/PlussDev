@@ -108,7 +108,7 @@ grid's shape intact.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().text_only().defined() << '\n';
+          << pluss::note::undefined().tex().text_only().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().text_only();
 } catch (const pluss::Error&) {

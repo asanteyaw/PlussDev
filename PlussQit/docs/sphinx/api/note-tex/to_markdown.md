@@ -117,7 +117,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().to_markdown().defined() << '\n';
+          << pluss::note::undefined().tex().to_markdown().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().to_markdown();
 } catch (const pluss::Error&) {

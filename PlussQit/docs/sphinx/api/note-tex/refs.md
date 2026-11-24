@@ -80,7 +80,7 @@ third cell owns an empty range.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().refs();
+const auto absent = pluss::note::undefined().tex().refs();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

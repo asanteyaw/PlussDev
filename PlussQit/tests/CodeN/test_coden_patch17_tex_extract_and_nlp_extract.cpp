@@ -169,7 +169,7 @@ TEST_CASE("CodeN TeX substitution rendering and structural cleanup are exact",
   REQUIRE(commands.tex().cmd_sub("alpha*", "STAR").at(1) ==
           R"(STAR + \alpha)");
   REQUIRE_THROWS_AS(commands.tex().cmd_sub("bad name", "x"), pluss::Error);
-  REQUIRE_THROWS_AS(pluss::Note::undefined().tex().cmd_sub("", "x"),
+  REQUIRE_THROWS_AS(pluss::note::undefined().tex().cmd_sub("", "x"),
                     pluss::Error);
 
   const auto graphics = pluss::make_note({
@@ -350,9 +350,9 @@ TEST_CASE("CodeN TeX projection inventories and deaccenting honor lexical bounda
   REQUIRE(normalized.at(2).empty());
   REQUIRE(normalized.at(3) == "x\n");
 
-  REQUIRE_FALSE(pluss::Note::undefined().tex().math_only().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().tex().line_norm().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().tex().deaccent().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().math_only().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().line_norm().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().deaccent().defined());
   const auto ints = pluss::note::make(std::vector<std::int64_t>{1, 2});
   REQUIRE_THROWS_AS(ints.tex().math_only(), pluss::Error);
   REQUIRE_THROWS_AS(ints.tex().line_norm(), pluss::Error);
@@ -414,8 +414,8 @@ TEST_CASE("CodeN TeX cleanup preserves authored content across balanced boundari
   REQUIRE_THROWS_AS(environments.tex().strip_env(""), pluss::Error);
   REQUIRE_THROWS_AS(environments.tex().strip_env("bad name"), pluss::Error);
 
-  REQUIRE_FALSE(pluss::Note::undefined().tex().strip_bib().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().tex().strip_env("proof").defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().strip_bib().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().strip_env("proof").defined());
   const auto ints = pluss::note::make(std::vector<std::int64_t>{1, 2});
   REQUIRE_THROWS_AS(ints.tex().strip_bib(), pluss::Error);
   REQUIRE_THROWS_AS(ints.tex().strip_size(), pluss::Error);
@@ -471,7 +471,7 @@ TEST_CASE("CodeN TeX structural cleanup is balanced and shape preserving",
   REQUIRE(malformed.tex().strip_links().at(2) == malformed.at(2));
   REQUIRE(malformed.tex().strip_links().at(3) == malformed.at(3));
 
-  REQUIRE_FALSE(pluss::Note::undefined().tex().strip_links().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().strip_links().defined());
   const auto ints = pluss::note::make(std::vector<std::int64_t>{1});
   REQUIRE_THROWS_AS(ints.tex().strip_envs(), pluss::Error);
   REQUIRE_THROWS_AS(ints.tex().strip_figs(), pluss::Error);
@@ -526,7 +526,7 @@ TEST_CASE("CodeN TeX declaration and marker cleanup preserves boundaries",
   REQUIRE(malformed.tex().strip_pkgs().at(2) == malformed.at(2));
   REQUIRE(malformed.tex().strip_labels().at(3) == malformed.at(3));
 
-  REQUIRE_FALSE(pluss::Note::undefined().tex().strip_refs().defined());
+  REQUIRE_FALSE(pluss::note::undefined().tex().strip_refs().defined());
   const auto ints = pluss::note::make(std::vector<std::int64_t>{1});
   REQUIRE_THROWS_AS(ints.tex().strip_labels(), pluss::Error);
   REQUIRE_THROWS_AS(ints.tex().strip_lr(), pluss::Error);

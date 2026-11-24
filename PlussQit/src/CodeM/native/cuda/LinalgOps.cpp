@@ -554,8 +554,8 @@ bool solve_lu_inverse_(
     return false;
   }
 
-  Series inv = Series::empty({a.sizes()[0], a.sizes()[0]}, a.scalar_type(), Platform::CUDA);
-  Series identity = Series::eye(a.sizes()[0], a.sizes()[0], a.scalar_type()).to(Platform::CPU).contiguous();
+  Series inv = pluss::codem::factory::empty({a.sizes()[0], a.sizes()[0]}, a.scalar_type(), Platform::CUDA);
+  Series identity = pluss::codem::factory::eye(a.sizes()[0], a.sizes()[0], a.scalar_type()).to(Platform::CPU).contiguous();
   DeviceBuffer d_rhs{};
   if (!alloc_device_buffer_(&d_rhs, bytes_of_(identity), reason)) return false;
   if (!copy_h2d_(d_rhs.ptr, identity.raw_data(), d_rhs.bytes, reason)) return false;
@@ -633,7 +633,7 @@ std::optional<Series> try_det(const Series& a, std::string* reason) {
   }
   const double det = determinant_from_lu_(a, d_lu, d_ipiv, info, why);
   if (!why->empty() && det == 0.0 && info <= 0) return std::nullopt;
-  return Series::full({}, det, a.scalar_type()).to(Platform::CUDA);
+  return pluss::codem::factory::full({}, det, a.scalar_type()).to(Platform::CUDA);
 #else
   (void)a;
   if (reason != nullptr) {

@@ -87,7 +87,7 @@ own empty ranges.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().figures();
+const auto absent = pluss::note::undefined().tex().figures();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 

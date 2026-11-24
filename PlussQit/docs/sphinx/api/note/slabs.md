@@ -145,7 +145,7 @@ slabs rank1: rejected
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().slabs();
+  (void)pluss::note::undefined().slabs();
 } catch (const pluss::Error&) {
   std::cout << "slabs undefined: rejected\n";
 }

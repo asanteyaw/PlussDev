@@ -11,7 +11,7 @@ bool Note::defined() const noexcept
 ## Ask Whether The Handle Contains A Note
 
 `defined()` distinguishes an actual `Note` value from the sentinel returned by
-`Note::undefined()`. It tests the handle itself, not its text, shape, or element
+`pluss::note::undefined()`. It tests the handle itself, not its text, shape, or element
 count. A scalar containing `""` is defined. A matrix with a zero-sized axis is
 also defined. Only a handle with no backing Note storage reports `false`.
 
@@ -28,7 +28,7 @@ and is safe in validation and cleanup paths because it is `noexcept`.
 ## Example 1: Undefined, Empty, And Empty Text Are Different
 
 ```cpp
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 const auto empty_text = pluss::note::make("");
 const auto empty_matrix = pluss::note::make(
     std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
@@ -53,7 +53,7 @@ valid rank-2 geometry but no cells.
 ## Example 2: Guard A Geometry-Dependent Operation
 
 ```cpp
-const auto value = pluss::Note::undefined();
+const auto value = pluss::note::undefined();
 if (!value.defined()) {
   std::cout << "no Note supplied\n";
 } else {
@@ -70,7 +70,7 @@ no Note supplied
 ## Example 3: Absence Is Not Rank Zero
 
 ```cpp
-const auto value = pluss::Note::undefined();
+const auto value = pluss::note::undefined();
 std::cout << std::boolalpha
           << "defined=" << value.defined()
           << " dim=" << value.dim()

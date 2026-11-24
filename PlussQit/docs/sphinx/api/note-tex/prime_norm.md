@@ -98,7 +98,7 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().prime_norm().defined()
+          << pluss::note::undefined().tex().prime_norm().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().prime_norm();

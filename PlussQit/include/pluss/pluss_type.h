@@ -307,7 +307,7 @@ private:
 
   static ::pluss::Series u8_mask_to_bool_series_(const ::pluss::Note& mask) {
     const auto lanes = mask.bools();
-    auto out = ::pluss::Series::zeros({static_cast<std::int64_t>(lanes.size())},
+    auto out = ::pluss::codem::factory::zeros({static_cast<std::int64_t>(lanes.size())},
                                       ::pluss::codem::ScalarType::Bool);
     auto* p = reinterpret_cast<bool*>(out.raw_data());
     for (std::size_t i = 0; i < lanes.size(); ++i) {

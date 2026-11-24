@@ -43,7 +43,7 @@ data=[0, 0, 0]
 
 ## Gotchas And Failure Modes
 
-- `zero_()` mutates `self`; use `Series::zeros(sizes, dtype)` when you want a fresh, independent zero-filled result instead.
+- `zero_()` mutates `self`; use `pluss::series::zeros(sizes, dtype)` when you want a fresh, independent zero-filled result instead.
 
 ## Summary
 
@@ -52,7 +52,7 @@ Use `zero_()` to reset an existing buffer to all zeros without allocating a new 
 ## See Also
 
 - [`Series::fill`](fill.md): the general form, `zero_()` is `fill_(0.0)`.
-- `Series::zeros`: builds a new zero-filled `Series` from a shape.
+- `pluss::series::zeros`: builds a new zero-filled `Series` from a shape.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="xlogy.html">

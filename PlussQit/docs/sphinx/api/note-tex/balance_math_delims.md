@@ -63,7 +63,7 @@ const bool idempotent =
     (balanced.tex().balance_math_delims() == balanced).all().bool_item();
 std::cout << std::boolalpha << "idempotent=" << idempotent
           << " undefined="
-          << pluss::Note::undefined().tex().balance_math_delims().defined()
+          << pluss::note::undefined().tex().balance_math_delims().defined()
           << '\n';
 ```
 

@@ -21,14 +21,14 @@ struct EmbeddingOptions {
 // second consumer needed it -- see ICE_BLUEPRINT.md's centralization note.
 // Follows the same allocate-then-register-then-fill-in-place construction
 // pattern as the engine's other built-in modules (Fusion, Conv, ...):
-// weight_ is allocated via Series::empty() and registered atomically, then
+// weight_ is allocated via pluss::series::empty() and registered atomically, then
 // reset_parameters() only ever mutates it in place via copy_(), so it can
 // never end up registered-but-untracked.
 class PLUSS_API EmbeddingImpl final : public Module {
 public:
   explicit EmbeddingImpl(EmbeddingOptions options) : Module(true), options_(options) {
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    weight_ = Series::empty({options_.cardinality, options_.hidden_size}, cfg.dtype, cfg.platform);
+    weight_ = pluss::series::empty({options_.cardinality, options_.hidden_size}, cfg.dtype, cfg.platform);
     this->parameter_record("weight", weight_);
     reset_parameters();
   }

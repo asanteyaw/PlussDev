@@ -1144,7 +1144,7 @@ pluss::Series reduced_validity_(
     return counts.eq(static_cast<double>(reduced_size));
   }
   if (identity_defined_for_empty) {
-    return pluss::Series::ones(counts.sizes(), pluss::codem::ScalarType::Bool);
+    return pluss::series::ones(counts.sizes(), pluss::codem::ScalarType::Bool);
   }
   return counts.gt(0.0);
 }
@@ -1180,11 +1180,11 @@ Shelf reduce_numeric_(
                           : op == NumericAxisOp_::Prod
                                 ? 1.0
                                 : std::numeric_limits<double>::quiet_NaN();
-    auto values = pluss::Series::full(
+    auto values = pluss::series::full(
         {output_size}, fill, pluss::codem::ScalarType::Float64);
     auto valid = identity_defined
-                     ? pluss::Series::ones({output_size}, pluss::codem::ScalarType::Bool)
-                     : pluss::Series::zeros({output_size}, pluss::codem::ScalarType::Bool);
+                     ? pluss::series::ones({output_size}, pluss::codem::ScalarType::Bool)
+                     : pluss::series::zeros({output_size}, pluss::codem::ScalarType::Bool);
     return with_reduce_labels_(Shelf(values, valid), src, matrix.names, axis);
   }
 
@@ -1264,7 +1264,7 @@ Shelf reduce_bool_(
               : matrix.values.logical_and(matrix.valid);
   const auto values = use_all ? prepared.all(axis) : prepared.any(axis);
   const auto valid =
-      skipnull ? pluss::Series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
+      skipnull ? pluss::series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
              : matrix.valid.all(axis);
   return with_reduce_labels_(Shelf(values, valid), src, matrix.names, axis);
 }
@@ -1851,7 +1851,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
           out_shelves.push_back(Shelf(*column_flags[idx]));
         } else {
           // A column that cannot hold NaN / infinity (integer, bool, text, time): never flagged.
-          auto none = pluss::Series::zeros({src.columns_[idx].size()}, pluss::codem::ScalarType::Bool);
+          auto none = pluss::series::zeros({src.columns_[idx].size()}, pluss::codem::ScalarType::Bool);
           out_shelves.push_back(Shelf(negate ? none.logical_not() : none));
         }
       }

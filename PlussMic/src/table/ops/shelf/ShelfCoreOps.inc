@@ -935,7 +935,7 @@ Shelf Shelf::put(const Shelf& bool_mask, const Shelf& value) const {
 Shelf Shelf::put(const Shelf& bool_mask, double value) const {
   if (kind() == ShelfKind::Series) {
     const auto& s = as_series();
-    return put(bool_mask, Shelf(pluss::Series::full({1}, value, s.scalar_type(), s.platform())));
+    return put(bool_mask, Shelf(pluss::series::full({1}, value, s.scalar_type(), s.platform())));
   }
   return put(bool_mask, Shelf(pluss::make_series(std::vector<double>{value}, {1})));
 }
@@ -997,7 +997,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
     if (t.has_mask()) {
       return t.notnull().as_series();
     }
-    return pluss::Series::ones({1}, pluss::codem::ScalarType::Bool);
+    return pluss::series::ones({1}, pluss::codem::ScalarType::Bool);
   };
 
   std::vector<pluss::Series> choice_validity;
@@ -1020,7 +1020,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
     PLUSS_CHECK(valid.numel() == 1,
                 "Shelf::select: validity mask must match output size or be scalar-like");
     const bool keep = valid.host<bool>()[0];
-    return pluss::Series::full(
+    return pluss::series::full(
         {output_size},
         keep ? 1.0 : 0.0,
         pluss::codem::ScalarType::Bool,
@@ -1121,7 +1121,7 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
   return select(
       conditions,
       choices,
-      Shelf(pluss::Series::full(
+      Shelf(pluss::series::full(
           {1},
           default_value,
           choices[0].as_series().scalar_type(),
@@ -1162,13 +1162,13 @@ Shelf Shelf::select(pluss::msharp::RangeView::Of<Shelf> conditions,
         conditions,
         choices,
         empty.with_mask(
-            pluss::Series::zeros(
+            pluss::series::zeros(
                 {empty.size()}, pluss::codem::ScalarType::Bool)));
   }
   return select(
       conditions,
       choices,
-      seed.with_mask(pluss::Series::zeros({seed.size()}, pluss::codem::ScalarType::Bool)));
+      seed.with_mask(pluss::series::zeros({seed.size()}, pluss::codem::ScalarType::Bool)));
 }
 
 Shelf Shelf::abs() const {
@@ -1282,10 +1282,10 @@ std::optional<pluss::Series> append_validity_mask_(const Shelf& left,
   }
   auto left_mask = detail::has_mask(left)
       ? *detail::validity_mask(left)
-      : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
+      : pluss::series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
   auto right_mask = detail::has_mask(right)
       ? *detail::validity_mask(right)
-      : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
+      : pluss::series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
   if (left_mask.platform() != platform) {
     left_mask = left_mask.to(platform);
   }
@@ -1439,7 +1439,7 @@ Shelf Shelf::shift(std::int64_t periods) const {
     return shifted.clear_mask();
   }
 
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   std::copy(out_valid.begin(), out_valid.end(), p);
   return shifted.with_mask(mask);
@@ -1765,10 +1765,10 @@ Shelf Shelf::interp(std::int64_t limit) const {
     }
   }
 
-  auto series = pluss::Series::empty(
+  auto series = pluss::series::empty(
       {size()}, pluss::codem::ScalarType::Float64, platform);
   if (!out.empty()) {
-    auto cpu = pluss::Series::empty({size()}, pluss::codem::ScalarType::Float64);
+    auto cpu = pluss::series::empty({size()}, pluss::codem::ScalarType::Float64);
     std::memcpy(cpu.raw_data(), out.data(), out.size() * sizeof(double));
     series = platform == pluss::codem::Platform::CPU ? cpu : cpu.to(platform);
   }
@@ -1814,10 +1814,10 @@ Shelf Shelf::bucketize(pluss::msharp::RangeView::Double bins,
 
   auto x = as_series().to(pluss::codem::ScalarType::Float64);
   const auto platform = x.platform();
-  auto out = pluss::Series::full({x.numel()},
+  auto out = pluss::series::full({x.numel()},
                                  static_cast<double>(label_values.front()),
                                  pluss::codem::ScalarType::Int64).to(platform);
-  auto assigned = pluss::Series::zeros({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
+  auto assigned = pluss::series::zeros({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
 
   pluss::Series base_valid = pluss::series::undefined();
   if (has_mask()) {
@@ -1826,7 +1826,7 @@ Shelf Shelf::bucketize(pluss::msharp::RangeView::Double bins,
       base_valid = base_valid.to(platform);
     }
   } else {
-    base_valid = pluss::Series::ones({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
+    base_valid = pluss::series::ones({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
   }
 
   for (std::int64_t i = 0; i < bucket_count; ++i) {
@@ -1943,7 +1943,7 @@ Shelf Shelf::freq(ShelfFreqOptions options) const {
   }
 
   auto label_shelf = Shelf(make_utf8_note(labels));
-  auto count_series = pluss::Series::empty({static_cast<std::int64_t>(counts.size())},
+  auto count_series = pluss::series::empty({static_cast<std::int64_t>(counts.size())},
                                            pluss::codem::ScalarType::Int64);
   if (!counts.empty()) {
     std::memcpy(count_series.raw_data(), counts.data(), counts.size() * sizeof(std::int64_t));
@@ -1951,7 +1951,7 @@ Shelf Shelf::freq(ShelfFreqOptions options) const {
   auto count_shelf = Shelf(count_series).label().set(label_shelf);
   if (options.kind == ShelfFreqKind::Prop) {
     if (count_shelf.size() == 0) {
-      return Shelf(pluss::Series::empty({0}, pluss::codem::ScalarType::Float64))
+      return Shelf(pluss::series::empty({0}, pluss::codem::ScalarType::Float64))
           .label().set(label_shelf)
           .name("prop");
     }
@@ -1974,7 +1974,7 @@ Shelf detail::freq_count_shelf(const Shelf& shelf,
 }
 
 ShelfValue Shelf::ndistinct(bool dropnull) const {
-  auto value = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
+  auto value = pluss::series::empty({1}, pluss::codem::ScalarType::Int64);
   reinterpret_cast<std::int64_t*>(value.raw_data())[0] = distinct(dropnull).size();
   return ShelfValue(Shelf(value));
 }
@@ -2117,7 +2117,7 @@ ShelfValue Shelf::count(bool count_true) const {
     const auto valid = notnull().as_series().host<bool>();
     total = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
   }
-  auto out = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::series::empty({1}, pluss::codem::ScalarType::Int64);
   reinterpret_cast<std::int64_t*>(out.raw_data())[0] = total;
   return ShelfValue(Shelf(out));
 }
@@ -2641,7 +2641,7 @@ Shelf Shelf::has(std::string_view value) const {
 
 Shelf Shelf::has(const Shelf& values) const {
   PLUSS_CHECK(values.defined(), "Shelf::has: values Shelf is undefined");
-  auto out = Shelf(pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool));
+  auto out = Shelf(pluss::series::zeros({size()}, pluss::codem::ScalarType::Bool));
   if (detail::has_labels(*this)) {
     out = detail::with_labels(out, detail::display_labels(*this));
   }
@@ -2721,7 +2721,7 @@ Shelf Shelf::compare(double other, ShelfBinaryCompareOp op) const {
         *this);
   }
 
-  auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({size()}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
 
   std::optional<std::vector<bool>> valid;
@@ -2750,7 +2750,7 @@ Shelf Shelf::compare(double other, ShelfBinaryCompareOp op) const {
 
 Shelf Shelf::compare(std::string_view other, ShelfBinaryCompareOp op) const {
   if (kind() == ShelfKind::Note) {
-    pluss::Note raw = pluss::Note::undefined();
+    pluss::Note raw = pluss::note::undefined();
     switch (op) {
       case ShelfBinaryCompareOp::Eq:
         raw = (as_note() == other);
@@ -2783,7 +2783,7 @@ Shelf Shelf::compare(std::string_view other, ShelfBinaryCompareOp op) const {
     }
   }
 
-  auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({size()}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(out.raw_data());
 
   std::optional<std::vector<bool>> valid;
@@ -3031,7 +3031,7 @@ Shelf Shelf::window(std::int64_t window_size, ShelfWindowOp op, std::int64_t min
   PLUSS_CHECK(is_numeric_series_type(as_series()), "Shelf::window: Series payload must be numeric");
 
   const auto n = size();
-  auto out = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+  auto out = pluss::series::empty({n}, pluss::codem::ScalarType::Float64);
   auto* out_data = reinterpret_cast<double*>(out.raw_data());
   std::vector<bool> out_valid(static_cast<std::size_t>(n), false);
 
@@ -3385,7 +3385,7 @@ Shelf Shelf::cast_(
 
       if (kind() == ShelfKind::Timeline) {
         const auto ticks = as_timeline().ticks();
-        auto out = pluss::Series::empty({static_cast<std::int64_t>(ticks.size())}, pluss::codem::ScalarType::Int64);
+        auto out = pluss::series::empty({static_cast<std::int64_t>(ticks.size())}, pluss::codem::ScalarType::Int64);
         if (!ticks.empty()) {
           std::memcpy(out.raw_data(), ticks.data(), ticks.size() * sizeof(std::int64_t));
         }
@@ -3409,7 +3409,7 @@ Shelf Shelf::cast_(
       const auto dt = series_dtype.value_or(pluss::codem::ScalarType::Float64);
 
       if (dt == pluss::codem::ScalarType::Bool) {
-        auto out = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+        auto out = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         std::vector<bool> parsed_valid(static_cast<std::size_t>(n), true);
         for (std::int64_t i = 0; i < n; ++i) {
@@ -3429,7 +3429,7 @@ Shelf Shelf::cast_(
         return Shelf(out, optional_mask_from_valid(parsed_valid));
       }
 
-      auto out = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+      auto out = pluss::series::empty({n}, pluss::codem::ScalarType::Float64);
       auto* p = reinterpret_cast<double*>(out.raw_data());
       std::vector<bool> parsed_valid(static_cast<std::size_t>(n), true);
       for (std::int64_t i = 0; i < n; ++i) {
@@ -3485,7 +3485,7 @@ Shelf Shelf::cast_(
         pluss::Series active_mask =
             has_mask()
                 ? validity_mask()->to(platform)
-                : pluss::Series::ones({size()}, pluss::codem::ScalarType::Bool).to(platform);
+                : pluss::series::ones({size()}, pluss::codem::ScalarType::Bool).to(platform);
 
         const auto trunc = raw_f64.floor();
         const auto is_integral = raw_f64.eq(trunc);
@@ -3505,7 +3505,7 @@ Shelf Shelf::cast_(
           const auto day =
               trunc.sub(yyyymm.mul(100.0)).to(pluss::codem::ScalarType::Int64);
 
-          auto out = pluss::Timeline::from_ymd(year, month, day);
+          auto out = pluss::timeline::from_ymd(year, month, day);
           const auto invalid_calendar_rows =
               active_mask.logical_and(out.isvalid().logical_not());
           PLUSS_CHECK(
@@ -3726,7 +3726,7 @@ Shelf ts_align_right_to_left_(const Shelf& left,
       return Shelf(pluss::series::full({n_left},
                                 std::numeric_limits<double>::quiet_NaN(),
                                 pluss::Config{}.with_dtype(pluss::codem::ScalarType::Float64).with_platform(platform)),
-                    pluss::Series::zeros({n_left}, pluss::codem::ScalarType::Bool, platform))
+                    pluss::series::zeros({n_left}, pluss::codem::ScalarType::Bool, platform))
           .label().set(left_axis);
     }
 
@@ -4115,8 +4115,8 @@ Shelf TimeSeriesAccessor::rolling(
   const auto dtype = platform == pluss::codem::Platform::CPU
                          ? pluss::codem::ScalarType::Float64
                          : pluss::codem::ScalarType::Float32;
-  auto output = pluss::Series::zeros({base_.size()}, dtype, platform);
-  auto output_valid = pluss::Series::zeros(
+  auto output = pluss::series::zeros({base_.size()}, dtype, platform);
+  auto output_valid = pluss::series::zeros(
       {base_.size()}, pluss::codem::ScalarType::Bool, platform);
 
   for (const auto& [key, rows] : rows_by_group) {
@@ -4199,7 +4199,7 @@ Shelf TimeSeriesAccessor::align_to(const Shelf& source_axis,
   const auto target_axis_ta = ts_axis_to_index_(target_axis, "TimeSeriesAccessor::align_to");
   const auto platform = source.platform();
   auto target_values = Shelf(
-      pluss::Series::zeros({target_axis_ta.size()}, pluss::codem::ScalarType::Float64, platform));
+      pluss::series::zeros({target_axis_ta.size()}, pluss::codem::ScalarType::Float64, platform));
   return ts_align_right_to_left_(
       target_values, base_, target_axis, source_axis, mode, "TimeSeriesAccessor::align_to");
 }
@@ -4377,7 +4377,7 @@ Shelf TimeSeriesResampler::asfreq(std::optional<double> fill_value) const {
     // sides; checked() validates that instead of trusting it silently.
     idx = target_axis_ta.ordered().join_asof(axis_ta.ordered(), pluss::Timeline::AsofDirection::Backward, nullptr, true);
   }
-  auto exact = pluss::Series::zeros({n_target}, pluss::codem::ScalarType::Bool);
+  auto exact = pluss::series::zeros({n_target}, pluss::codem::ScalarType::Bool);
   if (n_source > 0 && n_target > 0) {
     const Series valid = idx.ge(0.0);
     const Series source_ticks = axis_ta.timeline().epoch_nanos().reshape({n_source});

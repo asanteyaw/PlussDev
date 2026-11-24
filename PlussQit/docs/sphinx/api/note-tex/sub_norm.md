@@ -69,7 +69,7 @@ the run of alnum characters extends — `1b` together, then `2` alone.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().sub_norm().defined()
+          << pluss::note::undefined().tex().sub_norm().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().sub_norm();

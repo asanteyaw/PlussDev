@@ -53,7 +53,7 @@ int main() {
   }).ticks();
   const std::array<std::int64_t, 1> sizes{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       storage.data(), sizes, strides, {}, "UTC");
   show("strided_year", strided.period_start("year"));
 

@@ -87,7 +87,7 @@ TEST_CASE("MPS native put survives strict no-fallback policy", "[mps][put][nativ
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const ScopedEnvVar native_take_put("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
 
-  auto base_cpu = pluss::Series::zeros({6}, pluss::ScalarType::Float32);
+  auto base_cpu = pluss::series::zeros({6}, pluss::ScalarType::Float32);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 1, 4, 0}, {4});
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f}, {4});
   auto base_mps = base_cpu.to(pluss::pMPS);
@@ -163,7 +163,7 @@ TEST_CASE("MPS native put supports uint8 lane under strict policy", "[mps][put][
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const ScopedEnvVar native_take_put("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
 
-  auto base_cpu = pluss::Series::zeros({6}, pluss::ScalarType::UInt8);
+  auto base_cpu = pluss::series::zeros({6}, pluss::ScalarType::UInt8);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 1, 4, 0}, {4});
   const auto src_cpu = pluss::make_series(std::vector<std::uint8_t>{9, 200, 7, 60}, {4});
   auto base_mps = base_cpu.to(pluss::pMPS);
@@ -183,7 +183,7 @@ TEST_CASE("MPS strict put rejects unsupported accumulate lane when fallback is d
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const ScopedEnvVar native_take_put("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
 
-  auto base = pluss::Series::zeros({4}, pluss::ScalarType::Int16).to(pluss::pMPS);
+  auto base = pluss::series::zeros({4}, pluss::ScalarType::Int16).to(pluss::pMPS);
   const auto idx = pluss::make_series(std::vector<std::int64_t>{1, 1, 2}, {3}).to(pluss::pMPS);
   const auto src = pluss::make_series(std::vector<std::int16_t>{2, 3, 4}, {3}).to(pluss::pMPS);
   try {

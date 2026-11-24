@@ -96,7 +96,7 @@ public:
                                            input.sizes().end());
     output_shape.back() = rows_;
     const Series output =
-        Series::zeros(output_shape, products.scalar_type(), input.platform());
+        pluss::series::zeros(output_shape, products.scalar_type(), input.platform());
     return output.scatter_add(-1, rows, products);
   }
 

@@ -129,7 +129,7 @@ headings(5): rejected
 ## Example 5: Undefined And Invalid Dtype
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().headings(2);
+const auto absent = pluss::note::undefined().tex().headings(2);
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

@@ -197,7 +197,7 @@ static std::unique_ptr<CalendarOffset> negate_offset_(const CalendarOffset& off)
 
 Timeline impl_add_offset(const Timeline& a, const CalendarOffset& off) {
   check_timeline_core_(a);
-  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.sizes(), pluss::codem::ScalarType::Int64);
   if (a.numel() == 0) {
     return Timeline(std::move(out), a.unsafe_tz_name());
   }

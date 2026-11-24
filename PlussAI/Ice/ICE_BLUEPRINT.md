@@ -441,7 +441,7 @@ NodeK/CodeM, not worked around in ice:**
    pass replaced it with a structural fix modeled directly on libtorch's
    `torch::nn::Module::register_parameter`/`LinearImpl::reset()`: `parameter_record()` now
    `PLUSS_CHECK`s that a Series is already `defined()` before it will register it, allocation
-   (`Series::empty(shape, dtype, platform)`) and registration happen together in one method per
+   (`pluss::series::empty(shape, dtype, platform)`) and registration happen together in one method per
    class, and `reset_parameters()` fills in values with the in-place `Series::copy_()` instead of
    reassigning the member — so registration and tracking can never be out of sync with the value,
    no matter how many times `reset_parameters()` runs, and a future module that gets the order

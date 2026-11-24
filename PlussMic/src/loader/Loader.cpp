@@ -1496,7 +1496,7 @@ std::optional<pluss::Series> validity_mask_from_valid(const std::vector<bool>& v
   for (const auto v : valid) all_valid = all_valid && v;
   if (all_valid) return std::nullopt;
   const auto n = static_cast<std::int64_t>(valid.size());
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < n; ++i) p[i] = valid[static_cast<std::size_t>(i)];
   return mask;
@@ -1541,7 +1541,7 @@ pluss::table::Shelf shelf_from_arrow_array(const std::shared_ptr<arrow::Array>& 
   switch (type_id) {
     case arrow::Type::BOOL: {
       const auto a = std::static_pointer_cast<arrow::BooleanArray>(array);
-      auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+      auto s = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
       for (std::int64_t i = 0; i < n; ++i) p[i] = valid[static_cast<std::size_t>(i)] ? a->Value(i) : false;
       return pluss::table::Shelf(s, validity_mask_from_valid(valid));

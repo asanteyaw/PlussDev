@@ -96,10 +96,10 @@ value=\unit)");
   REQUIRE(updated.at(0) ==
           "\\newcommand{\\unit}{\\mathrm{kg}}\nvalue=\\unit");
 
-  REQUIRE_THROWS_AS(pluss::Note::undefined().tex().set_macro("bad name", "x"),
+  REQUIRE_THROWS_AS(pluss::note::undefined().tex().set_macro("bad name", "x"),
                     pluss::Error);
-  REQUIRE_THROWS_AS(pluss::Note::undefined().tex().set_macro("ok", "{x"),
+  REQUIRE_THROWS_AS(pluss::note::undefined().tex().set_macro("ok", "{x"),
                     pluss::Error);
-  REQUIRE_THROWS_AS(pluss::Note::undefined().tex().set_macro("ok", "#1"),
+  REQUIRE_THROWS_AS(pluss::note::undefined().tex().set_macro("ok", "#1"),
                     pluss::Error);
 }

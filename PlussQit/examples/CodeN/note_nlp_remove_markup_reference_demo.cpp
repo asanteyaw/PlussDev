@@ -102,7 +102,7 @@ int main() {
   show("empty", pluss::note::make(std::vector<std::string>{})
                     .nlp().remove_html());
   std::cout << "undefined defined=" << std::boolalpha
-            << pluss::Note::undefined().nlp().remove_html().defined() << '\n';
+            << pluss::note::undefined().nlp().remove_html().defined() << '\n';
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"<b>x</b>"},

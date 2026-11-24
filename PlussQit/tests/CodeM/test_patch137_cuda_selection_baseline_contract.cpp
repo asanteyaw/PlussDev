@@ -92,7 +92,7 @@ TEST_CASE("CUDA selection strict policy is runtime-dynamic", "[cuda][selection][
 TEST_CASE("CUDA selection route contract rejects non-CUDA tensors", "[cuda][selection][policy]") {
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar selection_on("PLUSS_CUDA_NATIVE_SELECTION", "1");
-  const auto x_cpu = pluss::Series::ones({4, 6}, pluss::ScalarType::Float32);
+  const auto x_cpu = pluss::series::ones({4, 6}, pluss::ScalarType::Float32);
   REQUIRE(x_cpu.platform() == pluss::pCPU);
   REQUIRE_FALSE(pluss::cuda::supports_sort_selection(x_cpu, /*dim=*/-1, /*stable=*/false));
   REQUIRE_FALSE(pluss::cuda::supports_topk_selection(x_cpu, /*k=*/3, /*dim=*/-1, /*sorted=*/true));

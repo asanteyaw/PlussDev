@@ -24,10 +24,10 @@ pluss::Series shelf_valid_(const Shelf& value) {
 
 Shelf scalar_shelf_(pluss::Series value, bool valid) {
   auto mask = valid
-                  ? pluss::Series::ones(
+                  ? pluss::series::ones(
                         value.sizes(), pluss::codem::ScalarType::Bool,
                         value.platform())
-                  : pluss::Series::zeros(
+                  : pluss::series::zeros(
                         value.sizes(), pluss::codem::ScalarType::Bool,
                         value.platform());
   return Shelf(std::move(value), std::move(mask));
@@ -36,7 +36,7 @@ Shelf scalar_shelf_(pluss::Series value, bool valid) {
 pluss::Series index_series_(
     const std::vector<std::int64_t>& values,
     pluss::codem::Platform platform) {
-  auto out = pluss::Series::empty(
+  auto out = pluss::series::empty(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Int64,
       pluss::codem::Platform::CPU);
@@ -137,14 +137,14 @@ Shelf indexed_numeric_window_(
   const auto platform = input.platform();
   if (n == 0) {
     return Shelf(
-        pluss::Series::empty({0}, dtype, platform),
-        pluss::Series::zeros(
+        pluss::series::empty({0}, dtype, platform),
+        pluss::series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
   }
   const auto values = input.to(dtype);
   const auto valid = shelf_valid_(source);
   const auto prepared = pluss::series::where(valid.logical_not(), 0.0, values);
-  const auto zero = pluss::Series::zeros({1}, dtype, platform);
+  const auto zero = pluss::series::zeros({1}, dtype, platform);
   const auto value_prefix =
       zero.unite({prepared.cumsum(0)}, 0, true);
   const auto count_prefix =
@@ -220,7 +220,7 @@ Shelf indexed_numeric_window_(
         extrema_valid[static_cast<std::size_t>(row)] = true;
       }
     }
-    auto cpu_result = pluss::Series::empty(
+    auto cpu_result = pluss::series::empty(
         {n}, pluss::codem::ScalarType::Float64);
     std::copy(extrema.begin(), extrema.end(),
               reinterpret_cast<double*>(cpu_result.raw_data()));
@@ -257,8 +257,8 @@ Shelf moving_moment_shelf_(
   const auto platform = input.platform();
   if (n == 0) {
     return Shelf(
-        pluss::Series::empty({0}, dtype, platform),
-        pluss::Series::zeros(
+        pluss::series::empty({0}, dtype, platform),
+        pluss::series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
   }
   if (options.closure != WindowClosure::Right) {
@@ -271,7 +271,7 @@ Shelf moving_moment_shelf_(
         pluss::series::where(valid.logical_not(), 0.0, values).sum() / count_total;
     const auto shifted =
         pluss::series::where(valid.logical_not(), 0.0, (values - origin));
-    const auto zero = pluss::Series::zeros({1}, dtype, platform);
+    const auto zero = pluss::series::zeros({1}, dtype, platform);
     const auto prefix = [&zero](const pluss::Series& value) {
       return zero.unite({value.cumsum(0)}, 0, true);
     };
@@ -327,8 +327,8 @@ Shelf moving_moment_shelf_(
   const auto values = input.to(dtype);
   const auto valid = shelf_valid_(source);
   const auto value_padding =
-      pluss::Series::zeros({window - 1}, dtype, platform);
-  const auto valid_padding = pluss::Series::zeros(
+      pluss::series::zeros({window - 1}, dtype, platform);
+  const auto valid_padding = pluss::series::zeros(
       {window - 1}, pluss::codem::ScalarType::Bool, platform);
   const auto window_values =
       value_padding
@@ -374,7 +374,7 @@ Shelf moving_moment_shelf_(
 }
 
 pluss::Series bool_from_u8_(const std::vector<std::uint8_t>& values) {
-  auto out = pluss::Series::zeros(
+  auto out = pluss::series::zeros(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Bool);
   auto* data = reinterpret_cast<bool*>(out.raw_data());
@@ -683,7 +683,7 @@ Shelf Shelf::percentiles(
                 "Shelf::percentiles: points must be in [0, 1]");
     auto value =
         clean.numel() == 0
-            ? pluss::Series::zeros(
+            ? pluss::series::zeros(
                   {1}, shelf_compute_type_(as_series()),
                   as_series().platform())
             : clean.quantile(point).reshape({1});
@@ -699,10 +699,10 @@ Shelf Shelf::percentiles(
           {static_cast<std::int64_t>(points.size())});
   const auto valid =
       clean.numel() >= min_count
-          ? pluss::Series::ones(
+          ? pluss::series::ones(
                 packed.sizes(), pluss::codem::ScalarType::Bool,
                 packed.platform())
-          : pluss::Series::zeros(
+          : pluss::series::zeros(
                 packed.sizes(), pluss::codem::ScalarType::Bool,
                 packed.platform());
   return Shelf(packed, valid);
@@ -743,7 +743,7 @@ Shelf Shelf::mode(bool drop_nulls) const {
       modes.push_back(0.0);
       output_valid.push_back(false);
     }
-    auto out = pluss::Series::empty(
+    auto out = pluss::series::empty(
         {static_cast<std::int64_t>(modes.size())},
         pluss::codem::ScalarType::Float64);
     std::copy(modes.begin(), modes.end(),
@@ -894,7 +894,7 @@ Shelf Shelf::rank(
     ++dense;
     begin = end;
   }
-  auto output = pluss::Series::empty(
+  auto output = pluss::series::empty(
       {n}, pluss::codem::ScalarType::Float64);
   std::copy(ranked.begin(), ranked.end(),
             reinterpret_cast<double*>(output.raw_data()));
@@ -905,7 +905,7 @@ Shelf Shelf::rank(
   auto output_valid =
       nulls == RankNullRule::Keep
           ? notnull().as_series().to(output.platform())
-          : pluss::Series::ones(
+          : pluss::series::ones(
                 {n}, pluss::codem::ScalarType::Bool,
                 output.platform());
   return Shelf(output, output_valid);
@@ -1085,13 +1085,13 @@ ShelfValue Shelf::corr_with(
   }
   const auto count =
       valid.to(pluss::codem::ScalarType::Int64).sum().item<std::int64_t>();
-  auto value = pluss::Series::zeros(
+  auto value = pluss::series::zeros(
       {1}, shelf_compute_type_(as_series()), as_series().platform());
   bool has_value = false;
   if (count >= min_count) {
     const auto corr_value = corr(other, method);
     has_value = std::isfinite(corr_value);
-    value = pluss::Series::full(
+    value = pluss::series::full(
         {1}, corr_value, shelf_compute_type_(as_series()),
         as_series().platform());
   }
@@ -1182,7 +1182,7 @@ Shelf exponential_mean_shelf_(
         count.ge(static_cast<double>(min_count))));
   }
   const auto beta = 1.0 - alpha;
-  auto positions = pluss::Series::arange(
+  auto positions = pluss::series::arange(
       0, source.size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
   if (ignore_nulls) {
     positions = count - 1.0;
@@ -1224,9 +1224,9 @@ Shelf exponential_variance_shelf_(
       alpha, adjusted, 1, ignore_nulls).as_series();
   pluss::Series second = pluss::series::undefined();
   auto correction =
-      pluss::Series::ones({source.size()}, dtype, platform);
+      pluss::series::ones({source.size()}, dtype, platform);
   if (adjusted && alpha < 1.0) {
-    auto positions = pluss::Series::arange(
+    auto positions = pluss::series::arange(
         0, source.size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
     if (ignore_nulls) {
       positions = count - 1.0;
@@ -1254,11 +1254,11 @@ Shelf exponential_variance_shelf_(
         centered * centered, alpha);
     if (bias_corrected) {
       if (alpha == 1.0) {
-        correction = pluss::Series::full(
+        correction = pluss::series::full(
             {source.size()}, std::numeric_limits<double>::infinity(),
             dtype, platform);
       } else {
-        const auto positions = pluss::Series::arange(
+        const auto positions = pluss::series::arange(
             0, source.size(), 1, pluss::codem::ScalarType::Int64,
             platform).to(dtype);
         const auto beta2 =
@@ -1278,7 +1278,7 @@ Shelf exponential_variance_shelf_(
       std::max<std::int64_t>(min_count, bias_corrected ? 2 : 1);
   auto output_valid = count.ge(static_cast<double>(required));
   if (bias_corrected && alpha == 1.0) {
-    output_valid = pluss::Series::zeros(
+    output_valid = pluss::series::zeros(
         {source.size()}, pluss::codem::ScalarType::Bool, platform);
   }
   return Shelf(result, output_valid);
@@ -1327,7 +1327,7 @@ Shelf Shelf::weigh(
   const auto window = static_cast<std::int64_t>(weights.size());
   const auto dtype = shelf_compute_type_(as_series());
   const auto platform = as_series().platform();
-  auto weight_series = pluss::Series::empty(
+  auto weight_series = pluss::series::empty(
       {window}, pluss::codem::ScalarType::Float64);
   std::copy(weights.begin(), weights.end(),
             reinterpret_cast<double*>(weight_series.raw_data()));
@@ -1338,11 +1338,11 @@ Shelf Shelf::weigh(
   const auto values = as_series().to(dtype);
   const auto valid = shelf_valid_(*this);
   const auto padded_values =
-      pluss::Series::zeros({window - 1}, dtype, platform)
+      pluss::series::zeros({window - 1}, dtype, platform)
           .unite({pluss::series::where(valid.logical_not(), 0.0, values)}, 0, true)
           .unfold(0, window, 1);
   const auto padded_valid =
-      pluss::Series::zeros(
+      pluss::series::zeros(
           {window - 1}, pluss::codem::ScalarType::Bool, platform)
           .unite({valid}, 0, true)
           .unfold(0, window, 1);
@@ -1472,8 +1472,8 @@ Shelf Shelf::grouped(
   }
   const auto dtype = shelf_compute_type_(as_series());
   const auto platform = as_series().platform();
-  auto output = pluss::Series::zeros({size()}, dtype, platform);
-  auto output_valid = pluss::Series::zeros(
+  auto output = pluss::series::zeros({size()}, dtype, platform);
+  auto output_valid = pluss::series::zeros(
       {size()}, pluss::codem::ScalarType::Bool, platform);
   for (const auto& [key, rows] : rows_by_group) {
     (void)key;
@@ -1551,7 +1551,7 @@ Shelf Shelf::map(
   if (!prototype.has_value()) {
     return *this;
   }
-  auto null_mask = pluss::Series::zeros(
+  auto null_mask = pluss::series::zeros(
       {1}, pluss::codem::ScalarType::Bool);
   if (prototype->kind() == ShelfKind::Series &&
       prototype->as_series().platform() !=
@@ -1647,7 +1647,7 @@ Shelf Shelf::length() const {
               "Shelf::length: expected Note payload");
   const auto measured = as_note().lengths_chars();
   const auto lengths = measured.integers();
-  auto output = pluss::Series::empty(
+  auto output = pluss::series::empty(
       {static_cast<std::int64_t>(lengths.size())},
       pluss::codem::ScalarType::Int64);
   std::copy(lengths.begin(), lengths.end(),
@@ -1710,7 +1710,7 @@ Shelf note_count_(const Shelf& source,
   if (options.regex) {
     expression = compile_regex_(pattern, options, "Shelf::nt().count");
   }
-  auto output = pluss::Series::empty(
+  auto output = pluss::series::empty(
       {source.size()}, pluss::codem::ScalarType::Int64);
   auto* data = reinterpret_cast<std::int64_t*>(output.raw_data());
   for (std::int64_t row = 0; row < source.size(); ++row) {

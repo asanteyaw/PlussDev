@@ -162,7 +162,7 @@ inline std::ostream& print(std::ostream& os, const pluss::Duration& d) {
 // ---- Shape factories (pluss::zeros/full/random-inspired, Duration-native) ----
 //
 // pluss::duration::zeros(sizes) -> Duration of all-zero (0 nanoseconds).
-// Routed through Series::zeros' own memset-based factory (wrapped, not
+// Routed through pluss::series::zeros' own memset-based factory (wrapped, not
 // copied, by ops_internal::duration_from_series) rather than a host-side
 // fill + second memcpy through duration_from_nanos.
 inline pluss::Duration zeros(pluss::msharp::RangeView::Int sizes) {
@@ -182,7 +182,7 @@ inline pluss::Duration zeros_like(const pluss::Duration& like) {
 // pluss::duration::full(sizes, fill_value) -> shape filled with a repeated
 // scalar Duration. Stays int64-exact (no double round trip) by reusing the
 // same flat-vector + duration_from_nanos path the unit factories and range()
-// already use, rather than Series::full's double-typed fill_value.
+// already use, rather than pluss::series::full's double-typed fill_value.
 inline pluss::Duration full(pluss::msharp::RangeView::Int sizes, const pluss::Duration& fill_value) {
   CODEM_CHECK(fill_value.dim() == 0, "pluss::duration::full: fill_value must be a scalar Duration");
   const auto n = factory_detail_::checked_numel_(sizes, "pluss::duration::full");
@@ -203,7 +203,7 @@ inline pluss::Duration full_like(const pluss::Duration& like, const pluss::Durat
 // [lo, hi) -- e.g. synthetic time-gap generation for test/demo data. Built on
 // a real 64-bit RNG + std::uniform_int_distribution<int64_t> (the same
 // exact-integer convention pluss::poisson/pluss::bernoulli/pluss::randperm
-// already use), not a double-based Series::rand scaling, which would lose
+// already use), not a double-based pluss::series::rand scaling, which would lose
 // precision once (hi - lo) in nanoseconds exceeds a double's ~2^53 mantissa
 // (about 104 days).
 inline pluss::Duration random(pluss::msharp::RangeView::Int sizes,

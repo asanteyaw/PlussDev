@@ -91,7 +91,7 @@ Example 2. Initializing a tracked leaf parameter with `copy_()` does not poison
 its later gradient.
 
 ```cpp
-pluss::Series w = pluss::Series::empty({5, 3}, pluss::ScalarType::Float64, pluss::pCPU);
+pluss::Series w = pluss::series::empty({5, 3}, pluss::ScalarType::Float64, pluss::pCPU);
 w.tracks_slope_(true);
 w.copy_(pluss::make_series({
     {1.0, 1.0, 1.0},

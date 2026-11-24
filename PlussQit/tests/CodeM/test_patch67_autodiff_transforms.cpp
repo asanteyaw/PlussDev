@@ -1723,9 +1723,9 @@ TEST_CASE("autodiff scatter_reduce(prod) handles receiver and source zeros",
 
 TEST_CASE("autodiff index backward accepts an empty index into an empty input",
           "[autodiff][reverse][index]") {
-  Series input = Series::empty({0, 3}, ScalarType::Float64);
+  Series input = pluss::series::empty({0, 3}, ScalarType::Float64);
   input.tracks_slope_(true);
-  const Series index = Series::empty({0}, ScalarType::Int64);
+  const Series index = pluss::series::empty({0}, ScalarType::Int64);
 
   input.index({index}).sum().reverse();
 

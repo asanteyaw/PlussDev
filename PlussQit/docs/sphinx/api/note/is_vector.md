@@ -57,7 +57,7 @@ vector=true empty=true size=0
 
 ```cpp
 const auto matrix = pluss::note::make({{"x"}});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "matrix=" << matrix.is_vector()
           << " absent=" << absent.is_vector() << '\n';

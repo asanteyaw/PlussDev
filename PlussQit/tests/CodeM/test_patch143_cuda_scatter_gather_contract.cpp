@@ -126,9 +126,9 @@ TEST_CASE("CUDA scatter/gather strict policy is runtime-dynamic", "[cuda][scatte
 TEST_CASE("CUDA scatter/gather route contract rejects non-CUDA tensors", "[cuda][scatter][policy]") {
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar sg_on("PLUSS_CUDA_NATIVE_SCATTER_GATHER", "1");
-  const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto self_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 2, 1, 0}, {2, 3});
-  const auto src_cpu = pluss::Series::ones({2, 3}, pluss::ScalarType::Float32);
+  const auto src_cpu = pluss::series::ones({2, 3}, pluss::ScalarType::Float32);
   REQUIRE_FALSE(pluss::cuda::supports_scatter_native(self_cpu, 1, idx_cpu, src_cpu));
   REQUIRE_FALSE(pluss::cuda::supports_scatter_add_native(self_cpu, 1, idx_cpu, src_cpu));
   REQUIRE_FALSE(pluss::cuda::supports_scatter_reduce_native(self_cpu, 1, idx_cpu, src_cpu, "sum"));
@@ -144,7 +144,7 @@ TEST_CASE("CUDA bridge enables scatter/gather fallback when strict native is off
     return;
   }
 
-  const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto self_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto input_cpu = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f}, {2, 3});
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 2, 1, 0}, {2, 3});
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f, 5.f, 4.f}, {2, 3});
@@ -181,9 +181,9 @@ TEST_CASE("CUDA strict native scatter/gather executes supported native route", "
     return;
   }
 
-  const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto self_cpu = pluss::series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 2, 1, 0}, {2, 3});
-  const auto src_cpu = pluss::Series::ones({2, 3}, pluss::ScalarType::Float32);
+  const auto src_cpu = pluss::series::ones({2, 3}, pluss::ScalarType::Float32);
   const auto self_cuda = self_cpu.to(pluss::pCUDA);
   const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
   const auto src_cuda = src_cpu.to(pluss::pCUDA);

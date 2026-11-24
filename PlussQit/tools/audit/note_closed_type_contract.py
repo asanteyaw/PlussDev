@@ -250,7 +250,7 @@ def manual_record(name: str, signature: str, current: str, target: str,
 
 def manual_records() -> list[dict[str, object]]:
     rows = [
-        manual_record("undefined", "static Note Note::undefined() noexcept", "Note", "Note", "untyped", "undefined handle constructor", "none", "src/CodeN/core/Note.h"),
+        manual_record("undefined", "static Note pluss::note::undefined() noexcept", "Note", "Note", "untyped", "undefined handle constructor", "none", "src/CodeN/core/Note.h"),
         manual_record("nlp", "Note::NlpAccessor Note::nlp() const noexcept", "Note::NlpAccessor", "Note::NlpAccessor", "accessor", "borrowed linguistic operation gateway", "complete", "src/CodeN/core/Note.h"),
         manual_record("regex", "Note::RegexAccessor Note::regex() const noexcept", "Note::RegexAccessor", "Note::RegexAccessor", "accessor", "borrowed regular-expression operation gateway", "complete", "src/CodeN/core/Note.h"),
         manual_record("tex", "Note::TexAccessor Note::tex() const noexcept", "Note::TexAccessor", "Note::TexAccessor", "accessor", "borrowed TeX/LaTeX-source operation gateway", "complete", "src/CodeN/core/Note.h"),

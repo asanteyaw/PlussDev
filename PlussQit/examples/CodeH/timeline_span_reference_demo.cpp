@@ -124,7 +124,7 @@ int main() {
       1'704'153'600'000'000'000LL, 222LL};
   const std::array<std::int64_t, 1> shape{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
   show("strided_span", scalar.span(strided));
 

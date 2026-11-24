@@ -39,8 +39,8 @@ int main() {
     const pluss::Series margin = y * z;
     return (1.0 + (margin * -1.0).exp()).log().sum() * (1.0 / n) + 0.05 * w.square().sum();
   };
-  const auto zeros_w = pluss::Series::zeros({2, 1}, pluss::ScalarType::Float64);
-  const auto zeros_b = pluss::Series::zeros({1}, pluss::ScalarType::Float64);
+  const auto zeros_w = pluss::series::zeros({2, 1}, pluss::ScalarType::Float64);
+  const auto zeros_b = pluss::series::zeros({1}, pluss::ScalarType::Float64);
 
   std::vector<std::pair<std::string, std::vector<double>>> fits;
   std::cout << std::left << std::setw(10) << "optimizer" << std::setw(14) << "exit" << std::setw(8) << "iters" << std::setw(8) << "evals" << std::setw(12) << "loss"

@@ -123,7 +123,7 @@ No dtype is converted through a textual representation.
 ## Example 3: Undefined Is A Serializable State
 
 ```cpp
-const auto restored = pluss::note::unpack(pluss::Note::undefined().pack());
+const auto restored = pluss::note::unpack(pluss::note::undefined().pack());
 std::cout << std::boolalpha << "defined=" << restored.defined() << '\n';
 ```
 
@@ -202,7 +202,7 @@ example inspects the restored bit patterns directly.
 ## Example 7: The Result Owns Its Storage
 
 ```cpp
-auto restored = pluss::Note::undefined();
+auto restored = pluss::note::undefined();
 {
   const auto temporary = pluss::note::make("alpha").pack();
   restored = pluss::note::unpack(temporary);

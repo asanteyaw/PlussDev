@@ -91,7 +91,7 @@ This differs intentionally from `envs()`, which requires a complete pair.
 ## Example 4: Undefined And Invalid Dtypes
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().env_names();
+const auto absent = pluss::note::undefined().tex().env_names();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

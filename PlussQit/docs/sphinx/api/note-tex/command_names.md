@@ -77,7 +77,7 @@ offsets=[0, 3, 4, 4]
 ## Example 3: Undefined Produces The Closed Empty Sentinel
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().command_names();
+const auto absent = pluss::note::undefined().tex().command_names();
 std::cout << std::boolalpha << "undefined names="
           << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";

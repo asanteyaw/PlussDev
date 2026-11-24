@@ -229,7 +229,7 @@ try {
       .reshape({2, 2}).argsort();
 } catch (const pluss::Error&) { std::cout << "matrix: rejected\n"; }
 
-try { (void)pluss::Note::undefined().argsort(); }
+try { (void)pluss::note::undefined().argsort(); }
 catch (const pluss::Error&) { std::cout << "undefined: rejected\n"; }
 ```
 

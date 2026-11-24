@@ -67,7 +67,7 @@ struct CrossEntropyOptions {
 namespace detail {
 
 inline Series scalar_on_(double value, const Series& like) {
-  return Series::full({}, value, like.scalar_type()).to(like.platform());
+  return pluss::series::full({}, value, like.scalar_type()).to(like.platform());
 }
 
 inline bool same_shape_(const Series& a, const Series& b) {

@@ -30,7 +30,7 @@ namespace ops_internal {
                                      std::span<const std::int64_t> sizes);
   // Zero-copy wrap of an already-built Int64 epoch-nanoseconds Series -- lets
   // callers (e.g. pluss::timeline::epoch) build via Series' own optimized
-  // factories (Series::zeros' memset, etc.) instead of paying for a second
+  // factories (pluss::series::zeros' memset, etc.) instead of paying for a second
   // host-side fill + memcpy through timeline_from_epoch_nanos.
   Timeline timeline_from_series(pluss::codem::Series ticks, std::string tz_name = "UTC");
 } // namespace ops_internal
@@ -75,6 +75,23 @@ pluss::coden::Note impl_weekday_name(const Timeline& a);
 pluss::coden::Note impl_month_name(const Timeline& a);
 } // namespace detail
 
+// The Timeline constructors that are free functions rather than members of Timeline: pluss::timeline::* (see
+// pluss/codeh/timeline_factory.h) is the public face and delegates here.
+namespace factory {
+Timeline from_ymd(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day,
+                  std::string_view tz_name = "UTC");
+Timeline from_ymdhms(const pluss::codem::Series& year, const pluss::codem::Series& month, const pluss::codem::Series& day,
+                     const pluss::codem::Series& hour, const pluss::codem::Series& minute,
+                     const pluss::codem::Series& second, std::string_view tz_name = "UTC");
+Timeline from_epoch_seconds(const pluss::codem::Series& epoch_seconds, std::string_view tz_name = "UTC");
+Timeline from_epoch_millis(const pluss::codem::Series& epoch_millis, std::string_view tz_name = "UTC");
+Timeline from_epoch_micros(const pluss::codem::Series& epoch_micros, std::string_view tz_name = "UTC");
+Timeline yesterday();
+Timeline tomorrow();
+inline Timeline from_buffer(std::int64_t* data, std::span<const std::int64_t> sizes, std::span<const std::int64_t> strides,
+                            pluss::codem::BlobDeleter deleter = {}, std::string_view tz_name = "UTC");
+} // namespace factory
+
 // Timeline: N-D (0D..3D) array of instants.
 // Canonical storage: epoch nanoseconds in UTC (int64).
 class CODEH_API Timeline : public TimelineBase {
@@ -117,11 +134,6 @@ public:
   using TimelineBase::weekday_name;
   using TimelineBase::month_name;
 
-  static Timeline from_buffer(std::int64_t* data,
-                              std::span<const std::int64_t> sizes,
-                              std::span<const std::int64_t> strides,
-                              pluss::codem::BlobDeleter deleter = {},
-                              std::string_view tz_name = "UTC");
 
 #if defined(CODEH_ENABLE_TIMELINE_SURFACE) && !defined(CODEH_NO_TIMELINE_SURFACE)
   #include "CodeH/core/TimelineSurface.h"
@@ -167,6 +179,16 @@ private:
   friend Timeline detail::impl_where(const Timeline&, const pluss::codem::Series&, const Timeline&);
   friend pluss::codem::Series detail::impl_searchsorted(const Timeline&, const Timeline&, bool);
   friend Timeline detail::impl_add_nanos(const Timeline&, std::int64_t);
+  friend Timeline factory::from_ymd(const pluss::codem::Series&, const pluss::codem::Series&, const pluss::codem::Series&, std::string_view);
+  friend Timeline factory::from_ymdhms(const pluss::codem::Series&, const pluss::codem::Series&, const pluss::codem::Series&,
+                                       const pluss::codem::Series&, const pluss::codem::Series&, const pluss::codem::Series&, std::string_view);
+  friend Timeline factory::from_epoch_seconds(const pluss::codem::Series&, std::string_view);
+  friend Timeline factory::from_epoch_millis(const pluss::codem::Series&, std::string_view);
+  friend Timeline factory::from_epoch_micros(const pluss::codem::Series&, std::string_view);
+  friend Timeline factory::yesterday();
+  friend Timeline factory::tomorrow();
+  friend Timeline factory::from_buffer(std::int64_t*, std::span<const std::int64_t>, std::span<const std::int64_t>,
+                                       pluss::codem::BlobDeleter, std::string_view);
   friend pluss::coden::Note detail::impl_weekday_name(const Timeline&);
   friend pluss::coden::Note detail::impl_month_name(const Timeline&);
 
@@ -174,12 +196,12 @@ private:
       : TimelineBase(std::move(ticks), std::move(tz_name)) {}
 };
 
-inline Timeline Timeline::from_buffer(std::int64_t* data,
+inline Timeline factory::from_buffer(std::int64_t* data,
                                       std::span<const std::int64_t> sizes,
                                       std::span<const std::int64_t> strides,
                                       pluss::codem::BlobDeleter deleter,
                                       std::string_view tz_name) {
-  CODEM_CHECK(sizes.size() <= 3, "Timeline::from_buffer: only supports 0D..3D");
+  CODEM_CHECK(sizes.size() <= 3, "pluss::codeh::factory::from_buffer: only supports 0D..3D");
   auto ticks = pluss::codem::from_buffer(
       static_cast<void*>(data),
       sizes,

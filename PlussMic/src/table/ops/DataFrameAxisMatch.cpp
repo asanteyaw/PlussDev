@@ -59,7 +59,7 @@ pluss::codem::Platform shelf_platform(const Shelf& shelf) {
 
 pluss::Series bool_series_on(const std::vector<bool>& values,
                              const pluss::codem::Platform platform) {
-  auto cpu = pluss::Series::zeros(
+  auto cpu = pluss::series::zeros(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Bool,
       pluss::codem::Platform::CPU);
@@ -300,10 +300,10 @@ std::optional<pluss::Series> joined_validity(
   }
   auto left_mask = detail::has_mask(left)
       ? *detail::validity_mask(left)
-      : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
+      : pluss::series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
   auto right_mask = detail::has_mask(right)
       ? *detail::validity_mask(right)
-      : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
+      : pluss::series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
   if (left_mask.platform() != platform) {
     left_mask = left_mask.to(platform);
   }
@@ -535,7 +535,7 @@ Shelf null_shelf_like(const Shelf& reference, const std::int64_t size) {
   } else {
     switch (reference.kind()) {
       case ShelfKind::Series:
-        values = Shelf(pluss::Series::zeros(
+        values = Shelf(pluss::series::zeros(
             {size},
             reference.as_series().scalar_type(),
             reference.as_series().platform()));
@@ -545,7 +545,7 @@ Shelf null_shelf_like(const Shelf& reference, const std::int64_t size) {
             std::vector<std::string>(static_cast<std::size_t>(size))));
         break;
       case ShelfKind::Timeline: {
-        auto ticks = pluss::Series::zeros(
+        auto ticks = pluss::series::zeros(
             {size},
             pluss::codem::ScalarType::Int64,
             reference.as_timeline().epoch_nanos().platform());
@@ -714,7 +714,7 @@ DataFrame DataFrame::extend(
 
   Shelf output_cases;
   if (fresh_cases) {
-    output_cases = Shelf(pluss::Series::arange(
+    output_cases = Shelf(pluss::series::arange(
         0.0,
         static_cast<double>(ncases() + other.ncases()),
         1.0,

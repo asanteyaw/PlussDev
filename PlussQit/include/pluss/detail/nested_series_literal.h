@@ -141,7 +141,7 @@ inline pluss::codem::Series to_series(const NestedSeriesLiteral& literal,
   }
 
   const auto out_dtype = dtype.has_value() ? *dtype : deduce_literal_dtype(literal);
-  pluss::codem::Series out = pluss::codem::Series::empty(sizes, out_dtype);
+  pluss::codem::Series out = pluss::codem::factory::empty(sizes, out_dtype);
 
   // Every leaf was Bool/UInt8/Int (no float leaf anywhere) and the target
   // dtype is itself integral: route through the exact int64 buffer instead
@@ -155,7 +155,7 @@ inline pluss::codem::Series to_series(const NestedSeriesLiteral& literal,
   collect_literal_stats(literal, stats);
   const bool literal_is_integer_only = !stats.has_float32 && !stats.has_float64;
   if (literal_is_integer_only && pluss::codem::dtype_of(out_dtype).is_integral()) {
-    pluss::codem::Series tmp = pluss::codem::Series::empty(sizes, pluss::codem::ScalarType::Int64);
+    pluss::codem::Series tmp = pluss::codem::factory::empty(sizes, pluss::codem::ScalarType::Int64);
     std::memcpy(
         tmp.raw_mutable_data(),
         flat_i64.data(),
@@ -164,7 +164,7 @@ inline pluss::codem::Series to_series(const NestedSeriesLiteral& literal,
     return out;
   }
 
-  pluss::codem::Series tmp = pluss::codem::Series::empty(sizes, pluss::codem::ScalarType::Float64);
+  pluss::codem::Series tmp = pluss::codem::factory::empty(sizes, pluss::codem::ScalarType::Float64);
   std::memcpy(
       tmp.raw_mutable_data(),
       flat.data(),

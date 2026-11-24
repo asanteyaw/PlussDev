@@ -337,13 +337,13 @@ Series matmul(const Series& a, const Series& b) {
   }
   const ScalarType dt = a.scalar_type();
   if (m64 == 0 || n64 == 0 || k64 == 0) {
-    return Series::empty({m64, n64}, dt, Platform::MPS);
+    return pluss::codem::factory::empty({m64, n64}, dt, Platform::MPS);
   }
   const NSUInteger m = static_cast<NSUInteger>(m64);
   const NSUInteger n = static_cast<NSUInteger>(n64);
   const NSUInteger k = static_cast<NSUInteger>(k64);
 
-  Series out = Series::empty({m64, n64}, dt, Platform::MPS);
+  Series out = pluss::codem::factory::empty({m64, n64}, dt, Platform::MPS);
   @autoreleasepool {
     const std::size_t elem_bytes =
         (dt == ScalarType::Int32)   ? sizeof(std::int32_t)

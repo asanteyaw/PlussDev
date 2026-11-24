@@ -10,8 +10,8 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("matmul 2D", "[matmul]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
-  auto b = Series::zeros({3,2}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
+  auto b = pluss::series::zeros({3,2}, ScalarType::Float64);
 
   // a = [[1,2,3],[4,5,6]]
   auto* ap = reinterpret_cast<double*>(a.raw_data());

@@ -90,7 +90,7 @@ int main() {
   show("empty", pluss::note::make(std::vector<std::string>{})
                     .nlp().remove_code());
   std::cout << "undefined defined=" << std::boolalpha
-            << pluss::Note::undefined().nlp().remove_code().defined() << '\n';
+            << pluss::note::undefined().nlp().remove_code().defined() << '\n';
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"- item"},

@@ -93,7 +93,7 @@ token Note — not an undefined one; compare Example 4 below.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().subsubsections().tokens().defined()
+          << pluss::note::undefined().tex().subsubsections().tokens().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().subsubsections();

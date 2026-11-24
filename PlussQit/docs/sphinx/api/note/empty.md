@@ -60,7 +60,7 @@ empty=true dim=2 sizes=[2, 0]
 ```cpp
 const auto empty_value = pluss::note::make(
     std::vector<std::string>{}, std::array<std::int64_t, 1>{0});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "empty value: defined=" << empty_value.defined()
           << " empty=" << empty_value.empty() << '\n'

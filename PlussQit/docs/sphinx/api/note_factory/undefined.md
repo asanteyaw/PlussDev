@@ -1,16 +1,16 @@
 # Note::undefined
 
-[Back to Note API Reference](../../note_api_reference)
+[Back to Note Factory API Reference](../../note_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Note Note::undefined() noexcept
+static Note pluss::note::undefined() noexcept
 ```
 
 ## Construct The Absence State
 
-`Note::undefined()` constructs a Note handle with no backing value. It is the
+`pluss::note::undefined()` constructs a Note handle with no backing value. It is the
 explicit absence state used when an operation has no Note to return or an
 optional Note argument has not been supplied. It is not a null text lane, not
 an empty string, and not a defined Note with a zero-sized dimension.
@@ -30,7 +30,7 @@ absence behavior is not part of its contract.
 ## Example 1: Absence And Empty Geometry Are Different
 
 ```cpp
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 const auto empty = pluss::note::make(
     std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
 
@@ -61,7 +61,7 @@ dtype and rank-2 geometry.
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().dtype();
+  (void)pluss::note::undefined().dtype();
 } catch (const pluss::Error&) {
   std::cout << "undefined dtype: rejected\n";
 }
@@ -78,7 +78,7 @@ Check `defined()` before requesting metadata that cannot exist without storage.
 ## Example 3: Copying Preserves Absence
 
 ```cpp
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 const auto copied = absent;
 std::cout << std::boolalpha << "copied defined=" << copied.defined() << '\n';
 ```
@@ -94,7 +94,7 @@ No placeholder allocation is introduced by the copy.
 ## Example 4: Absence Survives A Binary Round Trip
 
 ```cpp
-const auto restored = pluss::note::unpack(pluss::Note::undefined().pack());
+const auto restored = pluss::note::unpack(pluss::note::undefined().pack());
 std::cout << std::boolalpha << "defined=" << restored.defined() << '\n';
 ```
 
@@ -109,9 +109,9 @@ payload.
 
 ## See Also
 
-- [`defined`](defined.md): test for this state without throwing.
+- [`defined`](../timeline/defined.md): test for this state without throwing.
 - [`empty`](empty.md): test element count, which also reports true for undefined.
-- [`pack`](pack.md): preserve undefined across a byte-oriented boundary.
+- [`pack`](../note/pack.md): preserve undefined across a byte-oriented boundary.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="transpose.html"><span class="label">Previous</span><span class="title">transpose</span></a>

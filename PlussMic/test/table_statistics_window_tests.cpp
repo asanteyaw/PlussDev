@@ -181,7 +181,7 @@ void test_statistics() {
   expect(pluss::table::detail::validity_mask(aligned_axis.features("scholarship"))->host<bool>() ==
              std::vector<bool>({true, false, true, true}),
          "case-aligned assignment should mark unmatched cases null");
-  aligned_axis.set("constant") = pluss::Series::full({}, 7235.0, pluss::codem::ScalarType::Float64);
+  aligned_axis.set("constant") = pluss::series::full({}, 7235.0, pluss::codem::ScalarType::Float64);
   expect(aligned_axis.features("constant").as_series().host<double>() ==
              std::vector<double>({7235.0, 7235.0, 7235.0, 7235.0}),
          "0D Series assignment should broadcast");
@@ -866,7 +866,7 @@ void test_statistics() {
              row_max.features("c").as_series().host<double>() ==
                  std::vector<double>({5, 40}),
          "Axis::Feature cummax should scan across features per case");
-  auto nullable_valid = pluss::Series::ones(
+  auto nullable_valid = pluss::series::ones(
       {4}, pluss::codem::ScalarType::Bool);
   reinterpret_cast<bool*>(nullable_valid.raw_data())[1] = false;
   const auto nullable = DataFrame({
@@ -880,7 +880,7 @@ void test_statistics() {
   expect(pluss::table::detail::validity_mask(nullable.scan(ScanStatistic::Sum, false).features("x"))->host<bool>() ==
              std::vector<bool>({true, false, false, false}),
          "strict cumulative validity stops after a null");
-  auto row_valid = pluss::Series::ones({2}, pluss::codem::ScalarType::Bool);
+  auto row_valid = pluss::series::ones({2}, pluss::codem::ScalarType::Bool);
   reinterpret_cast<bool*>(row_valid.raw_data())[0] = false;
   const auto row_nullable = DataFrame({
       {"a", Shelf(pluss::make_series(std::vector<double>{1, 10}))},
@@ -1378,7 +1378,7 @@ void test_udfs_and_text() {
   expect(mapped.as_series().host<double>() ==
              std::vector<double>({2, 4, 6}),
          "Shelf element UDF");
-  auto map_validity = pluss::Series::ones(
+  auto map_validity = pluss::series::ones(
       {3}, pluss::codem::ScalarType::Bool);
   reinterpret_cast<bool*>(map_validity.raw_data())[1] = false;
   std::int64_t callback_count = 0;

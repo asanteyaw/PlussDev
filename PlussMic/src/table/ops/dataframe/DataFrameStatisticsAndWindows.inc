@@ -7,7 +7,7 @@ pluss::codem::ScalarType statistics_compute_type_(const pluss::Series& values) {
 }
 
 pluss::Series column_from_matrix_(const pluss::Series& matrix, std::int64_t column) {
-  auto index = pluss::Series::arange(
+  auto index = pluss::series::arange(
       column,
       column + 1,
       1,
@@ -104,11 +104,11 @@ Shelf pad_modes_(const Shelf& source, std::int64_t size) {
     return source;
   }
   const auto padding = size - source.size();
-  auto valid_padding = pluss::Series::zeros(
+  auto valid_padding = pluss::series::zeros(
       {padding}, pluss::codem::ScalarType::Bool);
   if (source.kind() == ShelfKind::Series) {
     const auto platform = source.as_series().platform();
-    auto values = pluss::Series::zeros(
+    auto values = pluss::series::zeros(
         {padding}, source.as_series().scalar_type(), platform);
     if (platform != pluss::codem::Platform::CPU) {
       valid_padding = valid_padding.to(platform);
@@ -277,8 +277,8 @@ Shelf moving_statistic_(const Shelf& source,
   const auto platform = input.platform();
   if (n == 0) {
     return Shelf(
-        pluss::Series::empty({0}, dtype, platform),
-        pluss::Series::zeros(
+        pluss::series::empty({0}, dtype, platform),
+        pluss::series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
   }
   auto values = input.to(dtype);
@@ -289,7 +289,7 @@ Shelf moving_statistic_(const Shelf& source,
   const auto prefix_difference = [window, n, dtype, platform](
                                      const pluss::Series& input_values) {
     auto cumulative = input_values.cumsum(0);
-    auto prior = pluss::Series::zeros(
+    auto prior = pluss::series::zeros(
         {std::min(window, n)}, dtype, platform);
     if (n > window) {
       prior = prior.unite(
@@ -327,7 +327,7 @@ Shelf moving_statistic_(const Shelf& source,
     const auto fill = op == MovingOp_::Minimum
                           ? std::numeric_limits<double>::infinity()
                           : -std::numeric_limits<double>::infinity();
-    auto padding = pluss::Series::full(
+    auto padding = pluss::series::full(
         {window - 1}, fill, dtype, platform);
     auto padded = padding.unite(
         {pluss::series::where(valid.logical_not(), fill, values)}, 0, true);
@@ -390,16 +390,16 @@ Shelf moving_moment_(const Shelf& source,
   const auto platform = source.as_series().platform();
   if (n == 0) {
     return Shelf(
-        pluss::Series::empty({0}, dtype, platform),
-        pluss::Series::zeros(
+        pluss::series::empty({0}, dtype, platform),
+        pluss::series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
   }
   const auto values = source.as_series().to(dtype);
   const auto valid = source.notnull().as_series().to(platform);
   const auto value_padding =
-      pluss::Series::zeros({window - 1}, dtype, platform);
+      pluss::series::zeros({window - 1}, dtype, platform);
   const auto valid_padding =
-      pluss::Series::zeros(
+      pluss::series::zeros(
           {window - 1}, pluss::codem::ScalarType::Bool, platform);
   const auto window_values =
       value_padding
@@ -844,7 +844,7 @@ DataFrame DataFrame::matmul(const DataFrame& other) const {
                   right_matrix.valid.all().item<bool>(),
               "DataFrame::matmul: null values are not supported");
   auto result = left_matrix.values.matmul(right_matrix.values);
-  auto valid = pluss::Series::ones(
+  auto valid = pluss::series::ones(
       result.sizes(), pluss::codem::ScalarType::Bool, result.platform());
   return frame_from_matrix_(
       result, valid, right_matrix.names, left.cases_);

@@ -8,17 +8,17 @@ using pluss::codem::ScalarType;
 
 TEST_CASE("index with per-dim broadcasted int64 indices", "[adv_index]") {
   // a shape [2,3]
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (int i=0;i<6;++i) ap[i] = double(i+1); // [[1,2,3],[4,5,6]]
 
   // idx0 shape [2,1] selects rows [0,1]
-  auto i0 = Series::zeros({2,1}, ScalarType::Int64);
+  auto i0 = pluss::series::zeros({2,1}, ScalarType::Int64);
   auto* i0p = reinterpret_cast<std::int64_t*>(i0.raw_data());
   i0p[0]=0; i0p[1]=1;
 
   // idx1 shape [1,2] selects cols [2,0]
-  auto i1 = Series::zeros({1,2}, ScalarType::Int64);
+  auto i1 = pluss::series::zeros({1,2}, ScalarType::Int64);
   auto* i1p = reinterpret_cast<std::int64_t*>(i1.raw_data());
   i1p[0]=2; i1p[1]=0;
 
@@ -34,16 +34,16 @@ TEST_CASE("index with per-dim broadcasted int64 indices", "[adv_index]") {
 }
 
 TEST_CASE("index_put overwrite and accumulate", "[adv_index]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float32);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float32);
   // indices broadcast to shape [2,2]
-  auto i0 = Series::zeros({2,1}, ScalarType::Int64);
-  auto i1 = Series::zeros({1,2}, ScalarType::Int64);
+  auto i0 = pluss::series::zeros({2,1}, ScalarType::Int64);
+  auto i1 = pluss::series::zeros({1,2}, ScalarType::Int64);
   auto* i0p = reinterpret_cast<std::int64_t*>(i0.raw_data());
   auto* i1p = reinterpret_cast<std::int64_t*>(i1.raw_data());
   i0p[0]=0; i0p[1]=1;
   i1p[0]=1; i1p[1]=1; // both map to col1
 
-  auto vals = Series::zeros({2,2}, ScalarType::Float32);
+  auto vals = pluss::series::zeros({2,2}, ScalarType::Float32);
   auto* vp = reinterpret_cast<float*>(vals.raw_data());
   vp[0]=1; vp[1]=2; vp[2]=3; vp[3]=4;
 
@@ -61,9 +61,9 @@ TEST_CASE("index_put overwrite and accumulate", "[adv_index]") {
 }
 
 TEST_CASE("put accumulate works", "[flat]") {
-  auto a = Series::zeros({5}, ScalarType::Int64);
-  auto idx = Series::zeros({3}, ScalarType::Int64);
-  auto src = Series::zeros({3}, ScalarType::Int64);
+  auto a = pluss::series::zeros({5}, ScalarType::Int64);
+  auto idx = pluss::series::zeros({3}, ScalarType::Int64);
+  auto src = pluss::series::zeros({3}, ScalarType::Int64);
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   auto* sp = reinterpret_cast<std::int64_t*>(src.raw_data());
   ip[0]=2; ip[1]=2; ip[2]=2;

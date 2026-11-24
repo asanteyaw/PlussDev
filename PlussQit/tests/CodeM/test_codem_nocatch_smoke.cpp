@@ -365,7 +365,7 @@ void test_aux_let_transmit() {
 }
 
 void test_arithmetic_and_reduce() {
-  auto a = pluss::Series::full({2,2}, 2.0, pluss::ScalarType::Float32);
+  auto a = pluss::series::full({2,2}, 2.0, pluss::ScalarType::Float32);
   auto c = a.add(3.0);
   expect_eq(c.host<float>(), {5.0f, 5.0f, 5.0f, 5.0f}, "add scalar");
 
@@ -598,7 +598,7 @@ void test_dispatch_extensions() {
   expect_eq(mr.host<std::int64_t>(), {2, 1, 4, 3}, "roll dim");
 
   std::cout << "[RUN] dispatch_extensions:masked_fill\n";
-  auto mask = pluss::Series::ones({2, 2}, pluss::ScalarType::Bool);
+  auto mask = pluss::series::ones({2, 2}, pluss::ScalarType::Bool);
   auto mf = m.masked_fill(mask, 9.0);
   expect_eq(mf.host<std::int64_t>(), {9, 9, 9, 9}, "masked_fill scalar");
 
@@ -651,7 +651,7 @@ void test_dispatch_extensions() {
   bx.bitwise_right_shift_(pluss::make_series(1LL));
   expect_eq(bx.host<std::int64_t>(), {1, 2, 3}, "bitwise_right_shift_ scalar");
 
-  auto rx = pluss::Series::zeros({64}, pluss::ScalarType::Int64);
+  auto rx = pluss::series::zeros({64}, pluss::ScalarType::Int64);
   rx.random_(3, 9);
   auto rv = rx.host<std::int64_t>();
   bool in_range = true;

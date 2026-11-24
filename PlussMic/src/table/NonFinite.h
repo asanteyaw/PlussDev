@@ -31,7 +31,7 @@ enum class Kind : std::uint8_t { Nan, Inf, PosInf, NegInf };  // Inf is +inf or 
                                          Kind kind,
                                          const std::optional<pluss::Series>& present) {
   if (!can_hold(values)) {
-    return pluss::Series::zeros(values.sizes(), pluss::codem::ScalarType::Bool, values.platform());
+    return pluss::series::zeros(values.sizes(), pluss::codem::ScalarType::Bool, values.platform());
   }
   auto out = [&] {
     switch (kind) {

@@ -138,7 +138,7 @@ int main() {
     (void)grid.cell_at(std::array<std::int64_t, 2>{2, 0});
   });
   show_rejection("owned multi-cell", [&] { (void)grid.owned(); });
-  show_rejection("host undefined", [&] { (void)pluss::Note::undefined().host(); });
+  show_rejection("host undefined", [&] { (void)pluss::note::undefined().host(); });
   show_rejection("wrong host accessor", [&] { (void)vector_host.scalar(); });
 
   std::cout << "\n=== at scalar ===\n"
@@ -268,5 +268,5 @@ int main() {
   };
   reject_owned("zero", zero);
   reject_owned("many", many);
-  reject_owned("undefined", pluss::Note::undefined());
+  reject_owned("undefined", pluss::note::undefined());
 }

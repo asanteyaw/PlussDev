@@ -89,7 +89,7 @@ Projection keeps one lane per source cell; extraction keeps one lane per match.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().math_only().defined() << '\n';
+          << pluss::note::undefined().tex().math_only().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})
       .tex().math_only();

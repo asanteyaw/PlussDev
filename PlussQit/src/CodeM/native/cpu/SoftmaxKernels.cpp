@@ -28,7 +28,7 @@ static Series softmax_impl_contig(const Series& a, std::int64_t dim, bool is_log
   if (dim < 0) dim += nd;
   PLUSS_CHECK(dim >= 0 && dim < nd, "softmax: bad dim");
 
-  Series out = Series::empty(aa.sizes(), aa.scalar_type());
+  Series out = pluss::codem::factory::empty(aa.sizes(), aa.scalar_type());
 
   std::int64_t outer = 1;
   for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[i];
@@ -76,7 +76,7 @@ static Series softmax_impl(const Series& a, std::int64_t dim, bool is_log, LoadF
   PLUSS_CHECK(dim >= 0 && dim < nd, "softmax: bad dim");
 
   std::vector<std::int64_t> out_sizes(aa.sizes().begin(), aa.sizes().end());
-  Series out = Series::empty(out_sizes, aa.scalar_type());
+  Series out = pluss::codem::factory::empty(out_sizes, aa.scalar_type());
 
   // We do a straightforward reduction over dim:
   // outer = product of sizes[0:dim), inner = product of sizes(dim+1:)
@@ -168,7 +168,7 @@ Series logsumexp(const Series& a, std::int64_t dim, bool keepdim) {
       if (keepdim) out_sizes.push_back(1);
     } else out_sizes.push_back(aa.sizes()[i]);
   }
-  Series out = Series::empty(out_sizes, aa.scalar_type());
+  Series out = pluss::codem::factory::empty(out_sizes, aa.scalar_type());
 
   std::int64_t outer = 1;
   for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[i];

@@ -109,7 +109,7 @@ Note(shape=[3], dim=1, numel=3, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().subsections().tokens().defined()
+          << pluss::note::undefined().tex().subsections().tokens().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().subsections();

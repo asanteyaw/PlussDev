@@ -1050,7 +1050,7 @@ void test_group_phase7_hardening() {
              pluss::table::detail::validity_mask(empty_tx.features("total"))->host<bool>() ==
                  std::vector<bool>({false, false, false}),
          "all-null keys should broadcast all-invalid grouped transform results");
-  const auto none = all_null.filter(Shelf(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
+  const auto none = all_null.filter(Shelf(pluss::series::empty({0}, pluss::codem::ScalarType::Bool)));
   expect(none.ncases() == 0,
          "all-null keys should allow a zero-length keep mask and return no rows");
 

@@ -45,7 +45,7 @@ Builds a `Duration` — an elapsed-time value or array — from scratch, with no
 
 `Duration` (capital D, the type) has no public constructors and no public
 construction statics of its own — `Duration()` is deleted, and there is no
-`Duration::from_scalar_nanos`/`Duration::range` to call directly. Construction
+`Duration::from_scalar_nanos`/`pluss::duration::range` to call directly. Construction
 lives entirely in its own namespace, `pluss::duration` (lowercase), the same
 split as `pluss::timeline::make`/`pluss::timeline::from_epoch` being kept separate
 from `Timeline` itself:
@@ -240,7 +240,7 @@ half-open range convention as `pluss::timeline::date_range`.
 ## Notes
 
 - `Duration()` has no default constructor, and there is no public
-  `Duration::from_scalar_nanos`/`Duration::range` either — always go through
+  `Duration::from_scalar_nanos`/`pluss::duration::range` either — always go through
   `pluss::duration::*`.
 - The unit factories are pure convenience: nothing they produce is
   distinguishable afterward from an equivalent `duration::nanos` call at the

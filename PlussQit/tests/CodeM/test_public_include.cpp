@@ -7,8 +7,8 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("public umbrella include works", "[public]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
-  auto b = Series::zeros({1,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
+  auto b = pluss::series::zeros({1,3}, ScalarType::Float64);
   auto c = a + b;
   REQUIRE(c.sizes()[0] == 2);
   REQUIRE(c.sizes()[1] == 3);

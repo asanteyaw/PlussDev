@@ -141,7 +141,7 @@ TEST_CASE("extrema pairs validate scalar and empty-axis contracts", "[methods][r
 
   REQUIRE_THROWS_WITH(scalar.max_pair(1), Catch::Matchers::ContainsSubstring("dim out of range"));
 
-  const auto empty = pluss::Series::empty({2, 0}, pluss::ScalarType::Float64);
+  const auto empty = pluss::series::empty({2, 0}, pluss::ScalarType::Float64);
   REQUIRE_THROWS_WITH(empty.max_pair(1),
                       Catch::Matchers::ContainsSubstring("cannot reduce an empty dimension"));
   REQUIRE_THROWS_WITH(empty.min_pair(-1),

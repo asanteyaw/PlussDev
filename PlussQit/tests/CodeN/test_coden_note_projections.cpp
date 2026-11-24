@@ -38,7 +38,7 @@ TEST_CASE("Note scalar and vector projections distinguish cardinality from rank"
   REQUIRE(one_tensor.scalar() == "delta");
   REQUIRE(pluss::note::make("").scalar().empty());
   REQUIRE_THROWS(pluss::note::make({"a", "b"}).scalar());
-  REQUIRE_THROWS(pluss::Note::undefined().scalar());
+  REQUIRE_THROWS(pluss::note::undefined().scalar());
 
   const auto grid = pluss::note::make(
       std::vector<std::string>{"a", "b", "c", "d"},
@@ -49,7 +49,7 @@ TEST_CASE("Note scalar and vector projections distinguish cardinality from rank"
   const auto empty = pluss::note::make(
       std::vector<std::string>{}, std::array<std::int64_t, 3>{2, 0, 4});
   REQUIRE(empty.vector().empty());
-  REQUIRE_THROWS(pluss::Note::undefined().vector());
+  REQUIRE_THROWS(pluss::note::undefined().vector());
 }
 
 TEST_CASE("Note matrix projection promotes lower ranks and preserves empty rows",
@@ -77,7 +77,7 @@ TEST_CASE("Note matrix projection promotes lower ranks and preserves empty rows"
   const auto tensor = pluss::note::make(
       std::vector<std::string>{"x"}, std::array<std::int64_t, 3>{1, 1, 1});
   REQUIRE_THROWS(tensor.matrix());
-  REQUIRE_THROWS(pluss::Note::undefined().matrix());
+  REQUIRE_THROWS(pluss::note::undefined().matrix());
   REQUIRE(pluss::note::make(std::vector<std::string>{},
                             std::array<std::int64_t, 1>{0}).matrix().size() == 1);
 }
@@ -102,7 +102,7 @@ TEST_CASE("Note slabs projection requires exact rank and preserves empty slabs",
   REQUIRE(empty_projected[1].empty());
 
   REQUIRE_THROWS(pluss::note::make({"a"}).slabs());
-  REQUIRE_THROWS(pluss::Note::undefined().slabs());
+  REQUIRE_THROWS(pluss::note::undefined().slabs());
 }
 
 TEST_CASE("Note borrowed projections expose exact bytes and source-owned geometry",
@@ -124,5 +124,5 @@ TEST_CASE("Note borrowed projections expose exact bytes and source-owned geometr
   REQUIRE(shape.data() == grid.sizes_view().data());
 
   REQUIRE(pluss::note::make("x").sizes_view().empty());
-  REQUIRE_THROWS(pluss::Note::undefined().sizes_view());
+  REQUIRE_THROWS(pluss::note::undefined().sizes_view());
 }

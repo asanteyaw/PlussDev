@@ -72,7 +72,7 @@ z
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().ids().tokens().defined() << '\n';
+          << pluss::note::undefined().tex().ids().tokens().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().ids();
 } catch (const pluss::Error&) { std::cout << "identifiers Int64: rejected\n"; }

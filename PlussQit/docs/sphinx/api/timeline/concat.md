@@ -126,7 +126,7 @@ std::array<std::int64_t, 4> backing{
     1'704'153'600'000'000'000LL, 22};
 const std::array<std::int64_t, 1> shape{2};
 const std::array<std::int64_t, 1> strides{2};
-const auto strided = pluss::Timeline::from_buffer(
+const auto strided = pluss::timeline::from_buffer(
     backing.data(), shape, strides, {}, "UTC");
 std::cout << pluss::timeline::print(
     strided.concat(pluss::timeline::date("2024-01-03"))) << '\n';

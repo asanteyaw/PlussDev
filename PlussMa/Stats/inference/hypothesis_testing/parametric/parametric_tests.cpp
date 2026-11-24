@@ -530,7 +530,7 @@ Anova1WResult anova_1w(const Series& y,
   const std::int64_t k_full = static_cast<std::int64_t>(std::llround(scalar_(labels.max()))) + 1;
   PLUSS_CHECK(k_full >= 2, std::string(op) + ": need at least two groups");
 
-  const Series class_ids = Series::arange(0, k_full, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
+  const Series class_ids = pluss::series::arange(0, k_full, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
   const Series mask_full = labels.reshape({n_clean, 1}).eq(class_ids.reshape({1, k_full}));
   const Series counts_full = mask_full.to(out_cfg.dtype).sum(0, false).reshape({k_full});
   const Series active = counts_full.gt(0.0);

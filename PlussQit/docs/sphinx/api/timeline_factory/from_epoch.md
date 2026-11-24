@@ -180,4 +180,4 @@ rejected
 - [`make`](make.md): parse textual timestamps.
 - [`epoch`](epoch.md): allocate a shape filled with tick zero.
 - [`full`](full.md): allocate a shape filled with any scalar instant.
-- [`Timeline::from_buffer`](../timeline/from_buffer.md): share external tick storage.
+- [`pluss::timeline::from_buffer`](../timeline/from_buffer.md): share external tick storage.

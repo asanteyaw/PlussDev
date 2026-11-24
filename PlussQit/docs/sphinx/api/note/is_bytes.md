@@ -81,7 +81,7 @@ conversion such as `to_utf8_strict()` produces a Text Note.
 ## Failure Behavior
 
 `is_bytes()` has no failure path. It reads only the dtype tag and does not
-dereference cell storage. In particular, `Note::undefined().is_bytes()` is
+dereference cell storage. In particular, `pluss::note::undefined().is_bytes()` is
 `false`; use `defined()` separately when absence must be distinguished from a
 defined non-Bytes Note.
 

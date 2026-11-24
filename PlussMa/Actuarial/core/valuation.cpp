@@ -1,5 +1,6 @@
 #include "pluss/subsp/actuarial/valuation.h"
 
+#include "pluss/codem/series_factory.h"
 #include "pluss/config.h"
 #include "pluss/subsp/actuarial/core.h"
 #include "pluss/subsp/actuarial/life_contingencies.h"
@@ -23,12 +24,12 @@ Series as_f64_vector_(const Series& value, std::string_view name) {
 }
 
 Series zeros_(std::int64_t size, pluss::codem::Platform platform) {
-  return Series::zeros({size}, ScalarType::Float64).to(platform);
+  return pluss::series::zeros({size}, ScalarType::Float64).to(platform);
 }
 
 Series filled_(std::int64_t size, double value,
                pluss::codem::Platform platform) {
-  return Series::ones({size}, ScalarType::Float64).to(platform).mul(value);
+  return pluss::series::ones({size}, ScalarType::Float64).to(platform).mul(value);
 }
 
 } // namespace
@@ -134,7 +135,7 @@ Series Discount::factors(std::int64_t horizon,
         .contiguous();
   }
   const double log_discount = -std::log1p(rate_);
-  return Series::arange(0, horizon + 1, 1, ScalarType::Int64)
+  return pluss::series::arange(0, horizon + 1, 1, ScalarType::Int64)
       .to(platform, ScalarType::Float64)
       .mul(log_discount)
       .exp();

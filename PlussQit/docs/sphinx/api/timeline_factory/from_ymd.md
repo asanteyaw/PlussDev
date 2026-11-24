@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# Timeline::from_ymd
+# pluss::timeline::from_ymd
 
-[Back to Timeline API Reference](../../timeline_api_reference)
+[Back to Timeline Factory API Reference](../../timeline_factory_api_reference)
 
 ## Signature
 
 ```cpp
-static Timeline Timeline::from_ymd(
+static Timeline pluss::timeline::from_ymd(
     const Series& year,
     const Series& month,
     const Series& day,
@@ -28,7 +28,7 @@ to every position; non-scalar components must have exactly equal shapes.
 const auto year = pluss::make_series(2024LL);
 const auto month = pluss::make_series({2LL, 3LL});
 const auto day = pluss::make_series({29LL, pluss::Timeline::kNaT});
-const auto dates = pluss::Timeline::from_ymd(year, month, day, "UTC");
+const auto dates = pluss::timeline::from_ymd(year, month, day, "UTC");
 
 std::cout << pluss::timeline::print(dates) << '\n';
 ```
@@ -54,7 +54,7 @@ silently converted into absence. Month and day are one-based.
 
 ## See Also
 
-- [`Timeline::from_ymdhms`](from_ymdhms.md)
+- [`pluss::timeline::from_ymdhms`](from_ymdhms.md)
 - [`Timeline::date`](date.md)
 
 <div class="pluss-inline-prev-next">

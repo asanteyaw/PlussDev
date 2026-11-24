@@ -136,7 +136,7 @@ Note(shape=[2], dim=1, numel=2, encoding=bytes)
 
 ```cpp
 std::cout << std::boolalpha << "undefined deduplicate defined="
-          << pluss::Note::undefined().deduplicate().defined() << '\n';
+          << pluss::note::undefined().deduplicate().defined() << '\n';
 ```
 
 ### Output

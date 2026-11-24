@@ -39,7 +39,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
           if (has_validity && !valid[static_cast<std::size_t>(i)]) {
             out.emplace_back(std::monostate{});
           } else {
-            auto scalar = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+            auto scalar = pluss::series::zeros({1}, pluss::codem::ScalarType::Bool);
             reinterpret_cast<bool*>(scalar.raw_data())[0] = x[static_cast<std::size_t>(i)];
             out.emplace_back(std::move(scalar));
           }

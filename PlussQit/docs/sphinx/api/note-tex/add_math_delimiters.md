@@ -74,7 +74,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha << "undefined="
-          << pluss::Note::undefined().tex().add_math_delimiters().defined()
+          << pluss::note::undefined().tex().add_math_delimiters().defined()
           << '\n';
 ```
 

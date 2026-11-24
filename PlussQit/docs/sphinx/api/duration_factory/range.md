@@ -46,6 +46,6 @@ auto empty = pluss::duration::range(pluss::duration::seconds(5),
 ```cpp
 pluss::duration::range(pluss::duration::seconds(0),
     pluss::duration::seconds(1), pluss::duration::seconds(0));
-// throws: Duration::range step must be non-zero
+// throws: pluss::duration::range step must be non-zero
 ```
 

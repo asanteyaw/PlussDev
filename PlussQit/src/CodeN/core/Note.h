@@ -24,6 +24,13 @@ class Series;
 }
 
 namespace pluss::coden {
+class Note;
+} // namespace pluss::coden
+namespace pluss::note {
+inline ::pluss::coden::Note undefined() noexcept;
+} // namespace pluss::note
+
+namespace pluss::coden {
 
 class Note;
 
@@ -61,7 +68,7 @@ public:
   using RegexAccessor = NoteRegexAccessor;
   using TexAccessor = NoteTexAccessor;
 
-  static Note undefined() noexcept { return Note(); }
+  friend Note (::pluss::note::undefined)() noexcept;
 
   // Minimal core API remains implemented in Note.cpp
   ::std::vector<::std::int64_t> sizes() const;
@@ -162,6 +169,11 @@ Note operator>=(::std::string_view lhs, const Note& rhs);
 
 
 } // namespace pluss::coden
+
+namespace pluss::note {
+// The named "no value" Note, like pluss::series::undefined().
+inline ::pluss::coden::Note undefined() noexcept { return ::pluss::coden::Note(); }
+} // namespace pluss::note
 
 // Inline method definitions are included outside the namespace to avoid
 // accidental nested-namespace pollution via transitive includes.

@@ -113,7 +113,7 @@ TEST_CASE("MPS linalg solver bridge deterministic residual checks", "[mps][linea
 
   const auto inv = cholesky_inverse(chol, false);
   REQUIRE(inv.platform() == pluss::pMPS);
-  const auto eye = pluss::Series::eye(4, 4, pluss::ScalarType::Float32);
+  const auto eye = pluss::series::eye(4, 4, pluss::ScalarType::Float32);
   const auto prod = to_vec_f32_cpu_(a_cpu.to(pluss::ScalarType::Float32).matmul(inv.to(pluss::pCPU)));
   REQUIRE(max_abs_diff_(prod, to_vec_f32_cpu_(eye)) <= 1.5e-2f);
 
@@ -167,7 +167,7 @@ TEST_CASE("MPS linalg solver bridge stress stability residuals", "[mps][linearal
     require_finite_(to_vec_f32_cpu_(x_chol));
 
     const auto inv = cholesky_inverse(chol, false);
-    const auto eye = pluss::Series::eye(n, n, pluss::ScalarType::Float32);
+    const auto eye = pluss::series::eye(n, n, pluss::ScalarType::Float32);
     const auto prod = to_vec_f32_cpu_(a_cpu.to(pluss::ScalarType::Float32).matmul(inv.to(pluss::pCPU)));
     REQUIRE(max_abs_diff_(prod, to_vec_f32_cpu_(eye)) <= 3.5e-2f);
     require_finite_(to_vec_f32_cpu_(inv));

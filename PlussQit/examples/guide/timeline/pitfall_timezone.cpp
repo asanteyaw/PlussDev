@@ -4,7 +4,7 @@
 #include <iostream>
 
 int main() {
-  auto local = pluss::Timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(3), pluss::make_series(29), pluss::make_series(1),
+  auto local = pluss::timeline::from_ymdhms(pluss::make_series(2026), pluss::make_series(3), pluss::make_series(29), pluss::make_series(1),
                                            pluss::make_series(30), pluss::make_series(0));
   // 1. 01:30 on 2026-03-29 never happens in London: the clocks jump from 01:00 to 02:00. The default is to refuse.
   try {

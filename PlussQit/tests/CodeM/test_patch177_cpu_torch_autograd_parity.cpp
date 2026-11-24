@@ -3351,7 +3351,7 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
         Series input = make_series(values, {4}).to(ScalarType::Float64);
         input.tracks_slope_(true);
         const Series output = use_quantile ? input.quantile(0.5) : input.median();
-        output.reverse(Series::full({}, 2.0, ScalarType::Float64));
+        output.reverse(pluss::series::full({}, 2.0, ScalarType::Float64));
 
         at::Tensor torch_input = at::tensor(values, options).set_requires_grad(true);
         const at::Tensor torch_output =
@@ -3369,7 +3369,7 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
     Series input = make_series(values, {4}).to(ScalarType::Float64);
     input.tracks_slope_(true);
     const Series output = input.median();
-    output.reverse(Series::full({}, 1.0, ScalarType::Float64));
+    output.reverse(pluss::series::full({}, 1.0, ScalarType::Float64));
 
     at::Tensor torch_input = at::tensor(values, options).set_requires_grad(true);
     const at::Tensor torch_output = torch_input.median();
@@ -3387,7 +3387,7 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
         Series input = make_series(values, {5}).to(ScalarType::Float64);
         input.tracks_slope_(true);
         const Series output = ignore_nan ? input.nanmedian() : input.median();
-        output.reverse(Series::full({}, 1.0, ScalarType::Float64));
+        output.reverse(pluss::series::full({}, 1.0, ScalarType::Float64));
 
         at::Tensor torch_input = at::tensor(values, options).set_requires_grad(true);
         const at::Tensor torch_output =

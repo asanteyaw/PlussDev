@@ -66,7 +66,7 @@ dim=2 numel=0 matrix=true
 ## Example 3: Check Absence Separately
 
 ```cpp
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 std::cout << std::boolalpha
           << "defined=" << absent.defined()
           << " dim=" << absent.dim()

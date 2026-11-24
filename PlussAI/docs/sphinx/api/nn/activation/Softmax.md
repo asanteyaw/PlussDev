@@ -60,7 +60,7 @@ int main() {
 
   std::cout << "logits = " << logits << "\n";
   std::cout << "softmax(logits) = " << probs << "\n";
-  std::cout << "sums to 1: " << std::boolalpha << probs.sum().allclose(pluss::Series::full({}, 1.0, pluss::ScalarType::Float64)) << "\n";
+  std::cout << "sums to 1: " << std::boolalpha << probs.sum().allclose(pluss::series::full({}, 1.0, pluss::ScalarType::Float64)) << "\n";
 
   return 0;
 }

@@ -34,16 +34,16 @@ TEST_CASE("shape metadata distinguishes rank extent and logical layout", "[intro
   REQUIRE_FALSE(transposed.is_contiguous());
   REQUIRE_THROWS(matrix.stride(2));
 
-  const auto empty = pluss::Series::empty({2, 0, 4}, pluss::ScalarType::Float64);
+  const auto empty = pluss::series::empty({2, 0, 4}, pluss::ScalarType::Float64);
   REQUIRE(empty.dim() == 3);
   REQUIRE(empty.numel() == 0);
 }
 
 TEST_CASE("dtype and platform predicates return native booleans", "[introspection]") {
-  const auto real = pluss::Series::zeros({2}, pluss::ScalarType::Float32);
-  const auto integer = pluss::Series::zeros({2}, pluss::ScalarType::Int32);
-  const auto unsigned_integer = pluss::Series::zeros({2}, pluss::ScalarType::UInt32);
-  const auto complex = pluss::Series::zeros({2}, pluss::ScalarType::Complex64);
+  const auto real = pluss::series::zeros({2}, pluss::ScalarType::Float32);
+  const auto integer = pluss::series::zeros({2}, pluss::ScalarType::Int32);
+  const auto unsigned_integer = pluss::series::zeros({2}, pluss::ScalarType::UInt32);
+  const auto complex = pluss::series::zeros({2}, pluss::ScalarType::Complex64);
 
   REQUIRE(real.dtype().scalar == pluss::ScalarType::Float32);
   REQUIRE(real.dtype().itemsize == 4);
@@ -91,8 +91,8 @@ TEST_CASE("equal requires the same shape and exact element equality", "[introspe
   REQUIRE(values.equal(pluss::make_series({1.0, 2.0, 3.0})));
   REQUIRE_FALSE(values.equal(pluss::make_series({{1, 2, 3}})));
   REQUIRE_FALSE(values.equal(pluss::make_series({1, 2, 4})));
-  REQUIRE(pluss::Series::empty({0}, pluss::ScalarType::Float64)
-              .equal(pluss::Series::empty({0}, pluss::ScalarType::Float64)));
+  REQUIRE(pluss::series::empty({0}, pluss::ScalarType::Float64)
+              .equal(pluss::series::empty({0}, pluss::ScalarType::Float64)));
 
   const double nan = std::numeric_limits<double>::quiet_NaN();
   REQUIRE_FALSE(pluss::make_series({nan}).equal(pluss::make_series({nan})));

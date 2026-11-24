@@ -831,7 +831,7 @@ struct DataReader final {
     PLUSS_CHECK(
         numel_from_sizes_(shape) == element_count_,
         "DataReader: host-buffer element count does not match provided sizes");
-    Series out = Series::empty(shape, source_dtype_, Platform::CPU).contiguous();
+    Series out = pluss::codem::factory::empty(shape, source_dtype_, Platform::CPU).contiguous();
     if (!host_bytes_.empty()) {
       std::memcpy(out.raw_data(), host_bytes_.data(), host_bytes_.size());
     }

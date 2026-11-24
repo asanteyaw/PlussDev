@@ -114,7 +114,7 @@ bool run_layernorm_checks(std::ostream* err = nullptr) {
 }
 
 // Regression coverage for an engine-level copy_() backward bug this test
-// tranche caught: Module::parameter_record() marks a freshly Series::empty()
+// tranche caught: Module::parameter_record() marks a freshly pluss::series::empty()
 // leaf tracks_slope_(true) *before* reset_parameters() fills it in via
 // copy_(untracked_init_values) -- exactly the pattern EmbeddingImpl (and
 // Conv/MultiheadAttention/Transformer*) use. copy_()'s backward used to
@@ -127,7 +127,7 @@ bool run_layernorm_checks(std::ostream* err = nullptr) {
 // PlussQit/src/CodeM/compat/Invoke.cpp's copy_dispatch_inplace_.
 bool run_copy_init_then_use_gradient_check(std::ostream* err = nullptr) {
   const auto cfg = float_cfg();
-  Series w = Series::empty({5, 3}, cfg.dtype, cfg.platform);
+  Series w = pluss::series::empty({5, 3}, cfg.dtype, cfg.platform);
   w.tracks_slope_(true); // mimic parameter_record(): mark leaf before filling values
   w.copy_(pluss::make_series( // mimic reset_parameters(): untracked one-time init
       std::vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5}, {5, 3}, cfg));

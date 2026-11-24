@@ -160,6 +160,38 @@ inline pluss::Timeline from_epoch(const pluss::Series& values,
   return from_epoch(flat, shape, tz_name);
 }
 
+// Calendar-component constructors: one Timeline from year, month, day (and hour, minute, second) Series.
+inline pluss::Timeline from_ymd(const pluss::Series& year, const pluss::Series& month, const pluss::Series& day,
+                                std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_ymd(year, month, day, tz_name);
+}
+inline pluss::Timeline from_ymdhms(const pluss::Series& year, const pluss::Series& month, const pluss::Series& day,
+                                   const pluss::Series& hour, const pluss::Series& minute, const pluss::Series& second,
+                                   std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_ymdhms(year, month, day, hour, minute, second, tz_name);
+}
+
+// Epoch-unit constructors for Series of seconds, milliseconds or microseconds since the Unix epoch.
+inline pluss::Timeline from_epoch_seconds(const pluss::Series& epoch_seconds, std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_epoch_seconds(epoch_seconds, tz_name);
+}
+inline pluss::Timeline from_epoch_millis(const pluss::Series& epoch_millis, std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_epoch_millis(epoch_millis, tz_name);
+}
+inline pluss::Timeline from_epoch_micros(const pluss::Series& epoch_micros, std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_epoch_micros(epoch_micros, tz_name);
+}
+
+// The calendar day before and after today (UTC), as scalar Timelines at midnight.
+inline pluss::Timeline yesterday() { return pluss::codeh::factory::yesterday(); }
+inline pluss::Timeline tomorrow() { return pluss::codeh::factory::tomorrow(); }
+
+// A Timeline over caller-owned epoch-nanosecond memory (no copy); `deleter` runs when the last reference goes.
+inline pluss::Timeline from_buffer(std::int64_t* data, std::span<const std::int64_t> sizes, std::span<const std::int64_t> strides,
+                                   pluss::codem::BlobDeleter deleter = {}, std::string_view tz_name = "UTC") {
+  return pluss::codeh::factory::from_buffer(data, sizes, strides, std::move(deleter), tz_name);
+}
+
 inline pluss::Timeline date_range(const pluss::Timeline& start,
                                   const pluss::Timeline& end,
                                   std::string_view freq,
@@ -222,7 +254,7 @@ inline std::ostream& print(std::ostream& os, const pluss::Timeline& t,
 // nanoseconds). The Timeline-domain equivalent of pluss::duration::zeros /
 // pluss::zeros: not a meaningless all-zero instant, but the one instant a
 // Timeline can legitimately be "empty" toward -- 1970-01-01T00:00:00Z.
-// Routed through Series::zeros' own memset-based factory (wrapped, not
+// Routed through pluss::series::zeros' own memset-based factory (wrapped, not
 // copied, by ops_internal::timeline_from_series).
 inline pluss::Timeline epoch(pluss::msharp::RangeView::Int sizes = {}) {
   (void)pluss::codeh::factory_detail::checked_numel(
@@ -237,7 +269,7 @@ inline pluss::Timeline epoch(std::initializer_list<std::int64_t> sizes) {
 // pluss::timeline::full(sizes, fill_value) -> shape filled with a repeated
 // scalar Timeline instant. Stays int64-exact (no double round trip) by
 // reusing the same flat-vector + from_epoch path the rest of this factory
-// already uses, rather than Series::full's double-typed fill_value.
+// already uses, rather than pluss::series::full's double-typed fill_value.
 inline pluss::Timeline full(pluss::msharp::RangeView::Int sizes, const pluss::Timeline& fill_value) {
   CODEM_CHECK(fill_value.dim() == 0, "pluss::timeline::full: fill_value must be a scalar Timeline");
   const auto n = pluss::codeh::factory_detail::checked_numel(sizes, "pluss::timeline::full");
@@ -261,7 +293,7 @@ inline pluss::Timeline full_like(const pluss::Timeline& like, const pluss::Timel
 // on a real 64-bit RNG + std::uniform_int_distribution<int64_t> (the same
 // exact-integer convention pluss::duration::random above and
 // pluss::poisson/pluss::bernoulli/pluss::randperm already use), not a
-// double-based Series::rand scaling, which would lose precision once
+// double-based pluss::series::rand scaling, which would lose precision once
 // (hi - lo) in nanoseconds exceeds a double's ~2^53 mantissa (about 104 days
 // -- i.e. almost any realistic "random date within a few years" range).
 inline pluss::Timeline random(pluss::msharp::RangeView::Int sizes,

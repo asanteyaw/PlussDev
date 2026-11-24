@@ -108,7 +108,7 @@ std::cout << "clean idempotent=" << std::boolalpha
 std::cout << pluss::note::print(
     pluss::note::make(std::vector<std::string>{}).nlp().clean()) << '\n';
 std::cout << "undefined defined="
-          << pluss::Note::undefined().nlp().clean().defined() << '\n';
+          << pluss::note::undefined().nlp().clean().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"text"},

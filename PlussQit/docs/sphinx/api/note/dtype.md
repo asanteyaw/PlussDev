@@ -74,7 +74,7 @@ dtype=Bool dim=2 shape=[2, 2]
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().dtype();
+  (void)pluss::note::undefined().dtype();
 } catch (const pluss::Error& error) {
   const std::string message(error.what());
   std::cout << message.substr(0, message.find('\n')) << '\n';

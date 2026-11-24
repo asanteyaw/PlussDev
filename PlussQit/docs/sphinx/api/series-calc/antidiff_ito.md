@@ -164,7 +164,7 @@ has one value per path.
 
 ```cpp
 auto dw = pluss::series::randn({400, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 3).mul(0.05);
-auto paths = pluss::Series::zeros({1, 3}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);  // [401, 3]
+auto paths = pluss::series::zeros({1, 3}, pluss::ScalarType::Float64).unite({dw.cumsum(0)}, 0);  // [401, 3]
 auto identity = [](const pluss::Series& t, const pluss::Series& w) { return w; };
 
 auto ito = paths.calc.antidiff.ito(identity, 0.0, 1.0);

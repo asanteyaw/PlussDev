@@ -101,7 +101,7 @@ that unknown control word. Two passes reach the visible body `done`.
 
 ```cpp
 try {
-  (void)pluss::Note::undefined().tex().render(0);
+  (void)pluss::note::undefined().tex().render(0);
 } catch (const pluss::Error&) {
   std::cout << "render(0): rejected\n";
 }
@@ -117,7 +117,7 @@ render(0): rejected
 
 ```cpp
 std::cout << std::boolalpha << "undefined="
-          << pluss::Note::undefined().tex().render().defined() << '\n';
+          << pluss::note::undefined().tex().render().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().render();
 } catch (const pluss::Error&) {

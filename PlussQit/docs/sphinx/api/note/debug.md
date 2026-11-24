@@ -106,7 +106,7 @@ Note(shape=[1], dim=1, numel=1, encoding=bytes, values=["A\x00\xFF"])
 ## Example 5: Undefined Is Directly Inspectable
 
 ```cpp
-std::cout << pluss::Note::undefined().debug() << '\n';
+std::cout << pluss::note::undefined().debug() << '\n';
 ```
 
 ### Output

@@ -184,7 +184,6 @@ api/timeline/ceil
 api/timeline/concat
 api/timeline/copy_ticks
 api/timeline/date
-api/timeline/date_range
 api/timeline/day
 api/timeline/day_scalar
 api/timeline/dayofyear
@@ -202,12 +201,6 @@ api/timeline/eq
 api/timeline/fill_like
 api/timeline/fill_nat
 api/timeline/floor
-api/timeline/from_buffer
-api/timeline/from_epoch_micros
-api/timeline/from_epoch_millis
-api/timeline/from_epoch_seconds
-api/timeline/from_ymd
-api/timeline/from_ymdhms
 api/timeline/ge
 api/timeline/gt
 api/timeline/host

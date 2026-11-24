@@ -66,7 +66,7 @@ rows=2 columns=0 cells=0
 
 ```cpp
 const auto matrix = pluss::note::make({{"a", "b"}});
-const auto absent = pluss::Note::undefined();
+const auto absent = pluss::note::undefined();
 
 auto rejected = [](std::string_view label, auto&& call) {
   try { call(); std::cout << label << ": accepted\n"; }

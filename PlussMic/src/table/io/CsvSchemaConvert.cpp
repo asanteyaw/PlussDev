@@ -476,7 +476,7 @@ std::optional<pluss::Series> validity_mask_from_valid(const std::vector<bool>& v
   if (n_valid == n) {
     return std::nullopt;
   }
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
     p[i] = valid[static_cast<std::size_t>(i)];
@@ -486,7 +486,7 @@ std::optional<pluss::Series> validity_mask_from_valid(const std::vector<bool>& v
 
 Shelf make_series_shelf_bool(const std::vector<bool>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto s = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(s.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
     p[i] = values[static_cast<std::size_t>(i)];
@@ -496,7 +496,7 @@ Shelf make_series_shelf_bool(const std::vector<bool>& values, const std::vector<
 
 Shelf make_series_shelf_i64(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
@@ -505,7 +505,7 @@ Shelf make_series_shelf_i64(const std::vector<std::int64_t>& values, const std::
 
 Shelf make_series_shelf_f64(const std::vector<double>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+  auto s = pluss::series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }

@@ -541,7 +541,7 @@ TextRef Note::owned() const {
 }
 
 Note Note::take(pluss::msharp::RangeView::Int indices) const {
-  if (!defined()) return Note::undefined();
+  if (!defined()) return pluss::note::undefined();
   const auto& p = impl();
   PLUSS_CHECK(p, "Note::take on undefined Note");
 

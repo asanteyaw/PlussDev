@@ -75,7 +75,7 @@ int main() {
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
   const std::int64_t paths = 40000;
-  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({paths}, 100.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::Milstein;
   options.steps = 64;
@@ -115,7 +115,7 @@ int main() {
   const double r = 0.05, T = 1.0, K = 105.0;
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [](double, const Series &y, const Series &theta) { return y * theta.select(0, 0); };
-  const Series y0 = Series::full({300000}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({300000}, 100.0, pluss::ScalarType::Float64);
   const Series theta = pluss::make_series({0.4});
   sde::SdeOptions options;
   options.method = sde::SdeMethod::Milstein;
@@ -154,7 +154,7 @@ int main() {
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
   const std::int64_t paths = 5;
-  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({paths}, 100.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::EulerMaruyama;
   options.steps = 64;
@@ -194,7 +194,7 @@ int main() {
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
   const std::int64_t paths = 6;
-  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({paths}, 100.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::EulerMaruyama;
   options.steps = 32;
@@ -234,7 +234,7 @@ int main() {
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
   const std::int64_t paths = 2000;
-  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({paths}, 100.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::EulerMaruyama;
   options.steps = 32;

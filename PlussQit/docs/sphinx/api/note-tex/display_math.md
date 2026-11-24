@@ -79,7 +79,7 @@ empty range `[4, 4)`.
 ## Example 3: Undefined And Invalid Dtypes
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().display_math();
+const auto absent = pluss::note::undefined().tex().display_math();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 

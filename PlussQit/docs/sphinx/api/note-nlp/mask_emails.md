@@ -71,7 +71,7 @@ const auto empty = pluss::note::make(std::vector<std::string>{})
 std::cout << "emails empty dim=" << empty.dim()
           << " numel=" << empty.numel() << '\n';
 std::cout << "emails undefined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().mask_emails().defined() << '\n';
+          << pluss::note::undefined().nlp().mask_emails().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"a@b.io"}, std::array<std::int64_t, 1>{1})

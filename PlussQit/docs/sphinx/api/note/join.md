@@ -123,7 +123,7 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 ```cpp
 std::cout << std::boolalpha
           << "undefined join defined="
-          << pluss::Note::undefined().join(",").defined() << '\n';
+          << pluss::note::undefined().join(",").defined() << '\n';
 ```
 
 ### Output

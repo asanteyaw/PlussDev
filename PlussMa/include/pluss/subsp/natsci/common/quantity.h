@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include "pluss/codem/series_factory.h"
 #include <concepts>
 #include <stdexcept>
 #include <type_traits>
@@ -134,7 +135,7 @@ inline pluss::codem::Series pow_rep(const pluss::codem::Series &base,
 
 inline double zero_rep(double) { return 0.0; }
 inline pluss::codem::Series zero_rep(const pluss::codem::Series &value) {
-  return pluss::codem::Series::zeros(value.sizes(), value.scalar_type(),
+  return pluss::series::zeros(value.sizes(), value.scalar_type(),
                                      value.platform());
 }
 

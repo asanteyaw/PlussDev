@@ -87,7 +87,7 @@ TEST_CASE("Timeline index materializes strided axes safely",
       1'704'240'000'000'000'000LL};
   const std::array<std::int64_t, 1> shape{3};
   const std::array<std::int64_t, 1> strides{2};
-  const auto source = pluss::Timeline::from_buffer(
+  const auto source = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "America/Edmonton");
   const auto index = source.index();
   REQUIRE(index.host() == std::vector<std::int64_t>{

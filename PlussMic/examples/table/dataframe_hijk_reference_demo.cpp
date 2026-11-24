@@ -19,7 +19,7 @@ int main() {
       {"price", make_series({3.0, 4.0, 2.5, 5.0})},
   }).title("sales");
 
-  auto valid = pluss::Series::zeros({4}, ScalarType::Bool);
+  auto valid = pluss::series::zeros({4}, ScalarType::Bool);
   auto* valid_ptr = reinterpret_cast<bool*>(valid.raw_data());
   valid_ptr[0] = true;
   valid_ptr[1] = false;

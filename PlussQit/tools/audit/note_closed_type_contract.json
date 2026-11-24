@@ -3877,7 +3877,7 @@
       "source": "src/CodeN/core/Note.h",
       "scope": "Note",
       "name": "undefined",
-      "signature": "static Note Note::undefined() noexcept",
+      "signature": "static Note pluss::note::undefined() noexcept",
       "current_return": "Note",
       "target_return": "Note",
       "target_dtype": "untyped",

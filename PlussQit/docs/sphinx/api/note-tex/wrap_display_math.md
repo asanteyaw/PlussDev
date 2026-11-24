@@ -85,7 +85,7 @@ opens and closes.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().wrap_display_math("").defined()
+          << pluss::note::undefined().tex().wrap_display_math("").defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})

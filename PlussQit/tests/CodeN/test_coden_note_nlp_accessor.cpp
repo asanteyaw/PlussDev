@@ -214,7 +214,7 @@ TEST_CASE("TokenBatch distinguishes handle state from ragged payload state",
   const std::array<std::int64_t, 3> empty_offsets{0, 0, 0};
   REQUIRE(std::ranges::equal(no_tokens.offsets().integers(), empty_offsets));
 
-  const auto propagated = pluss::Note::undefined().nlp().tokens();
+  const auto propagated = pluss::note::undefined().nlp().tokens();
   REQUIRE(propagated.defined());
   REQUIRE(propagated.empty());
   REQUIRE_FALSE(propagated.tokens().defined());

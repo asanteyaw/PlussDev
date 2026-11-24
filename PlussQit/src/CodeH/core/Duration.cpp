@@ -41,7 +41,7 @@ Duration Duration::operator+(const Duration& other) const {
   check_duration_core(other.nanos_);
 
   const auto out_sizes = broadcast_simple(nanos_.sizes(), other.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(out_sizes, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(out_sizes, pluss::codem::ScalarType::Int64);
 
   auto it = pluss::codem::SeriesIterator::binary(nanos_, other.nanos_, out);
   const auto* a = reinterpret_cast<const std::int64_t*>(nanos_.raw_data());
@@ -64,7 +64,7 @@ Duration Duration::operator-(const Duration& other) const {
   check_duration_core(other.nanos_);
 
   const auto out_sizes = broadcast_simple(nanos_.sizes(), other.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(out_sizes, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(out_sizes, pluss::codem::ScalarType::Int64);
 
   auto it = pluss::codem::SeriesIterator::binary(nanos_, other.nanos_, out);
   const auto* a = reinterpret_cast<const std::int64_t*>(nanos_.raw_data());
@@ -84,7 +84,7 @@ Duration Duration::operator-(const Duration& other) const {
 
 Duration Duration::operator-() const {
   check_duration_core(nanos_);
-  auto out = pluss::codem::Series::empty(nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(nanos_.sizes(), pluss::codem::ScalarType::Int64);
 
   auto it = pluss::codem::SeriesIterator::unary(nanos_, out);
   const auto* a = reinterpret_cast<const std::int64_t*>(nanos_.raw_data());
@@ -98,16 +98,16 @@ Duration Duration::operator-() const {
   return Duration(std::move(out));
 }
 
-Duration Duration::range(const Duration& start, const Duration& end, const Duration& step) {
+Duration detail::impl_range(const Duration& start, const Duration& end, const Duration& step) {
   check_duration_core(start.nanos_);
   check_duration_core(end.nanos_);
   check_duration_core(step.nanos_);
-  CODEM_CHECK(start.dim() == 0 && end.dim() == 0 && step.dim() == 0, "Duration::range requires scalar args");
+  CODEM_CHECK(start.dim() == 0 && end.dim() == 0 && step.dim() == 0, "pluss::duration::range requires scalar args");
   const auto s = reinterpret_cast<const std::int64_t*>(start.nanos_.raw_data())[0];
   const auto e = reinterpret_cast<const std::int64_t*>(end.nanos_.raw_data())[0];
   const auto inc = reinterpret_cast<const std::int64_t*>(step.nanos_.raw_data())[0];
-  CODEM_CHECK(s != kNaT && e != kNaT && inc != kNaT, "Duration::range does not allow NaT args");
-  CODEM_CHECK(inc != 0, "Duration::range step must be non-zero");
+  CODEM_CHECK(s != Duration::kNaT && e != Duration::kNaT && inc != Duration::kNaT, "pluss::duration::range does not allow NaT args");
+  CODEM_CHECK(inc != 0, "pluss::duration::range step must be non-zero");
 
   const bool advances = inc > 0 ? s <= e : s >= e;
   __int128 count_wide = 0;
@@ -120,7 +120,7 @@ Duration Duration::range(const Duration& start, const Duration& end, const Durat
                      distance, static_cast<std::uint64_t>(stride)) + 1;
   }
   CODEM_CHECK(count_wide <= (std::numeric_limits<std::int64_t>::max)(),
-              "Duration::range element count overflows int64");
+              "pluss::duration::range element count overflows int64");
   const auto count = static_cast<std::int64_t>(count_wide);
   std::vector<std::int64_t> flat;
   flat.reserve(static_cast<std::size_t>(count));
@@ -129,7 +129,7 @@ Duration Duration::range(const Duration& start, const Duration& end, const Durat
         static_cast<__int128>(s) + static_cast<__int128>(i) * inc));
   }
 
-  auto out = pluss::codem::Series::empty({(std::int64_t)flat.size()}, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty({(std::int64_t)flat.size()}, pluss::codem::ScalarType::Int64);
   std::memcpy(out.raw_data(), flat.data(), flat.size() * sizeof(std::int64_t));
   return Duration(std::move(out));
 }
@@ -145,7 +145,7 @@ Duration duration_from_nanos(std::span<const std::int64_t> nanos_flat,
               shape.empty() ? "duration_from_nanos: scalar expects 1 element"
                             : "duration_from_nanos: flat size mismatch");
 
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   if (!nanos_flat.empty()) {
     std::memcpy(out.raw_data(), nanos_flat.data(),
                 nanos_flat.size() * sizeof(std::int64_t));
@@ -166,9 +166,6 @@ namespace detail {
 Duration impl_add_duration(const Duration& a, const Duration& b) { return a + b; }
 Duration impl_sub_duration(const Duration& a, const Duration& b) { return a - b; }
 Duration impl_neg_duration(const Duration& a) { return -a; }
-Duration impl_range(const Duration& start, const Duration& end, const Duration& step) {
-  return Duration::range(start, end, step);
-}
 
 } // namespace detail
 

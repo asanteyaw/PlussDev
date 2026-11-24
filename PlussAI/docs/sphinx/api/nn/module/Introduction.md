@@ -51,7 +51,7 @@ after: `parameter_record(name, series)` (gradient-tracked, requires an
 already-*defined* `Series`) and `buffer_record(name, series)`
 (not gradient-tracked — running statistics, position tables, anything that
 travels with the module but is not learned). Both require allocating the
-`Series`' real storage first (`Series::empty(shape, dtype, platform)`),
+`Series`' real storage first (`pluss::series::empty(shape, dtype, platform)`),
 registering it once, then filling values afterward with an in-place op
 (`.copy_()`, `.uniform_()`) inside a `reset_parameters()`-style method —
 reassigning the member (`weight_ = uniform_(...)`) instead of mutating it in

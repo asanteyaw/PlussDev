@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("CodeM factories + views + contiguous", "[codem]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   REQUIRE(a.defined());
   REQUIRE(a.dim() == 2);
   REQUIRE(a.is_contiguous());

@@ -87,7 +87,7 @@ using dynamics::Coeff;
 [[nodiscard]] inline Series eckart(const Series &v1, const Series &v2, const Series &imaginary_wavenumber_cm, const Series &temperature, int points = 801, double u_max = 80.0) {
   const std::int64_t n = (points % 2 == 0) ? points + 1 : points;
   const double s_max = std::sqrt(u_max), h = s_max / static_cast<double>(n - 1);
-  const Series s = Series::linspace(0.0, s_max, n, pluss::ScalarType::Float64);
+  const Series s = pluss::series::linspace(0.0, s_max, n, pluss::ScalarType::Float64);
   std::vector<double> w(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i)
     w[i] = (i == 0 || i == n - 1) ? 1.0 : (i % 2 ? 4.0 : 2.0);

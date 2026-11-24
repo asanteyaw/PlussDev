@@ -69,7 +69,7 @@ input's. `training=false` skips dropping entirely, regardless of `p` or
 int main() {
   namespace nn = pluss::ai::nn;
 
-  const pluss::Series x = pluss::Series::full({10}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({10}, 1.0, pluss::ScalarType::Float64);
 
   const pluss::Series dropped = nn::dropout(x, 0.5, /*training=*/true, /*seed=*/42);
   std::cout << "dropout(x, p=0.5, training=true): " << dropped << "\n";
@@ -108,7 +108,7 @@ different `seed` reproduces a different (but still deterministic) set.
 int main() {
   namespace nn = pluss::ai::nn;
 
-  const pluss::Series x = pluss::Series::full({10}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({10}, 1.0, pluss::ScalarType::Float64);
 
   const pluss::Series a = nn::dropout(x, 0.5, true, 7);
   const pluss::Series b = nn::dropout(x, 0.5, true, 7);
@@ -149,7 +149,7 @@ probability, not, say, a fraction rounded to the nearest exact count.
 int main() {
   namespace nn = pluss::ai::nn;
 
-  const pluss::Series x = pluss::Series::full({10000}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({10000}, 1.0, pluss::ScalarType::Float64);
   const pluss::Series dropped = nn::dropout(x, 0.3, true, 99);
 
   const pluss::Series zero_count = dropped.eq(0.0).to(pluss::ScalarType::Float64).sum();

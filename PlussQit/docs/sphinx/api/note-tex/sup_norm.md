@@ -60,7 +60,7 @@ captured as one superscript, not split at the digit.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().sup_norm().defined()
+          << pluss::note::undefined().tex().sup_norm().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().sup_norm();

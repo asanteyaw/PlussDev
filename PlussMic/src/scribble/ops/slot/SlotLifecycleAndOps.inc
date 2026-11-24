@@ -630,7 +630,7 @@ pluss::kindle::Stream Slot::kindelize() const {
       out.reserve(values().size());
       for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).host<bool>()[0]);
       const auto n = static_cast<std::int64_t>(out.size());
-      auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+      auto s = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
       for (std::int64_t i = 0; i < n; ++i) p[i] = out[static_cast<std::size_t>(i)];
       return pluss::kindle::Stream(s);

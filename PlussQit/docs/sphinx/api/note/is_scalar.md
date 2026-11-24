@@ -55,7 +55,7 @@ scalar=true empty=false bytes=0
 ## Example 3: Undefined Is Not Scalar
 
 ```cpp
-const auto value = pluss::Note::undefined();
+const auto value = pluss::note::undefined();
 std::cout << std::boolalpha
           << "defined=" << value.defined()
           << " dim=" << value.dim()

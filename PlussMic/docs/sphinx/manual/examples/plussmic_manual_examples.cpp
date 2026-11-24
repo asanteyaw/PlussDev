@@ -26,7 +26,7 @@ DataFrame sales_frame() {
 }
 
 pluss::Series bool_series(std::vector<bool> values) {
-  auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())},
+  auto out = pluss::series::zeros({static_cast<std::int64_t>(values.size())},
                                   pluss::codem::ScalarType::Bool);
   auto* ptr = reinterpret_cast<bool*>(out.raw_data());
   for (std::size_t i = 0; i < values.size(); ++i) {

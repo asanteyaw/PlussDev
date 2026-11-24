@@ -187,7 +187,7 @@ Note(shape=[4], dim=1, numel=4, encoding=bytes)
 ```cpp
 std::cout << std::boolalpha
           << "defined="
-          << pluss::Note::undefined().repeat_interleave(2, 0).defined()
+          << pluss::note::undefined().repeat_interleave(2, 0).defined()
           << '\n';
 ```
 

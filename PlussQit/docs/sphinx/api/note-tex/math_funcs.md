@@ -70,7 +70,7 @@ the boundary rule excludes it.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().math_funcs().tokens().defined()
+          << pluss::note::undefined().tex().math_funcs().tokens().defined()
           << '\n';
 ```
 

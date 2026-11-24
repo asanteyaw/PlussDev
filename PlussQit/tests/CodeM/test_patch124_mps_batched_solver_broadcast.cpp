@@ -76,7 +76,7 @@ pluss::Series make_spd_b11_(std::int64_t b0, std::int64_t n) {
     }
   }
   auto raw = pluss::make_series(data, {b0, n, n}).to(pluss::ScalarType::Float32).contiguous();
-  auto eye = pluss::Series::eye(n, n, pluss::ScalarType::Float32).mul(0.7);
+  auto eye = pluss::series::eye(n, n, pluss::ScalarType::Float32).mul(0.7);
   std::vector<pluss::Series> parts;
   parts.reserve(static_cast<std::size_t>(b0));
   for (std::int64_t b = 0; b < b0; ++b) {

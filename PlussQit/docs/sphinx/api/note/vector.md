@@ -126,7 +126,7 @@ owned copy after source=copy
 ## Example 6: Undefined Is Not An Empty Sequence
 
 ```cpp
-try { (void)pluss::Note::undefined().vector(); }
+try { (void)pluss::note::undefined().vector(); }
 catch (const pluss::Error&) { std::cout << "vector undefined: rejected\n"; }
 ```
 

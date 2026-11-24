@@ -97,10 +97,10 @@ Series TraverseMatch::linear_indices() const {
 
   const std::int64_t k = count();
   if (k == 0) {
-    return Series::empty({0}, ScalarType::Int64, coords_.platform());
+    return pluss::codem::factory::empty({0}, ScalarType::Int64, coords_.platform());
   }
   if (indexed_rank_ == 0) {
-    return Series::zeros({k}, ScalarType::Int64).to(coords_.platform(), ScalarType::Int64);
+    return pluss::codem::factory::zeros({k}, ScalarType::Int64).to(coords_.platform(), ScalarType::Int64);
   }
 
   std::vector<std::int64_t> strides(static_cast<std::size_t>(indexed_rank_), 1);
@@ -109,7 +109,7 @@ Series TraverseMatch::linear_indices() const {
         strides[static_cast<std::size_t>(d + 1)] * source_shape_[static_cast<std::size_t>(d + 1)];
   }
 
-  Series linear = Series::zeros({k}, ScalarType::Int64).to(coords_.platform(), ScalarType::Int64);
+  Series linear = pluss::codem::factory::zeros({k}, ScalarType::Int64).to(coords_.platform(), ScalarType::Int64);
   for (std::int64_t d = 0; d < indexed_rank_; ++d) {
     Series col = coords_.select(1, d).to(coords_.platform(), ScalarType::Int64);
     Series term = col.mul(static_cast<double>(strides[static_cast<std::size_t>(d)]))
@@ -136,7 +136,7 @@ Series TraverseMatch::select_from(const Series& other) const {
     for (std::int64_t d = indexed_rank_; d < other.dim(); ++d) {
       empty_shape.push_back(other.size(d));
     }
-    return Series::empty(empty_shape, other.scalar_type(), other.platform());
+    return pluss::codem::factory::empty(empty_shape, other.scalar_type(), other.platform());
   }
 
   if (indexed_rank_ == 0) {

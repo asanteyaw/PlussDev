@@ -163,7 +163,7 @@ Series Series::calc_antidiff_(
     const std::int64_t nodes = intervals + 1;
     const auto dtype = upper.scalar_type();
     const auto platform = upper.platform();
-    const Series unit = Series::linspace(0.0, 1.0, nodes, dtype, platform);
+    const Series unit = pluss::codem::factory::linspace(0.0, 1.0, nodes, dtype, platform);
     const Series delta = upper.sub(lower);
     const Series points = delta.unsqueeze(-1).mul(unit).add(lower);
     Series values = callback(points);
@@ -381,7 +381,7 @@ SeriesItoDifferential Series::calc_ito_(
 
   const auto dtype = x.scalar_type();
   const auto platform = x.platform();
-  const Series zeros_s = Series::zeros(S, dtype, platform);
+  const Series zeros_s = pluss::codem::factory::zeros(S, dtype, platform);
   const bool has_time = options.time.defined();
   Series t_full = pluss::series::undefined();
   if (has_time)
@@ -466,9 +466,9 @@ SeriesItoDifferential Series::calc_ito_(
       }
     }
   }
-  Series diffusion = Series::zeros(with_leading(0, S).size() == 0 ? S : S, dtype,
+  Series diffusion = pluss::codem::factory::zeros(with_leading(0, S).size() == 0 ? S : S, dtype,
                                    platform);
-  diffusion = Series::zeros(
+  diffusion = pluss::codem::factory::zeros(
       [&] {
         auto sh = S;
         sh.push_back(m);
@@ -503,7 +503,7 @@ SeriesItoDifferential Series::calc_ito_(
                   std::string(op) + ": the jump coefficient must return one "
                                     "array per state");
       // Time-one flow of dy/du = h(y) z for every atom, by Runge-Kutta.
-      const auto stacked_zero = Series::zeros(with_leading(K, S), dtype, platform);
+      const auto stacked_zero = pluss::codem::factory::zeros(with_leading(K, S), dtype, platform);
       std::vector<Series> y;
       for (const auto &s : xs)
         y.push_back(s.detach().unsqueeze(0).add(stacked_zero));
@@ -549,7 +549,7 @@ SeriesItoDifferential Series::calc_ito_(
     const Series dg = y_shift.detach().sub(out.value.unsqueeze(0));
     const Series nu = jump_array(jumps->intensity.to(platform, dtype), K, S, op);
     if (jumps->compensated) {
-      Series linear = Series::zeros(with_leading(K, S), dtype, platform);
+      Series linear = pluss::codem::factory::zeros(with_leading(K, S), dtype, platform);
       for (std::size_t j = 0; j < k; ++j)
         linear = linear.add(marcus ? gd[j].unsqueeze(0).mul(hx[j].unsqueeze(0)).mul(zk)
                                    : gd[j].unsqueeze(0).mul(z[j]));
@@ -578,7 +578,7 @@ Series Series::calc_convention_drift_(
   Series leaf = x.detach();
   dd::detail::set_tracks_slope_(leaf, true);
   Series sig = normalize_sigma(sigma(leaf), S, "Series.calc.diff");
-  Series correction = Series::zeros(S, x.scalar_type(), x.platform());
+  Series correction = pluss::codem::factory::zeros(S, x.scalar_type(), x.platform());
   const std::int64_t m = sig.size(-1);
   for (std::int64_t f = 0; f < m; ++f) {
     const Series column = sig.select(-1, f);
@@ -636,11 +636,11 @@ Series Series::calc_stochastic_integral_(
     integrand = f(t_b.slice(dim, 0, n - 1, 1), left);
     // An integrand that depends on time alone is allowed to return the broadcastable shape of `t`.
     if (integrand.defined() && shape_of(integrand) != shape_of(left))
-      integrand = integrand.add(Series::zeros(shape_of(left), left.scalar_type(), left.platform()));
+      integrand = integrand.add(pluss::codem::factory::zeros(shape_of(left), left.scalar_type(), left.platform()));
   } else {
     Series full = f(t_b, path);
     if (full.defined() && shape_of(full) != shape_of(path))
-      full = full.add(Series::zeros(shape_of(path), path.scalar_type(), path.platform()));
+      full = full.add(pluss::codem::factory::zeros(shape_of(path), path.scalar_type(), path.platform()));
     PLUSS_CHECK(full.defined() && shape_of(full) == shape_of(path),
                 std::string(op) +
                     ": the integrand must return one value per path sample "
@@ -660,7 +660,7 @@ Series Series::calc_stochastic_integral_(
   const Series terms = integrand.mul(dw);
   if (!cumulative)
     return terms.sum(dim);
-  const Series zero = Series::zeros(shape_of(terms), terms.scalar_type(),
+  const Series zero = pluss::codem::factory::zeros(shape_of(terms), terms.scalar_type(),
                                     terms.platform())
                           .slice(dim, 0, 1, 1);
   return zero.unite({terms.cumsum(dim)}, dim);
@@ -775,7 +775,7 @@ Series Series::CalcAccessor::DiffAccessor::marcus_flow(
               "Series.calc.diff.marcus_flow: the start must be defined");
   const std::int64_t n = std::max<std::int64_t>(steps, 1);
   const double du = 1.0 / static_cast<double>(n);
-  Series y = x0.detach().add(Series::zeros(shape_of(x0), x0.scalar_type(), x0.platform()));
+  Series y = x0.detach().add(pluss::codem::factory::zeros(shape_of(x0), x0.scalar_type(), x0.platform()));
   auto field = [&](const Series &s) { return h(s).mul(z); };
   for (std::int64_t i = 0; i < n; ++i) {
     const Series k1 = field(y);
@@ -820,7 +820,7 @@ Series uniform_times(const Series &path, std::int64_t dim, double t0, double t1)
   PLUSS_CHECK(dim >= 0 && dim < rank, "Series.calc.antidiff: dim out of range");
   PLUSS_CHECK(std::isfinite(t0) && std::isfinite(t1) && t1 > t0,
               "Series.calc.antidiff: need finite t0 < t1");
-  return Series::linspace(t0, t1, path.size(dim), path.scalar_type(),
+  return pluss::codem::factory::linspace(t0, t1, path.size(dim), path.scalar_type(),
                           path.platform());
 }
 } // namespace
@@ -892,7 +892,7 @@ Series Series::calc_malliavin_(const Series &receiver,
   dim = normalized_dim(dim, receiver.dim(), op);
   Series leaf = from_path ? receiver.detach().diff(1, dim) : receiver.detach();
   PLUSS_CHECK(leaf.size(dim) >= 1, std::string(op) + ": no increments");
-  leaf = leaf.add(Series::zeros(shape_of(leaf), leaf.scalar_type(), leaf.platform())).detach();
+  leaf = leaf.add(pluss::codem::factory::zeros(shape_of(leaf), leaf.scalar_type(), leaf.platform())).detach();
   dd::detail::set_tracks_slope_(leaf, true);
   Series arg = leaf;
   if (from_path) {
@@ -906,7 +906,7 @@ Series Series::calc_malliavin_(const Series &receiver,
     objective.reverse(true, false, false);
   Series out = leaf.has_sensitivity()
                    ? leaf.sensitivity().detach()
-                   : Series::zeros(shape_of(leaf), leaf.scalar_type(), leaf.platform());
+                   : pluss::codem::factory::zeros(shape_of(leaf), leaf.scalar_type(), leaf.platform());
   pluss::codem::series_tape::clear_sensitivity(leaf);
   return out;
 }
@@ -922,13 +922,13 @@ Series Series::calc_skorokhod_(const Series &increments,
   dim = normalized_dim(dim, increments.dim(), op);
   const std::int64_t N = increments.size(dim);
   Series leaf = increments.detach().add(
-      Series::zeros(shape_of(increments), increments.scalar_type(), increments.platform())).detach();
+      pluss::codem::factory::zeros(shape_of(increments), increments.scalar_type(), increments.platform())).detach();
   dd::detail::set_tracks_slope_(leaf, true);
   const Series uval = u(leaf);
   PLUSS_CHECK(uval.defined() && shape_of(uval) == shape_of(leaf),
               std::string(op) + ": u must return one value per increment");
   const Series ito_part = uval.detach().mul(increments.detach()).sum(dim);
-  Series correction = Series::zeros(shape_of(ito_part), ito_part.scalar_type(), ito_part.platform());
+  Series correction = pluss::codem::factory::zeros(shape_of(ito_part), ito_part.scalar_type(), ito_part.platform());
   for (std::int64_t i = 0; i < N; ++i) {
     pluss::codem::series_tape::clear_sensitivity(leaf);
     // the objective is the summed slice: a slice of an untracked process can carry a source link of its own
@@ -970,7 +970,7 @@ Series Series::calc_marcus_integral_(
   const Series right = path.slice(dim, 1, n, 1);
   const Series dw = right.sub(left);
   const auto zero_like_left = [&] {
-    return Series::zeros(shape_of(left), left.scalar_type(), left.platform());
+    return pluss::codem::factory::zeros(shape_of(left), left.scalar_type(), left.platform());
   };
   auto broadcast_to_left = [&](Series v) {
     PLUSS_CHECK(v.defined(), std::string(op) + ": the integrand returned an undefined Series");
@@ -984,7 +984,7 @@ Series Series::calc_marcus_integral_(
   // Continuous steps: Stratonovich average of the endpoint values.
   Series full = f(t_b, path);
   if (shape_of(full) != shape_of(path))
-    full = full.add(Series::zeros(shape_of(path), path.scalar_type(), path.platform()));
+    full = full.add(pluss::codem::factory::zeros(shape_of(path), path.scalar_type(), path.platform()));
   PLUSS_CHECK(shape_of(full) == shape_of(path),
               std::string(op) + ": the integrand must act pointwise");
   Series term = full.slice(dim, 0, n - 1, 1).add(full.slice(dim, 1, n, 1)).mul(0.5).mul(dw);
@@ -1002,7 +1002,7 @@ Series Series::calc_marcus_integral_(
               std::string(op) + ": the integrand returned a non-finite value");
   if (!cumulative)
     return term.sum(dim);
-  const Series zero = Series::zeros(shape_of(term), term.scalar_type(), term.platform())
+  const Series zero = pluss::codem::factory::zeros(shape_of(term), term.scalar_type(), term.platform())
                           .slice(dim, 0, 1, 1);
   return zero.unite({term.cumsum(dim)}, dim);
 }
@@ -1040,7 +1040,7 @@ Series Series::array_stochastic_integral_(const Series &values,
   const Series terms = integrand.mul(dw);
   if (!cumulative)
     return terms.sum(dim);
-  const Series zero = Series::zeros(shape_of(terms), terms.scalar_type(), terms.platform())
+  const Series zero = pluss::codem::factory::zeros(shape_of(terms), terms.scalar_type(), terms.platform())
                           .slice(dim, 0, 1, 1);
   return zero.unite({terms.cumsum(dim)}, dim);
 }
@@ -1073,7 +1073,7 @@ Series Series::SeriesAntidiffProxy::quadratic_variation_cumulative(std::int64_t 
   dim = normalized_dim(dim, w.dim(), "Series.antidiff.quadratic_variation");
   const Series d = w.diff(1, dim);
   const Series terms = d.mul(d);
-  const Series zero = Series::zeros(shape_of(terms), terms.scalar_type(), terms.platform()).slice(dim, 0, 1, 1);
+  const Series zero = pluss::codem::factory::zeros(shape_of(terms), terms.scalar_type(), terms.platform()).slice(dim, 0, 1, 1);
   return zero.unite({terms.cumsum(dim)}, dim);
 }
 Series Series::SeriesAntidiffProxy::covariation(std::int64_t dim) const {
@@ -1091,7 +1091,7 @@ Series Series::SeriesAntidiffProxy::covariation_cumulative(std::int64_t dim) con
               "Series.antidiff.covariation: the two paths must have the same shape");
   dim = normalized_dim(dim, x.dim(), "Series.antidiff.covariation");
   const Series terms = x.diff(1, dim).mul(y.diff(1, dim));
-  const Series zero = Series::zeros(shape_of(terms), terms.scalar_type(), terms.platform()).slice(dim, 0, 1, 1);
+  const Series zero = pluss::codem::factory::zeros(shape_of(terms), terms.scalar_type(), terms.platform()).slice(dim, 0, 1, 1);
   return zero.unite({terms.cumsum(dim)}, dim);
 }
 

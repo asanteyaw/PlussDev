@@ -67,7 +67,7 @@ Design signal taken from these files:
 ### Patch 133 (landed in this step)
 - Add CUDA bootstrap contract tests (no-GPU-safe):
   - backend info coherence for CUDA target,
-  - `Series::empty(..., CUDA)` fail-loud contract,
+  - `pluss::series::empty(..., CUDA)` fail-loud contract,
   - `Series::platform(CUDA)` fail-loud contract.
 - Add reusable hardware gate runner script for artifact-driven sweeps (MPS/CUDA modes).
 
@@ -118,7 +118,7 @@ Design signal taken from these files:
 ### Patch 139 (landed in this step)
 - Performance and reliability maturity:
   - bridge-backed CUDA Series bootstrap:
-    - `Series::empty(..., CUDA)` and `Series::platform(CUDA)` enabled under
+    - `pluss::series::empty(..., CUDA)` and `Series::platform(CUDA)` enabled under
       `PLUSS_CUDA_ALLOW_CPU_BRIDGE=1` policy,
     - strict mode remains fail-loud when bridge is disabled;
   - CUDA CPU-bridge dispatch progression:
@@ -517,7 +517,7 @@ Design signal taken from these files:
 - CUDA device-storage foundation tranche:
   - add CUDA runtime device allocation/free, D2D copy, and device memset primitives;
   - add `StorageLocation::CudaDevice` and `Storage::cuda_device(...)`;
-  - add opt-in `PLUSS_CUDA_DEVICE_STORAGE=1` so `Series::empty(..., CUDA)` can allocate device-backed storage without breaking existing host-backed CUDA bridge/provider lanes;
+  - add opt-in `PLUSS_CUDA_DEVICE_STORAGE=1` so `pluss::series::empty(..., CUDA)` can allocate device-backed storage without breaking existing host-backed CUDA bridge/provider lanes;
   - update `Series::platform(...)` transfer to use H2D/D2H/D2D paths when either side is CUDA-device storage;
   - make CUDA-device `zeros` use device memset and keep non-zero fill/ones fail-loud until fill kernels land.
 - Expanded CUDA validation:

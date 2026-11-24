@@ -75,7 +75,7 @@ Slot::Value as_series_f64(double v) {
 }
 
 Slot::Value as_series_bool(bool v) {
-  auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+  auto s = pluss::series::zeros({1}, pluss::codem::ScalarType::Bool);
   reinterpret_cast<bool*>(s.raw_data())[0] = v;
   return s;
 }

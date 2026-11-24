@@ -59,7 +59,7 @@ Series transform_typed(const Series &input, std::int64_t dim, bool forward,
   const std::int64_t out_length = one_sided ? length / 2 + 1 : length;
   auto out_sizes = sizes;
   out_sizes[static_cast<std::size_t>(dim)] = out_length;
-  Series output = Series::empty(out_sizes, input.scalar_type());
+  Series output = pluss::codem::factory::empty(out_sizes, input.scalar_type());
   const auto *source = reinterpret_cast<const Complex *>(input.raw_data());
   auto *destination = reinterpret_cast<Complex *>(output.raw_data());
 

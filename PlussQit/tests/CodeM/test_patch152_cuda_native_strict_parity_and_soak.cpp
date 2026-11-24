@@ -128,7 +128,7 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
         flat_cuda.take(idx_cuda).to(pluss::pCPU).host<float>(),
         flat_cpu.take(idx_cpu).host<float>());
 
-    auto put_cpu = pluss::Series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
+    auto put_cpu = pluss::series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
     auto put_cuda = put_cpu.to(pluss::pCUDA);
     const auto src_cpu = pluss::make_series(srcdata, {4});
     const auto src_cuda = src_cpu.to(pluss::pCUDA);
@@ -145,7 +145,7 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
         x_cuda.gather(1, gather_idx_cuda).to(pluss::pCPU).host<float>(),
         x_cpu.gather(1, gather_idx_cpu).host<float>());
 
-    const auto scatter_base_cpu = pluss::Series::zeros({3, 4}, pluss::ScalarType::Float32);
+    const auto scatter_base_cpu = pluss::series::zeros({3, 4}, pluss::ScalarType::Float32);
     const auto scatter_base_cuda = scatter_base_cpu.to(pluss::pCUDA);
 
     require_close_(

@@ -54,9 +54,9 @@ int main() {
   std::cout << "transposed contiguous: " << transposed.is_contiguous() << "\n\n";
 
   heading("dtype_queries");
-  const auto real = pluss::Series::zeros({2}, pluss::ScalarType::Float32);
-  const auto integer = pluss::Series::zeros({2}, pluss::ScalarType::UInt32);
-  const auto complex = pluss::Series::zeros({2}, pluss::ScalarType::Complex64);
+  const auto real = pluss::series::zeros({2}, pluss::ScalarType::Float32);
+  const auto integer = pluss::series::zeros({2}, pluss::ScalarType::UInt32);
+  const auto complex = pluss::series::zeros({2}, pluss::ScalarType::Complex64);
   std::cout << "real dtype=" << real.dtype() << ", bytes=" << real.dtype().itemsize
             << ", floating=" << real.is_floating_point()
             << ", signed=" << real.is_signed() << '\n';
@@ -92,8 +92,8 @@ int main() {
   std::cout << "broadcastable but different shape: "
             << pluss::make_series({1, 2, 3}).equal(pluss::make_series({{1, 2, 3}})) << '\n';
   std::cout << "two empty [0] Series: "
-            << pluss::Series::empty({0}, pluss::ScalarType::Float64)
-                   .equal(pluss::Series::empty({0}, pluss::ScalarType::Float64)) << "\n\n";
+            << pluss::series::empty({0}, pluss::ScalarType::Float64)
+                   .equal(pluss::series::empty({0}, pluss::ScalarType::Float64)) << "\n\n";
 
   heading("asymmetric_tolerance");
   std::cout << "9 close to 10: "

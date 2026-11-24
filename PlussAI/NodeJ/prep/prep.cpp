@@ -2940,7 +2940,7 @@ namespace {
 // value in `keys`. Vectorized: one masked fused-add per fitted category.
 [[nodiscard]] Series encoder_codes_(const Series& column, const std::vector<std::uint64_t>& keys) {
   const std::int64_t rows = column.numel();
-  Series codes = Series::zeros({rows}, ScalarType::Float64, column.platform());
+  Series codes = pluss::series::zeros({rows}, ScalarType::Float64, column.platform());
   for (std::size_t position = 0; position < keys.size(); ++position) {
     const double value = std::bit_cast<double>(keys[position]);
     codes = codes.add(column.eq(value).to(ScalarType::Float64).mul(static_cast<double>(position + 1)));
@@ -3287,7 +3287,7 @@ StatusOr<Series> SupervisedEncoderBase::map(const FeatureBatch& batch, const Inf
     const double unknown = unknown_values_[static_cast<std::size_t>(f)];
     const auto& keys = category_keys_[static_cast<std::size_t>(f)];
     const auto& values = category_values_[static_cast<std::size_t>(f)];
-    Series encoded = Series::full({column.numel()}, unknown, ScalarType::Float64, column.platform());
+    Series encoded = pluss::series::full({column.numel()}, unknown, ScalarType::Float64, column.platform());
     for (std::size_t k = 0; k < keys.size(); ++k) {
       const double kv = std::bit_cast<double>(keys[k]);
       encoded = encoded.add(column.eq(kv).to(ScalarType::Float64).mul(values[k] - unknown));

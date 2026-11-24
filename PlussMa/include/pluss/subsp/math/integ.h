@@ -312,7 +312,7 @@ namespace detail {
 // needs to know how many batch rows there are.
 inline Series quadra_trapezoidal_(const IntegrandFn& fn, double a, double b, std::int64_t n, ScalarType dtype,
                                   pluss::codem::Platform platform, std::int64_t* evaluations) {
-  const Series x = Series::linspace(a, b, n + 1, dtype, platform);
+  const Series x = pluss::series::linspace(a, b, n + 1, dtype, platform);
   const Series y = fn(x);
   require_defined_(y, "quadra");
   if (evaluations) *evaluations += n + 1;
@@ -323,7 +323,7 @@ inline Series quadra_simpson_(const IntegrandFn& fn, double a, double b, std::in
                               pluss::codem::Platform platform, std::int64_t* evaluations) {
   if (n < 2) n = 2;
   if (n % 2 != 0) ++n;
-  const Series x = Series::linspace(a, b, n + 1, dtype, platform);
+  const Series x = pluss::series::linspace(a, b, n + 1, dtype, platform);
   const Series y = fn(x);
   require_defined_(y, "quadra");
   if (evaluations) *evaluations += n + 1;
@@ -851,7 +851,7 @@ inline QuadraScalarResult quadra_scalar(const ScalarIntegrandFn& fn, double a, d
 
 // ---------------------------------------------------------------------
 // Aleatoria: Monte Carlo integration. Vectorized: every sample is drawn
-// and evaluated in one batched call (via Series::rand's own native RNG
+// and evaluated in one batched call (via pluss::series::rand's own native RNG
 // kernel), never a per-sample loop -- the only way Monte Carlo's typical
 // sample counts (10^5-10^7+) stay fast.
 // ---------------------------------------------------------------------
@@ -954,7 +954,7 @@ inline AleatoriaResult aleatoria(const IntegrandFn& fn, double a, double b, cons
   const Config cfg = Config{}.with_dtype(options.dtype).with_platform(options.platform);
   Series u = pluss::series::rand({options.samples}, cfg, options.seed);
   if (options.stratified) {
-    const Series idx = Series::linspace(0.0, static_cast<double>(options.samples - 1), options.samples,
+    const Series idx = pluss::series::linspace(0.0, static_cast<double>(options.samples - 1), options.samples,
                                         options.dtype, options.platform);
     u = idx.add(u).div(static_cast<double>(options.samples));
   }

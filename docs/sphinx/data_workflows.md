@@ -126,7 +126,7 @@ Use an explicit boolean `Series` mask when the predicate comes from C++ logic:
 
 ```cpp
 auto ages = df.features("age").as_series().host<std::int64_t>();
-auto mask = pluss::Series::zeros(
+auto mask = pluss::series::zeros(
     {static_cast<std::int64_t>(ages.size())},
     pluss::codem::ScalarType::Bool);
 

@@ -208,7 +208,7 @@ struct Access {
     CODEM_CHECK(indices.dim() == 1, "TimelineIndexAccessor::take: indices must be 1D");
     const auto* ix = reinterpret_cast<const std::int64_t*>(indices.raw_data());
     const auto n = indices.numel();
-    auto out = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({n}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     const auto* x = reinterpret_cast<const std::int64_t*>(self.engine_.timeline.ticks_.raw_data());
     for (std::int64_t i = 0; i < n; ++i) {
@@ -225,7 +225,7 @@ struct Access {
     if (stop > n) stop = n;
     if (stop < start) stop = start;
     const auto len = stop - start;
-    auto out = pluss::codem::Series::empty({len}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({len}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     const auto* x = reinterpret_cast<const std::int64_t*>(self.engine_.timeline.ticks_.raw_data());
     for (std::int64_t i = 0; i < len; ++i) o[i] = x[start + i];
@@ -258,7 +258,7 @@ struct Access {
       else { v = x[i]; ++i; ++j; }
       if (outv.empty() || outv.back() != v) outv.push_back(v);
     }
-    auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
     return make(::pluss::codeh::Timeline(std::move(out), std::string(a.engine_.timeline.tz())), true);
   }
@@ -276,7 +276,7 @@ struct Access {
       else if (y[j] < x[i]) ++j;
       else { outv.push_back(x[i]); ++i; ++j; }
     }
-    auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     if (!outv.empty()) std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
     return make(::pluss::codeh::Timeline(std::move(out), std::string(a.engine_.timeline.tz())), true);
   }
@@ -294,7 +294,7 @@ struct Access {
       if (j < b.size() && y[j] == x[i]) { ++i; continue; }
       outv.push_back(x[i]); ++i;
     }
-    auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     if (!outv.empty()) std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
     return make(::pluss::codeh::Timeline(std::move(out), std::string(a.engine_.timeline.tz())), true);
   }
@@ -372,7 +372,7 @@ struct Access {
     };
     const auto result_type = op == "mean" ? pluss::codem::ScalarType::Float64
                                           : values.scalar_type();
-    auto out = pluss::codem::Series::empty({n}, result_type);
+    auto out = pluss::codem::factory::empty({n}, result_type);
     if (values.scalar_type() == pluss::codem::ScalarType::Float64) {
       const auto packed = values.contiguous();
       const auto* v = reinterpret_cast<const double*>(packed.raw_data());
@@ -528,7 +528,7 @@ struct Access {
     const auto lo = (std::int64_t)(std::lower_bound(x, x + n, s) - x);
     const auto hi = (std::int64_t)(std::upper_bound(x, x + n, e) - x);
     const std::int64_t len = std::max<std::int64_t>(0, hi - lo);
-    auto out = pluss::codem::Series::empty({len}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({len}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     for (std::int64_t i = 0; i < len; ++i) o[i] = lo + i;
     return out;
@@ -550,8 +550,8 @@ struct Access {
     const auto* x = reinterpret_cast<const std::int64_t*>(self.engine_.timeline.ticks_.raw_data());
     const auto n = self.size();
     if (n == 0) {
-      auto labels = ::pluss::codeh::Timeline(pluss::codem::Series::empty({0}, pluss::codem::ScalarType::Int64), std::string(self.engine_.timeline.tz()));
-      auto bin = pluss::codem::Series::empty({0}, pluss::codem::ScalarType::Int64);
+      auto labels = ::pluss::codeh::Timeline(pluss::codem::factory::empty({0}, pluss::codem::ScalarType::Int64), std::string(self.engine_.timeline.tz()));
+      auto bin = pluss::codem::factory::empty({0}, pluss::codem::ScalarType::Int64);
       return {std::move(labels), std::move(bin)};
     }
     ::pluss::codeh::TimeZone tz = ::pluss::codeh::TimeZone::load(self.engine_.timeline.tz());
@@ -563,7 +563,7 @@ struct Access {
       const std::int64_t local = utc + (std::int64_t)off * 60LL * 1'000'000'000LL;
       min_local = std::min(min_local, local);
     }
-    auto bin_id = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
+    auto bin_id = pluss::codem::factory::empty({n}, pluss::codem::ScalarType::Int64);
     auto* bid = reinterpret_cast<std::int64_t*>(bin_id.raw_data());
     std::int64_t max_bin = std::numeric_limits<std::int64_t>::min();
     std::int64_t min_bin = std::numeric_limits<std::int64_t>::max();
@@ -689,7 +689,7 @@ struct Access {
     }
 
     const std::int64_t nbins = max_bin - min_bin + 1;
-    auto label_ticks = pluss::codem::Series::empty({nbins}, pluss::codem::ScalarType::Int64);
+    auto label_ticks = pluss::codem::factory::empty({nbins}, pluss::codem::ScalarType::Int64);
     auto* lt = reinterpret_cast<std::int64_t*>(label_ticks.raw_data());
     for (std::int64_t b = 0; b < nbins; ++b) {
       const auto logical_bin = b + min_bin;
@@ -738,7 +738,7 @@ struct Access {
     auto bins = resample_bins(self, options);
     const auto n = self.size();
     const auto nb = bins.labels.numel();
-    auto out = pluss::codem::Series::empty({nb}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({nb}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     std::fill(o, o + nb, 0);
     const auto* bid = reinterpret_cast<const std::int64_t*>(bins.bin_id.raw_data());
@@ -754,7 +754,7 @@ struct Access {
                                                    const pluss::codem::Series& bin_id,
                                                    std::int64_t nbins,
                                                    bool is_min) {
-    auto out = pluss::codem::Series::empty({nbins}, values.scalar_type());
+    auto out = pluss::codem::factory::empty({nbins}, values.scalar_type());
     auto o = out.contiguous();
     auto v = values.contiguous();
     auto* op = reinterpret_cast<T*>(o.raw_data());
@@ -795,7 +795,7 @@ struct Access {
     check_values_1d_match_(values, self.size());
     auto bins = resample_bins(self, options);
     const auto nb = bins.labels.numel();
-    auto out = pluss::codem::Series::empty({nb}, values.scalar_type());
+    auto out = pluss::codem::factory::empty({nb}, values.scalar_type());
     auto ocont = out.contiguous();
     std::memset(ocont.raw_data(), 0,
                 (std::size_t)ocont.numel() * (std::size_t)ocont.itemsize());
@@ -840,7 +840,7 @@ struct Access {
     const auto nb = bins.labels.numel();
     auto sum = resample_sum(self, values.to(pluss::codem::ScalarType::Float64), options);
     auto cnt = resample_count(self, options);
-    auto out = pluss::codem::Series::empty({nb}, pluss::codem::ScalarType::Float64);
+    auto out = pluss::codem::factory::empty({nb}, pluss::codem::ScalarType::Float64);
     auto* o = reinterpret_cast<double*>(out.raw_data());
     const auto* s = reinterpret_cast<const double*>(sum.raw_data());
     const auto* c = reinterpret_cast<const std::int64_t*>(cnt.raw_data());
@@ -913,7 +913,7 @@ struct Access {
       return resample_first_last(
           self, values.to(pluss::codem::ScalarType::Float64), options, is_first);
     }
-    auto out = pluss::codem::Series::empty({nb}, values.scalar_type());
+    auto out = pluss::codem::factory::empty({nb}, values.scalar_type());
     auto o = out.contiguous();
     auto v = values.contiguous();
     const auto* bid = reinterpret_cast<const std::int64_t*>(bins.bin_id.raw_data());
@@ -988,7 +988,7 @@ struct Access {
     check_values_1d_match_(values, self.size());
     auto bins = resample_bins(self, options);
     const auto nb = bins.labels.numel();
-    auto out = pluss::codem::Series::empty({nb, 4}, values.scalar_type());
+    auto out = pluss::codem::factory::empty({nb, 4}, values.scalar_type());
     auto o = out.contiguous();
     // open/close via first/last; high/low via max/min
     auto open = resample_first(self, values, options).contiguous();
@@ -1010,7 +1010,7 @@ struct Access {
     const auto w = reinterpret_cast<const std::int64_t*>(window.nanos_.raw_data())[0];
     CODEM_CHECK(w > 0, "rolling_count: window must be positive");
     const auto n = self.size();
-    auto out = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({n}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     const auto* x = reinterpret_cast<const std::int64_t*>(self.engine_.timeline.ticks_.raw_data());
     std::int64_t j = 0;
@@ -1030,7 +1030,7 @@ struct Access {
     const auto w = reinterpret_cast<const std::int64_t*>(window.nanos_.raw_data())[0];
     CODEM_CHECK(w > 0, "rolling_sum: window must be positive");
     const auto n = self.size();
-    auto out = pluss::codem::Series::empty({n}, values.scalar_type());
+    auto out = pluss::codem::factory::empty({n}, values.scalar_type());
 
     // Minimal implementation: recompute sums with two pointers for float64/int64.
     const auto* x = reinterpret_cast<const std::int64_t*>(self.engine_.timeline.ticks_.raw_data());
@@ -1075,7 +1075,7 @@ struct Access {
     require_nondecreasing(right, "TimelineIndexAccessor::join_asof(right)");
     const auto nl = left.size();
     const auto nr = right.size();
-    auto out = pluss::codem::Series::empty({nl}, pluss::codem::ScalarType::Int64);
+    auto out = pluss::codem::factory::empty({nl}, pluss::codem::ScalarType::Int64);
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     const auto* xl = reinterpret_cast<const std::int64_t*>(left.engine_.timeline.ticks_.raw_data());
     const auto* xr = reinterpret_cast<const std::int64_t*>(right.engine_.timeline.ticks_.raw_data());
@@ -1158,12 +1158,12 @@ struct Access {
       }
     }
 
-    auto uticks = pluss::codem::Series::empty({(std::int64_t)u.size()}, pluss::codem::ScalarType::Int64);
+    auto uticks = pluss::codem::factory::empty({(std::int64_t)u.size()}, pluss::codem::ScalarType::Int64);
     std::memcpy(uticks.raw_data(), u.data(), u.size() * sizeof(std::int64_t));
     ::pluss::codeh::Timeline ut(std::move(uticks), std::string(left.engine_.timeline.tz()));
 
-    auto lser = pluss::codem::Series::empty({(std::int64_t)li.size()}, pluss::codem::ScalarType::Int64);
-    auto rser = pluss::codem::Series::empty({(std::int64_t)ri.size()}, pluss::codem::ScalarType::Int64);
+    auto lser = pluss::codem::factory::empty({(std::int64_t)li.size()}, pluss::codem::ScalarType::Int64);
+    auto rser = pluss::codem::factory::empty({(std::int64_t)ri.size()}, pluss::codem::ScalarType::Int64);
     std::memcpy(lser.raw_data(), li.data(), li.size() * sizeof(std::int64_t));
     std::memcpy(rser.raw_data(), ri.data(), ri.size() * sizeof(std::int64_t));
     return {std::move(ut), std::move(lser), std::move(rser)};

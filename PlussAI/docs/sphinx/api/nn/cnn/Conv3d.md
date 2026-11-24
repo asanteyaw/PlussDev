@@ -89,12 +89,12 @@ int main() {
   nn::Conv3d conv(1, 1, std::array<std::int64_t, 3>{2, 2, 2});  // in=1, out=1, kernel=2x2x2
 
   // a "sum everything in the 2x2x2 window" kernel
-  conv->weight().copy_(pluss::Series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float32));
+  conv->weight().copy_(pluss::series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float32));
   conv->bias().copy_(pluss::make_series({0.0}, {1}));
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   // batch=1, channels=1, a 2x2x2 volume filled with 1.0
-  const pluss::Series x = pluss::Series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
+  const pluss::Series x = pluss::series::full({1, 1, 2, 2, 2}, 1.0, pluss::ScalarType::Float64);
   const pluss::Series y = conv.forward(x);
 
   std::cout << "input shape:  [1,1,2,2,2]\n";
@@ -139,7 +139,7 @@ int main() {
   nn::Conv3d conv(opts);
 
   // batch=1, channels=1, 5x5x5 volume
-  const pluss::Series x = pluss::Series::full({1, 1, 5, 5, 5}, 1.0, pluss::ScalarType::Float32);
+  const pluss::Series x = pluss::series::full({1, 1, 5, 5, 5}, 1.0, pluss::ScalarType::Float32);
   const pluss::Series y = conv.forward(x);
 
   // padded = 5 + 2*1 = 7; out = (7 - 1*2 - 1) / 2 + 1 = 4/2 + 1 = 3
@@ -229,7 +229,7 @@ int main() {
 
   std::cout << "weight platform after .to(pMPS): " << static_cast<int>(conv->weight().platform()) << "\n";
 
-  const Series x = pluss::Series::full({1, 1, 3, 3, 3}, 1.0, pluss::ScalarType::Float32).to(pluss::pMPS);
+  const Series x = pluss::series::full({1, 1, 3, 3, 3}, 1.0, pluss::ScalarType::Float32).to(pluss::pMPS);
   try {
     const Series y = conv.forward(x);
     std::cout << "conv3d on MPS: OK, platform=" << static_cast<int>(y.platform()) << "\n";

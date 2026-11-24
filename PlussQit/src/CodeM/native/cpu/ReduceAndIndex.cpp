@@ -20,12 +20,12 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
   if (!a.defined()) throw_error("sum: undefined");
   if (a.dim() == 0) {
     // scalar -> scalar
-    auto out = Series::zeros({}, a.scalar_type());
+    auto out = pluss::codem::factory::zeros({}, a.scalar_type());
     std::memcpy(out.raw_data(), a.raw_data(), (std::size_t)a.dtype().itemsize);
     return out;
   }
   auto out_sizes = out_sizes_for_reduce(a.sizes(), dim, keepdim);
-  auto out = Series::zeros(out_sizes, a.scalar_type());
+  auto out = pluss::codem::factory::zeros(out_sizes, a.scalar_type());
 
   // Simple reduction: materialize contiguous and reduce along dim using nested loops.
   auto src = a.contiguous();
@@ -83,7 +83,7 @@ Series index_select(const Series& a, std::int64_t dim, const Series& index) {
 
   auto out_sizes = std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end());
   out_sizes[(std::size_t)dim] = index.numel();
-  auto out = Series::empty(out_sizes, a.scalar_type());
+  auto out = pluss::codem::factory::empty(out_sizes, a.scalar_type());
 
   auto src = a.contiguous();
   auto idx = index.contiguous();

@@ -104,8 +104,8 @@ LuWorkspace run_lu_factorization_(const Series& a, const char* op) {
 
   LuWorkspace ws{};
   ws.lu = a.clone().contiguous();
-  ws.pivots = Series::zeros({n64}, ScalarType::UInt32).to(Platform::MPS).contiguous();
-  ws.status = Series::zeros({1}, ScalarType::Int32).to(Platform::MPS).contiguous();
+  ws.pivots = pluss::codem::factory::zeros({n64}, ScalarType::UInt32).to(Platform::MPS).contiguous();
+  ws.status = pluss::codem::factory::zeros({1}, ScalarType::Int32).to(Platform::MPS).contiguous();
 
   @autoreleasepool {
     id<MTLBuffer> lu_buf = ensure_device_buffer_for_read_mm(ws.lu, c.device, mat_bytes);
@@ -176,7 +176,7 @@ Series lu_solve_from_workspace_(const LuWorkspace& ws, const Series& b, const ch
   const NSUInteger nrhs = static_cast<NSUInteger>(nrhs64);
 
   const Series rhs_mat = vector_rhs ? b.reshape({n64, 1}) : b;
-  Series out_mat = Series::empty({n64, nrhs64}, ScalarType::Float32, Platform::MPS).contiguous();
+  Series out_mat = pluss::codem::factory::empty({n64, nrhs64}, ScalarType::Float32, Platform::MPS).contiguous();
 
   auto& c = ctx_();
   @autoreleasepool {
@@ -260,7 +260,7 @@ Series lu_inverse(const Series& a) {
   constexpr const char* op = "mps::linalg::inverse";
   auto ws = run_lu_factorization_(a, op);
   const auto n64 = a.sizes()[0];
-  Series rhs = Series::eye(n64, n64, ScalarType::Float32).to(Platform::MPS).contiguous();
+  Series rhs = pluss::codem::factory::eye(n64, n64, ScalarType::Float32).to(Platform::MPS).contiguous();
   return lu_solve_from_workspace_(ws, rhs, op);
 }
 
@@ -329,7 +329,7 @@ Series cholesky_factor(const Series& a, bool upper) {
   const std::size_t status_bytes = sizeof(std::int32_t);
 
   Series out = a.clone().contiguous();
-  Series status = Series::zeros({1}, ScalarType::Int32).to(Platform::MPS).contiguous();
+  Series status = pluss::codem::factory::zeros({1}, ScalarType::Int32).to(Platform::MPS).contiguous();
 
   @autoreleasepool {
     id<MTLBuffer> out_buf = ensure_device_buffer_for_read_mm(out, c.device, mat_bytes);
@@ -400,7 +400,7 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
   const NSUInteger nrhs = static_cast<NSUInteger>(nrhs64);
 
   const Series rhs_mat = vector_rhs ? b.reshape({n64, 1}) : b;
-  Series out_mat = Series::empty({n64, nrhs64}, ScalarType::Float32, Platform::MPS).contiguous();
+  Series out_mat = pluss::codem::factory::empty({n64, nrhs64}, ScalarType::Float32, Platform::MPS).contiguous();
 
   @autoreleasepool {
     const std::size_t fac_bytes = static_cast<std::size_t>(factor.numel()) * sizeof(float);

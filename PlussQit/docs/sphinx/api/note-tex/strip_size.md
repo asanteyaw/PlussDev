@@ -76,7 +76,7 @@ Escaped braces and vertical bars are delimiter tokens and remain. Automatic
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().strip_size().defined() << '\n';
+          << pluss::note::undefined().tex().strip_size().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_size();
 } catch (const pluss::Error&) {

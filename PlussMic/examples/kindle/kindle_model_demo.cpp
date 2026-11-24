@@ -15,7 +15,7 @@ std::filesystem::path data_file(std::string_view name) {
 
 pluss::Series make_bool_mask(std::initializer_list<bool> values) {
   const auto n = static_cast<std::int64_t>(values.size());
-  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(mask.raw_data());
   std::int64_t i = 0;
   for (const bool v : values) {

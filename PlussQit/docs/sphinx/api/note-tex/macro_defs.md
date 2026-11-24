@@ -84,7 +84,7 @@ owns none.
 ## Example 3: Undefined And Invalid Input
 
 ```cpp
-const auto absent = pluss::Note::undefined().tex().macro_defs();
+const auto absent = pluss::note::undefined().tex().macro_defs();
 std::cout << std::boolalpha << absent.tokens().defined() << " offsets=["
           << absent.offsets().integers()[0] << "]\n";
 try {

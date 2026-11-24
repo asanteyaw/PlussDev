@@ -9,12 +9,12 @@ using pluss::codem::ScalarType;
 
 TEST_CASE("partial index appends remaining dims", "[adv_index]") {
   // a [2,3,2]
-  auto a = Series::zeros({2,3,2}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3,2}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   for (int i=0;i<12;++i) ap[i] = double(i+1);
 
   // index only first dim with shape [2]
-  auto i0 = Series::zeros({2}, ScalarType::Int64);
+  auto i0 = pluss::series::zeros({2}, ScalarType::Int64);
   auto* i0p = reinterpret_cast<std::int64_t*>(i0.raw_data());
   i0p[0]=1; i0p[1]=0;
 
@@ -31,13 +31,13 @@ TEST_CASE("partial index appends remaining dims", "[adv_index]") {
 }
 
 TEST_CASE("index_put supports values head_total and full", "[adv_index]") {
-  auto a = Series::zeros({2,3,2}, ScalarType::Float32);
-  auto i0 = Series::zeros({2}, ScalarType::Int64);
+  auto a = pluss::series::zeros({2,3,2}, ScalarType::Float32);
+  auto i0 = pluss::series::zeros({2}, ScalarType::Int64);
   auto* i0p = reinterpret_cast<std::int64_t*>(i0.raw_data());
   i0p[0]=0; i0p[1]=1;
 
   // values head_total=2 => broadcast over tail(3*2)
-  auto v = Series::zeros({2}, ScalarType::Float32);
+  auto v = pluss::series::zeros({2}, ScalarType::Float32);
   auto* vp = reinterpret_cast<float*>(v.raw_data());
   vp[0]=1.0f; vp[1]=2.0f;
 
@@ -51,7 +51,7 @@ TEST_CASE("index_put supports values head_total and full", "[adv_index]") {
 }
 
 TEST_CASE("amin/argmin", "[reduction]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   // [[3,1,2],[6,4,5]]
   ap[0]=3; ap[1]=1; ap[2]=2; ap[3]=6; ap[4]=4; ap[5]=5;
@@ -68,7 +68,7 @@ TEST_CASE("amin/argmin", "[reduction]") {
 }
 
 TEST_CASE("argmax/argmin no-arg are global flat reductions and empty dims fail", "[reduction]") {
-  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto a = pluss::series::zeros({2,3}, ScalarType::Float64);
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   // [[1,7,3],[9,2,-4]]
   ap[0]=1; ap[1]=7; ap[2]=3; ap[3]=9; ap[4]=2; ap[5]=-4;
@@ -83,7 +83,7 @@ TEST_CASE("argmax/argmin no-arg are global flat reductions and empty dims fail",
   REQUIRE(global_min.dim() == 0);
   REQUIRE(*gminp == 5);
 
-  auto empty = Series::zeros({0, 3}, ScalarType::Float64);
+  auto empty = pluss::series::zeros({0, 3}, ScalarType::Float64);
   REQUIRE_THROWS_WITH(empty.argmax(0, false), Catch::Matchers::ContainsSubstring("argmax: cannot reduce an empty dimension"));
   REQUIRE_THROWS_WITH(empty.argmin(0, false), Catch::Matchers::ContainsSubstring("argmin: cannot reduce an empty dimension"));
 }

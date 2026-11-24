@@ -58,7 +58,7 @@ TEST_CASE("CUDA bridge-backed Series transfer contract", "[cuda][bridge][runtime
   const bool cuda_ready = pluss::cuda::is_ready();
   if (!cuda_ready) {
     try {
-      (void)pluss::Series::empty({2, 2}, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA);
+      (void)pluss::series::empty({2, 2}, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA);
       FAIL("CUDA empty should fail when runtime is unavailable");
     } catch (const std::exception& e) {
       REQUIRE(std::string(e.what()).find("CUDA runtime unavailable") != std::string::npos);
@@ -67,7 +67,7 @@ TEST_CASE("CUDA bridge-backed Series transfer contract", "[cuda][bridge][runtime
     return;
   }
 
-  const auto x_cpu = pluss::Series::ones({2, 3}, pluss::ScalarType::Float32);
+  const auto x_cpu = pluss::series::ones({2, 3}, pluss::ScalarType::Float32);
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
   REQUIRE(x_cuda.platform() == pluss::pCUDA);
   const auto roundtrip = x_cuda.to(pluss::pCPU);

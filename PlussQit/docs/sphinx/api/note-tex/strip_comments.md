@@ -73,7 +73,7 @@ std::cout << std::boolalpha
           << "idempotent="
           << ((once == once.tex().strip_comments()).all().bool_item())
           << " undefined="
-          << pluss::Note::undefined().tex().strip_comments().defined() << '\n';
+          << pluss::note::undefined().tex().strip_comments().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().strip_comments();
 } catch (const pluss::Error&) {

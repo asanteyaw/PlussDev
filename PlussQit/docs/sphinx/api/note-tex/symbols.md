@@ -65,7 +65,7 @@ std::cout << '\n';
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().symbols().tokens().defined() << '\n';
+          << pluss::note::undefined().tex().symbols().tokens().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1}).tex().symbols();
 } catch (const pluss::Error&) { std::cout << "symbols Int64: rejected\n"; }

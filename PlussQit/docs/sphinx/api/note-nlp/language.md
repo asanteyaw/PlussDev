@@ -45,7 +45,7 @@ The result is a shape-preserving Note, not a `TokenBatch`: there are no offsets 
 ## Example 2: Absence And Dtype Validation
 
 ```cpp
-const auto absent = pluss::Note::undefined().nlp().language();
+const auto absent = pluss::note::undefined().nlp().language();
 std::cout << "defined=" << std::boolalpha << absent.defined() << '\n';
 try {
   (void)pluss::note::bytes(

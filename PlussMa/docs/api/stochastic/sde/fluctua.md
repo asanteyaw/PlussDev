@@ -70,7 +70,7 @@ int main() {
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
   const std::int64_t paths = 40000;
-  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({paths}, 100.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.method = sde::SdeMethod::EulerMaruyama;
   options.steps = 64;
@@ -108,7 +108,7 @@ int main() {
   const double kappa = 2.0, m = 1.0, s = 0.3;
   const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return (y - m) * -kappa; };
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * 0.0 + s; };
-  const Series y0 = Series::full({50000}, 3.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({50000}, 3.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.steps = 400;
   options.seed = 11;
@@ -149,7 +149,7 @@ int main() {
   const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
 
   const sde::DriftFn param_drift = [](double, const Series &y, const Series &theta) { return y * theta.select(0, 0); };
-  const Series y0 = Series::full({40000}, 100.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({40000}, 100.0, pluss::ScalarType::Float64);
   const Series theta = pluss::make_series({0.10});
   sde::SdeOptions options;
   options.method = sde::SdeMethod::EulerMaruyama;
@@ -185,7 +185,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(4));
   const sde::DriftFn none = [](double, const Series &y, const Series &) { return y * 0.0; };
   const sde::DiffusionFn vol = [](double t, const Series &y, const Series &) { return y * 0.0 + (0.1 + 0.2 * t); };
-  const Series y0 = Series::full({50000}, 0.0, pluss::ScalarType::Float64);
+  const Series y0 = pluss::series::full({50000}, 0.0, pluss::ScalarType::Float64);
   sde::SdeOptions options;
   options.steps = 200;
   options.seed = 4;

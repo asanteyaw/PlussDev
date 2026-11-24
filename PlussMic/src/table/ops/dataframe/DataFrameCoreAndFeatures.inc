@@ -2491,7 +2491,7 @@ pluss::Series DataFrame::repeated_caselbl(pluss::msharp::RangeView::Of<std::stri
     }
   }
 
-  auto out = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
   auto* mask = reinterpret_cast<bool*>(out.raw_data());
 
   std::unordered_set<std::string> seen_keys;
@@ -2749,14 +2749,14 @@ std::vector<std::string> align_target_features_(const DataFrame& frame,
 Shelf null_align_feature_(std::int64_t size, std::optional<double> fill, std::string_view where) {
   PLUSS_CHECK(size >= 0, std::string(where) + ": output size must be non-negative");
   const double value = fill.value_or(std::numeric_limits<double>::quiet_NaN());
-  auto values = pluss::Series::full({size},
+  auto values = pluss::series::full({size},
                                     value,
                                     pluss::codem::ScalarType::Float64,
                                     pluss::codem::Platform::CPU);
   if (fill.has_value()) {
     return Shelf(values);
   }
-  return Shelf(values, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool));
+  return Shelf(values, pluss::series::zeros({size}, pluss::codem::ScalarType::Bool));
 }
 
 Shelf remap_align_feature_(const Shelf& source,
@@ -3138,7 +3138,7 @@ void validate_unify_unique_side(const std::vector<std::string>& keys,
 pluss::Series bool_mask_from_values(
     const std::vector<bool>& values,
     const pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  auto out = pluss::Series::zeros(
+  auto out = pluss::series::zeros(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Bool,
       pluss::codem::Platform::CPU);
@@ -3153,12 +3153,12 @@ Shelf make_unify_null_shelf(const Shelf& reference, std::int64_t size) {
   switch (reference.kind()) {
     case ShelfKind::Series: {
       const auto platform = reference.as_series().platform();
-      auto invalid = pluss::Series::zeros(
+      auto invalid = pluss::series::zeros(
           {size},
           pluss::codem::ScalarType::Bool,
           platform);
       return Shelf(
-          pluss::Series::zeros(
+          pluss::series::zeros(
               {size},
               reference.as_series().scalar_type(),
               platform),
@@ -3168,18 +3168,18 @@ Shelf make_unify_null_shelf(const Shelf& reference, std::int64_t size) {
       return Shelf(
           pluss::make_note(
               std::vector<std::string>(static_cast<std::size_t>(size))),
-          pluss::Series::zeros(
+          pluss::series::zeros(
               {size},
               pluss::codem::ScalarType::Bool,
               pluss::codem::Platform::CPU));
     case ShelfKind::Timeline: {
       const auto platform = reference.as_timeline().epoch_nanos().platform();
       return Shelf(
-          pluss::timeline::from_epoch(pluss::Series::zeros(
+          pluss::timeline::from_epoch(pluss::series::zeros(
               {size},
               pluss::codem::ScalarType::Int64,
               platform)),
-          pluss::Series::zeros(
+          pluss::series::zeros(
               {size},
               pluss::codem::ScalarType::Bool,
               platform));
@@ -3188,7 +3188,7 @@ Shelf make_unify_null_shelf(const Shelf& reference, std::int64_t size) {
       return Shelf(
           pluss::duration::nanos(
               std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)),
-          pluss::Series::zeros(
+          pluss::series::zeros(
               {size}, pluss::codem::ScalarType::Bool, pluss::codem::Platform::CPU));
   }
   PLUSS_FAIL("DataFrame::unify: unsupported Shelf kind");
@@ -3301,7 +3301,7 @@ CategoryEncoding DataFrame::factor(
     codes[row] = found->second;
   }
 
-  auto code_values = pluss::Series::empty(
+  auto code_values = pluss::series::empty(
       {source.size()},
       pluss::codem::ScalarType::Int64,
       pluss::codem::Platform::CPU);
@@ -3436,7 +3436,7 @@ Shelf CategoryEncoding::decode() const {
     const auto size = static_cast<std::int64_t>(safe.size());
     switch (levels.kind()) {
       case ShelfKind::Series:
-        output = Shelf(pluss::Series::zeros(
+        output = Shelf(pluss::series::zeros(
             {size},
             levels.as_series().scalar_type(),
             levels.as_series().platform()));
@@ -3446,7 +3446,7 @@ Shelf CategoryEncoding::decode() const {
             std::vector<std::string>(safe.size())));
         break;
       case ShelfKind::Timeline:
-        output = Shelf(pluss::timeline::from_epoch(pluss::Series::zeros(
+        output = Shelf(pluss::timeline::from_epoch(pluss::series::zeros(
             {size},
             pluss::codem::ScalarType::Int64,
             levels.as_timeline().epoch_nanos().platform())));

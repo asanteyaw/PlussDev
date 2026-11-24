@@ -118,7 +118,7 @@ int main() {
       // intercept-only model: the single coefficient is the sample mean
       const std::vector<double> yv{1.0, 2.0, 6.0, 3.0};
       const Series y = pluss::make_series(yv, {4}).to(ScalarType::Float64);
-      const Series none = Series::zeros({4, 0}, ScalarType::Float64);
+      const Series none = pluss::series::zeros({4, 0}, ScalarType::Float64);
       const auto fit = reg::ols_fit(y, none);
       expect(fit.k_params == 1 && std::abs(fit.coefficients.host<double>().front() - 3.0) < 1e-12, "intercept-only OLS gives the mean");
       bool threw = false;

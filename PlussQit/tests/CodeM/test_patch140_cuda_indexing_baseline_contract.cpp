@@ -92,7 +92,7 @@ TEST_CASE("CUDA indexing strict policy is runtime-dynamic", "[cuda][indexing][po
 TEST_CASE("CUDA indexing route contract rejects non-CUDA tensors", "[cuda][indexing][policy]") {
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar indexing_on("PLUSS_CUDA_NATIVE_INDEXING", "1");
-  const auto x_cpu = pluss::Series::ones({5}, pluss::ScalarType::Float32);
+  const auto x_cpu = pluss::series::ones({5}, pluss::ScalarType::Float32);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 2, 4}, {3});
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f}, {3});
   REQUIRE(x_cpu.platform() == pluss::pCPU);

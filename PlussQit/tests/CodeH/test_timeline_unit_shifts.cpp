@@ -94,7 +94,7 @@ TEST_CASE("Timeline unit shifts preserve shape timezone absence and logical stri
       1'709'164'800'000'000'004LL, 222LL};
   const std::array<std::int64_t, 1> shape{2};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
   REQUIRE(strided.add_hours(1).ticks() ==
           std::vector<std::int64_t>{1'704'070'800'123'456'789LL,

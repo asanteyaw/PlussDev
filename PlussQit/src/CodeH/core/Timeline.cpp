@@ -42,7 +42,7 @@ static void check_timeline_core(const pluss::codem::Series& s) {
 }
 
 static pluss::codem::Series make_i64_series(const std::vector<std::int64_t>& values) {
-  auto out = pluss::codem::Series::empty(
+  auto out = pluss::codem::factory::empty(
       {static_cast<std::int64_t>(values.size())},
       pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
@@ -384,11 +384,11 @@ Timeline timeline_from_epoch_nanos(std::span<const std::int64_t> ticks_flat,
     CODEM_CHECK(prod == (std::int64_t)ticks_flat.size(), "from_epoch_nanos: flat size mismatch");
   }
   if (ticks_flat.empty()) {
-    auto s = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+    auto s = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
     check_timeline_core(s);
     return Timeline(std::move(s), "UTC");
   }
-  auto s = pluss::codem::Series::empty(
+  auto s = pluss::codem::factory::empty(
       std::span<const std::int64_t>(shape.data(), shape.size()),
       pluss::codem::ScalarType::Int64);
   std::memcpy(s.raw_data(), ticks_flat.data(),
@@ -468,7 +468,7 @@ Timeline impl_add_duration(const Timeline& a, const Duration& d) {
   CODEM_CHECK(d.defined(), "Timeline + Duration: duration undefined");
   CODEM_CHECK(d.nanos_.scalar_type() == pluss::codem::ScalarType::Int64, "Timeline + Duration: nanos must be int64");
   const auto shape = pluss::codem::SeriesIterator::broadcast_shape(a.ticks_.sizes(), d.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   if (std::ranges::find(shape, 0) != shape.end()) {
     return Timeline(std::move(out), std::string(a.tz()));
   }
@@ -491,7 +491,7 @@ Timeline impl_sub_duration(const Timeline& a, const Duration& d) {
   CODEM_CHECK(d.defined(), "Timeline - Duration: duration undefined");
   CODEM_CHECK(d.nanos_.scalar_type() == pluss::codem::ScalarType::Int64, "Timeline - Duration: nanos must be int64");
   const auto shape = pluss::codem::SeriesIterator::broadcast_shape(a.ticks_.sizes(), d.nanos_.sizes());
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   if (std::ranges::find(shape, 0) != shape.end()) {
     return Timeline(std::move(out), std::string(a.tz()));
   }
@@ -513,7 +513,7 @@ Duration impl_diff(const Timeline& a, const Timeline& b) {
   check_timeline_core(a.ticks_);
   check_timeline_core(b.ticks_);
   const auto shape = pluss::codem::SeriesIterator::broadcast_shape(a.ticks_.sizes(), b.ticks_.sizes());
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   if (std::ranges::find(shape, 0) != shape.end()) {
     return Duration(out);
   }
@@ -535,7 +535,7 @@ pluss::codem::Series impl_cmp(const Timeline& a, const Timeline& b, std::string_
   check_timeline_core(a.ticks_);
   check_timeline_core(b.ticks_);
   const auto shape = pluss::codem::SeriesIterator::broadcast_shape(a.ticks_.sizes(), b.ticks_.sizes());
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Bool);
   if (std::ranges::find(shape, 0) != shape.end()) {
     return out;
   }
@@ -570,7 +570,7 @@ pluss::codem::Series impl_dt_field(const Timeline& a, std::string_view field) {
   const auto tz = TimeZone::load(a.tz());
   // We'll return Int32 for most fields, Int64 for nanos.
   const bool want_i64 = (field == "nanosecond");
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), want_i64 ? pluss::codem::ScalarType::Int64 : pluss::codem::ScalarType::Int32);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), want_i64 ? pluss::codem::ScalarType::Int64 : pluss::codem::ScalarType::Int32);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   if (want_i64) {
@@ -632,7 +632,7 @@ pluss::codem::Series impl_dt_field(const Timeline& a, std::string_view field) {
 pluss::codem::Series impl_dt_predicate(const Timeline& a, std::string_view pred_op) {
   check_timeline_core(a.ticks_);
   const auto tz = TimeZone::load(a.tz());
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<bool*>(out.raw_data());
@@ -682,7 +682,7 @@ Timeline impl_dt_round(const Timeline& a, std::string_view mode, std::string_vie
   check_timeline_core(a.ticks_);
   const auto tz = TimeZone::load(a.tz());
   const auto q = unit_nanos(unit);
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -855,7 +855,7 @@ Timeline impl_tz_localize(const Timeline& a, std::string_view tz_name, int fold,
   check_timeline_core(a.ticks_);
   const auto tz = TimeZone::load(tz_name);
 
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -873,7 +873,7 @@ Timeline impl_time_of_day(const Timeline& a) {
   // Return a Timeline where date is epoch day 1970-01-01 but time preserved in local tz.
   check_timeline_core(a.ticks_);
   const auto tz = TimeZone::load(a.tz());
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -893,7 +893,7 @@ Timeline impl_time_of_day(const Timeline& a) {
 
 pluss::codem::Series impl_isnat(const Timeline& a) {
   check_timeline_core(a.ticks_);
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<bool*>(out.raw_data());
@@ -905,7 +905,7 @@ pluss::codem::Series impl_isnat(const Timeline& a) {
 
 pluss::codem::Series impl_isvalid(const Timeline& a) {
   check_timeline_core(a.ticks_);
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<bool*>(out.raw_data());
@@ -1040,7 +1040,7 @@ Timeline impl_fill_nat(const Timeline& a, const Timeline& value) {
   check_timeline_core(value.ticks_);
   CODEM_CHECK(value.dim() == 0, "fill_nat value must be scalar Timeline");
   const auto v = reinterpret_cast<const std::int64_t*>(value.ticks_.raw_data())[0];
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -1058,7 +1058,7 @@ Timeline impl_where(const Timeline& a, const pluss::codem::Series& mask, const T
               "Timeline::where: timezone mismatch");
   const auto shape = pluss::codem::SeriesIterator::broadcast_shape(a.ticks_.sizes(), other.ticks_.sizes());
   const auto shape2 = pluss::codem::SeriesIterator::broadcast_shape(shape, mask.sizes());
-  auto out = pluss::codem::Series::empty(shape2, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape2, pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::ternary(mask, a.ticks_, other.ticks_, out);
   const auto* mp = reinterpret_cast<const bool*>(it.m().raw_data());
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
@@ -1079,7 +1079,7 @@ pluss::codem::Series impl_searchsorted(const Timeline& a, const Timeline& values
   const auto* x = sorted.data();
   std::int64_t valid_end = n;
   while (valid_end > 0 && x[valid_end - 1] == Timeline::kNaT) --valid_end;
-  auto out = pluss::codem::Series::empty(values.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(values.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(values.ticks_, out);
   const auto* vp = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -1097,7 +1097,7 @@ pluss::codem::Series impl_searchsorted(const Timeline& a, const Timeline& values
 
 Timeline impl_add_nanos(const Timeline& a, std::int64_t nanos) {
   check_timeline_core(a.ticks_);
-  auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   apply_unary_i64_scalar(a.ticks_, out, [nanos](std::int64_t v) -> std::int64_t {
     return (v == Timeline::kNaT)
         ? Timeline::kNaT
@@ -1385,7 +1385,7 @@ static std::int64_t checked_epoch_scale(std::int64_t value,
 
 static pluss::codem::Series make_i64_series(std::span<const std::int64_t> flat,
                                             std::span<const std::int64_t> shape) {
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   if (!flat.empty()) {
     std::memcpy(out.raw_data(), flat.data(), flat.size() * sizeof(std::int64_t));
   }
@@ -1424,7 +1424,7 @@ static Timeline replace_local_field(const Timeline& self, LocalField field,
   }
 
   const auto tz = TimeZone::load(self.tz());
-  auto out = pluss::codem::Series::empty(self.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(self.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(self.unsafe_ticks(), out);
   const auto* input = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   auto* output = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -2097,7 +2097,7 @@ pluss::codem::Series TimelineBase::span(
       pluss::codem::SeriesIterator::broadcast_shape(
           self.unsafe_ticks().sizes(),
           other.unsafe_ticks().sizes());
-  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(shape, pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::binary(self.unsafe_ticks(), other.unsafe_ticks(), out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
@@ -2310,7 +2310,7 @@ Timeline TimelineBase::period_start(std::string_view unit) const {
               "Timeline::period_start: unsupported unit; expected year, month, day, hour, minute, or second");
 
   const auto timezone = TimeZone::load(self.tz());
-  auto out = pluss::codem::Series::empty(self.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::factory::empty(self.sizes(), pluss::codem::ScalarType::Int64);
   auto iterator = pluss::codem::SeriesIterator::unary(self.unsafe_ticks(), out);
   const auto* input = reinterpret_cast<const std::int64_t*>(iterator.a().raw_data());
   auto* output = reinterpret_cast<std::int64_t*>(out.raw_data());
@@ -2351,7 +2351,7 @@ TimelineIndexAccessor TimelineBase::index(bool require_sorted) const {
                                                      {require_sorted});
 }
 
-Timeline TimelineBase::from_ymd(const pluss::codem::Series& year,
+Timeline factory::from_ymd(const pluss::codem::Series& year,
                                 const pluss::codem::Series& month,
                                 const pluss::codem::Series& day,
                                 std::string_view tz_name) {
@@ -2362,7 +2362,7 @@ Timeline TimelineBase::from_ymd(const pluss::codem::Series& year,
   const ComponentInput mm{std::vector<std::int64_t>{0}, {}, true};
   const ComponentInput ss{std::vector<std::int64_t>{0}, {}, true};
   const std::vector<ComponentInput> all{y, mo, d, hh, mm, ss};
-  const auto shape = broadcast_or_same_shape(all, "Timeline::from_ymd");
+  const auto shape = broadcast_or_same_shape(all, "pluss::codeh::factory::from_ymd");
   std::int64_t n = 1;
   for (const auto s : shape) n *= s;
   if (shape.empty()) n = 1;
@@ -2380,7 +2380,7 @@ Timeline TimelineBase::from_ymd(const pluss::codem::Series& year,
                    / std::chrono::month(static_cast<unsigned>(mmv))
                    / std::chrono::day(static_cast<unsigned>(dd));
     CODEM_CHECK(ymd.ok(),
-                "Timeline::from_ymd: invalid calendar date at logical position " +
+                "pluss::codeh::factory::from_ymd: invalid calendar date at logical position " +
                     std::to_string(i));
     const auto local = sys_days(ymd);
     const auto local_ns =
@@ -2392,7 +2392,7 @@ Timeline TimelineBase::from_ymd(const pluss::codem::Series& year,
   return detail::impl_tz_convert(t, tz_name);
 }
 
-Timeline TimelineBase::from_ymdhms(const pluss::codem::Series& year,
+Timeline factory::from_ymdhms(const pluss::codem::Series& year,
                                    const pluss::codem::Series& month,
                                    const pluss::codem::Series& day,
                                    const pluss::codem::Series& hour,
@@ -2407,7 +2407,7 @@ Timeline TimelineBase::from_ymdhms(const pluss::codem::Series& year,
   const auto ss = load_component_i64(second, "from_ymdhms(second)");
 
   const std::vector<ComponentInput> all{y, mo, d, hh, mm, ss};
-  const auto shape = broadcast_or_same_shape(all, "Timeline::from_ymdhms");
+  const auto shape = broadcast_or_same_shape(all, "pluss::codeh::factory::from_ymdhms");
   std::int64_t n = 1;
   for (const auto s : shape) n *= s;
   if (shape.empty()) n = 1;
@@ -2427,13 +2427,13 @@ Timeline TimelineBase::from_ymdhms(const pluss::codem::Series& year,
     }
     CODEM_CHECK(hhv >= 0 && hhv <= 23 && mmn >= 0 && mmn <= 59 &&
                     ssv >= 0 && ssv <= 59,
-                "Timeline::from_ymdhms: invalid clock field at logical position " +
+                "pluss::codeh::factory::from_ymdhms: invalid clock field at logical position " +
                     std::to_string(i));
     const auto ymd = std::chrono::year(static_cast<int>(yy))
                    / std::chrono::month(static_cast<unsigned>(mmv))
                    / std::chrono::day(static_cast<unsigned>(dd));
     CODEM_CHECK(ymd.ok(),
-                "Timeline::from_ymdhms: invalid calendar date at logical position " +
+                "pluss::codeh::factory::from_ymdhms: invalid calendar date at logical position " +
                     std::to_string(i));
     const auto local = sys_days(ymd)
                      + hours(static_cast<int>(hhv))
@@ -2483,79 +2483,56 @@ pluss::codem::Series TimelineBase::epoch_days() const {
   return make_i64_series(flat, shape);
 }
 
-Timeline TimelineBase::from_epoch_seconds(const pluss::codem::Series& epoch_seconds,
+Timeline factory::from_epoch_seconds(const pluss::codem::Series& epoch_seconds,
                                           std::string_view tz_name) {
-  const auto c = load_component_i64(epoch_seconds, "Timeline::from_epoch_seconds");
+  const auto c = load_component_i64(epoch_seconds, "pluss::codeh::factory::from_epoch_seconds");
   std::vector<std::int64_t> flat(c.flat.size(), Timeline::kNaT);
   for (std::size_t i = 0; i < flat.size(); ++i) {
     if (c.flat[i] != Timeline::kNaT) {
       flat[i] = checked_epoch_scale(c.flat[i], 1'000'000'000LL,
-                                    "Timeline::from_epoch_seconds");
+                                    "pluss::codeh::factory::from_epoch_seconds");
     }
   }
   Timeline t = ops_internal::timeline_from_epoch_nanos(flat, c.shape);
   return detail::impl_tz_convert(t, tz_name);
 }
 
-Timeline TimelineBase::from_epoch_millis(const pluss::codem::Series& epoch_millis,
+Timeline factory::from_epoch_millis(const pluss::codem::Series& epoch_millis,
                                          std::string_view tz_name) {
-  const auto c = load_component_i64(epoch_millis, "Timeline::from_epoch_millis");
+  const auto c = load_component_i64(epoch_millis, "pluss::codeh::factory::from_epoch_millis");
   std::vector<std::int64_t> flat(c.flat.size(), Timeline::kNaT);
   for (std::size_t i = 0; i < flat.size(); ++i) {
     if (c.flat[i] != Timeline::kNaT) {
       flat[i] = checked_epoch_scale(c.flat[i], 1'000'000LL,
-                                    "Timeline::from_epoch_millis");
+                                    "pluss::codeh::factory::from_epoch_millis");
     }
   }
   Timeline t = ops_internal::timeline_from_epoch_nanos(flat, c.shape);
   return detail::impl_tz_convert(t, tz_name);
 }
 
-Timeline TimelineBase::from_epoch_micros(const pluss::codem::Series& epoch_micros,
+Timeline factory::from_epoch_micros(const pluss::codem::Series& epoch_micros,
                                          std::string_view tz_name) {
-  const auto c = load_component_i64(epoch_micros, "Timeline::from_epoch_micros");
+  const auto c = load_component_i64(epoch_micros, "pluss::codeh::factory::from_epoch_micros");
   std::vector<std::int64_t> flat(c.flat.size(), Timeline::kNaT);
   for (std::size_t i = 0; i < flat.size(); ++i) {
     if (c.flat[i] != Timeline::kNaT) {
       flat[i] = checked_epoch_scale(c.flat[i], 1'000LL,
-                                    "Timeline::from_epoch_micros");
+                                    "pluss::codeh::factory::from_epoch_micros");
     }
   }
   Timeline t = ops_internal::timeline_from_epoch_nanos(flat, c.shape);
   return detail::impl_tz_convert(t, tz_name);
 }
 
-Timeline TimelineBase::now() {
+namespace {
+Timeline utc_today_() {
   const auto ns = duration_cast<nanoseconds>(system_clock::now().time_since_epoch()).count();
-  return scalar_from_utc_ns(ns, "UTC");
+  return scalar_from_utc_ns(ns, "UTC").period_start("day");
 }
+} // namespace
 
-Timeline TimelineBase::today() { return now().period_start("day"); }
-Timeline TimelineBase::yesterday() { return today().add_days(-1); }
-Timeline TimelineBase::tomorrow() { return today().add_days(1); }
-
-std::vector<Timeline> TimelineBase::date_range(const Timeline& start,
-                                               const Timeline& end,
-                                               std::string_view freq,
-                                               int step) {
-  CODEM_CHECK(step != 0, "Timeline::date_range: step must be non-zero");
-  CODEM_CHECK(start.dim() == 0 && end.dim() == 0,
-              "Timeline::date_range: scalar start/end required");
-  std::vector<Timeline> out;
-  Timeline cur = start.period_start(freq);
-  const Timeline endp = end.period_start(freq);
-  if (step > 0) {
-    while (scalar_bool_series(cur.le(endp), "Timeline::date_range")) {
-      out.push_back(cur);
-      cur = cur.shift(step, freq);
-    }
-  } else {
-    while (scalar_bool_series(cur.ge(endp), "Timeline::date_range")) {
-      out.push_back(cur);
-      cur = cur.shift(step, freq);
-    }
-  }
-  return out;
-}
+Timeline factory::yesterday() { return utc_today_().add_days(-1); }
+Timeline factory::tomorrow() { return utc_today_().add_days(1); }
 
 } // namespace pluss::codeh

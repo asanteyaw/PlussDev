@@ -102,7 +102,7 @@ void sigmoid(const Series& a, Series& out) {
 
 void sigmoid_inplace(const Series& a) {
   PLUSS_CHECK(a.is_contiguous(), "sigmoid_inplace: requires contiguous");
-  Series out = Series::empty(a.sizes(), a.scalar_type());
+  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());
   sigmoid(a, out);
   std::memcpy(const_cast<std::byte*>(a.raw_data()), out.raw_data(), (std::size_t)(a.dtype().itemsize * a.numel()));
 }
@@ -148,7 +148,7 @@ void softplus(const Series& a, Series& out, double beta, double threshold) {
 
 void softplus_inplace(const Series& a, double beta, double threshold) {
   PLUSS_CHECK(a.is_contiguous(), "softplus_inplace: requires contiguous");
-  Series out = Series::empty(a.sizes(), a.scalar_type());
+  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());
   softplus(a, out, beta, threshold);
   std::memcpy(const_cast<std::byte*>(a.raw_data()), out.raw_data(), (std::size_t)(a.dtype().itemsize * a.numel()));
 }
@@ -182,7 +182,7 @@ void silu(const Series& a, Series& out) {
 
 void silu_inplace(const Series& a) {
   PLUSS_CHECK(a.is_contiguous(), "silu_inplace: requires contiguous");
-  Series out = Series::empty(a.sizes(), a.scalar_type());
+  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());
   silu(a,out);
   std::memcpy(const_cast<std::byte*>(a.raw_data()), out.raw_data(), (std::size_t)(a.dtype().itemsize * a.numel()));
 }
@@ -238,7 +238,7 @@ void gelu(const Series& a, Series& out, bool approximate) {
 
 void gelu_inplace(const Series& a, bool approximate) {
   PLUSS_CHECK(a.is_contiguous(), "gelu_inplace: requires contiguous");
-  Series out = Series::empty(a.sizes(), a.scalar_type());
+  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());
   gelu(a,out,approximate);
   std::memcpy(const_cast<std::byte*>(a.raw_data()), out.raw_data(), (std::size_t)(a.dtype().itemsize * a.numel()));
 }
@@ -272,7 +272,7 @@ void leaky_relu(const Series& a, Series& out, double negative_slope) {
 
 void leaky_relu_inplace(const Series& a, double negative_slope) {
   PLUSS_CHECK(a.is_contiguous(), "leaky_relu_inplace: requires contiguous");
-  Series out = Series::empty(a.sizes(), a.scalar_type());
+  Series out = pluss::codem::factory::empty(a.sizes(), a.scalar_type());
   leaky_relu(a,out,negative_slope);
   std::memcpy(const_cast<std::byte*>(a.raw_data()), out.raw_data(), (std::size_t)(a.dtype().itemsize * a.numel()));
 }

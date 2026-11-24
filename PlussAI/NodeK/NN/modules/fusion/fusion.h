@@ -60,10 +60,10 @@ private:
   void register_parameters_() {
     this->clear_parameter_records_();
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
-    weight_ = Series::empty({options_.out_features, options_.in_features}, cfg.dtype, cfg.platform);
+    weight_ = pluss::series::empty({options_.out_features, options_.in_features}, cfg.dtype, cfg.platform);
     this->parameter_record("weight", weight_);
     if (options_.bias) {
-      bias_ = Series::empty({options_.out_features}, cfg.dtype, cfg.platform);
+      bias_ = pluss::series::empty({options_.out_features}, cfg.dtype, cfg.platform);
       this->parameter_record("bias", bias_);
     }
   }

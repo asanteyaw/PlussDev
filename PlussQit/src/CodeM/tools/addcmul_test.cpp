@@ -11,7 +11,7 @@ int main() {
   // small broadcast test
   auto make_f64 = [](const std::vector<double>& data,
                      std::span<const std::int64_t> shape) {
-    Series out = Series::empty(shape, ScalarType::Float64);
+    Series out = pluss::codem::factory::empty(shape, ScalarType::Float64);
     if (!data.empty()) {
       std::memcpy(out.raw_mutable_data(), data.data(), sizeof(double) * data.size());
     }

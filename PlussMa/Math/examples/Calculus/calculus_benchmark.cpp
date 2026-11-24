@@ -65,7 +65,7 @@ int main() {
             << "\n";
 
   const pluss::Series cpu_real =
-      pluss::Series::linspace(-2.0, 2.0, 100000,
+      pluss::series::linspace(-2.0, 2.0, 100000,
                               pluss::ScalarType::Float64);
   benchmark("cpu_float64_d4", fourth, cpu_real, 100);
 
@@ -76,9 +76,9 @@ int main() {
       });
   const math::Function dz = operators::wirtinger("z")(complex);
   const pluss::Series cpu_complex = pluss::series::complex(
-      pluss::Series::linspace(0.1, 1.0, 100000,
+      pluss::series::linspace(0.1, 1.0, 100000,
                               pluss::ScalarType::Float32),
-      pluss::Series::linspace(-0.5, 0.5, 100000,
+      pluss::series::linspace(-0.5, 0.5, 100000,
                               pluss::ScalarType::Float32));
   benchmark("cpu_complex64_dz", dz, cpu_complex, 100);
 

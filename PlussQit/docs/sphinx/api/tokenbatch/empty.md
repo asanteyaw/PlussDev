@@ -91,7 +91,7 @@ No exception is thrown. Payload access would still require `defined()`.
 ## Example 4: Preserve Absence When It Matters
 
 ```cpp
-const auto batch = pluss::Note::undefined().nlp().tokens();
+const auto batch = pluss::note::undefined().nlp().tokens();
 std::cout << std::boolalpha
           << "empty=" << batch.empty()
           << " source-present=" << batch.tokens().defined() << '\n';

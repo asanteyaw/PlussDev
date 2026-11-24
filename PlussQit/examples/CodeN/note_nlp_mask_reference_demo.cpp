@@ -30,7 +30,7 @@ void contract(std::string_view name, Fn&& transform) {
   std::cout << name << " empty dim=" << empty.dim()
             << " numel=" << empty.numel() << '\n';
   std::cout << name << " undefined=" << std::boolalpha
-            << transform(pluss::Note::undefined()).defined() << '\n';
+            << transform(pluss::note::undefined()).defined() << '\n';
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"42"}, std::array<std::int64_t, 1>{1});
   rejected(std::string(name) + " Bytes", [&] { (void)transform(bytes); });
@@ -125,7 +125,7 @@ int main() {
   show("empty", pluss::note::make(std::vector<std::string>{})
                     .nlp().mask_numbers());
   std::cout << "undefined defined=" << std::boolalpha
-            << pluss::Note::undefined().nlp().mask_numbers().defined() << '\n';
+            << pluss::note::undefined().nlp().mask_numbers().defined() << '\n';
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"42"}, std::array<std::int64_t, 1>{1});

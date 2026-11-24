@@ -85,7 +85,7 @@ TEST_CASE("Note host extraction owns rank-aware copies", "[coden][note-access]")
 
 TEST_CASE("Note access rejects invalid geometry", "[coden][note-access]") {
   const auto grid = pluss::note::make({{"a", "b"}, {"c", "d"}});
-  const auto undefined = pluss::Note::undefined();
+  const auto undefined = pluss::note::undefined();
 
   REQUIRE_THROWS(grid.at(-1));
   REQUIRE_THROWS(grid.at(4));

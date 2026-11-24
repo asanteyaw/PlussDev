@@ -169,8 +169,8 @@ TEST_CASE("misuse is rejected", "[stochastic][ito]") {
 namespace {
 Series brownian(std::int64_t steps, std::int64_t paths, double t1, std::uint64_t seed) {
   const double h = t1 / static_cast<double>(steps);
-  const Series dw = Series::randn({steps, paths}, ScalarType::Float64, seed).mul(std::sqrt(h));
-  return Series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+  const Series dw = pluss::series::randn({steps, paths}, ScalarType::Float64, seed).mul(std::sqrt(h));
+  return pluss::series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
 }
 }  // namespace
 
@@ -210,7 +210,7 @@ TEST_CASE("cumulative integrals start at zero and end at the total", "[stochasti
 
 TEST_CASE("an explicit time grid and another time axis", "[stochastic][integral]") {
   const Series w = brownian(50, 2, 2.0, 11);
-  const Series times = Series::linspace(0.0, 2.0, 51, ScalarType::Float64).pow(1.3);  // non-uniform grid
+  const Series times = pluss::series::linspace(0.0, 2.0, 51, ScalarType::Float64).pow(1.3);  // non-uniform grid
   const auto f = [](const Series& t, const Series&) { return t; };
   const Series a = w.calc.antidiff.ito(f, times);
   const Series dw = w.diff(1, 0);
@@ -317,7 +317,7 @@ TEST_CASE("Marcus integral: Newton-Leibniz holds along a path that jumps", "[sto
     mask[41 * 3 + p] = 1.0;
   }
   const Series dw = pluss::make_series(dwv, {60, 3}).to(ScalarType::Float64);
-  const Series path = Series::zeros({1, 3}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+  const Series path = pluss::series::zeros({1, 3}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
   const auto f = [](const Series&, const Series& s) { return s; };
   const Series jm = pluss::make_series(mask, {60, 3}).to(ScalarType::Float64);
   const Series marcus = path.calc.antidiff.marcus(f, jm, 0.0, 1.0);
@@ -389,7 +389,7 @@ TEST_CASE("quadratic variation and covariation of sampled paths", "[stochastic][
 TEST_CASE("discrete Malliavin derivative of functionals of the increments", "[stochastic][malliavin]") {
   const std::int64_t N = 12, paths = 3;
   const double h = 1.0 / N;
-  const Series dw = Series::randn({N, paths}, ScalarType::Float64, 77).mul(std::sqrt(h));
+  const Series dw = pluss::series::randn({N, paths}, ScalarType::Float64, 77).mul(std::sqrt(h));
   const Series wt = dw.sum(0);
   const Series sq = dw.calc.diff.malliavin([](const Series& d) { return d.sum(0).pow(2.0); }, 0);
   const Series ex = dw.calc.diff.malliavin([](const Series& d) { return d.sum(0).exp(); }, 0);
@@ -402,7 +402,7 @@ TEST_CASE("discrete Malliavin derivative of functionals of the increments", "[st
       CHECK(at(qv, i * paths + p) == Approx(2.0 * at(dw, i * paths + p)));
     }
   // path form: F = sum_j W_j h; each increment i appears in W_j for j > i
-  const Series path = Series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+  const Series path = pluss::series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
   const Series area = path.calc.diff.malliavin_path([h](const Series& w) { return w.sum(0).mul(h); }, 0);
   REQUIRE(area.sizes()[0] == N);
   for (std::int64_t i = 0; i < N; ++i)
@@ -412,7 +412,7 @@ TEST_CASE("discrete Malliavin derivative of functionals of the increments", "[st
 TEST_CASE("Skorokhod integral: anticipating integrands pay the Malliavin correction", "[stochastic][malliavin]") {
   const std::int64_t N = 20, paths = 2;
   const double h = 0.05, T = N * h;
-  const Series dw = Series::randn({N, paths}, ScalarType::Float64, 31).mul(std::sqrt(h));
+  const Series dw = pluss::series::randn({N, paths}, ScalarType::Float64, 31).mul(std::sqrt(h));
   const double w0 = at(dw.sum(0), 0);
   // u_i = W_T for every i looks into the future: delta(u) = W_T^2 - T
   const Series ant = dw.calc.diff.skorokhod(
@@ -421,7 +421,7 @@ TEST_CASE("Skorokhod integral: anticipating integrands pay the Malliavin correct
   // an adapted integrand (u_i = W at the left endpoint) gives the Ito sum, with no correction
   const Series adapted = dw.calc.diff.skorokhod(
       [](const Series& d) { return d.cumsum(0).sub(d); }, h, 0);
-  const Series path = Series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
+  const Series path = pluss::series::zeros({1, paths}, ScalarType::Float64).unite({dw.cumsum(0)}, 0);
   const Series ito = path.calc.antidiff.ito([](const Series&, const Series& s) { return s; }, 0.0, T);
   for (std::int64_t p = 0; p < paths; ++p) CHECK(at(adapted, p) == Approx(at(ito, p)));
 }
@@ -432,7 +432,7 @@ TEST_CASE("a Malliavin weight reproduces the digital-option delta", "[stochastic
   const double S0 = 100.0, K = 100.0, r = 0.02, sg = 0.25, T = 1.0;
   const std::int64_t N = 4, paths = 400000;
   const double h = T / N;
-  const Series dw = Series::randn({N, paths}, ScalarType::Float64, 2024).mul(std::sqrt(h));
+  const Series dw = pluss::series::randn({N, paths}, ScalarType::Float64, 2024).mul(std::sqrt(h));
   const Series weight = dw.calc.diff.skorokhod(
       [&](const Series& d) { return d.mul(0.0).add(1.0 / (S0 * sg * T)); }, h, 0);
   const Series wt = dw.sum(0);

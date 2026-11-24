@@ -131,7 +131,7 @@ repeated boundary `2, 2`.
 ## Example 5: Undefined Propagates Structurally
 
 ```cpp
-const auto batch = pluss::Note::undefined().split_chars();
+const auto batch = pluss::note::undefined().split_chars();
 std::cout << std::boolalpha
           << "undefined batch=" << batch.defined()
           << " tokens-defined=" << batch.tokens().defined()

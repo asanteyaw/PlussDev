@@ -120,7 +120,7 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().dedup_blank_lines().defined()
+          << pluss::note::undefined().tex().dedup_blank_lines().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2})

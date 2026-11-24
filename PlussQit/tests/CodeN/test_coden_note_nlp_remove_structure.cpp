@@ -110,10 +110,10 @@ TEST_CASE("Note structural removers preserve shape absence and Text dtype",
   REQUIRE(empty.nlp().remove_code().sizes() ==
           std::vector<std::int64_t>{0});
 
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_boilerplate().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_brackets().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_bullets().defined());
-  REQUIRE_FALSE(pluss::Note::undefined().nlp().remove_code().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_boilerplate().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_brackets().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_bullets().defined());
+  REQUIRE_FALSE(pluss::note::undefined().nlp().remove_code().defined());
 
   const auto bytes = pluss::note::bytes(
       std::vector<std::string>{"- item"},

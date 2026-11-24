@@ -164,7 +164,7 @@ CODEN_API pluss::coden::Note unpack(::std::span<const ::std::byte> encoded) {
     PLUSS_CHECK(rank == 0 && count == 0 && extents == decltype(extents){} &&
                     reader.done(),
                 "pluss::note::unpack: malformed undefined Note");
-    return pluss::coden::Note::undefined();
+    return pluss::note::undefined();
   }
 
   PLUSS_CHECK(rank <= 3, "pluss::note::unpack: rank must be at most 3");
@@ -184,7 +184,7 @@ CODEN_API pluss::coden::Note unpack(::std::span<const ::std::byte> encoded) {
   PLUSS_CHECK(count == expected_count,
               "pluss::note::unpack: element count does not match shape");
 
-  pluss::coden::Note result = pluss::coden::Note::undefined();
+  pluss::coden::Note result = pluss::note::undefined();
   const auto dtype = static_cast<pluss::coden::NoteDType>(dtype_tag);
   switch (dtype) {
     case pluss::coden::NoteDType::Text:

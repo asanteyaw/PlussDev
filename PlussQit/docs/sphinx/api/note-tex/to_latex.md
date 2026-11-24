@@ -118,7 +118,7 @@ values, is rejected before the receiver is read.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().to_latex().defined() << '\n';
+          << pluss::note::undefined().tex().to_latex().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().to_latex();
 } catch (const pluss::Error&) {

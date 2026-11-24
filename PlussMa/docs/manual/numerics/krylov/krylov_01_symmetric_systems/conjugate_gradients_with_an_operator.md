@@ -18,7 +18,7 @@ using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-Series ones(std::vector<std::int64_t> shape) { return Series::zeros(shape, f64) + 1.0; }
+Series ones(std::vector<std::int64_t> shape) { return pluss::series::zeros(shape, f64) + 1.0; }
 // the 1-D second-difference operator (2 on the diagonal, -1 beside it) applied to the last axis, without forming a matrix
 Series shift_in(const Series& x, bool from_left) {
   const std::int64_t n = x.size(-1);

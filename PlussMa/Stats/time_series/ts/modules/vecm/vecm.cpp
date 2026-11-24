@@ -61,7 +61,7 @@ Series as_matrix_(const Series& x, const char* name) {
 }
 
 Series i64_range_(std::int64_t start, std::int64_t end, Config cfg) {
-  return Series::arange(start, end, 1, ScalarType::Int64).to(i64_cfg_(cfg).platform, i64_cfg_(cfg).dtype);
+  return pluss::series::arange(start, end, 1, ScalarType::Int64).to(i64_cfg_(cfg).platform, i64_cfg_(cfg).dtype);
 }
 
 double scalar_(const Series& x) {
@@ -138,7 +138,7 @@ VecmDesign build_design_(const Series& y_in,
     cols.push_back(pluss::series::ones({t, 1}, out_cfg));
   }
   if (include_trend) {
-    cols.push_back(Series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
+    cols.push_back(pluss::series::arange(1, t + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).reshape({t, 1}));
   }
   cols.push_back(level_lag);
   for (std::int64_t i = 1; i < lag_order; ++i) {

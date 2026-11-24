@@ -85,7 +85,7 @@ exactly as in Example 1, the second because it is already `\int`.
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().int_norm().defined()
+          << pluss::note::undefined().tex().int_norm().defined()
           << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().int_norm();

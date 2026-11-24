@@ -181,7 +181,7 @@ TEST_CASE("CUDA device zeros use device memset", "[cuda][device_storage][factory
     return;
   }
 
-  const auto z = pluss::Series::zeros({5}, pluss::ScalarType::Float32).to(pluss::pCUDA);
+  const auto z = pluss::series::zeros({5}, pluss::ScalarType::Float32).to(pluss::pCUDA);
   REQUIRE(z.storage().location() == pluss::codem::StorageLocation::CudaDevice);
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   require_close_(z.to(pluss::pCPU).host<float>(), std::vector<float>{0.f, 0.f, 0.f, 0.f, 0.f});

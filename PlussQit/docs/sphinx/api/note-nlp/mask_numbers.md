@@ -74,7 +74,7 @@ const auto empty = pluss::note::make(std::vector<std::string>{})
 std::cout << "numbers empty dim=" << empty.dim()
           << " numel=" << empty.numel() << '\n';
 std::cout << "numbers undefined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().mask_numbers().defined() << '\n';
+          << pluss::note::undefined().nlp().mask_numbers().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"42"}, std::array<std::int64_t, 1>{1})

@@ -91,7 +91,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 ```cpp
 std::cout << std::boolalpha
-          << pluss::Note::undefined().tex().to_html().defined() << '\n';
+          << pluss::note::undefined().tex().to_html().defined() << '\n';
 try {
   (void)pluss::note::make(std::vector<std::int64_t>{1, 2}).tex().to_html();
 } catch (const pluss::Error&) {

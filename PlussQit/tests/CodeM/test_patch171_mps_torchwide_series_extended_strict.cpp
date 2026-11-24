@@ -144,7 +144,7 @@ TEST_CASE("MPS strict torchwide extended float32 parity", "[mps][strict][torchwi
                  2e-4f,
                  "masked_scatter");
 
-  const auto base_cpu = pluss::Series::zeros({2, 4}, pluss::ScalarType::Float32);
+  const auto base_cpu = pluss::series::zeros({2, 4}, pluss::ScalarType::Float32);
   const auto base_mps = base_cpu.to(pluss::pMPS);
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 3, 3, 2, 1, 0}, {2, 4});
   const auto idx_mps = idx_cpu.to(pluss::pMPS);

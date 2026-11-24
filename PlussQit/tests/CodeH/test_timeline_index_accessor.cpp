@@ -58,7 +58,7 @@ TEST_CASE("Timeline index preserves timezone and borrowed storage",
   const std::vector<std::int64_t> sizes{3};
   const std::vector<std::int64_t> strides{1};
   {
-    const auto timeline = pluss::Timeline::from_buffer(
+    const auto timeline = pluss::timeline::from_buffer(
         raw,
         sizes,
         strides,

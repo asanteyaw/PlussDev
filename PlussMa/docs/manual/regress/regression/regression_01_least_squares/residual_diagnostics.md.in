@@ -56,8 +56,8 @@ int main() {
   const double m2 = centred.pow(2.0).mean().item<double>();
   const double skew = centred.pow(3.0).mean().item<double>() / std::pow(m2, 1.5);
   const double kurt = centred.pow(4.0).mean().item<double>() / (m2 * m2);
-  const auto later = e.index_select(0, pluss::Series::arange(1, n, 1, pluss::ScalarType::Int64));
-  const auto earlier = e.index_select(0, pluss::Series::arange(0, n - 1, 1, pluss::ScalarType::Int64));
+  const auto later = e.index_select(0, pluss::series::arange(1, n, 1, pluss::ScalarType::Int64));
+  const auto earlier = e.index_select(0, pluss::series::arange(0, n - 1, 1, pluss::ScalarType::Int64));
   const double dw = later.sub(earlier).pow(2.0).sum().item<double>() / e.pow(2.0).sum().item<double>();
   out.writeln("recomputed     DW", dw, " skew", skew, " kurtosis", kurt, " JB", n / 6.0 * (skew * skew + 0.25 * (kurt - 3.0) * (kurt - 3.0)));
 }

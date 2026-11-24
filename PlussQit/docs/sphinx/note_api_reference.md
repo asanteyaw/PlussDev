@@ -279,7 +279,6 @@ api/note/to_utf8_lossy
 api/note/to_utf8_strict
 api/note/to_windows1252_lossy
 api/note/transpose
-api/note/undefined
 api/note/unique
 api/note/unquote
 api/note/unsqueeze

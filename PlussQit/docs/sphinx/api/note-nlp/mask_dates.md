@@ -82,7 +82,7 @@ const auto empty = pluss::note::make(std::vector<std::string>{})
 std::cout << "dates empty dim=" << empty.dim()
           << " numel=" << empty.numel() << '\n';
 std::cout << "dates undefined=" << std::boolalpha
-          << pluss::Note::undefined().nlp().mask_dates().defined() << '\n';
+          << pluss::note::undefined().nlp().mask_dates().defined() << '\n';
 try {
   (void)pluss::note::bytes(
       std::vector<std::string>{"2024-01-02"},

@@ -74,7 +74,7 @@ int main() {
       1'704'240'000'000'000'000LL};
   const std::array<std::int64_t, 1> shape{3};
   const std::array<std::int64_t, 1> strides{2};
-  const auto strided = pluss::Timeline::from_buffer(
+  const auto strided = pluss::timeline::from_buffer(
       backing.data(), shape, strides, {}, "America/Edmonton");
   show("timeline_index_strided_round_trip", strided.index().timeline());
 
