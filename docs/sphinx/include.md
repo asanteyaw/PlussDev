@@ -1,33 +1,110 @@
 # Which header to include
 
-PlussII is six spaces, and one header gives you the starting set. Everything else is opt-in: you include it yourself, so a program compiles only what it uses. This page lists every header you are likely to include, what each one gives you, and how the short aliases work.
+PlussII is six spaces, and one header gives you the starting set. Everything else is opt-in: you include it yourself, so a program compiles only what it uses. This page teaches the includes from the single line to the single piece, says what each one gives you, and explains the short aliases.
 
-## The rule
+## Three levels
 
-`<pluss/pluss.h>` gives you **PlussQit, PlussMic and PlussPl**: the numbers, text and time types, the tables, and the plots. PlussMa, PlussAI and PlussTils are not in it. Add `<pluss/ma.h>`, `<pluss/ai.h>` or `<pluss/tils.h>` when you want them. Linking is separate: one CMake target, `Pluss::PlussII`, links every library, so the header you include decides what is compiled, not what is linked.
+You can include PlussII at three levels of detail, from the most convenient to the most precise.
+
+1. **`<pluss/pluss.h>`**: the one to use. It gives you PlussQit, PlussMic and PlussPl, and it is what almost every program, guide and example in this documentation includes. One line, nothing to order, and no "why is this type not found" to chase. Reach for the others only when you have a reason.
+2. **One header for each space**: `<pluss/core.h>`, `<pluss/mic.h>`, `<pluss/pl.h>`, `<pluss/ma.h>`, `<pluss/ai.h>`, `<pluss/tils.h>`. `<pluss/pluss.h>` is exactly the first three of these.
+3. **A single header for a single piece**: `<pluss/io.h>`, `<pluss/pl/flash.h>`, `<pluss/tils/doc.h>` and the others listed below. Each one stands alone: it includes what it needs, so you can include it first, last or by itself.
+
+`<pluss/pluss.h>` gives you PlussQit, PlussMic and PlussPl. PlussMa, PlussAI and PlussTils are not in it: add `<pluss/ma.h>`, `<pluss/ai.h>` or `<pluss/tils.h>` when you want them. Linking is separate: one CMake target, `Pluss::PlussII`, links every library, so the header you include decides what is compiled, not what is linked.
+
+Finer includes compile faster and show exactly what a file depends on. The price is typing and remembering which header holds what, which is why the single line is the right default.
+
+## The umbrella headers
 
 | Header | What it gives you |
 |---|---|
 | `<pluss/pluss.h>` | PlussQit, PlussMic and PlussPl together: the usual starting point |
-| `<pluss/core.h>` | PlussQit alone: `Series`, `Note`, `Timeline`, `Duration`, `TimeIndex`, `Queue`, saving and loading, errors |
+| `<pluss/core.h>` | PlussQit: `Series`, `Note`, `Timeline`, `Duration`, `TimeIndex`, `Queue`, saving and loading, errors |
 | `<pluss/mic.h>` | PlussMic: the table, kindle, scribble and bundle models and the loaders (it also brings in plotting when PlussPl is present) |
 | `<pluss/pl.h>` | PlussPl: `Studio`, `Pane`, `Trace`, the styles and views, and the `flash` plots |
 | `<pluss/ma.h>` | PlussMa: math, stats, engineering, natural sciences and actuarial |
 | `<pluss/ai.h>` | PlussAI: the neural-network, machine-learning and procedure frameworks |
 | `<pluss/tils.h>` | PlussTils: every PlussTils header, which includes the dashboards (PlussBI) when PlussMic is installed |
 
-## Taking only a part
+## The single headers
 
-Each space has finer headers, so you can include just the piece you use. They are quicker to compile than the umbrellas, and they make plain what a file depends on.
+### PlussQit
 
-| Space | Finer headers |
+`<pluss/core.h>` is made of these. Take one when a file needs only that.
+
+| Header | What it gives you |
 |---|---|
-| PlussQit | `<pluss/io.h>` (save and load), `<pluss/array_file.h>` (array files), `<pluss/queue.h>`, `<pluss/exception.h>`, `<pluss/version.h>` |
-| PlussMic | `<pluss/table/table.h>`, `<pluss/kindle/kindle.h>`, `<pluss/scribble/scribble.h>`, `<pluss/bundle/bundle.h>`, `<pluss/loader/loader.h>` |
-| PlussPl | `<pluss/pl/studio.h>`, `<pluss/pl/style.h>`, `<pluss/pl/views.h>`, `<pluss/pl/flash.h>` |
-| PlussMa | `<pluss/ma/math.h>`, `<pluss/ma/stats.h>`, `<pluss/ma/eng.h>`, `<pluss/ma/natsci.h>`, `<pluss/ma/actuarial.h>`, also `<pluss/ma/finance.h>` and `<pluss/ma/linearalg.h>` |
-| PlussAI | `<pluss/nn.h>`, `<pluss/ai/ml.h>`, `<pluss/ai/procedure.h>`, `<pluss/ai/lymph.h>`, `<pluss/ai/nlp.h>` |
-| PlussTils | `<pluss/tils/doc.h>`, `settings.h`, `cache.h`, `info.h`, `env.h`, `suppose.h`, `let.h`, `flow.h`, `print_options.h`, `view.h`, and the helpers under `<pluss/tils/kit/>` such as `output.h`, `rng_seed.h` and `pathing.h`; the dashboards are `<pluss/bi/bi.h>` |
+| `<pluss/codem/series_factory.h>` | creating a `Series`: `make_series`, `zeros`, `where` and the other factories |
+| `<pluss/coden/note_factory.h>` | creating a `Note` of text |
+| `<pluss/codeh/timeline_factory.h>` | creating a `Timeline` of instants, with `Duration` and `TimeIndex` |
+| `<pluss/queue.h>` | `Queue`, the one value that holds a `Series`, a `Note`, a `Timeline` or a `Duration` |
+| `<pluss/pluss_type.h>` | the dynamic holder behind `Queue` |
+| `<pluss/io.h>` | saving and loading values |
+| `<pluss/array_file.h>` | array files (`.npy` and `.npz`) |
+| `<pluss/error.h>`, `<pluss/exception.h>` | errors, tracebacks and messages |
+| `<pluss/validate.h>` | checks that suggest the closest valid name when one fails |
+| `<pluss/null.h>`, `<pluss/slicing.h>` | missing values, and slicing |
+| `<pluss/codem/losses.h>` | loss functions on a `Series` |
+| `<pluss/subsp/linearalg/linearalg.h>`, `<pluss/subsp/math/linalg.h>`, `<pluss/subsp/math/diff.h>`, `<pluss/subsp/stats/stats.h>` | linear algebra, differentiation and statistics on a `Series` |
+| `<pluss/version.h>` | `pluss::version()`, the version and build of this PlussII |
+
+### PlussMic
+
+| Header | What it gives you |
+|---|---|
+| `<pluss/table/table.h>` | the table model: `DataFrame`, `Shelf`, `Atlas`, the example tables, display and plotting from a table |
+| `<pluss/kindle/kindle.h>` | the kindle model: `Stream`, `Catalog`, `Archive` |
+| `<pluss/scribble/scribble.h>` | the scribble model: `Slot`, `Registry`, `Axel` |
+| `<pluss/bundle/bundle.h>` | the bundle model: `Nexus`, `Locus` |
+| `<pluss/loader/loader.h>` | loading and saving files |
+
+### PlussPl
+
+`<pluss/pl.h>` is these four.
+
+| Header | What it gives you |
+|---|---|
+| `<pluss/pl/studio.h>` | `Studio`, `Pane`, `Trace`: building a figure |
+| `<pluss/pl/style.h>` | themes, palettes and lighting |
+| `<pluss/pl/views.h>` | the views a plot window offers: smoothing, transforms, log scales, fit lines |
+| `<pluss/pl/flash.h>` | the `flash` plots: a finished chart in one call |
+
+### PlussMa
+
+| Header | What it gives you |
+|---|---|
+| `<pluss/ma/math.h>` | algebra, analysis, calculus, economics, finance, numerical methods, probability |
+| `<pluss/ma/stats.h>` | distributions, regression, time series, inference, Bayesian methods, estimation |
+| `<pluss/ma/eng.h>` | engineering: circuits, communications, control, fluids, signals, power, robotics, structures, thermal |
+| `<pluss/ma/natsci.h>` | biology, chemistry, physics |
+| `<pluss/ma/actuarial.h>` | actuarial mathematics |
+| `<pluss/ma/finance.h>`, `<pluss/ma/linearalg.h>` | finance and linear algebra, on their own |
+
+### PlussAI
+
+| Header | What it gives you |
+|---|---|
+| `<pluss/nn.h>` | neural modules: layers, losses, optimisers |
+| `<pluss/ai/ml.h>` | classical machine learning and the lymph workflows |
+| `<pluss/ai/procedure.h>` | running and saving work across the frameworks |
+| `<pluss/ai/lymph.h>`, `<pluss/ai/nlp.h>` | the lymph workflows alone, and text models |
+
+### PlussTils
+
+`<pluss/tils.h>` is all of these.
+
+| Header | What it gives you |
+|---|---|
+| `<pluss/tils/doc.h>` | reading the documentation from a program |
+| `<pluss/tils/settings.h>` | settings from defaults, a file, the environment and the command line |
+| `<pluss/tils/cache.h>` | keeping results between runs |
+| `<pluss/tils/info.h>` | version, system and compute platforms |
+| `<pluss/tils/env.h>` | reading environment variables |
+| `<pluss/tils/suppose.h>`, `<pluss/tils/let.h>`, `<pluss/tils/flow.h>` | checked suppositions, immutable bindings and value flow |
+| `<pluss/tils/print_options.h>`, `<pluss/tils/kit/output.h>` | printing and the output engine |
+| `<pluss/tils/kit/rng_seed.h>`, `<pluss/tils/kit/pathing.h>` | seeds and paths; the other helpers are in `<pluss/tils/kit.h>` |
+| `<pluss/tils/view.h>` | the built-in window behind `.show()` |
+| `<pluss/bi/bi.h>` | dashboards (PlussBI) |
 
 ## Worked tour
 
@@ -78,7 +155,7 @@ The compiler says
 ex_include_2.cpp:5:16: error: no type named 'Settings' in namespace 'pluss::tils'
 ```
 
-The type is not found because `<pluss/pluss.h>` does not include PlussTils. Add the header named in that part's guide, or `<pluss/tils.h>` for all of PlussTils.
+The type is not found because `<pluss/pluss.h>` does not include PlussTils. Add the header of the piece you use, or `<pluss/tils.h>` for all of PlussTils. If you ever lose track of which header a type needs, go back to `<pluss/pluss.h>` plus the umbrella of the space you are using.
 
 ## Short aliases
 

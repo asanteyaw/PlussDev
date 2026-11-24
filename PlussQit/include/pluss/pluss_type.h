@@ -18,6 +18,7 @@
 #include "CodeN/compat/Dispatch.h"
 #include "CodeM/compat/Invoke.h"
 #include "pluss/codem/codem.h"
+#include "pluss/codem/series_factory.h"  // pluss::series::where
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
 

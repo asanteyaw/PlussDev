@@ -1,10 +1,57 @@
-// Every umbrella header, and the headers inside PlussTils one by one, must compile together
-// from an installed download: <pluss/tils.h> is all of PlussTils, and each piece can be taken alone.
+// Every umbrella header and every single header the include guide teaches must compile together
+// from an installed download, and each one must stand alone (see docs/sphinx/include.md).
 #include <pluss/pluss.h>
 #include <pluss/tils.h>
 #include <pluss/ma.h>
 #include <pluss/ai.h>
 
+#include <pluss/core.h>
+#include <pluss/error.h>
+#include <pluss/null.h>
+#include <pluss/validate.h>
+#include <pluss/msharp/lister.h>
+#include <pluss/codem/series_factory.h>
+#include <pluss/codem/losses.h>
+#include <pluss/slicing.h>
+#include <pluss/coden/note_factory.h>
+#include <pluss/codeh/timeline_factory.h>
+#include <pluss/queue.h>
+#include <pluss/io.h>
+#include <pluss/array_file.h>
+#include <pluss/exception.h>
+#include <pluss/version.h>
+#include <pluss/pluss_type.h>
+#include <pluss/dispense.h>
+#include <pluss/mic.h>
+#include <pluss/table/table.h>
+#include <pluss/kindle/kindle.h>
+#include <pluss/scribble/scribble.h>
+#include <pluss/bundle/bundle.h>
+#include <pluss/loader/loader.h>
+#include <pluss/pl.h>
+#include <pluss/pl/studio.h>
+#include <pluss/pl/style.h>
+#include <pluss/pl/views.h>
+#include <pluss/pl/flash.h>
+#include <pluss/tils/doc.h>
+#include <pluss/tils/let.h>
+#include <pluss/tils/flow.h>
+#include <pluss/tils/suppose.h>
+#include <pluss/tils/kit/output.h>
+#include <pluss/tils/kit/rng_seed.h>
+#include <pluss/tils/kit/pathing.h>
+#include <pluss/ma/math.h>
+#include <pluss/ma/stats.h>
+#include <pluss/ma/eng.h>
+#include <pluss/ma/natsci.h>
+#include <pluss/ma/actuarial.h>
+#include <pluss/ma/finance.h>
+#include <pluss/ma/linearalg.h>
+#include <pluss/nn.h>
+#include <pluss/ai/ml.h>
+#include <pluss/ai/procedure.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/ai/nlp.h>
 #include <pluss/tils/cache.h>
 #include <pluss/tils/doc.h>
 #include <pluss/tils/env.h>
