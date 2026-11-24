@@ -149,6 +149,24 @@ inline Series hodgkin_huxley_axon_rate(const Series &s, double radius_cm, double
 }
 
 // Passive cable on the periodic grid: tau V_t = lambda^2 V_xx - V + drive.
+// largest explicit time step (ms) for which the axon equations are stable on `grid`: the diffusion of the voltage along the fibre, D = a / (2 R_a C_m),
+// limits an RK4 step to about 0.7 dx^2 / D (the cell spacing is read in cm)
+inline double axon_max_stable_dt(double radius_cm, double axoplasm_ohm_cm, const spatial::PeriodicGrid &grid, const HodgkinHuxley &p = {}) {
+  dynamics::require(radius_cm > 0.0 && axoplasm_ohm_cm > 0.0, "axon: radius and axoplasm resistivity must be positive");
+  const double diffusivity = 1000.0 * radius_cm / (2.0 * axoplasm_ohm_cm * p.capacitance);
+  const double dx = grid.spacing(0).si_value();
+  return 0.7 * dx * dx / diffusivity;
+}
+
+// integrate the axon from t0 to t1 in `steps` RK4 steps; a step above axon_max_stable_dt is refused rather than left to overflow
+inline Series simulate_axon(const Series &state, double radius_cm, double axoplasm_ohm_cm, const spatial::PeriodicGrid &grid, double t0, double t1,
+                            std::int64_t steps, const HodgkinHuxley &p = {}) {
+  dynamics::require(steps > 0 && t1 > t0, "simulate_axon: need t1 > t0 and a positive number of steps");
+  dynamics::require((t1 - t0) / static_cast<double>(steps) <= axon_max_stable_dt(radius_cm, axoplasm_ohm_cm, grid, p),
+                    "simulate_axon: the step is too large for the diffusion along the fibre (see axon_max_stable_dt); use more steps");
+  return dynamics::simulate([&](const Series &s) { return hodgkin_huxley_axon_rate(s, radius_cm, axoplasm_ohm_cm, grid, p); }, state, t0, t1, steps);
+}
+
 inline Series cable_rate(const Series &v, const Coeff &lambda, const Coeff &tau,
                          const spatial::PeriodicGrid &grid,
                          const Series &drive = pluss::series::undefined()) {

@@ -6,19 +6,19 @@ A population in a variable environment does not grow at the rate of its average 
 
 ## How it works
 
-The code is in `pluss::ma::natsci::biology::population::demography` (`demography::` below). The environment is a set of projection matrices $A_1, \dots, A_K$ with probabilities $p_k$, collected in `demography::Environment` (fields `matrices` of shape $[K, s, s]$, `prob` of shape $[K]$, and optionally `transition`, a row-stochastic $K\times K$ matrix that makes the sequence of years a Markov chain). The long-run growth of $\ln N_t$ per year is the stochastic growth rate,
+The code is in `pluss::ma::natsci::biology::population::demography` (`demography::` below). The environment is a set of projection matrices {math}`A_1, \dots, A_K` with probabilities {math}`p_k`, collected in `demography::Environment` (fields `matrices` of shape {math}`[K, s, s]`, `prob` of shape {math}`[K]`, and optionally `transition`, a row-stochastic {math}`K\times K` matrix that makes the sequence of years a Markov chain). The long-run growth of {math}`\ln N_t` per year is the stochastic growth rate,
 
 ```{math}
 \ln\lambda_s = \lim_{T\to\infty}\frac1T\ln\|A_{k_T}\cdots A_{k_1}n_0\|
 ```
 
-which is always below the log of the dominant eigenvalue of the average matrix $\bar A$ (a randomly varying environment hurts). For small variation Tuljapurkar's approximation is
+which is always below the log of the dominant eigenvalue of the average matrix {math}`\bar A` (a randomly varying environment hurts). For small variation Tuljapurkar's approximation is
 
 ```{math}
 \ln\lambda_s \approx \ln\lambda(\bar A) - \frac{\tau^2}{2\lambda^2},\qquad \tau^2 = \sum_k p_k\,\langle S, A_k - \bar A\rangle^2
 ```
 
-where $S$ is the sensitivity matrix of $\bar A$. `demography::tuljapurkar(matrices, prob)` returns $\ln\lambda(\bar A)$, $\tau^2$ and the approximation. `demography::simulate_growth(env, steps, replicates, seed)` estimates $\ln\lambda_s$ directly, with a standard error from the spread of the replicates, and `demography::simulate_paths(env, n0, steps, replicates, seed)` returns the total population size of each replicate year by year. `demography::quasi_extinction_probability(paths, threshold)` turns those paths into the probability that the population has fallen to the threshold by each year.
+where {math}`S` is the sensitivity matrix of {math}`\bar A`. `demography::tuljapurkar(matrices, prob)` returns {math}`\ln\lambda(\bar A)`, {math}`\tau^2` and the approximation. `demography::simulate_growth(env, steps, replicates, seed)` estimates {math}`\ln\lambda_s` directly, with a standard error from the spread of the replicates, and `demography::simulate_paths(env, n0, steps, replicates, seed)` returns the total population size of each replicate year by year. `demography::quasi_extinction_probability(paths, threshold)` turns those paths into the probability that the population has fallen to the threshold by each year.
 
 ## The growth rate of a variable environment
 
@@ -72,7 +72,7 @@ simulated ln lambda_s                  = 0.1216 +- 0.0003 (400 replicates of 200
 growth rate of the good year alone     = 1.4787, bad year alone = 0.8359
 ```
 
-The average matrix would grow at $\ln\lambda = 0.1601$ per year, but the variance term $\tau^2 = 0.0996$ reduces this to `0.1240` by the approximation, and the simulation gives `0.1216 +- 0.0003`. The good year alone has $\lambda = 1.4787$ and the bad year alone $0.8359$: the population grows in the long run, but more slowly than the average year suggests.
+The average matrix would grow at {math}`\ln\lambda = 0.1601` per year, but the variance term {math}`\tau^2 = 0.0996` reduces this to `0.1240` by the approximation, and the simulation gives `0.1216 +- 0.0003`. The good year alone has {math}`\lambda = 1.4787` and the bad year alone {math}`0.8359`: the population grows in the long run, but more slowly than the average year suggests.
 
 ## Runs of bad years
 

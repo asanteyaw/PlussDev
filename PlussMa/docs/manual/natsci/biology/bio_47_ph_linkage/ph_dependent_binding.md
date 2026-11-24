@@ -6,17 +6,17 @@ Phosphate, amino acids and proteins carry several groups that take up or release
 
 ## How it works
 
-The code is in `pluss::ma::natsci::biology::biophysics::linkage` (`linkage::` below). A molecule that can bind up to $n$ protons is described by its cumulative protonation constants $\beta_k$, with $\log_{10}\beta_k = \sum_{j\le k}\mathrm{p}K_j'$ where $\mathrm{p}K_j'$ is the logarithm of the constant for the $j$th proton in the order it binds. The partition function and the fraction of molecules carrying $k$ protons are
+The code is in `pluss::ma::natsci::biology::biophysics::linkage` (`linkage::` below). A molecule that can bind up to {math}`n` protons is described by its cumulative protonation constants {math}`\beta_k`, with {math}`\log_{10}\beta_k = \sum_{j\le k}\mathrm{p}K_j'` where {math}`\mathrm{p}K_j'` is the logarithm of the constant for the {math}`j`th proton in the order it binds. The partition function and the fraction of molecules carrying {math}`k` protons are
 
 ```{math}
 Z = 1 + \sum_{k=1}^{n}\beta_k\,[\mathrm{H}]^k,\qquad f_k = \frac{\beta_k [\mathrm{H}]^k}{Z},\qquad \langle k\rangle = \sum_k k f_k = -\frac{\partial \log_{10} Z}{\partial\,\mathrm{pH}}
 ```
 
-`linkage::polyprotic_fractions(log10_beta, ph)` returns the fractions with the unprotonated form first, `linkage::ln_partition_polyprotic` the logarithm of $Z$ and `linkage::mean_protons_polyprotic` the mean $\langle k\rangle$. For a protein with independent groups of $N_g$ groups of each class $g$ and acid constant $\mathrm{p}K_g$, `linkage::ln_partition_independent(counts, pka, ph)` and `linkage::mean_protons_independent(counts, pka, ph)` do the same. The last relation is the Wyman linkage relation: the proton count is the slope of $\log Z$ against pH. If a ligand binds and changes the partition function from $Z_{\mathrm{free}}$ to $Z_{\mathrm{bound}}$, its apparent association constant at a pH is `linkage::log10_apparent_constant(log10_k_ref, ln_z_bound, ln_z_free)`, which is $\log_{10}K_{\mathrm{ref}} + (\ln Z_{\mathrm{bound}} - \ln Z_{\mathrm{free}})/\ln 10$. `linkage::bound_complex(receptor_total, ligand_total, log10_k_app)` gives the complex concentration at given totals. A buffer takes up the protons that binding releases, so the measured enthalpy is `linkage::observed_enthalpy(dh_intrinsic, protons_taken_up, dh_buffer_ionization)`, the intrinsic enthalpy plus the protons exchanged times the ionisation enthalpy of the buffer.
+`linkage::polyprotic_fractions(log10_beta, ph)` returns the fractions with the unprotonated form first, `linkage::ln_partition_polyprotic` the logarithm of {math}`Z` and `linkage::mean_protons_polyprotic` the mean {math}`\langle k\rangle`. For a protein with independent groups of {math}`N_g` groups of each class {math}`g` and acid constant {math}`\mathrm{p}K_g`, `linkage::ln_partition_independent(counts, pka, ph)` and `linkage::mean_protons_independent(counts, pka, ph)` do the same. The last relation is the Wyman linkage relation: the proton count is the slope of {math}`\log Z` against pH. If a ligand binds and changes the partition function from {math}`Z_{\mathrm{free}}` to {math}`Z_{\mathrm{bound}}`, its apparent association constant at a pH is `linkage::log10_apparent_constant(log10_k_ref, ln_z_bound, ln_z_free)`, which is {math}`\log_{10}K_{\mathrm{ref}} + (\ln Z_{\mathrm{bound}} - \ln Z_{\mathrm{free}})/\ln 10`. `linkage::bound_complex(receptor_total, ligand_total, log10_k_app)` gives the complex concentration at given totals. A buffer takes up the protons that binding releases, so the measured enthalpy is `linkage::observed_enthalpy(dh_intrinsic, protons_taken_up, dh_buffer_ionization)`, the intrinsic enthalpy plus the protons exchanged times the ionisation enthalpy of the buffer.
 
 ## The forms of phosphate
 
-Phosphate has three protonation steps. The program lists the fraction of each form at six pH values, with the cumulative constants $\log_{10}\beta = 12.35,\ 19.55,\ 21.70$, and the mean number of bound protons.
+Phosphate has three protonation steps. The program lists the fraction of each form at six pH values, with the cumulative constants {math}`\log_{10}\beta = 12.35,\ 19.55,\ 21.70`, and the mean number of bound protons.
 
 ```cpp
 #include <pluss/ma.h>
@@ -58,7 +58,7 @@ mean protons bound         [2.9339, 2.5000, 2.0025, 1.5000, 1.0152, 0.5000]
 sum of fractions           [1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000]
 ```
 
-At $\mathrm{pH} = 7.2$, equal to the second $\mathrm{p}K$, the two forms $\mathrm{HPO_4^{2-}}$ and $\mathrm{H_2PO_4^-}$ are present half and half (`0.5000` each) and the mean number of protons is `1.5000`. At $\mathrm{pH} = 4.5$, between the first and second $\mathrm{p}K$, `0.9936` of the molecules are $\mathrm{H_2PO_4^-}$, and at $\mathrm{pH} = 9$ `0.9840` are $\mathrm{HPO_4^{2-}}$. The fractions sum to one at every pH.
+At {math}`\mathrm{pH} = 7.2`, equal to the second {math}`\mathrm{p}K`, the two forms {math}`\mathrm{HPO_4^{2-}}` and {math}`\mathrm{H_2PO_4^-}` are present half and half (`0.5000` each) and the mean number of protons is `1.5000`. At {math}`\mathrm{pH} = 4.5`, between the first and second {math}`\mathrm{p}K`, `0.9936` of the molecules are {math}`\mathrm{H_2PO_4^-}`, and at {math}`\mathrm{pH} = 9` `0.9840` are {math}`\mathrm{HPO_4^{2-}}`. The fractions sum to one at every pH.
 
 ## A protein with many groups
 
@@ -104,7 +104,7 @@ ln partition fn.    [199.1673, 116.3975, 76.4940, 57.5895, 27.8928, 2.1983]
 -d log10 Z / d pH   [22.9078, 12.9683, 10.0370, 8.4457, 7.7675, 1.9222]
 ```
 
-The protein holds `22.9078` protons at pH `3`, `10.0370` at pH `6.5` and only `1.9222` at pH `11`. The last row, minus the slope of $\log_{10}Z$ against pH, equals the proton count to four digits at every pH: the same numbers from two directions.
+The protein holds `22.9078` protons at pH `3`, `10.0370` at pH `6.5` and only `1.9222` at pH `11`. The last row, minus the slope of {math}`\log_{10}Z` against pH, equals the proton count to four digits at every pH: the same numbers from two directions.
 
 ## Binding that takes up a proton
 
@@ -155,7 +155,7 @@ observed enthalpy in HEPES: -27.4000 kJ/mol (0.6 protons taken up)
 observed enthalpy in Tris: -11.5000 kJ/mol (0.6 protons taken up)
 ```
 
-At low pH, where both states are protonated, binding is tight ($\log_{10}K = 7.9961$ at pH `5`); at high pH, where neither is, it is the reference `7.0039`. In between the constant falls by one unit as the proton is lost, and the complex falls from `0.9045` to `0.7309` micromolar. The measured enthalpy depends on the buffer: `-36.94` kJ/mol in phosphate, `-27.40` in HEPES and `-11.50` in Tris, because the proton goes into the buffer and the buffer's own ionisation enthalpy is added.
+At low pH, where both states are protonated, binding is tight ({math}`\log_{10}K = 7.9961` at pH `5`); at high pH, where neither is, it is the reference `7.0039`. In between the constant falls by one unit as the proton is lost, and the complex falls from `0.9045` to `0.7309` micromolar. The measured enthalpy depends on the buffer: `-36.94` kJ/mol in phosphate, `-27.40` in HEPES and `-11.50` in Tris, because the proton goes into the buffer and the buffer's own ionisation enthalpy is added.
 
 ## Decisions
 
@@ -165,7 +165,7 @@ At low pH, where both states are protonated, binding is tight ($\log_{10}K = 7.9
 
 ## Pitfalls
 
-The constants are cumulative: $\log_{10}\beta_k$ for binding $k$ protons, not the $\mathrm{p}K$ of each step. The program feeds the stepwise values of phosphate in place of the cumulative ones.
+The constants are cumulative: {math}`\log_{10}\beta_k` for binding {math}`k` protons, not the {math}`\mathrm{p}K` of each step. The program feeds the stepwise values of phosphate in place of the cumulative ones.
 
 ```cpp
 #include <pluss/ma.h>
@@ -203,7 +203,7 @@ fractions at pH 7.2, right: [0.0000, 0.5000, 0.5000, 0.0000]
 fractions at pH 7.2, wrong: [0.0000, 1.0000, 0.0000, 0.0000]
 ```
 
-With the correct cumulative constants the mean number of protons at pH `2.15`, `7.2` and `12.35` is `2.5000`, `1.5000` and `0.5000`. With the stepwise values `12.35, 7.20, 2.15` entered instead, it is `1.0000`, `1.0000` and `0.5000`, and at pH `7.2` the population is all $\mathrm{HPO_4^{2-}}$ (`1.0000`) instead of half and half. The call cannot know which kind of constant you meant, so check one pH where you know the answer.
+With the correct cumulative constants the mean number of protons at pH `2.15`, `7.2` and `12.35` is `2.5000`, `1.5000` and `0.5000`. With the stepwise values `12.35, 7.20, 2.15` entered instead, it is `1.0000`, `1.0000` and `0.5000`, and at pH `7.2` the population is all {math}`\mathrm{HPO_4^{2-}}` (`1.0000`) instead of half and half. The call cannot know which kind of constant you meant, so check one pH where you know the answer.
 
 ## Where next
 

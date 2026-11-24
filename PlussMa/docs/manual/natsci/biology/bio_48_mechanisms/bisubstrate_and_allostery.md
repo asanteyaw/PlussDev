@@ -6,11 +6,11 @@ Many enzymes bind two substrates, many are slowed by their own substrate, and ma
 
 ## How it works
 
-The code is in `pluss::ma::natsci::biology::systems::enzymes` (`enzymes::` below). The rapid-equilibrium ordered, random and ping-pong two-substrate laws are `enzymes::ordered_bibi_rapid(A, B, vmax, Kia, Kb)`, `enzymes::random_bibi_rapid(A, B, vmax, Ka, Kb, alpha)` and `enzymes::pingpong_bibi(A, B, vmax, KmA, KmB)`. A double-reciprocal plot of $1/v$ against $1/A$ at several fixed $B$ gives lines that meet for ordered and random mechanisms (the slope depends on $B$) and are parallel for ping-pong (the slope does not).
+The code is in `pluss::ma::natsci::biology::systems::enzymes` (`enzymes::` below). The rapid-equilibrium ordered, random and ping-pong two-substrate laws are `enzymes::ordered_bibi_rapid(A, B, vmax, Kia, Kb)`, `enzymes::random_bibi_rapid(A, B, vmax, Ka, Kb, alpha)` and `enzymes::pingpong_bibi(A, B, vmax, KmA, KmB)`. A double-reciprocal plot of {math}`1/v` against {math}`1/A` at several fixed {math}`B` gives lines that meet for ordered and random mechanisms (the slope depends on {math}`B`) and are parallel for ping-pong (the slope does not).
 
-For any other mechanism you write the enzyme states and the steps between them. An `enzymes::Step` has the state it leaves and the state it reaches (`from`, `to`), a rate constant `k`, the index of the concentration that multiplies it (`species`, or `-1` for a first-order step) and `product_sign`, `+1` for a step that releases product and `-1` for one that takes it up. An `enzymes::Mechanism` has the number of states and the steps. `enzymes::steady_state(mechanism, concentrations)` returns the fraction of the enzyme in each state, the solution of $Q\pi = 0$ with $\sum\pi = 1$ for the rate matrix $Q$, and `enzymes::turnover(mechanism, concentrations)` the net product flux per enzyme. Concentrations carry the species on the last axis, and leading axes are independent lanes.
+For any other mechanism you write the enzyme states and the steps between them. An `enzymes::Step` has the state it leaves and the state it reaches (`from`, `to`), a rate constant `k`, the index of the concentration that multiplies it (`species`, or `-1` for a first-order step) and `product_sign`, `+1` for a step that releases product and `-1` for one that takes it up. An `enzymes::Mechanism` has the number of states and the steps. `enzymes::steady_state(mechanism, concentrations)` returns the fraction of the enzyme in each state, the solution of {math}`Q\pi = 0` with {math}`\sum\pi = 1` for the rate matrix {math}`Q`, and `enzymes::turnover(mechanism, concentrations)` the net product flux per enzyme. Concentrations carry the species on the last axis, and leading axes are independent lanes.
 
-For a cooperative enzyme with $m$ identical sites, the concerted model gives an active and an inactive form that bind the substrate with dissociation constants $K_A$ and $K_I$, with the inactive form favoured by $\beta\varepsilon$ in units of $kT$ when no substrate is bound. The probability of the active form is
+For a cooperative enzyme with {math}`m` identical sites, the concerted model gives an active and an inactive form that bind the substrate with dissociation constants {math}`K_A` and {math}`K_I`, with the inactive form favoured by {math}`\beta\varepsilon` in units of {math}`kT` when no substrate is bound. The probability of the active form is
 
 ```{math}
 p_{\mathrm{active}} = \frac{(1 + c/K_A)^m}{(1 + c/K_A)^m + e^{\beta\varepsilon\,\text{(sign as in the call)}}(1 + c/K_I)^m}
@@ -20,7 +20,7 @@ given by `enzymes::mwc_active_probability(c, m, K_A, K_I, beta_eps)`, and the ve
 
 ## Telling two-substrate mechanisms apart
 
-The program computes the slope of $1/v$ against $1/A$ between $A = 1$ and $A = 2$ at three levels of the second substrate $B$, for an ordered, a random and a ping-pong mechanism.
+The program computes the slope of {math}`1/v` against {math}`1/A` between {math}`A = 1` and {math}`A = 2` at three levels of the second substrate {math}`B`, for an ordered, a random and a ping-pong mechanism.
 
 ```cpp
 #include <pluss/ma.h>
@@ -62,11 +62,11 @@ B = 4.0000: slope of 1/v against 1/A: ordered 0.1500, random 0.1750, ping-pong 0
 B = 16.0000: slope of 1/v against 1/A: ordered 0.0375, random 0.1188, ping-pong 0.1500
 ```
 
-For the ordered mechanism the slope is `0.6000`, `0.1500` and `0.0375`: it falls in proportion to $1/B$, so the lines of the double-reciprocal plot meet. For the random mechanism it also depends on $B$ (`0.4000`, `0.1750`, `0.1188`), while for ping-pong it is `0.1500` at every $B$: parallel lines. A set of parallel lines in the measured data points to ping-pong.
+For the ordered mechanism the slope is `0.6000`, `0.1500` and `0.0375`: it falls in proportion to {math}`1/B`, so the lines of the double-reciprocal plot meet. For the random mechanism it also depends on {math}`B` (`0.4000`, `0.1750`, `0.1188`), while for ping-pong it is `0.1500` at every {math}`B`: parallel lines. A set of parallel lines in the measured data points to ping-pong.
 
 ## A mechanism as a list of steps
 
-The program writes the Michaelis-Menten mechanism as two enzyme states and three steps and solves it for six substrate concentrations in one call, comparing the turnover with $k_{cat}S/(K_m + S)$.
+The program writes the Michaelis-Menten mechanism as two enzyme states and three steps and solves it for six substrate concentrations in one call, comparing the turnover with {math}`k_{cat}S/(K_m + S)`.
 
 ```cpp
 #include <pluss/ma.h>
@@ -107,7 +107,7 @@ turnover per enzyme     [0.0588, 0.1250, 0.2500, 0.3846, 0.4651, 0.4926]
 kcat S / (Km + S)       [0.0588, 0.1250, 0.2500, 0.3846, 0.4651, 0.4926]   with Km = (k-1 + kcat) / k1 = 0.1500
 ```
 
-The fraction of the enzyme in the complex rises from `0.1176` to `0.9852` as the substrate rises, and is exactly `0.5000` at $S = K_m = 0.15$. The turnover per enzyme, from the steps alone, is `0.0588`, `0.1250`, `0.2500`, `0.3846`, `0.4651` and `0.4926`, identical to the closed form with $K_m = (k_{-1} + k_{cat})/k_1$, which the engine did not use.
+The fraction of the enzyme in the complex rises from `0.1176` to `0.9852` as the substrate rises, and is exactly `0.5000` at {math}`S = K_m = 0.15`. The turnover per enzyme, from the steps alone, is `0.0588`, `0.1250`, `0.2500`, `0.3846`, `0.4651` and `0.4926`, identical to the closed form with {math}`K_m = (k_{-1} + k_{cat})/k_1`, which the engine did not use.
 
 ## A dead-end complex
 
@@ -152,11 +152,11 @@ the rate peaks near 0.1936 and falls at higher substrate (substrate inhibition)
 closed form sqrt(Km Ksi) = 0.1936 for the optimum with Km = 0.15 and Ksi = koff/kon = 0.25
 ```
 
-The turnover rises to `0.1961` at $S = 0.1936 = \sqrt{K_m K_{si}}$, the optimum of $v = k_{cat}S/(K_m + S + S^2/K_{si})$, and then falls: it is `0.0971` at `1` and `0.0062` at `20`, where `0.9876` of the enzyme is in the dead-end form. The engine reproduces substrate inhibition without any rate law being written.
+The turnover rises to `0.1961` at {math}`S = 0.1936 = \sqrt{K_m K_{si}}`, the optimum of {math}`v = k_{cat}S/(K_m + S + S^2/K_{si})`, and then falls: it is `0.0971` at `1` and `0.0062` at `20`, where `0.9876` of the enzyme is in the dead-end form. The engine reproduces substrate inhibition without any rate law being written.
 
 ## A cooperative enzyme
 
-A tetramer has an active form with $K_A = 0.5$ and an inactive form with $K_I = 20$, and the inactive form is favoured by $2\,kT$ with no substrate. The program prints the active fraction and the velocity from `0.01` to `100`, and the summary numbers.
+A tetramer has an active form with {math}`K_A = 0.5` and an inactive form with {math}`K_I = 20`, and the inactive form is favoured by {math}`2\,kT` with no substrate. The program prints the active fraction and the velocity from `0.01` to `100`, and the summary numbers.
 
 ```cpp
 #include <pluss/ma.h>
@@ -243,7 +243,7 @@ m = 4, beta eps = -3.0000: EC50 0.6174, Hill coefficient 2.1895, leakiness 0.047
 m = 4, beta eps = -6.0000: EC50 1.9637, Hill coefficient 2.8380, leakiness 0.0025
 ```
 
-With one site the Hill coefficient is `1.0000` however the other constants are chosen; it rises with the number of sites (`1.4344`, `1.8824`, `2.1681` for `2`, `4`, `8`) and with the preference for the inactive form (`1.6120`, `2.1895`, `2.8380` for $\beta\varepsilon$ of `-1`, `-3`, `-6`). A stronger preference makes the enzyme less leaky (`0.2689`, `0.0474`, `0.0025`) and moves the half-maximal concentration up.
+With one site the Hill coefficient is `1.0000` however the other constants are chosen; it rises with the number of sites (`1.4344`, `1.8824`, `2.1681` for `2`, `4`, `8`) and with the preference for the inactive form (`1.6120`, `2.1895`, `2.8380` for {math}`\beta\varepsilon` of `-1`, `-3`, `-6`). A stronger preference makes the enzyme less leaky (`0.2689`, `0.0474`, `0.0025`) and moves the half-maximal concentration up.
 
 ## Decisions
 
@@ -253,7 +253,7 @@ With one site the Hill coefficient is `1.0000` however the other constants are c
 
 ## Pitfalls
 
-Two ways to get a wrong rate without being told. The ping-pong law takes its combined $V_{max} = E_t k_1 k_2/(k_1 + k_2)$, not the faster of the two rate constants, and a step may name a concentration that the vector does not have.
+Two ways to get a wrong rate without being told. The ping-pong law takes its combined {math}`V_{max} = E_t k_1 k_2/(k_1 + k_2)`, not the faster of the two rate constants, and a step may name a concentration that the vector does not have.
 
 ```cpp
 #include <pluss/ma.h>
@@ -294,7 +294,7 @@ velocity with Vmax = Et kcat1 = 3.0000  (too large by the factor 3.0000)
 error: natsci: enzymes::rate_matrix: a step uses a species index beyond the concentration vector
 ```
 
-With $k_1 = 6$ and $k_2 = 3$ the maximum rate is `2.0000`, and the velocity at $A = B = 2$ with unit constants is `1.0000`. Using $E_t k_1$ for $V_{max}$ gives `3.0000`, three times too large, and nothing complains because the number is a perfectly good rate. A step that refers to concentration `1` when only the substrate is given is rejected with an error that names the problem.
+With {math}`k_1 = 6` and {math}`k_2 = 3` the maximum rate is `2.0000`, and the velocity at {math}`A = B = 2` with unit constants is `1.0000`. Using {math}`E_t k_1` for {math}`V_{max}` gives `3.0000`, three times too large, and nothing complains because the number is a perfectly good rate. A step that refers to concentration `1` when only the substrate is given is rejected with an error that names the problem.
 
 ## Where next
 

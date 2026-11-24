@@ -6,17 +6,17 @@ A parasitoid lays its eggs in a host and the host dies, and both species breed o
 
 ## How it works
 
-The code is in `pluss::ma::natsci::biology::population::parasitoid` (`parasitoid::` below). The state is a pair (hosts $H$, parasitoids $P$) on the last axis. Hosts reproduce with rate $\lambda$ and escape attack with probability $f(P)$; each host that is found yields $c$ parasitoids:
+The code is in `pluss::ma::natsci::biology::population::parasitoid` (`parasitoid::` below). The state is a pair (hosts {math}`H`, parasitoids {math}`P`) on the last axis. Hosts reproduce with rate {math}`\lambda` and escape attack with probability {math}`f(P)`; each host that is found yields {math}`c` parasitoids:
 
 ```{math}
 H_{t+1} = \lambda H_t f(P_t), \qquad P_{t+1} = c H_t \bigl(1 - f(P_t)\bigr)
 ```
 
-With attacks spread at random, $f = e^{-aP}$, which is `parasitoid::nicholson_bailey(state, lambda, a, c)`. Clumped attacks, with the number of attacks per host negative binomial with clumping parameter $k$, give $f = (1 + aP/k)^{-k}$ in `parasitoid::negative_binomial(state, lambda, a, c, k)`, and `parasitoid::beddington` adds host density dependence. The coexistence point is returned by `parasitoid::nicholson_bailey_equilibrium(lambda, a, c, like)` and `parasitoid::negative_binomial_equilibrium(lambda, a, c, k, like)` (the last argument only supplies the shape and type of the result), `parasitoid::jacobian(map, state)` differentiates a map at a state and `parasitoid::spectral_radius(J)` returns the largest modulus of the eigenvalues of a $2\times2$ Jacobian. The point is stable when that radius is below one. For patches on a ring, `parasitoid::ring_step(local, n, d)` applies a local map in every patch and then lets a fraction $d$ of each patch's output disperse equally to its two neighbours, and `parasitoid::synchrony(n)` is the standard deviation of the densities across patches.
+With attacks spread at random, {math}`f = e^{-aP}`, which is `parasitoid::nicholson_bailey(state, lambda, a, c)`. Clumped attacks, with the number of attacks per host negative binomial with clumping parameter {math}`k`, give {math}`f = (1 + aP/k)^{-k}` in `parasitoid::negative_binomial(state, lambda, a, c, k)`, and `parasitoid::beddington` adds host density dependence. The coexistence point is returned by `parasitoid::nicholson_bailey_equilibrium(lambda, a, c, like)` and `parasitoid::negative_binomial_equilibrium(lambda, a, c, k, like)` (the last argument only supplies the shape and type of the result), `parasitoid::jacobian(map, state)` differentiates a map at a state and `parasitoid::spectral_radius(J)` returns the largest modulus of the eigenvalues of a {math}`2\times2` Jacobian. The point is stable when that radius is below one. For patches on a ring, `parasitoid::ring_step(local, n, d)` applies a local map in every patch and then lets a fraction {math}`d` of each patch's output disperse equally to its two neighbours, and `parasitoid::synchrony(n)` is the standard deviation of the densities across patches.
 
 ## Random search is unstable
 
-The program computes the coexistence point for $\lambda = 2$, $a = 0.05$, $c = 1$, the spectral radius of its Jacobian, and follows a population started `1%` above it for `60` generations.
+The program computes the coexistence point for {math}`\lambda = 2`, {math}`a = 0.05`, {math}`c = 1`, the spectral radius of its Jacobian, and follows a population started `1%` above it for `60` generations.
 
 ```cpp
 #include <pluss/ma.h>
@@ -63,11 +63,11 @@ generation 50: hosts 14.7600, parasitoids 0.0000
 generation 60: hosts 15114.2522, parasitoids 0.0000
 ```
 
-The point is `27.7259` hosts and `13.8629` parasitoids, and the spectral radius is `1.1774 > 1`. A one per cent disturbance therefore grows, with oscillations of increasing amplitude: after `30` generations the hosts have fallen to `10.8698`, after `40` they are at `0.0144` and the parasitoids are extinct, and with no parasitoid left the hosts grow by a factor of $\lambda = 2$ each generation (`14.7600` at generation `50`, `15114.2522` at `60`).
+The point is `27.7259` hosts and `13.8629` parasitoids, and the spectral radius is `1.1774 > 1`. A one per cent disturbance therefore grows, with oscillations of increasing amplitude: after `30` generations the hosts have fallen to `10.8698`, after `40` they are at `0.0144` and the parasitoids are extinct, and with no parasitoid left the hosts grow by a factor of {math}`\lambda = 2` each generation (`14.7600` at generation `50`, `15114.2522` at `60`).
 
 ## Clumped attacks stabilise the interaction
 
-Attacks are rarely spread evenly over hosts. The program computes the equilibrium and its stability for six values of the clumping parameter $k$, from nearly random (`100`) to strongly clumped (`0.2`).
+Attacks are rarely spread evenly over hosts. The program computes the equilibrium and its stability for six values of the clumping parameter {math}`k`, from nearly random (`100`) to strongly clumped (`0.2`).
 
 ```cpp
 #include <pluss/ma.h>
@@ -106,7 +106,7 @@ k = 0.5000: equilibrium [60.0000, 30.0000], spectral radius 0.8660  stable
 k = 0.2000: equilibrium [248.0000, 124.0000], spectral radius 0.6225  stable
 ```
 
-Large $k$ reproduces the random-search model (radius `1.1754` at $k = 100$). The radius falls as attacks get more clumped and crosses one at $k = 1$: it is `1.0262` at $k = 1.2$ (unstable) and `0.9630` at $k = 0.8$ (stable), and `0.6225` at $k = 0.2$. Clumping also raises the equilibrium, from `27.8222` hosts to `248.0000`, because hosts in a heavily attacked clump cost the parasitoids little, so many other hosts escape.
+Large {math}`k` reproduces the random-search model (radius `1.1754` at {math}`k = 100`). The radius falls as attacks get more clumped and crosses one at {math}`k = 1`: it is `1.0262` at {math}`k = 1.2` (unstable) and `0.9630` at {math}`k = 0.8` (stable), and `0.6225` at {math}`k = 0.2`. Clumping also raises the equilibrium, from `27.8222` hosts to `248.0000`, because hosts in a heavily attacked clump cost the parasitoids little, so many other hosts escape.
 
 ## Patches linked by dispersal
 

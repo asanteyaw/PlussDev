@@ -248,6 +248,16 @@ void test_propagated_action_potential() {
   const auto advance = [&](const dyn::RateFn &rhs, const Series &s, double t0, double t1) {
     return dyn::simulate(rhs, s, t0, t1, static_cast<std::int64_t>(std::llround((t1 - t0) / dt)));
   };
+  // simulate_axon refuses a step beyond the diffusive limit and otherwise equals the plain integrator
+  {
+    expect(mem::axon_max_stable_dt(0.0238, 35.4, g) > dt, "the test step is inside the stable limit");
+    bool threw = false;
+    try { (void)mem::simulate_axon(state, 0.0238, 35.4, g, 0.0, 1.0, 2); } catch (const pluss::Error &) { threw = true; }
+    expect(threw, "simulate_axon rejects a step beyond the stable limit");
+    const Series a = mem::simulate_axon(state, 0.0238, 35.4, g, 0.0, 0.01, 5);
+    const Series b = advance(make_rhs(mem::HodgkinHuxley{}), state, 0.0, 0.01);
+    expect(a.sub(b).abs().max().item<double>() < 1e-12, "simulate_axon equals the plain integrator for a stable step");
+  }
   const Series right = x.gt(2.5).logical_and(x.lt(14.0)).to(F64);
   const auto front = [&](const Series &s) { // centroid of the right-moving region above 30 mV
     const Series above = s.select(-2, 0).gt(30.0).to(F64).mul(right);

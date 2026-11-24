@@ -6,17 +6,17 @@ Many populations reproduce in a single season, so the density next year is a fun
 
 ## How it works
 
-The code is in `pluss::ma::natsci::biology::population::maps` (`maps::` below). A map $x_{t+1} = f(x_t)$ is evaluated by `maps::logistic`, `maps::ricker`, `maps::beverton_holt`, `maps::hassell` and `maps::maynard_smith_slatkin`, each with a `_derivative` companion, and a Series of parameters or starting densities is treated as a batch, so one call follows a whole range of growth rates. `maps::iterate(f, x0, steps)` returns the state after `steps` iterations, and `maps::attractor(f, x0, burn, keep)` discards `burn` iterates and stores the next `keep` of them along a new last axis. The long-run behaviour is read from that orbit: `maps::detect_period(orbit, max_period, tol)` returns the smallest $p$ for which the orbit repeats within `tol` after $p$ steps (and `0` when none does), and the Lyapunov exponent
+The code is in `pluss::ma::natsci::biology::population::maps` (`maps::` below). A map {math}`x_{t+1} = f(x_t)` is evaluated by `maps::logistic`, `maps::ricker`, `maps::beverton_holt`, `maps::hassell` and `maps::maynard_smith_slatkin`, each with a `_derivative` companion, and a Series of parameters or starting densities is treated as a batch, so one call follows a whole range of growth rates. `maps::iterate(f, x0, steps)` returns the state after `steps` iterations, and `maps::attractor(f, x0, burn, keep)` discards `burn` iterates and stores the next `keep` of them along a new last axis. The long-run behaviour is read from that orbit: `maps::detect_period(orbit, max_period, tol)` returns the smallest {math}`p` for which the orbit repeats within `tol` after {math}`p` steps (and `0` when none does), and the Lyapunov exponent
 
 ```{math}
 \lambda = \lim_{n\to\infty}\frac1n\sum_{t=0}^{n-1}\ln\left|f'(x_t)\right|
 ```
 
-is computed by `maps::lyapunov(f, df, x0, burn, steps)`. It is negative on a stable cycle (nearby orbits converge), and positive when they separate exponentially, which is chaos. A cycle of period $p$ can also be found without iterating: `maps::periodic_point(f, df, guess, p)` solves $f^{p}(x) = x$ by Newton's method and returns the point and its multiplier $\prod_i f'(x_i)$, which is stable when its modulus is below one. The superstable growth rate, where the cycle passes through the critical point $f'(x_c) = 0$ and its multiplier is zero, comes from `maps::superstable_parameter(map, x_c, p, r_guess)`.
+is computed by `maps::lyapunov(f, df, x0, burn, steps)`. It is negative on a stable cycle (nearby orbits converge), and positive when they separate exponentially, which is chaos. A cycle of period {math}`p` can also be found without iterating: `maps::periodic_point(f, df, guess, p)` solves {math}`f^{p}(x) = x` by Newton's method and returns the point and its multiplier {math}`\prod_i f'(x_i)`, which is stable when its modulus is below one. The superstable growth rate, where the cycle passes through the critical point {math}`f'(x_c) = 0` and its multiplier is zero, comes from `maps::superstable_parameter(map, x_c, p, r_guess)`.
 
 ## Following five growth rates in one call
 
-The Ricker map $x_{t+1} = x_t e^{r(1 - x_t)}$ models a population limited by crowding. The program starts five populations with different growth rates at the same density, discards `2000` iterates and detects the period of the next `64`.
+The Ricker map {math}`x_{t+1} = x_t e^{r(1 - x_t)}` models a population limited by crowding. The program starts five populations with different growth rates at the same density, discards `2000` iterates and detects the period of the next `64`.
 
 ```cpp
 #include <pluss/ma.h>
@@ -52,7 +52,7 @@ detected period       = [1.0000, 2.0000, 4.0000, 0.0000, 0.0000]  (0 means no pe
 last iterate          = [1.0000, 1.5029, 1.8301, 1.1023, 2.0117]
 ```
 
-At $r = 1.5$ the density settles at the carrying capacity `1.0000` (period `1`); at `2.2` it alternates between two values (period `2`); at `2.55` it cycles through four. At `2.8` and `3.0` no period up to `16` is found, and the last iterates, `1.1023` and `2.0117`, are simply points of an orbit that does not repeat: the long-run behaviour is chaotic or has a period too long to see.
+At {math}`r = 1.5` the density settles at the carrying capacity `1.0000` (period `1`); at `2.2` it alternates between two values (period `2`); at `2.55` it cycles through four. At `2.8` and `3.0` no period up to `16` is found, and the last iterates, `1.1023` and `2.0117`, are simply points of an orbit that does not repeat: the long-run behaviour is chaotic or has a period too long to see.
 
 ## Measuring chaos
 
@@ -95,11 +95,11 @@ Lyapunov exponent = [-0.6931, -0.7669, -0.1052, 0.2342, 0.3904]
 Beverton-Holt (R0 = 8) exponent = [-2.0794]
 ```
 
-At $r = 1.5$ the exponent is $\ln|1 - r| = \ln 0.5 = -0.6931$ exactly, the derivative at the fixed point. It is negative for the cycles at `2.2` and `2.55` (`-0.7669`, `-0.1052`) and positive, `0.2342` and `0.3904`, at `2.8` and `3.0`: nearby densities separate and the dynamics is chaotic. The Beverton-Holt map with $R_0 = 8$ has exponent $-\ln 8 = -2.0794$ and cannot be anything else, because it never overshoots the carrying capacity.
+At {math}`r = 1.5` the exponent is {math}`\ln|1 - r| = \ln 0.5 = -0.6931` exactly, the derivative at the fixed point. It is negative for the cycles at `2.2` and `2.55` (`-0.7669`, `-0.1052`) and positive, `0.2342` and `0.3904`, at `2.8` and `3.0`: nearby densities separate and the dynamics is chaotic. The Beverton-Holt map with {math}`R_0 = 8` has exponent {math}`-\ln 8 = -2.0794` and cannot be anything else, because it never overshoots the carrying capacity.
 
 ## Cycles and their stability, exactly
 
-Iterating only finds stable cycles. The program solves for the fixed point and the 2-cycle of the Ricker map at $r = 2.3$ by Newton's method, reads off their multipliers, and finds the growth rates at which the logistic map $r x(1 - x)$ has superstable cycles of period `1`, `2` and `4`.
+Iterating only finds stable cycles. The program solves for the fixed point and the 2-cycle of the Ricker map at {math}`r = 2.3` by Newton's method, reads off their multipliers, and finds the growth rates at which the logistic map {math}`r x(1 - x)` has superstable cycles of period `1`, `2` and `4`.
 
 ```cpp
 #include <pluss/ma.h>
@@ -143,17 +143,17 @@ superstable growth rate of period 2: 3.236068
 superstable growth rate of period 4: 3.498562
 ```
 
-The fixed point is $x = 1$ with multiplier $1 - r = -1.3000$: its modulus exceeds one, so it is unstable and the population cannot rest there. The 2-cycle through `0.407845` has multiplier `-0.164925` and attracts. The superstable growth rates are `2.000000`, `3.236068` (that is $1 + \sqrt5$) and `3.498562`, each the centre of a window in which the cycle contracts fastest.
+The fixed point is {math}`x = 1` with multiplier {math}`1 - r = -1.3000`: its modulus exceeds one, so it is unstable and the population cannot rest there. The 2-cycle through `0.407845` has multiplier `-0.164925` and attracts. The superstable growth rates are `2.000000`, `3.236068` (that is {math}`1 + \sqrt5`) and `3.498562`, each the centre of a window in which the cycle contracts fastest.
 
 ## Decisions
 
 - Use `attractor` plus `detect_period` to see what a map settles into over a range of parameters, `lyapunov` to tell a long cycle from chaos, and `periodic_point` when you need the cycle itself, including an unstable one, and its multiplier.
-- Choose the map from the biology: Ricker and Hassell allow overcompensation and so cycles and chaos, while Beverton-Holt and Maynard Smith-Slatkin with $b \le 1$ do not.
+- Choose the map from the biology: Ricker and Hassell allow overcompensation and so cycles and chaos, while Beverton-Holt and Maynard Smith-Slatkin with {math}`b \le 1` do not.
 - Put the parameter values on a leading axis and run the sweep as one batch; every function here accepts it.
 
 ## Pitfalls
 
-Period detection reads a settled orbit. The program asks for the period at $r = 2.55$ (true period `4`) with too short a burn-in, with a tolerance tighter than the orbit has converged to, and with a sample no longer than `max_period`.
+Period detection reads a settled orbit. The program asks for the period at {math}`r = 2.55` (true period `4`) with too short a burn-in, with a tolerance tighter than the orbit has converged to, and with a sample no longer than `max_period`.
 
 ```cpp
 #include <pluss/ma.h>
