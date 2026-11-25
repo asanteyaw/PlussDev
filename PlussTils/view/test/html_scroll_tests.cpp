@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "pluss/tils/view/html_window.h"
+#include "pluss/tils/view/table_order.h"
 #include "pluss/tils/view/window.h"
 
 namespace {
@@ -982,33 +983,99 @@ void test_virtual_table_columns_can_be_resized() {
 </body></html>
 )HTML");
   const Wide model;
-  const auto handles = [&](const std::unordered_map<std::string, std::unordered_map<int, int>>* widths) {
+  struct Result {
     std::vector<HtmlHitRegion> hits;
+    int hover_lines{0};
+  };
+  const auto render = [&](const std::unordered_map<std::string, std::unordered_map<int, int>>* widths,
+                          const std::string& hover_target, const int hover_column) {
+    Result out;
     HtmlRenderConfig config{};
     config.draw_top_bar = false;
     config.root_padding_px = 0;
     config.virtual_table_model = &model;
-    config.hit_regions = &hits;
+    config.hit_regions = &out.hits;
     config.table_column_widths = widths;
-    (void)build_html_document_scene(document, SizeI{900, 400}, config);
+    config.hover_resize_target = hover_target;
+    config.hover_resize_column = hover_column;
+    const auto scene = build_html_document_scene(document, SizeI{900, 400}, config);
+    for (const auto& command : scene.commands()) {
+      if (const auto* line = std::get_if<LineCommand>(&command); line != nullptr && line->thickness == 3) {
+        ++out.hover_lines;
+      }
+    }
+    return out;
+  };
+  const auto with_action = [](const Result& r, const std::string_view action) {
     std::vector<HtmlHitRegion> out;
-    for (const auto& hit : hits) {
-      if (hit.action == "table.resize.column") {
+    for (const auto& hit : r.hits) {
+      if (hit.action == action) {
         out.push_back(hit);
       }
     }
     return out;
   };
 
-  // Every column but the last (the automatic one) has a divider to drag.
-  const auto initial = handles(nullptr);
-  expect(initial.size() == 2, "a long table of three columns has two drag handles; the last column takes the slack");
-  const int dragged = 7 * initial.front().aux;  // far wider than the measured width
+  // Columns are numbered as in a short table: the label column is 0, the model's columns follow. Every column
+  // but the last (the automatic one) has a divider to drag, and every column has the sort arrows.
+  const auto initial = render(nullptr, "", -1);
+  const auto handles = with_action(initial, "table.resize.column");
+  expect(handles.size() == 3, "the label column and the first two of three columns have drag handles; the last takes the slack");
+  expect(with_action(initial, "table.sort.asc").size() == 4 && with_action(initial, "table.sort.desc").size() == 4,
+         "every header of a long table, the label column included, has sort arrows");
+  expect(initial.hover_lines == 0, "no divider is highlighted while the pointer is elsewhere");
+
+  // The divider under the pointer is highlighted, as in a short table.
+  const auto hovered = render(nullptr, handles.front().target, 1);
+  expect(hovered.hover_lines == 1, "the divider under the pointer is highlighted in a long table");
+
+  // A dragged width is applied to its column.
+  const auto handle_for = [](const std::vector<HtmlHitRegion>& found, const int column) {
+    return std::find_if(found.begin(), found.end(), [column](const HtmlHitRegion& h) { return h.value == column; });
+  };
+  const int dragged = 7 * handle_for(handles, 1)->aux;  // far wider than the measured width
   std::unordered_map<std::string, std::unordered_map<int, int>> widths;
-  widths[initial.front().target][0] = dragged;
-  const auto after = handles(&widths);
-  expect(!after.empty() && after.front().value == 0 && after.front().aux == dragged,
-         "a dragged width is applied to its column in a long table");
+  widths[handles.front().target][1] = dragged;
+  const auto after = with_action(render(&widths, "", -1), "table.resize.column");
+  const auto widened = handle_for(after, 1);
+  expect(widened != after.end() && widened->aux == dragged, "a dragged width is applied to its column in a long table");
+}
+
+void test_virtual_table_sorts_by_a_column() {
+  using namespace pluss::view;
+
+  // Rows 0..5 by label; "n" holds numbers with a NaN, an infinity and a missing cell; "t" holds text.
+  class Sortable final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 6; }
+    std::int64_t column_count() const noexcept override { return 2; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(const std::int64_t column) const override { return column == 0 ? "n" : "t"; }
+    bool column_numeric(const std::int64_t column) const noexcept override { return column == 0; }
+    VirtualTableCell cell(const std::int64_t row, const std::int64_t column) const override {
+      static const char* numbers[] = {"10", "2", "NAN", "INF", "NULL", "-3"};
+      static const char* words[] = {"pear", "apple", "fig", "kiwi", "date", "plum"};
+      if (column == 0) {
+        return VirtualTableCell{.text = numbers[row], .missing = row == 4, .nonfinite = row == 2 || row == 3, .infinite = row == 3};
+      }
+      return VirtualTableCell{.text = words[row]};
+    }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  } model;
+
+  const auto sorted = [&](const int column, const bool ascending) {
+    std::vector<std::int64_t> rows;
+    sort_model_rows(model, rows, column, ascending);
+    return rows;
+  };
+  using Rows = std::vector<std::int64_t>;
+  // Numbers sort by value (so 2 comes before 10), then NaN, then the missing cell, in either direction.
+  expect(sorted(1, true) == Rows({5, 1, 0, 3, 2, 4}), "a numeric column sorts ascending by value, then NaN, then missing");
+  expect(sorted(1, false) == Rows({3, 0, 1, 5, 2, 4}), "descending reverses the numbers but keeps NaN and missing last");
+  expect(sorted(2, true) == Rows({1, 4, 2, 3, 0, 5}), "a text column sorts alphabetically");
+  expect(sorted(2, false) == Rows({5, 0, 3, 2, 4, 1}), "a text column sorts descending");
+  expect(sorted(0, false) == Rows({5, 4, 3, 2, 1, 0}), "the label column sorts by its labels");
 }
 
 void test_virtual_table_only_materializes_viewport_cells() {
@@ -1154,6 +1221,7 @@ int main() {
     test_virtual_table_colours_follow_the_stylesheet();
     test_virtual_table_last_column_takes_the_slack();
     test_virtual_table_columns_can_be_resized();
+    test_virtual_table_sorts_by_a_column();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";

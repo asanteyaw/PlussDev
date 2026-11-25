@@ -23,10 +23,16 @@
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window/text_layout.h"
 #include "../render/text_raster.h"
+#include "table_chrome.h"
 
 namespace pluss::view::window {
 
 namespace {
+
+using detail::HeaderControls;
+using detail::kResizeHandlePx;
+using detail::TablePaint;
+using detail::TableScrollbars;
 
 struct ResolvedStyle {
   int font_size{12};
@@ -814,10 +820,6 @@ struct LinearGradientSpec {
   return target;
 }
 
-// Table sizes live in HtmlTableGeometry (html_layout.h), in em, and are resolved against the
-// table's font size where they are used. The one size kept in pixels is the resize handle: it is
-// a pointer target, so its size does not follow the text.
-constexpr int kResizeHandlePx = 8;
 
 // Order-independent fingerprint of a table's user-set column widths.
 [[nodiscard]] std::uint64_t column_override_signature(const std::unordered_map<int, int>* overrides) {
@@ -3349,15 +3351,7 @@ int render_node(Scene& scene,
                 const ResolvedStyle* parent_style,
                 const int viewport_width);
 
-// The colours a table takes from the page's own stylesheet: the grid, the body fill, and the accent the
-// label column divider uses. Scrollbars and the area under the last row follow the theme too.
-struct TablePaint {
-  Color grid;
-  Color body_bg;
-  Color track;
-  Color thumb;
-};
-
+// The colours of a table as its stylesheet sets them (detail::TablePaint, shared with the header and scrollbar code).
 [[nodiscard]] TablePaint themed_table_paint(const HtmlDocument& document,
                                             const std::vector<const HtmlNode*>& lineage,
                                             const HtmlNode& table,
@@ -3410,7 +3404,23 @@ int render_virtual_table(
   const HtmlTableGeometryPx virtual_geo = resolve_table_geometry(style.font_size);
   const int header_h = virtual_geo.header_height;
   const int row_h = virtual_geo.row_height;
-  const int row_header_w = virtual_geo.row_label_width;
+  // The user's dragged widths: key 0 is the label column, key n the model's column n - 1 (the same numbering a
+  // short table uses). A width of 0 means "fit", which is the measured width.
+  const std::unordered_map<int, int>* dragged_widths = nullptr;
+  if (render_config.table_column_widths != nullptr) {
+    if (const auto found = render_config.table_column_widths->find(node_instance_target(node, "table"));
+        found != render_config.table_column_widths->end()) {
+      dragged_widths = &found->second;
+    }
+  }
+  const auto dragged_width = [&](const int key) {
+    if (dragged_widths == nullptr) {
+      return 0;
+    }
+    const auto it = dragged_widths->find(key);
+    return it == dragged_widths->end() || it->second <= 0 ? 0 : std::max(virtual_geo.min_resize, it->second);
+  };
+  int row_header_w = dragged_width(0) > 0 ? dragged_width(0) : virtual_geo.row_label_width;
   const int min_viewport_h = virtual_geo.max_viewport_height;
   const int content_height =
       std::max({min_viewport_h, style.explicit_height, style.min_height});
@@ -3505,16 +3515,9 @@ int render_virtual_table(
     }
   }
   const int scrollable_view_w = std::max(16, content_w - row_header_w);
-  // Widths the user dragged win over the measured ones, as in a short table; none goes below the narrowest
-  // a column may be dragged to.
-  if (render_config.table_column_widths != nullptr) {
-    if (const auto dragged = render_config.table_column_widths->find(table_target);
-        dragged != render_config.table_column_widths->end()) {
-      for (const auto& [column, width] : dragged->second) {
-        if (column >= 0 && static_cast<std::size_t>(column) < column_widths.size()) {
-          column_widths[static_cast<std::size_t>(column)] = std::max(virtual_geo.min_resize, width);
-        }
-      }
+  for (std::size_t c = 0; c < column_widths.size(); ++c) {
+    if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
+      column_widths[c] = dragged;
     }
   }
   // A long table follows the same rule as a short one: the last column is the automatic column, so it takes
@@ -3687,27 +3690,24 @@ int render_virtual_table(
               std::max(0, header_h - style.border_radius)},
         header_fill});
   }
+  HeaderControls controls(scene, render_config, table_target, virtual_geo);  // sort arrows and drag handles, as in every table
   for (const auto& column : visible_columns) {
     scene.add(LineCommand{PointI{column.x, content_y},
                           PointI{column.x, content_y + viewport_h}, 1, grid});
     draw_cell_text(model->column_name(column.index), column.x, content_y,
                    column.width, true, false);
-    // Each column's right edge is a handle to drag, except the automatic last column, whose width is whatever
-    // the others leave.
+    // The last column is the automatic one: its width is whatever the others leave, so it has no divider to drag.
     const bool automatic_column =
         virtual_geo.slack == HtmlTableSlack::LastColumn && column_count > 1 && column.index + 1 == column_count;
-    if (render_config.hit_regions != nullptr && !automatic_column) {
-      const int edge = column.x + column.width;
-      const int hx0 = std::max(edge - kResizeHandlePx / 2, scrollable_left);
-      const int hx1 = std::min(edge + kResizeHandlePx / 2, scrollable_right);
-      if (hx1 > hx0) {
-        render_config.hit_regions->push_back(HtmlHitRegion{.rect = RectI{hx0, content_y, hx1 - hx0, header_h},
-                                                           .action = "table.resize.column",
-                                                           .target = table_target,
-                                                           .value = static_cast<int>(column.index),
-                                                           .aux = column.width});
-      }
-    }
+    controls.add({.column = static_cast<std::size_t>(column.index) + 1,
+                  .x = column.x,
+                  .width = column.width,
+                  .ink = header_paint.text,
+                  .paper = header_fill,
+                  .resizable = !automatic_column,
+                  .clip_left = scrollable_left,
+                  .clip_right = scrollable_right},
+                 content_y, header_h);
   }
 
   const int body_y = content_y + header_h;
@@ -3783,6 +3783,16 @@ int render_virtual_table(
       sticky_header_fill});
   draw_cell_text(model->row_header(), content_x, content_y, row_header_w,
                  true, false);
+  controls.add({.column = 0,
+                .x = content_x,
+                .width = row_header_w,
+                .ink = sticky_header_paint.text,
+                .paper = sticky_header_fill,
+                .resizable = true,
+                .clip_left = content_x,
+                .clip_right = content_x + row_header_w + kResizeHandlePx / 2},
+               content_y, header_h);
+  controls.finish(content_y, header_h);  // the hover highlight and the drag handles, drawn last so they win
   scene.add(LineCommand{
       PointI{content_x + row_header_w, content_y},
       PointI{content_x + row_header_w, content_y + viewport_h}, 2,
@@ -3793,86 +3803,21 @@ int render_virtual_table(
     scene.add(ClearClipRectCommand{});
   }
 
-  RectI horizontal_track{};
-  RectI horizontal_thumb{};
-  RectI vertical_track{};
-  RectI vertical_thumb{};
-  if (max_scroll_x > 0) {
-    const int track_h = 10;
-    // Anchor to the content's actual bottom edge first, falling back to the
-    // outer-box heuristic only when that leaves enough room -- the old
-    // heuristic alone (padding / 2 + track_h) could be narrower than the
-    // real border+padding gutter, which let the track sit on top of the
-    // table's last visible row instead of below it.
-    const int below_content = content_y + viewport_h + 2;
-    const int near_outer_edge =
-        outer_y + outer_h - std::max(14, padding / 2 + track_h);
-    const int track_y = std::max(below_content, near_outer_edge);
-    const int track_w = std::max(36, scrollable_view_w - 6);
-    const int track_x = content_x + row_header_w + 3;
-    horizontal_track = RectI{track_x, track_y, track_w, track_h};
-    const double ratio =
-        static_cast<double>(scrollable_view_w) /
-        static_cast<double>(std::max<std::int64_t>(1, data_width));
-    const int thumb_w =
-        std::min(track_w, std::max(24, static_cast<int>(
-            std::lround(static_cast<double>(track_w) * ratio))));
-    const int thumb_x =
-        track_x + static_cast<int>(std::lround(
-                      static_cast<double>(track_w - thumb_w) * scroll_x /
-                      std::max(1, max_scroll_x)));
-    horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, horizontal_track,
-                     paint.track, 5);
-      draw_rect_fill(scene, horizontal_thumb,
-                     paint.thumb, 5);
-    }
-  }
-  if (max_scroll_y > 0) {
-    const int track_w = 10;
-    // Same reasoning as the horizontal track above: anchor to the content's
-    // actual right edge first so the track can never land on top of the
-    // rightmost visible column, only falling back to the outer-box
-    // heuristic when that's already clear of content.
-    const int right_of_content = content_x + content_w + 2;
-    const int near_outer_edge =
-        outer_x + outer_w - std::max(14, padding / 2 + track_w);
-    const int track_x = std::max(right_of_content, near_outer_edge);
-    const int track_h = std::max(36, body_viewport_h - 6);
-    const int track_y = body_y + 3;
-    vertical_track = RectI{track_x, track_y, track_w, track_h};
-    const double ratio =
-        static_cast<double>(body_viewport_h) /
-        static_cast<double>(std::max<std::int64_t>(1, body_height));
-    const int thumb_h =
-        std::min(track_h, std::max(24, static_cast<int>(
-            std::lround(static_cast<double>(track_h) * ratio))));
-    const int thumb_y =
-        track_y + static_cast<int>(std::lround(
-                      static_cast<double>(track_h - thumb_h) * scroll_y /
-                      std::max(1, max_scroll_y)));
-    vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, vertical_track,
-                     paint.track, 5);
-      draw_rect_fill(scene, vertical_thumb,
-                     paint.thumb, 5);
-    }
-  }
-  if (render_config.render_stats != nullptr) {
-    render_config.render_stats->table_scroll_regions.push_back(
-        HtmlScrollRegion{
-            .target = table_target,
-            .viewport_rect = interactive_viewport,
-            .max_scroll_x = max_scroll_x,
-            .max_scroll_y = max_scroll_y,
-            .horizontal_track_rect = horizontal_track,
-            .horizontal_thumb_rect = horizontal_thumb,
-            .vertical_track_rect = vertical_track,
-            .vertical_thumb_rect = vertical_thumb,
-        });
-  }
+  detail::draw_table_scrollbars(
+      scene, render_config, virtual_geo, paint, table_target, interactive_viewport,
+      TableScrollbars{.viewport = RectI{content_x, content_y, content_w, viewport_h},
+                      .outer = RectI{outer_x, outer_y, outer_w, outer_h},
+                      .padding = padding,
+                      .header_h = header_h,
+                      .frozen_w = row_header_w,
+                      .view_w = scrollable_view_w,
+                      .content_w = data_width,
+                      .body_view_h = body_viewport_h,
+                      .body_h = body_height,
+                      .scroll_x = scroll_x,
+                      .scroll_y = scroll_y,
+                      .max_scroll_x = max_scroll_x,
+                      .max_scroll_y = max_scroll_y});
   return total_h;
 }
 
@@ -4168,63 +4113,8 @@ int render_table(Scene& scene,
   // Exports leave the sort arrows out, and the room they reserve beside header text with them.
   const HtmlTableGeometryPx table_geo = resolve_table_geometry(style.font_size);
   const int sort_gutter_px = render_config.table_sort_controls ? table_geo.sort_gutter : 0;
-  const auto draw_sort_arrows = [&](const int cell_x,
-                                    const int cell_w,
-                                    const int row_y,
-                                    const int row_h,
-                                    const std::size_t column,
-                                    const Color ink,
-                                    const Color paper,
-                                    const int font_px,
-                                    const int clip_left,
-                                    const int clip_right) {
-    if (!render_config.table_sort_controls) {
-      return;
-    }
-    const bool active = sort_target_matches && render_config.table_sort_column >= 0 &&
-                        column == static_cast<std::size_t>(render_config.table_sort_column);
-    // Inactive arrows: the text colour mixed most of the way into the header's own
-    // background (text drawing ignores alpha), so they recede in any theme.
-    const auto mix = [](const int a, const int b) { return static_cast<std::uint8_t>((a * 35 + b * 65) / 100); };
-    const Color faint = Color::rgba(mix(ink.r, paper.r), mix(ink.g, paper.g), mix(ink.b, paper.b), 255);
-    const int control_x = cell_x + cell_w - table_geo.sort_pad - table_geo.sort_control;
-    const int centre_x = control_x + table_geo.sort_control / 2;
-    const int mid_y = row_y + row_h / 2;
-    for (int k = 0; k < 2; ++k) {
-      const bool up = k == 0;
-      const bool lit = active && (render_config.table_sort_ascending == up);
-      const int base_y = up ? mid_y - table_geo.sort_triangle_gap / 2 : mid_y + (table_geo.sort_triangle_gap - table_geo.sort_triangle_gap / 2);
-      const int tip_y = up ? base_y - table_geo.sort_triangle_height : base_y + table_geo.sort_triangle_height;
-      scene.add(FillPolygonCommand{
-          {PointI{centre_x - table_geo.sort_triangle_base / 2, base_y},
-           PointI{centre_x + table_geo.sort_triangle_base / 2, base_y},
-           PointI{centre_x, tip_y}},
-          lit ? ink : faint});
-      if (render_config.hit_regions != nullptr) {
-        const int x0 = std::max(control_x, clip_left);
-        const int x1 = std::min(control_x + table_geo.sort_control, clip_right);
-        if (x1 > x0) {
-          const int y0 = up ? row_y : mid_y;
-          const int y1 = up ? mid_y : row_y + row_h;
-          render_config.hit_regions->push_back(HtmlHitRegion{
-              .rect = RectI{x0, y0, x1 - x0, y1 - y0},
-              .action = up ? "table.sort.asc" : "table.sort.desc",
-              .target = table_target,
-              .value = static_cast<int>(column),
-          });
-        }
-      }
-    }
-  };
-
   auto render_row = [&](const std::size_t r, const int row_y) {
-    std::vector<HtmlHitRegion> resize_handles;  // drawn last so they win over neighbouring headers
-    struct HandleLook {
-      int edge;
-      int column;
-      Color ink;
-    };
-    std::vector<HandleLook> handle_looks;
+    HeaderControls controls(scene, render_config, table_target, table_geo);  // sort arrows and drag handles, as in every table
     const auto& row = rows[r];
     const bool header_row = std::any_of(row.cells.begin(), row.cells.end(), [](const TableCellData& cell) {
       return cell.is_header;
@@ -4350,37 +4240,20 @@ int render_table(Scene& scene,
                       cell_style.line_height,
                       text_align,
                       text_max_w);
-      if (header_row && render_config.hit_regions != nullptr) {
-        const int x0 = std::max(cell_x, scrollable_left);
-        const int x1 = std::min(cell_x + cell_w, scrollable_right);
-        if (x1 > x0) {
-          render_config.hit_regions->push_back(HtmlHitRegion{
-              .rect = RectI{x0, row_y, x1 - x0, row_h},
-              .action = "table.sort.column",
-              .target = table_target,
-              .value = static_cast<int>(c),
-          });
-        }
-      }
       if (header_row) {
-        draw_sort_arrows(cell_x, cell_w, row_y, row_h, c, cell_style.text_color,
-                         cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
-                         cell_style.font_size, scrollable_left, scrollable_right);
-        const int edge = cell_x + cell_w;
-        const int hx0 = std::max(edge - kResizeHandlePx / 2, scrollable_left);
-        const int hx1 = std::min(edge + kResizeHandlePx / 2, scrollable_right);
         // When the last column takes the slack it is the table's automatic column: it has no divider
         // to drag or double-click, because its width is whatever the other columns leave.
         const bool automatic_column =
             table_geo.slack == HtmlTableSlack::LastColumn && plan.widths.size() > 1 && c + 1 == plan.widths.size();
-        if (hx1 > hx0 && !automatic_column) {
-          resize_handles.push_back(HtmlHitRegion{.rect = RectI{hx0, row_y, hx1 - hx0, row_h},
-                                                 .action = "table.resize.column",
-                                                 .target = table_target,
-                                                 .value = static_cast<int>(c),
-                                                 .aux = cell_w});
-          handle_looks.push_back(HandleLook{edge, static_cast<int>(c), cell_style.text_color});
-        }
+        controls.add({.column = c,
+                      .x = cell_x,
+                      .width = cell_w,
+                      .ink = cell_style.text_color,
+                      .paper = cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
+                      .resizable = !automatic_column,
+                      .clip_left = scrollable_left,
+                      .clip_right = scrollable_right},
+                     row_y, row_h);
       }
     }
     scene.add(LineCommand{PointI{table_origin_x + row_total_w, row_y},
@@ -4450,25 +4323,16 @@ int render_table(Scene& scene,
                               PointI{sticky_x + sticky_w, row_y},
                               1,
                               grid_color});
-        if (header_row && render_config.hit_regions != nullptr) {
-          render_config.hit_regions->push_back(HtmlHitRegion{
-              .rect = RectI{sticky_x, row_y, sticky_w, row_h},
-              .action = "table.sort.column",
-              .target = table_target,
-              .value = static_cast<int>(s),
-          });
-        }
         if (header_row) {
-          draw_sort_arrows(sticky_x, sticky_w, row_y, row_h, s, cell_style.text_color,
-                           cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
-                           cell_style.font_size, sticky_x, sticky_x + sticky_w);
-          resize_handles.push_back(HtmlHitRegion{
-              .rect = RectI{sticky_x + sticky_w - kResizeHandlePx / 2, row_y, kResizeHandlePx, row_h},
-              .action = "table.resize.column",
-              .target = table_target,
-              .value = static_cast<int>(s),
-              .aux = sticky_w});
-          handle_looks.push_back(HandleLook{sticky_x + sticky_w, static_cast<int>(s), cell_style.text_color});
+          controls.add({.column = s,
+                        .x = sticky_x,
+                        .width = sticky_w,
+                        .ink = cell_style.text_color,
+                        .paper = cell_style.has_background ? cell_style.background_color : Color::rgba(255, 255, 255, 255),
+                        .resizable = true,
+                        .clip_left = sticky_x,
+                        .clip_right = sticky_x + sticky_w + kResizeHandlePx / 2},
+                       row_y, row_h);
         }
         sticky_x += sticky_w;
       }
@@ -4477,18 +4341,8 @@ int render_table(Scene& scene,
                             2,
                             sticky_divider});
     }
-    if (header_row && !render_config.hover_resize_target.empty() &&
-        render_config.hover_resize_target == table_target) {
-      for (const auto& look : handle_looks) {
-        if (look.column == render_config.hover_resize_column) {
-          scene.add(LineCommand{PointI{look.edge, row_y}, PointI{look.edge, row_y + row_h}, 3, look.ink});
-        }
-      }
-    }
-    if (render_config.hit_regions != nullptr) {
-      for (auto& handle : resize_handles) {
-        render_config.hit_regions->push_back(std::move(handle));
-      }
+    if (header_row) {
+      controls.finish(row_y, row_h);  // the hover highlight and the drag handles, drawn last so they win
     }
   };
 
@@ -4568,74 +4422,21 @@ int render_table(Scene& scene,
                           1,
                           grid_color});
   }
-  RectI horizontal_track{};
-  RectI horizontal_thumb{};
-  RectI vertical_track{};
-  RectI vertical_thumb{};
-  if (max_scroll_x > 0) {
-    const int track_h = 10;
-    // See render_virtual_table's identical fix: anchor to the content's
-    // real bottom edge so the track can't land on top of the last row.
-    const int below_content = content_y + viewport_h + 2;
-    const int near_outer_edge = outer_y + outer_h - std::max(14, padding / 2 + track_h);
-    const int track_y = std::max(below_content, near_outer_edge);
-    const int track_w = std::max(36, scrollable_view_w - 6);
-    const int track_x = content_x + sticky_total_w + 3;
-    horizontal_track = RectI{track_x, track_y, track_w, track_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, horizontal_track, paint.track, 5);
-    }
-
-    const double ratio = static_cast<double>(scrollable_view_w) / static_cast<double>(std::max(1, scrollable_content_w));
-    const int thumb_w =
-        std::min(track_w, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_w) * ratio))));
-    const int thumb_x = track_x + static_cast<int>(std::lround(
-                                   (static_cast<double>(std::max(0, track_w - thumb_w)) *
-                                    static_cast<double>(scroll_x)) /
-                                   static_cast<double>(max_scroll_x)));
-    horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, horizontal_thumb, paint.thumb, 5);
-    }
-  }
-  if (max_scroll_y > 0) {
-    const int track_w = 10;
-    // See render_virtual_table's identical fix: anchor to the content's
-    // real right edge so the track can't land on top of the last column.
-    const int right_of_content = content_x + content_w + 2;
-    const int near_outer_edge = outer_x + outer_w - std::max(14, padding / 2 + track_w);
-    const int track_x = std::max(right_of_content, near_outer_edge);
-    const int track_h = std::max(36, body_viewport_h - 6);
-    const int track_y = content_y + header_h + 3;
-    vertical_track = RectI{track_x, track_y, track_w, track_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, vertical_track, paint.track, 5);
-    }
-
-    const double ratio = static_cast<double>(body_viewport_h) / static_cast<double>(body_total_h);
-    const int thumb_h =
-        std::min(track_h, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_h) * ratio))));
-    const int thumb_y = track_y + static_cast<int>(std::lround(
-                                   (static_cast<double>(std::max(0, track_h - thumb_h)) *
-                                    static_cast<double>(scroll_y)) /
-                                   static_cast<double>(max_scroll_y)));
-    vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
-    if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, vertical_thumb, paint.thumb, 5);
-    }
-  }
-  if (render_config.render_stats != nullptr) {
-    render_config.render_stats->table_scroll_regions.push_back(HtmlScrollRegion{
-        .target = table_target,
-        .viewport_rect = interactive_viewport,
-        .max_scroll_x = max_scroll_x,
-        .max_scroll_y = max_scroll_y,
-        .horizontal_track_rect = horizontal_track,
-        .horizontal_thumb_rect = horizontal_thumb,
-        .vertical_track_rect = vertical_track,
-        .vertical_thumb_rect = vertical_thumb,
-    });
-  }
+  detail::draw_table_scrollbars(
+      scene, render_config, table_geo, paint, table_target, interactive_viewport,
+      TableScrollbars{.viewport = RectI{content_x, content_y, content_w, viewport_h},
+                      .outer = RectI{outer_x, outer_y, outer_w, outer_h},
+                      .padding = padding,
+                      .header_h = header_h,
+                      .frozen_w = sticky_total_w,
+                      .view_w = scrollable_view_w,
+                      .content_w = scrollable_content_w,
+                      .body_view_h = body_viewport_h,
+                      .body_h = body_total_h,
+                      .scroll_x = scroll_x,
+                      .scroll_y = scroll_y,
+                      .max_scroll_x = max_scroll_x,
+                      .max_scroll_y = max_scroll_y});
   return total_h;
 }
 

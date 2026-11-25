@@ -27,6 +27,7 @@ add_library(PlussTilsView STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_mapping.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_scroll.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/table_chrome.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/text/text_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/InHouseHtmlViewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/PlatformHtmlViewer.h

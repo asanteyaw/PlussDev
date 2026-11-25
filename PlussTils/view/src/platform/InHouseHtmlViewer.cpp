@@ -1,6 +1,7 @@
 #include "platform/PlatformHtmlViewer.h"
 
 #include <algorithm>
+#include <numeric>
 #include <atomic>
 #include <cctype>
 #include <chrono>
@@ -24,6 +25,7 @@
 #include <vector>
 
 #include "pluss/tils/view/html_window.h"
+#include "pluss/tils/view/table_order.h"
 #include "pluss/tils/view/window.h"
 #include "window/render/async_compositor.h"
 
@@ -87,6 +89,8 @@ class AsyncVirtualTableSearch {
   struct Result {
     std::uint64_t generation{0};
     std::string query{};
+    int sort_column{-1};
+    bool sort_ascending{true};
     std::vector<std::int64_t> rows{};
   };
 
@@ -113,7 +117,9 @@ class AsyncVirtualTableSearch {
   AsyncVirtualTableSearch(const AsyncVirtualTableSearch&) = delete;
   AsyncVirtualTableSearch& operator=(const AsyncVirtualTableSearch&) = delete;
 
-  void submit(std::string query) {
+  // `sort_column` follows the numbering of a short table: 0 is the label column, n the model's column n - 1;
+  // negative means unsorted.
+  void submit(std::string query, const int sort_column = -1, const bool sort_ascending = true) {
     if (model_ == nullptr) {
       return;
     }
@@ -124,6 +130,8 @@ class AsyncVirtualTableSearch {
     {
       const std::scoped_lock lock(mutex_);
       pending_query_ = std::move(query);
+      pending_sort_column_ = sort_column;
+      pending_sort_ascending_ = sort_ascending;
       ++pending_generation_;
       active_generation_.store(pending_generation_,
                                std::memory_order_release);
@@ -146,6 +154,8 @@ class AsyncVirtualTableSearch {
     std::uint64_t processed_generation = 0;
     while (!stopping_.load(std::memory_order_acquire)) {
       std::string query;
+      int sort_column = -1;
+      bool sort_ascending = true;
       std::uint64_t generation = 0;
       {
         std::unique_lock lock(mutex_);
@@ -158,11 +168,13 @@ class AsyncVirtualTableSearch {
         }
         generation = pending_generation_;
         query = pending_query_;
+        sort_column = pending_sort_column_;
+        sort_ascending = pending_sort_ascending_;
         processed_generation = generation;
       }
 
       std::vector<std::int64_t> rows;
-      if (!query.empty() || model_->filtering()) {
+      if (!query.empty() || model_->filtering() || sort_column >= 0) {
         const std::int64_t count =
             std::max<std::int64_t>(0, model_->row_count());
         rows.reserve(static_cast<std::size_t>(
@@ -180,12 +192,17 @@ class AsyncVirtualTableSearch {
         }
       }
 
+      if (sort_column >= 0) {
+        sort_model_rows(*model_, rows, sort_column, sort_ascending);
+      }
       if (!stopping_.load(std::memory_order_acquire) &&
           active_generation_.load(std::memory_order_acquire) == generation) {
         const std::scoped_lock lock(mutex_);
         completed_ = Result{
             .generation = generation,
             .query = std::move(query),
+            .sort_column = sort_column,
+            .sort_ascending = sort_ascending,
             .rows = std::move(rows),
         };
       }
@@ -199,6 +216,8 @@ class AsyncVirtualTableSearch {
   std::condition_variable wake_{};
   std::uint64_t pending_generation_{0};
   std::string pending_query_{};
+  int pending_sort_column_{-1};
+  bool pending_sort_ascending_{true};
   std::optional<Result> completed_{};
   std::thread worker_{};
 };
@@ -1150,6 +1169,8 @@ bool show_inhouse_html_window(const std::string& title,
   AsyncVirtualTableSearch virtual_search(virtual_table_model);
   std::shared_ptr<const std::vector<std::int64_t>> virtual_row_order;
   std::string submitted_virtual_query;
+  int submitted_virtual_sort = -1;
+  bool submitted_virtual_ascending = true;
   window::PixelCanvas presented_canvas;
   std::uint64_t last_submitted_frame_id = 0;
   std::uint64_t last_presented_frame_id = 0;
@@ -1922,19 +1943,23 @@ bool show_inhouse_html_window(const std::string& title,
         ch = static_cast<char>(
             std::tolower(static_cast<unsigned char>(ch)));
       }
-      if (query != submitted_virtual_query || virtual_filter_changed) {
+      const int wanted_sort = table_sort_column;  // a window has one long table, so its sort is the window's sort
+      if (query != submitted_virtual_query || virtual_filter_changed || wanted_sort != submitted_virtual_sort ||
+          (wanted_sort >= 0 && table_sort_ascending != submitted_virtual_ascending)) {
         virtual_filter_changed = false;
+        submitted_virtual_sort = wanted_sort;
+        submitted_virtual_ascending = table_sort_ascending;
         submitted_virtual_query = query;
         virtual_row_order.reset();
-        virtual_search.submit(query);
+        virtual_search.submit(query, wanted_sort, table_sort_ascending);
         scroll_model.reset();
         table_scroll_damage_only = false;
         needs_render = true;
       }
       if (auto result = virtual_search.take_completed();
           result.has_value() &&
-          result->query == submitted_virtual_query) {
-        if (submitted_virtual_query.empty() && !virtual_table_model->filtering()) {
+          result->query == submitted_virtual_query && result->sort_column == submitted_virtual_sort) {
+        if (submitted_virtual_query.empty() && !virtual_table_model->filtering() && submitted_virtual_sort < 0) {
           virtual_row_order.reset();
         } else {
           virtual_row_order =

@@ -59,6 +59,12 @@ struct HtmlTableGeometry {
   double sort_triangle_height_em{0.42};
   double sort_triangle_base_em{0.6};
   double sort_triangle_gap_em{0.14};  // between the two triangles (0 = they touch)
+  // Scrollbars: a thin rounded track with a thumb, in every table.
+  double scrollbar_em{0.7};            // thickness
+  double scrollbar_inset_em{0.2};      // air between a track and the table content
+  double scrollbar_min_track_em{2.6};  // shortest a track is drawn
+  double scrollbar_min_thumb_em{2.3};  // shortest a thumb is drawn
+  double scrollbar_edge_em{1.0};       // room kept at the box's outer edge for the track
   // Virtual (very large) tables, whose rows are fixed height.
   double header_height_em{3.0};
   double row_height_em{2.7};
@@ -87,6 +93,11 @@ struct HtmlTableGeometryPx {
   int sort_triangle_height{0};
   int sort_triangle_base{0};
   int sort_triangle_gap{0};
+  int scrollbar{0};
+  int scrollbar_inset{0};
+  int scrollbar_min_track{0};
+  int scrollbar_min_thumb{0};
+  int scrollbar_edge{0};
   int header_height{0};
   int row_height{0};
   int row_label_width{0};
@@ -125,6 +136,11 @@ struct HtmlTableGeometryPx {
   out.sort_triangle_height = px(g.sort_triangle_height_em);
   out.sort_triangle_base = px(g.sort_triangle_base_em);
   out.sort_triangle_gap = g.sort_triangle_gap_em <= 0.0 ? 0 : px(g.sort_triangle_gap_em);
+  out.scrollbar = px(g.scrollbar_em);
+  out.scrollbar_inset = px(g.scrollbar_inset_em);
+  out.scrollbar_min_track = px(g.scrollbar_min_track_em);
+  out.scrollbar_min_thumb = px(g.scrollbar_min_thumb_em);
+  out.scrollbar_edge = px(g.scrollbar_edge_em);
   out.header_height = px(g.header_height_em);
   out.row_height = px(g.row_height_em);
   out.row_label_width = px(g.row_label_width_em);
