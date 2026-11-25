@@ -978,65 +978,57 @@ struct ThemePalette {
   const char* name;   // id, lower case (used by parse_theme / the demo)
   const char* label;  // shown in the Theme menu
   // order matches kThemeTokens
-  std::array<const char*, 28> v;
+  std::array<const char*, 26> v;
   const char* heat_pos;  // "r,g,b" for positive correlations
   const char* heat_neg;  // "r,g,b" for negative correlations
 };
 
-constexpr std::array<const char*, 28> kThemeTokens{
+constexpr std::array<const char*, 26> kThemeTokens{
     "paper", "panel", "ink", "title", "muted", "line", "border", "row-line", "accent", "accent-2",
     "accent-3", "accent-3-border", "on-accent", "btn", "btn-border", "hero-a", "hero-c",
-    "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border", "miss-ink",
-    "miss-bg", "pill-bg", "grid"};
+    "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border",
+    "pill-bg", "grid"};
 
 const std::array<ThemePalette, 8> kThemes{{
     {DisplayTheme::Default, "default", "Default",
      {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#dce4ef", "#cfdae9", "#e7edf5", "#c84d58",
       "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#f8d9d9", "#dae3ee",
-      "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#a4433b", "#ffe3db", "#e5ebf4",
-      "#dce4ed"},
+      "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#e5ebf4", "#dce4ed"},
      "41,93,138", "200,77,88"},
     {DisplayTheme::Ember, "ember", "Ember",
      {"#f1e3da", "#fbf6f2", "#3a241e", "#2a1917", "#8d5646", "#e3cabd", "#e3cdc1", "#f0e0d6", "#b5412a",
       "#e8742a", "#77493b", "#4a2a22", "#fbe4d9", "#6b3a2e", "#46261e", "#eab09a", "#f6c9a8", "#f0d3c4",
-      "#f6e4d9", "#e6b9a2", "#fbf1ea", "#f6dccd", "#77493b", "#d9b9a8", "#ffffff", "#d7261e", "#f0d3c4",
-      "#f0e0d6"},
+      "#f6e4d9", "#e6b9a2", "#fbf1ea", "#f6dccd", "#77493b", "#d9b9a8", "#f0d3c4", "#f0e0d6"},
      "232,116,42", "90,61,56"},
     {DisplayTheme::Nardo, "nardo", "Nardo",
      {"#dcdfe2", "#f4f5f6", "#1c1f23", "#111316", "#6a7078", "#c3c7cc", "#c3c7cc", "#dfe2e5", "#d1122b",
       "#ff5a36", "#d1122b", "#9d0c20", "#ffffff", "#d1122b", "#9d0c20", "#cfd3d8", "#eceef0", "#d3d7db",
-      "#e6e8eb", "#c4c9ce", "#eef0f2", "#e3e6e9", "#d1122b", "#b5bac0", "#a8001a", "#ffc2c9", "#d3d7db",
-      "#dfe2e5"},
+      "#e6e8eb", "#c4c9ce", "#eef0f2", "#e3e6e9", "#d1122b", "#b5bac0", "#d3d7db", "#dfe2e5"},
      "209,18,43", "58,64,72"},
     {DisplayTheme::Brooklands, "brooklands", "Brooklands",
      {"#ece6d2", "#fbf8ed", "#14261b", "#0b3b25", "#6b7a62", "#cfc7a8", "#cfc7a8", "#e6dfc4", "#0b5d3b",
       "#c9a227", "#0b5d3b", "#06402a", "#f0d77a", "#0b5d3b", "#c9a227", "#bfd8c4", "#f2e6b6", "#d7e6d4",
-      "#e8f0e4", "#b9d3be", "#f5f2e2", "#e7eed9", "#c9a227", "#b8b08c", "#a30f00", "#ffc2b8", "#d7e6d4",
-      "#e6dfc4"},
+      "#e8f0e4", "#b9d3be", "#f5f2e2", "#e7eed9", "#c9a227", "#b8b08c", "#d7e6d4", "#e6dfc4"},
      "11,93,59", "192,128,16"},
     {DisplayTheme::Gulf, "gulf", "Gulf",
      {"#cfe7f3", "#f7fcff", "#0e2a3a", "#0a2433", "#547489", "#a9d0e4", "#a9d0e4", "#d2e8f3", "#ff6a13",
       "#ff6a13", "#ff6a13", "#d9500a", "#ffffff", "#ff6a13", "#d9500a", "#8ccbea", "#ffe3cf", "#bfe0f0",
-      "#dcedf7", "#a7d3ea", "#eef7fc", "#d6ecf8", "#ff6a13", "#8fc2dc", "#a8140a", "#ffc2b8", "#bfe0f0",
-      "#d2e8f3"},
+      "#dcedf7", "#a7d3ea", "#eef7fc", "#d6ecf8", "#ff6a13", "#8fc2dc", "#bfe0f0", "#d2e8f3"},
      "255,106,19", "40,130,180"},
     {DisplayTheme::Obsidian, "obsidian", "Obsidian",
      {"#060607", "#0c0d10", "#ebe6df", "#f7e8d8", "#c9a07a", "#1f2026", "#2a2b32", "#1b1c21", "#d08043",
       "#f0a066", "#b87333", "#8a5226", "#14100c", "#b87333", "#d98a4e", "#14100c", "#2a1a0e", "#3f2615",
-      "#2f1d10", "#5a3319", "#121317", "#2a1c10", "#d08043", "#34353d", "#ffa28f", "#341a16", "#1a1b20",
-      "#24252b"},
+      "#2f1d10", "#5a3319", "#121317", "#2a1c10", "#d08043", "#34353d", "#1a1b20", "#24252b"},
      "208,128,67", "6,6,7"},
     {DisplayTheme::Indigo, "indigo", "Indigo",
      {"#f6f3ff", "#fdfcff", "#2b2149", "#19152f", "#756988", "#ded6f1", "#d4c9eb", "#ebe5f8", "#7052b4",
       "#cab4ff", "#4b347f", "#392664", "#ffffff", "#4b347f", "#392664", "#d7c8f6", "#e8dcff", "#e5dcf8",
-      "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#9a3260", "#ffe1ec", "#e8defa",
-      "#e5dcf7"},
+      "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#e8defa", "#e5dcf7"},
      "112,82,180", "147,88,130"},
     {DisplayTheme::Native, "native", "Native",
      {"#e1e9f8", "#fafcff", "#14213d", "#0f1b4d", "#5a6b8f", "#c5d3ea", "#c5d3ea", "#dbe5f4", "#0fa3a3",
       "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#e9f6fb", "#cfdcf8",
-      "#eef3fc", "#bfeee9", "#f3f7fd", "#dce9fb", "#0fa3a3", "#a9bbdc", "#ffffff", "#d6336c", "#cfdcf8",
-      "#dbe5f4"},
+      "#eef3fc", "#bfeee9", "#f3f7fd", "#dce9fb", "#0fa3a3", "#a9bbdc", "#cfdcf8", "#dbe5f4"},
      "15,163,163", "106,92,255"},
 }};
 
@@ -1056,25 +1048,39 @@ const ThemePalette& palette_for_(const DisplayTheme theme) {
   return kThemes.front();
 }
 
-// NaN is violet and infinity is blue: noticeable, and neither of them the red of a missing value.
-constexpr std::string_view kNanTint = "#7a5af8";
-constexpr std::string_view kInfTint = "#2f5bd3";
-constexpr double kNanTintShare = 0.14;
-constexpr double kInfTintShare = 0.12;
+// How the three kinds of cell that are not ordinary values look, per theme. A missing cell (NULL) gets
+// its own text and a background that is plainly different; NaN and infinity keep the normal text and only
+// tone the background, a violet one for NaN and a blue one for infinity, so a glance tells the three apart.
+struct CellTints {
+  const char* null_ink;
+  const char* null_bg;
+  const char* nan_bg;
+  const char* inf_bg;
+};
 
-// "#rrggbb" laid over "#rrggbb": `share` of the top colour, the rest of the bottom one.
-std::string blend_hex_(const std::string_view top, const std::string_view bottom, const double share) {
-  const auto channel = [](const std::string_view hex, const std::size_t i) {
-    return std::stoi(std::string(hex.substr(1 + 2 * i, 2)), nullptr, 16);
-  };
-  std::string out = "#";
-  for (std::size_t i = 0; i < 3; ++i) {
-    const int v = static_cast<int>(std::lround(share * channel(top, i) + (1.0 - share) * channel(bottom, i)));
-    constexpr std::string_view digits = "0123456789abcdef";
-    out += digits[(v >> 4) & 0xF];
-    out += digits[v & 0xF];
+constexpr CellTints kDefaultCells{"#9c2f26", "#ffd3cc", "#e4dcf6", "#d6e3f6"};
+constexpr CellTints kEmberCells{"#ffffff", "#c8372d", "#e9dcf1", "#dbe4f1"};
+constexpr CellTints kNardoCells{"#a8001a", "#ffc2c9", "#e2daf2", "#d4e0f0"};
+constexpr CellTints kBrooklandsCells{"#a30f00", "#ffc2b8", "#e6dcef", "#d3e3eb"};
+constexpr CellTints kGulfCells{"#a8140a", "#ffc2b8", "#e3d9f3", "#c4d9f1"};
+constexpr CellTints kObsidianCells{"#ffa28f", "#4a211b", "#2c2250", "#1b2c52"};
+constexpr CellTints kIndigoCells{"#9a3260", "#ffd5e4", "#ddd0f5", "#d0def7"};
+constexpr CellTints kNativeCells{"#ffffff", "#d6336c", "#e4dcf8", "#d6e4fa"};
+
+const CellTints& cell_tints_for_(const DisplayTheme theme) {
+  switch (theme) {
+    case DisplayTheme::Ember: return kEmberCells;
+    case DisplayTheme::Nardo: return kNardoCells;
+    case DisplayTheme::Brooklands: return kBrooklandsCells;
+    case DisplayTheme::Gulf: return kGulfCells;
+    case DisplayTheme::Obsidian: return kObsidianCells;
+    case DisplayTheme::Indigo: return kIndigoCells;
+    case DisplayTheme::Native: return kNativeCells;
+    case DisplayTheme::Default:
+    case DisplayTheme::Auto:
+      break;
   }
-  return out;
+  return kDefaultCells;
 }
 
 // The `:root { --token: value; ... }` block every other rule reads through var().
@@ -1084,10 +1090,9 @@ std::string theme_root_css_(const DisplayOptions& options) {
   for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
     css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
   }
-  // The tints behind NaN and infinity: a calm hue laid over the theme's panel. Only NULL is red-ish.
-  // They are computed here, not with CSS color-mix(), which the built-in renderer does not understand.
-  css += pluss::tils::OutputEngine::format(" --nan-bg: {}; --inf-bg: {};", blend_hex_(kNanTint, palette.v[1], kNanTintShare),
-                                           blend_hex_(kInfTint, palette.v[1], kInfTintShare));
+  const auto& cells = cell_tints_for_(resolve_theme_(options));
+  css += pluss::tils::OutputEngine::format(" --miss-ink: {}; --miss-bg: {}; --nan-bg: {}; --inf-bg: {};", cells.null_ink,
+                                           cells.null_bg, cells.nan_bg, cells.inf_bg);
   css += " --shadow: none; }";
   return css;
 }
@@ -1330,21 +1335,15 @@ std::string html_shell_(std::string_view title,
     .muted {{
       color: var(--muted);
     }}
-    .missing {{
+    tbody tr td.missing {{
       color: var(--miss-ink);
       background: var(--miss-bg);
       font-weight: 700;
     }}
-    .nonfinite {{
-      /* NaN / inf / -inf are values, not missing data: each has its own calm tint, never the NULL red. */
-      color: var(--title);
-      font-style: italic;
-      font-weight: 600;
-    }}
-    .nonfinite.nan {{
+    tbody tr td.nonfinite.nan {{
       background: var(--nan-bg);
     }}
-    .nonfinite.inf {{
+    tbody tr td.nonfinite.inf {{
       background: var(--inf-bg);
     }}
     .hidden {{
