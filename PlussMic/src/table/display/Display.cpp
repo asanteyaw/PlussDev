@@ -992,7 +992,7 @@ constexpr std::array<const char*, 26> kThemeTokens{
 
 const std::array<ThemePalette, 8> kThemes{{
     {DisplayTheme::Default, "default", "Default",
-     {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#dce4ef", "#cfdae9", "#e7edf5", "#c84d58",
+     {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#c3d0e2", "#cfdae9", "#e7edf5", "#c84d58",
       "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#f8d9d9", "#dae3ee",
       "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#e5ebf4", "#dce4ed"},
      "41,93,138", "200,77,88"},
@@ -3035,6 +3035,9 @@ constexpr std::array<NumberFormatEntry, 8> kNumberFormats{{
     {NumberFormat::Scientific, "scientific", "Scientific"},
 }};
 
+// The button id of the Table tab in the view picker (see render_html_table_).
+constexpr std::string_view kTableTabId = "tab-table";
+
 struct FilterEntry {
   DisplayFilter filter;
   const char* id;
@@ -3130,6 +3133,17 @@ bool show_html_window_(const std::string& html,
         return std::string("off");  // matches no entry, so none is checked
       };
       window_opts.menus.push_back(std::move(menu));
+      // Going back to the Table view takes the filter off, so the table is the plain one again.
+      window_opts.on_view = [state, render_with, on_filter](std::string_view button_id) {
+        if (button_id != kTableTabId || state->filter == DisplayFilter::None) {
+          return std::string{};
+        }
+        state->filter = DisplayFilter::None;
+        if (on_filter) {
+          on_filter(state->filter);
+        }
+        return render_with(*state);
+      };
     }
     {
       pluss::view::HtmlMenu menu;

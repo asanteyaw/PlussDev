@@ -5,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "pluss/tils/view/html_window.h"
@@ -863,14 +864,15 @@ void test_virtual_table_colours_follow_the_stylesheet() {
     bool row_matches(std::int64_t, const std::string_view) const override { return true; }
   } model;
 
-  // Three different backgrounds for the three kinds: the table must paint exactly these.
+  // Only a missing cell is marked, and only by its text: the stylesheet's colour and weight. NaN and infinity are
+  // values and are drawn like any other, whatever the stylesheet says about their classes.
   const auto document = parse_html_document(R"HTML(
 <!doctype html>
 <html><head><style>
   body { margin:0; }
   table { width:100%; height:300px; }
   td { background:#ffffff; }
-  .missing { background:#aa0000; }
+  .missing { color:#aa0000; font-weight:800; }
   .nonfinite.nan { background:#00aa00; }
   .nonfinite.inf { background:#0000aa; }
 </style></head><body>
@@ -889,9 +891,23 @@ void test_virtual_table_colours_follow_the_stylesheet() {
       return fill != nullptr && fill->color.r == wanted.r && fill->color.g == wanted.g && fill->color.b == wanted.b;
     });
   };
-  expect(has_fill(Color::rgba(0xaa, 0x00, 0x00, 255)), "a missing cell takes the stylesheet's missing colour");
-  expect(has_fill(Color::rgba(0x00, 0xaa, 0x00, 255)), "a NaN cell takes the stylesheet's NaN colour");
-  expect(has_fill(Color::rgba(0x00, 0x00, 0xaa, 255)), "an infinite cell takes the stylesheet's infinity colour");
+  const auto text_of = [&](const std::string_view text) -> const TextCommand* {
+    for (const auto& command : scene.commands()) {
+      if (const auto* drawn = std::get_if<TextCommand>(&command); drawn != nullptr && drawn->text == text) {
+        return drawn;
+      }
+    }
+    return nullptr;
+  };
+  const auto* missing = text_of("NULL");
+  expect(missing != nullptr && missing->color.r == 0xaa && missing->color.g == 0x00 && missing->color.b == 0x00,
+         "a missing cell's text takes the stylesheet's missing colour");
+  expect(missing != nullptr && missing->font_weight == 800, "a missing cell's text takes the stylesheet's weight");
+  const auto* nan = text_of("NAN");
+  expect(nan != nullptr && nan->font_weight == 400 && !(nan->color.r == 0xaa && nan->color.g == 0x00),
+         "a NaN cell is drawn like an ordinary value");
+  expect(!has_fill(Color::rgba(0x00, 0xaa, 0x00, 255)) && !has_fill(Color::rgba(0x00, 0x00, 0xaa, 255)),
+         "NaN and infinity cells are not painted a colour of their own");
 }
 
 void test_virtual_table_last_column_takes_the_slack() {
@@ -941,6 +957,58 @@ void test_virtual_table_last_column_takes_the_slack() {
   // Many columns are wider than the panel: the last column keeps its own width and the table scrolls.
   const auto many = render(Narrow(60));
   expect(many.table_max_scroll_x > 0, "a long table wider than the panel still scrolls sideways");
+}
+
+void test_virtual_table_columns_can_be_resized() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class Wide final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 20000; }  // long enough to use the virtual path
+    std::int64_t column_count() const noexcept override { return 3; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(const std::int64_t column) const override { return "c" + std::to_string(column); }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  };
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>body { margin:0; } table { width:100%; height:300px; }</style></head><body>
+  <table id="t" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+  const Wide model;
+  const auto handles = [&](const std::unordered_map<std::string, std::unordered_map<int, int>>* widths) {
+    std::vector<HtmlHitRegion> hits;
+    HtmlRenderConfig config{};
+    config.draw_top_bar = false;
+    config.root_padding_px = 0;
+    config.virtual_table_model = &model;
+    config.hit_regions = &hits;
+    config.table_column_widths = widths;
+    (void)build_html_document_scene(document, SizeI{900, 400}, config);
+    std::vector<HtmlHitRegion> out;
+    for (const auto& hit : hits) {
+      if (hit.action == "table.resize.column") {
+        out.push_back(hit);
+      }
+    }
+    return out;
+  };
+
+  // Every column but the last (the automatic one) has a divider to drag.
+  const auto initial = handles(nullptr);
+  expect(initial.size() == 2, "a long table of three columns has two drag handles; the last column takes the slack");
+  const int dragged = 7 * initial.front().aux;  // far wider than the measured width
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  widths[initial.front().target][0] = dragged;
+  const auto after = handles(&widths);
+  expect(!after.empty() && after.front().value == 0 && after.front().aux == dragged,
+         "a dragged width is applied to its column in a long table");
 }
 
 void test_virtual_table_only_materializes_viewport_cells() {
@@ -1085,6 +1153,7 @@ int main() {
     test_virtual_table_only_materializes_viewport_cells();
     test_virtual_table_colours_follow_the_stylesheet();
     test_virtual_table_last_column_takes_the_slack();
+    test_virtual_table_columns_can_be_resized();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";

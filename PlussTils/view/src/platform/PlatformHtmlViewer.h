@@ -47,6 +47,7 @@ bool show_inhouse_html_window(const std::string& title,
                                   virtual_table_model = {},
                               bool table_viewport_scroll_only = false,
                               std::vector<HtmlMenu> menus = {},
-                              std::function<std::string(std::string_view)> render_panel = {});
+                              std::function<std::string(std::string_view)> render_panel = {},
+                              std::function<std::string(std::string_view)> on_view = {});
 
 } // namespace pluss::view::detail

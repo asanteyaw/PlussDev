@@ -966,7 +966,8 @@ bool show_inhouse_html_window(const std::string& title,
                                   virtual_table_model,
                               const bool table_viewport_scroll_only,
                               std::vector<HtmlMenu> menus,
-                              std::function<std::string(std::string_view)> render_panel) {
+                              std::function<std::string(std::string_view)> render_panel,
+                              std::function<std::string(std::string_view)> on_view) {
   if ((html.empty() && svg_payload.empty()) || !inhouse_html_viewer_available()) {
     return false;
   }
@@ -1096,6 +1097,7 @@ bool show_inhouse_html_window(const std::string& title,
     shell_menus = build_menus();
   }
   std::string last_view_button;  // survives re-renders
+  bool virtual_filter_changed{false};  // a menu or view choice may have changed the row filter
   // Selecting a view first fills its panel if that is still empty (views are computed on demand).
   const auto select_view = [&](const std::string_view button_id) {
     if (const auto* tab = find_node_by_id(document.root, button_id)) {
@@ -1104,6 +1106,39 @@ bool show_inhouse_html_window(const std::string& title,
       }
     }
     return select_view_tab(document.root, button_id);
+  };
+  // Replaces the page with a re-render (a menu choice, a reset on going back to the table), then restores the
+  // view that was showing. False when there is nothing to show.
+  const auto show_page = [&](const std::string& rerendered) {
+    if (rerendered.empty()) {
+      return false;
+    }
+    if (!live_svg.empty()) {
+      const auto svg_begin = rerendered.find("<svg");
+      const auto svg_end = rerendered.rfind("</svg>");
+      if (svg_begin != std::string::npos && svg_end != std::string::npos && svg_end > svg_begin) {
+        live_svg = rerendered.substr(svg_begin, svg_end + 6 - svg_begin);
+      }
+    }
+    document = window::parse_html_document(
+        rerendered, document.title.empty() ? std::string("PlussTilsView") : document.title);
+    layout_cache.clear();
+    hide_view_picker(document.root);
+    if (!live_svg.empty()) {
+      for (const char* id : {"download-svg", "save-png"}) {
+        if (auto* node = find_node_by_id_mut(document.root, id)) {
+          set_class(*node, "hidden", true);
+        }
+      }
+    }
+    if (!last_view_button.empty()) {
+      (void)select_view(last_view_button);
+    }
+    if (shell->supports_menus()) {
+      shell->update_menus(build_menus());  // move the check marks to the choice just made
+    }
+    virtual_filter_changed = true;  // a menu may have changed the row filter: rebuild the row order
+    return true;
   };
 
   if (!shell->open(window::ShellConfig{document.title, size, std::move(save_formats),
@@ -1114,7 +1149,6 @@ bool show_inhouse_html_window(const std::string& title,
   window::detail::AsyncSoftwareCompositor compositor;
   AsyncVirtualTableSearch virtual_search(virtual_table_model);
   std::shared_ptr<const std::vector<std::int64_t>> virtual_row_order;
-  bool virtual_filter_changed{false};
   std::string submitted_virtual_query;
   window::PixelCanvas presented_canvas;
   std::uint64_t last_submitted_frame_id = 0;
@@ -1627,6 +1661,9 @@ bool show_inhouse_html_window(const std::string& title,
         if (event.note.rfind("view:", 0) == 0) {
           if (select_view(std::string_view(event.note).substr(5))) {
             last_view_button = event.note.substr(5);
+            if (on_view) {
+              (void)show_page(on_view(last_view_button));
+            }
             scroll_model.reset();
             needs_render = true;
           }
@@ -1638,35 +1675,7 @@ bool show_inhouse_html_window(const std::string& title,
           const auto menu_id = std::string_view(event.note).substr(0, colon);
           const auto menu = std::find_if(menus.begin(), menus.end(),
                                          [&](const HtmlMenu& m) { return m.id == menu_id; });
-          const std::string rerendered = menu->render(std::string_view(event.note).substr(colon + 1));
-          if (!rerendered.empty()) {
-            if (!live_svg.empty()) {
-              const auto svg_begin = rerendered.find("<svg");
-              const auto svg_end = rerendered.rfind("</svg>");
-              if (svg_begin != std::string::npos && svg_end != std::string::npos && svg_end > svg_begin) {
-                live_svg = rerendered.substr(svg_begin, svg_end + 6 - svg_begin);
-              }
-            }
-            document = window::parse_html_document(
-                rerendered, document.title.empty() ? std::string("PlussTilsView") : document.title);
-            layout_cache.clear();
-            hide_view_picker(document.root);
-            if (!live_svg.empty()) {
-              for (const char* id : {"download-svg", "save-png"}) {
-                if (auto* node = find_node_by_id_mut(document.root, id)) {
-                  set_class(*node, "hidden", true);
-                }
-              }
-            }
-            if (!last_view_button.empty()) {
-              (void)select_view(last_view_button);
-            }
-            if (shell->supports_menus()) {
-              shell->update_menus(build_menus());  // move the check marks to the choice just made
-            }
-            virtual_filter_changed = true;  // a menu may have changed the row filter: rebuild the row order
-            needs_render = true;
-          }
+          needs_render = show_page(menu->render(std::string_view(event.note).substr(colon + 1))) || needs_render;
         } else if (event.note.rfind("save_as:", 0) == 0) {
           (void)save_as(event.note.substr(8));
         } else if (event.note == "zoom_in") {
@@ -1825,6 +1834,9 @@ bool show_inhouse_html_window(const std::string& title,
               }
             } else if (select_view(hit.target)) {
               last_view_button = hit.target;
+              if (on_view) {
+                (void)show_page(on_view(last_view_button));
+              }
               scroll_model.reset();
               needs_render = true;
             } else if (hit.target == "atlas-show-all") {

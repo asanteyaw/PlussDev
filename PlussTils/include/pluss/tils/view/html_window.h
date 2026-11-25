@@ -81,6 +81,10 @@ struct HtmlWindowOptions {
   // Fills an empty view panel (an element with data-lazy="<id>") the first time it is shown:
   // returns the panel's inner HTML for that id. Lets expensive views be computed on demand.
   std::function<std::string(std::string_view id)> render_panel{};
+  // Called whenever a view tab is chosen (even the one already showing) with that tab's button id. Returns the
+  // full page to show in its place, or empty to leave the page as it is. Lets a window reset what a menu set,
+  // such as a row filter, when the user goes back to the plain view.
+  std::function<std::string(std::string_view button_id)> on_view{};
 };
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;

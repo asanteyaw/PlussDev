@@ -245,7 +245,8 @@ bool SessionController::launch_on_backend_(SessionBackend backend,
                                               virtual_table_model,
                                               options_.table_viewport_scroll_only,
                                               options_.menus,
-                                              options_.render_panel);
+                                              options_.render_panel,
+                                              options_.on_view);
     case SessionBackend::None:
       return false;
   }

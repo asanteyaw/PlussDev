@@ -3505,6 +3505,18 @@ int render_virtual_table(
     }
   }
   const int scrollable_view_w = std::max(16, content_w - row_header_w);
+  // Widths the user dragged win over the measured ones, as in a short table; none goes below the narrowest
+  // a column may be dragged to.
+  if (render_config.table_column_widths != nullptr) {
+    if (const auto dragged = render_config.table_column_widths->find(table_target);
+        dragged != render_config.table_column_widths->end()) {
+      for (const auto& [column, width] : dragged->second) {
+        if (column >= 0 && static_cast<std::size_t>(column) < column_widths.size()) {
+          column_widths[static_cast<std::size_t>(column)] = std::max(virtual_geo.min_resize, width);
+        }
+      }
+    }
+  }
   // A long table follows the same rule as a short one: the last column is the automatic column, so it takes
   // what the other columns leave and the table always reaches the panel's right edge. It never goes below its
   // own width, so a table with many wide columns still scrolls sideways. This runs after the cached widths are
@@ -3680,6 +3692,22 @@ int render_virtual_table(
                           PointI{column.x, content_y + viewport_h}, 1, grid});
     draw_cell_text(model->column_name(column.index), column.x, content_y,
                    column.width, true, false);
+    // Each column's right edge is a handle to drag, except the automatic last column, whose width is whatever
+    // the others leave.
+    const bool automatic_column =
+        virtual_geo.slack == HtmlTableSlack::LastColumn && column_count > 1 && column.index + 1 == column_count;
+    if (render_config.hit_regions != nullptr && !automatic_column) {
+      const int edge = column.x + column.width;
+      const int hx0 = std::max(edge - kResizeHandlePx / 2, scrollable_left);
+      const int hx1 = std::min(edge + kResizeHandlePx / 2, scrollable_right);
+      if (hx1 > hx0) {
+        render_config.hit_regions->push_back(HtmlHitRegion{.rect = RectI{hx0, content_y, hx1 - hx0, header_h},
+                                                           .action = "table.resize.column",
+                                                           .target = table_target,
+                                                           .value = static_cast<int>(column.index),
+                                                           .aux = column.width});
+      }
+    }
   }
 
   const int body_y = content_y + header_h;
