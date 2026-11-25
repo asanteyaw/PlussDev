@@ -3673,7 +3673,7 @@ int render_virtual_table(
         const int text_y =
             cell_y + std::max(2, ((header ? header_h : row_h) - line_h) / 2);
         draw_text_lines(
-            scene, {text}, font_size, missing ? missing_paint.weight : (header ? 600 : 400), style.font_family,
+            scene, {text}, font_size, missing ? missing_paint.weight : (header ? header_paint.weight : style.font_weight), style.font_family,
             missing ? missing_paint.text : (header ? header_paint.text : style.text_color),
             cell_x + pad, text_y, line_h, header ? "center" : "left", text_w);
       };

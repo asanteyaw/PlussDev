@@ -1078,6 +1078,53 @@ void test_virtual_table_sorts_by_a_column() {
   expect(sorted(0, false) == Rows({5, 4, 3, 2, 1, 0}), "the label column sorts by its labels");
 }
 
+void test_long_and_short_tables_draw_headers_alike() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class Two final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 20000; }
+    std::int64_t column_count() const noexcept override { return 1; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(std::int64_t) const override { return "name"; }
+    bool column_numeric(std::int64_t) const noexcept override { return false; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  } model;
+
+  const std::string style = "<style>body { margin:0; } table { width:100%; height:300px; } thead th { font-weight:700; color:#223344; }</style>";
+  const auto long_doc = parse_html_document("<!doctype html><html><head>" + style +
+                                            "</head><body><table id=\"t\" data-virtual-table=\"true\"></table></body></html>");
+  const auto short_doc = parse_html_document(
+      "<!doctype html><html><head>" + style +
+      "</head><body><table id=\"t\"><thead><tr><th class=\"sortable\">name</th></tr></thead>"
+      "<tbody><tr><td>1</td></tr></tbody></table></body></html>");
+
+  const auto header_text = [](const HtmlDocument& document, const VirtualTableModel* virtual_model) {
+    HtmlRenderConfig config{};
+    config.draw_top_bar = false;
+    config.root_padding_px = 0;
+    config.virtual_table_model = virtual_model;
+    const auto scene = build_html_document_scene(document, SizeI{900, 400}, config);
+    for (const auto& command : scene.commands()) {
+      if (const auto* drawn = std::get_if<TextCommand>(&command); drawn != nullptr && drawn->text == "name") {
+        return *drawn;
+      }
+    }
+    return TextCommand{};
+  };
+  const auto long_header = header_text(long_doc, &model);
+  const auto short_header = header_text(short_doc, nullptr);
+  expect(long_header.text == "name" && short_header.text == "name", "both tables draw their column name");
+  expect(long_header.font_weight == 700 && short_header.font_weight == 700,
+         "a column name takes the stylesheet's weight in a long table as in a short one");
+  expect(long_header.color.r == short_header.color.r && long_header.color.g == short_header.color.g &&
+             long_header.color.b == short_header.color.b,
+         "a column name takes the stylesheet's colour in a long table as in a short one");
+}
+
 void test_virtual_table_only_materializes_viewport_cells() {
   using namespace pluss::view;
   using namespace pluss::view::window;
@@ -1222,6 +1269,7 @@ int main() {
     test_virtual_table_last_column_takes_the_slack();
     test_virtual_table_columns_can_be_resized();
     test_virtual_table_sorts_by_a_column();
+    test_long_and_short_tables_draw_headers_alike();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";

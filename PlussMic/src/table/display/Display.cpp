@@ -1275,6 +1275,7 @@ std::string html_shell_(std::string_view title,
       font-size: 0.86rem;
     }}
     thead th {{
+      font-weight: 700;
       position: sticky;
       top: 0;
       z-index: 2;
