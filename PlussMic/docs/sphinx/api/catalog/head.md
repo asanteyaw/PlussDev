@@ -74,7 +74,7 @@ city                     | Note         | Note             | 2       | [Accra, T
   start.
 - [`Catalog::slice`](slice.md): an arbitrary `[start, stop)` row range, rather than a fixed
   count from the beginning.
-- [`Catalog::cloc`](cloc.md): a single-row or explicit-range selection, built on `slice()`.
+- [`Catalog::eloc`](eloc.md): a single-row or explicit-range selection, built on `slice()`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="has.html">

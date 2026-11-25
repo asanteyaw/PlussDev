@@ -99,7 +99,7 @@ null instead of leaving it its own length.
 ```cpp
 const auto preserved = ragged.pull("customers").take({"id", "name"}).collect();
 std::cout << "preserve id=" << preserved.keys("id").size()
-          << " name=" << preserved.keys("name").size() << " rows=" << preserved.maxrows() << "\n";
+          << " name=" << preserved.keys("name").size() << " rows=" << preserved.maxentries() << "\n";
 PullOptions pad;
 pad.ragged.materialize = pluss::bundle::locus::RaggedMaterialize::Pad;
 auto padded_plan = ragged.pull("customers");

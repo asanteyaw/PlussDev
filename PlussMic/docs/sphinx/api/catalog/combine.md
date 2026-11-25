@@ -61,9 +61,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cloc.html">
+  <a class="prev-link" href="clear_cache.html">
     <span class="label">Previous</span>
-    <span class="title">cloc</span>
+    <span class="title">clear_cache</span>
   </a>
   <a class="next-link" href="count_kinds.html">
     <span class="label">Next</span>

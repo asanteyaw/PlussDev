@@ -41,7 +41,7 @@ auto archive = pluss::kindle::Archive({c0, c1});
 const auto& cats = archive.catalogs();
 std::cout << "count: " << cats.size() << "\n";
 for (const auto& cat : cats) {
-  std::cout << "nrecords: " << cat.maxrows() << "\n";
+  std::cout << "nrecords: " << cat.maxentries() << "\n";
 }
 ```
 

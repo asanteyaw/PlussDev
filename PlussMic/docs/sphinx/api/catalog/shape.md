@@ -14,8 +14,8 @@ std::pair<std::int64_t, std::int64_t> Catalog::shape() const
 ## What It Does
 
 Returns a `(rows, streams)` pair summarizing the catalog's overall size in one call —
-`{maxrows(), nkeys()}`. Because it's built from [`maxrows()`](maxrows.md) rather
-than [`nrows()`](nrows.md), `shape()` never throws on a ragged catalog (one whose
+`{maxentries(), nkeys()}`. Because it's built from [`maxentries()`](maxentries.md) rather
+than [`nentries()`](nentries.md), `shape()` never throws on a ragged catalog (one whose
 streams don't all share the same length); the row count it reports is the *longest*
 stream's length in that case, not an assertion that all streams agree.
 
@@ -26,7 +26,7 @@ stream's length in that case, not an assertion that all streams agree.
 ## Returns
 
 `std::pair<std::int64_t, std::int64_t>`
-    `{maxrows(), nkeys()}` — the first element is the longest stream's length, the
+    `{maxentries(), nkeys()}` — the first element is the longest stream's length, the
     second is the number of streams.
 
 ## Examples
@@ -53,7 +53,7 @@ std::cout << "(" << rows << ", " << streams << ")";
 ```
 
 Example 2. On a ragged catalog, `shape()` reports the longest stream's length as the row
-count — it does not throw the way [`nrows()`](nrows.md) would.
+count — it does not throw the way [`nentries()`](nentries.md) would.
 
 ```cpp
 auto ragged = pluss::kindle::Catalog({
@@ -73,7 +73,7 @@ std::cout << "(" << rows << ", " << streams << ")";
 
 ## Notes
 
-- Built from [`maxrows()`](maxrows.md), not `nrows()` — never throws on a ragged
+- Built from [`maxentries()`](maxentries.md), not `nentries()` — never throws on a ragged
   catalog.
 - The pair order is `(rows, streams)`, matching typical row-by-column shape conventions —
   not `(streams, rows)`.
@@ -81,9 +81,9 @@ std::cout << "(" << rows << ", " << streams << ")";
 
 ## See Also
 
-- [`Catalog::nkeys`](nkeys.md) / [`Catalog::maxrows`](maxrows.md): the two values
+- [`Catalog::nkeys`](nkeys.md) / [`Catalog::maxentries`](maxentries.md): the two values
   `shape()` combines.
-- [`Catalog::nrows`](nrows.md): the strict, throwing row-count check this method
+- [`Catalog::nentries`](nentries.md): the strict, throwing row-count check this method
   deliberately avoids.
 
 <div class="pluss-inline-prev-next">

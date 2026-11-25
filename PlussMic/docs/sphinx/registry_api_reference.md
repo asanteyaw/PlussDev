@@ -32,7 +32,6 @@ api/registry/begin
 api/registry/cast
 api/registry/clear
 api/registry/clear_
-api/registry/cloc
 api/registry/combine
 api/registry/concat
 api/registry/concat_
@@ -110,6 +109,7 @@ api/registry/show
 api/registry/size
 api/registry/sizes
 api/registry/slice
+api/registry/sloc
 api/registry/tabelize
 api/registry/tail
 api/registry/take

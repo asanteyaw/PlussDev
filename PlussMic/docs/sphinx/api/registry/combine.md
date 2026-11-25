@@ -126,9 +126,9 @@ id id_other id_other_2
   registry's fields before combining, to avoid unwanted collisions entirely.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cloc.html">
+  <a class="prev-link" href="sloc.html">
     <span class="label">Previous</span>
-    <span class="title">cloc</span>
+    <span class="title">sloc</span>
   </a>
   <a class="next-link" href="concat.html">
     <span class="label">Next</span>

@@ -119,9 +119,9 @@ std::int64_t Archive::maxkeys() const {
 std::int64_t Archive::nrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  const auto n = impl_ref_().catalogs_.front().nrows();
+  const auto n = impl_ref_().catalogs_.front().nentries();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    PLUSS_CHECK(catalog.nrows() == n, "Archive::nrecords: catalogs have different record counts");
+    PLUSS_CHECK(catalog.nentries() == n, "Archive::nrecords: catalogs have different record counts");
   }
   return n;
 }
@@ -129,9 +129,9 @@ std::int64_t Archive::nrecords() const {
 std::int64_t Archive::minrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  auto out = impl_ref_().catalogs_.front().minrows();
+  auto out = impl_ref_().catalogs_.front().minentries();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    out = std::min(out, catalog.minrows());
+    out = std::min(out, catalog.minentries());
   }
   return out;
 }
@@ -139,9 +139,9 @@ std::int64_t Archive::minrecords() const {
 std::int64_t Archive::maxrecords() const {
   PLUSS_CHECK(defined(), "Archive: undefined handle");
   if (impl_ref_().catalogs_.empty()) return 0;
-  auto out = impl_ref_().catalogs_.front().maxrows();
+  auto out = impl_ref_().catalogs_.front().maxentries();
   for (const auto& catalog : impl_ref_().catalogs_) {
-    out = std::max(out, catalog.maxrows());
+    out = std::max(out, catalog.maxentries());
   }
   return out;
 }

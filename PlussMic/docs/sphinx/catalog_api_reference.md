@@ -43,7 +43,6 @@ api/catalog/cache_stats
 api/catalog/cast
 api/catalog/clean
 api/catalog/clear_cache
-api/catalog/cloc
 api/catalog/combine
 api/catalog/count_kinds
 api/catalog/defined
@@ -56,6 +55,7 @@ api/catalog/dropnan
 api/catalog/dropneginf
 api/catalog/dropnull
 api/catalog/dropposinf
+api/catalog/eloc
 api/catalog/empty
 api/catalog/end
 api/catalog/featurize
@@ -100,17 +100,17 @@ api/catalog/map
 api/catalog/map_
 api/catalog/match_keys
 api/catalog/max
-api/catalog/maxrows
+api/catalog/maxentries
 api/catalog/mean
 api/catalog/merge
 api/catalog/min
-api/catalog/minrows
+api/catalog/minentries
 api/catalog/ndistinct
+api/catalog/nentries
 api/catalog/nkeys
 api/catalog/notinf
 api/catalog/notnan
 api/catalog/notnull
-api/catalog/nrows
 api/catalog/nt
 api/catalog/plot
 api/catalog/plot3d

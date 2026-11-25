@@ -2445,9 +2445,9 @@ def generic_note(class_name: str, method: Method) -> str:
             'featurize': 'Adds derived text features from one named text stream.',
             'stats': 'Computes one text summary statistic for a named text stream.',
             'load_labeled': 'Loads a CSV catalog and uses one field as stream case labels.',
-            'nrows': 'Returns the aligned row count when all streams share the same length.',
-            'minrows': 'Returns the smallest stream length in the catalog.',
-            'maxrows': 'Returns the largest stream length in the catalog.',
+            'nentries': 'Returns the aligned entry count when all streams share the same length.',
+            'minentries': 'Returns the smallest stream length in the catalog.',
+            'maxentries': 'Returns the largest stream length in the catalog.',
         },
         'Registry': {
             'apply': 'Applies a function to one or more named slots and returns the updated registry.',
@@ -8764,7 +8764,7 @@ def example_for(class_name: str, method: Method) -> str:
             return f'auto out = pluss::kindle::Catalog::{n}("{path}");'
         if n == 'kindelize':
             return df_base() + '\n\nauto out = pluss::kindle::Catalog::kindelize(df);'
-        if n in {'defined','unique','empty','keys','nrows','minrows','maxrows','nkeys','shape','size','to_string','to_json'}:
+        if n in {'defined','unique','empty','keys','nentries','minentries','maxentries','nkeys','shape','size','to_string','to_json'}:
             return base + f'\n\nauto out = catalog.{n}();'
         if n in {'has','at','get'}:
             return base + f'\n\nauto out = catalog.{n}("metric");'
@@ -9646,9 +9646,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Catalog cast accessors rewrite only the selected keys.',
                 'Unknown keys throw immediately.',
             ])
-        if class_name == 'Catalog' and n == 'cloc':
+        if class_name == 'Catalog' and n == 'eloc':
             return bullets('Practical Behavior', [
-                '`cloc(...)` slices aligned row positions across every stream in the catalog.',
+                '`eloc(...)` slices aligned row positions across every stream in the catalog.',
                 'Use it when you want row-wise positional access while keeping stream alignment intact.',
             ])
         if class_name == 'Catalog' and n == 'similarity':
@@ -9724,9 +9724,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`clear()` returns an empty registry with no slots.',
                 'Use `clear_()` when you want the same effect in place.',
             ])
-        if class_name == 'Registry' and n == 'cloc':
+        if class_name == 'Registry' and n == 'sloc':
             return bullets('Practical Behavior', [
-                '`cloc(...)` slices positional rows across every slot while keeping slot alignment intact.',
+                '`sloc(...)` slices positional rows across every slot while keeping slot alignment intact.',
             ])
         if class_name == 'Registry' and n == 'combine':
             return bullets('Practical Behavior', [

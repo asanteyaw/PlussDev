@@ -1,22 +1,22 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 83374ac40018 -->
+<!-- pluss-signature-hash: c9ae96e016b2 -->
 
-# Catalog::cloc
+# Catalog::eloc
 
 [Back to Catalog API Reference](../../catalog_api_reference)
 
 ## Signatures
 
 ```cpp
-Catalog Catalog::cloc(std::int64_t row) const
-Catalog Catalog::cloc(std::int64_t start, std::int64_t stop) const
+Catalog Catalog::eloc(std::int64_t row) const
+Catalog Catalog::eloc(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does
 
 Positional row access across every stream, in two shapes: a single row, or a `[start,
-stop)` range. Both are thin wrappers over [`slice()`](slice.md) — `cloc(row)` is exactly
-`slice(row, row + 1)`, and `cloc(start, stop)` is exactly `slice(start, stop)`, a pure
+stop)` range. Both are thin wrappers over [`slice()`](slice.md) — `eloc(row)` is exactly
+`slice(row, row + 1)`, and `eloc(start, stop)` is exactly `slice(start, stop)`, a pure
 alias with no behavioral difference at all.
 
 ## Parameters
@@ -51,7 +51,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi", "Ho", "Cape Coast"})),
 });
 
-auto out = ct.cloc(2);
+auto out = ct.eloc(2);
 std::cout << out;
 ```
 
@@ -77,7 +77,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi", "Ho", "Cape Coast"})),
 });
 
-auto out = ct.cloc(1, 3);
+auto out = ct.eloc(1, 3);
 std::cout << out;
 ```
 
@@ -97,9 +97,9 @@ city                     | Note         | Note             | 2       | [Tema, Ku
 
 ## Notes
 
-- `cloc(row)` returns a one-row `Catalog`, not a scalar or a row-object — extract the
+- `eloc(row)` returns a one-row `Catalog`, not a scalar or a row-object — extract the
   value out of each stream afterward if you need it.
-- `cloc(start, stop)` is a pure alias for [`slice(start, stop)`](slice.md) — no
+- `eloc(start, stop)` is a pure alias for [`slice(start, stop)`](slice.md) — no
   behavioral difference.
 
 ## See Also

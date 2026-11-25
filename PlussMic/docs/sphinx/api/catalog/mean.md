@@ -33,9 +33,9 @@ The default is `ReduceAxis::Record`, which yields one scalar stream per key.
 - [`Catalog::std`](std.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="maxrows.html">
+  <a class="prev-link" href="maxentries.html">
     <span class="label">Previous</span>
-    <span class="title">maxrows</span>
+    <span class="title">maxentries</span>
   </a>
   <a class="next-link" href="merge.html">
     <span class="label">Next</span>

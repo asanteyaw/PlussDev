@@ -112,9 +112,9 @@ Shelf::strip is only valid for Note payload
   which *does* let you narrow to a key subset before binding.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nrows.html">
+  <a class="prev-link" href="nentries.html">
     <span class="label">Previous</span>
-    <span class="title">nrows</span>
+    <span class="title">nentries</span>
   </a>
   <a class="next-link" href="plot.html">
     <span class="label">Next</span>

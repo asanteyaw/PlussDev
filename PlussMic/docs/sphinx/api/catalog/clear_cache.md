@@ -74,8 +74,8 @@ x
     <span class="label">Previous</span>
     <span class="title">clean</span>
   </a>
-  <a class="next-link" href="cloc.html">
+  <a class="next-link" href="eloc.html">
     <span class="label">Next</span>
-    <span class="title">cloc</span>
+    <span class="title">eloc</span>
   </a>
 </div>

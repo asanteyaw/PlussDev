@@ -28,11 +28,11 @@ Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::cloc(std::int64_t row) const {
+Catalog Catalog::eloc(std::int64_t row) const {
   return slice(row, row + 1);
 }
 
-Catalog Catalog::cloc(std::int64_t start, std::int64_t stop) const {
+Catalog Catalog::eloc(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
 }
 
@@ -638,7 +638,7 @@ Catalog Catalog::ndistinct(DistinctOptions options) const {
 }
 
 std::int64_t Catalog::count() const {
-  return nrows();
+  return nentries();
 }
 
 Catalog Catalog::map(const std::function<Stream(const Stream&)>& fn) const {

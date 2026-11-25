@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 86826e14ef4e -->
+<!-- pluss-signature-hash: 273d577926cc -->
 
 # Catalog::show
 
@@ -9,20 +9,25 @@
 
 ```cpp
 void Catalog::show(std::ostream& os) const
+void Catalog::show() const
 ```
 
 ## What It Does
 
-Renders the catalog's ASCII-table view directly to `os` — the same rendering
-`operator<<`, [`display()`](display.md), and [`info()`](info.md) all use internally.
-`Catalog::show()` **requires** an explicit stream argument; there
-is no no-argument overload, so there's no risk of it silently opening a GUI viewer window
-the way some other `show()`-named methods in this codebase can.
+Two ways to look at a catalog:
 
-```{important} display(), info(), and show() all render identically — there is no separate metadata summary
+- **`show(os)`** writes the catalog's ASCII-table view to the stream you give it — the same
+  rendering `operator<<`, [`display()`](display.md), and [`info()`](info.md) all use.
+- **`show()`** opens the catalog in the viewer window as **one card per key**. Each card carries the
+  key's name, its dtype and its own length, with the values listed underneath, so keys of different
+  lengths sit side by side without being padded to a common height. The window's Theme menu works as
+  it does for a DataFrame. When no window can be opened (a terminal-only session), `show()` prints the
+  ASCII view to `std::cout` instead. Calling it on an undefined catalog throws.
+
+```{important} display(), info(), and show(os) all render identically — there is no separate metadata summary
 Unlike Shelf::info(), which prints a name/kind/dtype/null-count summary distinct from
 Shelf::to_string()'s row rendering, Catalog::info() and Catalog::display() both call the exact
-same underlying render as show() and operator<<. All four produce byte-identical output;
+same underlying render as show(os) and operator<<. All four produce byte-identical output;
 there is currently no metadata-only summary view for Catalog.
 ```
 
@@ -30,7 +35,7 @@ there is currently no metadata-only summary view for Catalog.
 
 **os** (`std::ostream&`)
 
-The destination stream.
+The destination stream, for `show(os)`. `show()` takes no parameters.
 
 ## Returns
 
@@ -82,11 +87,25 @@ std::cout << "captured " << captured.str().size() << " characters";
 captured 761 characters
 ```
 
+Example 3. Open the catalog in the viewer, one card per key.
+
+```cpp
+auto ct = pluss::kindle::Catalog({
+    "names"_k = pluss::kindle::Stream(pluss::note::make({"John", "Pele", "Mensah"})),
+    "scores"_k = pluss::kindle::Stream(pluss::make_series({1.5, 2.5, 3.5, 4.5, 5.5})),
+});
+
+ct.show();
+```
+
+The window shows a `names` card with three values and a `scores` card with five, each at its own
+length. Nothing is written to the console when a window opens.
+
 ## Notes
 
-- Requires an explicit stream — there is no no-argument overload, unlike some other
-  `show()`-named methods in this codebase.
-- Identical output to [`display()`](display.md), [`info()`](info.md), and `operator<<` —
+- `show()` opens a window, so there is no printed output to capture; use `show(os)` or
+  [`to_string()`](to_string.md) when you need the text.
+- `show(os)` gives identical output to [`display()`](display.md), [`info()`](info.md), and `operator<<` —
   see the important callout above.
 
 ## See Also

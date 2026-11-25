@@ -1,16 +1,16 @@
-# Catalog::nrows
+# Catalog::nentries
 
 [Back to Catalog API Reference](../../catalog_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t Catalog::nrows()
+std::int64_t Catalog::nentries()
 ```
 
 ## What It Does
 
-Returns the aligned row count when all streams share the same length.
+Returns the aligned entry count when all streams share the same length.
 
 ## Parameters
 
@@ -32,7 +32,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.nrows();
+auto out = ct.nentries();
 ```
 
 ### Output
@@ -43,12 +43,12 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="notnull.html">
+  <a class="prev-link" href="ndistinct.html">
     <span class="label">Previous</span>
-    <span class="title">notnull</span>
+    <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="nt.html">
+  <a class="next-link" href="nkeys.html">
     <span class="label">Next</span>
-    <span class="title">nt</span>
+    <span class="title">nkeys</span>
   </a>
 </div>

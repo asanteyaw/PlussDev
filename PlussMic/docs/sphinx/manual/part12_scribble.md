@@ -67,7 +67,7 @@ Select and reshape:
 ```cpp
 auto first = registry.head(10);
 auto rows = registry.slice(10, 20);
-auto one_row = registry.cloc(0);
+auto one_row = registry.sloc(0);
 auto selected = registry.select({"name", "score"});
 auto dropped = registry.drop("temporary");
 auto renamed = registry.rename("old", "new");

@@ -14,8 +14,8 @@ Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const
 ## What It Does
 
 Keeps rows `[start, stop)` — inclusive start, exclusive stop — of **every** stream in the
-catalog, delegating to each stream's own `slice()`. [`cloc(start, stop)`](cloc.md) is a
-pure alias for this same method; [`cloc(row)`](cloc.md) is built on it too, as
+catalog, delegating to each stream's own `slice()`. [`eloc(start, stop)`](eloc.md) is a
+pure alias for this same method; [`eloc(row)`](eloc.md) is built on it too, as
 `slice(row, row + 1)`.
 
 ## Parameters
@@ -67,12 +67,12 @@ city                     | Note         | Note             | 2       | [Tema, Ku
 
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
 - Applies independently to each stream — works even on a ragged catalog.
-- [`cloc(start, stop)`](cloc.md) is a pure alias for this method; `cloc()`'s one-argument
+- [`eloc(start, stop)`](eloc.md) is a pure alias for this method; `eloc()`'s one-argument
   overload builds on it as `slice(row, row + 1)`.
 
 ## See Also
 
-- [`Catalog::cloc`](cloc.md): the alias, plus a single-row shorthand built on this method.
+- [`Catalog::eloc`](eloc.md): the alias, plus a single-row shorthand built on this method.
 - [`Catalog::head`](head.md) / [`Catalog::tail`](tail.md): fixed-count slices anchored to
   the start or end, rather than an arbitrary range.
 

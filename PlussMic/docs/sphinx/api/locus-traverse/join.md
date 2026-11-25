@@ -112,11 +112,11 @@ for (const auto [name, how] : {
          std::pair{"right_only", JoinHow::RightOnly},
      }) {
   const auto result = data.from("orders").join("customers", mode(how)).collect();
-  std::cout << name << " rows=" << result.maxrows() << "\n";
+  std::cout << name << " rows=" << result.maxentries() << "\n";
 }
 const auto crossed = shop(false).from("orders")
     .join("customers", mode(JoinHow::Cross)).collect();
-std::cout << "cross rows=" << crossed.maxrows() << "\n";
+std::cout << "cross rows=" << crossed.maxentries() << "\n";
 ```
 
 ### Output

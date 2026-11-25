@@ -170,7 +170,7 @@ int main() {
   auto scaled = splits.map_catalogs([&](const Catalog &c) { return c.set("x_scaled", (c.keys("x") - mean) / sd); });
   for (const char *name : {"train", "valid", "test"}) {
     auto c = scaled.loc(name);
-    std::cout << name << ": " << c.nrows() << " records, mean of x_scaled " << c.keys("x_scaled").mean().as_series().items<double>()[0] << "\n";
+    std::cout << name << ": " << c.nentries() << " records, mean of x_scaled " << c.keys("x_scaled").mean().as_series().items<double>()[0] << "\n";
   }
 
   // 3. A leak check: the validation and test values are expressed in units of the training spread, so they lie outside the training range.

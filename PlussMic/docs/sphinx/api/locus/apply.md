@@ -48,8 +48,8 @@ Example 1. Trimming one catalog's rows without touching the original.
 ```cpp
 const auto linked = make_linked_shop();
 const auto trimmed = linked.apply("orders", [](const Catalog& c) { return c.head(2); });
-std::cout << "trimmed orders rows=" << trimmed.catalog("orders").maxrows()
-          << " original orders rows=" << linked.catalog("orders").maxrows() << "\n";
+std::cout << "trimmed orders rows=" << trimmed.catalog("orders").maxentries()
+          << " original orders rows=" << linked.catalog("orders").maxentries() << "\n";
 ```
 
 ### Output

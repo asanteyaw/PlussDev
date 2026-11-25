@@ -70,7 +70,7 @@ void print_keys(const Catalog& catalog) {
     if (i != 0) std::cout << ", ";
     std::cout << catalog.keys()[i];
   }
-  std::cout << "] rows=" << catalog.maxrows() << "\n";
+  std::cout << "] rows=" << catalog.maxentries() << "\n";
 }
 
 template <class Fn>

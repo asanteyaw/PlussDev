@@ -62,9 +62,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="sloc.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">sloc</span>
   </a>
   <a class="next-link" href="tail.html">
     <span class="label">Next</span>

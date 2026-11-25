@@ -379,7 +379,7 @@ int main() {
   // 1. One record per customer, with a count and totals reduced from the orders catalog.
   auto features = workspace.pull("customers").take({"name"}).agg("orders").count("order_id").sum("amount").end().collect();
   std::cout << features << "\n";
-  std::cout << "customers " << customers.nrows() << ", records pulled " << features.nrows() << "\n";
+  std::cout << "customers " << customers.nentries() << ", records pulled " << features.nentries() << "\n";
 
   // 2. The same audit as a Nexus. Dara has no orders; because the link declares the orders side optional (right_optional), that is not a violation.
   std::cout << workspace.audit_report().features({"name", "valid"}).to_string() << "\n";

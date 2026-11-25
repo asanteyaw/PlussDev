@@ -33,8 +33,8 @@ keys row-by-row (`ReduceAxis::Key`).
     <span class="label">Previous</span>
     <span class="title">match_keys</span>
   </a>
-  <a class="next-link" href="maxrows.html">
+  <a class="next-link" href="maxentries.html">
     <span class="label">Next</span>
-    <span class="title">maxrows</span>
+    <span class="title">maxentries</span>
   </a>
 </div>

@@ -1,24 +1,24 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 05cfceaee4c7 -->
+<!-- pluss-signature-hash: 9e9d2970cde7 -->
 
-# Registry::cloc
+# Registry::sloc
 
 [Back to Registry API Reference](../../registry_api_reference)
 
 ## Signatures
 
 ```cpp
-Registry Registry::cloc(std::int64_t row) const
-Registry Registry::cloc(std::int64_t start, std::int64_t stop) const
+Registry Registry::sloc(std::int64_t row) const
+Registry Registry::sloc(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does
 
 A thin, positional-selection wrapper over [`slice()`](slice.md):
 
-- `cloc(row)` — selects a **single** row across every field, equivalent to
+- `sloc(row)` — selects a **single** row across every field, equivalent to
   `slice(row, row + 1)`.
-- `cloc(start, stop)` — selects a **range** across every field, equivalent to
+- `sloc(start, stop)` — selects a **range** across every field, equivalent to
   `slice(start, stop)` directly.
 
 Both overloads inherit `slice()`'s per-field, independent-length behavior — see
@@ -52,7 +52,7 @@ auto rg = pluss::scribble::Registry({
     {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3), pluss::make_series(4)})},
 });
 
-auto out = rg.cloc(1);
+auto out = rg.sloc(1);
 auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
@@ -75,7 +75,7 @@ auto rg = pluss::scribble::Registry({
     {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3), pluss::make_series(4)})},
 });
 
-auto out = rg.cloc(0, 2);
+auto out = rg.sloc(0, 2);
 auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
@@ -93,14 +93,14 @@ std::cout << "]";
 
 ## Notes
 
-- `cloc(row)` is literally implemented as `slice(row, row + 1)` — there is no
+- `sloc(row)` is literally implemented as `slice(row, row + 1)` — there is no
   behavioral difference beyond call-site convenience for the single-row case.
 - Both overloads share `slice()`'s per-field independent clamping and negative-index
   support.
 
 ## See Also
 
-- [`Registry::slice`](slice.md): the method both `cloc()` overloads delegate to.
+- [`Registry::slice`](slice.md): the method both `sloc()` overloads delegate to.
 - [`Registry::head`](head.md) / [`Registry::tail`](tail.md): other `slice()`-based
   positional selections.
 - [`Registry::take`](take.md): arbitrary (not-necessarily-contiguous) positional

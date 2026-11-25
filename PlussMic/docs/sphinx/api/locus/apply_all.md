@@ -34,8 +34,8 @@ Example 1. Trimming every catalog to its first row at once.
 ```cpp
 const auto linked = make_linked_shop();
 const auto all_trimmed = linked.apply_all([](const Catalog& c) { return c.head(1); });
-std::cout << "items rows=" << all_trimmed.catalog("items").maxrows()
-          << " orders rows=" << all_trimmed.catalog("orders").maxrows() << "\n";
+std::cout << "items rows=" << all_trimmed.catalog("items").maxentries()
+          << " orders rows=" << all_trimmed.catalog("orders").maxentries() << "\n";
 ```
 
 ### Output

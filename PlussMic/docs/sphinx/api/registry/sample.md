@@ -17,7 +17,7 @@ Returns a new registry with `n` randomly selected rows, drawn without replacemen
 and applied identically across every field via a single shuffled index list
 (internally, `take()` with a Fisher–Yates-shuffled `[0, size)` index range,
 truncated to `n`). Unlike every other row-selection method on `Registry`
-(`head()`, `tail()`, `slice()`, `cloc()`, `take()`), which apply independently
+(`head()`, `tail()`, `slice()`, `sloc()`, `take()`), which apply independently
 per field, **`sample()` requires every field to share the same length**.
 
 ```{important} sample() requires an aligned (non-ragged) registry

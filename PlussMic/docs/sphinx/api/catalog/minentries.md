@@ -1,11 +1,11 @@
-# Catalog::minrows
+# Catalog::minentries
 
 [Back to Catalog API Reference](../../catalog_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t Catalog::minrows()
+std::int64_t Catalog::minentries()
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.minrows();
+auto out = ct.minentries();
 ```
 
 ### Output

@@ -1,11 +1,11 @@
-# Catalog::maxrows
+# Catalog::maxentries
 
 [Back to Catalog API Reference](../../catalog_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t Catalog::maxrows()
+std::int64_t Catalog::maxentries()
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.maxrows();
+auto out = ct.maxentries();
 ```
 
 ### Output

@@ -33,18 +33,18 @@ int main() {
 
   // 1. A derived stream: set adds a new named stream computed from existing ones.
   auto enriched = sales.set("revenue", sales.keys("units") * sales.keys("price"));
-  std::cout << "streams: " << enriched.nkeys() << ", rows: " << enriched.nrows() << "\n";
+  std::cout << "streams: " << enriched.nkeys() << ", rows: " << enriched.nentries() << "\n";
 
   // 2. Filter by a condition on a stream, then order by revenue.
   auto strong = enriched.where(enriched.keys("revenue").as_series().ge(28.0));
-  std::cout << "rows with revenue of at least 28: " << strong.nrows() << "\n";
+  std::cout << "rows with revenue of at least 28: " << strong.nentries() << "\n";
   std::cout << enriched.sort("revenue", false).head(3) << "\n";
 
   // 3. Grouping splits a catalog into one catalog per key value; summarise each.
   auto groups = enriched.group().by("region");
   std::map<std::string, Catalog> ordered(groups.begin(), groups.end());
   for (const auto &[region, part] : ordered) {
-    std::cout << region << ": " << part.nrows() << " cities, units " << part.keys("units").sum().as_series().items<double>()[0] << ", mean revenue "
+    std::cout << region << ": " << part.nentries() << " cities, units " << part.keys("units").sum().as_series().items<double>()[0] << ", mean revenue "
               << part.keys("revenue").mean().as_series().items<double>()[0] << "\n";
   }
 }
@@ -183,7 +183,7 @@ int main() {
 
   // 2. grep keeps the rows whose text matches a pattern.
   auto rainy = reports.grep("text", "rain");
-  std::cout << "reports that mention rain: " << rainy.nrows() << ", ids " << pluss::series::print(rainy.keys("id").as_series()) << "\n";
+  std::cout << "reports that mention rain: " << rainy.nentries() << ", ids " << pluss::series::print(rainy.keys("id").as_series()) << "\n";
 
   // 3. keywords: the most frequent words across the whole collection, as a small catalog of (keyword, count).
   auto top = reports.keywords("text", 3);
@@ -238,12 +238,12 @@ int main() {
     file << "sensor,reading,count\nA,12.5,3\nB,,4\nA,13.1,\nB,14.0,2\nB,15.2,5\nA,11.9,1\n";
   }
   auto raw = Catalog::load_csv(raw_path.string());
-  std::cout << "loaded " << raw.nrows() << " rows, " << raw.nkeys() << " streams\n" << raw << "\n";
+  std::cout << "loaded " << raw.nentries() << " rows, " << raw.nkeys() << " streams\n" << raw << "\n";
 
   // 1. A row without a reading is useless: dropnull removes the rows where any stream is missing, so first fill what may be missing.
   auto counted = raw.set("count", raw.keys("count").fillnull(0.0));
   auto kept = counted.dropnull();
-  std::cout << "rows kept after filling counts and dropping missing readings: " << kept.nrows() << " of " << raw.nrows() << "\n";
+  std::cout << "rows kept after filling counts and dropping missing readings: " << kept.nentries() << " of " << raw.nentries() << "\n";
 
   // 2. Counts are whole numbers in the file but averages need a floating dtype: widen the stream.
   auto prepared = kept.set("count", kept.keys("count").astype(pluss::ScalarType::Float64));
@@ -253,13 +253,13 @@ int main() {
   std::map<std::string, Catalog> by_sensor;
   for (const auto &[name, part] : prepared.group().by("sensor")) by_sensor.emplace(name, part);
   for (const auto &[name, part] : by_sensor)
-    std::cout << "sensor " << name << ": " << part.nrows() << " readings, mean " << part.keys("reading").mean().as_series().items<double>()[0] << ", total count "
+    std::cout << "sensor " << name << ": " << part.nentries() << " readings, mean " << part.keys("reading").mean().as_series().items<double>()[0] << ", total count "
               << part.keys("count").sum().as_series().items<double>()[0] << "\n";
 
   // 4. Save and read back; the totals must survive.
   prepared.save_csv(clean_path.string());
   auto again = Catalog::load_csv(clean_path.string());
-  std::cout << "reloaded " << again.nrows() << " rows; reading total " << again.keys("reading").sum().as_series().items<double>()[0] << " vs "
+  std::cout << "reloaded " << again.nentries() << " rows; reading total " << again.keys("reading").sum().as_series().items<double>()[0] << " vs "
             << prepared.keys("reading").sum().as_series().items<double>()[0] << "\n";
   std::filesystem::remove(raw_path);
   std::filesystem::remove(clean_path);
@@ -324,7 +324,7 @@ int main() {
   for (const auto &[name, part] : with_month.group().by("month")) by_month.emplace(name, part);
   for (const auto &month : {"January", "February", "March"}) {
     const auto &part = by_month.at(month);
-    std::cout << month << ": " << part.nrows() << " observations, mean close " << part.keys("close").mean().as_series().items<double>()[0] << ", last close "
+    std::cout << month << ": " << part.nentries() << " observations, mean close " << part.keys("close").mean().as_series().items<double>()[0] << ", last close "
               << part.keys("close").tail(1).as_series().items<double>()[0] << "\n";
   }
 }

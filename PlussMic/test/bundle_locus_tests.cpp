@@ -791,19 +791,19 @@ void test_native_traverse_and_plans() {
     spec.how = how;
     return spec;
   };
-  expect(shop.from("orders").join("customers").collect().maxrows() == 3,
+  expect(shop.from("orders").join("customers").collect().maxentries() == 3,
          "the default traversal join is inner");
-  expect(shop.from("orders").join("customers", mode(JoinHow::Left)).collect().maxrows() == 4,
+  expect(shop.from("orders").join("customers", mode(JoinHow::Left)).collect().maxentries() == 4,
          "a left traversal keeps every root record");
-  expect(shop.from("orders").join("customers", mode(JoinHow::Right)).collect().maxrows() == 4,
+  expect(shop.from("orders").join("customers", mode(JoinHow::Right)).collect().maxentries() == 4,
          "a right traversal keeps every right record");
-  expect(shop.from("orders").join("customers", mode(JoinHow::Outer)).collect().maxrows() == 5,
+  expect(shop.from("orders").join("customers", mode(JoinHow::Outer)).collect().maxentries() == 5,
          "an outer traversal keeps both orphans");
-  expect(shop.from("orders").join("customers", mode(JoinHow::LeftOnly)).collect().maxrows() == 1,
+  expect(shop.from("orders").join("customers", mode(JoinHow::LeftOnly)).collect().maxentries() == 1,
          "left-only returns root records without a partner");
-  expect(shop.from("orders").join("customers", mode(JoinHow::RightOnly)).collect().maxrows() == 1,
+  expect(shop.from("orders").join("customers", mode(JoinHow::RightOnly)).collect().maxentries() == 1,
          "right-only returns target records without a partner");
-  expect(make_shop().from("orders").join("customers", mode(JoinHow::Cross)).collect().maxrows() == 12,
+  expect(make_shop().from("orders").join("customers", mode(JoinHow::Cross)).collect().maxentries() == 12,
          "cross traversal produces the Cartesian product without a relationship");
 
   const auto root = shop.from("orders");
@@ -817,7 +817,7 @@ void test_native_traverse_and_plans() {
   const auto unknown_pick = root.pick({"absent"});
   expect_throw([&] { (void)unknown_pick.collect(); }, "unknown projected keys are checked at collection");
   expect(root.via("orders").collect().keys() == root.collect().keys(), "a zero-hop path preserves the anchor");
-  expect(shop.from("items").via("customers", JoinHow::Cross).collect().maxrows() == 60,
+  expect(shop.from("items").via("customers", JoinHow::Cross).collect().maxentries() == 60,
          "cross traversal uses the path to choose catalogs without binding relationship keys");
 
   // A native plan equals the aligned Nexus plan on rectangular data.
@@ -863,12 +863,12 @@ void test_workspace_ops_and_meta() {
   expect(injected.ntables() == 5, "inject adds several catalogs");
 
   const auto trimmed = shop.apply("orders", [](const Catalog& c) { return c.head(2); });
-  expect(values_of(trimmed.catalog("orders"), "order_id").size() == 2 && shop.catalog("orders").maxrows() == 4,
+  expect(values_of(trimmed.catalog("orders"), "order_id").size() == 2 && shop.catalog("orders").maxentries() == 4,
          "apply rewrites one catalog without touching the original");
   expect_throw([&] { (void)shop.apply("orders", Locus::CatalogFn{}); }, "an empty callback should throw");
   expect_throw([&] { (void)shop.apply("orders", [](const Catalog&) { return Catalog(); }); },
                "a callback returning an undefined Catalog should throw");
-  expect(shop.apply_all([](const Catalog& c) { return c.head(1); }).catalog("items").maxrows() == 1,
+  expect(shop.apply_all([](const Catalog& c) { return c.head(1); }).catalog("items").maxentries() == 1,
          "apply_all applies to every catalog");
   expect(shop.flow([](const Locus& l) { return l.drop({"items"}); }).ntables() == 2, "flow threads the Locus through a function");
 

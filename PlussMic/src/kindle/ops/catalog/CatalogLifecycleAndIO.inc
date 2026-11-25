@@ -174,7 +174,7 @@ std::int64_t Catalog::nkeys() const {
   return nstreams();
 }
 
-std::int64_t Catalog::minrows() const {
+std::int64_t Catalog::minentries() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   if (impl_ref_().streams_.empty()) return 0;
   std::int64_t out = impl_ref_().streams_.front().size();
@@ -184,7 +184,7 @@ std::int64_t Catalog::minrows() const {
   return out;
 }
 
-std::int64_t Catalog::maxrows() const {
+std::int64_t Catalog::maxentries() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   std::int64_t out = 0;
   for (const auto& stream : impl_ref_().streams_) {
@@ -193,13 +193,13 @@ std::int64_t Catalog::maxrows() const {
   return out;
 }
 
-std::int64_t Catalog::nrows() const {
+std::int64_t Catalog::nentries() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   if (impl_ref_().streams_.empty()) return 0;
   const auto n = impl_ref_().streams_.front().size();
   for (const auto& stream : impl_ref_().streams_) {
     PLUSS_CHECK(stream.size() == n,
-                "Catalog::nrows: catalog has ragged stream lengths; use minrows()/maxrows() or tabelize()");
+                "Catalog::nentries: catalog has ragged stream lengths; use minentries()/maxentries() or tabelize()");
   }
   return n;
 }
@@ -210,7 +210,7 @@ std::int64_t Catalog::size() const {
 
 std::pair<std::int64_t, std::int64_t> Catalog::shape() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  return {maxrows(), nkeys()};
+  return {maxentries(), nkeys()};
 }
 
 bool Catalog::empty() const { return nkeys() == 0; }

@@ -147,17 +147,17 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto grouped = catalog.group().by("city");
   const auto filtered = catalog.filter(row_mask);
   const auto sliced = catalog.slice(1, 4);
-  const auto iloced = catalog.cloc(0, 3);
+  const auto iloced = catalog.eloc(0, 3);
 
   std::cout << "selected keys: " << selected.nkeys()
             << ", dropped keys: " << dropped.nkeys()
             << ", renamed has(distance): " << renamed.has("distance") << "\n";
   std::cout << "sorted head id: " << sorted.keys("id").head(1).as_series().host<std::int64_t>()[0] << "\n";
-  std::cout << "sorted_by rows: " << sorted_by.nrows()
+  std::cout << "sorted_by rows: " << sorted_by.nentries()
             << ", grouped buckets: " << grouped.size()
-            << ", filtered rows: " << filtered.nrows()
-            << ", slice rows: " << sliced.nrows()
-            << ", iloc rows: " << iloced.nrows() << "\n";
+            << ", filtered rows: " << filtered.nentries()
+            << ", slice rows: " << sliced.nentries()
+            << ", iloc rows: " << iloced.nentries() << "\n";
 
   const auto metric_filled = catalog.keys({"metric"}).fillnull(0.0);
   const auto metric_dropnull = catalog.keys({"metric"}).dropnull();
@@ -165,9 +165,9 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
             << ", mean(id): " << scalar_stream_value(catalog.keys("id").mean())
             << ", min(id): " << scalar_stream_value(catalog.keys("id").min())
             << ", max(id): " << scalar_stream_value(catalog.keys("id").max())
-            << ", rows: " << catalog.nrows() << "\n";
-  std::cout << "metric fillnull rows: " << metric_filled.nrows()
-            << ", metric dropnull rows: " << metric_dropnull.nrows() << "\n";
+            << ", rows: " << catalog.nentries() << "\n";
+  std::cout << "metric fillnull rows: " << metric_filled.nentries()
+            << ", metric dropnull rows: " << metric_dropnull.nentries() << "\n";
 
   const auto right = pluss::kindle::Catalog(std::vector<std::pair<std::string, pluss::kindle::Stream>>{
       {"id", ids},
@@ -188,12 +188,12 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto text_stats = catalog.stats("text", "mean");
   const auto text_tfidf = catalog.tfidf("text");
 
-  std::cout << "text_clean rows: " << text_clean.nrows()
-            << ", keywords rows: " << keywords.nrows()
+  std::cout << "text_clean rows: " << text_clean.nentries()
+            << ", keywords rows: " << keywords.nentries()
             << ", similarity key added: " << text_sim.has("text__city_similarity")
-            << ", text_filter rows: " << text_filter.nrows()
+            << ", text_filter rows: " << text_filter.nentries()
             << ", text_feat keys: " << text_feat.nkeys()
-            << ", text_stats rows: " << text_stats.nrows()
+            << ", text_stats rows: " << text_stats.nentries()
             << ", tfidf key added: " << text_tfidf.has("text_tfidf_norm") << "\n";
 
   catalog = catalog.set("id_plus_one", catalog.keys("id") + 1.0);
@@ -282,7 +282,7 @@ void demo_loader_entrypoints() {
   const auto bank_path = data_file("bank-full.csv").string();
 
   const auto loaded_csv = pluss::kindle::Catalog::load_csv(csv_path);
-  std::cout << "load_csv rows: " << loaded_csv.nrows()
+  std::cout << "load_csv rows: " << loaded_csv.nentries()
             << ", keys: " << loaded_csv.nkeys() << "\n";
 
   const auto loaded_generic = pluss::kindle::Catalog::load(
@@ -291,13 +291,13 @@ void demo_loader_entrypoints() {
       pluss::loader::config_from({
           {"ncases", 10},
       }));
-  std::cout << "load(csv, config) rows: " << loaded_generic.nrows() << "\n";
+  std::cout << "load(csv, config) rows: " << loaded_generic.nentries() << "\n";
 
   pluss::loader::ReadCsvOptions key_opts;
   key_opts.ncases = 32;
   const auto keyed = pluss::kindle::Catalog::load_labeled(bank_path, "job", key_opts);
   std::cout << "load_labeled has(_label): " << keyed.has("_label")
-            << ", rows: " << keyed.nrows() << "\n";
+            << ", rows: " << keyed.nentries() << "\n";
 
   try {
     (void)pluss::kindle::Catalog::from_json("{}");
@@ -314,7 +314,7 @@ int main() {
     const auto catalog = df.kindelize();
 
     std::cout << "Base catalog keys: " << catalog.nkeys()
-              << ", rows: " << catalog.nrows() << "\n";
+              << ", rows: " << catalog.nentries() << "\n";
     demo_stream_methods(catalog);
     demo_catalog_methods(catalog);
     demo_archive_methods(df);

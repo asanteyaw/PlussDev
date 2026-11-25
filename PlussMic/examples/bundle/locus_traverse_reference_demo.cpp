@@ -72,7 +72,7 @@ void print_keys(const Catalog& catalog) {
     if (i != 0) std::cout << ", ";
     std::cout << catalog.keys()[i];
   }
-  std::cout << "] rows=" << catalog.maxrows() << "\n";
+  std::cout << "] rows=" << catalog.maxentries() << "\n";
 }
 
 void print_numbers(const Catalog& catalog, std::string_view key) {
@@ -152,10 +152,10 @@ int main() {
            std::pair{"right_only", JoinHow::RightOnly},
        }) {
     const auto result = data.from("orders").join("customers", mode(how)).collect();
-    std::cout << name << " rows=" << result.maxrows() << "\n";
+    std::cout << name << " rows=" << result.maxentries() << "\n";
   }
   const auto crossed = shop(false).from("orders").join("customers", mode(JoinHow::Cross)).collect();
-  std::cout << "cross rows=" << crossed.maxrows() << "\n";
+  std::cout << "cross rows=" << crossed.maxentries() << "\n";
 
   heading("join explicit keys");
   JoinSpec manual;
@@ -233,9 +233,9 @@ int main() {
   print_words(path, "name");
 
   heading("via mode and zero hop");
-  std::cout << "left rows=" << data.from("items").via("customers").collect().maxrows() << "\n";
-  std::cout << "inner rows=" << data.from("items").via("customers", JoinHow::Inner).collect().maxrows() << "\n";
-  std::cout << "cross rows=" << data.from("items").via("customers", JoinHow::Cross).collect().maxrows() << "\n";
+  std::cout << "left rows=" << data.from("items").via("customers").collect().maxentries() << "\n";
+  std::cout << "inner rows=" << data.from("items").via("customers", JoinHow::Inner).collect().maxentries() << "\n";
+  std::cout << "cross rows=" << data.from("items").via("customers", JoinHow::Cross).collect().maxentries() << "\n";
   print_keys(data.from("orders").via("orders").collect());
 
   heading("via updates anchor");
@@ -260,7 +260,7 @@ int main() {
   const auto ragged = shop(true, true);
   JoinSpec left = mode(JoinHow::Left);
   const auto preserved = ragged.from("orders").join("customers", left).collect();
-  std::cout << "preserve amount size=" << preserved.keys("amount").size() << " rows=" << preserved.maxrows() << "\n";
+  std::cout << "preserve amount size=" << preserved.keys("amount").size() << " rows=" << preserved.maxentries() << "\n";
   JoinOptions padded;
   padded.ragged.materialize = RaggedMaterialize::Pad;
   const auto padded_result = ragged.from("orders").options(padded).join("customers", left).collect();
@@ -273,7 +273,7 @@ int main() {
   JoinOptions shortest;
   shortest.ragged.domain = pluss::kindle::RaggedDomain::Shortest;
   const auto cut = ragged.from("orders").options(shortest).join("customers", left).collect();
-  std::cout << "shortest rows=" << cut.maxrows() << " amount size=" << cut.keys("amount").size() << "\n";
+  std::cout << "shortest rows=" << cut.maxentries() << " amount size=" << cut.keys("amount").size() << "\n";
   JoinOptions exact;
   exact.ragged.domain = pluss::kindle::RaggedDomain::Exact;
   print_error("exact", [&] {
@@ -295,7 +295,7 @@ int main() {
 
   heading("options immutable branches");
   const auto option_base = data.from("orders").join("customers");
-  std::cout << "default rows=" << option_base.collect().maxrows() << "\n";
+  std::cout << "default rows=" << option_base.collect().maxentries() << "\n";
   print_error("derived loss", [&] { (void)option_base.options(lossless).collect(); });
-  std::cout << "default again rows=" << option_base.collect().maxrows() << "\n";
+  std::cout << "default again rows=" << option_base.collect().maxentries() << "\n";
 }

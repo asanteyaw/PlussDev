@@ -43,7 +43,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 
 auto out = archive.map_catalogs([](const pluss::kindle::Catalog& c) { return c.head(1); });
 std::cout << "out depth: " << out.depth() << "\n";
-std::cout << "out.catalog(0).maxrows(): " << out.catalog(0).maxrows() << "\n";
+std::cout << "out.catalog(0).maxentries(): " << out.catalog(0).maxentries() << "\n";
 std::cout << "depth labels preserved: " << out.label().has();
 ```
 
@@ -51,7 +51,7 @@ std::cout << "depth labels preserved: " << out.label().has();
 
 ```text
 out depth: 2
-out.catalog(0).maxrows(): 1
+out.catalog(0).maxentries(): 1
 depth labels preserved: 1
 ```
 

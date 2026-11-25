@@ -2,7 +2,10 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace pluss::table {
 
@@ -50,6 +53,13 @@ enum class NumberFormat : std::uint8_t {
   Scientific = 7,  // 1.235e+06
 };
 
+// One card of the keyed-cards view: a name, a few badges, and the values it holds.
+struct CardPanel {
+  std::string title;
+  std::vector<std::string> badges;
+  std::shared_ptr<const Shelf> values;
+};
+
 struct TerminalInfo {
   std::int64_t columns{120};
   std::int64_t rows{40};
@@ -93,6 +103,9 @@ std::string render_html(const Shelf& shelf, const DisplayOptions& options = {});
 std::string render_html(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render_html(const Atlas& atlas, const DisplayOptions& options = {});
 std::string info_html(const DataFrame& frame, const DisplayOptions& options = {});
+// A page of side-by-side cards, one per named column of values; cards may differ in length.
+std::string render_html_cards(std::string_view heading, std::string_view subtitle,
+                              const std::vector<CardPanel>& cards, const DisplayOptions& options = {});
 
 void print(std::ostream& os, const Shelf& shelf, const DisplayOptions& options = {});
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});
@@ -102,6 +115,9 @@ void show(const Shelf& shelf, const DisplayOptions& options = {});
 void show(const DataFrame& frame, const DisplayOptions& options = {});
 void show(const Atlas& atlas, const DisplayOptions& options = {});
 void show_info(const DataFrame& frame, const DisplayOptions& options = {});
+// Opens the cards page in the viewer; returns false when only a terminal is available.
+bool show_cards(std::string_view heading, std::string_view subtitle,
+                const std::vector<CardPanel>& cards, const DisplayOptions& options = {});
 
 } // namespace display
 

@@ -104,7 +104,7 @@ void print_keys(const Catalog& catalog) {
     if (i != 0) std::cout << ", ";
     std::cout << keys[i];
   }
-  std::cout << "] rows=" << catalog.maxrows() << "\n";
+  std::cout << "] rows=" << catalog.maxentries() << "\n";
 }
 
 void print_numbers(const Catalog& catalog, std::string_view key) {
@@ -194,7 +194,7 @@ int main() {
   auto related_plan = data.pull("customers").take("regions.zone");
   std::cout << "root=" << related_plan.root() << "\n";
   const auto related_result = related_plan.collect();
-  std::cout << "rows=" << related_result.maxrows() << "\n";
+  std::cout << "rows=" << related_result.maxentries() << "\n";
   print_words(related_result, "zone");
 
   heading("take single and default names");
@@ -324,7 +324,7 @@ int main() {
   const auto ragged = shop(true);
   const auto preserved = ragged.pull("customers").take({"id", "name"}).collect();
   std::cout << "preserve id=" << preserved.keys("id").size()
-            << " name=" << preserved.keys("name").size() << " rows=" << preserved.maxrows() << "\n";
+            << " name=" << preserved.keys("name").size() << " rows=" << preserved.maxentries() << "\n";
   PullOptions pad;
   pad.ragged.materialize = pluss::bundle::locus::RaggedMaterialize::Pad;
   auto padded_plan = ragged.pull("customers");
@@ -347,7 +347,7 @@ int main() {
   auto short_plan = ragged.pull("customers");
   short_plan.options(shortest).take({"id", "name"});
   const auto cut = short_plan.collect();
-  std::cout << "shortest id=" << cut.keys("id").size() << " rows=" << cut.maxrows() << "\n";
+  std::cout << "shortest id=" << cut.keys("id").size() << " rows=" << cut.maxentries() << "\n";
   PullOptions exact;
   exact.ragged.domain = pluss::bundle::locus::RaggedDomain::Exact;
   auto exact_plan = ragged.pull("customers");

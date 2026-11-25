@@ -118,7 +118,7 @@ std::string Catalog::to_json() const {
   oss << "  \"_type\": \"Catalog\",\n";
   oss << "  \"defined\": true,\n";
   oss << "  \"nkeys\": " << nkeys() << ",\n";
-  oss << "  \"nrecords\": " << nrows() << ",\n";
+  oss << "  \"nrecords\": " << nentries() << ",\n";
   oss << "  \"keys\": [";
   const auto& names = keys();
   for (std::size_t i = 0; i < names.size(); ++i) {
@@ -146,6 +146,24 @@ std::string Catalog::to_json() const {
 }
 
 void Catalog::show(std::ostream& os) const { display::print(os, *this); }
+
+void Catalog::show() const {
+  PLUSS_CHECK(defined(), "Catalog::show: catalog undefined");
+  std::vector<pluss::table::display::CardPanel> cards;
+  cards.reserve(static_cast<std::size_t>(nkeys()));
+  for (const auto& key : keys()) {
+    const auto stream = keys(key);
+    pluss::table::display::CardPanel card;
+    card.title = key;
+    card.badges = {stream.dtype(), std::to_string(stream.size()) + " values"};
+    card.values = std::make_shared<const pluss::table::Shelf>(stream.to_shelf());
+    cards.push_back(std::move(card));
+  }
+  const auto subtitle = std::to_string(nkeys()) + " keys";
+  if (!pluss::table::display::show_cards("Catalog", subtitle, cards)) {
+    show(std::cout);
+  }
+}
 
 std::ostream& operator<<(std::ostream& os, const Catalog& catalog) {
   catalog.show(os);

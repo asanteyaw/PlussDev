@@ -97,15 +97,15 @@ std::cout << "]";
 - `start`/`stop` are each clamped to `[0, size]` per field after resolving negative
   indices; an inverted or fully out-of-range request yields an empty result for
   that field rather than throwing.
-- [`head()`](head.md), [`tail()`](tail.md), and [`cloc()`](cloc.md) are all
+- [`head()`](head.md), [`tail()`](tail.md), and [`sloc()`](sloc.md) are all
   expressible in terms of `slice()`.
 
 ## See Also
 
 - [`Registry::head`](head.md) / [`Registry::tail`](tail.md): fixed-endpoint
   specializations of this method.
-- [`Registry::cloc`](cloc.md): a thin wrapper — `cloc(row)` is `slice(row, row+1)`,
-  `cloc(start, stop)` is `slice(start, stop)` directly.
+- [`Registry::sloc`](sloc.md): a thin wrapper — `sloc(row)` is `slice(row, row+1)`,
+  `sloc(start, stop)` is `slice(start, stop)` directly.
 - [`Catalog::slice`](../catalog/slice.md): the equivalent operation on the kindle
   model.
 

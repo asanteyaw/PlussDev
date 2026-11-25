@@ -21,7 +21,7 @@ is the more precise framing. There is no behavioral difference.
 ```{important} Counts streams, not rows
 Like `nkeys()`, `size()` reports the catalog's *width* (how many named streams it holds),
 not the length of any individual stream. For row counts, see
-[`nrows()`](nrows.md)/[`minrows()`](minrows.md)/[`maxrows()`](maxrows.md).
+[`nentries()`](nentries.md)/[`minentries()`](minentries.md)/[`maxentries()`](maxentries.md).
 ```
 
 ## Parameters

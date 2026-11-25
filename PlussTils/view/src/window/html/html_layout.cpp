@@ -73,6 +73,11 @@ struct ResolvedStyle {
   bool has_shadow{false};
   bool has_linear_gradient{false};
   bool gradient_horizontal{false};
+  bool gradient_has_mid{false};
+  Color gradient_mid{Color::rgba(255, 255, 255, 255)};
+  double gradient_mid_pos{0.5};
+  int border_top_px{0};  // `border-top: Npx solid colour`: a bar along the box's top edge
+  Color border_top_color{Color::rgba(208, 215, 222, 255)};
   Color gradient_start{Color::rgba(255, 255, 255, 255)};
   Color gradient_end{Color::rgba(245, 246, 248, 255)};
 };
@@ -550,6 +555,10 @@ struct LinearGradientSpec {
   Color start{Color::rgba(255, 255, 255, 255)};
   Color end{Color::rgba(245, 246, 248, 255)};
   bool horizontal{false};
+  // A middle colour stop (`a 0%, b 68%, c 100%`): the gradient runs start -> mid up to mid_pos, then mid -> end.
+  bool has_mid{false};
+  Color mid{Color::rgba(255, 255, 255, 255)};
+  double mid_pos{0.5};
 };
 
 [[nodiscard]] std::optional<BoxShadowSpec> parse_box_shadow(std::string_view value, const int font_size) {
@@ -655,11 +664,29 @@ struct LinearGradientSpec {
     return std::nullopt;
   }
 
-  return LinearGradientSpec{
+  LinearGradientSpec spec{
       .start = *start,
       .end = *end,
       .horizontal = horizontal,
   };
+  if (args.size() >= color_start + 3) {
+    const std::string& stop = args[color_start + 1];
+    if (const auto mid = parse_color(stop); mid.has_value()) {
+      spec.has_mid = true;
+      spec.mid = *mid;
+      const auto pct = stop.rfind('%');
+      if (pct != std::string::npos) {
+        std::size_t begin = pct;
+        while (begin > 0 && (std::isdigit(static_cast<unsigned char>(stop[begin - 1])) != 0 || stop[begin - 1] == '.')) {
+          --begin;
+        }
+        if (begin < pct) {
+          spec.mid_pos = std::clamp(std::atof(stop.substr(begin, pct - begin).c_str()) / 100.0, 0.0, 1.0);
+        }
+      }
+    }
+  }
+  return spec;
 }
 
 [[nodiscard]] std::string apply_text_transform(std::string text, std::string_view transform) {
@@ -1178,12 +1205,24 @@ void apply_style_property(ResolvedStyle& style,
       style.gradient_start = gradient->start;
       style.gradient_end = gradient->end;
       style.gradient_horizontal = gradient->horizontal;
+      style.gradient_has_mid = gradient->has_mid;
+      style.gradient_mid = gradient->mid;
+      style.gradient_mid_pos = gradient->mid_pos;
       style.has_background = true;
       style.background_color = gradient->start;
     } else if (const auto c = parse_color(val); c.has_value()) {
       style.has_linear_gradient = false;
       style.background_color = *c;
       style.has_background = c->a > 0;
+    }
+  } else if (property == "border-top") {
+    std::size_t p = 0;
+    while (p < val.size() && std::isspace(static_cast<unsigned char>(val[p])) != 0) ++p;
+    std::size_t q = p;
+    while (q < val.size() && std::isspace(static_cast<unsigned char>(val[q])) == 0) ++q;
+    style.border_top_px = clamp_nonneg(parse_css_length_px(val.substr(p, q - p), style.font_size));
+    if (const auto c = parse_color(val); c.has_value()) {
+      style.border_top_color = *c;
     }
   } else if (property == "border") {
     // Minimal shorthand: "1px solid #d0d7de"
@@ -1400,6 +1439,16 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   return true;
 }
 
+// (ids, classes, tags) packed so one integer compares like a browser's specificity triple.
+[[nodiscard]] int selector_specificity(std::string_view selector) {
+  int total = 0;
+  for (const auto& part : parse_selector_parts(selector)) {
+    total += (part.id.empty() ? 0 : 10000) + static_cast<int>(part.classes.size()) * 100 +
+             ((part.tag.empty() || part.universal) ? 0 : 1);
+  }
+  return total;
+}
+
 [[nodiscard]] bool selector_matches_node(std::string_view selector,
                                          const std::vector<const HtmlNode*>& lineage,
                                          const HtmlNode& node) {
@@ -1475,6 +1524,8 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   style.position = "static";
   style.has_linear_gradient = false;
   style.gradient_horizontal = false;
+  style.gradient_has_mid = false;
+  style.border_top_px = 0;
   style.gradient_start = Color::rgba(255, 255, 255, 255);
   style.gradient_end = Color::rgba(245, 246, 248, 255);
   style.display = (node.kind == HtmlNodeKind::Text) ? "inline" : "block";
@@ -1507,6 +1558,9 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
       style.gradient_start = gradient->start;
       style.gradient_end = gradient->end;
       style.gradient_horizontal = gradient->horizontal;
+      style.gradient_has_mid = gradient->has_mid;
+      style.gradient_mid = gradient->mid;
+      style.gradient_mid_pos = gradient->mid_pos;
       style.background_color = gradient->start;
       style.has_background = true;
     } else if (const auto c = parse_color(node.style.background); c.has_value()) {
@@ -1515,6 +1569,7 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
     }
   }
 
+  std::vector<std::pair<int, const HtmlCssRule*>> matched;
   for (const auto& rule : document.style_rules) {
     if (rule.media_min_width_px > 0 && viewport_width < rule.media_min_width_px) {
       continue;
@@ -1525,7 +1580,15 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
     if (!selector_matches_node(rule.selector, lineage, node)) {
       continue;
     }
-    for (const auto& decl : rule.declarations) {
+    matched.emplace_back(selector_specificity(rule.selector), &rule);
+  }
+  // The more specific selector wins whatever the order (`tr.even td` over `.sticky-left`); equal
+  // specificity keeps source order. Same cascade as a browser, so a page looks the same in both.
+  std::stable_sort(matched.begin(), matched.end(),
+                   [](const auto& a, const auto& b) { return a.first < b.first; });
+  for (const auto& [specificity, rule] : matched) {
+    (void)specificity;
+    for (const auto& decl : rule->declarations) {
       apply_style_property(style, decl.name, decl.value, document.css_variables);
     }
   }
@@ -2629,16 +2692,40 @@ void draw_style_fill(Scene& scene, const RectI rect, const ResolvedStyle& style)
     return;
   }
   if (style.has_linear_gradient) {
-    scene.add(FillLinearGradientCommand{
-        .rect = rect,
-        .start_color = style.gradient_start,
-        .end_color = style.gradient_end,
-        .horizontal = style.gradient_horizontal,
-        .radius = style.border_radius,
-    });
-    return;
+    if (style.gradient_has_mid) {
+      // Two segments meet at the middle stop: start -> mid, then mid -> end.
+      const int span = style.gradient_horizontal ? rect.width : rect.height;
+      const int cut = std::clamp(static_cast<int>(std::lround(span * style.gradient_mid_pos)), 0, span);
+      const RectI first = style.gradient_horizontal ? RectI{rect.x, rect.y, cut, rect.height}
+                                                    : RectI{rect.x, rect.y, rect.width, cut};
+      const RectI second = style.gradient_horizontal ? RectI{rect.x + cut, rect.y, rect.width - cut, rect.height}
+                                                     : RectI{rect.x, rect.y + cut, rect.width, rect.height - cut};
+      if (!first.empty()) {
+        scene.add(FillLinearGradientCommand{.rect = first, .start_color = style.gradient_start,
+                                            .end_color = style.gradient_mid, .horizontal = style.gradient_horizontal,
+                                            .radius = 0});
+      }
+      if (!second.empty()) {
+        scene.add(FillLinearGradientCommand{.rect = second, .start_color = style.gradient_mid,
+                                            .end_color = style.gradient_end, .horizontal = style.gradient_horizontal,
+                                            .radius = 0});
+      }
+    } else {
+      scene.add(FillLinearGradientCommand{
+          .rect = rect,
+          .start_color = style.gradient_start,
+          .end_color = style.gradient_end,
+          .horizontal = style.gradient_horizontal,
+          .radius = style.border_radius,
+      });
+    }
+  } else {
+    draw_rect_fill(scene, rect, style.background_color, style.border_radius);
   }
-  draw_rect_fill(scene, rect, style.background_color, style.border_radius);
+  if (style.border_top_px > 0) {
+    scene.add(FillRectCommand{RectI{rect.x, rect.y, rect.width, std::min(style.border_top_px, rect.height)},
+                              style.border_top_color});
+  }
 }
 
 void draw_rect_border(Scene& scene, const RectI rect, const int border, const Color color, const int radius) {
@@ -3253,6 +3340,26 @@ int render_node(Scene& scene,
                 const ResolvedStyle* parent_style,
                 const int viewport_width);
 
+// Colour of a table's grid lines: the border colour a body cell resolves to in the page's stylesheet, so
+// a theme repaints the grid instead of leaving it light grey.
+[[nodiscard]] Color themed_grid_color(const HtmlDocument& document,
+                                      const std::vector<const HtmlNode*>& lineage,
+                                      const HtmlNode& table,
+                                      const ResolvedStyle& table_style,
+                                      const int viewport_width) {
+  HtmlNode section;
+  section.tag = "tbody";
+  HtmlNode row;
+  row.tag = "tr";
+  HtmlNode cell;
+  cell.tag = "td";
+  std::vector<const HtmlNode*> cell_lineage = lineage;
+  cell_lineage.push_back(&table);
+  cell_lineage.push_back(&section);
+  cell_lineage.push_back(&row);
+  return resolve_style(document, cell, cell_lineage, &table_style, viewport_width).border_color;
+}
+
 int render_virtual_table(
     Scene& scene,
     const HtmlDocument& document,
@@ -3504,7 +3611,7 @@ int render_virtual_table(
   const Paint missing_paint = probe("tbody", "td", "num missing", false);
   const Paint nan_paint = probe("tbody", "td", "num nonfinite nan", false);
   const Paint inf_paint = probe("tbody", "td", "num nonfinite inf", false);
-  const Color grid = Color::rgba(216, 222, 228, 255);
+  const Color grid = themed_grid_color(document, lineage, node, style, viewport_width);
   const Color header_fill = header_paint.fill;
   const Color sticky_fill = sticky_paint.fill;
   const Color sticky_header_fill = sticky_header_paint.fill;
@@ -3738,6 +3845,7 @@ int render_table(Scene& scene,
                  const ResolvedStyle* parent_style,
                  const int viewport_width) {
   const ResolvedStyle style = resolve_style(document, node, lineage, parent_style, viewport_width);
+  const Color grid_color = themed_grid_color(document, lineage, node, style, viewport_width);
   // The model paints only the table marked as virtual; any other table on the page (a stats
   // view next to a long data table, say) is laid out from its own rows.
   if (render_config.virtual_table_model != nullptr) {
@@ -4102,9 +4210,9 @@ int render_table(Scene& scene,
         break;
       }
     }
-    const Color fill = header_row ? header_fill
-                                  : ((r % 2 == 0) ? Color::rgba(255, 255, 255, 255)
-                                                  : Color::rgba(248, 250, 252, 255));
+    // Body cells paint their own background one pixel inside the row, so what shows between them is the
+    // grid: the theme's line colour, never a fixed white.
+    const Color fill = header_row ? header_fill : grid_color;
     if (header_row && row_y == content_y) {
       const int header_radius = std::max(0, std::min(style.border_radius, row_h / 2));
       // The header band runs the full width of the panel: past the last column it is the header of
@@ -4119,12 +4227,12 @@ int render_table(Scene& scene,
     scene.add(LineCommand{PointI{table_origin_x, row_y},
                           PointI{table_origin_x + grid_w, row_y},
                           1,
-                          Color::rgba(216, 222, 228, 255)});
+                          grid_color});
     // The grid carries on past the last column as blank columns, so a table narrower than its panel
     // looks like a sheet with empty cells and not like a hole.
     for (int edge = table_origin_x + row_total_w; edge < content_x + content_w;
          edge += std::max(1, table_geo.continuation_column)) {
-      scene.add(LineCommand{PointI{edge, row_y}, PointI{edge, row_y + row_h}, 1, Color::rgba(216, 222, 228, 255)});
+      scene.add(LineCommand{PointI{edge, row_y}, PointI{edge, row_y + row_h}, 1, grid_color});
     }
 
     for (const std::size_t c : visible_scroll_columns) {
@@ -4134,7 +4242,7 @@ int render_table(Scene& scene,
       scene.add(LineCommand{PointI{cell_x, row_y},
                             PointI{cell_x, row_y + row_h},
                             1,
-                            Color::rgba(216, 222, 228, 255)});
+                            grid_color});
 
       const std::string value = (source_index < row.cells.size()) ? row.cells[source_index].text : std::string{};
 
@@ -4234,7 +4342,7 @@ int render_table(Scene& scene,
     scene.add(LineCommand{PointI{table_origin_x + row_total_w, row_y},
                           PointI{table_origin_x + row_total_w, row_y + row_h},
                           1,
-                          Color::rgba(216, 222, 228, 255)});
+                          grid_color});
 
     if (sticky_prefix_count > 0) {
       Color sticky_divider = Color::rgba(79, 137, 148, 255);  // overridden by the sticky cell's border-color
@@ -4246,7 +4354,7 @@ int render_table(Scene& scene,
         scene.add(LineCommand{PointI{sticky_x, row_y},
                               PointI{sticky_x, row_y + row_h},
                               1,
-                              Color::rgba(216, 222, 228, 255)});
+                              grid_color});
 
         const std::string value = (source_index < row.cells.size()) ? row.cells[source_index].text : std::string{};
         ResolvedStyle cell_style = style;
@@ -4297,7 +4405,7 @@ int render_table(Scene& scene,
         scene.add(LineCommand{PointI{sticky_x, row_y},
                               PointI{sticky_x + sticky_w, row_y},
                               1,
-                              Color::rgba(216, 222, 228, 255)});
+                              grid_color});
         if (header_row && render_config.hit_regions != nullptr) {
           render_config.hit_regions->push_back(HtmlHitRegion{
               .rect = RectI{sticky_x, row_y, sticky_w, row_h},
@@ -4412,7 +4520,7 @@ int render_table(Scene& scene,
     scene.add(LineCommand{PointI{table_origin_x, table_end_y},
                           PointI{table_origin_x + row_total_w, table_end_y},
                           1,
-                          Color::rgba(216, 222, 228, 255)});
+                          grid_color});
   }
   RectI horizontal_track{};
   RectI horizontal_thumb{};

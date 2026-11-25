@@ -79,8 +79,8 @@ city                     | Series       | Series[bool]     | 3       | [true, tr
     <span class="label">Previous</span>
     <span class="title">notnan</span>
   </a>
-  <a class="next-link" href="nrows.html">
+  <a class="next-link" href="nentries.html">
     <span class="label">Next</span>
-    <span class="title">nrows</span>
+    <span class="title">nentries</span>
   </a>
 </div>

@@ -87,7 +87,7 @@ full output domain and an explicit null.
 const auto preserved = ragged.from("orders")
     .join("customers", mode(JoinHow::Left)).collect();
 std::cout << "preserve amount size=" << preserved.keys("amount").size()
-          << " rows=" << preserved.maxrows() << "\n";
+          << " rows=" << preserved.maxentries() << "\n";
 
 JoinOptions padded;
 padded.ragged.materialize = RaggedMaterialize::Pad;
@@ -133,7 +133,7 @@ const auto cut = ragged.from("orders")
     .options(shortest)
     .join("customers", mode(JoinHow::Left))
     .collect();
-std::cout << "shortest rows=" << cut.maxrows()
+std::cout << "shortest rows=" << cut.maxentries()
           << " amount size=" << cut.keys("amount").size() << "\n";
 
 JoinOptions exact;
@@ -192,9 +192,9 @@ Example 7. Option changes branch immutably.
 
 ```cpp
 const auto base = data.from("orders").join("customers");
-std::cout << "default rows=" << base.collect().maxrows() << "\n";
+std::cout << "default rows=" << base.collect().maxentries() << "\n";
 print_error("derived loss", [&] { (void)base.options(lossless).collect(); });
-std::cout << "default again rows=" << base.collect().maxrows() << "\n";
+std::cout << "default again rows=" << base.collect().maxentries() << "\n";
 ```
 
 ### Output

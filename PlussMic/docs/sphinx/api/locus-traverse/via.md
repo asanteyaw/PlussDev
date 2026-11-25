@@ -84,14 +84,14 @@ Cartesian product at each edge.
 
 ```cpp
 std::cout << "left rows="
-          << data.from("items").via("customers").collect().maxrows() << "\n";
+          << data.from("items").via("customers").collect().maxentries() << "\n";
 std::cout << "inner rows="
           << data.from("items").via("customers", JoinHow::Inner)
-                 .collect().maxrows()
+                 .collect().maxentries()
           << "\n";
 std::cout << "cross rows="
           << data.from("items").via("customers", JoinHow::Cross)
-                 .collect().maxrows()
+                 .collect().maxentries()
           << "\n";
 ```
 

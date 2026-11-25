@@ -30,7 +30,7 @@ Example 2, where the same seed reliably reproduces the same sample.
 
 **n** (`std::int64_t`)
 
-Number of rows to sample. Clamped to `[0, nrows]` — requesting more rows than the
+Number of rows to sample. Clamped to `[0, nentries]` — requesting more rows than the
 catalog has simply returns all of them (still shuffled), rather than throwing.
 
 **random_state** (`std::optional<std::uint64_t>`, default `std::nullopt`)
@@ -119,7 +119,7 @@ Catalog::sample: requires aligned stream lengths
 - Sampling is without replacement — each row position appears at most once in the result.
 - Requires aligned stream lengths, unlike `head`/`tail`/`slice`/`take`; throws on a ragged
   catalog rather than sampling per-stream.
-- `n` is clamped to `[0, nrows]`; requesting more rows than exist returns every row
+- `n` is clamped to `[0, nentries]`; requesting more rows than exist returns every row
   (shuffled), not an error.
 - Non-deterministic unless `random_state` is set — see the important callout above.
 
@@ -127,7 +127,7 @@ Catalog::sample: requires aligned stream lengths
 
 - [`Catalog::take`](take.md): the positional mechanism `sample()` uses internally, for when
   you already know which positions you want.
-- [`Catalog::nrows`](nrows.md): the aligned row-length check `sample()` performs
+- [`Catalog::nentries`](nentries.md): the aligned row-length check `sample()` performs
   before shuffling.
 
 <div class="pluss-inline-prev-next">

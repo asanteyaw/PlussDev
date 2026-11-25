@@ -1259,12 +1259,17 @@ std::string html_shell_(std::string_view title,
       background: var(--panel);
       overflow: hidden;
     }}
+    .top-bar {{
+      height: 4px;
+      background: var(--accent-3);
+    }}
     .table-scroll {{
       overflow: auto;
       max-height: calc(100vh - 300px);
       border-radius: inherit;
     }}
     table {{
+      border-color: var(--border);
       width: 100%;
       max-height: 28.6em;  /* about 400px at the table font; tracks the font size */
       margin: 0;
@@ -1285,6 +1290,7 @@ std::string html_shell_(std::string_view title,
     th, td {{
       padding: 8px 10px;
       border-bottom: 1px solid var(--row-line);
+      border-color: var(--line);
       vertical-align: top;
     }}
     td {{
@@ -2051,8 +2057,8 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += "</div>";
   }
 
-  body += style.virtual_rows ? "<div class=\"table-wrap vwrap\"><div class=\"table-scroll\">"
-                              : "<div class=\"table-wrap\"><div class=\"table-scroll\">";
+  body += style.virtual_rows ? "<div class=\"table-wrap vwrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">"
+                              : "<div class=\"table-wrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">";
   // The label column starts at a fixed default width like every other column (nothing is sized
   // from the labels, so long feature names never blow it out); the user drags it to taste.
   constexpr int kLabelColumnPx = 140;
@@ -2885,6 +2891,44 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
                      options);
 }
 
+std::string render_html_cards_(std::string_view heading,
+                               std::string_view subtitle,
+                               const std::vector<CardPanel>& cards,
+                               const DisplayOptions& options) {
+  std::string body = R"CSS(<style>
+    .kcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; align-items: start; padding-top: 6px; }
+    .kcard { border: 1px solid var(--border); border-top: 4px solid var(--accent-3); border-radius: 7px; background: var(--panel); overflow: hidden; min-width: 0; }
+    .kcard-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 8px 10px 6px; }
+    .kbadges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .kcard-title { margin: 0; font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .kcard .top-bar { display: none; }
+    .kcard .table-wrap { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+    .kcard .table-scroll { max-height: 62vh; overflow: auto; }
+  </style>)CSS";
+  body += "<div class=\"kcards\">";
+  HtmlBodyStyle style;
+  style.corner_label = "#";
+  style.show_cards = false;
+  for (std::size_t i = 0; i < cards.size(); ++i) {
+    const auto& card = cards[i];
+    body += "<section class=\"kcard\"><div class=\"kcard-head\">";
+    body += pluss::tils::OutputEngine::format("<h2 class=\"kcard-title\">{}</h2><div class=\"kbadges\">", escape_html_(card.title));
+    for (const auto& badge : card.badges) {
+      body += pluss::tils::OutputEngine::format("<span class=\"pill\">{}</span>", escape_html_(badge));
+    }
+    body += "</div></div>";
+    if (card.values) {
+      std::vector<std::pair<std::string, Shelf>> column;
+      column.emplace_back(card.title, *card.values);
+      body += render_html_table_body_(DataFrame(std::move(column)), options,
+                                      pluss::tils::OutputEngine::format("plussmic-card-{}", i), style);
+    }
+    body += "</section>";
+  }
+  body += "</div>";
+  return html_shell_(document_title_(heading, options), subtitle, body, options);
+}
+
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = dataframe_columns_(frame);
   const auto display_cases = display_shelf(frame.labels().values());
@@ -3189,6 +3233,11 @@ std::string render_html(const Shelf& shelf, const DisplayOptions& options) {
   return render_html_pre_(title, subtitle, render(shelf, options), options);
 }
 
+std::string render_html_cards(const std::string_view heading, const std::string_view subtitle,
+                              const std::vector<CardPanel>& cards, const DisplayOptions& options) {
+  return render_html_cards_(heading, subtitle, cards, options);
+}
+
 std::string render_html(const Atlas& atlas, const DisplayOptions& options) {
   return render_html_atlas_(atlas, options);
 }
@@ -3432,6 +3481,25 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
     }
   }
   print(std::cout, atlas, options);
+}
+
+bool show_cards(const std::string_view heading, const std::string_view subtitle,
+                const std::vector<CardPanel>& cards, const DisplayOptions& options) {
+  const std::string head{heading};
+  const std::string sub{subtitle};
+  if (show_in_notebook_(render_html_cards_(head, sub, cards, options))) {
+    return true;
+  }
+  const auto backend = resolve_backend_(options);
+  if (backend == DisplayBackend::Terminal) {
+    return false;
+  }
+  auto render_opts = options;
+  render_opts.backend = backend;
+  const auto render_with = [head, sub, cards](const DisplayOptions& current) {
+    return render_html_cards_(head, sub, cards, current);
+  };
+  return show_html_window_(render_with(render_opts), render_opts, "Pluss " + head, backend, {}, false, render_with);
 }
 
 void show_info(const DataFrame& frame, const DisplayOptions& options) {
