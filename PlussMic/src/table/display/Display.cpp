@@ -1260,7 +1260,7 @@ std::string html_shell_(std::string_view title,
       overflow: hidden;
     }}
     .top-bar {{
-      height: 4px;
+      height: 0.3em;
       background: var(--accent-3);
     }}
     .table-scroll {{
@@ -2896,14 +2896,13 @@ std::string render_html_cards_(std::string_view heading,
                                const std::vector<CardPanel>& cards,
                                const DisplayOptions& options) {
   std::string body = R"CSS(<style>
-    .kcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; align-items: start; padding-top: 6px; }
-    .kcard { border: 1px solid var(--border); border-top: 4px solid var(--accent-3); border-radius: 7px; background: var(--panel); overflow: hidden; min-width: 0; }
-    .kcard-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 8px 10px 6px; }
-    .kbadges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .kcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16em, 1fr)); gap: 0.7em; align-items: start; padding-top: 0.4em; }
+    .kcard { border: 1px solid var(--border); border-top: 0.3em solid var(--accent-3); border-radius: 0.5em; background: var(--panel); overflow: hidden; min-width: 0; }
+    .kcard-head { display: flex; flex-wrap: wrap; gap: 0.4em; align-items: center; justify-content: space-between; padding: 0.6em 0.7em 0.4em; }
+    .kbadges { display: flex; flex-wrap: wrap; gap: 0.4em; }
     .kcard-title { margin: 0; font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
     .kcard .top-bar { display: none; }
     .kcard .table-wrap { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
-    .kcard .table-scroll { max-height: 62vh; overflow: auto; }
   </style>)CSS";
   body += "<div class=\"kcards\">";
   HtmlBodyStyle style;

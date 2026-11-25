@@ -346,8 +346,8 @@ Registry Registry::slice(std::int64_t start, std::int64_t stop) const {
   return Registry(std::move(out));
 }
 
-Registry Registry::sloc(std::int64_t row) const {
-  return slice(row, row + 1);
+Registry Registry::sloc(std::int64_t state) const {
+  return slice(state, state + 1);
 }
 
 Registry Registry::sloc(std::int64_t start, std::int64_t stop) const {

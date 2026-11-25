@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c9ae96e016b2 -->
+<!-- pluss-signature-hash: 2065d0e58bb4 -->
 
 # Catalog::eloc
 
@@ -8,39 +8,39 @@
 ## Signatures
 
 ```cpp
-Catalog Catalog::eloc(std::int64_t row) const
+Catalog Catalog::eloc(std::int64_t entry) const
 Catalog Catalog::eloc(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does
 
-Positional row access across every stream, in two shapes: a single row, or a `[start,
-stop)` range. Both are thin wrappers over [`slice()`](slice.md) — `eloc(row)` is exactly
-`slice(row, row + 1)`, and `eloc(start, stop)` is exactly `slice(start, stop)`, a pure
+Positional entry access across every stream, in two shapes: a single entry, or a `[start,
+stop)` range. Both are thin wrappers over [`slice()`](slice.md) — `eloc(entry)` is exactly
+`slice(entry, entry + 1)`, and `eloc(start, stop)` is exactly `slice(start, stop)`, a pure
 alias with no behavioral difference at all.
 
 ## Parameters
 
-**row** (`std::int64_t`)
+**entry** (`std::int64_t`)
 
-A single row position to select. Produces a one-row catalog, not a scalar.
+A single entry position to select. Produces a one-entry catalog, not a scalar.
 
 **start** (`std::int64_t`)
 
-Inclusive starting row position (two-argument overload).
+Inclusive starting entry position (two-argument overload).
 
 **stop** (`std::int64_t`)
 
-Exclusive ending row position (two-argument overload).
+Exclusive ending entry position (two-argument overload).
 
 ## Returns
 
 `Catalog`
-    A new catalog restricted to the requested row or row range, across every stream.
+    A new catalog restricted to the requested entry or entry range, across every stream.
 
 ## Examples
 
-Example 1. Select a single row — the result is still a `Catalog`, just with one row in
+Example 1. Select a single entry — the result is still a `Catalog`, just with one entry in
 each stream.
 
 ```cpp
@@ -97,7 +97,7 @@ city                     | Note         | Note             | 2       | [Tema, Ku
 
 ## Notes
 
-- `eloc(row)` returns a one-row `Catalog`, not a scalar or a row-object — extract the
+- `eloc(entry)` returns a one-entry `Catalog`, not a scalar or an entry-object — extract the
   value out of each stream afterward if you need it.
 - `eloc(start, stop)` is a pure alias for [`slice(start, stop)`](slice.md) — no
   behavioral difference.
@@ -105,7 +105,7 @@ city                     | Note         | Note             | 2       | [Tema, Ku
 ## See Also
 
 - [`Catalog::slice`](slice.md): the method the two-argument overload is a direct alias for.
-- [`Catalog::head`](head.md) / [`Catalog::tail`](tail.md): fixed-count row selection from
+- [`Catalog::head`](head.md) / [`Catalog::tail`](tail.md): fixed-count entry selection from
   either end.
 
 <div class="pluss-inline-prev-next">

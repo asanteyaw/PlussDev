@@ -75,7 +75,7 @@ struct ResolvedStyle {
   bool gradient_horizontal{false};
   bool gradient_has_mid{false};
   Color gradient_mid{Color::rgba(255, 255, 255, 255)};
-  double gradient_mid_pos{0.5};
+  double gradient_mid_pos{0.0};
   int border_top_px{0};  // `border-top: Npx solid colour`: a bar along the box's top edge
   Color border_top_color{Color::rgba(208, 215, 222, 255)};
   Color gradient_start{Color::rgba(255, 255, 255, 255)};
@@ -558,7 +558,7 @@ struct LinearGradientSpec {
   // A middle colour stop (`a 0%, b 68%, c 100%`): the gradient runs start -> mid up to mid_pos, then mid -> end.
   bool has_mid{false};
   Color mid{Color::rgba(255, 255, 255, 255)};
-  double mid_pos{0.5};
+  double mid_pos{0.0};
 };
 
 [[nodiscard]] std::optional<BoxShadowSpec> parse_box_shadow(std::string_view value, const int font_size) {
@@ -674,6 +674,8 @@ struct LinearGradientSpec {
     if (const auto mid = parse_color(stop); mid.has_value()) {
       spec.has_mid = true;
       spec.mid = *mid;
+      // Without a position a stop sits evenly between its neighbours.
+      spec.mid_pos = 1.0 / static_cast<double>(args.size() - color_start - 1);
       const auto pct = stop.rfind('%');
       if (pct != std::string::npos) {
         std::size_t begin = pct;
@@ -681,7 +683,10 @@ struct LinearGradientSpec {
           --begin;
         }
         if (begin < pct) {
-          spec.mid_pos = std::clamp(std::atof(stop.substr(begin, pct - begin).c_str()) / 100.0, 0.0, 1.0);
+          // A stop outside 0%..100% is not a stop on the gradient: it is ignored, not moved.
+          const double pos = std::atof(stop.substr(begin, pct - begin).c_str()) / 100.0;
+          spec.has_mid = pos >= 0.0 && pos <= 1.0;
+          spec.mid_pos = pos;
         }
       }
     }
@@ -1439,12 +1444,16 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   return true;
 }
 
-// (ids, classes, tags) packed so one integer compares like a browser's specificity triple.
+// (ids, classes, tags) packed so one integer compares like a browser's specificity triple. Each weight
+// outranks any number of the next kind a selector can plausibly hold.
+constexpr int kTagWeight = 1;
+constexpr int kClassWeight = 100 * kTagWeight;
+constexpr int kIdWeight = 100 * kClassWeight;
 [[nodiscard]] int selector_specificity(std::string_view selector) {
   int total = 0;
   for (const auto& part : parse_selector_parts(selector)) {
-    total += (part.id.empty() ? 0 : 10000) + static_cast<int>(part.classes.size()) * 100 +
-             ((part.tag.empty() || part.universal) ? 0 : 1);
+    total += (part.id.empty() ? 0 : kIdWeight) + static_cast<int>(part.classes.size()) * kClassWeight +
+             ((part.tag.empty() || part.universal) ? 0 : kTagWeight);
   }
   return total;
 }
@@ -2695,7 +2704,7 @@ void draw_style_fill(Scene& scene, const RectI rect, const ResolvedStyle& style)
     if (style.gradient_has_mid) {
       // Two segments meet at the middle stop: start -> mid, then mid -> end.
       const int span = style.gradient_horizontal ? rect.width : rect.height;
-      const int cut = std::clamp(static_cast<int>(std::lround(span * style.gradient_mid_pos)), 0, span);
+      const int cut = static_cast<int>(std::lround(span * style.gradient_mid_pos));
       const RectI first = style.gradient_horizontal ? RectI{rect.x, rect.y, cut, rect.height}
                                                     : RectI{rect.x, rect.y, rect.width, cut};
       const RectI second = style.gradient_horizontal ? RectI{rect.x + cut, rect.y, rect.width - cut, rect.height}
@@ -3340,24 +3349,41 @@ int render_node(Scene& scene,
                 const ResolvedStyle* parent_style,
                 const int viewport_width);
 
-// Colour of a table's grid lines: the border colour a body cell resolves to in the page's stylesheet, so
-// a theme repaints the grid instead of leaving it light grey.
-[[nodiscard]] Color themed_grid_color(const HtmlDocument& document,
-                                      const std::vector<const HtmlNode*>& lineage,
-                                      const HtmlNode& table,
-                                      const ResolvedStyle& table_style,
-                                      const int viewport_width) {
+// The colours a table takes from the page's own stylesheet: the grid, the body fill, and the accent the
+// label column divider uses. Scrollbars and the area under the last row follow the theme too.
+struct TablePaint {
+  Color grid;
+  Color body_bg;
+  Color track;
+  Color thumb;
+};
+
+[[nodiscard]] TablePaint themed_table_paint(const HtmlDocument& document,
+                                            const std::vector<const HtmlNode*>& lineage,
+                                            const HtmlNode& table,
+                                            const ResolvedStyle& table_style,
+                                            const int viewport_width) {
   HtmlNode section;
   section.tag = "tbody";
   HtmlNode row;
   row.tag = "tr";
-  HtmlNode cell;
-  cell.tag = "td";
   std::vector<const HtmlNode*> cell_lineage = lineage;
   cell_lineage.push_back(&table);
   cell_lineage.push_back(&section);
   cell_lineage.push_back(&row);
-  return resolve_style(document, cell, cell_lineage, &table_style, viewport_width).border_color;
+  HtmlNode cell;
+  cell.tag = "td";
+  const ResolvedStyle body = resolve_style(document, cell, cell_lineage, &table_style, viewport_width);
+  HtmlNode label;
+  label.tag = "td";
+  label.attributes.push_back(HtmlAttribute{"class", "sticky-left"});
+  const ResolvedStyle accent = resolve_style(document, label, cell_lineage, &table_style, viewport_width);
+  TablePaint paint{};
+  paint.grid = body.border_color;
+  paint.body_bg = body.has_background ? body.background_color : table_style.background_color;
+  paint.track = body.border_color;
+  paint.thumb = accent.border_color;
+  return paint;
 }
 
 int render_virtual_table(
@@ -3611,7 +3637,8 @@ int render_virtual_table(
   const Paint missing_paint = probe("tbody", "td", "num missing", false);
   const Paint nan_paint = probe("tbody", "td", "num nonfinite nan", false);
   const Paint inf_paint = probe("tbody", "td", "num nonfinite inf", false);
-  const Color grid = themed_grid_color(document, lineage, node, style, viewport_width);
+  const TablePaint paint = themed_table_paint(document, lineage, node, style, viewport_width);
+  const Color grid = paint.grid;
   const Color header_fill = header_paint.fill;
   const Color sticky_fill = sticky_paint.fill;
   const Color sticky_header_fill = sticky_header_paint.fill;
@@ -3664,6 +3691,7 @@ int render_virtual_table(
   }
   const std::int64_t first_row =
       row_h > 0 ? static_cast<std::int64_t>(scroll_y / row_h) : 0;
+  scene.add(FillRectCommand{RectI{content_x, body_y, content_w, body_viewport_h}, paint.body_bg});
   int row_y = body_y - (scroll_y % row_h);
   const int body_bottom = body_y + body_viewport_h;
   // Stop before a row that would extend past the viewport rather than
@@ -3781,9 +3809,9 @@ int render_virtual_table(
     horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
     if (render_config.draw_scrollbars) {
       draw_rect_fill(scene, horizontal_track,
-                     Color::rgba(218, 224, 231, 238), 5);
+                     paint.track, 5);
       draw_rect_fill(scene, horizontal_thumb,
-                     Color::rgba(94, 111, 130, 255), 5);
+                     paint.thumb, 5);
     }
   }
   if (max_scroll_y > 0) {
@@ -3812,9 +3840,9 @@ int render_virtual_table(
     vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
     if (render_config.draw_scrollbars) {
       draw_rect_fill(scene, vertical_track,
-                     Color::rgba(218, 224, 231, 238), 5);
+                     paint.track, 5);
       draw_rect_fill(scene, vertical_thumb,
-                     Color::rgba(94, 111, 130, 255), 5);
+                     paint.thumb, 5);
     }
   }
   if (render_config.render_stats != nullptr) {
@@ -3845,7 +3873,8 @@ int render_table(Scene& scene,
                  const ResolvedStyle* parent_style,
                  const int viewport_width) {
   const ResolvedStyle style = resolve_style(document, node, lineage, parent_style, viewport_width);
-  const Color grid_color = themed_grid_color(document, lineage, node, style, viewport_width);
+  const TablePaint paint = themed_table_paint(document, lineage, node, style, viewport_width);
+  const Color grid_color = paint.grid;
   // The model paints only the table marked as virtual; any other table on the page (a stats
   // view next to a long data table, say) is laid out from its own rows.
   if (render_config.virtual_table_model != nullptr) {
@@ -4466,6 +4495,8 @@ int render_table(Scene& scene,
     if (render_config.clip_table_viewport) {
       scene.add(SetClipRectCommand{RectI{content_x, body_clip_y, content_w, body_clip_h}});
     }
+    // What the rows do not cover (a part-row at the bottom, the gap under the header) is the body's own colour.
+    scene.add(FillRectCommand{RectI{content_x, body_clip_y, content_w, body_clip_h}, paint.body_bg});
 
     if (body_order.empty()) {
       const int line_h = resolve_line_height_value(style.line_height, style.font_size);
@@ -4537,7 +4568,7 @@ int render_table(Scene& scene,
     const int track_x = content_x + sticky_total_w + 3;
     horizontal_track = RectI{track_x, track_y, track_w, track_h};
     if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, horizontal_track, Color::rgba(218, 224, 231, 238), 5);
+      draw_rect_fill(scene, horizontal_track, paint.track, 5);
     }
 
     const double ratio = static_cast<double>(scrollable_view_w) / static_cast<double>(std::max(1, scrollable_content_w));
@@ -4549,7 +4580,7 @@ int render_table(Scene& scene,
                                    static_cast<double>(max_scroll_x)));
     horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
     if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, horizontal_thumb, Color::rgba(94, 111, 130, 255), 5);
+      draw_rect_fill(scene, horizontal_thumb, paint.thumb, 5);
     }
   }
   if (max_scroll_y > 0) {
@@ -4563,7 +4594,7 @@ int render_table(Scene& scene,
     const int track_y = content_y + header_h + 3;
     vertical_track = RectI{track_x, track_y, track_w, track_h};
     if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, vertical_track, Color::rgba(218, 224, 231, 238), 5);
+      draw_rect_fill(scene, vertical_track, paint.track, 5);
     }
 
     const double ratio = static_cast<double>(body_viewport_h) / static_cast<double>(body_total_h);
@@ -4575,7 +4606,7 @@ int render_table(Scene& scene,
                                    static_cast<double>(max_scroll_y)));
     vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
     if (render_config.draw_scrollbars) {
-      draw_rect_fill(scene, vertical_thumb, Color::rgba(94, 111, 130, 255), 5);
+      draw_rect_fill(scene, vertical_thumb, paint.thumb, 5);
     }
   }
   if (render_config.render_stats != nullptr) {

@@ -28,8 +28,8 @@ Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::eloc(std::int64_t row) const {
-  return slice(row, row + 1);
+Catalog Catalog::eloc(std::int64_t entry) const {
+  return slice(entry, entry + 1);
 }
 
 Catalog Catalog::eloc(std::int64_t start, std::int64_t stop) const {

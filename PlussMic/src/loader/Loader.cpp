@@ -2017,13 +2017,28 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   PLUSS_CHECK(close_status.ok(), "loader::save_parquet: failed to finalize output file: " + close_status.ToString());
 }
 
+// Older Arrow releases fill a reader through an out-parameter; newer ones return a Result.
+template <class File>
+arrow::Result<std::unique_ptr<parquet::arrow::FileReader>> open_parquet_reader_(File infile) {
+  if constexpr (requires { parquet::arrow::OpenFile(infile, arrow::default_memory_pool()); }) {
+    return parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  } else {
+    std::unique_ptr<parquet::arrow::FileReader> reader;
+    auto status = parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader);
+    if (!status.ok()) {
+      return status;
+    }
+    return reader;
+  }
+}
+
 CsvRawBatch read_parquet_raw_batch_cpp(std::string_view filepath, const Config& config) {
   auto maybe_file = arrow::io::ReadableFile::Open(std::string(filepath));
   PLUSS_CHECK(maybe_file.ok(), "loader::read_parquet_raw_batch: unable to open file '" + std::string(filepath) + "'");
   auto infile = *maybe_file;
 
   std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto reader_result = parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  auto reader_result = open_parquet_reader_(infile);
   auto st = reader_result.status();
   if (st.ok()) {
     reader = std::move(*reader_result);
@@ -2112,7 +2127,7 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
   auto infile = *maybe_file;
 
   std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto reader_result = parquet::arrow::OpenFile(infile, arrow::default_memory_pool());
+  auto reader_result = open_parquet_reader_(infile);
   auto st = reader_result.status();
   if (st.ok()) {
     reader = std::move(*reader_result);
