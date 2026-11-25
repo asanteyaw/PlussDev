@@ -978,65 +978,65 @@ struct ThemePalette {
   const char* name;   // id, lower case (used by parse_theme / the demo)
   const char* label;  // shown in the Theme menu
   // order matches kThemeTokens
-  std::array<const char*, 29> v;
+  std::array<const char*, 28> v;
   const char* heat_pos;  // "r,g,b" for positive correlations
   const char* heat_neg;  // "r,g,b" for negative correlations
 };
 
-constexpr std::array<const char*, 29> kThemeTokens{
+constexpr std::array<const char*, 28> kThemeTokens{
     "paper", "panel", "ink", "title", "muted", "line", "border", "row-line", "accent", "accent-2",
-    "accent-3", "accent-3-border", "on-accent", "btn", "btn-border", "hero-a", "hero-b", "hero-c",
+    "accent-3", "accent-3-border", "on-accent", "btn", "btn-border", "hero-a", "hero-c",
     "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border", "miss-ink",
     "miss-bg", "pill-bg", "grid"};
 
 const std::array<ThemePalette, 8> kThemes{{
     {DisplayTheme::Default, "default", "Default",
      {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#dce4ef", "#cfdae9", "#e7edf5", "#c84d58",
-      "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#ffffff", "#f8d9d9",
-      "#dae3ee", "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#a4433b", "#ffe3db",
-      "#e5ebf4", "#dce4ed"},
+      "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#f8d9d9", "#dae3ee",
+      "#edf1f7", "#f2c8cb", "#f7f9fc", "#e7edf5", "#2b5b80", "#b9c8d9", "#a4433b", "#ffe3db", "#e5ebf4",
+      "#dce4ed"},
      "41,93,138", "200,77,88"},
     {DisplayTheme::Ember, "ember", "Ember",
      {"#f1e3da", "#fbf6f2", "#3a241e", "#2a1917", "#8d5646", "#e3cabd", "#e3cdc1", "#f0e0d6", "#b5412a",
-      "#e8742a", "#77493b", "#4a2a22", "#fbe4d9", "#6b3a2e", "#46261e", "#eab09a", "#fbf6f2", "#f6c9a8",
-      "#f0d3c4", "#f6e4d9", "#e6b9a2", "#fbf1ea", "#f6dccd", "#77493b", "#d9b9a8", "#ffffff", "#d7261e",
-      "#f0d3c4", "#f0e0d6"},
+      "#e8742a", "#77493b", "#4a2a22", "#fbe4d9", "#6b3a2e", "#46261e", "#eab09a", "#f6c9a8", "#f0d3c4",
+      "#f6e4d9", "#e6b9a2", "#fbf1ea", "#f6dccd", "#77493b", "#d9b9a8", "#ffffff", "#d7261e", "#f0d3c4",
+      "#f0e0d6"},
      "232,116,42", "90,61,56"},
     {DisplayTheme::Nardo, "nardo", "Nardo",
      {"#dcdfe2", "#f4f5f6", "#1c1f23", "#111316", "#6a7078", "#c3c7cc", "#c3c7cc", "#dfe2e5", "#d1122b",
-      "#ff5a36", "#d1122b", "#9d0c20", "#ffffff", "#d1122b", "#9d0c20", "#cfd3d8", "#f4f5f6", "#eceef0",
-      "#d3d7db", "#e6e8eb", "#c4c9ce", "#eef0f2", "#e3e6e9", "#d1122b", "#b5bac0", "#a8001a", "#ffc2c9",
-      "#d3d7db", "#dfe2e5"},
+      "#ff5a36", "#d1122b", "#9d0c20", "#ffffff", "#d1122b", "#9d0c20", "#cfd3d8", "#eceef0", "#d3d7db",
+      "#e6e8eb", "#c4c9ce", "#eef0f2", "#e3e6e9", "#d1122b", "#b5bac0", "#a8001a", "#ffc2c9", "#d3d7db",
+      "#dfe2e5"},
      "209,18,43", "58,64,72"},
     {DisplayTheme::Brooklands, "brooklands", "Brooklands",
      {"#ece6d2", "#fbf8ed", "#14261b", "#0b3b25", "#6b7a62", "#cfc7a8", "#cfc7a8", "#e6dfc4", "#0b5d3b",
-      "#c9a227", "#0b5d3b", "#06402a", "#f0d77a", "#0b5d3b", "#c9a227", "#bfd8c4", "#fbf8ed", "#f2e6b6",
-      "#d7e6d4", "#e8f0e4", "#b9d3be", "#f5f2e2", "#e7eed9", "#c9a227", "#b8b08c", "#a30f00", "#ffc2b8",
-      "#d7e6d4", "#e6dfc4"},
+      "#c9a227", "#0b5d3b", "#06402a", "#f0d77a", "#0b5d3b", "#c9a227", "#bfd8c4", "#f2e6b6", "#d7e6d4",
+      "#e8f0e4", "#b9d3be", "#f5f2e2", "#e7eed9", "#c9a227", "#b8b08c", "#a30f00", "#ffc2b8", "#d7e6d4",
+      "#e6dfc4"},
      "11,93,59", "192,128,16"},
     {DisplayTheme::Gulf, "gulf", "Gulf",
      {"#cfe7f3", "#f7fcff", "#0e2a3a", "#0a2433", "#547489", "#a9d0e4", "#a9d0e4", "#d2e8f3", "#ff6a13",
-      "#ff6a13", "#ff6a13", "#d9500a", "#ffffff", "#ff6a13", "#d9500a", "#8ccbea", "#f7fcff", "#ffe3cf",
-      "#bfe0f0", "#dcedf7", "#a7d3ea", "#eef7fc", "#d6ecf8", "#ff6a13", "#8fc2dc", "#a8140a", "#ffc2b8",
-      "#bfe0f0", "#d2e8f3"},
+      "#ff6a13", "#ff6a13", "#d9500a", "#ffffff", "#ff6a13", "#d9500a", "#8ccbea", "#ffe3cf", "#bfe0f0",
+      "#dcedf7", "#a7d3ea", "#eef7fc", "#d6ecf8", "#ff6a13", "#8fc2dc", "#a8140a", "#ffc2b8", "#bfe0f0",
+      "#d2e8f3"},
      "255,106,19", "40,130,180"},
     {DisplayTheme::Obsidian, "obsidian", "Obsidian",
      {"#060607", "#0c0d10", "#ebe6df", "#f7e8d8", "#c9a07a", "#1f2026", "#2a2b32", "#1b1c21", "#d08043",
-      "#f0a066", "#b87333", "#8a5226", "#14100c", "#b87333", "#d98a4e", "#14100c", "#0c0d10", "#2a1a0e",
-      "#3f2615", "#2f1d10", "#5a3319", "#121317", "#2a1c10", "#d08043", "#34353d", "#ffa28f", "#341a16",
-      "#1a1b20", "#24252b"},
+      "#f0a066", "#b87333", "#8a5226", "#14100c", "#b87333", "#d98a4e", "#14100c", "#2a1a0e", "#3f2615",
+      "#2f1d10", "#5a3319", "#121317", "#2a1c10", "#d08043", "#34353d", "#ffa28f", "#341a16", "#1a1b20",
+      "#24252b"},
      "208,128,67", "6,6,7"},
     {DisplayTheme::Indigo, "indigo", "Indigo",
      {"#f6f3ff", "#fdfcff", "#2b2149", "#19152f", "#756988", "#ded6f1", "#d4c9eb", "#ebe5f8", "#7052b4",
-      "#cab4ff", "#4b347f", "#392664", "#ffffff", "#4b347f", "#392664", "#d7c8f6", "#fdfcff", "#e8dcff",
-      "#e5dcf8", "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#9a3260", "#ffe1ec",
-      "#e8defa", "#e5dcf7"},
+      "#cab4ff", "#4b347f", "#392664", "#ffffff", "#4b347f", "#392664", "#d7c8f6", "#e8dcff", "#e5dcf8",
+      "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#9a3260", "#ffe1ec", "#e8defa",
+      "#e5dcf7"},
      "112,82,180", "147,88,130"},
     {DisplayTheme::Native, "native", "Native",
      {"#e1e9f8", "#fafcff", "#14213d", "#0f1b4d", "#5a6b8f", "#c5d3ea", "#c5d3ea", "#dbe5f4", "#0fa3a3",
-      "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#aee9e3", "#e9f6fb",
-      "#cfdcf8", "#eef3fc", "#bfeee9", "#f3f7fd", "#dce9fb", "#0fa3a3", "#a9bbdc", "#ffffff", "#d6336c",
-      "#cfdcf8", "#dbe5f4"},
+      "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#e9f6fb", "#cfdcf8",
+      "#eef3fc", "#bfeee9", "#f3f7fd", "#dce9fb", "#0fa3a3", "#a9bbdc", "#ffffff", "#d6336c", "#cfdcf8",
+      "#dbe5f4"},
      "15,163,163", "106,92,255"},
 }};
 
@@ -1156,7 +1156,7 @@ std::string html_shell_(std::string_view title,
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       border-top: 5px solid var(--accent);
-      background: linear-gradient(90deg, var(--hero-a) 0%, var(--hero-b) 68%, var(--hero-c) 100%);
+      background: linear-gradient(90deg, var(--hero-a), var(--hero-c));
       display: flex;
       gap: 14px;
       align-items: center;
