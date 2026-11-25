@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <mutex>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
@@ -1048,39 +1049,31 @@ const ThemePalette& palette_for_(const DisplayTheme theme) {
   return kThemes.front();
 }
 
-// How the three kinds of cell that are not ordinary values look, per theme. A missing cell (NULL) gets
-// its own text and a background that is plainly different; NaN and infinity keep the normal text and only
-// tone the background, a violet one for NaN and a blue one for infinity, so a glance tells the three apart.
-struct CellTints {
-  const char* null_ink;
-  const char* null_bg;
-  const char* nan_bg;
-  const char* inf_bg;
-};
+// A missing cell (NULL) is the one thing the table marks: its text is bold and red, the red of the theme.
+// NaN and infinity are values and look like any other value; the View > Filter menu finds them.
+constexpr const char* kDefaultNullInk = "#c0262d";
+constexpr const char* kEmberNullInk = "#c4281c";
+constexpr const char* kNardoNullInk = "#c8102e";
+constexpr const char* kBrooklandsNullInk = "#b3261e";
+constexpr const char* kGulfNullInk = "#c62828";
+constexpr const char* kObsidianNullInk = "#ff6b5e";
+constexpr const char* kIndigoNullInk = "#c9184a";
+constexpr const char* kNativeNullInk = "#d63031";
 
-constexpr CellTints kDefaultCells{"#9c2f26", "#ffd3cc", "#e4dcf6", "#d6e3f6"};
-constexpr CellTints kEmberCells{"#ffffff", "#c8372d", "#e9dcf1", "#dbe4f1"};
-constexpr CellTints kNardoCells{"#a8001a", "#ffc2c9", "#e2daf2", "#d4e0f0"};
-constexpr CellTints kBrooklandsCells{"#a30f00", "#ffc2b8", "#e6dcef", "#d3e3eb"};
-constexpr CellTints kGulfCells{"#a8140a", "#ffc2b8", "#e3d9f3", "#c4d9f1"};
-constexpr CellTints kObsidianCells{"#ffa28f", "#4a211b", "#2c2250", "#1b2c52"};
-constexpr CellTints kIndigoCells{"#9a3260", "#ffd5e4", "#ddd0f5", "#d0def7"};
-constexpr CellTints kNativeCells{"#ffffff", "#d6336c", "#e4dcf8", "#d6e4fa"};
-
-const CellTints& cell_tints_for_(const DisplayTheme theme) {
+const char* null_ink_for_(const DisplayTheme theme) {
   switch (theme) {
-    case DisplayTheme::Ember: return kEmberCells;
-    case DisplayTheme::Nardo: return kNardoCells;
-    case DisplayTheme::Brooklands: return kBrooklandsCells;
-    case DisplayTheme::Gulf: return kGulfCells;
-    case DisplayTheme::Obsidian: return kObsidianCells;
-    case DisplayTheme::Indigo: return kIndigoCells;
-    case DisplayTheme::Native: return kNativeCells;
+    case DisplayTheme::Ember: return kEmberNullInk;
+    case DisplayTheme::Nardo: return kNardoNullInk;
+    case DisplayTheme::Brooklands: return kBrooklandsNullInk;
+    case DisplayTheme::Gulf: return kGulfNullInk;
+    case DisplayTheme::Obsidian: return kObsidianNullInk;
+    case DisplayTheme::Indigo: return kIndigoNullInk;
+    case DisplayTheme::Native: return kNativeNullInk;
     case DisplayTheme::Default:
     case DisplayTheme::Auto:
       break;
   }
-  return kDefaultCells;
+  return kDefaultNullInk;
 }
 
 // The `:root { --token: value; ... }` block every other rule reads through var().
@@ -1090,9 +1083,7 @@ std::string theme_root_css_(const DisplayOptions& options) {
   for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
     css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
   }
-  const auto& cells = cell_tints_for_(resolve_theme_(options));
-  css += pluss::tils::OutputEngine::format(" --miss-ink: {}; --miss-bg: {}; --nan-bg: {}; --inf-bg: {};", cells.null_ink,
-                                           cells.null_bg, cells.nan_bg, cells.inf_bg);
+  css += pluss::tils::OutputEngine::format(" --miss-ink: {};", null_ink_for_(resolve_theme_(options)));
   css += " --shadow: none; }";
   return css;
 }
@@ -1337,14 +1328,7 @@ std::string html_shell_(std::string_view title,
     }}
     tbody tr td.missing {{
       color: var(--miss-ink);
-      background: var(--miss-bg);
-      font-weight: 700;
-    }}
-    tbody tr td.nonfinite.nan {{
-      background: var(--nan-bg);
-    }}
-    tbody tr td.nonfinite.inf {{
-      background: var(--inf-bg);
+      font-weight: 800;
     }}
     .hidden {{
       display: none;
@@ -2240,12 +2224,50 @@ std::string render_html_table_body_(const DataFrame& frame,
   return body;
 }
 
+std::vector<bool> shelf_flags_(const Shelf& flags_shelf, const std::int64_t n) {
+  std::vector<bool> out(static_cast<std::size_t>(n), false);
+  try {
+    const auto flags = flags_shelf.as_series().to(pluss::codem::ScalarType::Bool).host<bool>();
+    for (std::size_t i = 0; i < flags.size() && i < out.size(); ++i) {
+      out[i] = flags[i];
+    }
+  } catch (const std::exception&) {
+  }
+  return out;
+}
+
+// One Bool per case: does the row hold a cell of the kind the filter looks for? Each cell is tested for what it
+// is (missing, NaN, infinite), never by its text, so a name such as "Nancy" is never mistaken for a NaN. This is
+// the DataFrame's own isnull / isnan / isinf, folded across the features with any.
+Shelf row_filter_mask_(const DataFrame& frame, const DisplayFilter filter) {
+  std::optional<Shelf> mask;
+  const auto add = [&](const Shelf& flags) { mask = mask.has_value() ? Shelf(*mask | flags) : flags; };
+  if (frame.nfeatures() > 0) {
+    if (filter == DisplayFilter::Invalid || filter == DisplayFilter::Null) {
+      add(frame.isnull().any(Axis::Feature));
+    }
+    if (filter == DisplayFilter::Invalid || filter == DisplayFilter::NaN) {
+      add(frame.isnan().any(Axis::Feature));
+    }
+    if (filter == DisplayFilter::Invalid || filter == DisplayFilter::Infinite) {
+      add(frame.isinf().any(Axis::Feature));
+    }
+  }
+  return mask.has_value() ? *mask : Shelf(pluss::make_series(std::vector<bool>(static_cast<std::size_t>(frame.ncases()), false)));
+}
+
+// The frame with only the rows the filter keeps.
+DataFrame filtered_frame_(const DataFrame& frame, const DisplayFilter filter) {
+  return frame.filter(row_filter_mask_(frame, filter));
+}
+
 class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
       : cases_(display_shelf(frame.labels().values())),
         columns_(dataframe_columns_(frame)),
+        frame_(frame),
         names_(frame.features()),
         rows_(frame.ncases()) {
     numeric_.reserve(columns_.size());
@@ -2318,6 +2340,31 @@ class DataFrameVirtualTableModel final
         .infinite = nonfinite && text != "NAN",
     };  }
 
+  // The rows the View > Filter menu keeps. Called from the menu's thread while the search thread reads it.
+  void set_filter(const DisplayFilter filter) const {
+    std::shared_ptr<const std::vector<bool>> keep;
+    if (filter != DisplayFilter::None) {
+      keep = std::make_shared<const std::vector<bool>>(shelf_flags_(row_filter_mask_(frame_, filter), rows_));
+    }
+    const std::scoped_lock lock(filter_mutex_);
+    keep_ = std::move(keep);
+    filtering_.store(keep_ != nullptr, std::memory_order_release);
+  }
+
+  bool filtering() const noexcept override {
+    return filtering_.load(std::memory_order_acquire);
+  }
+
+  bool row_allowed(const std::int64_t row) const override {
+    std::shared_ptr<const std::vector<bool>> keep;
+    {
+      const std::scoped_lock lock(filter_mutex_);
+      keep = keep_;
+    }
+    return keep == nullptr || (row >= 0 && static_cast<std::size_t>(row) < keep->size() &&
+                               (*keep)[static_cast<std::size_t>(row)]);
+  }
+
   bool row_matches(const std::int64_t row,
                    const std::string_view folded_query) const override {
     if (row < 0 || row >= rows_ || folded_query.empty()) {
@@ -2346,6 +2393,10 @@ class DataFrameVirtualTableModel final
  private:
   Shelf cases_{};
   std::vector<Shelf> columns_{};
+  DataFrame frame_{};  // the frame as stored: what NULL, NaN and infinity are decided on
+  mutable std::mutex filter_mutex_{};
+  mutable std::shared_ptr<const std::vector<bool>> keep_{};
+  mutable std::atomic<bool> filtering_{false};
   std::vector<std::string> names_{};
   std::vector<bool> numeric_{};
   std::vector<std::size_t> search_columns_{};
@@ -2384,18 +2435,6 @@ std::string virtual_table_body_(const DataFrame& frame) {
 Shelf masked_f64_(const std::vector<double>& values, const std::vector<std::uint8_t>& ok) {
   const auto mask = pluss::make_series(ok).to(pluss::codem::ScalarType::Bool);
   return Shelf(pluss::make_series(values), mask);
-}
-
-std::vector<bool> shelf_flags_(const Shelf& flags_shelf, const std::int64_t n) {
-  std::vector<bool> out(static_cast<std::size_t>(n), false);
-  try {
-    const auto flags = flags_shelf.as_series().to(pluss::codem::ScalarType::Bool).host<bool>();
-    for (std::size_t i = 0; i < flags.size() && i < out.size(); ++i) {
-      out[i] = flags[i];
-    }
-  } catch (const std::exception&) {
-  }
-  return out;
 }
 
 // Per-case "is missing" flags for one column.
@@ -2514,52 +2553,34 @@ std::optional<ViewResult> compute_correlation_(const DataFrame& frame) {
   }
 }
 
-// Separate absent cells from nonfinite numeric values. The last row counts
-// cases where any column has each condition.
+// Separate absent cells from nonfinite numeric values. The last row counts cases where any column has each
+// condition. Everything is the DataFrame's own isnull / isnan / isinf and sum: one pass per kind over the
+// whole frame, with an extra "(any column)" feature that folds each row across the features with any.
 std::optional<ViewResult> compute_missing_(const DataFrame& frame) {
-  const auto cols = dataframe_columns_(frame);
-  const auto names = frame.features();
   const auto n = frame.ncases();
-  if (cols.empty() || n == 0) {
+  if (frame.nfeatures() == 0 || n == 0) {
     return std::nullopt;
   }
-  std::vector<std::string> row_names;
-  std::array<std::vector<std::int64_t>, 3> counts;
-  std::array<std::vector<double>, 3> percents;
-  std::array<std::vector<bool>, 3> any_flags;
-  for (auto& flags : any_flags) flags.resize(static_cast<std::size_t>(n), false);
-  for (std::size_t c = 0; c < cols.size(); ++c) {
-    row_names.push_back(names[c]);
-    std::array<std::vector<bool>, 3> flags{missing_flags_(cols[c], n), {}, {}};
-    try { flags[1] = shelf_flags_(cols[c].isnan(), n); } catch (const std::exception&) {}
-    try { flags[2] = shelf_flags_(cols[c].isinf(), n); } catch (const std::exception&) {}
-    for (std::size_t kind = 0; kind < flags.size(); ++kind) {
-      std::int64_t count = 0;
-      for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
-        if (i < flags[kind].size() && flags[kind][i]) {
-          ++count;
-          any_flags[kind][i] = true;
-        }
-      }
-      counts[kind].push_back(count);
-      percents[kind].push_back(100.0 * static_cast<double>(count) / static_cast<double>(n));
+  try {
+    constexpr std::string_view kAnyColumn = "(any column)";
+    auto row_names = frame.features();
+    row_names.emplace_back(kAnyColumn);
+    const std::array<std::pair<std::string, DataFrame>, 3> kinds{{
+        {"null", frame.isnull()},
+        {"NaN", frame.isnan()},
+        {"infinity", frame.isinf()},
+    }};
+    std::vector<std::pair<std::string, Shelf>> out;
+    for (const auto& [label, flags] : kinds) {
+      const DataFrame with_any = flags.insert(flags.nfeatures(), std::string(kAnyColumn), flags.any(Axis::Feature));
+      const auto counts = with_any.sum().as_series().to(pluss::codem::ScalarType::Int64);
+      out.emplace_back(label, Shelf(counts));
+      out.emplace_back(label + " %", Shelf(counts.to(pluss::codem::ScalarType::Float64) * (100.0 / static_cast<double>(n))));
     }
+    return ViewResult{DataFrame(std::move(out), Shelf(pluss::make_note(row_names))), 0, false};
+  } catch (const std::exception&) {
+    return std::nullopt;
   }
-  row_names.push_back("(any column)");
-  for (std::size_t kind = 0; kind < counts.size(); ++kind) {
-    const auto count = std::count(any_flags[kind].begin(), any_flags[kind].end(), true);
-    counts[kind].push_back(count);
-    percents[kind].push_back(100.0 * static_cast<double>(count) / static_cast<double>(n));
-  }
-
-  std::vector<std::pair<std::string, Shelf>> out;
-  const std::array<std::string, 3> labels{"null", "NaN", "infinity"};
-  for (std::size_t kind = 0; kind < labels.size(); ++kind) {
-    out.emplace_back(labels[kind], Shelf(pluss::make_series(counts[kind])));
-    out.emplace_back(labels[kind] + " %", Shelf(pluss::make_series(percents[kind])));
-  }
-  const DataFrame table(std::move(out), Shelf(pluss::make_note(row_names)));
-  return ViewResult{table, 0, false};
 }
 
 // Per numeric column, by the 1.5 x IQR rule: the floor and ceiling (the lower and upper
@@ -3014,6 +3035,19 @@ constexpr std::array<NumberFormatEntry, 8> kNumberFormats{{
     {NumberFormat::Scientific, "scientific", "Scientific"},
 }};
 
+struct FilterEntry {
+  DisplayFilter filter;
+  const char* id;
+  const char* label;
+};
+
+constexpr std::array<FilterEntry, 4> kFilters{{
+    {DisplayFilter::Invalid, "invalid", "Invalid"},
+    {DisplayFilter::Null, "null", "Null"},
+    {DisplayFilter::NaN, "nan", "NaN"},
+    {DisplayFilter::Infinite, "inf", "Inf"},
+}};
+
 bool show_html_window_(const std::string& html,
                        const DisplayOptions& options,
                        std::string_view title,
@@ -3023,7 +3057,9 @@ bool show_html_window_(const std::string& html,
                        const bool table_viewport_scroll_only = false,
                        std::function<std::string(const DisplayOptions&)> render_with = {},
                        const bool offer_number_format = false,
-                       std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {}) {
+                       std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {},
+                       const bool offer_filter = false,
+                       std::function<void(DisplayFilter)> on_filter = {}) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -3061,6 +3097,37 @@ bool show_html_window_(const std::string& html,
           }
         }
         return std::string{};
+      };
+      window_opts.menus.push_back(std::move(menu));
+    }
+    if (offer_filter) {
+      pluss::view::HtmlMenu menu;
+      menu.id = "filter";
+      menu.title = "Filter";
+      menu.in_view_menu = true;  // a cascading entry inside the View menu
+      for (const auto& entry : kFilters) {
+        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
+      }
+      // Choosing the filter that is already on turns it off, so there is no entry that means "everything".
+      menu.render = [state, render_with, on_filter](std::string_view id) {
+        for (const auto& entry : kFilters) {
+          if (id == entry.id) {
+            state->filter = state->filter == entry.filter ? DisplayFilter::None : entry.filter;
+            if (on_filter) {
+              on_filter(state->filter);
+            }
+            return render_with(*state);
+          }
+        }
+        return std::string{};
+      };
+      menu.selected = [state]() {
+        for (const auto& entry : kFilters) {
+          if (state->filter == entry.filter) {
+            return std::string(entry.id);
+          }
+        }
+        return std::string("off");  // matches no entry, so none is checked
       };
       window_opts.menus.push_back(std::move(menu));
     }
@@ -3218,10 +3285,14 @@ std::string render(const Shelf& shelf, const DisplayOptions& options) {
 
 std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
   StatsViews views(frame);
+  const bool filtered = options.filter != DisplayFilter::None;
+  const DataFrame shown = filtered ? filtered_frame_(frame, options.filter) : frame;
   return render_html_table_(
-      frame,
+      shown,
       document_title_("DataFrame", options),
-      pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
+      filtered ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", shown.ncases(), frame.ncases(),
+                                                   frame.nfeatures())
+               : pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
       options, views);
 }
 
@@ -3413,16 +3484,22 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
     const bool in_house = backend == DisplayBackend::PlussWebView;
     const auto views = std::make_shared<StatsViews>(frame_copy);
     const auto render_with = [frame_copy, views, use_virtual_table, in_house](const DisplayOptions& themed) {
+      // A long table is filtered by its model; a short one is re-rendered from the rows the filter keeps.
+      const bool filtered = themed.filter != DisplayFilter::None && !use_virtual_table;
+      const DataFrame shown = filtered ? filtered_frame_(frame_copy, themed.filter) : frame_copy;
       return render_html_table_(
-          frame_copy,
+          shown,
           document_title_("DataFrame", themed),
-          pluss::tils::OutputEngine::format("{} cases, {} features", frame_copy.ncases(), frame_copy.nfeatures()),
+          filtered ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", shown.ncases(), frame_copy.ncases(),
+                                                       frame_copy.nfeatures())
+                   : pluss::tils::OutputEngine::format("{} cases, {} features", frame_copy.ncases(), frame_copy.nfeatures()),
           themed, *views, /*lazy=*/in_house, /*virtual_model=*/use_virtual_table);
     };
     const auto html = render_with(render_opts);
+    std::shared_ptr<DataFrameVirtualTableModel> filterable_model;
     if (use_virtual_table) {
-      virtual_model =
-          std::make_shared<DataFrameVirtualTableModel>(frame);
+      filterable_model = std::make_shared<DataFrameVirtualTableModel>(frame);
+      virtual_model = filterable_model;
     }
     std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with;
     if (in_house) {
@@ -3442,7 +3519,13 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                           in_house ? std::function<std::string(const DisplayOptions&)>(render_with)
                                    : std::function<std::string(const DisplayOptions&)>{},
                           !use_virtual_table,
-                          std::move(render_panel_with))) {
+                          std::move(render_panel_with),
+                          /*offer_filter=*/in_house,
+                          [filterable_model](const DisplayFilter filter) {
+                            if (filterable_model != nullptr) {
+                              filterable_model->set_filter(filter);
+                            }
+                          })) {
       return;
     }
   }

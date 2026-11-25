@@ -18,9 +18,9 @@ enum class BackendPreference : std::uint8_t {
 
 struct VirtualTableCell {
   std::string text{};
-  bool missing{false};    // a NULL cell (no value): drawn in red
-  bool nonfinite{false};  // NaN / inf / -inf: a value, drawn in its own calm tint, never as missing
-  bool infinite{false};   // with `nonfinite`: inf / -inf (blue) rather than NaN (violet)
+  bool missing{false};    // a NULL cell (no value): its text is drawn in the theme's missing colour
+  bool nonfinite{false};  // NaN / inf / -inf: a value, drawn like any other
+  bool infinite{false};   // with `nonfinite`: inf / -inf rather than NaN
 };
 
 class VirtualTableModel {
@@ -38,6 +38,10 @@ class VirtualTableModel {
   [[nodiscard]] virtual bool row_matches(
       std::int64_t row,
       std::string_view folded_query) const = 0;
+  // A row filter chosen from a window menu. `filtering()` says whether one is in force; `row_allowed` is
+  // then the test every row must pass, on top of any search text.
+  [[nodiscard]] virtual bool filtering() const noexcept { return false; }
+  [[nodiscard]] virtual bool row_allowed(std::int64_t /*row*/) const { return true; }
 };
 
 // A window-level menu (e.g. colour theme, number format). Choosing an option calls

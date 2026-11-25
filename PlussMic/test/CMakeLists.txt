@@ -40,6 +40,9 @@ add_executable(plussmic_table_axis_match_tests
 add_executable(plussmic_table_statistics_window_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_statistics_window_tests.cpp
 )
+add_executable(plussmic_table_display_filter_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/table_display_filter_tests.cpp
+)
 add_executable(plussmic_table_flash_dataset_bridge_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_flash_dataset_bridge_tests.cpp
 )
@@ -70,6 +73,7 @@ target_link_libraries(plussmic_table_ts_accessor_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_ts_unsorted_axis_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_axis_match_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_statistics_window_tests PRIVATE PlussMic)
+target_link_libraries(plussmic_table_display_filter_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_flash_dataset_bridge_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_temporal_core_migration_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_bi_tests PRIVATE PlussMic)
@@ -117,6 +121,7 @@ add_test(NAME plussmic_table_ts_accessor COMMAND plussmic_table_ts_accessor_test
 add_test(NAME plussmic_table_ts_unsorted_axis COMMAND plussmic_table_ts_unsorted_axis_tests)
 add_test(NAME plussmic_table_axis_match COMMAND plussmic_table_axis_match_tests)
 add_test(NAME plussmic_table_statistics_window COMMAND plussmic_table_statistics_window_tests)
+add_test(NAME plussmic_table_display_filter COMMAND plussmic_table_display_filter_tests)
 add_test(NAME plussmic_table_flash_dataset_bridge COMMAND plussmic_table_flash_dataset_bridge_tests)
 add_test(NAME plussmic_temporal_core_migration COMMAND plussmic_temporal_core_migration_tests)
 add_test(NAME plussmic_bi COMMAND plussmic_bi_tests)

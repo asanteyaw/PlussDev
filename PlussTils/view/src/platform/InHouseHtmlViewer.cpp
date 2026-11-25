@@ -162,7 +162,7 @@ class AsyncVirtualTableSearch {
       }
 
       std::vector<std::int64_t> rows;
-      if (!query.empty()) {
+      if (!query.empty() || model_->filtering()) {
         const std::int64_t count =
             std::max<std::int64_t>(0, model_->row_count());
         rows.reserve(static_cast<std::size_t>(
@@ -174,7 +174,7 @@ class AsyncVirtualTableSearch {
                    generation)) {
             break;
           }
-          if (model_->row_matches(row, query)) {
+          if (model_->row_allowed(row) && (query.empty() || model_->row_matches(row, query))) {
             rows.push_back(row);
           }
         }
@@ -1114,6 +1114,7 @@ bool show_inhouse_html_window(const std::string& title,
   window::detail::AsyncSoftwareCompositor compositor;
   AsyncVirtualTableSearch virtual_search(virtual_table_model);
   std::shared_ptr<const std::vector<std::int64_t>> virtual_row_order;
+  bool virtual_filter_changed{false};
   std::string submitted_virtual_query;
   window::PixelCanvas presented_canvas;
   std::uint64_t last_submitted_frame_id = 0;
@@ -1663,6 +1664,7 @@ bool show_inhouse_html_window(const std::string& title,
             if (shell->supports_menus()) {
               shell->update_menus(build_menus());  // move the check marks to the choice just made
             }
+            virtual_filter_changed = true;  // a menu may have changed the row filter: rebuild the row order
             needs_render = true;
           }
         } else if (event.note.rfind("save_as:", 0) == 0) {
@@ -1908,7 +1910,8 @@ bool show_inhouse_html_window(const std::string& title,
         ch = static_cast<char>(
             std::tolower(static_cast<unsigned char>(ch)));
       }
-      if (query != submitted_virtual_query) {
+      if (query != submitted_virtual_query || virtual_filter_changed) {
+        virtual_filter_changed = false;
         submitted_virtual_query = query;
         virtual_row_order.reset();
         virtual_search.submit(query);
@@ -1919,7 +1922,7 @@ bool show_inhouse_html_window(const std::string& title,
       if (auto result = virtual_search.take_completed();
           result.has_value() &&
           result->query == submitted_virtual_query) {
-        if (submitted_virtual_query.empty()) {
+        if (submitted_virtual_query.empty() && !virtual_table_model->filtering()) {
           virtual_row_order.reset();
         } else {
           virtual_row_order =

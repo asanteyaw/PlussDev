@@ -60,6 +60,16 @@ struct CardPanel {
   std::shared_ptr<const Shelf> values;
 };
 
+// Which rows the table shows, chosen from the View > Filter menu. Invalid is any cell that is NULL, NaN or
+// infinite; the others pick one kind. The decision is made on what each cell is, never on its text.
+enum class DisplayFilter : std::uint8_t {
+  None = 0,
+  Invalid = 1,
+  Null = 2,
+  NaN = 3,
+  Infinite = 4,
+};
+
 struct TerminalInfo {
   std::int64_t columns{120};
   std::int64_t rows{40};
@@ -71,6 +81,7 @@ struct DisplayOptions {
   DisplayBackend backend{DisplayBackend::Auto};
   DisplayTheme theme{DisplayTheme::Auto};
   NumberFormat number_format{NumberFormat::Default};
+  DisplayFilter filter{DisplayFilter::None};
   std::int64_t terminal_width{0};  // <= 0 => detect from terminal
   std::int64_t terminal_height{0}; // <= 0 => detect from terminal
   bool show_shape_footer{true};
