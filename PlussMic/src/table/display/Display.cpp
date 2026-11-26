@@ -2464,6 +2464,30 @@ class DataFrameVirtualTableModel final
     number_format_.store(static_cast<int>(format), std::memory_order_release);
   }
 
+  // The filter, the visit and the number format of a set of options, all at once.
+  void apply(const DisplayOptions& options) const {
+    set_filter(options.filter);
+    set_window(row_window_for_(options));
+    set_number_format(options.number_format);
+  }
+
+  // How many rows the filter and the visit leave.
+  std::int64_t visible_rows() const {
+    std::shared_ptr<const std::vector<bool>> keep;
+    pluss::view::RowWindow window;
+    {
+      const std::scoped_lock lock(filter_mutex_);
+      keep = keep_;
+      window = window_;
+    }
+    std::int64_t rows = rows_;
+    if (keep != nullptr) {
+      rows = static_cast<std::int64_t>(std::count(keep->begin(), keep->end(), true));
+    }
+    const auto [first, last] = pluss::view::window_bounds(window, rows);
+    return last - first;
+  }
+
   // The rows the View > Visit menu visits, among those the filter, search and sort leave.
   void set_window(const pluss::view::RowWindow& window) const {
     const std::scoped_lock lock(filter_mutex_);
@@ -3966,6 +3990,18 @@ static bool show_in_notebook_(const std::string& html) {
   return true;
 }
 
+// The page of a DataFrame as a window (or a picture) shows it: the table painted from the model, with the subtitle
+// saying how many rows the filter and the visit leave.
+std::string frame_page_(const DataFrame& frame, StatsViews& views, const std::shared_ptr<DataFrameVirtualTableModel>& model,
+                        const DisplayOptions& options, const bool lazy) {
+  const std::int64_t visible = model->visible_rows();
+  const auto subtitle = visible != frame.ncases()
+                            ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", visible, frame.ncases(), frame.nfeatures())
+                            : pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures());
+  return render_html_table_(frame, document_title_("DataFrame", options), subtitle, options, views, lazy,
+                            /*virtual_model=*/true);
+}
+
 void show(const DataFrame& frame, const DisplayOptions& options) {
   if (show_in_notebook_(render_html(frame, options))) {
     return;
@@ -3986,21 +4022,23 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
     // only re-renders. (A browser view builds every view up front.)
     const bool in_house = backend == DisplayBackend::PlussWebView;
     const auto views = std::make_shared<StatsViews>(frame_copy);
-    const auto render_with = [frame_copy, views, use_virtual_table, in_house](const DisplayOptions& themed) {
-      // A long table is filtered and windowed by its model; a short one is re-rendered from the rows that remain.
-      const auto shown = use_virtual_table
-                             ? ShownRows{frame_copy, pluss::tils::OutputEngine::format("{} cases, {} features",
-                                                                                      frame_copy.ncases(), frame_copy.nfeatures())}
-                             : shown_rows_(frame_copy, themed);
-      return render_html_table_(shown.frame, document_title_("DataFrame", themed), shown.subtitle, themed, *views,
-                                /*lazy=*/in_house, /*virtual_model=*/use_virtual_table);
-    };
-    const auto html = render_with(render_opts);
     std::shared_ptr<DataFrameVirtualTableModel> filterable_model;
     if (use_virtual_table) {
       filterable_model = std::make_shared<DataFrameVirtualTableModel>(frame);
+      filterable_model->apply(render_opts);
       virtual_model = filterable_model;
     }
+    const auto render_with = [frame_copy, views, filterable_model, use_virtual_table, in_house](const DisplayOptions& themed) {
+      // A table in a window is painted from its model, which holds the filter and the visit; a browser view lays out
+      // the rows that remain.
+      if (use_virtual_table) {
+        return frame_page_(frame_copy, *views, filterable_model, themed, /*lazy=*/in_house);
+      }
+      const auto shown = shown_rows_(frame_copy, themed);
+      return render_html_table_(shown.frame, document_title_("DataFrame", themed), shown.subtitle, themed, *views,
+                                /*lazy=*/in_house, /*virtual_model=*/false);
+    };
+    const auto html = render_with(render_opts);
     std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with;
     if (in_house) {
       render_panel_with = [views](const DisplayOptions& current, const std::string_view id) {
@@ -4023,9 +4061,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                           /*offer_filter=*/in_house,
                           [filterable_model](const DisplayOptions& current) {
                             if (filterable_model != nullptr) {
-                              filterable_model->set_filter(current.filter);
-                              filterable_model->set_window(row_window_for_(current));
-                              filterable_model->set_number_format(current.number_format);
+                              filterable_model->apply(current);
                             }
                           })) {
       return;
