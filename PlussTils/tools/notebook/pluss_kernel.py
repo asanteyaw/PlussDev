@@ -22,6 +22,7 @@ import queue
 import re
 import shlex
 import subprocess
+import time
 import tempfile
 import threading
 
@@ -169,8 +170,8 @@ class PlussKernel(Kernel):
         self._proc = subprocess.Popen(
             self._command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
         )
-        for stream, target in ((self._proc.stdout, self._out), (self._proc.stderr, self._err)):
-            threading.Thread(target=self._pump, args=(stream, target), daemon=True).start()
+        for stream, target, name in ((self._proc.stdout, self._out, "stdout"), (self._proc.stderr, self._err, "stderr")):
+            threading.Thread(target=self._pump, args=(stream, target, name), daemon=True).start()
         self._cells = tempfile.mkdtemp(prefix="pluss_cells_")
         self._count = 0
         # %lib is a command of its own; everything else goes in as a file.
@@ -178,15 +179,28 @@ class PlussKernel(Kernel):
         self._run_text(PRELUDE)
 
     @staticmethod
-    def _pump(stream, target):
+    def _log(kind, text):
+        """With PLUSS_NOTEBOOK_LOG set to a file, everything the kernel sends to the engine and gets back is written
+        there (the smoke test prints it when a check fails), so a platform that misbehaves can be read, not guessed."""
+        path = os.environ.get("PLUSS_NOTEBOOK_LOG")
+        if not path:
+            return
+        with open(path, "a", errors="replace") as handle:
+            handle.write("[%.3f] %s %r\n" % (time.time(), kind, text if isinstance(text, str) else text.decode(errors="replace")))
+
+    @staticmethod
+    def _pump(stream, target, name="engine"):
         while True:
             chunk = stream.read1(65536) if hasattr(stream, "read1") else stream.read(65536)
             if not chunk:
+                PlussKernel._log(name + " ended", "")
                 target.put(None)
                 return
+            PlussKernel._log(name, chunk)
             target.put(chunk)
 
     def _send(self, line):
+        self._log("sent", line)
         self._proc.stdin.write(line.encode())
         self._proc.stdin.flush()
 

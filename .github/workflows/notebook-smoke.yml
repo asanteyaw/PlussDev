@@ -10,6 +10,10 @@ on:
         description: Id of the PlussII C++ Release run whose archives are tested
         type: string
         required: true
+      repo_kernel:
+        description: Test the kernel in this repository (its newest code) against the archive's libraries, instead of the kernel the archive installs
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -76,4 +80,9 @@ jobs:
           ls "$JUPYTER_DATA_DIR/kernels/pluss"
 
       - name: Run the notebook smoke test
-        run: python PlussTils/tools/notebook/smoke_test.py "$PREFIX" --use-installed
+        run: |
+          if [ "${{ inputs.repo_kernel }}" = "true" ]; then
+            python PlussTils/tools/notebook/smoke_test.py "$PREFIX"
+          else
+            python PlussTils/tools/notebook/smoke_test.py "$PREFIX" --use-installed
+          fi

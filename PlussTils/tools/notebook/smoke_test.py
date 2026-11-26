@@ -42,6 +42,10 @@ def main():
         if installed.returncode != 0:
             return 1
 
+    # The kernel writes what it sends to the engine and gets back to this file; it is printed when a check fails.
+    log = os.path.join(tempfile.mkdtemp(prefix="pluss_notebook_log_"), "engine.log")
+    os.environ["PLUSS_NOTEBOOK_LOG"] = log
+
     from jupyter_client.manager import start_new_kernel
 
     km, kc = start_new_kernel(kernel_name="pluss", startup_timeout=600)
@@ -109,6 +113,11 @@ def main():
     finally:
         km.shutdown_kernel(now=True)
     print("%d check(s) failed" % len(failures))
+    if failures and os.path.exists(log):
+        # What the kernel and the compile engine said to each other, so a failure on one machine can be read.
+        lines = open(log, errors="replace").read().splitlines()
+        print("---- engine log (last %d of %d lines) ----" % (min(len(lines), 150), len(lines)))
+        print("\n".join(line[:400] for line in lines[-150:]))
     return 1 if failures else 0
 
 
