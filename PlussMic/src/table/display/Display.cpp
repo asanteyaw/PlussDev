@@ -3976,65 +3976,9 @@ std::string info_html(const DataFrame& frame, const DisplayOptions& options) {
   return render_html_info_doc_(frame, options);
 }
 
-std::string render(const Atlas& atlas, const DisplayOptions& options) {
-  const auto term = detect_terminal();
-  const auto effective = resolve_effective_options(options, term, false);
-  std::vector<std::string> lines;
-  lines.push_back(pluss::tils::OutputEngine::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeatures()));
+static StackFacts atlas_facts_(const Atlas& atlas);
 
-  const auto total = atlas.depth();
-  const auto max_frames = std::max<std::int64_t>(2, effective.edge_rows + effective.tail_rows);
-  std::vector<std::int64_t> visible;
-  bool ellipsis = false;
-  if (total <= max_frames) {
-    visible.reserve(static_cast<std::size_t>(total));
-    for (std::int64_t i = 0; i < total; ++i) {
-      visible.push_back(i);
-    }
-  } else {
-    const auto head = std::max<std::int64_t>(1, effective.edge_rows);
-    const auto tail = std::max<std::int64_t>(1, effective.tail_rows);
-    for (std::int64_t i = 0; i < head; ++i) {
-      visible.push_back(i);
-    }
-    for (std::int64_t i = total - tail; i < total; ++i) {
-      visible.push_back(i);
-    }
-    ellipsis = true;
-  }
-
-  DisplayOptions frame_opts = options;
-  if (frame_opts.mode == DisplayMode::Wide) {
-    frame_opts.mode = DisplayMode::Auto;
-  }
-  std::optional<Shelf> display_axis0;
-  if (atlas.axis0_labels().has_value()) {
-    display_axis0 = display_shelf(*atlas.axis0_labels());
-  }
-
-  for (std::size_t i = 0; i < visible.size(); ++i) {
-    if (ellipsis && i == static_cast<std::size_t>(effective.edge_rows)) {
-      lines.push_back("...");
-    }
-
-    const auto idx = visible[i];
-    std::string label = pluss::tils::OutputEngine::format("frame[{}]", idx);
-    if (display_axis0.has_value()) {
-      label += pluss::tils::OutputEngine::format(" case={}", shelf_value_at(*display_axis0, idx));
-    }
-    lines.push_back(label);
-    lines.push_back(render(atlas.frame(idx), frame_opts));
-  }
-
-  std::string out;
-  for (std::size_t i = 0; i < lines.size(); ++i) {
-    if (i) {
-      out.push_back('\n');
-    }
-    out += lines[i];
-  }
-  return out;
-}
+std::string render(const Atlas& atlas, const DisplayOptions& options) { return render_stack_facts(atlas_facts_(atlas), options); }
 
 // ---------------------------------------------------------------------------
 // The table as a notebook shows it: a plain HTML table, not PlussView's page. A notebook has no terminal to wrap
@@ -4242,26 +4186,7 @@ std::string render_notebook_summary(const SummaryView& view, const std::string& 
 
 bool show_in_notebook(const std::string& html) { return show_in_notebook_(html); }
 
-// An atlas in a notebook: one row per frame (its label, cases, features and their names). A frame is drilled into with
-// frame(i), which then shows as a table.
-std::string render_notebook_html(const Atlas& atlas) {
-  std::optional<Shelf> labels;
-  if (atlas.axis0_labels().has_value()) {
-    labels = display_shelf(*atlas.axis0_labels());
-  }
-  SummaryView view;
-  view.columns = {"level", "label", "cases", "features", "feature names"};
-  view.size = atlas.depth();
-  view.row = [&](const std::int64_t i) {
-    const auto frame = atlas.frame(i);
-    const auto names = frame.features();
-    return std::vector<std::string>{
-        std::to_string(i), labels.has_value() ? shelf_value_at(*labels, i) : std::string{}, std::to_string(frame.ncases()),
-        std::to_string(frame.nfeatures()),
-        preview_text(static_cast<std::int64_t>(names.size()), [&](const std::int64_t k) { return names[static_cast<std::size_t>(k)]; }, 60)};
-  };
-  return render_notebook_summary(view, pluss::tils::OutputEngine::format("depth {}", atlas.depth()));
-}
+std::string render_notebook_html(const Atlas& atlas) { return render_notebook_stack_facts(atlas_facts_(atlas)); }
 
 std::string render_notebook_html(const DataFrame& frame) {
   return notebook_table_html_(frame);
@@ -4463,6 +4388,110 @@ std::string preview_text(const std::int64_t size, const std::function<std::strin
     }
   }
   return clip_cell("[" + pluss::tils::OutputEngine::join(parts, ", ") + "]", max_width);
+}
+
+std::string render_stack_facts(const StackFacts& stack, const DisplayOptions& options) {
+  SummaryView view;
+  view.title = stack.type;
+  view.columns = {"fact", "value"};
+  view.size = static_cast<std::int64_t>(stack.facts.size());
+  view.row = [&stack](const std::int64_t i) {
+    const auto& fact = stack.facts[static_cast<std::size_t>(i)];
+    return std::vector<std::string>{fact.first, fact.second};
+  };
+  return render_summary(view, options);
+}
+
+void print_stack_facts(std::ostream& os, const StackFacts& stack, const DisplayOptions& options) {
+  os << render_stack_facts(stack, options) << '\n';
+}
+
+std::string render_notebook_stack_facts(const StackFacts& stack) {
+  SummaryView view;
+  view.columns = {stack.type, "value"};
+  view.size = static_cast<std::int64_t>(stack.facts.size());
+  view.row = [&stack](const std::int64_t i) {
+    const auto& fact = stack.facts[static_cast<std::size_t>(i)];
+    return std::vector<std::string>{fact.first, fact.second};
+  };
+  return render_notebook_summary(view, "");
+}
+
+std::string span_text(const std::int64_t smallest, const std::int64_t largest, const std::int64_t total, const std::int64_t count) {
+  if (count <= 0) {
+    return "none";
+  }
+  if (smallest == largest) {
+    return pluss::tils::OutputEngine::format("{} each", smallest);
+  }
+  return pluss::tils::OutputEngine::format("{} to {} ({} in all)", smallest, largest, total);
+}
+
+// How many kinds a tally spells out before it says how many more there are: a stack of many tables can hold many
+// types, and a fact must stay one line.
+constexpr std::size_t kTallyKinds = 4;
+
+std::string tally_text(const std::vector<std::pair<std::string, std::int64_t>>& counts) {
+  if (counts.empty()) {
+    return "none";
+  }
+  auto sorted = counts;
+  std::stable_sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
+  std::string text;
+  for (std::size_t i = 0; i < sorted.size() && i < kTallyKinds; ++i) {
+    text += (i > 0 ? ", " : "") + sorted[i].first + " \u00d7 " + std::to_string(sorted[i].second);
+  }
+  if (sorted.size() > kTallyKinds) {
+    text += pluss::tils::OutputEngine::format(", and {} more kinds", sorted.size() - kTallyKinds);
+  }
+  return text;
+}
+
+// An atlas is a stack of frames. Its terminal and notebook face is a short list of facts, the same length however many
+// frames it holds or however many columns they have; the frames themselves are for the PlussView window.
+static StackFacts atlas_facts_(const Atlas& atlas) {
+  StackFacts stack;
+  stack.type = "Atlas";
+  const auto& frames = atlas.frames();
+  std::int64_t cases_min = 0, cases_max = 0, cases_total = 0, features_min = 0, features_max = 0, features_total = 0;
+  bool same_names = true;
+  std::vector<std::string> first_names;
+  std::map<std::string, std::int64_t> kinds;
+  for (std::size_t i = 0; i < frames.size(); ++i) {
+    const auto& frame = frames[i];
+    const auto cases = frame.ncases();
+    const auto features = frame.nfeatures();
+    cases_min = i == 0 ? cases : std::min(cases_min, cases);
+    cases_max = i == 0 ? cases : std::max(cases_max, cases);
+    features_min = i == 0 ? features : std::min(features_min, features);
+    features_max = i == 0 ? features : std::max(features_max, features);
+    cases_total += cases;
+    features_total += features;
+    const auto names = frame.features();
+    if (i == 0) {
+      first_names = names;
+    } else if (same_names && names != first_names) {
+      same_names = false;
+    }
+    for (const auto& column : dataframe_columns_(frame)) {
+      ++kinds[logical_dtype(column)];
+    }
+  }
+  const auto depth = static_cast<std::int64_t>(frames.size());
+  stack.facts.emplace_back("depth", pluss::tils::OutputEngine::format("{} frames", depth));
+  stack.facts.emplace_back("cases", span_text(cases_min, cases_max, cases_total, depth));
+  stack.facts.emplace_back("features", span_text(features_min, features_max, features_total, depth));
+  stack.facts.emplace_back("feature names", depth == 0 ? "none" : (same_names ? "the same in every frame" : "differ between frames"));
+  stack.facts.emplace_back("ptypes", tally_text(std::vector<std::pair<std::string, std::int64_t>>(kinds.begin(), kinds.end())));
+  if (atlas.axis0_labels().has_value()) {
+    const auto labels = display_shelf(*atlas.axis0_labels());
+    stack.facts.emplace_back("depth labels",
+                             pluss::tils::OutputEngine::format("{}: {} to {}", logical_dtype(labels), shelf_value_at(labels, 0),
+                                                               shelf_value_at(labels, labels.size() - 1)));
+  } else {
+    stack.facts.emplace_back("depth labels", "none");
+  }
+  return stack;
 }
 
 std::string first_cell_text(const Shelf& shelf) { return shelf_value_at(shelf, 0); }

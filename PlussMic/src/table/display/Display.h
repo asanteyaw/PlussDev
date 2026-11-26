@@ -205,6 +205,21 @@ void print_summary(std::ostream& os, const SummaryView& view, const DisplayOptio
 // "[a, b, c, ..., z]": the first and last values of a sequence on one line, for a column that previews a part.
 std::string preview_text(std::int64_t size, const std::function<std::string(std::int64_t)>& value, std::int64_t max_width);
 
+// What a stack of tables (an atlas, an archive, an axel) says about itself in a terminal or a notebook: a short list of
+// facts, the same length however deep the stack is or however many columns its tables have. The tables themselves, one
+// per level, are for the PlussView window.
+struct StackFacts {
+  std::string type;                                      // "Atlas", "Archive", "Axel"
+  std::vector<std::pair<std::string, std::string>> facts;  // name, value
+};
+std::string render_stack_facts(const StackFacts& stack, const DisplayOptions& options = {});
+void print_stack_facts(std::ostream& os, const StackFacts& stack, const DisplayOptions& options = {});
+std::string render_notebook_stack_facts(const StackFacts& stack);
+// "5 each" when every level has the same count, else "2 to 120 (1234 in all)"; "none" with no levels.
+std::string span_text(std::int64_t smallest, std::int64_t largest, std::int64_t total, std::int64_t count);
+// "Series × 12, Note × 3", the most common kinds first, the rest counted rather than listed.
+std::string tally_text(const std::vector<std::pair<std::string, std::int64_t>>& counts);
+
 // The text of a Shelf's first cell, as the Shelf prints it (a Slot cell is a one-element Shelf).
 std::string first_cell_text(const Shelf& shelf);
 

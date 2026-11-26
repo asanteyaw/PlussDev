@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -249,100 +250,6 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
   return oss.str();
 }
 
-std::string render_archive_frame(const pluss::kindle::Archive& archive,
-                                 const EffectiveOptions& options) {
-  if (!archive.defined()) {
-    return "kindle::Archive <undefined>\n";
-  }
-
-  const auto width = frame_rule_width(options.terminal_width);
-  std::ostringstream oss;
-  oss << frame_rule('=', width) << "\n";
-  oss << fit_line(pluss::tils::OutputEngine::format("kindle::Archive  depth={}", archive.depth()), width) << "\n";
-  oss << fit_line(pluss::tils::OutputEngine::format("depth_labels={}", archive.label().has() ? "yes" : "no"), width) << "\n";
-  oss << frame_rule('-', width) << "\n";
-
-  const bool show_label = archive.label().has() && width >= 84;
-  const bool show_span = width >= 96;
-
-  const auto frame_w = 6;
-  const auto label_w = show_label ? std::max<std::int64_t>(8, std::min<std::int64_t>(22, width / 5)) : 0;
-  const auto nkeys_w = 8;
-  const auto min_w = show_span ? 6 : 0;
-  const auto max_w = show_span ? 6 : 0;
-  const auto sep_count = show_label ? (show_span ? 5 : 4) : (show_span ? 4 : 3);
-  const auto fixed = frame_w + label_w + nkeys_w + min_w + max_w + sep_count * 3;
-  const auto keys_w = std::max<std::int64_t>(12, width - fixed);
-
-  std::string header = right_pad("frame", frame_w);
-  if (show_label) {
-    header += " | " + right_pad("label", label_w);
-  }
-  header += " | " + right_pad("keys", nkeys_w);
-  if (show_span) {
-    header += " | " + right_pad("min_cs", min_w) + " | " + right_pad("max_cs", max_w);
-  }
-  header += " | " + right_pad("keys", keys_w);
-  oss << fit_line(header, width) << "\n";
-  oss << frame_rule('-', width) << "\n";
-
-  std::int64_t body_budget = std::max<std::int64_t>(4, options.terminal_height - 8);
-  const auto head = std::max<std::int64_t>(1, std::min<std::int64_t>(options.edge_items, body_budget - 1));
-  const auto tail = std::max<std::int64_t>(1, std::min<std::int64_t>(options.tail_items, body_budget - head - 1));
-  bool ellipsis = false;
-  const auto idx = visible_indices(archive.depth(), head, tail, ellipsis);
-
-  std::optional<pluss::table::Shelf> label_shelf = std::nullopt;
-  if (archive.label().has()) {
-    label_shelf = archive.label().values().to_shelf().cast().note();
-  }
-
-  for (std::size_t i = 0; i < idx.size(); ++i) {
-    if (ellipsis && i == static_cast<std::size_t>(head)) {
-      std::string line = right_pad("...", frame_w);
-      if (show_label) {
-        line += " | " + right_pad("...", label_w);
-      }
-      line += " | " + right_pad("...", nkeys_w);
-      if (show_span) {
-        line += " | " + right_pad("...", min_w) + " | " + right_pad("...", max_w);
-      }
-      line += " | " + right_pad("...", keys_w);
-      oss << fit_line(line, width) << "\n";
-    }
-
-    const auto row = idx[i];
-    const auto cat = archive.catalog(row);
-
-    std::int64_t min_cs = 0;
-    std::int64_t max_cs = 0;
-    if (cat.nkeys() > 0) {
-      min_cs = std::numeric_limits<std::int64_t>::max();
-      for (const auto& key : cat.keys()) {
-        const auto s = cat.keys(key);
-        min_cs = std::min(min_cs, s.size());
-        max_cs = std::max(max_cs, s.size());
-      }
-    }
-
-    std::string line = right_pad(std::to_string(row), frame_w);
-    if (show_label) {
-      auto lbl = shelf_value_at(*label_shelf, row, label_w);
-      line += " | " + right_pad(lbl, label_w);
-    }
-    line += " | " + right_pad(std::to_string(cat.nkeys()), nkeys_w);
-    if (show_span) {
-      line += " | " + right_pad(std::to_string(min_cs), min_w)
-           + " | " + right_pad(std::to_string(max_cs), max_w);
-    }
-    line += " | " + right_pad(catalog_keys_preview(cat, options, keys_w), keys_w);
-    oss << fit_line(line, width) << "\n";
-  }
-
-  oss << frame_rule('=', width);
-  return oss.str();
-}
-
 } // namespace
 
 // A stream is one-dimensional and holds one kind of value, so it prints exactly as a Shelf does: its labels are the
@@ -355,8 +262,57 @@ std::string render(const Catalog& catalog, const DisplayOptions& options) {
   return render_catalog_frame(catalog, resolve_options(options));
 }
 
+// An archive is a stack of catalogs. Its terminal and notebook face is a short list of facts, the same length however
+// many catalogs it holds or however many keys they have; the catalogs are for the PlussView window.
+pluss::table::display::StackFacts archive_facts(const pluss::kindle::Archive& archive) {
+  pluss::table::display::StackFacts stack;
+  stack.type = "Archive";
+  const std::int64_t depth = archive.depth();
+  std::int64_t keys_min = 0, keys_max = 0, keys_total = 0, entries_min = 0, entries_max = 0, entries_total = 0, streams = 0;
+  bool same_names = true;
+  std::vector<std::string> first_names;
+  std::map<std::string, std::int64_t> kinds;
+  for (std::int64_t i = 0; i < depth; ++i) {
+    const auto catalog = archive.catalog(i);
+    const auto& names = catalog.keys();
+    const auto nkeys = catalog.nkeys();
+    keys_min = i == 0 ? nkeys : std::min(keys_min, nkeys);
+    keys_max = i == 0 ? nkeys : std::max(keys_max, nkeys);
+    keys_total += nkeys;
+    if (i == 0) {
+      first_names = names;
+    } else if (same_names && names != first_names) {
+      same_names = false;
+    }
+    for (const auto& name : names) {
+      const auto stream = catalog.keys(name);
+      const auto size = stream.size();
+      entries_min = streams == 0 ? size : std::min(entries_min, size);
+      entries_max = streams == 0 ? size : std::max(entries_max, size);
+      entries_total += size;
+      ++streams;
+      ++kinds[kind_name(stream.kind())];
+    }
+  }
+  stack.facts.emplace_back("depth", pluss::tils::OutputEngine::format("{} catalogs", depth));
+  stack.facts.emplace_back("keys", pluss::table::display::span_text(keys_min, keys_max, keys_total, depth));
+  stack.facts.emplace_back("entries per key", pluss::table::display::span_text(entries_min, entries_max, entries_total, streams));
+  stack.facts.emplace_back("key names", depth == 0 ? "none" : (same_names ? "the same in every catalog" : "differ between catalogs"));
+  stack.facts.emplace_back("ptypes", pluss::table::display::tally_text(std::vector<std::pair<std::string, std::int64_t>>(kinds.begin(), kinds.end())));
+  if (archive.label().has()) {
+    const auto labels = archive.label().values().to_shelf().cast().note().as_note();
+    stack.facts.emplace_back("depth labels", labels.numel() == 0 ? std::string("none")
+                                                                 : pluss::tils::OutputEngine::format("{} to {}", labels.at(0), labels.at(labels.numel() - 1)));
+  } else {
+    stack.facts.emplace_back("depth labels", "none");
+  }
+  return stack;
+}
+
 std::string render(const pluss::kindle::Archive& archive, const DisplayOptions& options) {
-  return render_archive_frame(archive, resolve_options(options));
+  pluss::table::display::DisplayOptions shown;
+  shown.terminal_width = options.terminal_width;
+  return archive.defined() ? pluss::table::display::render_stack_facts(archive_facts(archive), shown) : "kindle::Archive <undefined>";
 }
 
 void print(std::ostream& os, const Stream& stream, const DisplayOptions& options) {

@@ -4,6 +4,8 @@
 #include <iosfwd>
 #include <string>
 
+#include "table/display/Display.h"
+
 namespace pluss::kindle {
 class Stream;
 class Catalog;
@@ -24,6 +26,8 @@ struct DisplayOptions {
 std::string render(const Stream& stream, const DisplayOptions& options = {});
 std::string render(const Catalog& catalog, const DisplayOptions& options = {});
 std::string render(const Archive& archive, const DisplayOptions& options = {});
+// What an archive says about itself in a terminal or a notebook (see table::display::StackFacts).
+pluss::table::display::StackFacts archive_facts(const Archive& archive);
 
 void print(std::ostream& os, const Stream& stream, const DisplayOptions& options = {});
 void print(std::ostream& os, const Catalog& catalog, const DisplayOptions& options = {});

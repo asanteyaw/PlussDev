@@ -1,4 +1,5 @@
 // The View > Filter menu keeps rows by what a cell is (missing, NaN, infinite), never by its text.
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -299,6 +300,30 @@ void test_one_dimensional_types_print_alike() {
   expect(asked < 100, "and formats only those rows");
 }
 
+// A stack of tables (an atlas, an archive, an axel) says a short list of facts about itself, however deep it is and
+// however many columns its tables have.
+void test_stacks_print_a_summary_that_does_not_grow() {
+  const auto build = [](const int frames_count, const int columns) {
+    std::vector<DataFrame> frames;
+    for (int f = 0; f < frames_count; ++f) {
+      std::vector<std::pair<std::string, Shelf>> cols;
+      for (int c = 0; c < columns; ++c) {
+        cols.emplace_back("c" + std::to_string(c), Shelf(pluss::make_series({1.0 * f, 2.0})));
+      }
+      frames.emplace_back(cols);
+    }
+    return pluss::table::Atlas(frames);
+  };
+  const auto lines = [](const std::string& text) { return std::count(text.begin(), text.end(), '\n'); };
+  std::ostringstream small, large;
+  small << build(3, 4);
+  large << build(150, 120);
+  expect(has(large.str(), "150 frames") && has(large.str(), "120 each") && has(large.str(), "the same in every frame"),
+         "an atlas says how deep it is, how big its frames are and that they share their names");
+  expect(lines(large.str()) == lines(small.str()), "and prints as many lines for a deep, wide atlas as for a small one");
+  expect(!has(large.str(), "c119"), "without listing its feature names");
+}
+
 int main() {
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
@@ -311,6 +336,7 @@ int main() {
   test_notebook_table_is_a_plain_fragment();
   test_notebook_shows_each_type_in_its_own_shape();
   test_one_dimensional_types_print_alike();
+  test_stacks_print_a_summary_that_does_not_grow();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

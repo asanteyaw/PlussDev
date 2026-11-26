@@ -102,40 +102,64 @@ std::string Axel::to_json() const {
   return oss.str();
 }
 
-namespace {
+namespace display {
 
-// The overview of an axel, one row per level: its label, how many fields it has, how many states they run to, and the
-// fields' names. The terminal and the notebook both show it.
-pluss::table::display::SummaryView axel_overview_(const Axel& axel) {
+// An axel is a stack of registries. Its terminal and notebook face is a short list of facts, the same length however
+// many registries it holds or however many fields they have; the registries are for the PlussView window.
+pluss::table::display::StackFacts axel_facts(const Axel& axel) {
+  pluss::table::display::StackFacts stack;
+  stack.type = "Axel";
   const auto& levels = axel.registries();
-  pluss::table::display::SummaryView view;
-  view.title = pluss::tils::OutputEngine::format("scribble::Axel  depth={}", axel.depth());
-  view.notes.push_back(axel.labels().has_value() ? "depth_labels=yes" : "depth_labels=no");
-  view.columns = {"level", "label", "fields", "min_states", "max_states", "field names"};
-  view.size = static_cast<std::int64_t>(levels.size());
-  view.row = [&axel, &levels](const std::int64_t i) {
+  const auto depth = static_cast<std::int64_t>(levels.size());
+  std::int64_t fields_min = 0, fields_max = 0, fields_total = 0, states_min = 0, states_max = 0, states_total = 0, slots = 0;
+  bool same_names = true;
+  std::vector<std::string> first_names;
+  std::map<std::string, std::int64_t> kinds;
+  for (std::int64_t i = 0; i < depth; ++i) {
     const auto& level = levels[static_cast<std::size_t>(i)];
     const auto& names = level.fields();
-    const std::string label = axel.labels().has_value() ? detail::slot_cell_text(axel.labels()->at(i)) : std::string{};
-    return std::vector<std::string>{
-        std::to_string(i), label, std::to_string(level.nfields()), std::to_string(level.minstate()),
-        std::to_string(level.maxstate()),
-        pluss::table::display::preview_text(
-            static_cast<std::int64_t>(names.size()), [&](const std::int64_t k) { return names[static_cast<std::size_t>(k)]; }, 60)};
-  };
-  return view;
+    const auto nfields = level.nfields();
+    fields_min = i == 0 ? nfields : std::min(fields_min, nfields);
+    fields_max = i == 0 ? nfields : std::max(fields_max, nfields);
+    fields_total += nfields;
+    if (i == 0) {
+      first_names = names;
+    } else if (same_names && names != first_names) {
+      same_names = false;
+    }
+    for (const auto& name : names) {
+      const auto slot = level.fields(name);
+      const auto size = slot.size();
+      states_min = slots == 0 ? size : std::min(states_min, size);
+      states_max = slots == 0 ? size : std::max(states_max, size);
+      states_total += size;
+      ++slots;
+      ++kinds[detail::slot_held_text(slot)];
+    }
+  }
+  stack.facts.emplace_back("depth", pluss::tils::OutputEngine::format("{} registries", depth));
+  stack.facts.emplace_back("fields", pluss::table::display::span_text(fields_min, fields_max, fields_total, depth));
+  stack.facts.emplace_back("states per field", pluss::table::display::span_text(states_min, states_max, states_total, slots));
+  stack.facts.emplace_back("field names", depth == 0 ? "none" : (same_names ? "the same in every registry" : "differ between registries"));
+  stack.facts.emplace_back("ptypes", pluss::table::display::tally_text(std::vector<std::pair<std::string, std::int64_t>>(kinds.begin(), kinds.end())));
+  if (axel.labels().has_value() && axel.labels()->size() > 0) {
+    const auto& labels = *axel.labels();
+    stack.facts.emplace_back("depth labels", pluss::tils::OutputEngine::format("{} to {}", detail::slot_cell_text(labels.at(0)),
+                                                                                detail::slot_cell_text(labels.at(labels.size() - 1))));
+  } else {
+    stack.facts.emplace_back("depth labels", "none");
+  }
+  return stack;
 }
 
-}  // namespace
+}  // namespace display
 
-// An axel is a stack of registries, shown as an overview with one row per level. A level is drilled into with
-// registry(i). (to_string() is the full JSON dump.)
 void Axel::show(std::ostream& os) const {
   if (!defined()) {
     os << "scribble::Axel <undefined>";
     return;
   }
-  pluss::table::display::print_summary(os, axel_overview_(*this));
+  pluss::table::display::print_stack_facts(os, display::axel_facts(*this));
 }
 
 const detail::AxelImpl& Axel::impl_ref_() const {

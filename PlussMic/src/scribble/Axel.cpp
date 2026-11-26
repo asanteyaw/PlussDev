@@ -4,6 +4,7 @@
 #include <pluss/tils/kit/output.h>
 
 #include <algorithm>
+#include <map>
 #include <ostream>
 #include <sstream>
 #include <unordered_set>
@@ -85,12 +86,12 @@ public:
 
 namespace pluss::table::display {
 
+// An axel in a notebook: the same short list of facts the terminal shows.
 std::string render_notebook_html(const pluss::scribble::Axel& axel) {
   if (!axel.defined()) {
     return "<div class=\"pluss-table\">Axel &lt;undefined&gt;</div>";
   }
-  return render_notebook_summary(pluss::scribble::axel_overview_(axel),
-                                 pluss::tils::OutputEngine::format("depth {}", axel.depth()));
+  return render_notebook_stack_facts(pluss::scribble::display::axel_facts(axel));
 }
 
 }  // namespace pluss::table::display
