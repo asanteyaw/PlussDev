@@ -591,7 +591,14 @@ if(PLUSSII_DISTRIBUTION_SUFFIX)
 else()
   set(_plussii_suffix "")
 endif()
-set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}${_plussii_suffix}")
+# Only a Steady build is named for its version. A Transient build is rebuilt from main under the same name, so its
+# archive and the folder inside it say "transient" instead.
+if(PLUSS_RELEASE_CHANNEL STREQUAL "transient")
+  set(_plussii_edition "transient")
+else()
+  set(_plussii_edition "${PROJECT_VERSION}")
+endif()
+set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${_plussii_edition}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}${_plussii_suffix}")
 set(CPACK_GENERATOR "TGZ;ZIP")
 
 set(PLUSS_SDK_STAGING_DIR

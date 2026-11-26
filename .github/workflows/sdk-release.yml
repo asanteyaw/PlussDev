@@ -197,7 +197,8 @@ jobs:
           for archive in plussii-cpp-*.zip; do
             platform="${archive#plussii-cpp-}"
             platform="${platform#*-}"
-            mv "$archive" "plussii-cpp-transient-${platform}"
+            # A Transient build already names itself "transient"; this only relabels one that carries a version.
+            [ "$archive" = "plussii-cpp-transient-${platform}" ] || mv "$archive" "plussii-cpp-transient-${platform}"
           done
 
       - name: Generate checksums
