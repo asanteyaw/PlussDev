@@ -764,6 +764,44 @@ std::string logical_dtype(const Shelf& t) {
   return "Unknown";
 }
 
+// The one-dimensional layout every sequence shares (a Shelf, a Stream, a Slot): position and value side by side, the
+// first and last rows with a row of dots between when there are many, and a footer line saying what it holds. Only the
+// rows that are shown are asked for, so the cost does not grow with the length of the sequence.
+std::string sequence_text_(const SequenceView& view, const EffectiveDisplayOptions& options, std::int64_t terminal_width) {
+  const auto row_plan = build_row_plan(view.size, options);
+  std::vector<std::pair<std::string, std::string>> rows;
+  rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
+  const auto push_row = [&](const std::int64_t row) {
+    const auto label = view.label ? view.label(row) : pluss::tils::OutputEngine::format("{}", row);
+    rows.emplace_back(clip_cell(label, options.max_cell_width), clip_cell(view.value(row), options.max_cell_width));
+  };
+  for (const auto row : row_plan.head) {
+    push_row(row);
+  }
+  if (row_plan.ellipsis) {
+    rows.emplace_back("...", "...");
+  }
+  for (const auto row : row_plan.tail) {
+    push_row(row);
+  }
+  std::int64_t label_width = 1;
+  for (const auto& row : rows) {
+    label_width = std::max<std::int64_t>(label_width, static_cast<std::int64_t>(row.first.size()));
+  }
+  std::string out;
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    out += fit_line(pluss::tils::OutputEngine::format("{}  {}", left_pad(rows[i].first, label_width), rows[i].second),
+                    terminal_width);
+    if (i + 1 < rows.size()) {
+      out.push_back('\n');
+    }
+  }
+  if (!out.empty()) {
+    out.push_back('\n');
+  }
+  return out + view.footer;
+}
+
 std::string render_shelf_series_like_(const Shelf& shelf,
                                        const EffectiveDisplayOptions& options,
                                        std::int64_t terminal_width) {
@@ -859,49 +897,15 @@ std::string render_shelf_series_like_(const Shelf& shelf,
     return out;
   }
 
-  std::vector<std::pair<std::string, std::string>> rows;
-  rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
-
-  auto push_row = [&](std::int64_t ridx) {
-    const auto idx = labels.has_value() ? shelf_value_at(*labels, ridx) : pluss::tils::OutputEngine::format("{}", ridx);
-    const auto val = shelf_value_at(values, ridx);
-    rows.emplace_back(clip_cell(idx, options.max_cell_width), clip_cell(val, options.max_cell_width));
+  SequenceView view;
+  view.size = values.size();
+  view.label = [&](const std::int64_t row) {
+    return labels.has_value() ? shelf_value_at(*labels, row) : pluss::tils::OutputEngine::format("{}", row);
   };
-
-  for (const auto ridx : row_plan.head) {
-    push_row(ridx);
-  }
-  if (row_plan.ellipsis) {
-    rows.emplace_back("...", "...");
-  }
-  for (const auto ridx : row_plan.tail) {
-    push_row(ridx);
-  }
-
-  std::int64_t idx_width = 1;
-  for (const auto& row : rows) {
-    idx_width = std::max<std::int64_t>(idx_width, static_cast<std::int64_t>(row.first.size()));
-  }
-
-  std::string out;
-  for (std::size_t i = 0; i < rows.size(); ++i) {
-    const auto line = pluss::tils::OutputEngine::format("{}  {}",
-                                  left_pad(rows[i].first, idx_width),
-                                  rows[i].second);
-    out += fit_line(line, terminal_width);
-    if (i + 1 < rows.size()) {
-      out.push_back('\n');
-    }
-  }
-  if (!out.empty()) {
-    out.push_back('\n');
-  }
-  if (shelf.named()) {
-    out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", shelf.name(), dtype_footer);
-  } else {
-    out += pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
-  }
-  return out;
+  view.value = [&](const std::int64_t row) { return shelf_value_at(values, row); };
+  view.footer = shelf.named() ? pluss::tils::OutputEngine::format("Name: {}, ptype: {}", shelf.name(), dtype_footer)
+                              : pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
+  return sequence_text_(view, options, terminal_width);
 }
 
 bool native_webview_backend_available_() {
@@ -4290,6 +4294,19 @@ void show_info(const DataFrame& frame, const DisplayOptions& options) {
   }
   print_info(std::cout, frame, options);
 }
+
+std::string render_sequence(const SequenceView& view, const DisplayOptions& options) {
+  const auto term = detect_terminal();
+  const auto effective = resolve_effective_options(options, term, false);
+  const auto width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
+  return sequence_text_(view, effective, width);
+}
+
+void print_sequence(std::ostream& os, const SequenceView& view, const DisplayOptions& options) {
+  os << render_sequence(view, options) << '\n';
+}
+
+std::string first_cell_text(const Shelf& shelf) { return shelf_value_at(shelf, 0); }
 
 void print(std::ostream& os, const Shelf& shelf, const DisplayOptions& options) {
   os << render(shelf, options) << '\n';

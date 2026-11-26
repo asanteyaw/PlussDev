@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "pluss/pluss.h"
+#include "kindle/Stream.h"
 #include "kindle/display/GridModel.h"
+#include "scribble/Slot.h"
 #include "table/display/Display.h"
 
 namespace {
@@ -255,6 +257,43 @@ void test_notebook_shows_non_tables_as_text() {
   expect(has(text, "a"), "a catalog prints its key");
 }
 
+// A Shelf, a Stream and a Slot are one-dimensional and print alike, and printing costs the rows shown, not the length.
+void test_one_dimensional_types_print_alike() {
+  using Value = pluss::scribble::Slot::Value;
+  const Shelf shelf(pluss::make_series({101.0, 102.0, 103.0}));
+  const pluss::kindle::Stream stream(pluss::make_series({101.0, 102.0, 103.0}));
+  std::ostringstream shelf_text, stream_text;
+  pluss::table::display::print(shelf_text, shelf);
+  stream_text << stream;
+  expect(stream_text.str() == shelf_text.str(), "a stream prints exactly as the shelf of its values does");
+
+  const pluss::scribble::Slot same(std::vector<Value>{Value(pluss::make_series({1.5})), Value(pluss::make_series({2.5}))});
+  std::ostringstream same_text;
+  same_text << same;
+  expect(has(same_text.str(), "1.5") && has(same_text.str(), "ptype: Series") && !has(same_text.str(), "_type"),
+         "a slot of one kind prints its values and says what it holds, not its internals");
+
+  const pluss::scribble::Slot mixed(std::vector<Value>{Value(pluss::make_series({1.0})), Value(pluss::make_note({"a"})),
+                                                       Value(std::monostate{})});
+  std::ostringstream mixed_text;
+  mixed_text << mixed;
+  expect(has(mixed_text.str(), "NULL") && has(mixed_text.str(), "ptype: Mixed (Series, Note)"),
+         "a slot of different kinds says so, and a cell with no value is NULL");
+
+  // Only the rows that are shown are asked for, however long the sequence is.
+  std::int64_t asked = 0;
+  pluss::table::display::SequenceView view;
+  view.size = 1'000'000;
+  view.value = [&](const std::int64_t row) {
+    ++asked;
+    return std::to_string(row);
+  };
+  view.footer = "ptype: Series";
+  const auto text = pluss::table::display::render_sequence(view);
+  expect(has(text, "999999") && has(text, "..."), "a long sequence shows its first and last rows with dots between");
+  expect(asked < 100, "and formats only those rows");
+}
+
 int main() {
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
@@ -266,6 +305,7 @@ int main() {
   test_catalog_raggedness_view();
   test_notebook_table_is_a_plain_fragment();
   test_notebook_shows_non_tables_as_text();
+  test_one_dimensional_types_print_alike();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

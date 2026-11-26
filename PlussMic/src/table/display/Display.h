@@ -168,6 +168,21 @@ bool save_png(const ModelPage& page, const std::string& path, const DisplayOptio
 std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.
 pluss::view::RowWindow row_window_for(const DisplayOptions& options);
+// One-dimensional text, the layout a Shelf prints: the position and the value of each cell, the first and last rows
+// with a row of dots between when there are many, then a footer ("ptype: Series"). A Shelf, a Stream and a Slot all
+// print through it, so they look alike in a terminal and in a notebook. Only the rows that are shown are asked for
+// (`label` and `value` are called for those alone), so the cost does not grow with the length of the sequence.
+struct SequenceView {
+  std::int64_t size{0};
+  std::function<std::string(std::int64_t)> label;  // the text of a row's label; unset: the row's position
+  std::function<std::string(std::int64_t)> value;  // the text of a row's value
+  std::string footer;                              // the line under the rows, such as "ptype: Series"
+};
+std::string render_sequence(const SequenceView& view, const DisplayOptions& options = {});
+void print_sequence(std::ostream& os, const SequenceView& view, const DisplayOptions& options = {});
+// The text of a Shelf's first cell, as the Shelf prints it (a Slot cell is a one-element Shelf).
+std::string first_cell_text(const Shelf& shelf);
+
 // Whether the code is running inside the PlussII notebook (its kernel sets PLUSS_NOTEBOOK). Only a DataFrame is shown
 // there as a table; a shelf, an atlas and a catalog are shown as the text the terminal shows.
 bool in_notebook();

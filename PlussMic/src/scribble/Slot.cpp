@@ -16,6 +16,8 @@
 #include "pluss/codeh/timeline_factory.h"
 #include "kindle/Stream.h"
 #include "table/NonFinite.h"
+#include "table/Shelf.h"
+#include "table/display/Display.h"
 #include <pluss/tils/kit/output.h>
 
 namespace pluss::scribble {

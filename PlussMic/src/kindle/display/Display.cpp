@@ -178,73 +178,6 @@ std::string catalog_keys_preview(const Catalog& catalog,
   return clip_text(pluss::tils::OutputEngine::format("[{}]", pluss::tils::OutputEngine::join(names, ", ")), max_width);
 }
 
-std::string render_stream_frame(const Stream& stream, const EffectiveOptions& options) {
-  if (!stream.defined()) {
-    return "kindle::Stream <undefined>\n";
-  }
-
-  const auto width = frame_rule_width(options.terminal_width);
-  std::ostringstream oss;
-  oss << frame_rule('=', width) << "\n";
-  oss << fit_line(
-      pluss::tils::OutputEngine::format("kindle::Stream  kind={}  dtype={}  records={}",
-                  kind_name(stream.kind()),
-                  stream.dtype(),
-                  stream.size()),
-      width)
-      << "\n";
-  oss << fit_line(
-      pluss::tils::OutputEngine::format("label={}  mask={}  meta={}",
-                  stream.has_label() ? "yes" : "no",
-                  detail::has_mask(stream) ? "yes" : "no",
-                  stream.meta().size()),
-      width)
-      << "\n";
-  oss << frame_rule('-', width) << "\n";
-
-  const auto shelf = stream.to_shelf();
-  std::int64_t body_budget = std::max<std::int64_t>(3, options.terminal_height - 8);
-  const auto head = std::max<std::int64_t>(1, std::min<std::int64_t>(options.edge_items, body_budget - 1));
-  const auto tail = std::max<std::int64_t>(1, std::min<std::int64_t>(options.tail_items, body_budget - head - 1));
-
-  bool ellipsis = false;
-  const auto idx = visible_indices(stream.size(), head, tail, ellipsis);
-
-  const auto case_w = std::max<std::int64_t>(5, std::min<std::int64_t>(12, width / 5));
-  const auto value_w = std::max<std::int64_t>(8, width - case_w - 3);
-
-  oss << right_pad("label", case_w) << " | " << right_pad("value", value_w) << "\n";
-  oss << frame_rule('-', width) << "\n";
-
-  for (std::size_t i = 0; i < idx.size(); ++i) {
-    if (ellipsis && i == static_cast<std::size_t>(head)) {
-      oss << right_pad("...", case_w) << " | " << right_pad("...", value_w) << "\n";
-    }
-    const auto row = idx[i];
-    std::string case_cell;
-    if (stream.has_label()) {
-      case_cell = shelf_value_at(stream.label()->cast().note(), row, case_w);
-    } else {
-      case_cell = std::to_string(row);
-    }
-    const auto value_cell = shelf_value_at(shelf, row, value_w);
-    oss << right_pad(case_cell, case_w) << " | " << right_pad(value_cell, value_w) << "\n";
-  }
-
-  if (options.show_meta && !stream.meta().empty()) {
-    oss << frame_rule('-', width) << "\n";
-    std::vector<std::pair<std::string, std::string>> meta_items(stream.meta().begin(), stream.meta().end());
-    std::sort(meta_items.begin(), meta_items.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
-    for (const auto& [k, v] : meta_items) {
-      oss << fit_line(pluss::tils::OutputEngine::format("{}: {}", k, v), width) << "\n";
-    }
-  }
-
-  oss << frame_rule('=', width);
-  return oss.str();
-}
-
 std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions& options) {
   if (!catalog.defined()) {
     return "kindle::Catalog <undefined>\n";
@@ -412,8 +345,10 @@ std::string render_archive_frame(const pluss::kindle::Archive& archive,
 
 } // namespace
 
-std::string render(const Stream& stream, const DisplayOptions& options) {
-  return render_stream_frame(stream, resolve_options(options));
+// A stream is one-dimensional and holds one kind of value, so it prints exactly as a Shelf does: its labels are the
+// index, a missing value is NULL, and the footer says what it holds. (The options here describe catalogs.)
+std::string render(const Stream& stream, const DisplayOptions&) {
+  return pluss::table::display::render(stream.to_shelf());
 }
 
 std::string render(const Catalog& catalog, const DisplayOptions& options) {
