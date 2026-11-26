@@ -148,22 +148,22 @@ std::string Catalog::to_json() const {
 
 void Catalog::show(std::ostream& os) const { display::print(os, *this); }
 
-void Catalog::show() const {
-  PLUSS_CHECK(defined(), "Catalog::show: catalog undefined");
+pluss::table::display::ModelPage catalog_page(const Catalog& catalog) {
+  PLUSS_CHECK(catalog.defined(), "Catalog::show: catalog undefined");
   // The keys side by side as a ragged grid: each column is as long as its own stream and nothing is padded.
-  auto model = std::make_shared<display::CatalogGridModel>(*this);
+  auto model = std::make_shared<display::CatalogGridModel>(catalog);
   pluss::table::display::ModelPage page;
   page.title = "Catalog";
   const bool ragged = model->longest() != model->shortest();
-  page.subtitle = ragged ? std::to_string(nkeys()) + " keys, " + std::to_string(model->shortest()) + " to " +
+  page.subtitle = ragged ? std::to_string(catalog.nkeys()) + " keys, " + std::to_string(model->shortest()) + " to " +
                                std::to_string(model->longest()) + " entries"
-                         : std::to_string(nkeys()) + " keys, " + std::to_string(model->longest()) + " entries";
-  page.cards = {{"Keys", std::to_string(nkeys())},
+                         : std::to_string(catalog.nkeys()) + " keys, " + std::to_string(model->longest()) + " entries";
+  page.cards = {{"Keys", std::to_string(catalog.nkeys())},
                 {"Longest", std::to_string(model->longest())},
                 {"Shortest", std::to_string(model->shortest())}};
   page.model = model;
-  for (const auto& name : keys()) {
-    page.streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(this->keys(name).to_shelf()));
+  for (const auto& name : catalog.keys()) {
+    page.streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(catalog.keys(name).to_shelf()));
   }
   page.offer_align = ragged;
   page.on_options = [model](const pluss::table::display::DisplayOptions& options) {
@@ -172,6 +172,11 @@ void Catalog::show() const {
     model->set_window(pluss::table::display::row_window_for(options));
     model->set_number_format(options.number_format);
   };
+  return page;
+}
+
+void Catalog::show() const {
+  const auto page = catalog_page(*this);
   // A catalog is not a DataFrame, and opens in Ember so it looks like it unless a default theme was set.
   pluss::table::display::DisplayOptions options;
   if (pluss::table::display::default_theme() == pluss::table::display::DisplayTheme::Default) {

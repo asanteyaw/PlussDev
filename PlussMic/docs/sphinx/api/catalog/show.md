@@ -97,7 +97,7 @@ std::cout << "captured " << captured.str().size() << " characters";
 captured 761 characters
 ```
 
-Example 3. Open the catalog in the viewer, one card per key.
+Example 3. Open the catalog in the viewer as a ragged grid.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({

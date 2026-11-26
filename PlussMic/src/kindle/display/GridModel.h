@@ -66,3 +66,12 @@ class CatalogGridModel final : public pluss::view::VirtualTableModel {
 };
 
 }  // namespace pluss::kindle::display
+
+namespace pluss::kindle {
+
+class Catalog;
+
+// The page Catalog::show() opens: the ragged grid, its cards and the view tabs.
+pluss::table::display::ModelPage catalog_page(const Catalog& catalog);
+
+}  // namespace pluss::kindle

@@ -35,6 +35,10 @@
 #include "CodeM/core/ScalarType.h"
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/table_order.h"
+#include "pluss/tils/view/window/export.h"
+#include "pluss/tils/view/window/html_document.h"
+#include "pluss/tils/view/window/html_layout.h"
+#include "pluss/tils/view/window/renderer.h"
 #include "pluss/tils/view/window/text_layout.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
@@ -4000,6 +4004,52 @@ std::string frame_page_(const DataFrame& frame, StatsViews& views, const std::sh
                             : pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures());
   return render_html_table_(frame, document_title_("DataFrame", options), subtitle, options, views, lazy,
                             /*virtual_model=*/true);
+}
+
+namespace {
+bool save_page_png_(const std::string& html, const pluss::view::VirtualTableModel* model, const std::string& path,
+                    const int width, const int height) {
+  namespace window = pluss::view::window;
+  const auto document = window::parse_html_document(html);
+  window::HtmlRenderConfig config{};
+  config.virtual_table_model = model;
+  std::vector<std::int64_t> rows;
+  if (model != nullptr && (model->filtering() || model->row_window().kind != pluss::view::RowWindow::Kind::All)) {
+    for (std::int64_t row = 0; row < model->row_count(); ++row) {
+      if (model->row_allowed(row)) {
+        rows.push_back(row);
+      }
+    }
+    const auto [first, last] = pluss::view::window_bounds(model->row_window(), static_cast<std::int64_t>(rows.size()));
+    rows = std::vector<std::int64_t>(rows.begin() + first, rows.begin() + last);
+    config.virtual_row_order = &rows;
+  }
+  const window::SizeI size{width, height};
+  const auto scene = window::build_html_document_scene(document, size, config);
+  window::PixelCanvas canvas(size);
+  canvas.clear(window::Color::rgba(0, 0, 0, 255));
+  window::SoftwareRenderer renderer;
+  std::vector<window::RenderEvent> events;
+  renderer.render(scene, canvas, events);
+  return window::save_canvas_png(canvas, path);
+}
+}  // namespace
+
+bool save_png(const ModelPage& page, const std::string& path, const DisplayOptions& options, const int width,
+              const int height) {
+  if (page.on_options) {
+    page.on_options(options);
+  }
+  return save_page_png_(render_html_model(page, options), page.model.get(), path, width, height);
+}
+
+bool save_png(const DataFrame& frame, const std::string& path, const DisplayOptions& options, const int width,
+              const int height) {
+  StatsViews views(frame);
+  const auto model = std::make_shared<DataFrameVirtualTableModel>(frame);
+  model->apply(options);
+  const auto html = frame_page_(frame, views, model, options, /*lazy=*/false);
+  return save_page_png_(html, model.get(), path, width, height);
 }
 
 void show(const DataFrame& frame, const DisplayOptions& options) {

@@ -144,6 +144,10 @@ void print(std::ostream& os, const Atlas& atlas, const DisplayOptions& options =
 void print_info(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});
 void show(const Shelf& shelf, const DisplayOptions& options = {});
 void show(const DataFrame& frame, const DisplayOptions& options = {});
+
+// Paints the window's table page, as PlussView shows it, into a PNG file of the given size.
+bool save_png(const DataFrame& frame, const std::string& path, const DisplayOptions& options = {}, int width = 1246,
+              int height = 520);
 void show(const Atlas& atlas, const DisplayOptions& options = {});
 void show_info(const DataFrame& frame, const DisplayOptions& options = {});
 // A page for any model-painted table that is not a DataFrame (a ragged catalog): the title, the cards above the
@@ -158,6 +162,9 @@ struct ModelPage {
   std::function<void(const DisplayOptions&)> on_options;
   bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
 };
+// The same for a model page (a ragged catalog): the page's own filter, visit and alignment come from the options.
+bool save_png(const ModelPage& page, const std::string& path, const DisplayOptions& options = {}, int width = 1300,
+              int height = 520);
 // A number's text written as View > Format asks for (the stored value does not change).
 std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.
