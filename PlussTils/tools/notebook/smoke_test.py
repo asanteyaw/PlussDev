@@ -79,6 +79,7 @@ def main():
                 seen["mime"] += list(c["data"])
             elif t == "error":
                 seen["error"] = c["evalue"]
+                seen["traceback"] = "\n".join(c.get("traceback", []))
             elif t == "status" and c["execution_state"] == "idle":
                 return seen
 
@@ -99,7 +100,12 @@ def main():
         r = run("std::cout << v << std::endl;")
         check("a variable defined again is rebound", r["text"].strip() == "2", r)
         r = run("int broken = ;")
-        check("a compile error is reported", r["error"] is not None and "error" in r["error"], r)
+        check("a compile error is reported", r["error"] is not None, r)
+        check("it names the user's line and shows no internal call",
+              "int broken = ;" in r.get("traceback", "") and "pluss::nb::show" not in r.get("traceback", ""), r)
+        r = run("an_undeclared_name")
+        check("an undeclared name on the last line is shown as the user wrote it",
+              r["error"] is not None and "an_undeclared_name" in r.get("traceback", "") and "pluss::nb::show" not in r.get("traceback", ""), r)
         r = run("std::cout << v << std::endl;")
         check("the engine survives a compile error", r["text"].strip() == "2", r)
         run("#include <pluss/tils/kit/datastore.h>")  # a notebook starts with <pluss/pluss.h> only, as a main.cpp would

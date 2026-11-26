@@ -105,6 +105,85 @@ TYPE_DEFINITION = re.compile(r"\b(?:struct|class|union|enum(?:\s+class|\s+struct
 VERSION = re.compile(r"(\w+?)__v\d+\b")
 REDEFINED = re.compile(r"redefinition of '(\w+)'")
 
+# One line of the compiler's report that starts a diagnostic: "cell:1:17: error: use of undeclared identifier 'b'".
+DIAGNOSTIC = re.compile(r"^(?P<file>\S[^:]*):(?P<line>\d+):(?P<column>\d+): (?P<kind>fatal error|error|warning|note): (?P<message>.*)$")
+# What the kernel wraps a cell's last expression in so that it is shown; a reader never sees it.
+SHOW_CALL = "pluss::nb::show("
+
+
+def format_compile_error(report, code, sent, undef_lines, number):
+    """The compiler's report as a traceback about the user's own code, in the style of a pluss::Error:
+
+        Traceback (most recent call last):
+          Cell [3], line 2
+            auto y = f(x);
+                       ^
+        CompileError: use of undeclared identifier 'x'
+
+    The compiler talks about the text the kernel sent, which can differ from what the user wrote (the last
+    expression is wrapped in a call that shows it, a header may be undefined first), so each place is mapped back to
+    the user's line and column. Returns (traceback text, message of the first error)."""
+    user_lines = code.rstrip("\n").split("\n")
+    sent_lines = sent.rstrip("\n").split("\n")
+    wrapped = bool(sent_lines) and SHOW_CALL in sent_lines[-1] and SHOW_CALL not in user_lines[-1]
+
+    def locate(line, column):
+        """The user's line number, line text and 0-based column for a place in the text that was sent."""
+        number_in_cell = line - undef_lines
+        if not 1 <= number_in_cell <= len(user_lines):
+            return None
+        text = user_lines[number_in_cell - 1]
+        offset = column - 1
+        inside_wrapper = False
+        if wrapped and number_in_cell == len(sent_lines):
+            call = sent_lines[-1].find(SHOW_CALL)
+            payload = call + len(SHOW_CALL)
+            start = PlussKernel._last_statement_start(text)
+            first = start + (len(text[start:]) - len(text[start:].lstrip()))
+            if offset < call:
+                pass
+            elif offset < payload:
+                offset = first  # inside the display wrapper: point at the expression it shows
+                inside_wrapper = True
+            else:
+                offset = first + (offset - payload)
+        return number_in_cell, text, max(0, min(offset, len(text))), inside_wrapper
+
+    blocks, current = [], None
+    for raw in report.split("\n"):
+        found = DIAGNOSTIC.match(raw)
+        if found:
+            current = {"head": found, "rest": []}
+            blocks.append(current)
+        elif current is not None:
+            current["rest"].append(raw)
+    sections, first_message = [], ""
+    for block in blocks:
+        head = block["head"]
+        kind, message = head.group("kind"), VERSION.sub(r"\1", head.group("message"))
+        if kind != "note" and not first_message and kind != "warning":
+            first_message = message
+        place = locate(int(head.group("line")), int(head.group("column"))) if head.group("file") == "cell" else None
+        if place is None:
+            # Inside a header or somewhere the user did not write: the compiler's own words are all there is.
+            lines = ["%s:%s:%s: %s: %s" % (head.group("file"), head.group("line"), head.group("column"), kind, message)]
+            lines += [l for l in block["rest"] if l.strip()]
+            sections.append("\n".join(lines))
+            continue
+        where, text, column, inside_wrapper = place
+        if inside_wrapper:
+            message = "this value cannot be displayed (%s)" % message
+        label = {"error": "CompileError", "fatal error": "CompileError", "warning": "Warning", "note": "Note"}[kind]
+        sections.append("\n".join([
+            "  Cell [%d], line %d" % (number, where),
+            "    " + text,
+            "    " + " " * column + "^",
+            "%s: %s" % (label, message),
+        ]))
+    if not sections:
+        return report.strip(), first_message
+    return "Traceback (most recent call last):\n" + "\n\n".join(sections), first_message
+
 
 class PlussKernel(Kernel):
     implementation = "pluss"
@@ -326,6 +405,7 @@ class PlussKernel(Kernel):
                 source = rename_identifier(source, base, new)
         else:
             return out, err
+        self._cell_info = (code, source, len(macros) if "#include" in code and macros else 0)
         if "error:" not in err:
             self._macros = macros
             self._types.update(VERSION.sub(r"\1", name) for name in TYPE_DEFINITION.findall(text))
@@ -352,6 +432,12 @@ class PlussKernel(Kernel):
         out, err = self._tidy(out), self._tidy(err)
         failed = "error:" in err
         first_error = next((line for line in err.split("\n") if "error:" in line), err.strip().split("\n")[0] if err.strip() else "")
+        if failed:
+            # The report is about the text that was sent; say it about the user's own code instead.
+            report = "\n".join(l for l in err.split("\n") if l.strip() != "error: Parsing failed." and not re.match(r"^\d+ errors? generated", l.strip()))
+            code_sent, source_sent, undef = getattr(self, "_cell_info", (code, code, 0))
+            err, shown = format_compile_error(report, code_sent, source_sent, undef, self.execution_count)
+            first_error = shown or first_error
         if not silent:
             self._publish(out)
             if err.strip() and not failed:
