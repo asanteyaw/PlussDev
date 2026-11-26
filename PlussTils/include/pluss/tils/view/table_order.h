@@ -1,6 +1,6 @@
 #pragma once
 
-// How a long table (one painted from a VirtualTableModel) is put in order. Kept in one place so every long
+// How a table's rows are put in order and which of them are visited, for every table. Kept in one place so every long
 // table sorts the same way, whatever window or page holds it.
 
 #include <algorithm>
@@ -16,6 +16,33 @@
 #include "pluss/tils/view/html_window.h"
 
 namespace pluss::view {
+
+// The rows [begin, end) a window visits out of `total`. Fewer rows than asked for just means all of them: the
+// first, middle and last 10 of 5 rows are those 5. The middle is counted from the top, so with 11 rows the middle
+// 10 are rows 2 to 11 (positions 1..10); with 12 the first, middle and last 10 are rows 1-10, 2-11 and 3-12. A
+// range follows a slice: both ends count from the back when negative, and are clamped into the table.
+[[nodiscard]] inline std::pair<std::int64_t, std::int64_t> window_bounds(const RowWindow& window, const std::int64_t total) {
+  const std::int64_t rows = std::max<std::int64_t>(0, total);
+  const std::int64_t count = std::min(std::max<std::int64_t>(0, window.count), rows);
+  switch (window.kind) {
+    case RowWindow::Kind::All:
+      return {0, rows};
+    case RowWindow::Kind::First:
+      return {0, count};
+    case RowWindow::Kind::Last:
+      return {rows - count, rows};
+    case RowWindow::Kind::Middle: {
+      const std::int64_t begin = (rows - count + 1) / 2;
+      return {begin, begin + count};
+    }
+    case RowWindow::Kind::Range: {
+      const auto place = [rows](const std::int64_t at) { return std::clamp(at < 0 ? rows + at : at, std::int64_t{0}, rows); };
+      const std::int64_t begin = place(window.begin);
+      return {begin, std::max(begin, place(window.end))};
+    }
+  }
+  return {0, rows};
+}
 
 // Orders `rows` (indices into the model) by one column, stably. Columns are numbered as in a short table: 0 is the
 // label column and n is the model's column n - 1. Numbers sort as numbers (NaN and infinity where their value

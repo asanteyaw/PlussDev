@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <charconv>
 #include <mutex>
 #include <cctype>
 #include <cmath>
@@ -33,6 +34,7 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
 #include "pluss/tils/view/html_window.h"
+#include "pluss/tils/view/table_order.h"
 #include "pluss/tils/view/window/text_layout.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
@@ -1179,6 +1181,16 @@ std::string html_shell_(std::string_view title,
       margin-left: auto;
       flex-wrap: nowrap;
     }}
+    .visit-bar {{
+      margin-left: 0;
+      justify-content: flex-start;
+      gap: 0.6em;
+      padding: 0.5em 0;
+    }}
+    .visit-bar input {{
+      min-width: 8em;
+      width: 8em;
+    }}
     .tools input {{
       margin: 0;
       min-width: 220px;
@@ -2262,6 +2274,44 @@ DataFrame filtered_frame_(const DataFrame& frame, const DisplayFilter filter) {
   return frame.filter(row_filter_mask_(frame, filter));
 }
 
+// The View > Visit choice as the row window every table applies.
+pluss::view::RowWindow row_window_for_(const DisplayOptions& options) {
+  using Kind = pluss::view::RowWindow::Kind;
+  pluss::view::RowWindow window;
+  window.count = options.visit_rows;
+  switch (options.visit) {
+    case DisplayVisit::First: window.kind = Kind::First; break;
+    case DisplayVisit::Middle: window.kind = Kind::Middle; break;
+    case DisplayVisit::Last: window.kind = Kind::Last; break;
+    case DisplayVisit::Custom:
+      window.kind = Kind::Range;
+      window.begin = options.visit_begin;
+      window.end = options.visit_end;
+      break;
+    case DisplayVisit::All: break;
+  }
+  return window;
+}
+
+// The rows of a short table that are shown: the ones the filter keeps, then the ones the window visits, both
+// through the DataFrame's own filter and slice.
+struct ShownRows {
+  DataFrame frame;
+  std::string subtitle;
+};
+
+ShownRows shown_rows_(const DataFrame& frame, const DisplayOptions& options) {
+  DataFrame shown = options.filter != DisplayFilter::None ? filtered_frame_(frame, options.filter) : frame;
+  if (options.visit != DisplayVisit::All) {
+    const auto [begin, end] = pluss::view::window_bounds(row_window_for_(options), shown.ncases());
+    shown = shown.slice(begin, end);
+  }
+  const bool reduced = shown.ncases() != frame.ncases();
+  return {shown, reduced ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", shown.ncases(), frame.ncases(),
+                                                              frame.nfeatures())
+                         : pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures())};
+}
+
 class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
@@ -2356,6 +2406,17 @@ class DataFrameVirtualTableModel final
     return filtering_.load(std::memory_order_acquire);
   }
 
+  // The rows the View > Visit menu visits, among those the filter, search and sort leave.
+  void set_window(const pluss::view::RowWindow& window) const {
+    const std::scoped_lock lock(filter_mutex_);
+    window_ = window;
+  }
+
+  pluss::view::RowWindow row_window() const override {
+    const std::scoped_lock lock(filter_mutex_);
+    return window_;
+  }
+
   bool row_allowed(const std::int64_t row) const override {
     std::shared_ptr<const std::vector<bool>> keep;
     {
@@ -2397,6 +2458,7 @@ class DataFrameVirtualTableModel final
   DataFrame frame_{};  // the frame as stored: what NULL, NaN and infinity are decided on
   mutable std::mutex filter_mutex_{};
   mutable std::shared_ptr<const std::vector<bool>> keep_{};
+  mutable pluss::view::RowWindow window_{};
   mutable std::atomic<bool> filtering_{false};
   std::vector<std::string> names_{};
   std::vector<bool> numeric_{};
@@ -2774,6 +2836,27 @@ class StatsViews {
 // `views` supplies (and caches) those views. With `lazy` their panels are left empty for the
 // window to fill the first time each is opened; `virtual_model` means the in-house viewer paints
 // the data table's rows from a model.
+// The ids of the controls in the custom range bar (see visit_bar_html_) and of the entries of View > Visit.
+constexpr std::string_view kVisitApplyId = "visit-apply";
+constexpr const char* kVisitBeginId = "visit-begin";
+constexpr const char* kVisitEndId = "visit-end";
+
+// The box that appears under View > Visit > Custom: the first position and the one to stop before, as in a slice.
+std::string visit_bar_html_(const DisplayOptions& options) {
+  const auto shown = [](const std::int64_t value, const std::int64_t unset) {
+    return value == unset ? std::string{} : std::to_string(value);
+  };
+  return pluss::tils::OutputEngine::format(
+      "<div class=\"tools visit-bar\"><span class=\"muted\">Rows from</span>"
+      "<input id=\"{0}\" type=\"text\" placeholder=\"first\" value=\"{2}\" />"
+      "<span class=\"muted\">to, not including</span>"
+      "<input id=\"{1}\" type=\"text\" placeholder=\"last\" value=\"{3}\" />"
+      "<button id=\"{4}\" type=\"button\">Apply</button>"
+      "<span class=\"muted\">positions count from 0; a negative one counts from the end</span></div>",
+      kVisitBeginId, kVisitEndId, shown(options.visit_begin, 0),
+      shown(options.visit_end, std::numeric_limits<std::int64_t>::max()), std::string(kVisitApplyId));
+}
+
 std::string render_html_table_(const DataFrame& frame,
                                std::string_view title,
                                std::string_view subtitle,
@@ -2788,8 +2871,9 @@ std::string render_html_table_(const DataFrame& frame,
   constexpr std::int64_t kBrowserVirtualRows = 2000;
   table_style.virtual_rows =
       options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
-  auto body = virtual_model ? virtual_table_body_(frame)
-                            : render_html_table_body_(frame, options, "plussmic-table", table_style);
+  auto body = (options.visit == DisplayVisit::Custom ? visit_bar_html_(options) : std::string{}) +
+              (virtual_model ? virtual_table_body_(frame)
+                             : render_html_table_body_(frame, options, "plussmic-table", table_style));
   if (options.html_summary) {
     struct Panel {
       std::string id;
@@ -3039,6 +3123,12 @@ constexpr std::array<NumberFormatEntry, 8> kNumberFormats{{
 // The button id of the Table tab in the view picker (see render_html_table_).
 constexpr std::string_view kTableTabId = "tab-table";
 
+struct VisitEntry {
+  DisplayVisit visit;
+  const char* id;
+  std::string label;
+};
+
 struct FilterEntry {
   DisplayFilter filter;
   const char* id;
@@ -3063,7 +3153,7 @@ bool show_html_window_(const std::string& html,
                        const bool offer_number_format = false,
                        std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {},
                        const bool offer_filter = false,
-                       std::function<void(DisplayFilter)> on_filter = {}) {
+                       std::function<void(const DisplayOptions&)> on_rows = {}) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -3113,12 +3203,12 @@ bool show_html_window_(const std::string& html,
         menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
       }
       // Choosing the filter that is already on turns it off, so there is no entry that means "everything".
-      menu.render = [state, render_with, on_filter](std::string_view id) {
+      menu.render = [state, render_with, on_rows](std::string_view id) {
         for (const auto& entry : kFilters) {
           if (id == entry.id) {
             state->filter = state->filter == entry.filter ? DisplayFilter::None : entry.filter;
-            if (on_filter) {
-              on_filter(state->filter);
+            if (on_rows) {
+              on_rows(*state);
             }
             return render_with(*state);
           }
@@ -3134,14 +3224,78 @@ bool show_html_window_(const std::string& html,
         return std::string("off");  // matches no entry, so none is checked
       };
       window_opts.menus.push_back(std::move(menu));
-      // Going back to the Table view takes the filter off, so the table is the plain one again.
-      window_opts.on_view = [state, render_with, on_filter](std::string_view button_id) {
-        if (button_id != kTableTabId || state->filter == DisplayFilter::None) {
+      // Going back to the Table view takes the filter and the visit off, so the table is the plain one again.
+      window_opts.on_view = [state, render_with, on_rows](std::string_view button_id) {
+        if (button_id != kTableTabId ||
+            (state->filter == DisplayFilter::None && state->visit == DisplayVisit::All)) {
           return std::string{};
         }
         state->filter = DisplayFilter::None;
-        if (on_filter) {
-          on_filter(state->filter);
+        state->visit = DisplayVisit::All;
+        if (on_rows) {
+          on_rows(*state);
+        }
+        return render_with(*state);
+      };
+    }
+    {
+      // View > Visit: the first, middle or last rows, or a range typed into the box that appears. Choosing the
+      // active entry again turns it off, as in Filter.
+      pluss::view::HtmlMenu menu;
+      menu.id = "visit";
+      menu.title = "Visit";
+      menu.in_view_menu = true;
+      const auto visits = std::make_shared<std::array<VisitEntry, 4>>(std::array<VisitEntry, 4>{{
+          {DisplayVisit::First, "first", pluss::tils::OutputEngine::format("First {}", state->visit_rows)},
+          {DisplayVisit::Middle, "middle", pluss::tils::OutputEngine::format("Middle {}", state->visit_rows)},
+          {DisplayVisit::Last, "last", pluss::tils::OutputEngine::format("Last {}", state->visit_rows)},
+          {DisplayVisit::Custom, "custom", "Custom..."},
+      }});
+      for (const auto& entry : *visits) {
+        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
+      }
+      menu.render = [state, render_with, on_rows, visits](std::string_view id) {
+        for (const auto& entry : *visits) {
+          if (id == entry.id) {
+            state->visit = state->visit == entry.visit ? DisplayVisit::All : entry.visit;
+            if (on_rows) {
+              on_rows(*state);
+            }
+            return render_with(*state);
+          }
+        }
+        return std::string{};
+      };
+      menu.selected = [state, visits]() {
+        for (const auto& entry : *visits) {
+          if (state->visit == entry.visit) {
+            return std::string(entry.id);
+          }
+        }
+        return std::string("off");
+      };
+      window_opts.menus.push_back(std::move(menu));
+      // Apply on the custom range: the two boxes hold positions, an empty one meaning the start or the end.
+      window_opts.on_action = [state, render_with, on_rows](std::string_view button_id,
+                                                           const std::unordered_map<std::string, std::string>& inputs) {
+        if (button_id != kVisitApplyId) {
+          return std::string{};
+        }
+        const auto read = [&](const char* key, const std::int64_t fallback) {
+          const auto it = inputs.find(key);
+          if (it == inputs.end() || it->second.empty()) {
+            return fallback;
+          }
+          std::int64_t value = fallback;
+          const auto& text = it->second;
+          std::from_chars(text.data(), text.data() + text.size(), value);
+          return value;
+        };
+        state->visit = DisplayVisit::Custom;
+        state->visit_begin = read(kVisitBeginId, 0);
+        state->visit_end = read(kVisitEndId, std::numeric_limits<std::int64_t>::max());
+        if (on_rows) {
+          on_rows(*state);
         }
         return render_with(*state);
       };
@@ -3300,15 +3454,8 @@ std::string render(const Shelf& shelf, const DisplayOptions& options) {
 
 std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
   StatsViews views(frame);
-  const bool filtered = options.filter != DisplayFilter::None;
-  const DataFrame shown = filtered ? filtered_frame_(frame, options.filter) : frame;
-  return render_html_table_(
-      shown,
-      document_title_("DataFrame", options),
-      filtered ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", shown.ncases(), frame.ncases(),
-                                                   frame.nfeatures())
-               : pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
-      options, views);
+  const auto shown = shown_rows_(frame, options);
+  return render_html_table_(shown.frame, document_title_("DataFrame", options), shown.subtitle, options, views);
 }
 
 std::string render_html(const Shelf& shelf, const DisplayOptions& options) {
@@ -3499,16 +3646,13 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
     const bool in_house = backend == DisplayBackend::PlussWebView;
     const auto views = std::make_shared<StatsViews>(frame_copy);
     const auto render_with = [frame_copy, views, use_virtual_table, in_house](const DisplayOptions& themed) {
-      // A long table is filtered by its model; a short one is re-rendered from the rows the filter keeps.
-      const bool filtered = themed.filter != DisplayFilter::None && !use_virtual_table;
-      const DataFrame shown = filtered ? filtered_frame_(frame_copy, themed.filter) : frame_copy;
-      return render_html_table_(
-          shown,
-          document_title_("DataFrame", themed),
-          filtered ? pluss::tils::OutputEngine::format("{} of {} cases, {} features", shown.ncases(), frame_copy.ncases(),
-                                                       frame_copy.nfeatures())
-                   : pluss::tils::OutputEngine::format("{} cases, {} features", frame_copy.ncases(), frame_copy.nfeatures()),
-          themed, *views, /*lazy=*/in_house, /*virtual_model=*/use_virtual_table);
+      // A long table is filtered and windowed by its model; a short one is re-rendered from the rows that remain.
+      const auto shown = use_virtual_table
+                             ? ShownRows{frame_copy, pluss::tils::OutputEngine::format("{} cases, {} features",
+                                                                                      frame_copy.ncases(), frame_copy.nfeatures())}
+                             : shown_rows_(frame_copy, themed);
+      return render_html_table_(shown.frame, document_title_("DataFrame", themed), shown.subtitle, themed, *views,
+                                /*lazy=*/in_house, /*virtual_model=*/use_virtual_table);
     };
     const auto html = render_with(render_opts);
     std::shared_ptr<DataFrameVirtualTableModel> filterable_model;
@@ -3536,9 +3680,10 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                           !use_virtual_table,
                           std::move(render_panel_with),
                           /*offer_filter=*/in_house,
-                          [filterable_model](const DisplayFilter filter) {
+                          [filterable_model](const DisplayOptions& current) {
                             if (filterable_model != nullptr) {
-                              filterable_model->set_filter(filter);
+                              filterable_model->set_filter(current.filter);
+                              filterable_model->set_window(row_window_for_(current));
                             }
                           })) {
       return;

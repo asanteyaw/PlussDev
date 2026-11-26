@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <string_view>
 #include <vector>
 
@@ -48,6 +49,8 @@ bool show_inhouse_html_window(const std::string& title,
                               bool table_viewport_scroll_only = false,
                               std::vector<HtmlMenu> menus = {},
                               std::function<std::string(std::string_view)> render_panel = {},
-                              std::function<std::string(std::string_view)> on_view = {});
+                              std::function<std::string(std::string_view)> on_view = {},
+                              std::function<std::string(std::string_view, const std::unordered_map<std::string, std::string>&)>
+                                  on_action = {});
 
 } // namespace pluss::view::detail

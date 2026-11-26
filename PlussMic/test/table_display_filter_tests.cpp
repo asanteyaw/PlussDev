@@ -95,6 +95,62 @@ void test_missing_view_counts() {
          "the (any column) row counts one NULL, one NaN and one infinity row (25 % each): " + any);
 }
 
+// A frame of n rows named row-01, row-02, ... so each can be looked for in the page.
+DataFrame numbered(const int n) {
+  std::vector<std::string> names;
+  for (int i = 1; i <= n; ++i) {
+    names.push_back(std::string("row-") + (i < 10 ? "0" : "") + std::to_string(i));
+  }
+  return DataFrame({{"name", Shelf(pluss::make_note(names))}});
+}
+
+// Which of row-01..row-n the Visit choice shows, as the numbers.
+std::vector<int> visited(const int n, const display::DisplayVisit visit) {
+  display::DisplayOptions options;
+  options.visit = visit;
+  const auto out = display::render_html(numbered(n), options);
+  std::vector<int> shown;
+  for (int i = 1; i <= n; ++i) {
+    const std::string label = std::string("row-") + (i < 10 ? "0" : "") + std::to_string(i);
+    // Count only the table (the page also carries the other views), so look for the label inside a cell.
+    if (out.find(">" + label + "<") != std::string::npos) {
+      shown.push_back(i);
+    }
+  }
+  return shown;
+}
+
+std::vector<int> span(const int first, const int last) {
+  std::vector<int> out;
+  for (int i = first; i <= last; ++i) {
+    out.push_back(i);
+  }
+  return out;
+}
+
+void test_visit_first_middle_last() {
+  using Visit = display::DisplayVisit;
+  expect(visited(5, Visit::First) == span(1, 5) && visited(5, Visit::Middle) == span(1, 5) && visited(5, Visit::Last) == span(1, 5),
+         "with 5 rows every Visit choice shows all 5");
+  expect(visited(11, Visit::First) == span(1, 10), "with 11 rows the first 10 are 1-10");
+  expect(visited(11, Visit::Middle) == span(2, 11) && visited(11, Visit::Last) == span(2, 11),
+         "with 11 rows the middle and the last 10 are both 2-11");
+  expect(visited(12, Visit::First) == span(1, 10) && visited(12, Visit::Middle) == span(2, 11) && visited(12, Visit::Last) == span(3, 12),
+         "with 12 rows the first, middle and last 10 differ: 1-10, 2-11, 3-12");
+}
+
+void test_visit_custom_range() {
+  display::DisplayOptions options;
+  options.visit = display::DisplayVisit::Custom;
+  options.visit_begin = 3;
+  options.visit_end = 7;
+  const auto out = display::render_html(numbered(20), options);
+  expect(out.find(">row-04<") != std::string::npos && out.find(">row-07<") != std::string::npos &&
+             out.find(">row-03<") == std::string::npos && out.find(">row-08<") == std::string::npos,
+         "a custom range shows positions begin up to, not including, end");
+  expect(out.find("visit-apply") != std::string::npos, "the custom range box is on the page");
+}
+
 }  // namespace
 
 int main() {
@@ -102,6 +158,8 @@ int main() {
   test_invalid_keeps_null_nan_and_infinity();
   test_each_kind_alone();
   test_missing_view_counts();
+  test_visit_first_middle_last();
+  test_visit_custom_range();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

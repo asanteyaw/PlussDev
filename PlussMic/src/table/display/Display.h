@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -70,6 +71,16 @@ enum class DisplayFilter : std::uint8_t {
   Infinite = 4,
 };
 
+// Which rows the table visits, chosen from View > Visit: the first, middle or last `visit_rows`, or a range of
+// positions the user typed (Custom). The same rule applies to every table, long or short.
+enum class DisplayVisit : std::uint8_t {
+  All = 0,
+  First = 1,
+  Middle = 2,
+  Last = 3,
+  Custom = 4,
+};
+
 struct TerminalInfo {
   std::int64_t columns{120};
   std::int64_t rows{40};
@@ -82,6 +93,10 @@ struct DisplayOptions {
   DisplayTheme theme{DisplayTheme::Auto};
   NumberFormat number_format{NumberFormat::Default};
   DisplayFilter filter{DisplayFilter::None};
+  DisplayVisit visit{DisplayVisit::All};
+  std::int64_t visit_rows{10};              // First, Middle and Last
+  std::int64_t visit_begin{0};              // Custom: the first position, 0-based
+  std::int64_t visit_end{std::numeric_limits<std::int64_t>::max()};  // Custom: the position to stop before
   std::int64_t terminal_width{0};  // <= 0 => detect from terminal
   std::int64_t terminal_height{0}; // <= 0 => detect from terminal
   bool show_shape_footer{true};

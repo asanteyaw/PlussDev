@@ -174,7 +174,15 @@ class AsyncVirtualTableSearch {
       }
 
       std::vector<std::int64_t> rows;
-      if (!query.empty() || model_->filtering() || sort_column >= 0) {
+      const RowWindow row_window = model_->row_window();
+      const bool windowed = row_window.kind != RowWindow::Kind::All;
+      const bool ordered = !query.empty() || model_->filtering() || sort_column >= 0;
+      if (windowed && !ordered) {
+        // Only a window of an otherwise untouched table: the rows are those of the window, none to search or sort.
+        const auto [first, last] = window_bounds(row_window, model_->row_count());
+        rows.resize(static_cast<std::size_t>(last - first));
+        std::iota(rows.begin(), rows.end(), first);
+      } else if (ordered) {
         const std::int64_t count =
             std::max<std::int64_t>(0, model_->row_count());
         rows.reserve(static_cast<std::size_t>(
@@ -194,6 +202,10 @@ class AsyncVirtualTableSearch {
 
       if (sort_column >= 0) {
         sort_model_rows(*model_, rows, sort_column, sort_ascending);
+      }
+      if (windowed && ordered) {
+        const auto [first, last] = window_bounds(row_window, static_cast<std::int64_t>(rows.size()));
+        rows = std::vector<std::int64_t>(rows.begin() + first, rows.begin() + last);
       }
       if (!stopping_.load(std::memory_order_acquire) &&
           active_generation_.load(std::memory_order_acquire) == generation) {
@@ -986,7 +998,9 @@ bool show_inhouse_html_window(const std::string& title,
                               const bool table_viewport_scroll_only,
                               std::vector<HtmlMenu> menus,
                               std::function<std::string(std::string_view)> render_panel,
-                              std::function<std::string(std::string_view)> on_view) {
+                              std::function<std::string(std::string_view)> on_view,
+                              std::function<std::string(std::string_view, const std::unordered_map<std::string, std::string>&)>
+                                  on_action) {
   if ((html.empty() && svg_payload.empty()) || !inhouse_html_viewer_available()) {
     return false;
   }
@@ -1853,6 +1867,10 @@ bool show_inhouse_html_window(const std::string& title,
                   needs_render = true;
                 }
               }
+            } else if (on_action && show_page(on_action(hit.target, input_values))) {
+              // A button the page defines (such as Apply on the row range): it answered with a new page.
+              scroll_model.reset();
+              needs_render = true;
             } else if (select_view(hit.target)) {
               last_view_button = hit.target;
               if (on_view) {
@@ -1959,7 +1977,8 @@ bool show_inhouse_html_window(const std::string& title,
       if (auto result = virtual_search.take_completed();
           result.has_value() &&
           result->query == submitted_virtual_query && result->sort_column == submitted_virtual_sort) {
-        if (submitted_virtual_query.empty() && !virtual_table_model->filtering() && submitted_virtual_sort < 0) {
+        if (submitted_virtual_query.empty() && !virtual_table_model->filtering() && submitted_virtual_sort < 0 &&
+            virtual_table_model->row_window().kind == RowWindow::Kind::All) {
           virtual_row_order.reset();
         } else {
           virtual_row_order =

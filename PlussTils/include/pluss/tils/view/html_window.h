@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <string_view>
 #include <vector>
 
@@ -21,6 +22,16 @@ struct VirtualTableCell {
   bool missing{false};    // a NULL cell (no value): its text is drawn in the theme's missing colour
   bool nonfinite{false};  // NaN / inf / -inf: a value, drawn like any other
   bool infinite{false};   // with `nonfinite`: inf / -inf rather than NaN
+};
+
+// Which rows of a table are visited: all of them, the first n, the middle n, the last n, or a position range.
+// Positions are 0-based; a range is [begin, end) and, like a slice, counts a negative end from the back.
+struct RowWindow {
+  enum class Kind : std::uint8_t { All = 0, First = 1, Middle = 2, Last = 3, Range = 4 };
+  Kind kind{Kind::All};
+  std::int64_t count{0};  // First, Middle and Last: how many rows
+  std::int64_t begin{0};  // Range
+  std::int64_t end{0};    // Range
 };
 
 class VirtualTableModel {
@@ -42,6 +53,9 @@ class VirtualTableModel {
   // then the test every row must pass, on top of any search text.
   [[nodiscard]] virtual bool filtering() const noexcept { return false; }
   [[nodiscard]] virtual bool row_allowed(std::int64_t /*row*/) const { return true; }
+  // The rows to show out of those the filter, the search and the sort leave (see sort_model_rows and
+  // window_bounds in table_order.h).
+  [[nodiscard]] virtual RowWindow row_window() const { return {}; }
 };
 
 // A window-level menu (e.g. colour theme, number format). Choosing an option calls
@@ -85,6 +99,12 @@ struct HtmlWindowOptions {
   // full page to show in its place, or empty to leave the page as it is. Lets a window reset what a menu set,
   // such as a row filter, when the user goes back to the plain view.
   std::function<std::string(std::string_view button_id)> on_view{};
+  // Called when a button the page itself defines is clicked, with its id and the text typed into the page's input
+  // boxes (by id). Returns the full page to show in its place, or empty to leave it. Lets a menu choice ask for
+  // values, such as the first and last row to visit.
+  std::function<std::string(std::string_view button_id,
+                            const std::unordered_map<std::string, std::string>& inputs)>
+      on_action{};
 };
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;

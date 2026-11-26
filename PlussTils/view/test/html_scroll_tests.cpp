@@ -1125,6 +1125,33 @@ void test_long_and_short_tables_draw_headers_alike() {
          "a column name takes the stylesheet's colour in a long table as in a short one");
 }
 
+void test_row_window_bounds() {
+  using namespace pluss::view;
+  using Kind = RowWindow::Kind;
+  const auto bounds = [](const Kind kind, const std::int64_t total, const std::int64_t count = 10) {
+    return window_bounds(RowWindow{.kind = kind, .count = count}, total);
+  };
+  using Pair = std::pair<std::int64_t, std::int64_t>;
+  // Fewer rows than asked for: every window is all of them.
+  expect(bounds(Kind::First, 5) == Pair(0, 5) && bounds(Kind::Middle, 5) == Pair(0, 5) && bounds(Kind::Last, 5) == Pair(0, 5),
+         "with 5 rows the first, middle and last 10 are all 5 rows");
+  // 11 rows: the middle is counted from the top, so it is rows 2 to 11, the same as the last.
+  expect(bounds(Kind::First, 11) == Pair(0, 10) && bounds(Kind::Middle, 11) == Pair(1, 11) && bounds(Kind::Last, 11) == Pair(1, 11),
+         "with 11 rows the first 10 are 1-10 and the middle and last 10 are 2-11");
+  // 12 rows: all three differ.
+  expect(bounds(Kind::First, 12) == Pair(0, 10) && bounds(Kind::Middle, 12) == Pair(1, 11) && bounds(Kind::Last, 12) == Pair(2, 12),
+         "with 12 rows the first, middle and last 10 are 1-10, 2-11 and 3-12");
+  expect(bounds(Kind::Middle, 13) == Pair(2, 12), "the middle stays counted from the top: 3-12 of 13");
+  expect(bounds(Kind::First, 0) == Pair(0, 0), "an empty table has no rows to visit");
+  const auto range = [](const std::int64_t begin, const std::int64_t end, const std::int64_t total) {
+    return window_bounds(RowWindow{.kind = Kind::Range, .begin = begin, .end = end}, total);
+  };
+  expect(range(3, 7, 20) == Pair(3, 7), "a range is [begin, end)");
+  expect(range(-5, 20, 20) == Pair(15, 20), "a negative begin counts from the back");
+  expect(range(15, 99, 20) == Pair(15, 20), "an end past the table is clamped to it");
+  expect(range(9, 4, 20) == Pair(9, 9), "an end before the begin is an empty range");
+}
+
 void test_virtual_table_only_materializes_viewport_cells() {
   using namespace pluss::view;
   using namespace pluss::view::window;
@@ -1269,6 +1296,7 @@ int main() {
     test_virtual_table_last_column_takes_the_slack();
     test_virtual_table_columns_can_be_resized();
     test_virtual_table_sorts_by_a_column();
+    test_row_window_bounds();
     test_long_and_short_tables_draw_headers_alike();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
