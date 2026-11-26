@@ -167,6 +167,8 @@ struct ModelPage {
   std::shared_ptr<pluss::view::VirtualTableModel> model;
   // The streams behind the grid, for the view tabs (Summary, Validity, Outliers, Correlation, Layout).
   std::vector<std::pair<std::string, std::shared_ptr<const Shelf>>> streams;
+  std::string part_word{"key"};        // what a column is called in the view tabs: key, field
+  std::string entries_word{"entries"};  // what its items are called: entries, states
   std::function<void(const DisplayOptions&)> on_options;
   bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
 };

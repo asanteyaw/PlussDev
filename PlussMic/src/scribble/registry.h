@@ -220,6 +220,8 @@ public:
   std::string to_string() const;
   std::string to_json() const;
   void show(std::ostream& os) const;
+  // Opens the registry in the PlussView window (the ragged grid a catalog opens), or hands it to the notebook as a grid.
+  void show() const;
 
   const_iterator begin() const;
   const_iterator end() const;

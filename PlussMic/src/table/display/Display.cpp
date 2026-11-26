@@ -3015,7 +3015,10 @@ class CatalogViews final : public ViewSource {
  public:
   using Stream = std::pair<std::string, std::shared_ptr<const Shelf>>;
 
-  explicit CatalogViews(std::vector<Stream> streams) : streams_(std::move(streams)) {
+  // `part` and `entries` are the words for a column and its items: key and entries for a catalog, field and states for a
+  // registry.
+  CatalogViews(std::vector<Stream> streams, std::string part, std::string entries)
+      : streams_(std::move(streams)), part_(std::move(part)), entries_(std::move(entries)) {
     for (const auto& [name, shelf] : streams_) {
       longest_ = std::max(longest_, shelf->size());
     }
@@ -3060,16 +3063,16 @@ class CatalogViews final : public ViewSource {
     if (id == "correlation") {
       return render_correlation_(*result, options) +
              pluss::tils::OutputEngine::format(
-                 "<div class=\"muted\" style=\"padding:8px 2px;\">Over the {} entries every key has, taken from the {}.</div>",
-                 shortest_, options.align == DisplayAlign::Tail ? "end" : "start");
+                 "<div class=\"muted\" style=\"padding:8px 2px;\">Over the {} {} every {} has, taken from the {}.</div>",
+                 shortest_, entries_, part_, options.align == DisplayAlign::Tail ? "end" : "start");
     }
     if (id == "missing") {
       return render_html_table_body_(auto_round_(result->table, 1, options), options, "plussmic-missing",
-                                     profile_style_("key", {"null", "NaN", "infinity", "absent"}));
+                                     profile_style_(part_, {"null", "NaN", "infinity", "absent"}));
     }
     if (id == "layout") {
       // The whole catalog's raggedness as cards, then one row per key.
-      auto style = profile_style_("key", {"entries", "absent", "valid", "from", "to"});
+      auto style = profile_style_(part_, {entries_, "absent", "valid", "from", "to"});
       style.show_cards = false;
       return ragged_cards_() + render_html_table_body_(auto_round_(result->table, 1, options), options,
                                                        "plussmic-ragged", style);
@@ -3179,7 +3182,7 @@ class CatalogViews final : public ViewSource {
     }
     std::vector<std::pair<std::string, Shelf>> columns;
     columns.emplace_back("dtype", Shelf(pluss::make_note(dtypes)));
-    columns.emplace_back("entries", Shelf(pluss::make_series(entries)));
+    columns.emplace_back(entries_, Shelf(pluss::make_series(entries)));
     columns.emplace_back("absent", Shelf(pluss::make_series(absent)));
     columns.emplace_back("coverage %", Shelf(pluss::make_series(coverage)));
     columns.emplace_back("valid", Shelf(pluss::make_series(valid)));
@@ -3226,6 +3229,8 @@ class CatalogViews final : public ViewSource {
   }
 
   std::vector<Stream> streams_;
+  std::string part_;     // the word for a column: key, field
+  std::string entries_;  // the word for its items: entries, states
   std::int64_t longest_{0};
   std::int64_t shortest_{0};
   std::map<std::string, std::optional<ViewResult>> cache_;
@@ -4370,7 +4375,7 @@ std::string render_html_model(const ModelPage& page, const DisplayOptions& optio
   for (const auto& [name, shelf] : page.streams) {
     streams.emplace_back(name, shelf);
   }
-  CatalogViews views(std::move(streams));
+  CatalogViews views(std::move(streams), page.part_word, page.entries_word);
   const std::string body =
       tabbed_body_(summary_cards_html_(page.cards) + virtual_table_frame_(), views, options, /*lazy=*/false);
   return html_shell_(page.title, page.subtitle, body, options);
@@ -4387,7 +4392,7 @@ bool show_model(const ModelPage& page, const DisplayOptions& options) {
   for (const auto& [name, shelf] : page.streams) {
     streams.emplace_back(name, shelf);
   }
-  const auto views = std::make_shared<CatalogViews>(std::move(streams));
+  const auto views = std::make_shared<CatalogViews>(std::move(streams), page.part_word, page.entries_word);
   const auto render_with = [page, views](const DisplayOptions& current) { return render_html_model_(page, *views, current); };
   const auto render_panel_with = [views](const DisplayOptions& current, const std::string_view id) {
     auto panel = views->render(std::string(id), current);

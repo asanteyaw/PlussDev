@@ -152,28 +152,12 @@ void Catalog::show(std::ostream& os) const { display::print(os, *this); }
 pluss::table::display::ModelPage catalog_page(const Catalog& catalog) {
   PLUSS_CHECK(catalog.defined(), "Catalog::show: catalog undefined");
   // The keys side by side as a ragged grid: each column is as long as its own stream and nothing is padded.
-  auto model = std::make_shared<display::CatalogGridModel>(catalog);
-  pluss::table::display::ModelPage page;
-  page.title = "Catalog";
-  const bool ragged = model->longest() != model->shortest();
-  page.subtitle = ragged ? std::to_string(catalog.nkeys()) + " keys, " + std::to_string(model->shortest()) + " to " +
-                               std::to_string(model->longest()) + " entries"
-                         : std::to_string(catalog.nkeys()) + " keys, " + std::to_string(model->longest()) + " entries";
-  page.cards = {{"Keys", std::to_string(catalog.nkeys())},
-                {"Longest", std::to_string(model->longest())},
-                {"Shortest", std::to_string(model->shortest())}};
-  page.model = model;
+  std::vector<std::pair<std::string, std::shared_ptr<const pluss::table::Shelf>>> streams;
   for (const auto& name : catalog.keys()) {
-    page.streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(catalog.keys(name).to_shelf()));
+    streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(catalog.keys(name).to_shelf()));
   }
-  page.offer_align = ragged;
-  page.on_options = [model](const pluss::table::display::DisplayOptions& options) {
-    model->set_alignment(options.align);
-    model->set_filter(options.filter);
-    model->set_window(pluss::table::display::row_window_for(options));
-    model->set_number_format(options.number_format);
-  };
-  return page;
+  return pluss::table::display::ragged_model_page("Catalog", "keys", "key", "entries",
+                                                  std::make_shared<display::CatalogGridModel>(catalog), std::move(streams));
 }
 
 void Catalog::show() const {

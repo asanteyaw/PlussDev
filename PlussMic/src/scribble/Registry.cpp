@@ -252,62 +252,93 @@ public:
 
 } // namespace pluss::scribble
 
-namespace pluss::table::display {
+#include "table/display/RaggedGrid.h"
+
+namespace pluss::scribble {
 
 namespace {
 
-// The fields of a registry side by side, each as long as its own slot: the grid a notebook shows. Where a slot has no
-// state at a row nothing is drawn (which is not a NULL), as for a catalog.
-class RegistryGridModel final : public pluss::view::VirtualTableModel {
- public:
-  explicit RegistryGridModel(const pluss::scribble::Registry& registry) {
-    for (const auto& name : registry.fields()) {
-      slots_.push_back(registry.fields(name));
-      names_.push_back(name);
-      longest_ = std::max(longest_, slots_.back().size());
-      shortest_ = names_.size() == 1 ? slots_.back().size() : std::min(shortest_, slots_.back().size());
-    }
+// The column a registry field is: when its cells agree (one kind, one dtype) it is read as a stream of that kind, so it
+// filters, formats and classifies as a catalog's stream does; otherwise its cells are shown as they are, and a cell with
+// no value is the only missing kind there is.
+pluss::table::display::RaggedColumn registry_column(const std::string& name, const Slot& slot) {
+  try {
+    return pluss::table::display::ragged_column_from_shelf(name, slot.kindelize().to_shelf());
+  } catch (const pluss::Error&) {
+    // The cells differ in kind or dtype (kindelize says so by throwing; there is no cheaper test), so read them one by one.
   }
-  std::int64_t longest() const noexcept { return longest_; }
-  std::int64_t shortest() const noexcept { return shortest_; }
-  std::int64_t row_count() const noexcept override { return longest_; }
-  std::int64_t column_count() const noexcept override { return static_cast<std::int64_t>(slots_.size()); }
-  std::string row_header() const override { return "state"; }
-  std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
-  std::string column_name(const std::int64_t column) const override {
-    const auto c = static_cast<std::size_t>(column);
-    return names_[c] + " \u00b7 " + std::to_string(slots_[c].size());
-  }
-  bool column_numeric(std::int64_t) const noexcept override { return false; }
-  pluss::view::VirtualTableCell cell(const std::int64_t row, const std::int64_t column) const override {
-    const auto& slot = slots_[static_cast<std::size_t>(column)];
-    if (row >= slot.size()) {
-      return pluss::view::VirtualTableCell{.absent = true};
-    }
-    const auto& value = slot.at(row);
-    return pluss::view::VirtualTableCell{.text = pluss::scribble::detail::slot_cell_text(value),
-                                         .missing = std::holds_alternative<std::monostate>(value)};
-  }
-  bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  pluss::table::display::RaggedColumn column;
+  column.name = name;
+  column.entries = slot.size();
+  column.text = [slot](const std::int64_t i) { return detail::slot_cell_text(slot.at(i)); };
+  column.missing = [slot](const std::int64_t i) { return std::holds_alternative<std::monostate>(slot.at(i)); };
+  return column;
+}
 
- private:
-  std::vector<pluss::scribble::Slot> slots_{};
-  std::vector<std::string> names_{};
-  std::int64_t longest_{0};
-  std::int64_t shortest_{0};
-};
+std::vector<pluss::table::display::RaggedColumn> registry_columns(const Registry& registry) {
+  std::vector<pluss::table::display::RaggedColumn> columns;
+  for (const auto& name : registry.fields()) {
+    columns.push_back(registry_column(name, registry.fields(name)));
+  }
+  return columns;
+}
 
 }  // namespace
+
+namespace display {
+
+// A registry laid out for the viewer as a ragged grid: its fields side by side, each as long as its own slot.
+class RegistryGridModel final : public pluss::table::display::RaggedGridModel {
+ public:
+  explicit RegistryGridModel(const Registry& registry)
+      : RaggedGridModel("state", registry_columns(registry)) {}
+};
+
+}  // namespace display
+
+// The page Registry::show() opens, the same ragged window a catalog opens: the grid, its cards and the view tabs.
+pluss::table::display::ModelPage registry_page(const Registry& registry) {
+  PLUSS_CHECK(registry.defined(), "Registry::show: registry undefined");
+  std::vector<std::pair<std::string, std::shared_ptr<const pluss::table::Shelf>>> streams;
+  for (const auto& name : registry.fields()) {
+    const auto slot = registry.fields(name);
+    try {
+      streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(slot.kindelize().to_shelf()));
+    } catch (const pluss::Error&) {
+      // A field of mixed cells has no numeric profile to show, so it stays out of the view tabs.
+    }
+  }
+  return pluss::table::display::ragged_model_page("Registry", "fields", "field", "states",
+                                                  std::make_shared<display::RegistryGridModel>(registry), std::move(streams));
+}
+
+void Registry::show() const {
+  if (pluss::table::display::show_in_notebook(pluss::table::display::render_notebook_html(*this))) {
+    return;
+  }
+  const auto page = registry_page(*this);
+  pluss::table::display::DisplayOptions options;
+  if (pluss::table::display::default_theme() == pluss::table::display::DisplayTheme::Default) {
+    options.theme = pluss::table::display::DisplayTheme::Ember;  // a ragged type opens in Ember, like a catalog
+  }
+  if (!pluss::table::display::show_model(page, options)) {
+    show(std::cout);
+  }
+}
+
+}  // namespace pluss::scribble
+
+namespace pluss::table::display {
 
 std::string render_notebook_html(const pluss::scribble::Registry& registry) {
   if (!registry.defined()) {
     return "<div class=\"pluss-table\">Registry &lt;undefined&gt;</div>";
   }
-  const RegistryGridModel model(registry);
+  const pluss::scribble::display::RegistryGridModel model(registry);
   const auto states = model.shortest() == model.longest()
                           ? pluss::tils::OutputEngine::format("{} states", model.longest())
                           : pluss::tils::OutputEngine::format("{} to {} states", model.shortest(), model.longest());
-  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} fields &middot; {}", model.column_count(), states));
+  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} fields &middot; {}", model.columns(), states));
 }
 
 }  // namespace pluss::table::display
