@@ -18,9 +18,11 @@ Starting from a radix `l_0` of lives and the mortality `qx` over `n` years, the 
 The present values of the previous pages are ratios of these columns. For a life at duration `k` of a table that ends at `n`:
 
 ```{math}
-\ddot a_{k:\overline{n-k}|}=\frac{N_k-N_n}{D_k},\qquad
-A^1_{k:\overline{n-k}|}=\frac{M_k-M_n}{D_k},\qquad
-{}_{n-k}E_k=\frac{D_n}{D_k}.
+\begin{aligned}
+&\ddot a_{k:\overline{n-k}|}=\frac{N_k-N_n}{D_k}, \\
+&A^1_{k:\overline{n-k}|}=\frac{M_k-M_n}{D_k}, \\
+&{}_{n-k}E_k=\frac{D_n}{D_k}.
+\end{aligned}
 ```
 
 Because the table stops at `n`, its `N` and `M` are zero at `n` and the formulas above read `N_k / D_k` and `M_k / D_k`.

@@ -7,8 +7,10 @@ A `Field` is one object that holds everything needed to price a European option:
 The quantity every engine computes is the discounted risk-neutral expectation of the payoff,
 
 ```{math}
-C = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(S_T-K)^+\big],\qquad
-P = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(K-S_T)^+\big],
+\begin{aligned}
+&C = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(S_T-K)^+\big], \\
+&P = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(K-S_T)^+\big],
+\end{aligned}
 ```
 
 where {math}`S_T` is the asset at maturity {math}`T`, {math}`K` the strike, {math}`r` the continuously compounded rate and {math}`q` the dividend yield. The model decides the law of {math}`S_T`. In the Black-Scholes model the asset is a geometric Brownian motion,
@@ -22,9 +24,11 @@ S_t=S_0\exp\!\Big(\big(r-q-\tfrac12\sigma^2\big)t+\sigma W_t\Big),
 with {math}`W_t` a Brownian motion, and the expectation has a closed form. In a stochastic-volatility model such as Heston the constant {math}`\sigma` is replaced by {math}`\sqrt{v_t}`, where the variance {math}`v_t` is itself random,
 
 ```{math}
-dS_t=(r-q)S_t\,dt+\sqrt{v_t}\,S_t\,dW^S_t,\qquad
-dv_t=\kappa(\theta-v_t)\,dt+\sigma\sqrt{v_t}\,dW^v_t,\qquad
-d\langle W^S,W^v\rangle_t=\rho\,dt,
+\begin{aligned}
+&dS_t=(r-q)S_t\,dt+\sqrt{v_t}\,S_t\,dW^S_t, \\
+&dv_t=\kappa(\theta-v_t)\,dt+\sigma\sqrt{v_t}\,dW^v_t, \\
+&d\langle W^S,W^v\rangle_t=\rho\,dt,
+\end{aligned}
 ```
 
 and the expectation is computed by a transform method (Fourier inversion or the COS expansion) or by simulating the paths. A `Field` does not care which: you choose the model and the engine, and `price()` dispatches to the right routine. The same five members work for every model, which is what makes the object reusable.

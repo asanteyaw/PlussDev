@@ -139,8 +139,10 @@ The Hessian model is applied to the Lagrangian approximation inside the QP step.
 When `Bfgs` is active, the update is based on the standard secant pair
 
 ```{math}
-s_k = x_{k+1} - x_k,\qquad
-y_k = \nabla \phi_{k+1} - \nabla \phi_k,
+\begin{aligned}
+&s_k = x_{k+1} - x_k, \\
+&y_k = \nabla \phi_{k+1} - \nabla \phi_k,
+\end{aligned}
 ```
 
 where $\phi$ is the merit-gradient model used by the solver. The update is skipped when curvature is too small, controlled by `bfgs_curvature_tolerance`.

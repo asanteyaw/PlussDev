@@ -86,7 +86,10 @@ Both totals equal the physical mass of `15.7 kg`. Without a density, `mass` and 
 A cantilever of length `L` has bending natural frequencies
 
 ```{math}
-\omega_n = (\beta_n L)^2 \sqrt{\frac{E I}{\rho A L^4}}, \qquad \beta_n L = 1.8751,\; 4.6941,\; 7.8548,\; 10.9955,\ \ldots
+\begin{aligned}
+&\omega_n = (\beta_n L)^2 \sqrt{\frac{E I}{\rho A L^4}}, \\
+&\beta_n L = 1.8751,\; 4.6941,\; 7.8548,\; 10.9955,\ \ldots
+\end{aligned}
 ```
 
 For this beam the root is `sqrt(E I / (rho A L^4)) = 11.519`, so the first three are `40.50, 253.8, 710.7 rad/s`. The finite-element answer approaches these from above as the beam is divided into more members, because a stiffer-than-exact model is the price of fewer degrees of freedom. The program finds the lowest three modes for 2, 4, 8 and 16 members and prints the frequency error.

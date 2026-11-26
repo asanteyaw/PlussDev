@@ -7,7 +7,10 @@
 A short-rate model has one number as its state, the rate. A forward-rate model, in the framework of Heath, Jarrow and Morton (HJM), takes the whole curve of forward rates {math}`f(t,T)`, the rate agreed at time {math}`t` for borrowing instantaneously at {math}`T`, and lets it evolve. The curve at time 0 is an input rather than an output, so the model starts from the market. Zero-coupon bond prices are the exponential of the integrated forward curve,
 
 ```{math}
-P(t,T)=\exp\Big(-\int_t^Tf(t,u)\,du\Big),\qquad r_t=f(t,t).
+\begin{aligned}
+&P(t,T)=\exp\Big(-\int_t^Tf(t,u)\,du\Big), \\
+&r_t=f(t,t).
+\end{aligned}
 ```
 
 In the library the forward curve is held on a **grid of tenors** {math}`\tau_1<\dots<\tau_n` (the times to maturity of the forwards that are followed), with one volatility {math}`\sigma_j` per tenor and a single source of randomness shared by all of them, so the model has one factor. The curve is described by the time to maturity {math}`\tau`, the Musiela parametrisation {math}`f(t,\tau)=f(t,t+\tau)`, so that the grid is fixed while calendar time passes. Under the pricing measure the curve moves by

@@ -9,8 +9,10 @@ The Kalman filter estimates the state at time `t` from the measurements up to `t
 The backward pass, the Rauch-Tung-Striebel recursion, corrects each filtered estimate with the next smoothed one:
 
 ```{math}
-\hat x_{t|T} = \hat x_{t|t} + G_t\,(\hat x_{t+1|T} - \hat x_{t+1|t}), \qquad
-G_t = P_{t|t} A^T P_{t+1|t}^{-1}.
+\begin{aligned}
+&\hat x_{t|T} = \hat x_{t|t} + G_t\,(\hat x_{t+1|T} - \hat x_{t+1|t}), \\
+&G_t = P_{t|t} A^T P_{t+1|t}^{-1}.
+\end{aligned}
 ```
 
 The correction is large where the future disagrees with the prediction. `smooth` takes the same arguments as `kalman` and returns a `SmoothResult` with four members: `filter`, the complete `KalmanResult` of the forward pass; `smoothed_mean` and `smoothed_cov`, the smoothed estimate and its covariance at each step, with the shapes of the filtered ones; and `gain`, the backward gain `G_t`. Two facts follow from the recursion and are visible in the programs:

@@ -74,7 +74,10 @@ W = Q = n R T \ln\frac{V_2}{V_1}
 If no heat flows, the gas cools as it does work, and the temperature and volume obey
 
 ```{math}
-T_2 = T_1\left(\frac{V_1}{V_2}\right)^{\gamma - 1}, \qquad W = -\Delta U = m c_v (T_1 - T_2)
+\begin{aligned}
+&T_2 = T_1\left(\frac{V_1}{V_2}\right)^{\gamma - 1}, \\
+&W = -\Delta U = m c_v (T_1 - T_2)
+\end{aligned}
 ```
 
 `thermo::iso_t(amount, T, V1, V2)` and `thermo::iso_s(mass, cv, gamma, T1, V1, V2)` return these paths. For a path that follows an arbitrary pressure law, `thermo::pv_work(pressure_fn, V1, V2)` integrates {math}`W = \int p\,\mathrm{d}V` numerically. The function receives the volume and returns a pressure; the program uses it for the isothermal pressure {math}`p = nRT/V` and compares the result with the closed form.

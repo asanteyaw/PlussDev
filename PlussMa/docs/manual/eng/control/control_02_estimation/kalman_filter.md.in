@@ -9,9 +9,11 @@ You have a record of noisy measurements of a system and want, at each time, the 
 At each step the filter does two things. It **predicts**: from the filtered estimate at the previous step it computes the prior mean `A x^` and covariance `A P A^T + W` for the new state. It then **updates**: it compares the new measurement `y` with the predicted one `C x_pred`, and corrects the prediction by the gain times the innovation:
 
 ```{math}
-K_t = P_t^{-} C^T (C P_t^{-} C^T + V)^{-1}, \qquad
-\hat x_t = \hat x_t^{-} + K_t\,(y_t - C \hat x_t^{-}), \qquad
-P_t = (I - K_t C)\,P_t^{-}.
+\begin{aligned}
+&K_t = P_t^{-} C^T (C P_t^{-} C^T + V)^{-1}, \\
+&\hat x_t = \hat x_t^{-} + K_t\,(y_t - C \hat x_t^{-}), \\
+&P_t = (I - K_t C)\,P_t^{-}.
+\end{aligned}
 ```
 
 `kalman(system, observations, process_cov, noise_cov, initial_mean, initial_cov)` takes the observations as a matrix `[time, outputs]` and returns a `KalmanResult` with one entry per time step:

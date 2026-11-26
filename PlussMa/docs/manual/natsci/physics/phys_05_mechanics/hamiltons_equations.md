@@ -9,7 +9,10 @@ Mechanics can be written in terms of one function, the energy of the system expr
 For a system with coordinates {math}`q` and momenta {math}`p` and a Hamiltonian {math}`H(q, p, t)`, the motion obeys
 
 ```{math}
-\frac{\mathrm{d}q}{\mathrm{d}t} = \frac{\partial H}{\partial p}, \qquad \frac{\mathrm{d}p}{\mathrm{d}t} = -\frac{\partial H}{\partial q}
+\begin{aligned}
+&\frac{\mathrm{d}q}{\mathrm{d}t} = \frac{\partial H}{\partial p}, \\
+&\frac{\mathrm{d}p}{\mathrm{d}t} = -\frac{\partial H}{\partial q}
+\end{aligned}
 ```
 
 A state is made with `mechanics::make_phase(coordinate, momentum)` from two quantities of the same shape, in which the last axis holds the degrees of freedom and any leading axes are independent states, so many starting points move together. `mechanics::hamiltonian(H, state)` evaluates the energy function you supply, a callback of `(q, p, t)` that returns one energy per state, and returns the `value` and the `flow`, whose two parts `flow.coordinate` and `flow.momentum` are the two derivatives above, obtained by automatic differentiation of the callback.

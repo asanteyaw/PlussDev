@@ -11,13 +11,20 @@ The short rate is never observed; bond prices are. A filter turns a stream of bo
 Over a step {math}`\Delta`, the Vasicek rate is an autoregression around its level, with the exact step
 
 ```{math}
-r_t=\theta+F\,(r_{t-1}-\theta)+w_t,\qquad F=e^{-\kappa\Delta},\qquad w_t\sim\mathcal N\Big(0,\;Q=\frac{\sigma^2(1-F^2)}{2\kappa}\Big).
+\begin{aligned}
+&r_t=\theta+F\,(r_{t-1}-\theta)+w_t, \\
+&F=e^{-\kappa\Delta}, \\
+&w_t\sim\mathcal N\Big(0,\;Q=\frac{\sigma^2(1-F^2)}{2\kappa}\Big).
+\end{aligned}
 ```
 
 A zero-coupon bond of maturity {math}`\tau` has the price {math}`P=A(\tau)e^{-B(\tau)r}` (Chapter 7), observed with a relative error {math}`\varepsilon`:
 
 ```{math}
-P_{t,i}=A(\tau_i)\,e^{-B(\tau_i)r_t}\,(1+\varepsilon_{t,i}),\qquad \ln P_{t,i}\approx\ln A(\tau_i)-B(\tau_i)\,r_t+\varepsilon_{t,i}.
+\begin{aligned}
+&P_{t,i}=A(\tau_i)\,e^{-B(\tau_i)r_t}\,(1+\varepsilon_{t,i}), \\
+&\ln P_{t,i}\approx\ln A(\tau_i)-B(\tau_i)\,r_t+\varepsilon_{t,i}.
+\end{aligned}
 ```
 
 Two descriptions of the observation follow. The price is a **nonlinear** function of the state, which the extended and the unscented filter handle directly. The logarithm of the price is **linear** in the state, {math}`\ln P-\ln A=-B\,r`, so the Kalman filter applies to the log prices exactly, with {math}`H_i=-B(\tau_i)`. The transition has an intercept, {math}`\theta(1-F)`, which is a constant input.

@@ -14,7 +14,10 @@ A two-state protein is either folded or unfolded, and its stability is a free en
 For a two-state protein the free energy of unfolding varies linearly with the denaturant concentration {math}`x`,
 
 ```{math}
-\Delta G(x) = m\,(d_{50} - x), \qquad f_U = \frac{1}{1 + e^{\Delta G/RT}}
+\begin{aligned}
+&\Delta G(x) = m\,(d_{50} - x), \\
+&f_U = \frac{1}{1 + e^{\Delta G/RT}}
+\end{aligned}
 ```
 
 where {math}`d_{50}` is the midpoint and {math}`m` the {math}`m`-value. `protein_folding::unfolding_free_energy(x, m, d50)` and `protein_folding::two_state_fraction_unfolded(x, m, d50, rt)` evaluate them, with `rt` in kcal/mol from `protein_(0.0019872 * T)`. The program uses {math}`m = 2` kcal/mol/M and {math}`d_{50} = 3` M at {math}`25\,^\circ`C.

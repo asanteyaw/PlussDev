@@ -9,7 +9,10 @@ A machine turning at a steady speed pushes on its supports with a force that var
 For a load `f e^{i omega t}` the steady response is `u e^{i omega t}`, with a complex amplitude `u` (its size is the amplitude and its angle is the phase lag behind the load), found from
 
 ```{math}
-\left( K + i \omega C - \omega^2 M \right) u = f, \qquad C = a M + b K.
+\begin{aligned}
+&\left( K + i \omega C - \omega^2 M \right) u = f, \\
+&C = a M + b K.
+\end{aligned}
 ```
 
 `harmonic(frame, load, omega, fix, options)` solves this for every frequency in `omega`. The load has a leading frequency axis, `[..., frequency, node, 3]`, and may be complex; a real load is taken as having zero phase. It returns a `HarmonicResult`:

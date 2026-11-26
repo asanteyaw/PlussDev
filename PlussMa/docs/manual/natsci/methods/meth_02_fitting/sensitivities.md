@@ -9,7 +9,10 @@ Before collecting data you can ask which parameters the experiment will be able 
 For a model {math}`\mathrm{d}y/\mathrm{d}t = f(y, p)` with parameters {math}`p`, the sensitivity {math}`S = \partial y/\partial p` obeys the linear equation
 
 ```{math}
-\dot S = f_y\,S + f_p,\qquad S(0) = 0
+\begin{aligned}
+&\dot S = f_y\,S + f_p, \\
+&S(0) = 0
+\end{aligned}
 ```
 
 and is integrated together with the state as one augmented system. The two Jacobians {math}`f_y` and {math}`f_p` are central differences of the rate you pass. If you observe the state at times {math}`t_k` with independent unit noise, the Fisher information of the parameters is {math}`F = \sum_k S_k^{\top}S_k`, and the Cramér-Rao bound says no unbiased estimate has a covariance below {math}`F^{-1}`. An eigenvalue of {math}`F` near zero is a parameter combination the measurements cannot see.

@@ -19,8 +19,10 @@ All three revert to a level at speed {math}`\kappa` and differ in the noise:
 In the Vasicek model the noise has constant size, so the rate is Gaussian and can be negative; given {math}`r_s`, the rate at {math}`t=s+\Delta` is normal with
 
 ```{math}
-\mathbb{E}[r_t\mid r_s]=\theta+(r_s-\theta)e^{-\kappa\Delta},\qquad
-\operatorname{Var}[r_t\mid r_s]=\frac{\sigma^2}{2\kappa}\big(1-e^{-2\kappa\Delta}\big).
+\begin{aligned}
+&\mathbb{E}[r_t\mid r_s]=\theta+(r_s-\theta)e^{-\kappa\Delta}, \\
+&\operatorname{Var}[r_t\mid r_s]=\frac{\sigma^2}{2\kappa}\big(1-e^{-2\kappa\Delta}\big).
+\end{aligned}
 ```
 
 In the CIR model the noise shrinks with the rate, so the rate cannot become negative; it stays strictly positive when the Feller condition {math}`2\kappa\theta\ge\sigma^2` holds. Its transition law is a scaled non-central chi-squared, with mean {math}`\theta+(r_s-\theta)e^{-\kappa\Delta}` and variance

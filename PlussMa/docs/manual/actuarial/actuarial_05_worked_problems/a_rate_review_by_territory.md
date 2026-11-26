@@ -19,7 +19,10 @@ For each territory {math}`i` with exposure {math}`E_i` and losses {math}`L_i`, t
 where {math}`K` is the exposure at which experience and manual rate get equal weight. The blended pure premium is loaded for expenses and profit, and compared with the current premium {math}`P_i`:
 
 ```{math}
-P^{\ast}_i=\frac{\hat p_i+F}{1-v-\pi},\qquad \Delta_i=\frac{P^{\ast}_i}{P_i}-1 .
+\begin{aligned}
+&P^{\ast}_i=\frac{\hat p_i+F}{1-v-\pi}, \\
+&\Delta_i=\frac{P^{\ast}_i}{P_i}-1 .
+\end{aligned}
 ```
 
 The numbers here are small enough to follow by hand, and each program checks its work against a second route.

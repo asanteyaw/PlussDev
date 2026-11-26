@@ -15,7 +15,10 @@ The code is in `pluss::ma::natsci::biology::population::demography` (`demography
 which is always below the log of the dominant eigenvalue of the average matrix {math}`\bar A` (a randomly varying environment hurts). For small variation Tuljapurkar's approximation is
 
 ```{math}
-\ln\lambda_s \approx \ln\lambda(\bar A) - \frac{\tau^2}{2\lambda^2},\qquad \tau^2 = \sum_k p_k\,\langle S, A_k - \bar A\rangle^2
+\begin{aligned}
+&\ln\lambda_s \approx \ln\lambda(\bar A) - \frac{\tau^2}{2\lambda^2}, \\
+&\tau^2 = \sum_k p_k\,\langle S, A_k - \bar A\rangle^2
+\end{aligned}
 ```
 
 where {math}`S` is the sensitivity matrix of {math}`\bar A`. `demography::tuljapurkar(matrices, prob)` returns {math}`\ln\lambda(\bar A)`, {math}`\tau^2` and the approximation. `demography::simulate_growth(env, steps, replicates, seed)` estimates {math}`\ln\lambda_s` directly, with a standard error from the spread of the replicates, and `demography::simulate_paths(env, n0, steps, replicates, seed)` returns the total population size of each replicate year by year. `demography::quasi_extinction_probability(paths, threshold)` turns those paths into the probability that the population has fallen to the threshold by each year.

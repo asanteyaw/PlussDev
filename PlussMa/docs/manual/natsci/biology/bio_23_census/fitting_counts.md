@@ -9,7 +9,10 @@ Population counts are the most common data in conservation, and they are noisy t
 The code is in `pluss::ma::natsci::biology::population::count_pva` (`pva::` below). The log abundance {math}`x_t = \ln N_t` follows a random walk with drift {math}`\mu` and process variance {math}`\sigma^2`, and each count {math}`y_t` is observed with error variance {math}`\eta^2`:
 
 ```{math}
-x_{t+1} = x_t + \mu + \sigma\,\varepsilon_t, \qquad y_t = x_t + \eta\,\zeta_t .
+\begin{aligned}
+&x_{t+1} = x_t + \mu + \sigma\,\varepsilon_t, \\
+&y_t = x_t + \eta\,\zeta_t .
+\end{aligned}
 ```
 
 `pva::fit(counts)` finds the three parameters by maximum likelihood with a Kalman filter and returns the log likelihood, the filtered current log abundance `filtered_mean`, and the smoothed log abundance. From a fit, `pva::extinction_risk(fit, threshold, horizons)` is the probability of falling below a threshold within each horizon, `pva::ultimate_extinction_risk(fit, threshold)` the long-run probability, and `pva::loglik(counts, parameters)` evaluates the likelihood at any parameters. A threshold above the current abundance has risk one.

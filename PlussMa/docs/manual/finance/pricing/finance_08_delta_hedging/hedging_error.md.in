@@ -15,8 +15,10 @@ dV=\Theta\,dt+\Delta\,dS+\tfrac12\Gamma\,(dS)^2,
 and the Black-Scholes equation says that {math}`\Theta=-\tfrac12\sigma^2S^2\Gamma` apart from the terms of the cash account. The hedge removes {math}`\Delta\,dS`. What is left, because {math}`(dS)^2` is random and not the {math}`\sigma^2S^2\,dt` that the equation assumes, is the profit of the seller in the step, the **gamma profit**,
 
 ```{math}
-\pi_i\;=\;\tfrac12\,\Gamma_iS_i^2\Big(\sigma^2\Delta t-\Big(\tfrac{\Delta S_i}{S_i}\Big)^2\Big)\;=\;-\tfrac12\,\Gamma_iS_i^2\sigma^2\Delta t\,\big(Z_i^2-1\big),
-\qquad Z_i\sim\mathcal N(0,1).
+\begin{aligned}
+&\pi_i\;=\;\tfrac12\,\Gamma_iS_i^2\Big(\sigma^2\Delta t-\Big(\tfrac{\Delta S_i}{S_i}\Big)^2\Big)\;=\;-\tfrac12\,\Gamma_iS_i^2\sigma^2\Delta t\,\big(Z_i^2-1\big), \\
+&Z_i\sim\mathcal N(0,1).
+\end{aligned}
 ```
 
 A seller of the option is short gamma: a calm step ({math}`Z^2<1`) earns the time decay and a violent one loses. It has mean zero, and since {math}`\operatorname{Var}(Z^2-1)=2`, variance {math}`\tfrac12(\Gamma_iS_i^2\sigma^2\Delta t)^2`. The errors of different steps are uncorrelated, so the variance of the terminal profit is approximately

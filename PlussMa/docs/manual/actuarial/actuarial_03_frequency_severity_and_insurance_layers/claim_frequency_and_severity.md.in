@@ -11,13 +11,19 @@ This page describes the standard laws for each and the numbers that summarise th
 A **Poisson** count with rate {math}`\lambda` has equal mean and variance,
 
 ```{math}
-E[N]=\mathrm{Var}[N]=\lambda,\qquad \Pr(N=k)=e^{-\lambda}\frac{\lambda^k}{k!}.
+\begin{aligned}
+&E[N]=\mathrm{Var}[N]=\lambda, \\
+&\Pr(N=k)=e^{-\lambda}\frac{\lambda^k}{k!}.
+\end{aligned}
 ```
 
 Real claim counts are usually more dispersed than that, because the risk varies from policy to policy: a portfolio is a mixture of rates. A **negative binomial** count captures it. With the parameterisation used here, the number of failures before the {math}`r`-th success when each trial succeeds with probability {math}`p`,
 
 ```{math}
-E[N]=\frac{r(1-p)}{p},\qquad \mathrm{Var}[N]=\frac{r(1-p)}{p^2}=\frac{E[N]}{p}>E[N].
+\begin{aligned}
+&E[N]=\frac{r(1-p)}{p}, \\
+&\mathrm{Var}[N]=\frac{r(1-p)}{p^2}=\frac{E[N]}{p}>E[N].
+\end{aligned}
 ```
 
 The variance exceeds the mean by the factor {math}`1/p`, which is the overdispersion.
@@ -27,13 +33,19 @@ The variance exceeds the mean by the factor {math}`1/p`, which is the overdisper
 A **lognormal** severity with parameters {math}`\mu` and {math}`\sigma` (the mean and standard deviation of the logarithm of the loss) has a long right tail,
 
 ```{math}
-E[X]=e^{\mu+\sigma^2/2},\qquad \mathrm{Var}[X]=\left(e^{\sigma^2}-1\right)e^{2\mu+\sigma^2}.
+\begin{aligned}
+&E[X]=e^{\mu+\sigma^2/2}, \\
+&\mathrm{Var}[X]=\left(e^{\sigma^2}-1\right)e^{2\mu+\sigma^2}.
+\end{aligned}
 ```
 
 A **gamma** severity with shape {math}`a`, scale {math}`\theta` and an optional location {math}`c` (a minimum loss) has
 
 ```{math}
-E[X]=a\theta+c,\qquad \mathrm{Var}[X]=a\theta^2.
+\begin{aligned}
+&E[X]=a\theta+c, \\
+&\mathrm{Var}[X]=a\theta^2.
+\end{aligned}
 ```
 
 The location shifts every loss and so moves the mean and leaves the variance alone.

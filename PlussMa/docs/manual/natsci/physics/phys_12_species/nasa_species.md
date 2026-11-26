@@ -9,11 +9,17 @@ The ideal gas of Physics 4 has one heat capacity and one heat ratio, and real ga
 Each species carries two sets of seven coefficients, one for temperatures below a midpoint (usually `1000` K) and one above it. With {math}`R` the molar gas constant and {math}`T` the temperature,
 
 ```{math}
-\frac{c_p}{R} = a_0 + a_1 T + a_2 T^2 + a_3 T^3 + a_4 T^4, \qquad \frac{h}{RT} = a_0 + \frac{a_1}{2}T + \frac{a_2}{3}T^2 + \frac{a_3}{4}T^3 + \frac{a_4}{5}T^4 + \frac{a_5}{T}
+\begin{aligned}
+&\frac{c_p}{R} = a_0 + a_1 T + a_2 T^2 + a_3 T^3 + a_4 T^4, \\
+&\frac{h}{RT} = a_0 + \frac{a_1}{2}T + \frac{a_2}{3}T^2 + \frac{a_3}{4}T^3 + \frac{a_4}{5}T^4 + \frac{a_5}{T}
+\end{aligned}
 ```
 
 ```{math}
-\frac{s}{R} = a_0\ln T + a_1 T + \frac{a_2}{2}T^2 + \frac{a_3}{3}T^3 + \frac{a_4}{4}T^4 + a_6, \qquad g = h - Ts
+\begin{aligned}
+&\frac{s}{R} = a_0\ln T + a_1 T + \frac{a_2}{2}T^2 + \frac{a_3}{3}T^3 + \frac{a_4}{4}T^4 + a_6, \\
+&g = h - Ts
+\end{aligned}
 ```
 
 You describe a species with a `thermo::SpeciesData`: a name, the atoms it is made of, its molar mass in kg/mol, the lowest, middle and highest temperatures of validity, and the two coefficient sets `low` and `high`. `thermo::Nasa7(list_of_species, like)` builds the model for several species at once, with `like` a Series that fixes the precision. `thermo::props(model, temperature)` returns the molar `cp`, `h`, `s` and `g`, where `temperature` is a `common::TemperaturePoint<Series>`; the result has a trailing species axis, so a temperature array of shape `[k]` gives arrays of shape `[k, species]`. `thermo::mass_props(model, temperature, molar_mass)` divides by the molar masses to give properties per kilogram. The model itself also offers `cp_r`, `h_rt`, `s_r` and `g_rt` on plain Series and `check(temperature)`, which refuses temperatures outside the validity range.

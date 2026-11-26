@@ -136,8 +136,10 @@ The two columns agree to the eight decimals printed, path by path. This is the s
 One set of paths prices many payoffs. For a payoff {math}`g` of the path the estimate and its standard error are
 
 ```{math}
-\hat V=\frac{e^{-rT}}{N}\sum_{i=1}^{N}g\big(S^{(i)}\big),\qquad
-\operatorname{se}(\hat V)=\frac{e^{-rT}}{\sqrt N}\,\hat s_g,
+\begin{aligned}
+&\hat V=\frac{e^{-rT}}{N}\sum_{i=1}^{N}g\big(S^{(i)}\big), \\
+&\operatorname{se}(\hat V)=\frac{e^{-rT}}{\sqrt N}\,\hat s_g,
+\end{aligned}
 ```
 
 with {math}`\hat s_g` the sample standard deviation of the payoffs. The program simulates 100,000 Heston paths with antithetic sampling and prices four contracts with ordinary `Series` operations along the time axis: the European call {math}`(S_T-K)^+`; an Asian call on the arithmetic average of the grid values, {math}`(\bar S-K)^+`; an up-and-out call, which pays {math}`(S_T-K)^+` only if {math}`\max_tS_t<130` over the grid; and a floating-strike lookback call, {math}`S_T-\min_tS_t`. It prints the standard error of each and, for the European call, compares with the price the `Field` returns through `price()` under the same controls.

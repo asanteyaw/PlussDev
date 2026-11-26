@@ -9,7 +9,10 @@ When survival, growth and reproduction depend on a continuous size, such as the 
 The code is in `pluss::ma::natsci::biology::population::ipm` (`ipm::` below). With size {math}`z \in [0, 10]` the population changes by
 
 ```{math}
-n_{t+1}(z') = \int K(z', z)\,n_t(z)\,\mathrm{d}z, \qquad K = s(z)\,G(z' \mid z) + f(z)\,D(z'),
+\begin{aligned}
+&n_{t+1}(z') = \int K(z', z)\,n_t(z)\,\mathrm{d}z, \\
+&K = s(z)\,G(z' \mid z) + f(z)\,D(z'),
+\end{aligned}
 ```
 
 with survival {math}`s`, growth {math}`G`, fecundity {math}`f` and offspring sizes {math}`D`. `ipm::mesh(lower, upper, n)` makes the grid, `ipm::discretize(kernel, mesh)` the matrix with the quadrature weights built in, and `ipm::analyze(A, h)` returns the growth rate {math}`\lambda`, the stable size density `w`, the reproductive values `v` and the sensitivity and elasticity kernels. Splitting the kernel into survival-growth {math}`P` and fecundity {math}`F` gives the expected remaining life {math}`\mathbf{1}^\top(I-P)^{-1}`, `ipm::life_expectancy(P)`, and the lifetime offspring, the largest eigenvalue of {math}`F(I-P)^{-1}`, `ipm::net_reproductive_rate(P, F)`. If seeds disperse with moment generating function {math}`M(s)`, the population spreads at {math}`\min_s \ln(R_0 M(s))/s`, which `ipm::spreading_speed(ln_r0, mgf, s_max)` finds.

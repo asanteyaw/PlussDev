@@ -9,7 +9,10 @@ A parasitoid lays its eggs in a host and the host dies, and both species breed o
 The code is in `pluss::ma::natsci::biology::population::parasitoid` (`parasitoid::` below). The state is a pair (hosts {math}`H`, parasitoids {math}`P`) on the last axis. Hosts reproduce with rate {math}`\lambda` and escape attack with probability {math}`f(P)`; each host that is found yields {math}`c` parasitoids:
 
 ```{math}
-H_{t+1} = \lambda H_t f(P_t), \qquad P_{t+1} = c H_t \bigl(1 - f(P_t)\bigr)
+\begin{aligned}
+&H_{t+1} = \lambda H_t f(P_t), \\
+&P_{t+1} = c H_t \bigl(1 - f(P_t)\bigr)
+\end{aligned}
 ```
 
 With attacks spread at random, {math}`f = e^{-aP}`, which is `parasitoid::nicholson_bailey(state, lambda, a, c)`. Clumped attacks, with the number of attacks per host negative binomial with clumping parameter {math}`k`, give {math}`f = (1 + aP/k)^{-k}` in `parasitoid::negative_binomial(state, lambda, a, c, k)`, and `parasitoid::beddington` adds host density dependence. The coexistence point is returned by `parasitoid::nicholson_bailey_equilibrium(lambda, a, c, like)` and `parasitoid::negative_binomial_equilibrium(lambda, a, c, k, like)` (the last argument only supplies the shape and type of the result), `parasitoid::jacobian(map, state)` differentiates a map at a state and `parasitoid::spectral_radius(J)` returns the largest modulus of the eigenvalues of a {math}`2\times2` Jacobian. The point is stable when that radius is below one. For patches on a ring, `parasitoid::ring_step(local, n, d)` applies a local map in every patch and then lets a fraction {math}`d` of each patch's output disperse equally to its two neighbours, and `parasitoid::synchrony(n)` is the standard deviation of the densities across patches.

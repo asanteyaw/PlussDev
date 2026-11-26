@@ -15,7 +15,10 @@ In a channel driven by a pressure gradient the mean flow depends on the distance
 The eddy viscosity {math}`\nu_t` comes from a model. The library provides **Spalart-Allmaras** (`rans::Model::SpalartAllmaras`), which transports one variable {math}`\tilde\nu`, and **k-omega SST** (`rans::Model::KOmegaSST`), which transports the turbulent kinetic energy {math}`k` and the specific dissipation {math}`\omega`. Near the wall the velocity follows the law of the wall: {math}`U^+ = y^+` in the viscous sublayer ({math}`y^+ \lesssim 5`) and
 
 ```{math}
-U^+ = \frac{1}{\kappa} \ln y^+ + B, \qquad \kappa = 0.41,\ B \approx 5.2,
+\begin{aligned}
+&U^+ = \frac{1}{\kappa} \ln y^+ + B, \\
+&\kappa = 0.41,\ B \approx 5.2,
+\end{aligned}
 ```
 
 in the logarithmic layer ({math}`y^+ \gtrsim 30`), with {math}`y^+ = y\,\mathrm{Re}_\tau`.

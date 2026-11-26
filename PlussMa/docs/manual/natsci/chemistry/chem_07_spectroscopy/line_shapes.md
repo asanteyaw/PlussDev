@@ -9,7 +9,12 @@ A spectral line is not a delta function: collisions and the motion of the molecu
 Three normalised profiles of the position {math}`x` around a line centre {math}`x_0` cover most work. The Gaussian, with standard deviation {math}`\sigma`, describes Doppler broadening, the Lorentzian, with half-width {math}`\gamma`, describes collisional and lifetime broadening, and the Voigt profile is their convolution:
 
 ```{math}
-G(x) = \frac{e^{-u^2/2}}{\sigma\sqrt{2\pi}},\qquad L(x) = \frac{\gamma/\pi}{(x - x_0)^2 + \gamma^2},\qquad V = G * L,\qquad u = \frac{x - x_0}{\sigma}
+\begin{aligned}
+&G(x) = \frac{e^{-u^2/2}}{\sigma\sqrt{2\pi}}, \\
+&L(x) = \frac{\gamma/\pi}{(x - x_0)^2 + \gamma^2}, \\
+&V = G * L, \\
+&u = \frac{x - x_0}{\sigma}
+\end{aligned}
 ```
 
 `gaussian(x, x0, sigma)`, `lorentzian(x, x0, gamma)` and `voigt(x, x0, sigma, gamma)` evaluate them, all with the same unit area. The Voigt profile is evaluated from the Faddeeva function `faddeeva(x, y)`, which is also available directly and returns the real and imaginary parts. `voigt_fwhm_approx(lorentz_fwhm, gauss_fwhm)` gives the full width at half maximum of the Voigt profile to within a fraction of a percent, and `doppler_sigma(nu0, T, molar_mass)` gives the Gaussian standard deviation of a line at {math}`\nu_0` for a gas of molar mass {math}`M` in kg/mol,

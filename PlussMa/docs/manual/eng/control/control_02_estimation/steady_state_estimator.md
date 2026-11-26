@@ -11,7 +11,10 @@ You can measure some outputs of a system, but not its states, and the measuremen
 The discrete system is
 
 ```{math}
-x_{k+1} = A x_k + w_k, \qquad y_k = C x_k + v_k,
+\begin{aligned}
+&x_{k+1} = A x_k + w_k, \\
+&y_k = C x_k + v_k,
+\end{aligned}
 ```
 
 with process noise `w` of covariance `W` and measurement noise `v` of covariance `V`. A **predictor-form observer** keeps an estimate `x^` and corrects it with the innovation, the difference between the measurement and the prediction:
@@ -23,7 +26,10 @@ with process noise `w` of covariance `W` and measurement noise `v` of covariance
 The estimation error then obeys `e_{k+1} = (A - L C) e_k + (noise)`, so `L` must make `A - L C` stable, and the best `L` minimises the error covariance. If `P` is that covariance (the covariance of the one-step *prediction* error), then
 
 ```{math}
-P = A P A^T - A P C^T (C P C^T + V)^{-1} C P A^T + W, \qquad L = A P C^T (C P C^T + V)^{-1}.
+\begin{aligned}
+&P = A P A^T - A P C^T (C P C^T + V)^{-1} C P A^T + W, \\
+&L = A P C^T (C P C^T + V)^{-1}.
+\end{aligned}
 ```
 
 This is the discrete Riccati equation of the LQR with the roles `(A, B, Q, R) -> (A^T, C^T, W, V)`: **estimation is control of the dual system**. `lqe` solves it, with `system` giving `A` and `C`, and returns an `LqeResult` of three members: `covariance`, the matrix `P`; `gain`, the matrix `L`; and `closed_loop`, `A - L C`. For a continuous system the same function solves the continuous equation.

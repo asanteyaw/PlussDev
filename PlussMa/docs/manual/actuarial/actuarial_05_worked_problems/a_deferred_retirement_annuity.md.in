@@ -103,8 +103,10 @@ int main() {
 The policy as written pays nothing if she dies before 65, so premiums paid are lost. Many buyers want them back. If the premiums paid so far, with no interest, are returned at the end of the year of death, the death benefit in year {math}`k` is {math}`kG`, and the balance becomes
 
 ```{math}
-G\,\ddot a_{55:\overline{10}\vert}=\text{single premium}+G\,R,\qquad
-R=\sum_{k=1}^{10}k\,v^{k}\,{}_{k-1}p_{55}\,q_{55+k-1},
+\begin{aligned}
+&G\,\ddot a_{55:\overline{10}\vert}=\text{single premium}+G\,R, \\
+&R=\sum_{k=1}^{10}k\,v^{k}\,{}_{k-1}p_{55}\,q_{55+k-1},
+\end{aligned}
 ```
 
 so that

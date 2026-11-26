@@ -9,7 +9,10 @@ An ideal gas ties together its pressure, volume, temperature and amount, and fro
 The state of {math}`n` moles of gas is fixed by two of the three variables pressure {math}`p`, volume {math}`V` and absolute temperature {math}`T`, through
 
 ```{math}
-p V = n R T, \qquad R = 8.314\,462\,618\ \mathrm{J\,mol^{-1}\,K^{-1}}
+\begin{aligned}
+&p V = n R T, \\
+&R = 8.314\,462\,618\ \mathrm{J\,mol^{-1}\,K^{-1}}
+\end{aligned}
 ```
 
 `thermo::volume(amount, temperature, pressure)`, `thermo::pressure(amount, temperature, volume)`, `thermo::temp(pressure, volume, amount)` and `thermo::moles(pressure, volume, temperature)` each solve this for the quantity named. Arguments are `common::ScalarQuantity<...>` values (or `SeriesQuantity` values, for many states at once) and `common::TemperaturePoint<>` for a temperature, which can be created from a value in another scale with `TemperaturePoint<>::from(0.0, common::units::celsius)` and is converted to kelvin once. The molar gas constant is the exact CODATA 2022 value.
@@ -59,7 +62,11 @@ For one mole at {math}`0\,^\circ\mathrm{C}` and {math}`100` kPa the volume is `2
 On a mass basis the gas constant is {math}`R_s = R / M` for a molar mass {math}`M`. For a calorically perfect gas with heat ratio {math}`\gamma = c_p / c_v` the two specific heats follow from {math}`R_s`:
 
 ```{math}
-c_v = \frac{R_s}{\gamma - 1}, \qquad c_p = c_v + R_s, \qquad a = \sqrt{\gamma R_s T}
+\begin{aligned}
+&c_v = \frac{R_s}{\gamma - 1}, \\
+&c_p = c_v + R_s, \\
+&a = \sqrt{\gamma R_s T}
+\end{aligned}
 ```
 
 `thermo::gas_const(molar_mass)`, `thermo::cv(gas_constant, gamma)`, `thermo::cp(gas_constant, gamma)` and `thermo::heat_ratio(cp, cv)` give these, `thermo::density(pressure, temperature, gas_constant)` is {math}`\rho = p / (R_s T)`, `thermo::sound_speed(gamma, gas_constant, temperature)` is {math}`a`, and `thermo::energy(cv, T)` and `thermo::enthalpy(cp, T)` are {math}`c_v T` and {math}`c_p T` per kilogram. `thermo::kappa(p)` and `thermo::beta(T)` are the ideal-gas compressibility {math}`1/p` and expansion coefficient {math}`1/T`. The program evaluates all of them for air at sea-level pressure and {math}`15\,^\circ\mathrm{C}`, entered in Celsius.

@@ -71,9 +71,11 @@ int main() {
 When the numbers are already parameters, from a calibration or a file you read, writing a `Field` for each is boilerplate. `Chord::from_model_params` takes a `Chord::Parameters` table instead: one column per parameter, one row per asset, filled with designated initializers. The Heston dynamics of asset *a*, the model a table builds unless it says otherwise, are
 
 ```{math}
-dS^a_t=(r_a-q_a)S^a_t\,dt+\sqrt{v^a_t}\,S^a_t\,dW^{S,a}_t,\qquad
-dv^a_t=\kappa_a(\theta_a-v^a_t)\,dt+\sigma_a\sqrt{v^a_t}\,dW^{v,a}_t ,\qquad
-d\langle W^{S,a},W^{v,a}\rangle_t=\rho_a\,dt ,
+\begin{aligned}
+&dS^a_t=(r_a-q_a)S^a_t\,dt+\sqrt{v^a_t}\,S^a_t\,dW^{S,a}_t, \\
+&dv^a_t=\kappa_a(\theta_a-v^a_t)\,dt+\sigma_a\sqrt{v^a_t}\,dW^{v,a}_t , \\
+&d\langle W^{S,a},W^{v,a}\rangle_t=\rho_a\,dt ,
+\end{aligned}
 ```
 
 and the columns are `spot` (the starting {math}`S^a_0`), `rate` {math}`r_a`, `dividend_yield` {math}`q_a`, `kappa`, `theta`, `sigma`, `rho` and `v0` {math}`v^a_0`. With the three jump columns `jump_intensity`, `jump_mean` and `jump_vol` the assets are Bates; other models are chosen with the `kind` column, below. The rules for the columns are few:

@@ -10,13 +10,19 @@ Hartree-Fock is the first approximation of quantum chemistry: each electron move
 You supply the integrals over your basis functions; the calculation does not compute them from a geometry. With `n` basis functions (atomic orbitals), the integrals are the overlap matrix `S`, the core Hamiltonian `h` (kinetic energy plus attraction to the nuclei), the electron-repulsion integrals {math}`(\mu\nu|\lambda\sigma)` in chemists' notation, and the repulsion energy of the nuclei {math}`E_{nuc}`. The closed-shell energy is built from a density matrix `P` with {math}`P = 2 C_{occ} C_{occ}^T`, where the occupied orbitals {math}`C_{occ}` are the lowest `N/2` solutions of the Roothaan equations
 
 ```{math}
-F C = S C\,\varepsilon, \qquad F_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma} P_{\lambda\sigma}\left[(\mu\nu|\lambda\sigma) - \tfrac12(\mu\lambda|\nu\sigma)\right].
+\begin{aligned}
+&F C = S C\,\varepsilon, \\
+&F_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma} P_{\lambda\sigma}\left[(\mu\nu|\lambda\sigma) - \tfrac12(\mu\lambda|\nu\sigma)\right].
+\end{aligned}
 ```
 
 The Fock matrix `F` depends on `P`, so the equations are solved by iteration: guess `P`, build `F`, solve for new orbitals, form a new `P`, repeat. The electronic and total energies are
 
 ```{math}
-E_{el} = \tfrac12 \sum_{\mu\nu} P_{\mu\nu}\,(h_{\mu\nu} + F_{\mu\nu}), \qquad E = E_{el} + E_{nuc}.
+\begin{aligned}
+&E_{el} = \tfrac12 \sum_{\mu\nu} P_{\mu\nu}\,(h_{\mu\nu} + F_{\mu\nu}), \\
+&E = E_{el} + E_{nuc}.
+\end{aligned}
 ```
 
 The iteration is accelerated by DIIS, which combines the last few Fock matrices to cancel their error {math}`FPS - SPF`; this error is also the orbital gradient that measures convergence. The first guess is the density built from the orbitals of the core Hamiltonian, which a restart replaces with your own density.

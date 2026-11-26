@@ -9,7 +9,11 @@ You want to follow a reacting gas in time: how fast a species is used up, whethe
 The state of the vessel is a vector {math}`y = (T, C_1, \dots, C_S)` with the concentrations in mol/m³. The concentrations change by the net production rates, {math}`dC_k/dt = \omega_k`. In an adiabatic rigid vessel the internal energy is fixed, which gives the temperature equation
 
 ```{math}
-\frac{dT}{dt} = -\frac{\sum_k u_k\,\omega_k}{\sum_k C_k\, c_{v,k}}, \qquad u_k = h_k - RT, \quad c_{v,k} = c_{p,k} - R,
+\begin{aligned}
+&\frac{dT}{dt} = -\frac{\sum_k u_k\,\omega_k}{\sum_k C_k\, c_{v,k}}, \\
+&u_k = h_k - RT, \\
+&c_{v,k} = c_{p,k} - R,
+\end{aligned}
 ```
 
 and the pressure follows from {math}`p = RT\sum_k C_k`. In an isothermal vessel the temperature is held fixed instead. Two quantities are conserved by the adiabatic equations and serve as checks: the internal energy density {math}`\sum_k C_k u_k` and the total amount of each element.

@@ -95,9 +95,10 @@ A combination marked `-` is an error naming the model and listing the engines th
 The Fourier-cosine method expands the density of {math}`\ln(S_T/K)` in a cosine series on an interval {math}`[a,b]` chosen to hold nearly all the probability, and reads the series coefficients off the characteristic function:
 
 ```{math}
-C \;\approx\; e^{-rT}\,{\sum_{n=0}^{N-1}}{}'\;\mathrm{Re}\!\Big\{\varphi\!\Big(\tfrac{n\pi}{b-a}\Big)\,e^{-in\pi\frac{a}{b-a}}\Big\}\,V_n,
-\qquad
-[a,b]=\Big[c_1-L\sqrt{c_2+\sqrt{c_4}},\;c_1+L\sqrt{c_2+\sqrt{c_4}}\Big],
+\begin{aligned}
+&C \;\approx\; e^{-rT}\,{\sum_{n=0}^{N-1}}{}'\;\mathrm{Re}\!\Big\{\varphi\!\Big(\tfrac{n\pi}{b-a}\Big)\,e^{-in\pi\frac{a}{b-a}}\Big\}\,V_n, \\
+&[a,b]=\Big[c_1-L\sqrt{c_2+\sqrt{c_4}},\;c_1+L\sqrt{c_2+\sqrt{c_4}}\Big],
+\end{aligned}
 ```
 
 where the prime halves the first term, {math}`V_n` are the cosine coefficients of the payoff, {math}`c_1,c_2,c_4` are the first, second and fourth cumulants of the log-price, and {math}`L` is `truncation`. `num_terms` is {math}`N`. `cumulant_step` is the step of the finite differences that obtain the cumulants from the characteristic function. Two errors compete: the truncation error from discarding the density outside {math}`[a,b]`, controlled by {math}`L`, and the series error from stopping at {math}`N` terms, which falls geometrically for a smooth density.
@@ -150,8 +151,10 @@ Two practical rules follow. First, raise `num_terms` for short maturities and fo
 The Carr-Madan method prices a whole grid of strikes with one Fourier transform. The call price, damped by {math}`e^{\alpha k}` with {math}`k=\ln K` so that it becomes integrable, has the transform
 
 ```{math}
-C(k)=\frac{e^{-\alpha k}}{\pi}\int_0^\infty e^{-iuk}\,\psi(u)\,du,\qquad
-\psi(u)=\frac{e^{-rT}\,\varphi\big(u-(\alpha+1)i\big)}{\alpha^2+\alpha-u^2+i(2\alpha+1)u},
+\begin{aligned}
+&C(k)=\frac{e^{-\alpha k}}{\pi}\int_0^\infty e^{-iuk}\,\psi(u)\,du, \\
+&\psi(u)=\frac{e^{-rT}\,\varphi\big(u-(\alpha+1)i\big)}{\alpha^2+\alpha-u^2+i(2\alpha+1)u},
+\end{aligned}
 ```
 
 which requires {math}`\mathbb{E}[S_T^{\alpha+1}]<\infty`. The integral is discretised with step `du` at `num_fft` points, and the FFT returns the prices on a log-strike grid of spacing {math}`\Delta k = 2\pi/(N\,\mathrm{du})`; the price at the strikes you asked for is interpolated from that grid. This coupling is the point to understand: a smaller `du` integrates more accurately, but it makes the strike grid coarser, so the interpolation error grows. `dk` can be set explicitly instead of derived. `quadrature` is the rule used for the integral, `Simpson` or `Trapezoidal`, `alpha` is the damping, `mode` selects the form of the Heston characteristic function, and `vol_risk_premium` is the market price of volatility risk used to change the measure (zero for risk-neutral pricing, as here).
@@ -314,11 +317,13 @@ Variance reduction is cheaper than more paths: halving the standard error by add
 For Black-Scholes without dividends they have closed forms, with {math}`d_1=\dfrac{\ln(S/K)+(r+\sigma^2/2)T}{\sigma\sqrt T}` and {math}`d_2=d_1-\sigma\sqrt T`:
 
 ```{math}
-\Delta=N(d_1),\quad
-\Gamma=\frac{\phi(d_1)}{S\sigma\sqrt T},\quad
-\mathcal V=S\,\phi(d_1)\sqrt T,\quad
-\Theta=-\frac{S\,\phi(d_1)\,\sigma}{2\sqrt T}-rKe^{-rT}N(d_2),\quad
-\rho=KTe^{-rT}N(d_2),
+\begin{aligned}
+&\Delta=N(d_1), \\
+&\Gamma=\frac{\phi(d_1)}{S\sigma\sqrt T}, \\
+&\mathcal V=S\,\phi(d_1)\sqrt T, \\
+&\Theta=-\frac{S\,\phi(d_1)\,\sigma}{2\sqrt T}-rKe^{-rT}N(d_2), \\
+&\rho=KTe^{-rT}N(d_2),
+\end{aligned}
 ```
 
 where {math}`N` and {math}`\phi` are the standard normal distribution and density. With dividends the first three carry a factor {math}`e^{-qT}` and the rest gain terms in {math}`q`. The `Analytic` engine returns these closed forms. The other engines obtain the Greeks in the cheapest way their method allows, and only the last resort is to **bump and reprice**:

@@ -9,7 +9,10 @@ You need the viscosity and the thermal conductivity of a gas at some temperature
 A species is described by `transport::SpeciesData`: the geometry (`0` for an atom, `1` for a linear molecule, `2` for a non-linear one), the Lennard-Jones well depth {math}`\varepsilon/k_B` in K and diameter {math}`\sigma` in angstrom, the dipole moment (which must be zero), the rotational relaxation number and the molar mass in kg/mol. `GasTransport(species, like)` builds the model for a list of them. The kinetic theory of dilute gases gives the viscosity
 
 ```{math}
-\eta = \frac{5}{16}\frac{\sqrt{\pi m k_B T}}{\pi\sigma^2\,\Omega^{(2,2)*}(T^*)},\qquad T^* = \frac{k_B T}{\varepsilon}
+\begin{aligned}
+&\eta = \frac{5}{16}\frac{\sqrt{\pi m k_B T}}{\pi\sigma^2\,\Omega^{(2,2)*}(T^*)}, \\
+&T^* = \frac{k_B T}{\varepsilon}
+\end{aligned}
 ```
 
 where {math}`\Omega^{(2,2)*}` is the reduced collision integral, which `omega22(T*)` evaluates, and `omega11(T*)` is its companion for diffusion. The thermal conductivity adds the heat carried by internal energy to the translational part through a modified Eucken correction, so it needs the heat capacity: `species_properties(T, cp_over_r)` takes {math}`T` of shape {math}`[\ldots]` and {math}`c_p/R` of shape {math}`[\ldots, \text{species}]` and returns `viscosity` and `conductivity` of shape {math}`[\ldots, \text{species}]`, in Pa s and W/(m K), together with the binary diffusion matrix of the next page. Every number is a function of {math}`T^*` alone, so a table over temperature is a leading axis.

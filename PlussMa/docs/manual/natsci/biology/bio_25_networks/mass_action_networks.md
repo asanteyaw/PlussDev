@@ -9,7 +9,10 @@ You have a set of reactions with rate constants and you want to know how the con
 A network has one row for each reaction and one column for each species. The stoichiometry matrix {math}`N` holds the net change of each species when the reaction happens once, and the order matrix {math}`O` holds the power of each concentration in the rate law. With rate constants {math}`k_r`, the flux of reaction {math}`r` and the rate of change of the concentrations are
 
 ```{math}
-v_r = k_r\prod_s x_s^{O_{rs}}, \qquad \frac{\mathrm{d}x}{\mathrm{d}t} = N^{\top} v
+\begin{aligned}
+&v_r = k_r\prod_s x_s^{O_{rs}}, \\
+&\frac{\mathrm{d}x}{\mathrm{d}t} = N^{\top} v
+\end{aligned}
 ```
 
 `reaction::make(N, O)` builds the network, `reaction::flux(net, x, k)` and `reaction::rate(net, x, k)` evaluate {math}`v` and {math}`\mathrm{d}x/\mathrm{d}t`, and `reaction::jacobian(net, x, k)` the derivative of the rates. The state and the rate constants may have leading batch axes, so one call evaluates a whole ensemble. A steady state solves {math}`\mathrm{d}x/\mathrm{d}t = 0` together with the conservation laws that reaction networks always have (the total amount of enzyme, for example); `reaction::steady_state(net, k, x0, L, T)` takes the conservation matrix {math}`L` and the totals {math}`T` and finds {math}`x` with {math}`Lx = T`, starting from a positive guess {math}`x_0`. All programs below use one network, an enzyme {math}`E` that converts a substrate {math}`S` into a product {math}`P` through a complex {math}`C`, with substrate supplied at a constant rate and product removed in proportion to its amount.

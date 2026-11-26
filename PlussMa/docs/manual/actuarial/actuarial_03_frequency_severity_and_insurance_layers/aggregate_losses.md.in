@@ -13,8 +13,10 @@ with the claim count {math}`N` independent of the severities {math}`X_i`, which 
 Its mean and variance follow from those of the frequency and severity, with no simulation:
 
 ```{math}
-E[S]=E[N]\,E[X],\qquad
-\mathrm{Var}[S]=E[N]\,\mathrm{Var}[X]+\mathrm{Var}[N]\,\bigl(E[X]\bigr)^2 .
+\begin{aligned}
+&E[S]=E[N]\,E[X], \\
+&\mathrm{Var}[S]=E[N]\,\mathrm{Var}[X]+\mathrm{Var}[N]\,\bigl(E[X]\bigr)^2 .
+\end{aligned}
 ```
 
 The first term is the variability of the claim amounts; the second is the variability of the claim count, amplified by the size of a claim. For a Poisson frequency, {math}`\mathrm{Var}[N]=E[N]=\lambda`, and the variance is {math}`\lambda\,E[X^2]`, the rate times the second moment of the claim.

@@ -9,7 +9,10 @@ A measured value without its uncertainty is half a result. You want to carry the
 A `Measurement` holds a value {math}`x` and a standard uncertainty {math}`u(x) \ge 0`, both with the same physical dimension. Sums and differences of independent measurements add the variances, and products and quotients add the relative variances, to first order:
 
 ```{math}
-u(x \pm y) = \sqrt{u(x)^2 + u(y)^2},\qquad \frac{u(xy)}{|xy|} = \sqrt{\left(\frac{u(x)}{x}\right)^2 + \left(\frac{u(y)}{y}\right)^2}
+\begin{aligned}
+&u(x \pm y) = \sqrt{u(x)^2 + u(y)^2}, \\
+&\frac{u(xy)}{|xy|} = \sqrt{\left(\frac{u(x)}{x}\right)^2 + \left(\frac{u(y)}{y}\right)^2}
+\end{aligned}
 ```
 
 (the quotient has the same relative uncertainty as the product). The type is `pluss::ma::natsci::common::Measurement<Dimension, Rep>`, where `Rep` is `double` for a single reading or `pluss::Series` for a batch of any shape, and the dimension is tracked by the type: the product of a length and a time has the dimension of a length times a time, and `Measurement<Length> + Measurement<Time>` does not compile. `value()` and `standard_uncertainty()` return the quantities, `lower()` and `upper()` one standard uncertainty below and above, and `relative_standard_uncertainty()` the ratio {math}`u/|x|`. The programs measure the density of a block and a batch of lengths.

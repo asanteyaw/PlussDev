@@ -9,7 +9,10 @@ Shocks are nearly inviscid, but boundary layers, mixing layers and the decay of 
 With transport the momentum equation gains the divergence of a Newtonian stress and the energy equation the work of that stress and a Fourier heat flux:
 
 ```{math}
-\tau_{ij} = \mu\left(\partial_j u_i + \partial_i u_j - \tfrac23 \delta_{ij}\, \partial_k u_k\right) + \zeta\, \delta_{ij}\, \partial_k u_k, \qquad q = -k\,\nabla T.
+\begin{aligned}
+&\tau_{ij} = \mu\left(\partial_j u_i + \partial_i u_j - \tfrac23 \delta_{ij}\, \partial_k u_k\right) + \zeta\, \delta_{ij}\, \partial_k u_k, \\
+&q = -k\,\nabla T.
+\end{aligned}
 ```
 
 You give the coefficients in `gas::Transport` (`shear` for {math}`\mu`, `bulk` for {math}`\zeta`, `heat` for {math}`k`) and put it in `options.step.transport`. For air over a range of temperatures set `options.step.sutherland` to a `gas::SutherlandLaw` instead; it gives the viscosity as a function of the local temperature,

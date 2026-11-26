@@ -9,7 +9,10 @@ Where is a body on its orbit one hour from now? Time does not give the angle dir
 Three angles describe the same point on an orbit with eccentricity {math}`e`: the true anomaly {math}`\nu` (the angle seen from the central body), the eccentric anomaly {math}`E` (a helper angle on the circle that encloses the ellipse), and the mean anomaly {math}`M`, which grows in proportion to time, {math}`M = M_0 + n\,t` with the mean rate {math}`n = \sqrt{\mu/a^3}`. They are tied together by
 
 ```{math}
-\tan\frac{\nu}{2} = \sqrt{\frac{1+e}{1-e}}\,\tan\frac{E}{2}, \qquad M = E - e\sin E
+\begin{aligned}
+&\tan\frac{\nu}{2} = \sqrt{\frac{1+e}{1-e}}\,\tan\frac{E}{2}, \\
+&M = E - e\sin E
+\end{aligned}
 ```
 
 and, for a hyperbola ({math}`e > 1`), by {math}`M = e\sinh H - H`. Getting {math}`M` from {math}`\nu` is direct, and `astro::to_mean(ecc, nu)` does it. Getting {math}`\nu` from {math}`M` needs the second equation solved for {math}`E`, because it cannot be inverted in closed form: `astro::solve_mean(ecc, mean)` does this by Newton's method for every element of the arrays at once, and `astro::to_true(ecc, anomaly)` converts the answer to the true anomaly. `astro::mean_rate(elements, mu)` is {math}`n`, and `astro::advance(elements, elapsed, mu)` combines all of this: it moves the mean anomaly forward by {math}`n\,t` and returns the elements with the new true anomaly. The eccentricity and the angle arrays must have the same shape, and an eccentricity of exactly {math}`1` is refused because a parabola needs a different variable. Angles are in radians.

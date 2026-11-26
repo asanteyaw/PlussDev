@@ -9,7 +9,11 @@ To follow the motion in time one integrates Hamilton's equations. A general-purp
 When the Hamiltonian separates into {math}`H = T(p) + V(q)` the leapfrog rule advances a state by a step {math}`h` with a half step in momentum, a full step in position and another half step in momentum:
 
 ```{math}
-p_{1/2} = p_0 - \tfrac{h}{2} V'(q_0), \quad q_1 = q_0 + h\,T'(p_{1/2}), \quad p_1 = p_{1/2} - \tfrac{h}{2} V'(q_1)
+\begin{aligned}
+&p_{1/2} = p_0 - \tfrac{h}{2} V'(q_0), \\
+&q_1 = q_0 + h\,T'(p_{1/2}), \\
+&p_1 = p_{1/2} - \tfrac{h}{2} V'(q_1)
+\end{aligned}
 ```
 
 `mechanics::symplectic_step(state, step, potential, kinetic)` does this with the force and the velocity taken by automatic differentiation of the two energy callbacks `V(q, t)` and `T(p, t)`; its optional fifth argument is the time at the start of the step. The method is second order, so halving the step should reduce the energy error by about four.

@@ -15,7 +15,10 @@ f_j=\frac{\sum_{i}C_{i,j+1}}{\sum_{i}C_{i,j}} .
 **Cumulative development factors.** The factor from period {math}`j` to the end is the product of the remaining age-to-age factors,
 
 ```{math}
-\mathrm{CDF}_j=f_j\,f_{j+1}\cdots f_{n-2},\qquad \mathrm{CDF}_{n-1}=1 ,
+\begin{aligned}
+&\mathrm{CDF}_j=f_j\,f_{j+1}\cdots f_{n-2}, \\
+&\mathrm{CDF}_{n-1}=1 ,
+\end{aligned}
 ```
 
 so a triangle of {math}`n` periods has {math}`n-1` age-to-age factors and {math}`n` cumulative factors, the last being one: the final period is taken to be ultimate.
@@ -23,7 +26,10 @@ so a triangle of {math}`n` periods has {math}`n-1` age-to-age factors and {math}
 **Ultimate and reserve.** An origin whose latest observed cumulative amount is {math}`C_i`, at period {math}`j_i`, has the ultimate loss and **reserve**
 
 ```{math}
-\hat U_i=C_i\,\mathrm{CDF}_{j_i},\qquad R_i=\hat U_i-C_i .
+\begin{aligned}
+&\hat U_i=C_i\,\mathrm{CDF}_{j_i}, \\
+&R_i=\hat U_i-C_i .
+\end{aligned}
 ```
 
 The reserve is what remains to be paid: it is the money held for claims that have already occurred.

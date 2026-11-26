@@ -9,7 +9,10 @@ Two complementary strands of DNA pair into a double helix and heating separates 
 The code is in `pluss::ma::natsci::biology::biophysics::nucleic_acids` (`nucleic_acids::` below; the examples shorten it to `na::`). The nearest-neighbour model adds the enthalpy and entropy of every pair of adjacent base pairs, plus terms for the ends. `nucleic_acids::duplex_thermodynamics(sequence, table)` returns the total with the length and GC fraction, and the melting temperature is the point where half the strands are paired:
 
 ```{math}
-T_m = \frac{\Delta H}{\Delta S + R\ln k} - 273.15\ [^\circ\mathrm{C}], \qquad k = c_1 - c_2/2 .
+\begin{aligned}
+&T_m = \frac{\Delta H}{\Delta S + R\ln k} - 273.15\ [^\circ\mathrm{C}], \\
+&k = c_1 - c_2/2 .
+\end{aligned}
 ```
 
 `nucleic_acids::melting_temperature(duplex, c1, c2, salt_method, na, k, tris, mg, dntps)` takes strand concentrations in nM and ion concentrations in mM. The curve of paired strands against temperature comes from the equilibrium constant `nucleic_acids::equilibrium_constant(duplex, T, correction)`, which refers to {math}`1` M sodium unless the entropy correction from `nucleic_acids::salt_correction` is passed, and `nucleic_acids::duplex_fraction(K, cA, cB, self_complementary)`.

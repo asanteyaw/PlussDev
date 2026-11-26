@@ -9,7 +9,11 @@ The same species data that gives the rates also describes the gas as a mixture: 
 For a mixture with mass fractions {math}`Y_k` (they sum to one) and species molar masses {math}`M_k`, the ideal-gas relations are
 
 ```{math}
-\frac{1}{M} = \sum_k \frac{Y_k}{M_k}, \qquad p = \frac{\rho R T}{M}, \qquad e = \sum_k Y_k\,\frac{RT}{M_k}\left(\frac{h_k}{RT} - 1\right),
+\begin{aligned}
+&\frac{1}{M} = \sum_k \frac{Y_k}{M_k}, \\
+&p = \frac{\rho R T}{M}, \\
+&e = \sum_k Y_k\,\frac{RT}{M_k}\left(\frac{h_k}{RT} - 1\right),
+\end{aligned}
 ```
 
 with the heat capacities {math}`c_v = \sum_k Y_k (R/M_k)(c_{p,k}/R - 1)` and {math}`c_p = \sum_k Y_k (R/M_k)\,c_{p,k}/R`, the ratio {math}`\gamma = c_p/c_v` and the speed of sound {math}`a = \sqrt{\gamma p/\rho}`. The enthalpy and entropy of each species come from the NASA-7 polynomials, so the energy contains the heat of formation and a reaction that changes the composition changes the temperature at fixed energy.

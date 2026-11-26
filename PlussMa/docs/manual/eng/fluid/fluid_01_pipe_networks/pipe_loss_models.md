@@ -11,8 +11,10 @@ Everything the solver knows about a pipe is its head-loss law: how much head the
 For a pipe of length `L` and diameter `D` carrying a flow `q`, the mean velocity is `v = 4 q / (π D²)`. The two laws are
 
 ```{math}
-h = \left( f \frac{L}{D} + K \right) \frac{v |v|}{2 g}, \qquad
-h = \frac{10.67 \, L \, |q|^{0.852} q}{C^{1.852} \, D^{4.8704}} + K \frac{v |v|}{2 g},
+\begin{aligned}
+&h = \left( f \frac{L}{D} + K \right) \frac{v |v|}{2 g}, \\
+&h = \frac{10.67 \, L \, |q|^{0.852} q}{C^{1.852} \, D^{4.8704}} + K \frac{v |v|}{2 g},
+\end{aligned}
 ```
 
 the first from Darcy and Weisbach, the second from Hazen and Williams. `K` is the pipe's minor-loss coefficient, the loss of fittings in units of velocity head. Both are odd functions of the flow, so a reversed flow loses the same head with the opposite sign. You choose the law with `Options::loss`, for the whole network.

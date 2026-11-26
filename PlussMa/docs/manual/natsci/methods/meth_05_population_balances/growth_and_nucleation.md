@@ -9,7 +9,10 @@ A powder, a crystal slurry, a culture of cells and a school of fish all have a s
 The unknown is a number density `n(L, t)`, the number of particles per unit volume per unit size, stored as one value per bin. The balance law says particles are neither created nor destroyed except at the ends of the size range:
 
 ```{math}
-\frac{\partial n}{\partial t} + \frac{\partial (G n)}{\partial L} = 0, \qquad G(0)\, n(0, t) = B_0 ,
+\begin{aligned}
+&\frac{\partial n}{\partial t} + \frac{\partial (G n)}{\partial L} = 0, \\
+&G(0)\, n(0, t) = B_0 ,
+\end{aligned}
 ```
 
 where `G(L)` is the growth rate and `B_0` is the nucleation rate: the flux of new particles entering at size zero. The grid is a `Grid` with `edges` (`B + 1` of them) and `centers` (`B`); `uniform_grid(lo, hi, bins)` makes equal bins. The discretisation is a finite-volume scheme: the flux through each interior edge is the growth rate there times the density reconstructed from the upwind side, with a limiter so that fronts do not overshoot. The lower end receives the flux `B0`, and the upper end is a free outflow, so anything that grows past the top leaves the range.

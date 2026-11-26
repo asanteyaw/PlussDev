@@ -9,7 +9,10 @@ The energy levels of a quantum system, and the state of lowest energy, tell you 
 A Hamiltonian {math}`H` is a Hermitian matrix. Its eigenvalues {math}`E_k` are the energy levels and its eigenvectors {math}`|k\rangle` the stationary states, which keep their form in time and only turn by a phase,
 
 ```{math}
-H|k\rangle = E_k|k\rangle, \qquad |k\rangle \to e^{-iE_k t/\hbar}|k\rangle
+\begin{aligned}
+&H|k\rangle = E_k|k\rangle, \\
+&|k\rangle \to e^{-iE_k t/\hbar}|k\rangle
+\end{aligned}
 ```
 
 `quantum::spectrum(H)` returns a `values` Series, in increasing order, and a `vectors` operator whose columns are the eigenvectors; `quantum::ground(H)` returns the lowest eigenvector as a ket. A system of several parts is built from operators of its parts with `quantum::tensor`, which multiplies the Hilbert spaces and records their sizes, so that operators and states of different systems cannot be mixed by mistake. The programs on this page build their Hamiltonians from the Pauli matrices {math}`X`, {math}`Y` and {math}`Z` and the identity, written as small helper functions at the top of each program, and combine them with `quantum::op(values, spaces)`. Expectation values, entropies and the evolution in time use the functions of Physics 3.

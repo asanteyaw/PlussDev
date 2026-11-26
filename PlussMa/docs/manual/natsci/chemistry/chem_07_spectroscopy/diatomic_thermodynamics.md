@@ -9,7 +9,11 @@ The heat capacity of a gas is set by how its molecules can store energy, and for
 A diatomic molecule is described by the harmonic frequency {math}`\omega_e`, its anharmonicity {math}`\omega_e x_e`, the rotational constant {math}`B_e` and the vibration-rotation coupling {math}`\alpha_e` (all in cm{math}`^{-1}`), with a symmetry number {math}`\sigma` that is {math}`2` for a homonuclear molecule. The vibrational levels are {math}`G(v) = \omega_e(v+\tfrac12) - \omega_e x_e (v+\tfrac12)^2` up to the point where the polynomial turns over, the rotational levels in vibrational state {math}`v` are {math}`B_v J(J+1)` with {math}`B_v = B_e - \alpha_e(v + \tfrac12)` and degeneracy {math}`(2J+1)/\sigma`. For each degree of freedom the partition function and the heat capacity are sums over levels,
 
 ```{math}
-q = \sum_i g_i e^{-\varepsilon_i/k_BT},\qquad \frac{c_v}{R} = \langle x^2\rangle - \langle x\rangle^2,\quad x = \frac{\varepsilon}{k_BT}
+\begin{aligned}
+&q = \sum_i g_i e^{-\varepsilon_i/k_BT}, \\
+&\frac{c_v}{R} = \langle x^2\rangle - \langle x\rangle^2, \\
+&x = \frac{\varepsilon}{k_BT}
+\end{aligned}
 ```
 
 `spectroscopy::rotational(d, T)` and `vibrational(d, T)` return the partition function `q`, the mean energy `mean` in units of {math}`k_BT` and the heat-capacity contribution `var`, over a Series of temperatures; `cp_over_r(d, T)` adds the translation and the {math}`PV` work, {math}`\tfrac52`, to give {math}`c_p/R` for the gas. Levels are counted up to {math}`J = 200` and until the vibrational ladder turns over, which is far beyond any thermally populated level for the temperatures a gas phase code uses.

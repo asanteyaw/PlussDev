@@ -9,7 +9,10 @@ You have measured how much light a sample absorbs and you want the concentration
 Light of intensity {math}`I_0` that crosses a path {math}`\ell` of a solution with absorber concentrations {math}`c_j` and molar absorptivities {math}`\varepsilon_j` comes out with intensity {math}`I`, where
 
 ```{math}
-A = \log_{10}\frac{I_0}{I} = \ell\sum_j \varepsilon_j c_j, \qquad T = \frac{I}{I_0} = 10^{-A}
+\begin{aligned}
+&A = \log_{10}\frac{I_0}{I} = \ell\sum_j \varepsilon_j c_j, \\
+&T = \frac{I}{I_0} = 10^{-A}
+\end{aligned}
 ```
 
 `spectroscopy::absorbance(eps, c, path)` sums over the last axis, which is the species axis, so absorptivities with shape {math}`[\ldots, \text{species}]` and concentrations of the same trailing size give one absorbance for each lane. `transmittance(A)` converts it to {math}`T`. The path length is a number or a Series, so cells of different lengths are a batch like any other. Because the absorbance is linear in the concentrations, an unknown mixture is a linear system: absorbances at {math}`n` wavelengths of {math}`n` absorbers give the concentrations as the solution of {math}`A = \ell\,E\,c`, with {math}`E` the matrix of absorptivities.

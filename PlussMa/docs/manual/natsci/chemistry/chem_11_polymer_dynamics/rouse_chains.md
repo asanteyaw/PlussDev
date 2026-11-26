@@ -9,7 +9,10 @@ A polymer in a melt or a dilute solution is never still: its segments jiggle, th
 Bead `n` sits at position {math}`r_n`, is joined to its neighbours by springs of constant {math}`k = 3 k_B T / b^2` (`b` is the bond length, the root-mean-square length of one spring) and feels a friction `zeta` and random thermal kicks. The springs couple the beads through the connectivity matrix `A`, which has `1` on the two chain ends, `2` on the interior diagonal and `-1` next to it. Its eigenvalues are known in closed form,
 
 ```{math}
-a_p = 4 \sin^2\!\left(\frac{p\pi}{2N}\right), \qquad p = 0, 1, \dots, N-1 ,
+\begin{aligned}
+&a_p = 4 \sin^2\!\left(\frac{p\pi}{2N}\right), \\
+&p = 0, 1, \dots, N-1 ,
+\end{aligned}
 ```
 
 and each eigenvector is an independent mode of motion. The mode `p = 0` has `a_0 = 0`: it is the translation of the whole chain. The other `N - 1` modes relax exponentially with the times
@@ -21,7 +24,10 @@ and each eigenvector is an independent mode of motion. The mode `p = 0` has `a_0
 so the slowest mode, which is the end-to-end relaxation of the whole chain, takes a time proportional to {math}`N^2`. The translation mode gives the diffusion coefficient {math}`D = k_B T / (N\zeta)`. For `c` chains per unit volume the stress relaxation modulus and the zero-shear viscosity follow from the same times:
 
 ```{math}
-G(t) = c\, k_B T \sum_{p=1}^{N-1} e^{-2t/\tau_p}, \qquad \eta = \frac{c\, k_B T}{2}\sum_{p=1}^{N-1}\tau_p \;\longrightarrow\; \frac{c\,\zeta N^2 b^2}{36}.
+\begin{aligned}
+&G(t) = c\, k_B T \sum_{p=1}^{N-1} e^{-2t/\tau_p}, \\
+&\eta = \frac{c\, k_B T}{2}\sum_{p=1}^{N-1}\tau_p \;\longrightarrow\; \frac{c\,\zeta N^2 b^2}{36}.
+\end{aligned}
 ```
 
 The functions are in `pluss::ma::natsci::chemistry::polymer_dynamics`: `rouse_matrix(n_beads)` and `rouse_eigenvalues(n_beads)` give `A` and its spectrum `a_p`; `rouse_relaxation_times(n_beads, zeta, b, kt)` returns the `N - 1` times `tau_p`; `rouse_diffusion(n_beads, zeta, kt)` the diffusion coefficient; `rouse_modulus(t, tau, chains_per_volume, kt)` the modulus at each time in `t`; and `rouse_viscosity(tau, chains_per_volume, kt)` the viscosity. The friction `zeta` is a Series, so a set of frictions runs as a batch of lanes; the bond length, the thermal energy and the chain density may be plain numbers or Series of the same shape.

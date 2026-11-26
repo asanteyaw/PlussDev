@@ -9,7 +9,11 @@ A system is stiff when it has processes on wildly different time scales: a react
 You give `integrate(f, y0, t0, t1, options, jacobian)` a rate function `f` that maps a state `y` of shape `[..., n]` to `dy/dt` of the same shape, an initial state, and the interval. The system must be **autonomous**: `f` receives only `y`. The method is a second-order Rosenbrock scheme with an embedded third-order error estimate, which solves one linear system per step instead of a nonlinear one:
 
 ```{math}
-(I - h d J)\, k_1 = f(y_n), \qquad d = \frac{1}{2 + \sqrt 2}, \qquad y_{n+1} = y_n + h\, k_2 ,
+\begin{aligned}
+&(I - h d J)\, k_1 = f(y_n), \\
+&d = \frac{1}{2 + \sqrt 2}, \\
+&y_{n+1} = y_n + h\, k_2 ,
+\end{aligned}
 ```
 
 with `J = df/dy` the Jacobian at the start of the step and `k_2`, `k_3` the further stages. The step is accepted when the scaled error estimate is below `rtol`, with the error measured relative to `max(|y|, |y_new|, atol/rtol)`, and the next step is chosen from that error. If you do not give a Jacobian it is built by finite differences, one column per state variable, in a single call to `f` for all lanes. If you give one, as a function from `y` to an array of shape `[..., n, n]`, the rate function is called far less often.

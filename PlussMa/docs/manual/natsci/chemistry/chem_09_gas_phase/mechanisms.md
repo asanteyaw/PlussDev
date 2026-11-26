@@ -9,13 +9,19 @@ You have a set of gas-phase reactions with Arrhenius parameters and thermodynami
 Each reaction has a forward rate constant {math}`k_f = A\,T^{b}\,e^{-E_a/RT}`. In a third-body reaction such as {math}`\mathrm{O}+\mathrm{O}+M \rightleftharpoons \mathrm{O_2}+M` the partner `M` can be any molecule, and the rate is multiplied by the third-body concentration {math}`[M] = \sum_k \epsilon_k [X_k]`, where the efficiency {math}`\epsilon_k` says how well species `k` acts as a partner (`1` by default). A falloff reaction interpolates between a low-pressure limit {math}`k_0[M]` and a high-pressure limit {math}`k_\infty`:
 
 ```{math}
-k = k_\infty \frac{P_r}{1+P_r}\,F, \qquad P_r = \frac{k_0 [M]}{k_\infty},
+\begin{aligned}
+&k = k_\infty \frac{P_r}{1+P_r}\,F, \\
+&P_r = \frac{k_0 [M]}{k_\infty},
+\end{aligned}
 ```
 
 with `F = 1` for the Lindemann form and the Troe broadening for the other,
 
 ```{math}
-\log_{10}F = \frac{\log_{10}F_{cent}}{1 + f_1^2}, \quad F_{cent} = (1-a)e^{-T/T_3} + a\,e^{-T/T_1} + e^{-T_2/T}.
+\begin{aligned}
+&\log_{10}F = \frac{\log_{10}F_{cent}}{1 + f_1^2}, \\
+&F_{cent} = (1-a)e^{-T/T_3} + a\,e^{-T/T_1} + e^{-T_2/T}.
+\end{aligned}
 ```
 
 The reverse rate constant comes from the thermodynamics: {math}`k_r = k_f/K_c` with {math}`K_c = \exp(-\Delta G^\circ/RT)\,(p^\circ/RT)^{\Delta\nu}`, computed from the NASA-7 polynomials of the species. The rates of progress are {math}`q_f = k_f\prod_k c_k^{\nu_k'}` and {math}`q_r = k_r\prod_k c_k^{\nu_k''}`, and the net production rate of species `k` is {math}`\omega_k = \sum_r \nu_{kr}(q_{f,r} - q_{r,r})`.

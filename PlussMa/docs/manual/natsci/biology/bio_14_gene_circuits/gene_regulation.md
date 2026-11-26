@@ -14,7 +14,10 @@ Each circuit is a set of rate equations, and each `gene_networks::*_rate` functi
 In the genetic toggle switch two genes repress each other. With expression levels {math}`u` and {math}`v` and repression of Hill strength {math}`\beta` and {math}`\gamma`,
 
 ```{math}
-\dot u = \frac{a_1}{1 + v^{\beta}} - u, \qquad \dot v = \frac{a_2}{1 + u^{\gamma}} - v
+\begin{aligned}
+&\dot u = \frac{a_1}{1 + v^{\beta}} - u, \\
+&\dot v = \frac{a_2}{1 + u^{\gamma}} - v
+\end{aligned}
 ```
 
 `gene_networks::toggle_switch_rate(s, a1, a2, beta, gamma)` is the right-hand side for the state `(u, v)`, with all the coefficients allowed to be arrays. With strong enough repression the circuit has two stable states, one gene on and the other off, and remembers which one it was pushed into. The program starts five cells at different expression levels with {math}`a_1 = a_2 = 5` and {math}`\beta = \gamma = 2` and runs them together to time `60`.

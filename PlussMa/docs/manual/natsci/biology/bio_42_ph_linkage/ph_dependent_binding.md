@@ -9,7 +9,11 @@ Phosphate, amino acids and proteins carry several groups that take up or release
 The code is in `pluss::ma::natsci::biology::biophysics::linkage` (`linkage::` below). A molecule that can bind up to {math}`n` protons is described by its cumulative protonation constants {math}`\beta_k`, with {math}`\log_{10}\beta_k = \sum_{j\le k}\mathrm{p}K_j'` where {math}`\mathrm{p}K_j'` is the logarithm of the constant for the {math}`j`th proton in the order it binds. The partition function and the fraction of molecules carrying {math}`k` protons are
 
 ```{math}
-Z = 1 + \sum_{k=1}^{n}\beta_k\,[\mathrm{H}]^k,\qquad f_k = \frac{\beta_k [\mathrm{H}]^k}{Z},\qquad \langle k\rangle = \sum_k k f_k = -\frac{\partial \log_{10} Z}{\partial\,\mathrm{pH}}
+\begin{aligned}
+&Z = 1 + \sum_{k=1}^{n}\beta_k\,[\mathrm{H}]^k, \\
+&f_k = \frac{\beta_k [\mathrm{H}]^k}{Z}, \\
+&\langle k\rangle = \sum_k k f_k = -\frac{\partial \log_{10} Z}{\partial\,\mathrm{pH}}
+\end{aligned}
 ```
 
 `linkage::polyprotic_fractions(log10_beta, ph)` returns the fractions with the unprotonated form first, `linkage::ln_partition_polyprotic` the logarithm of {math}`Z` and `linkage::mean_protons_polyprotic` the mean {math}`\langle k\rangle`. For a protein with independent groups of {math}`N_g` groups of each class {math}`g` and acid constant {math}`\mathrm{p}K_g`, `linkage::ln_partition_independent(counts, pka, ph)` and `linkage::mean_protons_independent(counts, pka, ph)` do the same. The last relation is the Wyman linkage relation: the proton count is the slope of {math}`\log Z` against pH. If a ligand binds and changes the partition function from {math}`Z_{\mathrm{free}}` to {math}`Z_{\mathrm{bound}}`, its apparent association constant at a pH is `linkage::log10_apparent_constant(log10_k_ref, ln_z_bound, ln_z_free)`, which is {math}`\log_{10}K_{\mathrm{ref}} + (\ln Z_{\mathrm{bound}} - \ln Z_{\mathrm{free}})/\ln 10`. `linkage::bound_complex(receptor_total, ligand_total, log10_k_app)` gives the complex concentration at given totals. A buffer takes up the protons that binding releases, so the measured enthalpy is `linkage::observed_enthalpy(dh_intrinsic, protons_taken_up, dh_buffer_ionization)`, the intrinsic enthalpy plus the protons exchanged times the ionisation enthalpy of the buffer.

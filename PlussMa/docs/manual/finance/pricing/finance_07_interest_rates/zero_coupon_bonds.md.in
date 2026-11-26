@@ -5,7 +5,10 @@
 A zero-coupon bond pays 1 at maturity {math}`T` and nothing before. Its price today, the **discount factor** {math}`P(0,T)`, is the building block of fixed income: every coupon bond, swap and curve is a combination of discount factors. In a short-rate model the price depends on the current short rate {math}`r` and the maturity {math}`\tau=T-t`, and for the three models of the library it has a closed form that is exponential in the rate,
 
 ```{math}
-P(\tau,r)=A(\tau)\,e^{-B(\tau)\,r},\qquad y(\tau)=-\frac{\ln P(\tau,r)}{\tau},
+\begin{aligned}
+&P(\tau,r)=A(\tau)\,e^{-B(\tau)\,r}, \\
+&y(\tau)=-\frac{\ln P(\tau,r)}{\tau},
+\end{aligned}
 ```
 
 with {math}`y` the continuously compounded **yield** for maturity {math}`\tau`. The functions {math}`A` and {math}`B` depend on the model:

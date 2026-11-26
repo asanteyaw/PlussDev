@@ -11,7 +11,10 @@ A periodic grid is made with `spatial::make_periodic_grid(shape, spacing)`: one 
 The operators are finite differences built from shifts. The first derivative along an axis is the centred difference, the second derivative is the three-point stencil:
 
 ```{math}
-\partial_x u \approx \frac{u_{i+1} - u_{i-1}}{2h}, \qquad \partial_x^2 u \approx \frac{u_{i+1} - 2 u_i + u_{i-1}}{h^2},
+\begin{aligned}
+&\partial_x u \approx \frac{u_{i+1} - u_{i-1}}{2h}, \\
+&\partial_x^2 u \approx \frac{u_{i+1} - 2 u_i + u_{i-1}}{h^2},
+\end{aligned}
 ```
 
 both accurate to second order in `h`. `gradient` stacks the derivatives into a vector field, `divergence` sums the derivatives of the components, `curl` is the scalar in two dimensions and a vector in three, and `laplacian` sums the second derivatives. Three more are needed by the solvers: `fwd_diff` and `back_diff`, the one-sided differences whose composition is exactly the compact Laplacian, and `wide_laplacian`, the stencil `(u_{i+2} - 2 u_i + u_{i-2}) / (4 h^2)` that equals the divergence of the centred gradient. `advect(velocity, field, grid)` computes `u . grad f`. Each operator also accepts a `SeriesQuantity` and returns one whose dimension is the field's dimension divided by length (or length squared), checked at compile time.

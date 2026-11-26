@@ -7,7 +7,10 @@
 The chain ladder trusts the paid claims completely: it scales what has been paid up to the ultimate. For the most recent origin, with little paid, that is a large multiplier on a small and noisy number, and the reserve inherits the noise. The **Bornhuetter-Ferguson** method keeps what has been paid and adds only the expected unpaid part, taken from an independent estimate of the origin's ultimate loss, for instance from the premium and an expected loss ratio:
 
 ```{math}
-\hat U_i=C_i+\mathrm{ELR}_i\,P_i\,\bigl(1-q_i\bigr),\qquad R_i=\hat U_i-C_i=\hat U^{\text{exp}}_i\,(1-q_i),
+\begin{aligned}
+&\hat U_i=C_i+\mathrm{ELR}_i\,P_i\,\bigl(1-q_i\bigr), \\
+&R_i=\hat U_i-C_i=\hat U^{\text{exp}}_i\,(1-q_i),
+\end{aligned}
 ```
 
 where {math}`\hat U^{\text{exp}}_i` is the expected ultimate loss of origin {math}`i`, {math}`C_i` the claims reported or paid so far, and {math}`q_i` the **percent reported** (paid), the share of the ultimate the development pattern says has emerged by now: {math}`q_i=1/\mathrm{CDF}_{j_i}`. The expected loss is not updated by the emerged claims, only the unpaid share of it is added.

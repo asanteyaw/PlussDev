@@ -9,7 +9,10 @@ Restricted Hartree-Fock puts the spin-up and spin-down electrons into the same o
 The spin-up (alpha) and spin-down (beta) electrons have their own density matrices {math}`P^\alpha` and {math}`P^\beta` and Fock matrices {math}`F^\alpha, F^\beta`, which share the Coulomb field of the total density {math}`P = P^\alpha + P^\beta` and differ in the exchange, which only acts between electrons of the same spin:
 
 ```{math}
-F^\alpha_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma}\left[P_{\lambda\sigma}(\mu\nu|\lambda\sigma) - P^\alpha_{\lambda\sigma}(\mu\lambda|\nu\sigma)\right], \qquad E = \tfrac12\sum_{\mu\nu}\left[P_{\mu\nu}h_{\mu\nu} + P^\alpha_{\mu\nu}F^\alpha_{\mu\nu} + P^\beta_{\mu\nu}F^\beta_{\mu\nu}\right] + E_{nuc}.
+\begin{aligned}
+&F^\alpha_{\mu\nu} = h_{\mu\nu} + \sum_{\lambda\sigma}\left[P_{\lambda\sigma}(\mu\nu|\lambda\sigma) - P^\alpha_{\lambda\sigma}(\mu\lambda|\nu\sigma)\right], \\
+&E = \tfrac12\sum_{\mu\nu}\left[P_{\mu\nu}h_{\mu\nu} + P^\alpha_{\mu\nu}F^\alpha_{\mu\nu} + P^\beta_{\mu\nu}F^\beta_{\mu\nu}\right] + E_{nuc}.
+\end{aligned}
 ```
 
 The result is not forced to be a pure spin state, so the program reports the expectation value of the total spin squared, {math}`\langle S^2\rangle = S_z(S_z+1) + N_\beta - \sum_{ij}|\langle i^\alpha|j^\beta\rangle|^2`: it is `0` for a singlet, `3/4` for a doublet and `2` for a triplet, and a value above these says the solution is contaminated with higher spin states.

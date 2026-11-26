@@ -9,7 +9,10 @@ You have a solution with known total amounts of some components, say an acid and
 Choose a set of {math}`m` components, the free species out of which everything else is built (for example {math}`\mathrm{H^+}` and {math}`\mathrm{CO_3^{2-}}`). Every other species is a complex {math}`c` formed from them, {math}`\nu_{1c}A_1 + \cdots + \nu_{mc}A_m \rightleftharpoons C_c`, with a formation constant {math}`K_c`. The concentration of each complex follows from the free concentrations {math}`x` by mass action, and the totals {math}`T_i` of the components are conserved:
 
 ```{math}
-[C_c] = K_c \prod_i x_i^{\nu_{ic}}, \qquad T_i = x_i + \sum_c \nu_{ic}\,[C_c]
+\begin{aligned}
+&[C_c] = K_c \prod_i x_i^{\nu_{ic}}, \\
+&T_i = x_i + \sum_c \nu_{ic}\,[C_c]
+\end{aligned}
 ```
 
 `speciation::solve(N, ln_K, T)` takes the matrix {math}`N` with one row per component and one column per complex, the natural logarithms of the formation constants and the totals, and solves the {math}`m` balance equations for the logarithms of the free concentrations by Newton's method with a capped step. It returns `free` {math}`[\ldots, m]`, `complexes` {math}`[\ldots, c]`, the largest relative balance error `residual`, the iteration count and `converged`, which is true when every lane met the tolerance; the totals may carry leading batch axes, one solution per lane, with the same {math}`N` and {math}`K`. A stoichiometric coefficient may be negative: the hydroxide {math}`\mathrm{OH^-}` is {math}`-1` of {math}`\mathrm{H^+}`, and the total of {math}`\mathrm{H^+}` is then the proton excess {math}`[\mathrm{H^+}] - [\mathrm{OH^-}] + \ldots`, the acid that has been added to the reference solution. A proton excess may be zero (a pure base) or negative (an excess of base); the total of a component that is a true amount of substance, such as a metal, cannot be.

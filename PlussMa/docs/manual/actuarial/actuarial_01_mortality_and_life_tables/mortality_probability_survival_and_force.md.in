@@ -15,7 +15,10 @@ p_x = 1-q_x
 is the probability of surviving that year. The force of mortality is an instantaneous rate. On the discrete one-year convention used here,
 
 ```{math}
-\mu_x = -\log(1-q_x), \qquad q_x = 1-e^{-\mu_x}.
+\begin{aligned}
+&\mu_x = -\log(1-q_x), \\
+&q_x = 1-e^{-\mu_x}.
+\end{aligned}
 ```
 
 These are transformations of the same one-year mortality assumption, not interchangeable numbers. For small mortality probabilities, `qx` and the force are close; as mortality rises, the distinction becomes material.

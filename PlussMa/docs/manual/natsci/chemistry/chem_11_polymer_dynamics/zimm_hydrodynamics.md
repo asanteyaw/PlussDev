@@ -9,13 +9,19 @@ In a dilute solution a moving bead drags the solvent around it, and that flow pu
 The Rouse chain has bead friction `zeta` and bond length `b`. In the Zimm model the velocity of each bead also contains the flow caused by every other bead, through the preaveraged Oseen interaction
 
 ```{math}
-H_{nm} = \delta_{nm} + \sqrt{2}\,\frac{h^*}{\sqrt{|n-m|}}\,(1-\delta_{nm}), \qquad h^* = \frac{\zeta}{\eta_s\, b\,\sqrt{12\pi^3}} ,
+\begin{aligned}
+&H_{nm} = \delta_{nm} + \sqrt{2}\,\frac{h^*}{\sqrt{|n-m|}}\,(1-\delta_{nm}), \\
+&h^* = \frac{\zeta}{\eta_s\, b\,\sqrt{12\pi^3}} ,
+\end{aligned}
 ```
 
 where {math}`\eta_s` is the solvent viscosity. The strength of the coupling is the single number {math}`h^*`: it is `0` for no hydrodynamic interaction and about `0.25` for a typical flexible chain. The relaxation times follow from the eigenvalues {math}`\lambda_p` of the product `H A` (`A` is the Rouse connectivity matrix) as
 
 ```{math}
-\tau_p = \frac{\zeta b^2}{3 k_B T\,\lambda_p}, \qquad D = \frac{k_B T}{N^2 \zeta}\sum_{n,m} H_{nm}.
+\begin{aligned}
+&\tau_p = \frac{\zeta b^2}{3 k_B T\,\lambda_p}, \\
+&D = \frac{k_B T}{N^2 \zeta}\sum_{n,m} H_{nm}.
+\end{aligned}
 ```
 
 For long chains this gives {math}`\tau_p \propto N^{3/2}` instead of the Rouse {math}`N^2` and {math}`D \propto N^{-1/2}` instead of {math}`N^{-1}`. The product `H A` is not symmetric, so the spectrum is computed from the symmetric matrix {math}`L^T A L`, where {math}`H = L L^T` is the Cholesky factorisation; the two have the same eigenvalues.

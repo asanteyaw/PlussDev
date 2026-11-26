@@ -9,7 +9,11 @@ You have a model {math}`\mathrm{d}y/\mathrm{d}t = f(y)` and a state where {math}
 Near an equilibrium {math}`y^*` a disturbance {math}`\delta = y - y^*` obeys {math}`\dot\delta = J\delta` with the Jacobian {math}`J = \partial f/\partial y` at {math}`y^*`. The equilibrium attracts if every eigenvalue of {math}`J` has a negative real part. The eigenvalues are the roots of the characteristic polynomial {math}`\det(\lambda I - J) = \sum_k c_k\lambda^{n-k}`, whose coefficients follow from traces of matrix powers by the Faddeev-LeVerrier recursion
 
 ```{math}
-M_k = J M_{k-1} + c_{k-1} I,\qquad c_k = -\frac{1}{k}\operatorname{tr}(J M_k),\qquad M_0 = 0,\ c_0 = 1
+\begin{aligned}
+&M_k = J M_{k-1} + c_{k-1} I, \\
+&c_k = -\frac{1}{k}\operatorname{tr}(J M_k), \\
+&M_0 = 0,\ c_0 = 1
+\end{aligned}
 ```
 
 The Routh array of the coefficients then counts the roots in the right half plane: it is built row by row from the coefficients, and the number of sign changes down its first column equals the number of roots with positive real part. A whole row of zeros means roots on the imaginary axis, and the result is flagged `marginal`.

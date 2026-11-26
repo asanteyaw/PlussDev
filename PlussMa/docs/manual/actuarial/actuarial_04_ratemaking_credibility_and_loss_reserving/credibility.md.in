@@ -5,8 +5,10 @@
 A rate from experience is only as reliable as the experience is large. A book of fifty exposure units has a pure premium that is mostly noise; a book of fifty thousand has one that is nearly the truth. **Credibility** blends the experience with a **manual** premium, a broader and steadier rate from a larger class, giving more weight to the experience the more of it there is:
 
 ```{math}
-\hat P = Z\,\bar P_{\text{experience}} + (1-Z)\,P_{\text{manual}},\qquad
-Z=\frac{E}{E+k}.
+\begin{aligned}
+&\hat P = Z\,\bar P_{\text{experience}} + (1-Z)\,P_{\text{manual}}, \\
+&Z=\frac{E}{E+k}.
+\end{aligned}
 ```
 
 {math}`E` is the exposure behind the experience and {math}`k` is a constant of the line of business, the exposure at which the experience and the manual rate each get half the weight. {math}`Z` rises from 0 with no exposure towards 1 as the exposure grows, and never reaches it: even a very large book leaves a little weight on the manual rate. A larger {math}`k` means a noisier line, which needs more experience before it is trusted.
