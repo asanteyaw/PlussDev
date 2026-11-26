@@ -27,6 +27,7 @@
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/table_order.h"
 #include "pluss/tils/view/window.h"
+#include "window/html/table_chrome.h"
 #include "window/render/async_compositor.h"
 
 #if defined(PLUSSTILS_VIEW_HAVE_LIBZIP) && PLUSSTILS_VIEW_HAVE_LIBZIP
@@ -1044,6 +1045,7 @@ bool show_inhouse_html_window(const std::string& title,
     int column{0};
     int start_x{0};
     int start_width{0};
+    bool moved{false};  // the pointer has left the divider's handle: a press and release in place is a click
   } resize_drag;
   std::string hover_resize_target;  // column border under the pointer
   int hover_resize_column = -1;
@@ -1793,7 +1795,13 @@ bool show_inhouse_html_window(const std::string& title,
       } else if (event.kind == window::ShellEventKind::PointerDrag && resize_drag.active) {
         // Dragging a header border: the column follows the pointer, wrapping live.
         const int dx = static_cast<int>(std::lround(event.x)) - resize_drag.start_x;
-        if (dx != 0) fitted_columns.erase({resize_drag.target, resize_drag.column});
+        // A click is not a drag: the pointer must leave the divider's own handle first. A trackpad moves a pixel or
+        // two during a double-click, and that must not count as resizing (it would cancel the fit it toggles).
+        if (!resize_drag.moved && std::abs(dx) <= window::detail::kResizeHandlePx / 2) {
+          continue;
+        }
+        resize_drag.moved = true;
+        fitted_columns.erase({resize_drag.target, resize_drag.column});
         const auto geo = window::resolve_table_geometry(render_stats.table_font_px);
         table_column_widths[resize_drag.target][resize_drag.column] = std::clamp(
             resize_drag.start_width + dx, geo.min_resize,
