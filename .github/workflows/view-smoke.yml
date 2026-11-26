@@ -39,7 +39,7 @@ jobs:
       - name: Install a virtual display and its tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb x11-apps imagemagick xdotool libx11-6 libcurl4-openssl-dev clang-18 cmake ninja-build
+          sudo apt-get install -y xvfb x11-apps imagemagick xdotool libx11-6 libx11-dev libxi-dev libfreetype-dev libcurl4-openssl-dev clang-18 cmake ninja-build
       - name: Open each window and take its screenshot
         run: |
           export CC=clang-18 CXX=clang++-18
