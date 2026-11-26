@@ -140,6 +140,17 @@ NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
 }
 @end
 
+// Puts the pointer back to an arrow over a button of a dialog. A text box in the same dialog leaves its I-beam behind
+// when the pointer moves off it, and nothing else asks for the arrow, so each button does.
+@interface PlussArrowOnHover : NSObject
+@end
+@implementation PlussArrowOnHover
+- (void)cursorUpdate:(NSEvent*)event {
+  (void)event;
+  [[NSCursor arrowCursor] set];
+}
+@end
+
 // The image view owns the pointer shape through a cursor rect: a bare [NSCursor set] is undone
 // by AppKit on the next mouse move, so the wanted cursor is held here and re-applied by AppKit.
 @interface PlussTilsViewCursorImageView : NSImageView
@@ -999,6 +1010,19 @@ class CocoaWindowShell final : public IWindowShell {
       if (inputs.count > 0) {
         alert.window.initialFirstResponder = inputs.firstObject;
       }
+      // The dialog's buttons show the arrow, and the dialog is the active window so it gets pointer updates.
+      [alert layout];
+      PlussArrowOnHover* arrow = [[PlussArrowOnHover alloc] init];
+      for (NSButton* button in alert.buttons) {
+        NSTrackingArea* area = [[NSTrackingArea alloc]
+            initWithRect:NSZeroRect
+                 options:(NSTrackingCursorUpdate | NSTrackingActiveAlways | NSTrackingInVisibleRect)
+                   owner:arrow
+                userInfo:nil];
+        [button addTrackingArea:area];
+      }
+      alert.window.acceptsMouseMovedEvents = YES;
+      [NSApp activateIgnoringOtherApps:YES];
       if ([alert runModal] != NSAlertFirstButtonReturn) {
         return std::nullopt;
       }
