@@ -140,14 +140,30 @@ NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
 }
 @end
 
-// Puts the pointer back to an arrow over a button of a dialog. A text box in the same dialog leaves its I-beam behind
-// when the pointer moves off it, and nothing else asks for the arrow, so each button does.
-@interface PlussArrowOnHover : NSObject
+// The content of a small prompt dialog. The whole dialog asks for the arrow through a cursor rect (a bare
+// [NSCursor set] is undone by the cursor-rect system), and only the text boxes, which sit above it in the view
+// tree, ask for the text cursor, so the buttons and the empty space never inherit an I-beam from a box.
+@interface PlussPromptContent : NSView
 @end
-@implementation PlussArrowOnHover
-- (void)cursorUpdate:(NSEvent*)event {
-  (void)event;
-  [[NSCursor arrowCursor] set];
+@implementation PlussPromptContent
+- (void)resetCursorRects {
+  [self addCursorRect:self.bounds cursor:[NSCursor arrowCursor]];
+}
+@end
+
+// What the prompt's two buttons do: end the modal session with a code the caller reads.
+@interface PlussPromptActions : NSObject
+- (void)accept:(id)sender;
+- (void)cancel:(id)sender;
+@end
+@implementation PlussPromptActions
+- (void)accept:(id)sender {
+  (void)sender;
+  [NSApp stopModalWithCode:NSModalResponseOK];
+}
+- (void)cancel:(id)sender {
+  (void)sender;
+  [NSApp stopModalWithCode:NSModalResponseCancel];
 }
 @end
 
@@ -981,49 +997,74 @@ class CocoaWindowShell final : public IWindowShell {
 
   bool supports_prompt() const noexcept override { return true; }
 
-  // A system alert with the fields in a grid under the message: the labels in one column, the boxes lined up in
-  // the next, each as wide as this many characters of the system font.
+  // A small dialog: the message, the fields in a grid (labels in one column, boxes lined up in the next), then
+  // Cancel and the accepting button. Sizes follow the system font: the boxes are this many characters wide, the
+  // message wraps at this many.
   std::optional<std::vector<std::string>> prompt(const ShellPrompt& request) override {
     constexpr int kPromptFieldColumns = 10;
+    constexpr int kPromptMessageColumns = 44;
     @autoreleasepool {
-      NSAlert* alert = [[NSAlert alloc] init];
-      alert.messageText = [NSString stringWithUTF8String:request.title.c_str()];
-      alert.informativeText = [NSString stringWithUTF8String:request.message.c_str()];
-      [alert addButtonWithTitle:[NSString stringWithUTF8String:request.accept.c_str()]];
-      [alert addButtonWithTitle:@"Cancel"];
       NSFont* font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-      const CGFloat field_width = font.maximumAdvancement.width * kPromptFieldColumns;
+      const CGFloat advance = font.maximumAdvancement.width;
+      NSTextField* message = [NSTextField wrappingLabelWithString:[NSString stringWithUTF8String:request.message.c_str()]];
+      message.preferredMaxLayoutWidth = advance * kPromptMessageColumns;
       NSMutableArray<NSTextField*>* inputs = [NSMutableArray array];
       NSMutableArray* rows = [NSMutableArray array];
       for (const auto& field : request.fields) {
         NSTextField* label = [NSTextField labelWithString:[NSString stringWithUTF8String:field.label.c_str()]];
         NSTextField* input = [NSTextField textFieldWithString:[NSString stringWithUTF8String:field.value.c_str()]];
         input.placeholderString = [NSString stringWithUTF8String:field.placeholder.c_str()];
-        [input.widthAnchor constraintEqualToConstant:field_width].active = YES;
+        [input.widthAnchor constraintEqualToConstant:advance * kPromptFieldColumns].active = YES;
         [inputs addObject:input];
         [rows addObject:@[label, input]];
       }
       NSGridView* grid = [NSGridView gridViewWithViews:rows];
       [grid columnAtIndex:0].xPlacement = NSGridCellPlacementTrailing;
-      grid.frame = NSMakeRect(0, 0, grid.fittingSize.width, grid.fittingSize.height);
-      alert.accessoryView = grid;
+
+      PlussPromptActions* actions = [[PlussPromptActions alloc] init];
+      NSButton* cancel = [NSButton buttonWithTitle:@"Cancel" target:actions action:@selector(cancel:)];
+      cancel.keyEquivalent = @"\033";
+      NSButton* accept = [NSButton buttonWithTitle:[NSString stringWithUTF8String:request.accept.c_str()]
+                                            target:actions
+                                            action:@selector(accept:)];
+      accept.keyEquivalent = @"\r";
+      NSStackView* buttons = [NSStackView stackViewWithViews:@[cancel, accept]];
+      buttons.orientation = NSUserInterfaceLayoutOrientationHorizontal;
+
+      NSStackView* column = [NSStackView stackViewWithViews:@[message, grid, buttons]];
+      column.orientation = NSUserInterfaceLayoutOrientationVertical;
+      column.alignment = NSLayoutAttributeLeading;
+      column.edgeInsets = NSEdgeInsetsMake(20, 20, 20, 20);
+      [column setCustomSpacing:16 afterView:grid];
+      [buttons.trailingAnchor constraintEqualToAnchor:column.trailingAnchor constant:-20].active = YES;
+
+      PlussPromptContent* content = [[PlussPromptContent alloc] initWithFrame:NSZeroRect];
+      column.translatesAutoresizingMaskIntoConstraints = NO;
+      [content addSubview:column];
+      [NSLayoutConstraint activateConstraints:@[
+        [column.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+        [column.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+        [column.topAnchor constraintEqualToAnchor:content.topAnchor],
+        [column.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
+      ]];
+      const NSSize size = content.fittingSize;
+      content.frame = NSMakeRect(0, 0, size.width, size.height);
+
+      NSPanel* panel = [[NSPanel alloc] initWithContentRect:content.frame
+                                                  styleMask:NSWindowStyleMaskTitled
+                                                    backing:NSBackingStoreBuffered
+                                                      defer:NO];
+      panel.title = [NSString stringWithUTF8String:request.title.c_str()];
+      panel.contentView = content;
+      panel.defaultButtonCell = accept.cell;
+      [panel center];
       if (inputs.count > 0) {
-        alert.window.initialFirstResponder = inputs.firstObject;
+        [panel makeFirstResponder:inputs.firstObject];
       }
-      // The dialog's buttons show the arrow, and the dialog is the active window so it gets pointer updates.
-      [alert layout];
-      PlussArrowOnHover* arrow = [[PlussArrowOnHover alloc] init];
-      for (NSButton* button in alert.buttons) {
-        NSTrackingArea* area = [[NSTrackingArea alloc]
-            initWithRect:NSZeroRect
-                 options:(NSTrackingCursorUpdate | NSTrackingActiveAlways | NSTrackingInVisibleRect)
-                   owner:arrow
-                userInfo:nil];
-        [button addTrackingArea:area];
-      }
-      alert.window.acceptsMouseMovedEvents = YES;
       [NSApp activateIgnoringOtherApps:YES];
-      if ([alert runModal] != NSAlertFirstButtonReturn) {
+      const NSModalResponse response = [NSApp runModalForWindow:panel];
+      [panel orderOut:nil];
+      if (response != NSModalResponseOK) {
         return std::nullopt;
       }
       std::vector<std::string> values;
