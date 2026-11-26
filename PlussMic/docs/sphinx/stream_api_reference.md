@@ -99,7 +99,6 @@ api/stream/reduce_groups
 api/stream/scribbelize
 api/stream/select
 api/stream/shape
-api/stream/show
 api/stream/size
 api/stream/slice
 api/stream/stamp

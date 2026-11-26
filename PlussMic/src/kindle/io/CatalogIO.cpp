@@ -9,6 +9,7 @@
 #include "kindle/display/GridModel.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::kindle {
 
@@ -176,9 +177,8 @@ pluss::table::display::ModelPage catalog_page(const Catalog& catalog) {
 }
 
 void Catalog::show() const {
-  // A catalog is not a table: a notebook shows it as the terminal does.
-  if (pluss::table::display::in_notebook()) {
-    show(std::cout);
+  // In a notebook a catalog is a ragged HTML grid, not a window.
+  if (pluss::table::display::show_in_notebook(pluss::table::display::render_notebook_html(*this))) {
     return;
   }
   const auto page = catalog_page(*this);
@@ -198,3 +198,20 @@ std::ostream& operator<<(std::ostream& os, const Catalog& catalog) {
 }
 
 } // namespace pluss::kindle
+
+namespace pluss::table::display {
+
+// A catalog in a notebook: the keys side by side as a grid, each column exactly as long as its own stream, blank where a
+// stream has no entry (which is not a NULL), under a footer that says how ragged it is.
+std::string render_notebook_html(const pluss::kindle::Catalog& catalog) {
+  if (!catalog.defined()) {
+    return "<div class=\"pluss-table\">Catalog &lt;undefined&gt;</div>";
+  }
+  const pluss::kindle::display::CatalogGridModel model(catalog);
+  const auto entries = model.shortest() == model.longest()
+                           ? pluss::tils::OutputEngine::format("{} entries", model.longest())
+                           : pluss::tils::OutputEngine::format("{} to {} entries", model.shortest(), model.longest());
+  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} keys &middot; {}", model.keys(), entries));
+}
+
+}  // namespace pluss::table::display

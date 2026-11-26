@@ -802,6 +802,58 @@ std::string sequence_text_(const SequenceView& view, const EffectiveDisplayOptio
   return out + view.footer;
 }
 
+// The overview layout of a collection of named parts (a registry's fields, an axel's levels): a title, optional note
+// lines, then one row per part. Each column is as wide as its widest shown cell (and no wider than a cell may be); the
+// last column takes what is left of the line. Only the rows that are shown are asked for.
+std::string summary_text_(const SummaryView& view, const EffectiveDisplayOptions& options, std::int64_t terminal_width) {
+  const std::size_t columns = view.columns.size();
+  const auto row_plan = build_row_plan(view.size, options);
+  std::vector<std::vector<std::string>> rows;
+  rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
+  const auto push_row = [&](const std::int64_t index) {
+    auto cells = view.row(index);
+    cells.resize(columns);
+    for (auto& cell : cells) {
+      cell = clip_cell(std::move(cell), options.max_cell_width * 2);
+    }
+    rows.push_back(std::move(cells));
+  };
+  for (const auto index : row_plan.head) {
+    push_row(index);
+  }
+  if (row_plan.ellipsis) {
+    rows.emplace_back(columns, "...");
+  }
+  for (const auto index : row_plan.tail) {
+    push_row(index);
+  }
+  std::vector<std::int64_t> widths(columns, 1);
+  for (std::size_t c = 0; c < columns; ++c) {
+    widths[c] = static_cast<std::int64_t>(view.columns[c].size());
+    for (const auto& row : rows) {
+      widths[c] = std::max<std::int64_t>(widths[c], static_cast<std::int64_t>(row[c].size()));
+    }
+  }
+  const auto line = [&](const std::vector<std::string>& cells) {
+    std::string out;
+    for (std::size_t c = 0; c < columns; ++c) {
+      out += c + 1 < columns ? right_pad(cells[c], widths[c]) + " | " : cells[c];
+    }
+    return fit_line(out, terminal_width);
+  };
+  const std::string heavy(static_cast<std::size_t>(std::max<std::int64_t>(1, terminal_width)), '=');
+  const std::string light(static_cast<std::size_t>(std::max<std::int64_t>(1, terminal_width)), '-');
+  std::string out = heavy + "\n" + fit_line(view.title, terminal_width) + "\n";
+  for (const auto& note : view.notes) {
+    out += fit_line(note, terminal_width) + "\n";
+  }
+  out += light + "\n" + line(view.columns) + "\n" + light + "\n";
+  for (const auto& row : rows) {
+    out += line(row) + "\n";
+  }
+  return out + heavy;
+}
+
 std::string render_shelf_series_like_(const Shelf& shelf,
                                        const EffectiveDisplayOptions& options,
                                        std::int64_t terminal_width) {
@@ -4007,8 +4059,10 @@ constexpr const char* kNotebookStyle =
     ".pluss-table .gap td{text-align:center;color:var(--pluss-muted)}"
     ".pluss-table .foot{margin-top:.3em;color:var(--pluss-muted);font-size:.85em}";
 
-std::string notebook_table_html_(const DataFrame& frame) {
-  const DataFrameVirtualTableModel model(frame);
+// The notebook table of any model PlussView can paint (a frame, a catalog's ragged grid, a registry's): the header, the
+// rows (the first and last few of a long one), blank where a column has no entry, and the footer line. Only the rows
+// that are shown are read from the model.
+std::string notebook_model_html_(const pluss::view::VirtualTableModel& model, const std::string& footer) {
   const std::int64_t rows = model.row_count();
   const std::int64_t columns = model.column_count();
   std::string html = std::string("<div class=\"pluss-table\"><style>") + kNotebookStyle + "</style><table><thead><tr><th>" +
@@ -4022,7 +4076,11 @@ std::string notebook_table_html_(const DataFrame& frame) {
     html += "<tr><th>" + escape_html_(model.row_label(row)) + "</th>";
     for (std::int64_t c = 0; c < columns; ++c) {
       const auto cell = model.cell(row, c);
-      html += std::string(cell.missing ? "<td class=\"null\">" : "<td>") + escape_html_(cell.text) + "</td>";
+      if (cell.absent) {
+        html += "<td></td>";  // the column has no entry here: nothing is drawn, and it is not a NULL
+      } else {
+        html += std::string(cell.missing ? "<td class=\"null\">" : "<td>") + escape_html_(cell.text) + "</td>";
+      }
     }
     html += "</tr>";
   };
@@ -4035,9 +4093,42 @@ std::string notebook_table_html_(const DataFrame& frame) {
     }
     write_row(row);
   }
-  html += "</tbody></table><div class=\"foot\">" +
-          pluss::tils::OutputEngine::format("{} cases &times; {} features", rows, columns) + "</div></div>";
-  return html;
+  return html + "</tbody></table><div class=\"foot\">" + footer + "</div></div>";
+}
+
+// An overview (a stack's levels, say) as a model: the first column of the overview labels the rows.
+class SummaryGridModel final : public pluss::view::VirtualTableModel {
+ public:
+  explicit SummaryGridModel(const SummaryView& view) : view_(view) {}
+  std::int64_t row_count() const noexcept override { return view_.size; }
+  std::int64_t column_count() const noexcept override { return static_cast<std::int64_t>(view_.columns.size()) - 1; }
+  std::string row_header() const override { return view_.columns.empty() ? std::string{} : view_.columns.front(); }
+  std::string row_label(const std::int64_t row) const override { return row_at_(row).front(); }
+  std::string column_name(const std::int64_t column) const override { return view_.columns[static_cast<std::size_t>(column) + 1]; }
+  bool column_numeric(std::int64_t) const noexcept override { return false; }
+  pluss::view::VirtualTableCell cell(const std::int64_t row, const std::int64_t column) const override {
+    return pluss::view::VirtualTableCell{.text = row_at_(row)[static_cast<std::size_t>(column) + 1]};
+  }
+  bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+
+ private:
+  // The row last asked for is kept, since a notebook reads a row's cells one after another.
+  const std::vector<std::string>& row_at_(const std::int64_t row) const {
+    if (row != cached_row_) {
+      cached_ = view_.row(row);
+      cached_.resize(view_.columns.size());
+      cached_row_ = row;
+    }
+    return cached_;
+  }
+  const SummaryView& view_;
+  mutable std::int64_t cached_row_{-1};
+  mutable std::vector<std::string> cached_{};
+};
+
+std::string notebook_table_html_(const DataFrame& frame) {
+  const DataFrameVirtualTableModel model(frame);
+  return notebook_model_html_(model, pluss::tils::OutputEngine::format("{} cases &times; {} features", model.row_count(), model.column_count()));
 }
 
 // Inside the PlussII notebook the kernel sets PLUSS_NOTEBOOK; a table is then handed back to the notebook as
@@ -4135,6 +4226,38 @@ bool save_png(const DataFrame& frame, const std::string& path, const DisplayOpti
   return save_page_png_(html, model.get(), path, width, height);
 }
 
+std::string render_notebook_html(const pluss::view::VirtualTableModel& model, const std::string& footer) {
+  return notebook_model_html_(model, footer);
+}
+
+std::string render_notebook_summary(const SummaryView& view, const std::string& footer) {
+  const SummaryGridModel model(view);
+  return notebook_model_html_(model, footer);
+}
+
+bool show_in_notebook(const std::string& html) { return show_in_notebook_(html); }
+
+// An atlas in a notebook: one row per frame (its label, cases, features and their names). A frame is drilled into with
+// frame(i), which then shows as a table.
+std::string render_notebook_html(const Atlas& atlas) {
+  std::optional<Shelf> labels;
+  if (atlas.axis0_labels().has_value()) {
+    labels = display_shelf(*atlas.axis0_labels());
+  }
+  SummaryView view;
+  view.columns = {"level", "label", "cases", "features", "feature names"};
+  view.size = atlas.depth();
+  view.row = [&](const std::int64_t i) {
+    const auto frame = atlas.frame(i);
+    const auto names = frame.features();
+    return std::vector<std::string>{
+        std::to_string(i), labels.has_value() ? shelf_value_at(*labels, i) : std::string{}, std::to_string(frame.ncases()),
+        std::to_string(frame.nfeatures()),
+        preview_text(static_cast<std::int64_t>(names.size()), [&](const std::int64_t k) { return names[static_cast<std::size_t>(k)]; }, 60)};
+  };
+  return render_notebook_summary(view, pluss::tils::OutputEngine::format("depth {}", atlas.depth()));
+}
+
 std::string render_notebook_html(const DataFrame& frame) {
   return notebook_table_html_(frame);
 }
@@ -4227,9 +4350,7 @@ void show(const Shelf& shelf, const DisplayOptions& options) {
 }
 
 void show(const Atlas& atlas, const DisplayOptions& options) {
-  // An atlas is a stack of frames, not one table: in a notebook it is shown as the terminal shows it.
-  if (in_notebook()) {
-    print(std::cout, atlas, options);
+  if (show_in_notebook_(render_notebook_html(atlas))) {
     return;
   }
   const auto backend = resolve_backend_(options);
@@ -4304,6 +4425,39 @@ std::string render_sequence(const SequenceView& view, const DisplayOptions& opti
 
 void print_sequence(std::ostream& os, const SequenceView& view, const DisplayOptions& options) {
   os << render_sequence(view, options) << '\n';
+}
+
+std::string render_summary(const SummaryView& view, const DisplayOptions& options) {
+  const auto term = detect_terminal();
+  const auto effective = resolve_effective_options(options, term, false);
+  const auto width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
+  return summary_text_(view, effective, width);
+}
+
+void print_summary(std::ostream& os, const SummaryView& view, const DisplayOptions& options) {
+  os << render_summary(view, options) << '\n';
+}
+
+// The first and last values of a sequence on one line, "[a, b, c, ..., z]", for a column that previews what a part
+// holds. How many are shown at each end is named here, once, for every overview.
+constexpr std::int64_t kPreviewHead = 3;
+constexpr std::int64_t kPreviewTail = 1;
+
+std::string preview_text(const std::int64_t size, const std::function<std::string(std::int64_t)>& value,
+                         const std::int64_t max_width) {
+  std::vector<std::string> parts;
+  const bool cut = size > kPreviewHead + kPreviewTail;
+  const std::int64_t head = cut ? kPreviewHead : size;
+  for (std::int64_t i = 0; i < head; ++i) {
+    parts.push_back(value(i));
+  }
+  if (cut) {
+    parts.emplace_back("...");
+    for (std::int64_t i = size - kPreviewTail; i < size; ++i) {
+      parts.push_back(value(i));
+    }
+  }
+  return clip_cell("[" + pluss::tils::OutputEngine::join(parts, ", ") + "]", max_width);
 }
 
 std::string first_cell_text(const Shelf& shelf) { return shelf_value_at(shelf, 0); }

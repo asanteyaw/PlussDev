@@ -268,7 +268,6 @@ public:
 
   std::string to_string() const;
   std::string to_json() const;
-  void show(std::ostream& os) const;
 
 private:
   friend bool detail::has_mask(const Stream& stream);

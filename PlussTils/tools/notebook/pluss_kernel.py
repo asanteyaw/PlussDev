@@ -50,6 +50,11 @@ inline void show(const char* text) { std::cout << text << std::endl; }
 inline void show(const pluss::table::DataFrame& frame) {
   emit("text/html", pluss::table::display::render_notebook_html(frame));
 }
+inline void show(const pluss::kindle::Catalog& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
+inline void show(const pluss::kindle::Archive& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
+inline void show(const pluss::scribble::Registry& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
+inline void show(const pluss::scribble::Axel& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
+inline void show(const pluss::table::Atlas& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
 template <class Chart>
 auto show(Chart& chart) -> decltype(chart.save_svg(std::string()), void()) {
   const std::string path = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/pluss_nb_chart.svg";

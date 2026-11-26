@@ -1,4 +1,5 @@
 #include "scribble/Slot.h"
+#include "scribble/SlotDisplay.h"
 
 #include <algorithm>
 #include <cmath>

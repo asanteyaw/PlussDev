@@ -1,4 +1,6 @@
 #include "scribble/registry.h"
+#include "scribble/SlotDisplay.h"
+#include "table/display/Display.h"
 
 #include <algorithm>
 #include <cctype>
@@ -249,3 +251,63 @@ public:
 #include "scribble/ops/registry/RegistryInteropAndRender.inc"
 
 } // namespace pluss::scribble
+
+namespace pluss::table::display {
+
+namespace {
+
+// The fields of a registry side by side, each as long as its own slot: the grid a notebook shows. Where a slot has no
+// state at a row nothing is drawn (which is not a NULL), as for a catalog.
+class RegistryGridModel final : public pluss::view::VirtualTableModel {
+ public:
+  explicit RegistryGridModel(const pluss::scribble::Registry& registry) {
+    for (const auto& name : registry.fields()) {
+      slots_.push_back(registry.fields(name));
+      names_.push_back(name);
+      longest_ = std::max(longest_, slots_.back().size());
+      shortest_ = names_.size() == 1 ? slots_.back().size() : std::min(shortest_, slots_.back().size());
+    }
+  }
+  std::int64_t longest() const noexcept { return longest_; }
+  std::int64_t shortest() const noexcept { return shortest_; }
+  std::int64_t row_count() const noexcept override { return longest_; }
+  std::int64_t column_count() const noexcept override { return static_cast<std::int64_t>(slots_.size()); }
+  std::string row_header() const override { return "state"; }
+  std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+  std::string column_name(const std::int64_t column) const override {
+    const auto c = static_cast<std::size_t>(column);
+    return names_[c] + " \u00b7 " + std::to_string(slots_[c].size());
+  }
+  bool column_numeric(std::int64_t) const noexcept override { return false; }
+  pluss::view::VirtualTableCell cell(const std::int64_t row, const std::int64_t column) const override {
+    const auto& slot = slots_[static_cast<std::size_t>(column)];
+    if (row >= slot.size()) {
+      return pluss::view::VirtualTableCell{.absent = true};
+    }
+    const auto& value = slot.at(row);
+    return pluss::view::VirtualTableCell{.text = pluss::scribble::detail::slot_cell_text(value),
+                                         .missing = std::holds_alternative<std::monostate>(value)};
+  }
+  bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+
+ private:
+  std::vector<pluss::scribble::Slot> slots_{};
+  std::vector<std::string> names_{};
+  std::int64_t longest_{0};
+  std::int64_t shortest_{0};
+};
+
+}  // namespace
+
+std::string render_notebook_html(const pluss::scribble::Registry& registry) {
+  if (!registry.defined()) {
+    return "<div class=\"pluss-table\">Registry &lt;undefined&gt;</div>";
+  }
+  const RegistryGridModel model(registry);
+  const auto states = model.shortest() == model.longest()
+                          ? pluss::tils::OutputEngine::format("{} states", model.longest())
+                          : pluss::tils::OutputEngine::format("{} to {} states", model.shortest(), model.longest());
+  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} fields &middot; {}", model.column_count(), states));
+}
+
+}  // namespace pluss::table::display

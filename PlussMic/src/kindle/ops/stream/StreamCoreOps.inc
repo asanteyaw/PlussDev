@@ -446,8 +446,6 @@ std::string Stream::to_json() const {
   return oss.str();
 }
 
-void Stream::show(std::ostream& os) const { display::print(os, *this); }
-
 detail::StreamImpl& Stream::mut_impl_() {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   if (impl_.use_count() > 1) {
@@ -466,7 +464,7 @@ const detail::StreamImpl& Stream::impl_ref_() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Stream& stream) {
-  stream.show(os);
+  display::print(os, stream);
   return os;
 }
 

@@ -12,6 +12,15 @@
 
 #include "pluss/tils/view/html_window.h"
 
+namespace pluss::kindle {
+class Catalog;
+class Archive;
+}  // namespace pluss::kindle
+namespace pluss::scribble {
+class Registry;
+class Axel;
+}  // namespace pluss::scribble
+
 namespace pluss::table {
 
 class Shelf;
@@ -180,9 +189,35 @@ struct SequenceView {
 };
 std::string render_sequence(const SequenceView& view, const DisplayOptions& options = {});
 void print_sequence(std::ostream& os, const SequenceView& view, const DisplayOptions& options = {});
+// The overview of a collection of named parts (a registry's fields, an axel's levels): a title, optional note lines and
+// one row per part under named columns, the last column taking the rest of the line. Only the rows shown are asked for.
+struct SummaryView {
+  std::string title;                 // the first line, such as "scribble::Registry  fields=2  states=3"
+  std::vector<std::string> notes;    // lines between the title and the rows
+  std::vector<std::string> columns;  // the column titles
+  std::int64_t size{0};              // how many rows there are in all
+  std::function<std::vector<std::string>(std::int64_t)> row;  // the cells of one row, one per column
+};
+std::string render_summary(const SummaryView& view, const DisplayOptions& options = {});
+void print_summary(std::ostream& os, const SummaryView& view, const DisplayOptions& options = {});
+// "[a, b, c, ..., z]": the first and last values of a sequence on one line, for a column that previews a part.
+std::string preview_text(std::int64_t size, const std::function<std::string(std::int64_t)>& value, std::int64_t max_width);
+
 // The text of a Shelf's first cell, as the Shelf prints it (a Slot cell is a one-element Shelf).
 std::string first_cell_text(const Shelf& shelf);
 
+// The compact HTML table of any model PlussView can paint (a catalog's ragged grid, a registry's), blank where a column
+// has no entry, with `footer` under it; and the same for an overview (the first column labels the rows).
+std::string render_notebook_html(const pluss::view::VirtualTableModel& model, const std::string& footer);
+std::string render_notebook_summary(const SummaryView& view, const std::string& footer);
+// Hands `html` to the notebook as the output of the cell; false (and nothing printed) outside the notebook.
+bool show_in_notebook(const std::string& html);
+// The notebook table of a catalog, an archive, a registry and an axel, and of an atlas (defined with each type).
+std::string render_notebook_html(const pluss::kindle::Catalog& catalog);
+std::string render_notebook_html(const pluss::kindle::Archive& archive);
+std::string render_notebook_html(const pluss::scribble::Registry& registry);
+std::string render_notebook_html(const pluss::scribble::Axel& axel);
+std::string render_notebook_html(const Atlas& atlas);
 // Whether the code is running inside the PlussII notebook (its kernel sets PLUSS_NOTEBOOK). Only a DataFrame is shown
 // there as a table; a shelf, an atlas and a catalog are shown as the text the terminal shows.
 bool in_notebook();

@@ -102,7 +102,41 @@ std::string Axel::to_json() const {
   return oss.str();
 }
 
-void Axel::show(std::ostream& os) const { os << to_string(); }
+namespace {
+
+// The overview of an axel, one row per level: its label, how many fields it has, how many states they run to, and the
+// fields' names. The terminal and the notebook both show it.
+pluss::table::display::SummaryView axel_overview_(const Axel& axel) {
+  const auto& levels = axel.registries();
+  pluss::table::display::SummaryView view;
+  view.title = pluss::tils::OutputEngine::format("scribble::Axel  depth={}", axel.depth());
+  view.notes.push_back(axel.labels().has_value() ? "depth_labels=yes" : "depth_labels=no");
+  view.columns = {"level", "label", "fields", "min_states", "max_states", "field names"};
+  view.size = static_cast<std::int64_t>(levels.size());
+  view.row = [&axel, &levels](const std::int64_t i) {
+    const auto& level = levels[static_cast<std::size_t>(i)];
+    const auto& names = level.fields();
+    const std::string label = axel.labels().has_value() ? detail::slot_cell_text(axel.labels()->at(i)) : std::string{};
+    return std::vector<std::string>{
+        std::to_string(i), label, std::to_string(level.nfields()), std::to_string(level.minstate()),
+        std::to_string(level.maxstate()),
+        pluss::table::display::preview_text(
+            static_cast<std::int64_t>(names.size()), [&](const std::int64_t k) { return names[static_cast<std::size_t>(k)]; }, 60)};
+  };
+  return view;
+}
+
+}  // namespace
+
+// An axel is a stack of registries, shown as an overview with one row per level. A level is drilled into with
+// registry(i). (to_string() is the full JSON dump.)
+void Axel::show(std::ostream& os) const {
+  if (!defined()) {
+    os << "scribble::Axel <undefined>";
+    return;
+  }
+  pluss::table::display::print_summary(os, axel_overview_(*this));
+}
 
 const detail::AxelImpl& Axel::impl_ref_() const {
   PLUSS_CHECK(defined(), "Axel: undefined handle");

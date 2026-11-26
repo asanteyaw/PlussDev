@@ -239,22 +239,27 @@ void test_notebook_table_is_a_plain_fragment() {
   expect(!has(html, "<td>100</td>"), "the cut rows are not written out");
 }
 
-// In the notebook only a DataFrame is a table; a shelf, an atlas and a catalog print as the text the terminal shows.
-void test_notebook_shows_non_tables_as_text() {
+// In a notebook a shelf is text, as in the terminal; a catalog is a ragged HTML grid, blank where a key has no entry.
+void test_notebook_shows_each_type_in_its_own_shape() {
   setenv("PLUSS_NOTEBOOK", "1", 1);
   std::ostringstream captured;
   auto* const saved = std::cout.rdbuf(captured.rdbuf());
   const Shelf shelf(pluss::make_series({101.0, 102.0, 103.0}));
   pluss::table::display::show(shelf);
+  const std::string shelf_text = captured.str();
+  captured.str("");
   using namespace pluss::kindle::literals;
-  auto catalog = pluss::kindle::Catalog({"a"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}))});
+  auto catalog = pluss::kindle::Catalog({"a"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0})),
+                                         "b"_k = pluss::kindle::Stream(pluss::make_series({4.0}))});
   catalog.show();
+  const std::string catalog_text = captured.str();
   std::cout.rdbuf(saved);
   unsetenv("PLUSS_NOTEBOOK");
-  const std::string text = captured.str();
-  expect(has(text, "101") && has(text, "103"), "a shelf prints its values");
-  expect(!has(text, "pluss-mime") && !has(text, "<table"), "and not as a table");
-  expect(has(text, "a"), "a catalog prints its key");
+  expect(has(shelf_text, "101") && has(shelf_text, "103") && !has(shelf_text, "pluss-mime") && !has(shelf_text, "<table"),
+         "a shelf prints its values as text");
+  expect(has(catalog_text, "pluss-mime text/html") && has(catalog_text, "<table"), "a catalog is an HTML table");
+  expect(has(catalog_text, "a &middot; 3") || has(catalog_text, "a \u00b7 3"), "whose headers say how long each key is");
+  expect(has(catalog_text, "<td></td>"), "and whose missing entries are blank");
 }
 
 // A Shelf, a Stream and a Slot are one-dimensional and print alike, and printing costs the rows shown, not the length.
@@ -304,7 +309,7 @@ int main() {
   test_catalog_grid_is_ragged_not_padded();
   test_catalog_raggedness_view();
   test_notebook_table_is_a_plain_fragment();
-  test_notebook_shows_non_tables_as_text();
+  test_notebook_shows_each_type_in_its_own_shape();
   test_one_dimensional_types_print_alike();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;

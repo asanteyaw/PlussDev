@@ -69,7 +69,6 @@ api/slot/ptype
 api/slot/push
 api/slot/push_
 api/slot/shape
-api/slot/show
 api/slot/size
 api/slot/slice
 api/slot/sum

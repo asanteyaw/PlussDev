@@ -1,4 +1,7 @@
 #include "scribble/Axel.h"
+#include "scribble/SlotDisplay.h"
+#include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 #include <algorithm>
 #include <ostream>
@@ -79,3 +82,15 @@ public:
 #include "scribble/ops/axel/AxelRenderAndInternals.inc"
 
 } // namespace pluss::scribble
+
+namespace pluss::table::display {
+
+std::string render_notebook_html(const pluss::scribble::Axel& axel) {
+  if (!axel.defined()) {
+    return "<div class=\"pluss-table\">Axel &lt;undefined&gt;</div>";
+  }
+  return render_notebook_summary(pluss::scribble::axel_overview_(axel),
+                                 pluss::tils::OutputEngine::format("depth {}", axel.depth()));
+}
+
+}  // namespace pluss::table::display

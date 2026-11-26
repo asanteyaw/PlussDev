@@ -145,7 +145,30 @@ std::string Registry::to_json() const {
   return oss.str();
 }
 
-void Registry::show(std::ostream& os) const { os << to_string(); }
+// A registry is shown as an overview, one row per field, because its fields can differ in length: the field, what its
+// slot holds, how many states it has and a preview of them. (to_string() is the full JSON dump.)
+void Registry::show(std::ostream& os) const {
+  if (!defined()) {
+    os << "scribble::Registry <undefined>";
+    return;
+  }
+  const auto& names = field_names();
+  pluss::table::display::SummaryView view;
+  view.title = pluss::tils::OutputEngine::format("scribble::Registry  fields={}", nfields());
+  view.notes.push_back(minstate() == maxstate() ? pluss::tils::OutputEngine::format("states={}", nstate())
+                                                  : pluss::tils::OutputEngine::format("states={} to {}", minstate(), maxstate()));
+  view.columns = {"field", "ptype", "states", "preview"};
+  view.size = static_cast<std::int64_t>(names.size());
+  view.row = [&](const std::int64_t i) {
+    const auto field = slot(names[static_cast<std::size_t>(i)]);
+    const auto& cells = field.values();
+    return std::vector<std::string>{
+        names[static_cast<std::size_t>(i)], detail::slot_held_text(field), std::to_string(field.size()),
+        pluss::table::display::preview_text(
+            field.size(), [&](const std::int64_t k) { return detail::slot_cell_text(cells[static_cast<std::size_t>(k)]); }, 60)};
+  };
+  pluss::table::display::print_summary(os, view);
+}
 
 Registry::const_iterator Registry::begin() const { return keys().begin(); }
 Registry::const_iterator Registry::end() const { return keys().end(); }
