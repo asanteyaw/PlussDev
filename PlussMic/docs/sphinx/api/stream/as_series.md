@@ -74,7 +74,7 @@ Stream payload is not Seri
 - Returns by `const&`, not a copy — the reference is only valid as long as the source
   `Stream` is alive.
 - The printed representation of a raw `pluss::Series` (`pluss::Series(shape=..., dtype=...,
-  ...)`) is distinct from `Stream`'s own boxed-table rendering — this is the tensor-level
+  ...)`) is distinct from how a `Stream` prints (like a `Shelf`) — this is the tensor-level
   type's own `operator<<`, not `Stream`'s.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.

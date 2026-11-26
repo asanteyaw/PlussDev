@@ -6,7 +6,7 @@ PAGE = dict(
 
 A new `Studio` is 1280 by 820. Both numbers must be finite and greater than zero: anything else (zero, a negative number, infinity or NaN) is refused with `pluss::Error`, and the figure keeps the size it had. The size is read when the figure is rendered, so calling `size` before or after the panes are added gives the same figure, and calling it again simply replaces the previous size. [`extent`](extent.md) reads it back.
 
-The margins around the panes are shares of the size, as in matplotlib and MATLAB (a share of the width at the left and right, of the height at the top and bottom), so a small figure keeps small margins and a large one large margins; what a headline, a caption or a docked legend adds is measured from its own font or its own key. The size is not scaled to the content: the same panes in a smaller figure get smaller plot areas, and a figure that is too small for its margins and legends leaves the plot area empty rather than overlapping them.""",
+The margins around the panes are shares of the size, as in most plotting tools (a share of the width at the left and right, of the height at the top and bottom), so a small figure keeps small margins and a large one large margins; what a headline, a caption or a docked legend adds is measured from its own font or its own key. The size is not scaled to the content: the same panes in a smaller figure get smaller plot areas, and a figure that is too small for its margins and legends leaves the plot area empty rather than overlapping them.""",
     parameters="""**width** (`double`)
     The figure width. Must be finite and greater than zero.
 

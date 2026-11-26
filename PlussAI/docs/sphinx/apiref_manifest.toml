@@ -272,7 +272,7 @@ qualname = "lymph::workflow::Workflow"
 kind = "class"
 family = "lymph/workflow"
 page = "api/lymph/workflow/Workflow.md"
-summary = "`Workflow` is Model + Policy + an optional branch/route DSL -- the deployable, sklearn-Pipeline-shaped composition object."
+summary = "`Workflow` is Model + Policy + an optional branch/route DSL -- the deployable, pipeline-shaped composition object."
 since = "0.1"
 methods = ["on", "learn", "map", "infer", "assess", "save", "with"]
 

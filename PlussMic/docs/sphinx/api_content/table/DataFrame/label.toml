@@ -1,7 +1,7 @@
 summary = """
 Return the DataFrame label machinery for inspecting and manipulating row labels.
 
-`label()` is PlussMic's public case-label surface. It centralizes the operations that are equivalent to pandas index machinery while keeping the word “case” available for the full row concept in Pluss data modelling.
+`label()` is PlussMic's public case-label surface. It centralizes the operations that are equivalent to row-index machinery while keeping the word “case” available for the full row concept in Pluss data modelling.
 
 Use this surface instead of root-level `caselbl*` methods. The label accessor keeps case-label operations in one place:
 
@@ -13,7 +13,7 @@ Use this surface instead of root-level `caselbl*` methods. The label accessor ke
 - `df.label().reset(...)` materializes labels back into ordinary features.
 - `df.label().sort(...)` sorts rows by label values.
 - `df.label().align(...)` rebuilds the frame against a target label order.
-- `df.label().unite(...)`, `intersect(...)`, `diff(...)`, and `symdiff(...)` provide pandas Index-style set operations.
+- `df.label().unite(...)`, `intersect(...)`, `diff(...)`, and `symdiff(...)` provide set operations on the labels.
 - `df.label().find(...)` returns exact-match indexer positions and `-1` for missing targets.
 - `df.label().pos(...)` returns all positions for one label, including duplicate-label positions.
 - `df.label().rename(...)`, `names(...)`, `order(...)`, `swap(...)`, and `drop(...)` edit structured label metadata.

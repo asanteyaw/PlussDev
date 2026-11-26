@@ -8,7 +8,7 @@
 DataFrame Shelf::framerize(std::string_view name = {})
 ```
 
-Reshape this Shelf into a one-column `DataFrame` -- the 1-D to 2-D counterpart of pandas `Series.to_frame`.
+Reshape this Shelf into a one-column `DataFrame` -- the 1-D to 2-D step: it widens one column into a frame.
 
 Reach for it at the end of a reducing chain that lands on a Shelf you actually want to present or carry as a frame: `df.ndistinct(false).arrange(false)` gives you a Shelf, and `.framerize("unique_values")` turns it into a labelled one-column frame that renders with `DataFrame`'s aligned table layout instead of the terser Shelf view.
 

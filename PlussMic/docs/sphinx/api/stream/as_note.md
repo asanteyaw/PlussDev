@@ -71,7 +71,7 @@ Stream payload is not No
 - Returns by `const&`, not a copy — the reference is only valid as long as the source
   `Stream` is alive.
 - The printed representation of a raw `pluss::Note` (`Note(shape=..., dim=..., ...)`) is
-  distinct from `Stream`'s own boxed-table rendering.
+  distinct from how a `Stream` prints (like a `Shelf`).
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.
 

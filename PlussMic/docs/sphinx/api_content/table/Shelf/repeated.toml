@@ -14,7 +14,7 @@ notes = [
 For values `[A, B, A, C, B]`, `repeated()` returns `[true, true, true, false, true]`.
 """,
   """
-Use `duplicated(...)` when you want pandas-style duplicate follower semantics such as `[false, false, true, false, true]`.
+Use `duplicated(...)` when you want duplicate-follower semantics such as `[false, false, true, false, true]`.
 """
 ]
 

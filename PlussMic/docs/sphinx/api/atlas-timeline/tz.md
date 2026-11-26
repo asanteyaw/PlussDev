@@ -18,7 +18,7 @@ the stack** with `name` — the same transform
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) applies to a single frame,
 broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
 **The underlying instant is unchanged** — only the timezone used to compute local
-calendar fields (year/month/day/hour, and box-table display) shifts.
+calendar fields (year/month/day/hour, and how they print) shifts.
 
 ## Parameters
 
