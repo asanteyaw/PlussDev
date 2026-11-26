@@ -9,6 +9,7 @@ Exit status 0 means every check passed.
 """
 import argparse
 import os
+import queue
 import subprocess
 import sys
 import tempfile
@@ -50,11 +51,25 @@ def main():
 
     km, kc = start_new_kernel(kernel_name="pluss", startup_timeout=600)
 
-    def run(code, timeout=600):
+    def show_log():
+        if os.path.exists(log):
+            # What the kernel and the compile engine said to each other, so a failure on one machine can be read.
+            lines = open(log, errors="replace").read().splitlines()
+            print("---- engine log (last %d of %d lines) ----" % (min(len(lines), 150), len(lines)))
+            print("\n".join(line[:400] for line in lines[-150:]), flush=True)
+
+    def run(code, timeout=300):
         mid = kc.execute(code)
         seen = {"text": "", "err": "", "mime": [], "error": None}
         while True:
-            m = kc.get_iopub_msg(timeout=timeout)
+            try:
+                m = kc.get_iopub_msg(timeout=timeout)
+            except queue.Empty:
+                # The cell never finished: say which one and what the engine was doing, then stop.
+                check("a cell finishes within %d s" % timeout, False, code)
+                show_log()
+                km.shutdown_kernel(now=True)
+                sys.exit(1)
             if m["parent_header"].get("msg_id") != mid:
                 continue
             t, c = m["msg_type"], m["content"]
@@ -113,11 +128,8 @@ def main():
     finally:
         km.shutdown_kernel(now=True)
     print("%d check(s) failed" % len(failures))
-    if failures and os.path.exists(log):
-        # What the kernel and the compile engine said to each other, so a failure on one machine can be read.
-        lines = open(log, errors="replace").read().splitlines()
-        print("---- engine log (last %d of %d lines) ----" % (min(len(lines), 150), len(lines)))
-        print("\n".join(line[:400] for line in lines[-150:]))
+    if failures:
+        show_log()
     return 1 if failures else 0
 
 
