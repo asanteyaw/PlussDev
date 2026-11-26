@@ -153,11 +153,15 @@ struct ModelPage {
   std::string subtitle;
   std::vector<std::pair<std::string, std::string>> cards;  // label, value
   std::shared_ptr<pluss::view::VirtualTableModel> model;
+  // The streams behind the grid, for the view tabs (Summary, Validity, Outliers, Correlation, Layout).
+  std::vector<std::pair<std::string, std::shared_ptr<const Shelf>>> streams;
   std::function<void(const DisplayOptions&)> on_options;
   bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
 };
 // The row window View > Visit asks for, as the viewer's own type.
 pluss::view::RowWindow row_window_for(const DisplayOptions& options);
+// The page as HTML with every view tab filled in (for a browser or a notebook, and for tests).
+std::string render_html_model(const ModelPage& page, const DisplayOptions& options = {});
 // Opens the page in the viewer; returns false when only a terminal is available.
 bool show_model(const ModelPage& page, const DisplayOptions& options = {});
 

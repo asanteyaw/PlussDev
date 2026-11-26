@@ -192,6 +192,29 @@ void test_catalog_grid_is_ragged_not_padded() {
   expect(!grid.filtering() && grid.row_allowed(4), "with no filter every row is kept");
 }
 
+// The Raggedness view says how ragged a catalog is, from the streams as they are.
+void test_catalog_raggedness_view() {
+  using namespace pluss::kindle::literals;
+  auto catalog = pluss::kindle::Catalog({
+      "a"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0})),
+      "b"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0})),
+      "c"_k = pluss::kindle::Stream(pluss::make_series({1.0, 0.0}), pluss::make_series(std::vector<bool>{true, false})),
+  });
+  display::ModelPage page;
+  page.title = "Catalog";
+  for (const auto& key : catalog.keys()) {
+    page.streams.emplace_back(key, std::make_shared<const Shelf>(catalog.keys(key).to_shelf()));
+  }
+  const auto html = display::render_html_model(page);
+  expect(has(html, ">Spread<") && has(html, ">Shortest<") && has(html, ">Full-length keys<"), "the raggedness cards are on the page");
+  expect(has(html, ">1 of 3<"), "one of the three keys is full length");
+  expect(has(html, "plussmic-ragged"), "the per-key raggedness table is on the page");
+  // The row of key c: 2 entries, 3 absent, 40 % of the longest, 1 valid (one is NULL).
+  const auto c_row = row_text(html.substr(html.find("plussmic-ragged")), ">c<");
+  expect(c_row.find("2") != std::string::npos && c_row.find("3") != std::string::npos && c_row.find("40") != std::string::npos,
+         "key c has 2 entries, lacks 3 and covers 40 % of the longest key: " + c_row);
+}
+
 }  // namespace
 
 int main() {
@@ -202,6 +225,7 @@ int main() {
   test_visit_first_middle_last();
   test_visit_custom_range();
   test_catalog_grid_is_ragged_not_padded();
+  test_catalog_raggedness_view();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

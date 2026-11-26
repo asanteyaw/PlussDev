@@ -27,7 +27,11 @@ Two ways to look at a catalog:
   entries. The View menu aligns keys of different lengths by their **head** (every key from the top, the
   default) or their **tail** (every key ending at the bottom), and the Filter and Visit entries work on the
   grid as they do on a DataFrame. The columns of a ragged catalog are independent, so the headers have no sort
-  arrows. When no window can be opened (a terminal-only session), `show()` prints the ASCII view to
+  arrows. The View menu also lists views computed from the streams as they are, never from a padded rectangle:
+  Summary and Outliers per key, Validity (each key's NULLs, NaNs and infinities, and separately the entries it
+  does not have), Correlation over the entries every key shares, and Raggedness, which says how ragged the
+  catalog is: the longest, shortest and spread, the mean length, how many keys are full length, and for each
+  key its entries, absent entries, coverage of the longest key and where it sits. When no window can be opened (a terminal-only session), `show()` prints the ASCII view to
   `std::cout` instead. Calling it on an undefined catalog throws.
 
 ```{important} display(), info(), and show(os) all render identically — there is no separate metadata summary

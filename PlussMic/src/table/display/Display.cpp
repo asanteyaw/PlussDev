@@ -2819,18 +2819,28 @@ std::string render_outliers_(const ViewResult& result, const DisplayOptions& opt
 
 // The views of one frame, by id, in menu order. available() is cheap (column types only);
 // render() computes on first use and then reuses the result.
-class StatsViews {
+struct ViewInfo {
+  std::string id;
+  std::string label;
+};
+
+// Where the view tabs of a page come from: which views apply, and each one rendered for the current options.
+class ViewSource {
+ public:
+  virtual ~ViewSource() = default;
+  virtual std::vector<ViewInfo> available() = 0;
+  virtual std::string render(const std::string& id, const DisplayOptions& options) = 0;
+};
+
+class StatsViews final : public ViewSource {
  public:
   explicit StatsViews(DataFrame frame) : frame_(std::move(frame)) {}
 
-  struct Info {
-    std::string id;
-    std::string label;
-  };
+  using Info = ViewInfo;
 
   // Views that can apply to this frame. A view listed here may still turn out to be undefined
   // (render() then returns an empty string).
-  std::vector<Info> available() const {
+  std::vector<Info> available() override {
     const auto columns = dataframe_columns_(frame_);
     std::size_t numeric = 0;
     for (const auto& col : columns) {
@@ -2854,7 +2864,7 @@ class StatsViews {
     return out;
   }
 
-  std::string render(const std::string& id, const DisplayOptions& options) {
+  std::string render(const std::string& id, const DisplayOptions& options) override {
     const auto& result = result_for_(id);
     if (!result.has_value()) {
       return {};
@@ -2921,23 +2931,234 @@ std::string visit_inline_html_(const DisplayOptions& options) {
       shown(options.visit_end, std::numeric_limits<std::int64_t>::max()), std::string(kVisitApplyId));
 }
 
-std::string render_html_table_(const DataFrame& frame,
-                               std::string_view title,
-                               std::string_view subtitle,
-                               const DisplayOptions& options,
-                               StatsViews& views,
-                               const bool lazy = false,
-                               const bool virtual_model = false) {
-  HtmlBodyStyle table_style;
-  table_style.format_numbers = true;
-  // A browser view lays out every row of a long table, which is slow to open, sort and search;
-  // past this many rows the rows are drawn by script, a window at a time.
-  constexpr std::int64_t kBrowserVirtualRows = 2000;
-  table_style.virtual_rows =
-      options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
-  auto body = virtual_model ? virtual_table_body_(frame)
-                            : render_html_table_body_(frame, options, "plussmic-table", table_style);
-  if (options.html_summary) {
+// The views of a ragged catalog. Every one is computed from the streams as they are, never from a padded
+// rectangle: the per-key views (Summary, Outliers) run the DataFrame views on each key alone and stack the rows,
+// Validity counts each key's NULLs, NaNs and infinities and, separately, the entries it does not have, and
+// Correlation uses the entries every key shares (the first ones under head alignment, the last under tail).
+class CatalogViews final : public ViewSource {
+ public:
+  using Stream = std::pair<std::string, std::shared_ptr<const Shelf>>;
+
+  explicit CatalogViews(std::vector<Stream> streams) : streams_(std::move(streams)) {
+    for (const auto& [name, shelf] : streams_) {
+      longest_ = std::max(longest_, shelf->size());
+    }
+    shortest_ = streams_.empty() ? 0 : longest_;
+    for (const auto& [name, shelf] : streams_) {
+      shortest_ = std::min(shortest_, shelf->size());
+    }
+  }
+
+  std::vector<ViewInfo> available() override {
+    std::size_t numeric = 0;
+    for (const auto& [name, shelf] : streams_) {
+      numeric += is_stat_numeric_(*shelf) ? 1 : 0;
+    }
+    std::vector<ViewInfo> out;
+    if (numeric >= 1) {
+      out.push_back({"summary", "Summary"});
+    }
+    if (numeric >= 2 && shortest_ > 0) {
+      out.push_back({"correlation", "Correlation"});
+    }
+    if (!streams_.empty()) {
+      out.push_back({"missing", "Validity"});
+    }
+    if (numeric >= 1) {
+      out.push_back({"outliers", "Outliers"});
+    }
+    if (!streams_.empty()) {
+      out.push_back({"layout", "Raggedness"});
+    }
+    return out;
+  }
+
+  std::string render(const std::string& id, const DisplayOptions& options) override {
+    const auto& result = result_for_(id, options);
+    if (!result.has_value()) {
+      return {};
+    }
+    if (id == "summary") {
+      return render_summary_(*result, options);
+    }
+    if (id == "correlation") {
+      return render_correlation_(*result, options) +
+             pluss::tils::OutputEngine::format(
+                 "<div class=\"muted\" style=\"padding:8px 2px;\">Over the {} entries every key has, taken from the {}.</div>",
+                 shortest_, options.align == DisplayAlign::Tail ? "end" : "start");
+    }
+    if (id == "missing") {
+      return render_html_table_body_(auto_round_(result->table, 1, options), options, "plussmic-missing",
+                                     profile_style_("key", {"null", "NaN", "infinity", "absent"}));
+    }
+    if (id == "layout") {
+      // The whole catalog's raggedness as cards, then one row per key.
+      auto style = profile_style_("key", {"entries", "absent", "valid", "from", "to"});
+      style.show_cards = false;
+      return ragged_cards_() + render_html_table_body_(auto_round_(result->table, 1, options), options,
+                                                       "plussmic-ragged", style);
+    }
+    return render_outliers_(*result, options);
+  }
+
+ private:
+  DataFrame one_(const Stream& stream) const {
+    return DataFrame({{stream.first, *stream.second}});
+  }
+
+  // The rows of a per-key view, stacked key by key.
+  template <class Compute>
+  std::optional<ViewResult> stacked_(const Compute& compute) const {
+    std::optional<DataFrame> all;
+    for (const auto& stream : streams_) {
+      if (!is_stat_numeric_(*stream.second)) {
+        continue;
+      }
+      const auto part = compute(one_(stream));
+      if (!part.has_value()) {
+        continue;
+      }
+      all = all.has_value() ? all->extend(part->table) : part->table;
+    }
+    if (!all.has_value()) {
+      return std::nullopt;
+    }
+    return ViewResult{*all, 0, false};
+  }
+
+  static std::int64_t count_of_(const Shelf& flags) {
+    return flags.as_series().to(pluss::codem::ScalarType::Int64).sum().host<std::int64_t>().front();
+  }
+
+  std::optional<ViewResult> validity_() const {
+    std::vector<std::string> keys;
+    std::vector<std::int64_t> nulls, nans, infs, absent;
+    std::vector<double> total;
+    for (const auto& [name, shelf] : streams_) {
+      keys.push_back(name);
+      nulls.push_back(count_of_(shelf->isnull()));
+      nans.push_back(is_numeric_shelf(*shelf) ? count_of_(shelf->isnan()) : 0);
+      infs.push_back(is_numeric_shelf(*shelf) ? count_of_(shelf->isinf()) : 0);
+      absent.push_back(longest_ - shelf->size());
+      total.push_back(static_cast<double>(shelf->size()));
+    }
+    const auto percent = [&](const std::vector<std::int64_t>& counts, const bool of_longest) {
+      std::vector<double> out;
+      for (std::size_t i = 0; i < counts.size(); ++i) {
+        const double whole = of_longest ? static_cast<double>(longest_) : total[i];
+        out.push_back(whole > 0.0 ? 100.0 * static_cast<double>(counts[i]) / whole : 0.0);
+      }
+      return out;
+    };
+    std::vector<std::pair<std::string, Shelf>> columns;
+    columns.emplace_back("null", Shelf(pluss::make_series(nulls)));
+    columns.emplace_back("null %", Shelf(pluss::make_series(percent(nulls, false))));
+    columns.emplace_back("NaN", Shelf(pluss::make_series(nans)));
+    columns.emplace_back("NaN %", Shelf(pluss::make_series(percent(nans, false))));
+    columns.emplace_back("infinity", Shelf(pluss::make_series(infs)));
+    columns.emplace_back("infinity %", Shelf(pluss::make_series(percent(infs, false))));
+    columns.emplace_back("absent", Shelf(pluss::make_series(absent)));
+    columns.emplace_back("absent %", Shelf(pluss::make_series(percent(absent, true))));
+    return ViewResult{DataFrame(std::move(columns), Shelf(pluss::make_note(keys))), 0, false};
+  }
+
+  // How ragged the catalog is, at a glance.
+  std::string ragged_cards_() const {
+    std::int64_t total = 0;
+    std::int64_t full = 0;
+    for (const auto& [name, shelf] : streams_) {
+      total += shelf->size();
+      full += shelf->size() == longest_ ? 1 : 0;
+    }
+    const std::int64_t keys = static_cast<std::int64_t>(streams_.size());
+    const double mean = keys > 0 ? static_cast<double>(total) / static_cast<double>(keys) : 0.0;
+    return summary_cards_html_({
+        {"Ragged", longest_ == shortest_ ? "no" : "yes"},
+        {"Longest", std::to_string(longest_)},
+        {"Shortest", std::to_string(shortest_)},
+        {"Spread", std::to_string(longest_ - shortest_)},
+        {"Mean length", pluss::tils::OutputEngine::format("{:.1f}", mean)},
+        {"Full-length keys", pluss::tils::OutputEngine::format("{} of {}", full, keys)},
+        {"Entries every key has", std::to_string(shortest_)},
+    });
+  }
+
+  // One row per key: its type, how many entries it has and lacks, how much of the longest key it covers, how many
+  // of its entries are not NULL, and the rows it fills under the current alignment.
+  std::optional<ViewResult> layout_(const DisplayOptions& options) const {
+    std::vector<std::string> keys, dtypes;
+    std::vector<std::int64_t> entries, absent, valid, from, to;
+    std::vector<double> coverage;
+    for (const auto& [name, shelf] : streams_) {
+      const std::int64_t n = shelf->size();
+      const std::int64_t start = options.align == DisplayAlign::Tail ? longest_ - n : 0;
+      keys.push_back(name);
+      dtypes.push_back(logical_dtype(*shelf));
+      entries.push_back(n);
+      absent.push_back(longest_ - n);
+      coverage.push_back(longest_ > 0 ? 100.0 * static_cast<double>(n) / static_cast<double>(longest_) : 0.0);
+      valid.push_back(n - count_of_(shelf->isnull()));
+      from.push_back(start);
+      to.push_back(start + n);
+    }
+    std::vector<std::pair<std::string, Shelf>> columns;
+    columns.emplace_back("dtype", Shelf(pluss::make_note(dtypes)));
+    columns.emplace_back("entries", Shelf(pluss::make_series(entries)));
+    columns.emplace_back("absent", Shelf(pluss::make_series(absent)));
+    columns.emplace_back("coverage %", Shelf(pluss::make_series(coverage)));
+    columns.emplace_back("valid", Shelf(pluss::make_series(valid)));
+    columns.emplace_back("from", Shelf(pluss::make_series(from)));
+    columns.emplace_back("to", Shelf(pluss::make_series(to)));
+    return ViewResult{DataFrame(std::move(columns), Shelf(pluss::make_note(keys))), 0, false};
+  }
+
+  std::optional<ViewResult> shared_correlation_(const DisplayOptions& options) const {
+    std::vector<std::pair<std::string, Shelf>> columns;
+    for (const auto& [name, shelf] : streams_) {
+      if (!is_stat_numeric_(*shelf)) {
+        continue;
+      }
+      const std::int64_t n = shelf->size();
+      columns.emplace_back(name, options.align == DisplayAlign::Tail ? shelf->slice(n - shortest_, n) : shelf->slice(0, shortest_));
+    }
+    return compute_correlation_(DataFrame(std::move(columns)));
+  }
+
+  const std::optional<ViewResult>& result_for_(const std::string& id, const DisplayOptions& options) {
+    const std::string key = id + (options.align == DisplayAlign::Tail ? ":tail" : ":head");
+    const auto found = cache_.find(key);
+    if (found != cache_.end()) {
+      return found->second;
+    }
+    std::optional<ViewResult> computed;
+    try {
+      if (id == "summary") {
+        computed = stacked_([](const DataFrame& one) { return compute_summary_(one); });
+      } else if (id == "outliers") {
+        computed = stacked_([](const DataFrame& one) { return compute_outliers_(one); });
+      } else if (id == "missing") {
+        computed = validity_();
+      } else if (id == "layout") {
+        computed = layout_(options);
+      } else if (id == "correlation") {
+        computed = shared_correlation_(options);
+      }
+    } catch (const std::exception&) {
+      computed = std::nullopt;
+    }
+    return cache_.emplace(key, std::move(computed)).first->second;
+  }
+
+  std::vector<Stream> streams_;
+  std::int64_t longest_{0};
+  std::int64_t shortest_{0};
+  std::map<std::string, std::optional<ViewResult>> cache_;
+};
+
+// The page body with its view tabs: the table first, then each view the source offers (filled when first opened
+// where the window can do that, otherwise now). A page with only the table is just the table.
+std::string tabbed_body_(std::string table_body, ViewSource& views, const DisplayOptions& options, const bool lazy) {
+  std::string body;
     struct Panel {
       std::string id;
       std::string label;
@@ -2945,7 +3166,7 @@ std::string render_html_table_(const DataFrame& frame,
       bool lazy{false};
     };
     std::vector<Panel> panels;
-    panels.push_back({"table", "Table", std::move(body), false});
+    panels.push_back({"table", "Table", std::move(table_body), false});
     for (const auto& info : views.available()) {
       Panel panel{info.id, info.label, {}, lazy};
       if (!lazy) {
@@ -2977,6 +3198,27 @@ std::string render_html_table_(const DataFrame& frame,
     } else {
       body = std::move(panels.front().html);
     }
+    return body;
+}
+
+std::string render_html_table_(const DataFrame& frame,
+                               std::string_view title,
+                               std::string_view subtitle,
+                               const DisplayOptions& options,
+                               ViewSource& views,
+                               const bool lazy = false,
+                               const bool virtual_model = false) {
+  HtmlBodyStyle table_style;
+  table_style.format_numbers = true;
+  // A browser view lays out every row of a long table, which is slow to open, sort and search;
+  // past this many rows the rows are drawn by script, a window at a time.
+  constexpr std::int64_t kBrowserVirtualRows = 2000;
+  table_style.virtual_rows =
+      options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
+  auto body = virtual_model ? virtual_table_body_(frame)
+                            : render_html_table_body_(frame, options, "plussmic-table", table_style);
+  if (options.html_summary) {
+    body = tabbed_body_(std::move(body), views, options, lazy);
   }
   return html_shell_(title, options.visit_editing ? std::string_view(kVisitInstruction) : subtitle, body, options,
                      options.visit_editing ? visit_inline_html_(options) : std::string{});
@@ -3560,10 +3802,11 @@ pluss::view::RowWindow row_window_for(const DisplayOptions& options) {
   return row_window_for_(options);
 }
 
-std::string render_html_model_(const ModelPage& page, const DisplayOptions& options) {
-  const std::string body = summary_cards_html_(page.cards) + virtual_table_frame_();
-  return html_shell_(page.title, page.subtitle, body, options,
-                     options.visit_editing ? visit_inline_html_(options) : std::string{});
+std::string render_html_model_(const ModelPage& page, CatalogViews& views, const DisplayOptions& options) {
+  const std::string body =
+      tabbed_body_(summary_cards_html_(page.cards) + virtual_table_frame_(), views, options, /*lazy=*/true);
+  return html_shell_(page.title, options.visit_editing ? std::string_view(kVisitInstruction) : std::string_view(page.subtitle),
+                     body, options, options.visit_editing ? visit_inline_html_(options) : std::string{});
 }
 
 std::string render_html(const Atlas& atlas, const DisplayOptions& options) {
@@ -3817,6 +4060,17 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
   print(std::cout, atlas, options);
 }
 
+std::string render_html_model(const ModelPage& page, const DisplayOptions& options) {
+  std::vector<CatalogViews::Stream> streams;
+  for (const auto& [name, shelf] : page.streams) {
+    streams.emplace_back(name, shelf);
+  }
+  CatalogViews views(std::move(streams));
+  const std::string body =
+      tabbed_body_(summary_cards_html_(page.cards) + virtual_table_frame_(), views, options, /*lazy=*/false);
+  return html_shell_(page.title, page.subtitle, body, options);
+}
+
 bool show_model(const ModelPage& page, const DisplayOptions& options) {
   const auto backend = resolve_backend_(options);
   if (backend != DisplayBackend::PlussWebView || page.model == nullptr) {
@@ -3824,13 +4078,23 @@ bool show_model(const ModelPage& page, const DisplayOptions& options) {
   }
   auto render_opts = options;
   render_opts.backend = backend;
-  const auto render_with = [page](const DisplayOptions& current) { return render_html_model_(page, current); };
+  std::vector<CatalogViews::Stream> streams;
+  for (const auto& [name, shelf] : page.streams) {
+    streams.emplace_back(name, shelf);
+  }
+  const auto views = std::make_shared<CatalogViews>(std::move(streams));
+  const auto render_with = [page, views](const DisplayOptions& current) { return render_html_model_(page, *views, current); };
+  const auto render_panel_with = [views](const DisplayOptions& current, const std::string_view id) {
+    auto panel = views->render(std::string(id), current);
+    return panel.empty() ? std::string("<div class=\"muted\" style=\"padding:18px;\">This view is not available for this catalog.</div>")
+                         : panel;
+  };
   if (page.on_options) {
     page.on_options(render_opts);
   }
   return show_html_window_(render_with(render_opts), render_opts, "Pluss " + page.title, backend, page.model,
                            /*table_viewport_scroll_only=*/true, render_with, /*offer_number_format=*/false,
-                           /*render_panel_with=*/{}, /*offer_filter=*/true, page.on_options, page.offer_align);
+                           render_panel_with, /*offer_filter=*/true, page.on_options, page.offer_align);
 }
 
 

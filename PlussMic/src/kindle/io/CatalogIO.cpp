@@ -162,6 +162,9 @@ void Catalog::show() const {
                 {"Longest", std::to_string(model->longest())},
                 {"Shortest", std::to_string(model->shortest())}};
   page.model = model;
+  for (const auto& name : keys()) {
+    page.streams.emplace_back(name, std::make_shared<const pluss::table::Shelf>(this->keys(name).to_shelf()));
+  }
   page.offer_align = ragged;
   page.on_options = [model](const pluss::table::display::DisplayOptions& options) {
     model->set_alignment(options.align);
