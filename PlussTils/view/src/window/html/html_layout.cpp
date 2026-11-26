@@ -871,6 +871,17 @@ struct LinearGradientSpec {
   return parsed;
 }
 
+// How wide `text` is when painted. Wrapping, truncating and sizing all measure with this one function (the font's
+// own metrics where the platform has them), so a line is cut where it would really overflow and a box is as wide
+// as the text it holds.
+[[nodiscard]] int painted_text_width(std::string_view text,
+                                     int font_size,
+                                     int font_weight,
+                                     std::string_view font_family);
+[[nodiscard]] inline int text_fit_width(std::string_view text, const int font_size) {
+  return painted_text_width(text, font_size, 400, {});
+}
+
 [[nodiscard]] std::string truncate_to_width(std::string text, int font_size, int max_width);
 
 [[nodiscard]] std::vector<std::string> wrap_lines(std::string_view text,
@@ -930,7 +941,7 @@ struct LinearGradientSpec {
 
       const std::string word(segment.substr(word_pos, word_end - word_pos));
       const std::string candidate = current.empty() ? word : (current + " " + word);
-      if (layout_math_text(candidate, font_size).width <= max_width) {
+      if (text_fit_width(candidate, font_size) <= max_width) {
         current = candidate;
       } else if (current.empty()) {
         lines.push_back(truncate_to_width(word, font_size, max_width));
@@ -958,7 +969,7 @@ struct LinearGradientSpec {
   if (max_width <= 0) {
     return {};
   }
-  if (layout_math_text(text, font_size).width <= max_width) {
+  if (text_fit_width(text, font_size) <= max_width) {
     return text;
   }
 
@@ -966,7 +977,7 @@ struct LinearGradientSpec {
   while (!text.empty()) {
     text.pop_back();
     const std::string candidate = text + ellipsis;
-    if (layout_math_text(candidate, font_size).width <= max_width) {
+    if (text_fit_width(candidate, font_size) <= max_width) {
       return candidate;
     }
   }
@@ -999,7 +1010,7 @@ struct LinearGradientSpec {
   std::string rest = trim_copy(raw);
   std::vector<std::string> lines;
   while (!rest.empty() && static_cast<int>(lines.size()) < std::max(1, max_lines)) {
-    if (layout_math_text(rest, font_size).width <= max_width) {
+    if (text_fit_width(rest, font_size) <= max_width) {
       lines.push_back(std::move(rest));
       rest.clear();
       break;
@@ -1014,7 +1025,7 @@ struct LinearGradientSpec {
       if (i < rest.size() && (static_cast<unsigned char>(rest[i]) & 0xC0) == 0x80) {
         continue;
       }
-      if (layout_math_text(rest.substr(0, i), font_size).width > max_width) {
+      if (text_fit_width(rest.substr(0, i), font_size) > max_width) {
         break;
       }
       fit = i;
@@ -1729,6 +1740,11 @@ void collect_table_rows_recursive(const HtmlNode& node,
   return widths;
 }
 
+[[nodiscard]] int painted_text_width(std::string_view text,
+                                     int font_size,
+                                     int font_weight,
+                                     std::string_view font_family);
+
 [[nodiscard]] int estimate_node_preferred_width(const HtmlDocument& document,
                                                 const HtmlNode& node,
                                                 std::vector<const HtmlNode*>& lineage,
@@ -1744,7 +1760,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
   if (preferred <= 0 && node.kind == HtmlNodeKind::Text) {
     const std::string transformed = apply_text_transform(node.text, style.text_transform);
-    const int natural_width = layout_math_text(transformed, style.font_size).width +
+    // Measured as it will be painted, so a row of items is sized for the text it really holds.
+    const int natural_width = painted_text_width(transformed, style.font_size, style.font_weight, style.font_family) +
                               (style.padding * 2) + (style.border * 2) + 8;
     preferred = style.white_space == "nowrap" ? natural_width : std::min(natural_width, cap_width);
   }
@@ -1755,7 +1772,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
       label = (node.tag == "input") ? "Search visible rows" : "Button";
     }
     label = apply_text_transform(label, style.text_transform);
-    preferred = layout_math_text(truncate_to_width(label, style.font_size, 420), style.font_size).width +
+    preferred = painted_text_width(truncate_to_width(label, style.font_size, 420), style.font_size, style.font_weight,
+                                   style.font_family) +
                 (style.padding * 2) + (style.border * 2) + 22;
   }
 
@@ -2607,7 +2625,7 @@ struct TableLayout {
       native.has_value() && *native > 0) {
     return *native;
   }
-  return layout_math_text(text, font_size).width;
+  return layout_math_text(text, font_size).width;  // the platform has no font metrics: the layout's own estimate
 }
 
 // `text` cut to end in "..." when it is wider than `max_width`, measured the way it is painted (the same way a

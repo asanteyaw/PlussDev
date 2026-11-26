@@ -60,9 +60,20 @@ class VirtualTableModel {
 
 // A window-level menu (e.g. colour theme, number format). Choosing an option calls
 // `render(option id)`, which returns the full page re-rendered for that choice.
+// A menu option that needs values before it can act: choosing it shows a dialog with these fields (when the
+// window can) and passes what was typed to HtmlMenu::render_prompted.
+struct HtmlPromptField {
+  std::string label{};
+  std::string placeholder{};
+};
+
 struct HtmlMenuOption {
   std::string id{};
   std::string label{};
+  std::string prompt_title{};  // empty: the option acts at once
+  std::string prompt_message{};
+  std::string prompt_accept{"OK"};
+  std::vector<HtmlPromptField> prompt{};
 };
 
 struct HtmlMenu {
@@ -70,6 +81,10 @@ struct HtmlMenu {
   std::string title{};
   std::vector<HtmlMenuOption> options{};
   std::function<std::string(std::string_view option_id)> render{};
+  // For options with a prompt: the values the fields start with, and the page for what was typed. When the window
+  // cannot show a dialog the option falls back to `render`, which can ask in the page.
+  std::function<std::vector<std::string>(std::string_view option_id)> prompt_values{};
+  std::function<std::string(std::string_view option_id, const std::vector<std::string>& values)> render_prompted{};
   // When true the menu is not a toolbar pull-down of its own: it appears as a cascading
   // entry (with an arrow) inside the "View" menu.
   bool in_view_menu{false};

@@ -1162,6 +1162,15 @@ std::string html_shell_(std::string_view title,
       justify-content: space-between;
       flex-wrap: wrap;
     }}
+    .hero.visiting {{
+      flex-wrap: nowrap;  /* the range boxes share the row with the search box, so the header keeps its height */
+    }}
+    .hero.visiting p {{
+      white-space: nowrap;  /* the instruction that replaces the subtitle stays on one line */
+    }}
+    .hero.visiting .tools {{
+      margin-left: 0;  /* the header spreads title, range boxes and search evenly, so the boxes sit in the middle */
+    }}
     .hero h1 {{
       margin: 0;
       font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
@@ -1182,9 +1191,10 @@ std::string html_shell_(std::string_view title,
       margin-left: auto;
       flex-wrap: nowrap;
     }}
-    .tools input {{
+    .tools input, .visit-inline input {{
       margin: 0;
-      min-width: 220px;
+      min-width: 0;
+      width: 17em;  /* explicit, so the row's width is known before it is laid out */
       height: 40px;
       min-height: 40px;
       padding: 0 12px;
@@ -1197,39 +1207,18 @@ std::string html_shell_(std::string_view title,
       appearance: none;
       -webkit-appearance: none;
     }}
-    .visit-bar {{
-      flex: 1 1 auto;
-      margin: 0 1em;
-      text-align: center;
-    }}
-    .visit-bar p {{
-      margin: 0 0 0.4em;
-      font-size: 0.78rem;
-    }}
-    .visit-row {{
+    .visit-inline {{
       display: flex;
-      gap: 0.6em;
+      gap: 0.5em;
       align-items: center;
-      justify-content: center;
     }}
-    .visit-row input {{
-      margin: 0;
+    .visit-inline .visit-box {{
       min-width: 0;
       width: 5.5em;  /* room for five digits */
-      height: 40px;
-      min-height: 40px;
-      padding: 0 0.6em;
-      border-radius: 7px;
-      border: 1px solid var(--control-border);
-      background: var(--panel);
-      color: var(--ink);
-      font: inherit;
+      padding: 0 0.5em;
       text-align: center;
     }}
-    .visit-row button {{
-      margin: 0;
-    }}
-    .tools button {{
+    .tools button, .visit-inline button {{
       margin: 0;
       height: 40px;
       min-height: 40px;
@@ -1553,8 +1542,8 @@ std::string html_shell_(std::string_view title,
 <body>
   <div class="shell">
     <div class="frame">
-      <header class="hero">
-        <div>
+      <header class="hero{8}">
+        <div class="hero-title">
           <h1>{0}</h1>
           <p>{1}</p>
         </div>
@@ -1888,7 +1877,8 @@ std::string html_shell_(std::string_view title,
                      search,
                      responsive_css,
                      theme_root_css_(options),
-                     header_extra);
+                     header_extra,
+                     header_extra.empty() ? "" : " visiting");
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -2891,19 +2881,20 @@ constexpr std::string_view kVisitApplyId = "visit-apply";
 constexpr const char* kVisitBeginId = "visit-begin";
 constexpr const char* kVisitEndId = "visit-end";
 
-// The box that opens in the middle of the header under View > Visit > Custom: what to type on top, then the first
-// position and the one to stop before, then Apply. It goes away once applied.
-std::string visit_bar_html_(const DisplayOptions& options) {
+// What the header's subtitle says while the custom range is being typed.
+constexpr std::string_view kVisitInstruction =
+    "Numbers only. Leave a box blank for the start or the end.";
+
+// The controls that open in the header's toolbar, beside the search box, under View > Visit > Custom: the first
+// position, the one to stop before, and Apply. They go away once applied.
+std::string visit_inline_html_(const DisplayOptions& options) {
   const auto shown = [](const std::int64_t value, const std::int64_t unset) {
     return value == unset ? std::string{} : std::to_string(value);
   };
   return pluss::tils::OutputEngine::format(
-      "<div class=\"visit-bar\"><p class=\"muted\">Enter numbers only. Leave the start box empty for the start, "
-      "the end box empty for the end.</p>"
-      "<div class=\"visit-row\"><input id=\"{0}\" type=\"text\" placeholder=\"0\" value=\"{2}\" />"
-      "<span class=\"muted\">to</span>"
-      "<input id=\"{1}\" type=\"text\" placeholder=\"1\" value=\"{3}\" />"
-      "<button id=\"{4}\" type=\"button\">Apply</button></div></div>",
+      "<div class=\"visit-inline\"><input class=\"visit-box\" id=\"{0}\" type=\"text\" placeholder=\"0\" value=\"{2}\" />"
+      "<input class=\"visit-box\" id=\"{1}\" type=\"text\" placeholder=\"1\" value=\"{3}\" />"
+      "<button id=\"{4}\" type=\"button\">Apply</button></div>",
       kVisitBeginId, kVisitEndId, shown(options.visit_begin, 0),
       shown(options.visit_end, std::numeric_limits<std::int64_t>::max()), std::string(kVisitApplyId));
 }
@@ -2965,7 +2956,8 @@ std::string render_html_table_(const DataFrame& frame,
       body = std::move(panels.front().html);
     }
   }
-  return html_shell_(title, subtitle, body, options, options.visit_editing ? visit_bar_html_(options) : std::string{});
+  return html_shell_(title, options.visit_editing ? std::string_view(kVisitInstruction) : subtitle, body, options,
+                     options.visit_editing ? visit_inline_html_(options) : std::string{});
 }
 
 std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options) {
@@ -3307,8 +3299,41 @@ bool show_html_window_(const std::string& html,
           {DisplayVisit::Custom, "custom", "Custom..."},
       }});
       for (const auto& entry : *visits) {
-        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
+        pluss::view::HtmlMenuOption option{entry.id, entry.label};
+        if (entry.visit == DisplayVisit::Custom) {
+          // Asked for in a dialog where the window can show one; elsewhere the page offers the boxes (see render).
+          option.prompt_title = "Visit rows";
+          option.prompt_message = std::string(kVisitInstruction);
+          option.prompt_accept = "Apply";
+          option.prompt = {{"From", "0"}, {"To", "1"}};
+        }
+        menu.options.push_back(std::move(option));
       }
+      menu.prompt_values = [state](std::string_view) {
+        const auto text = [](const std::int64_t value, const std::int64_t unset) {
+          return value == unset ? std::string{} : std::to_string(value);
+        };
+        return std::vector<std::string>{text(state->visit_begin, 0),
+                                        text(state->visit_end, std::numeric_limits<std::int64_t>::max())};
+      };
+      menu.render_prompted = [state, render_with, on_rows](std::string_view, const std::vector<std::string>& values) {
+        const auto read = [&](const std::size_t at, const std::int64_t fallback) {
+          if (at >= values.size() || values[at].empty()) {
+            return fallback;
+          }
+          std::int64_t value = fallback;
+          std::from_chars(values[at].data(), values[at].data() + values[at].size(), value);
+          return value;
+        };
+        state->visit = DisplayVisit::Custom;
+        state->visit_editing = false;
+        state->visit_begin = read(0, 0);
+        state->visit_end = read(1, std::numeric_limits<std::int64_t>::max());
+        if (on_rows) {
+          on_rows(*state);
+        }
+        return render_with(*state);
+      };
       menu.render = [state, render_with, on_rows, visits](std::string_view id) {
         for (const auto& entry : *visits) {
           if (id == entry.id) {
