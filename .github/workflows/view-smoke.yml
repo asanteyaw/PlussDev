@@ -1,0 +1,121 @@
+name: PlussView window smoke test
+
+# Opens real PlussView windows (a table, a filtered table, a visited range and a ragged catalog) from a built
+# PlussII download on Linux (under a virtual X display) and Windows, takes a screenshot of each, and fails when a
+# window does not open or its screenshot is blank. The screenshots are uploaded so they can be looked at.
+# Give it the id of a finished "PlussII C++ Release" run whose archives it should test.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Id of the PlussII C++ Release run whose archives are tested
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: PlussTils/tools/ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plussii-cpp-ubuntu-24.04
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: archive
+      - name: Unpack
+        run: |
+          cd archive && unzip -q *.zip
+          prefix=$(dirname "$(dirname "$(find "$PWD" -path '*/bin/pluss' | head -1)")")
+          echo "PREFIX=$prefix" >> "$GITHUB_ENV"
+          chmod +x "$prefix/bin/pluss"
+      - name: Install a virtual display and its tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb x11-apps imagemagick xdotool libx11-6 libcurl4-openssl-dev clang-18 cmake ninja-build
+      - name: Open each window and take its screenshot
+        run: |
+          export CC=clang-18 CXX=clang++-18
+          mkdir -p shots
+          for mode in table table-filter table-visit catalog catalog-tail; do
+            xvfb-run -a -s "-screen 0 1400x900x24" bash -c '
+              "$PREFIX/bin/pluss" run PlussTils/tools/ci/view_probe.cpp '"$mode"' > "shots/'"$mode"'.log" 2>&1 &
+              pid=$!
+              sleep 90
+              import -window root "shots/'"$mode"'.png" || true
+              kill $pid 2>/dev/null || true
+            '
+            cat "shots/$mode.log" | tail -5
+          done
+          python3 - <<'PY'
+          import sys, subprocess
+          bad = []
+          for mode in "table table-filter table-visit catalog catalog-tail".split():
+              out = subprocess.run(["identify", "-format", "%[fx:standard_deviation]", f"shots/{mode}.png"], capture_output=True, text=True).stdout
+              print(mode, "variation", out)
+              try:
+                  if float(out) < 0.02:
+                      bad.append(mode)
+              except ValueError:
+                  bad.append(mode)
+          if bad:
+              print("blank or missing screenshots:", bad)
+              sys.exit(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: view-linux
+          path: shots
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: PlussTils/tools/ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plussii-cpp-windows-2022
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: archive
+      - name: Open each window and take its screenshot
+        shell: pwsh
+        run: |
+          Set-Location archive
+          Expand-Archive -Path (Get-ChildItem *.zip).FullName -DestinationPath .
+          $pluss = (Get-ChildItem -Recurse -Filter pluss.exe | Select-Object -First 1).FullName
+          Set-Location ..
+          New-Item -ItemType Directory -Force shots | Out-Null
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $bad = @()
+          foreach ($mode in "table","table-filter","table-visit","catalog","catalog-tail") {
+            $p = Start-Process -FilePath $pluss -ArgumentList "run","PlussTils/tools/ci/view_probe.cpp",$mode -PassThru -RedirectStandardOutput "shots/$mode.log" -RedirectStandardError "shots/$mode.err"
+            Start-Sleep -Seconds 150
+            $b = [System.Windows.Forms.SystemInformation]::VirtualScreen
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save("shots/$mode.png")
+            $distinct = @{}
+            for ($x = 0; $x -lt $bmp.Width; $x += 37) { for ($y = 0; $y -lt $bmp.Height; $y += 37) { $distinct[$bmp.GetPixel($x, $y).ToArgb()] = 1 } }
+            Write-Host "$mode distinct colours: $($distinct.Count)"
+            if ($distinct.Count -lt 8) { $bad += $mode }
+            Get-Process -Name "view_probe*" -ErrorAction SilentlyContinue | Stop-Process -Force
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            Get-Content "shots/$mode.err" -Tail 5 -ErrorAction SilentlyContinue
+          }
+          if ($bad.Count -gt 0) { Write-Host "blank screenshots: $bad"; exit 1 }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: view-windows
+          path: shots
