@@ -233,8 +233,8 @@ builder equivalent of a per-level `ascending=[...]` style API.
   Mixed per-key directions require `ArrangeSpec`s or post-`by(...)` mutation
   of the active key.
 - With plain key-name overloads, `sort(false).by({"age", "salary", "score"})`
-  means all three keys are descending. It is not the pandas-style
-  `ascending=[...]` case until you move to `ArrangeSpec`s or active-key mutation.
+  means all three keys are descending. It is not a per-key
+  ascending-list case until you move to `ArrangeSpec`s or active-key mutation.
 - Not `noexcept`; `sort()` itself does no validation work — every check is
   deferred to the terminal.
 

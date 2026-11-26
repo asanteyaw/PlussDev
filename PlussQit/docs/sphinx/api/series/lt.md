@@ -199,7 +199,7 @@ must count as a match, step to [`Series::le`](le.md) instead.
 
 ## Aliases
 
-**`less()`** / **`less_()`** — spelling is kept for torch-style naming familiarity.
+**`less()`** / **`less_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `lt()` / `lt_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

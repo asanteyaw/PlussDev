@@ -12,9 +12,9 @@ Series& Series::rename_() const
 
 ## What It Does
 
-`rename_()` is a torch-parity stub: Pluss's `Series` does not carry named dimensions, so there is nothing to rename. It is a pure no-op — it returns a reference to `self` unmodified, without touching its storage or bumping its version.
+`rename_()` is a compatibility stub: Pluss's `Series` does not carry named dimensions, so there is nothing to rename. It is a pure no-op — it returns a reference to `self` unmodified, without touching its storage or bumping its version.
 
-It exists on the public surface purely so code written against a torch-style API (`x.rename_(...)`) still compiles and does something well-defined, rather than failing to resolve.
+It exists on the public surface purely so code written against a conventional API (`x.rename_(...)`) still compiles and does something well-defined, rather than failing to resolve.
 
 ## Parameters
 
@@ -50,7 +50,7 @@ same object: true
 
 ## Summary
 
-`rename_()` is a no-op kept for torch-style API compatibility; `Series` has no named-dimension concept to rename.
+`rename_()` is a no-op kept for API compatibility; `Series` has no named-dimension concept to rename.
 
 ## See Also
 

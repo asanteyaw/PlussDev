@@ -262,7 +262,7 @@ chart.show();
 ## Notes
 
 - Both `frame_index` (single overload) and every value in `frame_indices` (multi overloads)
-  support Python-style negative indexing counting from the end of the depth stack.
+  support negative indexing counting from the end of the depth stack.
 - The multi-index overloads require `y_feature` (and `x_feature`, if given) to exist in **every**
   selected frame — a missing feature in any one of them throws.
 - A call that names only `y_feature` uses each frame's own case axis — its row index, or its

@@ -19,7 +19,7 @@ A relational, key-value join between this frame and `right` — matching rows by
 *values* in `left_on`/`right_on`, not by case label or row position. This is
 distinct from [`combine()`](combine.md)/[`join()`](join.md)/[`align()`](align.md),
 which all match rows by **case-label value**; `unify()` matches by an arbitrary key
-feature (or several), the same shape as a SQL `JOIN` or a pandas `merge()`.
+feature (or several), the same shape as a SQL `JOIN` or a dataframe merge.
 
 `right_on` defaults to reusing `left_on`'s names when left and right share the same
 key column name(s); pass it explicitly when the two frames name their keys

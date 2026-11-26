@@ -1,7 +1,7 @@
 # Hierarchical Cases
 
 Hierarchical cases are PlussMic's structured case-axis engine. They are the
-Pluss-native equivalent of a pandas MultiIndex on rows, but the public language
+Pluss-native equivalent of a multi-level row index, but the public language
 uses `cases` and `labels`.
 
 The case hierarchy is stored as typed case-label metadata. Display labels may

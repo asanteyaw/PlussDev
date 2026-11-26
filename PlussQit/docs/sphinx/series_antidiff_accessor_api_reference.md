@@ -45,11 +45,9 @@ read off values a `Series` already holds. See
 ## Method Pages
 
 - [`trapezoid`](api/series-antidiff/trapezoid.md): total area under `y` over
-  `x` (or a uniform spacing), reduced along one dimension — torch parity
-  with `torch.trapezoid`
+  `x` (or a uniform spacing), reduced along one dimension (the standard trapezoidal rule)
 - [`cumulative_trapezoid`](api/series-antidiff/cumulative_trapezoid.md): the
-  running antiderivative, one value per sample point — torch parity with
-  `torch.cumulative_trapezoid`
+  running antiderivative, one value per sample point (the cumulative trapezoidal rule)
 
 - [`ito`, `strat`, `theta`](api/series-antidiff/stochastic_integrals.md): stochastic
   integrals of an integrand that is already sampled, against a sampled path

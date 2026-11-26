@@ -219,7 +219,7 @@ eye.
 
 ## Aliases
 
-**`multiply()`** / **`multiply_()`** — spelling is kept for torch-style naming familiarity.
+**`multiply()`** / **`multiply_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `mul()` / `mul_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

@@ -28,7 +28,7 @@ Registry Registry::take(std::string_view key, const std::vector<std::int64_t>& i
   selection to a **single named field**, leaving every other field untouched.
 
 ```{important} Out-of-range indices throw — no clamping, no negative-index wraparound
-Both roles perform no clamping and no Python-style negative-index support. Each
+Both roles perform no clamping and no negative-index support. Each
 index is looked up via `Slot::at()`, which throws
 `"Slot::at: index out of bounds"` for any index `< 0` or `>= size()` for that
 field. On a ragged registry, an index valid for one field can throw for a shorter

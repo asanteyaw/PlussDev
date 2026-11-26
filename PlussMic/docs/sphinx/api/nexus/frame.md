@@ -18,7 +18,7 @@ Fetches one table out of the workspace, either by name (`key`) or by position
 if the table doesn't exist — for a non-throwing alternative, use
 [`get(key)`](get.md) (name-based only).
 
-The positional overload supports negative indices Python-style: `-1` means the last
+The positional overload supports negative indices: `-1` means the last
 table, `-2` the second-to-last, and so on.
 
 ## Parameters

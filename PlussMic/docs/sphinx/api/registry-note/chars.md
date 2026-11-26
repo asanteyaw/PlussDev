@@ -15,8 +15,7 @@ Registry RegistryNoteAccessor::chars(std::int64_t start,
 
 ## What It Does
 
-Slices each bound field's text by character position — Python-style
-`text[start:stop:step]` semantics, including negative indices counting from
+Slices each bound field's text by character position — `text[start:stop:step]` semantics, including negative indices counting from
 the end.
 
 ## Parameters

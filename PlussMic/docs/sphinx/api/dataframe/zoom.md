@@ -47,7 +47,7 @@ debugging a generated frame, or preparing a focused block for display/export.
 **case_start**, **case_stop** (`std::int64_t`)
 
 The contiguous case block `[case_start, case_stop)`. Negative values follow the same
-Python-style normalization as [`slice()`](slice.md).
+normalization as [`slice()`](slice.md).
 
 **feature_start**, **feature_stop** (`std::int64_t`)
 

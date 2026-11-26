@@ -234,7 +234,7 @@ and the gradient signs all become predictable.
 
 ## Aliases
 
-**`subtract()`** / **`subtract_()`** — spelling is kept for torch-style naming familiarity.
+**`subtract()`** / **`subtract_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `sub()` / `sub_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

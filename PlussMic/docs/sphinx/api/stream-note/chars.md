@@ -14,7 +14,7 @@ Stream StreamNoteAccessor::chars(std::int64_t start, std::optional<std::int64_t>
 ## What It Does
 
 Extracts a character-position substring from the bound stream's text, using
-Python-style slicing semantics (`start`, `stop`, `step`), returning a new
+Slicing semantics (`start`, `stop`, `step`), returning a new
 stream.
 
 ## Parameters

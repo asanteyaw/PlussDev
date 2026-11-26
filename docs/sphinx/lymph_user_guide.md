@@ -740,7 +740,7 @@ Expected output behavior:
 - repeatable metrics for fixed seed
 - trained workflow reloads and infers consistently
 
-## Migration Guide (sklearn -> Lymph Terms)
+## Migration Guide (Pipeline Terms -> Lymph Terms)
 
 - `fit` -> `learn_`
 - `fit_transform` -> `learn_map`
@@ -748,7 +748,7 @@ Expected output behavior:
 - `predict` -> `infer`
 - `predict_proba`/`decision_function` -> `infer_scores`
 - `score` -> `assess`
-- sklearn `Pipeline([...])` concept -> `Workflow{ .model, .stages = {...} }`
+- a pipeline of steps -> `Workflow{ .model, .stages = {...} }`
 - `train_test_split` -> `hold_out_split`
 - `GridSearchCV` workflow selection -> `selection::tune` / `selection::tune_specs`
 

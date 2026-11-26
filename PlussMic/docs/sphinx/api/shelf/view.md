@@ -16,7 +16,7 @@ ShelfView Shelf::view(std::int64_t start, std::int64_t stop, bool render = false
 Returns an arbitrary `[start, stop)` positional window as a `ShelfView` — the
 general form [`head()`](head.md)/[`tail()`](tail.md) are anchored special cases of.
 Delegates directly to [`slice()`](slice.md) internally, so it shares that method's
-Python-style negative-index and clamping behavior: `start`/`stop` support negative
+negative-index and clamping behavior: `start`/`stop` support negative
 indices (counted from the end), both are clamped into `[0, size()]`, and a `stop`
 that ends up before `start` produces an empty (not erroring) result.
 
@@ -61,7 +61,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Negative indices count from the end, same as Python slicing.
+Example 2. Negative indices count from the end, same as slicing a string.
 
 ```cpp
 auto out2 = scores.view(-3, -1);

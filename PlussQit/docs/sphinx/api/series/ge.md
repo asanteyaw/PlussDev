@@ -197,7 +197,7 @@ the boundary that [`Series::gt`](gt.md) leaves open.
 
 ## Aliases
 
-**`greater_equal()`** / **`greater_equal_()`** — spelling is kept for torch-style naming familiarity.
+**`greater_equal()`** / **`greater_equal_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `ge()` / `ge_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

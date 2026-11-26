@@ -19,8 +19,7 @@ addresses, or titles typed in all-lowercase or inconsistent casing. Requires the
 shelf to be `Note`-kind.
 
 ```{warning} Word-boundary detection resets on *any* non-alphanumeric character
-`titlecase()` decides where a new "word" starts the same way Python's `str.title()`
-does: a word boundary is any position right after a non-alphanumeric character
+`titlecase()` decides where a new "word" starts the way a title-casing rule normally does: a word boundary is any position right after a non-alphanumeric character
 (space, hyphen, apostrophe, digit-to-letter transitions — anything that isn't a
 letter or digit), not just whitespace. This means an apostrophe inside a contraction
 resets the boundary too, so `"don't"` titlecases to `"Don'T"`, not `"Don't"` — see

@@ -15,7 +15,7 @@ Shelf Shelf::slice(std::int64_t start, std::int64_t stop) const
 
 Returns a contiguous `[start, stop)` slice as a plain `Shelf` (not a `ShelfView` —
 compare [`view()`](view.md), which wraps this exact operation in a `ShelfView`).
-Python-slice semantics throughout: negative `start`/`stop` count from the end, both
+Slice semantics throughout: negative `start`/`stop` count from the end, both
 are clamped into `[0, size()]`, and a `stop` at or before the resolved `start`
 produces an empty (not erroring) result. Internally implemented as
 `take({start, start+1, ..., stop-1})`.
@@ -89,7 +89,7 @@ ptype: Series
 
 ## Notes
 
-- Negative `start`/`stop` count from the end (Python-slice convention).
+- Negative `start`/`stop` count from the end (the usual slice convention).
 - Both bounds are clamped into `[0, size()]` — never throws for out-of-range
   values.
 - An inverted or empty resulting range produces a valid, zero-length `Shelf`.

@@ -79,7 +79,7 @@ pluss::save(n, "note.plio");
 auto n2 = pluss::load<pluss::Note>("note.plio");
 ```
 
-### 2) Out-parameter load (Torch-like style)
+### 2) Out-parameter load (out-parameter style)
 
 ```cpp
 pluss::Series y;

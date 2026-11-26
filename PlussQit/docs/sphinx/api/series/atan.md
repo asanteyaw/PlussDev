@@ -159,7 +159,7 @@ support on this public path should be treated cautiously.
 
 ## Aliases
 
-**`arctan()`** / **`arctan_()`** — spelling is kept for torch-style naming familiarity.
+**`arctan()`** / **`arctan_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `atan()` / `atan_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

@@ -191,7 +191,7 @@ pb2.objective([target](const Series& x) -> Series {
   - `InternalProtocol`
 
 `MeritMethod` is a real backend in `optima` (baseline penalty-method backend).  
-For MATLAB-style constrained NLP behavior, prefer `SequentialQP` or `InternalProtocol`.
+For constrained nonlinear programs, prefer `SequentialQP` or `InternalProtocol`.
 
 ### Examples
 
@@ -290,7 +290,7 @@ Rule of thumb:
 ### Notes
 
 Use progress hooks for transparent optimization traces and fail-loud diagnosis.
-This is the MATLAB `OutputFcn` equivalent.
+This is the per-iteration callback.
 
 ### Inputs
 

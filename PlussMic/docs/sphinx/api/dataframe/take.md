@@ -22,7 +22,7 @@ row-selection primitive several other methods ([`slice()`](slice.md),
 [`head()`](head.md), [`tail()`](tail.md), [`sample()`](sample.md),
 [`shuffle()`](shuffle.md)) are built on top of internally.
 
-Every requested position is resolved with Python-style negative-index support (`-1`
+Every requested position is resolved with negative-index support (`-1`
 means the last case), but — unlike `slice()`'s clamping behavior — an out-of-range
 position (after negative normalization) is a validation error here, not silently
 clamped. Case labels on the result follow the same positions and order as `indices`:

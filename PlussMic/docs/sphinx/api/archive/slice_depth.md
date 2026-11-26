@@ -14,7 +14,7 @@ Archive Archive::slice_depth(std::int64_t start, std::int64_t stop) const
 ## What It Does
 
 Returns a new archive containing the contiguous half-open depth range `[start, stop)`.
-Supports Python-style negative indices for both `start` and `stop`, and clamps out-of-range
+Supports negative indices for both `start` and `stop`, and clamps out-of-range
 bounds rather than throwing.
 
 ## Parameters

@@ -15,7 +15,7 @@ Shelf Shelf::chars(std::int64_t start,
 
 ## What It Does
 
-Slices every cell of a `Note` (string) shelf the same way Python slices a string —
+Slices every cell of a `Note` (string) shelf the same way a string is sliced —
 `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly, including negative
 indices (counted from the end) and a negative step (walking the string backwards).
 Requires the shelf to be `Note`-kind. Each cell is split into individual characters
@@ -26,7 +26,7 @@ rejoined into the output string.
 Because the slice bounds are evaluated per-cell using each cell's own length, cells of
 different lengths in the same shelf can each keep a different *number* of characters
 from the same `(start, stop, step)` call — exactly as it would if you ran the
-equivalent Python slice separately over each string.
+equivalent string slice separately over each string.
 
 ## Parameters
 
@@ -125,7 +125,7 @@ unchanged (`-5` resolves to index 0). Row 2, only two characters long, is also
 unchanged — `-5` clamps to index 0 once it's out of range.
 
 Example 3. A negative `step` walks backwards — `chars(-1, std::nullopt, -1)` is the
-idiomatic way to reverse a string with this method, exactly like Python's `s[::-1]`.
+idiomatic way to reverse a string with this method, exactly like a slice with step `-1`.
 
 ```cpp
 auto out3 = words.chars(-1, std::nullopt, -1);

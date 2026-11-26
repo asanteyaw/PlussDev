@@ -16,7 +16,7 @@ Slot SlotNoteAccessor::chars(std::int64_t start,
 ## What It Does
 
 Slices every value in the bound slot by character position —
-Python-style `text[start:stop:step]` semantics, including negative
+`text[start:stop:step]` semantics, including negative
 indices counting from the end.
 
 ## Parameters

@@ -202,7 +202,7 @@ data=[[10, 12],
 For a rank-2 `Series`, `-1` means the last axis, so this is column slicing.
 
 Example 7. Out-of-range bounds saturate to the axis rather than raising — the
-same forgiving behavior as a Python list slice. Here `end = 99` simply stops at
+same forgiving behavior as a slice of a list. Here `end = 99` simply stops at
 the real axis length.
 
 ```cpp

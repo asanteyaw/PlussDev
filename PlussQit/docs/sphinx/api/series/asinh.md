@@ -135,7 +135,7 @@ input to floating output.
 
 ## Aliases
 
-**`arcsinh()`** / **`arcsinh_()`** — spelling is kept for torch-style naming familiarity.
+**`arcsinh()`** / **`arcsinh_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `asinh()` / `asinh_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

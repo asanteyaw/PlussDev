@@ -19,8 +19,7 @@ transform for names, addresses, or titles typed in all-lowercase or
 inconsistent casing.
 
 ```{warning} Word-boundary detection resets on *any* non-alphanumeric character
-`titlecase()` decides where a new "word" starts the same way Python's
-`str.title()` does: a word boundary is any position right after a
+`titlecase()` decides where a new "word" starts the usual title-casing way: a word boundary is any position right after a
 non-alphanumeric character (space, hyphen, apostrophe, digit-to-letter
 transitions, punctuation — anything that isn't a letter or digit), not just
 whitespace. This means an apostrophe inside a contraction resets the

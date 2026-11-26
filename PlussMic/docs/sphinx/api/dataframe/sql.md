@@ -139,7 +139,7 @@ than as a long sequence of C++ table verbs, you can just write the query.
 - The calling frame is always available in the statement as the source table
   `df`; `options.sources` can bind additional named frames for joins.
 - Bare source-name shorthand is accepted: `df.sql().execute("df")` is treated like
-  `SELECT * FROM df`, similar in spirit to pandas' `read_sql(table_name, ...)`.
+  `SELECT * FROM df`, like reading a whole table by name.
 - Statements still need to produce a result set. This surface is query-oriented, not
   a mutation API for arbitrary DDL/DML workflows.
 

@@ -31,10 +31,8 @@ after the first — an approximation of `F(x_i) = integral_{x_0}^{x_i} y dx`
 for each `i`, in the same sense that `Series::cumsum()` is the running form
 of `Series::sum()`.
 
-This is torch parity: `torch.cumulative_trapezoid` is `torch.trapezoid`'s
-own running counterpart, and, like `trapezoid`, real torch declares it with
-no dedicated kernel — computed compositionally, the same approach taken
-here.
+Like `trapezoid`, it has no dedicated kernel: it is computed compositionally
+from `diff`, `slice`, `mul`, `add` and `cumsum`.
 
 ## Relationship To `trapezoid()`
 
@@ -61,8 +59,7 @@ behind the zero-argument form.
 `Series`
     A new `Series` with `dim`'s length reduced by one (the running sum
     starts after the first pair of samples, so an `n`-sample axis produces
-    `n - 1` cumulative values) — the same convention `torch.
-    cumulative_trapezoid` uses. Leading dimensions are preserved
+    `n - 1` cumulative values) — one fewer than the input. Leading dimensions are preserved
     (see Batching below).
 
 ## Batching
@@ -198,8 +195,7 @@ data=[(0.5+1j), (3+6j)]
 ## Gotchas And Failure Modes
 
 - The output has one FEWER entry along `dim` than the input — an
-  `n`-sample axis produces `n - 1` cumulative values, matching
-  `torch.cumulative_trapezoid`'s own convention. Reaching for element `i`
+  `n`-sample axis produces `n - 1` cumulative values, which is one fewer than the input. Reaching for element `i`
   of the result gives the area up through sample `i + 1`, not sample `i`.
 - The same peer-binding, broadcasting, and descending-`x` behavior as
   [`trapezoid()`](trapezoid.md) applies here — see that page's own Gotchas

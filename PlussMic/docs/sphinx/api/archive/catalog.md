@@ -13,7 +13,7 @@ Catalog Archive::catalog(std::int64_t i) const
 
 ## What It Does
 
-Returns the catalog at depth-index `i`. Supports Python-style negative indexing (`-1` is
+Returns the catalog at depth-index `i`. Supports negative indexing (`-1` is
 the last catalog). An exact synonym for [`dloc()`](dloc.md).
 
 ## Parameters

@@ -15,7 +15,7 @@ Registry Registry::slice(std::int64_t start, std::int64_t stop) const
 
 Returns a new registry keeping the positional range `[start, stop)` of every
 field, applying [`Slot::slice(start, stop)`](../slot/slice.md) independently to
-each field. Supports Python-style negative indices (counting from the end) and
+each field. Supports negative indices (counting from the end) and
 never throws for an out-of-range `start`/`stop` — both are clamped to each field's
 own valid range.
 
@@ -67,7 +67,7 @@ std::cout << "]";
 [2, 3]
 ```
 
-Example 2. Negative indices count from the end, Python-style.
+Example 2. Negative indices count from the end.
 
 ```cpp
 auto rg = pluss::scribble::Registry({

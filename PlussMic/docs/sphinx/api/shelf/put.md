@@ -159,7 +159,7 @@ ptype: Series
 
 ## See Also
 
-- [`Shelf::select`](select.md): the general numpy-`select`-style construct `put()`
+- [`Shelf::select`](select.md): the general multi-branch select construct `put()`
   specializes — multiple ordered conditions/choices instead of one mask/value pair.
 - [`Shelf::fillnull`](fillnull.md): the inverse direction — replace `NULL` rows with a
   value, rather than nulling out selected rows.

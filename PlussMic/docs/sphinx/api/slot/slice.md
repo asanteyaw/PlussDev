@@ -14,8 +14,7 @@ Slot Slot::slice(std::int64_t start, std::int64_t stop) const
 ## What It Does
 
 Returns a new slot holding the contiguous positional range `[start, stop)`.
-Supports negative indices, counted from the end, the same way Python
-slicing does.
+Supports negative indices, counted from the end, the same way a string slice does.
 
 ## Parameters
 

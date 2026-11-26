@@ -160,7 +160,7 @@ and whether your workflow needs verified gradient propagation.
 
 ## Aliases
 
-**`arcsin()`** / **`arcsin_()`** — spelling is kept for torch-style naming familiarity.
+**`arcsin()`** / **`arcsin_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `asin()` / `asin_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

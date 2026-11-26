@@ -15,7 +15,7 @@ Series Series::median(std::int64_t dim) const
 
 `median()` finds the centre of an ordered population. For an odd number of
 values, that is the one middle value. For an even number there are two middle
-values and the result is the lower of them, as `torch.median` does, so the
+values and the result is the lower of them, as a lower median does, so the
 result is always a value that occurs in the source. Use
 [`quantile(0.5)`](quantile.md) for the interpolated midpoint of an even
 population. The result is `float64`.

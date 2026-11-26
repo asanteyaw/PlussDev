@@ -56,8 +56,8 @@ ptype: Series
 
 ## Notes
 
-- The encoding is Monday `0` through Sunday `6` — **not** the C/Python
-  `tm_wday`-style Sunday-first convention some other libraries use.
+- The encoding is Monday `0` through Sunday `6` — **not** Sunday-first
+  convention some other libraries use.
 - `.tl()` requires the bound shelf to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying shelf) displays as

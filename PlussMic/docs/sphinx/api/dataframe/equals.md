@@ -27,7 +27,7 @@ Two comparison modes are available:
   identical floats do not compare equal.
 - **Tolerant** (`equals(other, atol, rtol)`): for numeric feature cells specifically,
   values are compared with the same `|a - b| <= atol + rtol * max(|a|, |b|)` rule
-  `numpy.allclose` uses, absorbing small floating-point discrepancies from independent
+  the usual tolerance comparison uses, absorbing small floating-point discrepancies from independent
   computation paths that should mathematically agree. Non-numeric cells (`Note`,
   `Timeline`, `TimeIndex`, or a numeric/non-numeric mismatch) always fall back to exact
   string comparison even in tolerant mode — `atol`/`rtol` only relax numeric-to-numeric

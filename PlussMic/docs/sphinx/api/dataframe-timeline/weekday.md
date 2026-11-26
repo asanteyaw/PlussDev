@@ -80,8 +80,8 @@ a Thursday (`3`); `"2024-07-06"` is a Saturday (`5`).
 
 ## Notes
 
-- The encoding is Monday `0` through Sunday `6` — **not** the C/Python
-  `tm_wday`-style Sunday-first convention some other libraries use.
+- The encoding is Monday `0` through Sunday `6` — **not** Sunday-first
+  convention some other libraries use.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.

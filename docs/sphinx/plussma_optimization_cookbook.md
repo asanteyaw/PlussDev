@@ -310,7 +310,7 @@ const auto out = pmo::optima(problem, init_params, options);
 ### Notes
 
 Attach tracing before tuning so failures are actionable immediately.
-This is the MATLAB `OutputFcn` analogue: the callback runs at solver start/iteration/done.
+This is the per-iteration callback: the callback runs at solver start/iteration/done.
 
 ### Inputs
 

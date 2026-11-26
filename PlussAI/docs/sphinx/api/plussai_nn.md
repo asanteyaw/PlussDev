@@ -48,7 +48,7 @@ namespace nn = pluss::ai::nn;
 unlike `nodej`/`nodeb`/`nodek`, which are internal source-directory codenames
 that public docs never expose (translated instead into `classic`, the `nlp`
 substrate, and so on), `pluss::ai::nn` needs no separate public alias to hide
-anything, the same way `torch::nn` needs none. Prose and signatures on this
+anything. Prose and signatures on this
 reference spell the framework out in full (`pluss::ai::nn::Fusion`,
 `pluss::ai::nn::optim::Adam`) for clarity. Runnable examples declare the short
 `nn` alias and call through it (`nn::Fusion`, `nn::optim::Adam`), the same way

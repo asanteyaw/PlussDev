@@ -22,8 +22,7 @@ shelf to be `Note`-kind. Two distinct trimming policies:
 - **`chars` overload**: trims by **character-set membership**, not by matching
   `chars` as a literal prefix/suffix substring. Every leading character that appears
   anywhere in `chars` is removed, one at a time, until a character not in the set is
-  reached; the same happens independently from the trailing end — the same
-  convention Python's `str.strip(chars)` uses.
+  reached; the same happens independently from the trailing end — the usual strip-by-character-set convention.
 
 ## Parameters
 

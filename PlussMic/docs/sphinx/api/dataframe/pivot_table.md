@@ -42,7 +42,7 @@ It starts from long data, groups by row-side keys and column-side keys, reduces 
 more value features inside each key combination, and then spreads the column-side key
 combinations across wide output features.
 
-If you know pandas, this is the Pluss analogue of `pandas.pivot_table(...)`. The main
+This is the Pluss pivot table. The main
 idea is the same, but the rendering model is deliberately Pluss-native:
 
 - row keys stay on the case axis
@@ -500,7 +500,7 @@ Tema  | 1                    5                   1                     ...  50
 [2 cs x 8 feat]
 ```
 
-This is the closest analogue to pandas `aggfunc=["sum", "mean"]`. Every selected value
+This is the way to ask for several aggregations at once, such as `"sum"` and `"mean"`. Every selected value
 feature is expanded against every requested aggregation.
 
 Example 5. Use explicit `specs` when different value features need different reductions.

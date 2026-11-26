@@ -14,7 +14,7 @@ Axel Axel::slice(std::int64_t start, std::int64_t stop) const
 ## What It Does
 
 Selects a contiguous range of registry frames `[start, stop)` along the
-depth axis, with Python-style negative-index support and clamping — the
+depth axis, with negative-index support and clamping — the
 range is never out of bounds, it's silently narrowed instead.
 
 ## Parameters
@@ -62,7 +62,7 @@ std::cout << "depth=" << out.depth() << " first_id="
 depth=2 first_id=1
 ```
 
-Example 2. Negative indices count from the end, same as Python slicing.
+Example 2. Negative indices count from the end, same as slicing a string.
 
 ```cpp
 auto axel = pluss::scribble::Axel({
@@ -106,8 +106,7 @@ l1
 
 ## Notes
 
-- Unlike [`registry(i)`](registry.md), `slice()` supports Python-style
-  negative indices for both `start` and `stop`.
+- Unlike [`registry(i)`](registry.md), `slice()` supports negative indices for both `start` and `stop`.
 - Both indices are clamped, so no combination of `start`/`stop` throws —
   a `stop` before an effective `start` simply yields a zero-depth
   result.

@@ -15,7 +15,7 @@ Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const
 
 Returns a new atlas containing the contiguous half-open depth range `[start, stop)` — the
 `Atlas` analog of [`Archive::slice_depth`](../archive/slice_depth.md). Supports
-Python-style negative indices for both `start` and `stop`, and clamps out-of-range bounds
+negative indices for both `start` and `stop`, and clamps out-of-range bounds
 rather than throwing.
 
 ## Parameters

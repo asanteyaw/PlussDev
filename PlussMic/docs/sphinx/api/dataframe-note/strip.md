@@ -25,7 +25,7 @@ which overload you call:
   `chars` as a literal prefix/suffix substring. Every leading character that
   appears anywhere in `chars` is removed, one at a time, until a character not
   in the set is reached; the same happens independently from the trailing
-  end. This is the same convention Python's `str.strip(chars)` uses — `chars`
+  end. This is the usual strip-by-character-set convention — `chars`
   is a bag of characters to peel off, not a string to match.
 
 Every method on `DataFrameNoteAccessor` — `strip()` included — applies to

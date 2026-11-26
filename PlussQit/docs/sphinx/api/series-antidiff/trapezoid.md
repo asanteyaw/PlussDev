@@ -34,12 +34,8 @@ trapezoid's area is
 0.5 * (y[i] + y[i+1]) * (x[i+1] - x[i])
 ```
 
-Summing this over every adjacent pair gives the total. This is the same
-algorithm `torch.trapezoid` and `numpy.trapz` implement — real torch's own
-`native_functions.yaml` declares `trapezoid` with no `dispatch:` entry,
-meaning torch itself computes it compositionally from other primitives
-rather than a dedicated kernel; `Series::trapezoid` does the same, built
-from `diff`, `slice`, `mul`, `add`, and `sum`.
+Summing this over every adjacent pair gives the total. This is the standard trapezoidal rule. There is no dedicated kernel:
+`Series::trapezoid` is built compositionally from `diff`, `slice`, `mul`, `add`, and `sum`.
 
 ## Why "antidiff", Not "integ"
 
@@ -263,7 +259,7 @@ broadcast: incompatible shapes
   mismatch throws rather than silently truncating or padding.
 - Descending `x` (e.g. `x = [4, 3, 2, 1, 0]`) is not special-cased —
   `diff(x)` is naturally negative, and the formula produces the correctly
-  signed (negative) result the same way torch's own does.
+  signed (negative) result as the formula does.
 - `trapezoid()` is out-of-place; it never mutates `y` or `x`.
 
 ## Summary

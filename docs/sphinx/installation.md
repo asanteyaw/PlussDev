@@ -146,8 +146,7 @@ cmake --build build --config Release
 ```
 
 LibTorch's [C++ installation guide](https://docs.pytorch.org/cppdocs/installing.html)
-explains how to obtain its archive. If you installed PyTorch through Python,
-its `torch.utils.cmake_prefix_path` gives the Torch CMake prefix instead. If
+explains how to obtain its archive. If
 `find_package(Torch REQUIRED)` fails, check that the selected prefix contains
 `share/cmake/Torch/TorchConfig.cmake`; `Torch_DIR` may also point directly to
 that directory. Define `PLUSS_DISABLE_TORCH_INTEROP` to switch the bridge off.

@@ -164,7 +164,7 @@ possible, all values reflected onto the non-negative side."
 
 ## Aliases
 
-**`absolute()`** / **`absolute_()`** — spelling is kept for torch-style naming familiarity.
+**`absolute()`** / **`absolute_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `abs()` / `abs_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

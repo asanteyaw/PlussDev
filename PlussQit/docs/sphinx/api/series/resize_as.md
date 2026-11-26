@@ -16,7 +16,7 @@ Series& Series::resize_as_sparse_(const Series& other) const
 
 `resize_as_(other)` rebinds `self` to a freshly allocated, **uninitialized** buffer matching `other`'s shape — the same discard-and-reallocate contract as [`Series::resize_`](resize.md), just with the target shape read from another `Series` instead of spelled out directly.
 
-`resize_as_sparse_()` is a torch-parity stub: Pluss's `Series` has no real sparse storage format, so both the zero-argument and `other`-argument overloads are pure no-ops — they return `self` unmodified.
+`resize_as_sparse_()` is a compatibility stub: Pluss's `Series` has no real sparse storage format, so both the zero-argument and `other`-argument overloads are pure no-ops — they return `self` unmodified.
 
 Despite being declared `const` at the call site, `resize_as_(other)` genuinely mutates `self`; the `resize_as_sparse_` overloads do not, since they do nothing at all.
 
@@ -71,7 +71,7 @@ same object: true
 
 ## Summary
 
-Use `resize_as_(other)` to adopt another `Series`'s shape into a fresh, uninitialized buffer. `resize_as_sparse_()` is a no-op stub kept for torch-style API compatibility.
+Use `resize_as_(other)` to adopt another `Series`'s shape into a fresh, uninitialized buffer. `resize_as_sparse_()` is a no-op stub kept for API compatibility.
 
 ## See Also
 

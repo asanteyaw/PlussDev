@@ -197,7 +197,7 @@ this is the closed-boundary counterpart to the open-boundary behavior of
 
 ## Aliases
 
-**`less_equal()`** / **`less_equal_()`** — spelling is kept for torch-style naming familiarity.
+**`less_equal()`** / **`less_equal_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `le()` / `le_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

@@ -74,7 +74,7 @@ Use backticks around feature names that contain spaces or punctuation, such as `
 This method is for row filtering. It does not rewrite values, create columns, or mutate the current frame in place.
 
 The expression is parsed and evaluated by PlussMic's own small expression engine, not by
-shelling out to an external interpreter — there is no dependency on Python, a SQL engine,
+shelling out to an external interpreter — there is no dependency on a scripting language, a SQL engine,
 or any other runtime to use `query()`. The patterns documented above (numeric and string
 comparisons, `and` / `or` combinators, quoted literals, and backtick-quoted feature
 names) are the supported core; if a more elaborate expression does not parse the way you

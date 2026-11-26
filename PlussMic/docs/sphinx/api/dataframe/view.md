@@ -16,7 +16,7 @@ DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render
 Returns a `[start, stop)` row range wrapped in a `DataFrameView`, the same renderable
 wrapper [`head()`](head.md) and [`tail()`](tail.md) return. `view(start, stop)` uses
 the exact same slice normalization as [`slice()`](slice.md) — both endpoints support
-Python-style negative indices, both are clamped into range, and `stop` is exclusive on
+negative indices, both are clamped into range, and `stop` is exclusive on
 both ends, positive or negative. The only thing `view()` adds on top of `slice()` is
 the `render` toggle: `view(start, stop, render)` is `slice(start, stop)` dressed up in
 a `DataFrameView`.

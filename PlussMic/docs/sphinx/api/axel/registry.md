@@ -83,7 +83,7 @@ Axel::registry: index out of bounds
   `const std::vector<Registry>&`.
 - [`Axel::depth`](depth.md): the valid upper bound for `i`.
 - [`Axel::slice`](slice.md): select a contiguous *range* of frames
-  (with Python-style negative-index support) instead of one.
+  (with negative-index support) instead of one.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="registries.html">

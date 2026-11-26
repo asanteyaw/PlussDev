@@ -114,7 +114,7 @@ Example 2. A custom delimiter and prefix, and the phantom-column effect from the
 warning above: row 3's hidden invalid text introduces a level no valid row ever uses.
 
 ```cpp
-auto langs = Shelf(pluss::make_note({"python, rust", "python, go", "just-one-word", "mars"}),
+auto langs = Shelf(pluss::make_note({"pear, plum", "pear, fig", "just-one-word", "mars"}),
     pluss::make_series(std::vector<bool>{true, true, true, false}));
 std::cout << langs;
 
@@ -125,8 +125,8 @@ std::cout << out2;
 ### Output (before — row 3 is invalid, its underlying text is invisible here)
 
 ```text
-0  python, rust
-1  python, go
+0  pear, plum
+1  pear, fig
 2  just-one-word
 3  NULL
 ptype: Note
@@ -135,14 +135,14 @@ ptype: Note
 ### Output
 
 ```text
-=====================================================================
-     | know_go  know_just-one-word  know_mars  know_python  know_rust
----------------------------------------------------------------------
-0    | false    false               false      true         true     
-1    | true     false               false      true         false    
-2    | false    true                false      false        false    
-3    | false    false               false      false        false    
----------------------------------------------------------------------
+====================================================================
+     | know_fig  know_just-one-word  know_mars  know_pear  know_plum
+--------------------------------------------------------------------
+0    | false     false               false      true       true     
+1    | true      false               false      true       false    
+2    | false     true                false      false      false    
+3    | false     false               false      false      false    
+--------------------------------------------------------------------
 [4 cs x 5 feat]
 ```
 

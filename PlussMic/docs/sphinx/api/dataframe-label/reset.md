@@ -17,8 +17,7 @@ DataFrame DataFrameLabelAccessor::reset(const DataFrame::ResetLabelOptions& opti
 Clears the case labels back to the default integer index. Unless dropped, the
 old case-label values are first materialized back as ordinary feature
 column(s). By default — with no name supplied — each level's own name is
-kept (matching pandas' `reset_index()`, which preserves a named `Index`'s
-name); pass an explicit name only when you want to override it.
+kept (a named level keeps its name); pass an explicit name only when you want to override it.
 
 ## Parameters
 
@@ -139,8 +138,7 @@ std::cout << out3;
 ## Notes
 
 - Calling `reset()` with no arguments keeps each level's own name (or falls
-  back to `"level_"` + position for an unnamed level) — this matches pandas'
-  `reset_index()`, which preserves a named `Index`'s name. Pass a non-empty
+  back to `"level_"` + position for an unnamed level) — a named level keeps its name. Pass a non-empty
   `case_feature` string only when you want to override that name.
 - `reset(DataFrame::ResetLabelOptions{})` with `options.names` left empty is
   equivalent to the no-argument single-string overload.

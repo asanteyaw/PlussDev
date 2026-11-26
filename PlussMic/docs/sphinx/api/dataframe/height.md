@@ -16,7 +16,7 @@ std::int64_t DataFrame::height() const
 A convenience alias for [`ncases()`](ncases.md): the number of cases (rows) in the
 frame. `height()` and `width()` exist as a pair, reading naturally when you think of
 a frame as a grid — `height()` down, [`width()`](width.md) across — the same
-convention used by tools like Polars, as an alternative to the `ncases()`/
+convention many dataframe tools use, as an alternative to the `ncases()`/
 `nfeatures()` naming for people coming from that background. There is no independent
 computation here: `height()` returns exactly what `ncases()` returns.
 

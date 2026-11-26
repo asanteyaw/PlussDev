@@ -45,7 +45,7 @@ happens to *that position's own* output value is then controlled separately by
   after it** becomes missing too — the missing entry "poisons" the running
   computation forward, even though the identity-substituted arithmetic
   underneath is still technically well-defined. This matches the common
-  spreadsheet/pandas convention that a running total is undefined once a gap
+  spreadsheet convention that a running total is undefined once a gap
   appears in the input, unless you explicitly ask to skip past it.
 
 ## Parameters

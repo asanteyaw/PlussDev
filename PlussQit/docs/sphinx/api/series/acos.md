@@ -166,7 +166,7 @@ and current backward-support expectations.
 
 ## Aliases
 
-**`arccos()`** / **`arccos_()`** — spelling is kept for torch-style naming familiarity.
+**`arccos()`** / **`arccos_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `acos()` / `acos_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

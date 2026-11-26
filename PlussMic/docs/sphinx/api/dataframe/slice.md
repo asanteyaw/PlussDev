@@ -14,7 +14,7 @@ DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const
 ## What It Does
 
 Returns a contiguous positional case range `[start, stop)` — every row from `start` up
-to, but not including, `stop`. Both endpoints support Python-style negative indices
+to, but not including, `stop`. Both endpoints support negative indices
 (`-1` means "the last case," `-2` the second-to-last, and so on), and both are clamped
 into range rather than raising, so it is always safe to pass generous or approximate
 bounds. Case labels on the result are preserved exactly as they were on the source
@@ -101,7 +101,7 @@ std::cout << near_the_end;
 
 `-3` normalizes to `6 - 3 = 3` and `-1` normalizes to `6 - 1 = 5`, so this returns
 `[3, 5)` — cases `3` and `4`. Case `5`, the actual last row, is excluded, exactly as
-`-1` in Python-style slicing means "stop right before the last element."
+`-1` in a slice means "stop right before the last element."
 
 Example 3. Pass a `stop` well beyond the frame's size.
 

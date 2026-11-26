@@ -62,8 +62,7 @@ Slot::at: index out of bounds
 ## Notes
 
 - Bounds-checked: negative indices and indices at or beyond `size()` both
-  throw `"Slot::at: index out of bounds"` — there's no Python-style
-  negative-index wraparound.
+  throw `"Slot::at: index out of bounds"` — there's no negative-index wraparound.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.
 

@@ -113,11 +113,7 @@ gradebook.set("OrgDefinedId") =
     gradebook.features("OrgDefinedId").as_note().strip().lstrip("#");
 ```
 
-This is the direct table-cleaning pattern:
-
-```python
-df["OrgDefinedId"] = df["OrgDefinedId"].astype(str).str.strip().str.lstrip("#")
-```
+This is the direct table-cleaning pattern.
 
 Use `.as_note()` when you want Note-specific text methods such as `strip`,
 `lstrip`, and `rstrip`.

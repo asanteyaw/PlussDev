@@ -33,7 +33,7 @@ static Shelf Shelf::select(pluss::RangeView<Shelf> conditions,
 ## What It Does
 
 **A `static` factory method, not an instance method** — you call it as `Shelf::select(...)`,
-not `shelf.select(...)`. It's the numpy-`select`-style construct: given a parallel list of
+not `shelf.select(...)`. It's the multi-branch select construct: given a parallel list of
 boolean `conditions` and value `choices`, it builds a new shelf where row `i` takes the
 value from the **first** `choices[k]` whose `conditions[k]` is `true` at row `i` — falling
 back to `default_value` if no condition matches that row at all. Conditions are evaluated
@@ -80,7 +80,7 @@ payload kind (or be `pluss::series::null`, which is always accepted).
 
 ## Examples
 
-Example 1. Classic multi-branch "if/elif/elif/else" grading, numpy-`select` style — first
+Example 1. Classic multi-branch "if/elif/elif/else" grading, multi-branch select style — first
 matching condition wins.
 
 ```cpp
@@ -173,7 +173,7 @@ Shelf::select: condition/choice count mismatch
 - [`Shelf::put`](put.md): the single-mask, single-value specialization of `select()`.
 - [`Shelf::compare`](compare.md) / [`eq`](eq.md): the usual way to build each `conditions`
   entry.
-- [`DataFrame::select`](../dataframe/select.md): the same numpy-`select`-style construct,
+- [`DataFrame::select`](../dataframe/select.md): the same multi-branch select construct,
   one level up — `choices` and `default_value` are whole `DataFrame`s instead of `Shelf`s.
 
 <div class="pluss-inline-prev-next">

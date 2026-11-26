@@ -60,7 +60,7 @@ void run_step(const pluss::Series& y_pred, const pluss::Series& y_true) {
 
 ## Notes
 
-- C++ cannot always provide Python-style full user-to-runtime tracebacks by default.
+- C++ cannot always provide full user-to-runtime tracebacks by default.
 - Pluss improves debugging by attaching source location and internal call-stack context to thrown errors.
 - Dispatch boundaries in CodeM/CodeN/CodeH now rethrow non-Pluss exceptions as `pluss::Error` with operation context.
 - Use macros or `pluss::validate::*` based on style preference; both surface through `pluss::Error`.

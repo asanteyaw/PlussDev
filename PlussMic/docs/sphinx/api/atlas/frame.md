@@ -14,7 +14,7 @@ DataFrame Atlas::frame(std::int64_t index) const
 ## What It Does
 
 Retrieves one frame from the stack by its depth position, returning it as a plain
-`DataFrame`. `index` supports Python-style negative indexing: `-1` is the last frame,
+`DataFrame`. `index` supports negative indexing: `-1` is the last frame,
 `-2` the second-to-last, and so on, the same convention [`dloc()`](dloc.md) (its exact
 synonym) and slicing methods like [`head()`](head.md)/[`tail()`](tail.md) use elsewhere
 on `Atlas`.

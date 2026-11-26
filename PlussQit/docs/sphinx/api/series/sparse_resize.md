@@ -13,7 +13,7 @@ Series& Series::sparse_resize_and_clear_() const
 
 ## What It Does
 
-Pluss's `Series` has no real sparse storage format, so both of these are torch-parity stubs rather than working sparse-tensor operations.
+Pluss's `Series` has no real sparse storage format, so both of these are compatibility stubs rather than working sparse-tensor operations.
 
 `sparse_resize_()` is a pure no-op: it returns a reference to `self` unmodified.
 
@@ -72,7 +72,7 @@ data=[0, 0]
 
 ## Summary
 
-Both are torch-parity stubs kept for API compatibility: `sparse_resize_()` does nothing; `sparse_resize_and_clear_()` zeros `self`'s values.
+Both are compatibility stubs kept for API compatibility: `sparse_resize_()` does nothing; `sparse_resize_and_clear_()` zeros `self`'s values.
 
 ## See Also
 

@@ -15,8 +15,7 @@ DataFrame DataFrameNoteAccessor::chars(std::int64_t start,
 
 ## What It Does
 
-Slices every selected text feature's cells the same way Python slices a
-string — `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly,
+Slices every selected text feature's cells the same way a string is sliced — `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly,
 including negative indices (counted from the end) and a negative step
 (walking the string backwards). Each cell is split into individual
 characters (Unicode codepoints, same unit [`length()`](length.md) counts
@@ -26,7 +25,7 @@ selected characters are rejoined into the output string.
 Because the slice bounds are evaluated per-cell using each cell's own
 length, cells of different lengths in the same feature can each keep a
 different *number* of characters from the same `(start, stop, step)`
-call — exactly as it would if you ran the equivalent Python slice
+call — exactly as it would if you ran the equivalent string slice
 separately over each string.
 
 ## Parameters
@@ -142,7 +141,7 @@ long, is also unchanged — `-5` clamps to index 0 once it's out of range.
 
 Example 3. A negative `step` walks backwards — `chars(-1, std::nullopt,
 -1)` is the idiomatic way to reverse a string with this method, exactly
-like Python's `s[::-1]`.
+like a slice with step `-1`.
 
 ```cpp
 auto out3 = words.nt().chars(-1, std::nullopt, -1);

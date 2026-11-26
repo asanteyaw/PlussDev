@@ -144,7 +144,7 @@ about.
 
 ## Aliases
 
-**`negative()`** / **`negative_()`** — spelling is kept for torch-style naming familiarity.
+**`negative()`** / **`negative_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `neg()` / `neg_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

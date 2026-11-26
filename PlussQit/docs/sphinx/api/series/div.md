@@ -215,7 +215,7 @@ into production."
 
 ## Aliases
 
-**`divide()`** / **`divide_()`**; **`true_divide()`** / **`true_divide_()`** — spellinges are kept for torch-style naming familiarity.
+**`divide()`** / **`divide_()`**; **`true_divide()`** / **`true_divide_()`** — spellinges are kept for naming familiarity.
 Each resolves to exactly the same dispatch as `div()` / `div_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

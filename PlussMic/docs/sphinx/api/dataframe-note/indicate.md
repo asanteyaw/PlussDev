@@ -136,7 +136,7 @@ valid row ever uses.
 ```cpp
 auto langs = DataFrame({
     {"langs", Shelf(pluss::make_note(
-        {"python, rust", "python, go", "just-one-word", "mars"}),
+        {"pear, plum", "pear, fig", "just-one-word", "mars"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 std::cout << langs;
@@ -151,8 +151,8 @@ std::cout << out2;
 ====================
      | langs        
 --------------------
-0    | python, rust 
-1    | python, go   
+0    | pear, plum   
+1    | pear, fig    
 2    | just-one-word
 3    | NULL         
 --------------------
@@ -162,14 +162,14 @@ std::cout << out2;
 ### Output
 
 ```text
-=====================================================================
-     | know_go  know_just-one-word  know_mars  know_python  know_rust
----------------------------------------------------------------------
-0    | false    false               false      true         true     
-1    | true     false               false      true         false    
-2    | false    true                false      false        false    
-3    | false    false               false      false        false    
----------------------------------------------------------------------
+====================================================================
+     | know_fig  know_just-one-word  know_mars  know_pear  know_plum
+--------------------------------------------------------------------
+0    | false     false               false      true       true     
+1    | true      false               false      true       false    
+2    | false     true                false      false      false    
+3    | false     false               false      false      false    
+--------------------------------------------------------------------
 [4 cs x 5 feat]
 ```
 

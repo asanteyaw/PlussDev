@@ -13,7 +13,7 @@ Series& Series::set_(const Series& other) const
 
 ## What It Does
 
-`set_()` (zero-argument) is a pure no-op — it returns a reference to `self` unmodified, without touching its storage or bumping its version. It exists purely for torch-style API compatibility.
+`set_()` (zero-argument) is a pure no-op — it returns a reference to `self` unmodified, without touching its storage or bumping its version. It exists purely for API compatibility.
 
 `set_(other)` is the real, meaningful overload: it makes `self` alias `other`'s storage — after the call, `self` holds `other`'s values (converted to `self`'s dtype if the dtypes differ), effectively swapping out which buffer `self` refers to. This is different from an ordinary in-place value op: it can change `self`'s shape as well as its values.
 

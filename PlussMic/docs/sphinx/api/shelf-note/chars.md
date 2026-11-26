@@ -14,7 +14,7 @@ Shelf ShelfNoteAccessor::chars(std::int64_t start,
 
 ## What It Does
 
-Slices the bound shelf's text the same way Python slices a string —
+Slices the bound shelf's text the same way a string is sliced —
 `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly, including negative
 indices (counted from the end) and a negative step (walking the string backwards). A
 direct forward to [`Shelf::chars()`](../shelf/chars.md). Requires the bound shelf
@@ -82,7 +82,7 @@ unchanged — `stop` is clamped to the cell's own length rather than padding or
 erroring. Row 3 is invalid and stays `NULL`.
 
 Example 2. A negative `step` reverses each cell — the idiomatic way to reverse a
-string with this method, exactly like Python's `s[::-1]`.
+string with this method, exactly like a slice with step `-1`.
 
 ```cpp
 auto out2 = words.nt().chars(-1, std::nullopt, -1);

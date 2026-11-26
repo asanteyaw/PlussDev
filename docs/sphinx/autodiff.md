@@ -60,7 +60,7 @@ You mark a leaf `Series` as tracked, build a scalar loss from it, call `reverse(
 Use this when:
 
 - you are debugging the tape directly
-- you want a PyTorch-like eager workflow
+- you want an eager, step-by-step workflow
 - the objective already exists as raw `Series` code
 
 ### Example

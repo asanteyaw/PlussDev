@@ -45,7 +45,7 @@ This hub is organized by surface area.
 ```{note}
 An earlier generation of this hub linked several auto-generated, single-giant-page
 references (`plusspl_core_api`, `flash_api`, `flash_full_overloads_api`, and others)
-that used a fictional pseudo-Python signature style not matching the real C++ API. Those
+that used a fictional pseudo-code signature style not matching the real C++ API. Those
 have been removed as stale duplicates of the per-method references above; `flash::`'s 3D
 scene/camera/lighting preset helpers and 4D animation/frame-export helpers they described
 (`camera3d`, `scene_preset3d`, `trace_preset3d`, and the `hyper4d` family) are real and

@@ -140,7 +140,7 @@ Use `acosh()` to recover nonnegative hyperbolic coordinates from values in
 
 ## Aliases
 
-**`arccosh()`** / **`arccosh_()`** — spelling is kept for torch-style naming familiarity.
+**`arccosh()`** / **`arccosh_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `acosh()` / `acosh_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

@@ -14,7 +14,7 @@ Series& Series::resize_(pluss::RangeView<std::int64_t> sizes) const
 
 `resize_()` rebinds `self` to a **freshly allocated, uninitialized** buffer of the given `sizes`. It does not preserve, reshape, or reinterpret the old data — the old values are simply discarded, and the new buffer's contents are unspecified until you write to them.
 
-This is fundamentally different from [`Series::reshape`](reshape.md) (which reinterprets existing data without copying or discarding anything) or [`Series::fill_`](fill.md) (which overwrites existing storage with a known value). `resize_()` is the low-level, torch-parity "just give me a buffer of this shape" primitive.
+This is fundamentally different from [`Series::reshape`](reshape.md) (which reinterprets existing data without copying or discarding anything) or [`Series::fill_`](fill.md) (which overwrites existing storage with a known value). `resize_()` is the low-level "just give me a buffer of this shape" primitive.
 
 Despite being declared `const` at the call site, `resize_()` genuinely mutates `self`.
 

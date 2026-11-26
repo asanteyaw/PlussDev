@@ -182,7 +182,7 @@ data=[0.7854, -0.7854]
 
 ## Aliases
 
-**`arctan2()`** / **`arctan2_()`** — spelling is kept for torch-style naming familiarity.
+**`arctan2()`** / **`arctan2_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `atan2()` / `atan2_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

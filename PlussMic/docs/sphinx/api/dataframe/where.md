@@ -18,7 +18,7 @@ DataFrame DataFrame::where(const Shelf& bool_mask, const AlignOptions& options) 
 An exact alias for [`filter()`](filter.md) — `where(bool_mask, ...)` literally
 delegates to `filter(bool_mask, ...)` for both the `pluss::Series` and `Shelf` mask
 overloads, keeping only the rows where the mask is `true` and dropping the rest.
-Note this is **not** numpy/pandas `.where()`'s replace-in-place semantics (which
+Note this is **not** a replace-in-place `.where()` (which
 keeps every row and only replaces individual masked-out *values*) — for that kind
 of masked replacement within a single feature, reach for [`put()`](put.md) instead.
 
@@ -117,7 +117,7 @@ literal mask did.
 - `where()` is a pure alias for [`filter()`](filter.md) — anything documented there
   (mask-length validation, `NULL`-in-mask handling, case-label preservation) applies
   identically here.
-- This is **not** numpy/pandas-style `.where()` replace semantics — it drops rows
+- This is **not** a replace-in-place `.where()` — it drops rows
   rather than replacing individual masked values while keeping every row. Use
   [`put()`](put.md) for masked, in-place-style value replacement within one feature.
 - Kept rows retain their original case labels; the result is never re-indexed.
@@ -127,7 +127,7 @@ literal mask did.
 - [`DataFrame::filter`](filter.md): the underlying implementation this method
   delegates to — functionally identical.
 - [`DataFrame::put`](put.md): masked value replacement within a feature, the closer
-  analogue to numpy/pandas `.where()`'s actual semantics.
+  match for replace-in-place semantics.
 - [`DataFrame::query`](query.md): a string-expression-driven alternative to building
   an explicit boolean mask by hand.
 

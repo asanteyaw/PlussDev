@@ -139,7 +139,7 @@ the endpoints as singular boundaries in both forward and reverse computations.
 
 ## Aliases
 
-**`arctanh()`** / **`arctanh_()`** — spelling is kept for torch-style naming familiarity.
+**`arctanh()`** / **`arctanh_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `atanh()` / `atanh_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.

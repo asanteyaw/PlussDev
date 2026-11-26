@@ -89,7 +89,7 @@ answer
 
 ## Getting it
 
-You need Python with `ipykernel` and `jupyter_client` (`python3 -m pip install ipykernel jupyter_client`), a clang-repl (macOS: `brew install llvm`), and a PlussII download. Then, from the download:
+You need the Jupyter kernel packages `ipykernel` and `jupyter_client` (`python3 -m pip install ipykernel jupyter_client`), a clang-repl (macOS: `brew install llvm`), and a PlussII download. Then, from the download:
 
 ```text
 bin/pluss kernel install

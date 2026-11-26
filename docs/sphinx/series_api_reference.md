@@ -1,7 +1,7 @@
 # Series API Reference
 
 `Series` is the tensor-style core object in PlussQit: numeric, boolean, shaped,
-strided, and close enough to Torch semantics that most array instincts carry over.
+strided, and close enough to common array semantics that most array instincts carry over.
 This reference is being rewritten method-by-method into handwritten pages with
 real prose, verified outputs, and explicit edge-case coverage.
 
@@ -35,7 +35,7 @@ misread.
 
 - [`extract`](_local/PlussQit/sphinx/api/series/extract.md): the full dynamic selector surface
   (`Slice`, scalar indices, `Ellipsis`, `NewAxis`, bool/int advanced indices).
-- [`index`](_local/PlussQit/sphinx/api/series/index.md): the Torch-style indexing entrypoint, especially
+- [`index`](_local/PlussQit/sphinx/api/series/index.md): the indexing entrypoint, especially
   relevant when one or more advanced index tensors are involved.
 - [`extract_put`](_local/PlussQit/sphinx/api/series/extract_put.md): non-mutating selector-based writes.
 - [`extract_put_`](_local/PlussQit/sphinx/api/series/extract_put_.md): in-place selector-based writes.

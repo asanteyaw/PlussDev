@@ -96,7 +96,7 @@ every column, not `NULL`.
 Example 2. A custom delimiter and prefix.
 
 ```cpp
-auto langs = Shelf(pluss::make_note({"python, rust", "python, go", "just-one-word"}));
+auto langs = Shelf(pluss::make_note({"pear, plum", "pear, fig", "just-one-word"}));
 auto out2 = langs.nt().indicate(", ", "know_");
 std::cout << out2;
 ```
@@ -104,13 +104,13 @@ std::cout << out2;
 ### Output
 
 ```text
-==========================================================
-     | know_go  know_just-one-word  know_python  know_rust
-----------------------------------------------------------
-0    | false    false               true         true     
-1    | true     false               true         false    
-2    | false    true                false        false    
-----------------------------------------------------------
+=========================================================
+     | know_fig  know_just-one-word  know_pear  know_plum
+---------------------------------------------------------
+0    | false     false               true       true     
+1    | true      false               true       false    
+2    | false     true                false      false    
+---------------------------------------------------------
 [3 cs x 4 feat]
 ```
 

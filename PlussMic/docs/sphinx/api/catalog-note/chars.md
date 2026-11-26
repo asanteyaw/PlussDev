@@ -17,7 +17,7 @@ Catalog CatalogNoteAccessor::chars(
 ## What It Does
 
 Extracts a character-index slice `[start, stop)` (with an optional `step`) from every
-bound key's text, Python-`str[start:stop:step]`-style, and returns a new catalog with
+bound key's text, `text[start:stop:step]`-style, and returns a new catalog with
 those keys replaced.
 
 ```{important} CatalogNoteAccessor requires every bound key to be Note-kind
@@ -77,7 +77,7 @@ city                     | Note         | Note             | 2       | [Acc, Kum
 ## Notes
 
 - See the important callout above.
-- Same slicing semantics as Python's `str[start:stop:step]` — `stop` omitted means
+- Same slicing semantics as a string slice `str[start:stop:step]` — `stop` omitted means
   "to the end", and a negative `step` is not supported (matches the `std::int64_t`
   parameter having no documented negative-stride behavior at this layer).
 

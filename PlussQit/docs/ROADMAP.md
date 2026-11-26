@@ -5,7 +5,7 @@ This repo is structured ATen-style under `src/CodeM/` (headers + sources co-loca
 ## What is production-grade here?
 - Correct metadata/view semantics (sizes/strides/storage_offset)
 - Broadcasting for elementwise ops
-- Type promotion policy (torch-like baseline; deviations centralized)
+- Type promotion policy (conventional baseline; deviations centralized)
 - Deterministic CPU kernels (with room for parallel/vectorized fastpaths)
 - Tests and a single public umbrella include: `<pluss/pluss.h>`
 
@@ -31,4 +31,4 @@ This repo is structured ATen-style under `src/CodeM/` (headers + sources co-loca
 
 ## Naming deviations
 
-PlussQit may rename a small set of methods away from Torch to reduce conceptual clutter (e.g., `unite/pile`). These are documented and versioned.
+PlussQit may rename a small set of methods away from common names to reduce conceptual clutter (e.g., `unite/pile`). These are documented and versioned.

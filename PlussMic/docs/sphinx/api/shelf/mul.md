@@ -17,8 +17,7 @@ Shelf Shelf::mul(const Shelf& other) const
 Elementwise multiplication, following [`add()`](add.md)'s shared mechanics. `mul()`
 has its own payload special case, parallel to `add()`'s `Note`-concatenation
 exception: multiplying a `Note` (string) shelf by a non-negative integral scalar
-**repeats** each string that many times — `"ab".mul(3.0)` behaves like Python's
-`"ab" * 3`, giving `"ababab"`. This only works for the scalar overload; there is no
+**repeats** each string that many times — `"ab".mul(3.0)` gives `"ababab"`. This only works for the scalar overload; there is no
 `Note`-times-`Note` multiplication.
 
 ## Parameters

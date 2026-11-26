@@ -16,7 +16,7 @@ Axel AxelNoteAccessor::chars(std::int64_t start,
 ## What It Does
 
 Slices each bound field's text by character position, in every registry
-frame — Python-style `text[start:stop:step]` semantics, including
+frame — `text[start:stop:step]` semantics, including
 negative indices counting from the end. Applies
 [`RegistryNoteAccessor::chars`](../registry-note/chars.md) to every
 frame via [`Axel::map`](../axel/map.md).

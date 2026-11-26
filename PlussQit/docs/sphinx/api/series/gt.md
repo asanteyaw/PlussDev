@@ -194,7 +194,7 @@ reach for [`Series::ge`](ge.md).
 
 ## Aliases
 
-**`greater()`** / **`greater_()`** — spelling is kept for torch-style naming familiarity.
+**`greater()`** / **`greater_()`** — spelling is kept for naming familiarity.
 Each resolves to exactly the same dispatch as `gt()` / `gt_()`
 before any computation runs, so behavior, gradient, and failure modes are
 identical; nothing here is a separate implementation to learn.
