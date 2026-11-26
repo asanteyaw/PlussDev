@@ -168,6 +168,9 @@ bool save_png(const ModelPage& page, const std::string& path, const DisplayOptio
 std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.
 pluss::view::RowWindow row_window_for(const DisplayOptions& options);
+// Whether the code is running inside the PlussII notebook (its kernel sets PLUSS_NOTEBOOK). Only a DataFrame is shown
+// there as a table; a shelf, an atlas and a catalog are shown as the text the terminal shows.
+bool in_notebook();
 // The frame as the compact HTML table a notebook shows: no page and no scripts, styles scoped to the table, the
 // notebook's own colours, as tall as its rows (a long frame as its first and last rows).
 std::string render_notebook_html(const DataFrame& frame);

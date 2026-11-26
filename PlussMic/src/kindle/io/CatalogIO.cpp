@@ -176,6 +176,11 @@ pluss::table::display::ModelPage catalog_page(const Catalog& catalog) {
 }
 
 void Catalog::show() const {
+  // A catalog is not a table: a notebook shows it as the terminal does.
+  if (pluss::table::display::in_notebook()) {
+    show(std::cout);
+    return;
+  }
   const auto page = catalog_page(*this);
   // A catalog is not a DataFrame, and opens in Ember so it looks like it unless a default theme was set.
   pluss::table::display::DisplayOptions options;

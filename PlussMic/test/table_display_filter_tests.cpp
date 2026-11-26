@@ -1,6 +1,7 @@
 // The View > Filter menu keeps rows by what a cell is (missing, NaN, infinite), never by its text.
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -236,6 +237,24 @@ void test_notebook_table_is_a_plain_fragment() {
   expect(!has(html, "<td>100</td>"), "the cut rows are not written out");
 }
 
+// In the notebook only a DataFrame is a table; a shelf, an atlas and a catalog print as the text the terminal shows.
+void test_notebook_shows_non_tables_as_text() {
+  setenv("PLUSS_NOTEBOOK", "1", 1);
+  std::ostringstream captured;
+  auto* const saved = std::cout.rdbuf(captured.rdbuf());
+  const Shelf shelf(pluss::make_series({101.0, 102.0, 103.0}));
+  pluss::table::display::show(shelf);
+  using namespace pluss::kindle::literals;
+  auto catalog = pluss::kindle::Catalog({"a"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0}))});
+  catalog.show();
+  std::cout.rdbuf(saved);
+  unsetenv("PLUSS_NOTEBOOK");
+  const std::string text = captured.str();
+  expect(has(text, "101") && has(text, "103"), "a shelf prints its values");
+  expect(!has(text, "pluss-mime") && !has(text, "<table"), "and not as a table");
+  expect(has(text, "a"), "a catalog prints its key");
+}
+
 int main() {
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
@@ -246,6 +265,7 @@ int main() {
   test_catalog_grid_is_ragged_not_padded();
   test_catalog_raggedness_view();
   test_notebook_table_is_a_plain_fragment();
+  test_notebook_shows_non_tables_as_text();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }
