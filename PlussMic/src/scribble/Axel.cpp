@@ -1,5 +1,7 @@
 #include "scribble/Axel.h"
+#include "scribble/RegistryGrid.h"
 #include "scribble/SlotDisplay.h"
+#include "table/display/StackPage.h"
 #include "table/display/Display.h"
 #include <pluss/tils/kit/output.h>
 
@@ -95,3 +97,40 @@ std::string render_notebook_html(const pluss::scribble::Axel& axel) {
 }
 
 }  // namespace pluss::table::display
+
+namespace pluss::scribble {
+
+// The axel in the PlussView window: one registry at a time as the ragged grid a registry opens as (see StackPage.h).
+void Axel::show() const {
+  if (pluss::table::display::show_in_notebook(pluss::table::display::render_notebook_html(*this))) {
+    return;
+  }
+  PLUSS_CHECK(defined(), "Axel::show: axel undefined");
+  const Axel held = *this;
+  pluss::table::display::StackSource source;
+  source.title = "Axel";
+  source.unit = "registry";
+  source.depth = depth();
+  source.ragged = true;
+  source.label = [held](const std::int64_t i) {
+    return held.labels().has_value() ? detail::slot_cell_text(held.labels()->at(i)) : std::string{};
+  };
+  source.table = [held](const std::int64_t i) -> std::shared_ptr<pluss::table::display::OptionsModel> {
+    return std::make_shared<display::RegistryGridModel>(held.registry(i));
+  };
+  source.cards = [held](const std::int64_t i) {
+    const display::RegistryGridModel model(held.registry(i));
+    return std::vector<std::pair<std::string, std::string>>{{"Fields", std::to_string(model.fields())},
+                                                              {"Longest", std::to_string(model.longest())},
+                                                              {"Shortest", std::to_string(model.shortest())}};
+  };
+  pluss::table::display::DisplayOptions options;
+  if (pluss::table::display::default_theme() == pluss::table::display::DisplayTheme::Default) {
+    options.theme = pluss::table::display::DisplayTheme::Ember;  // a ragged type opens in Ember
+  }
+  if (!pluss::table::display::show_model(pluss::table::display::stack_model_page(std::move(source)), options)) {
+    show(std::cout);
+  }
+}
+
+}  // namespace pluss::scribble

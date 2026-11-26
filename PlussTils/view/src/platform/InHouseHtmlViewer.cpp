@@ -1134,6 +1134,7 @@ bool show_inhouse_html_window(const std::string& title,
   std::string last_view_button;  // survives re-renders
   // A menu or view choice may have changed the row filter. A table that opens already filtered or visiting a range
   // (its options were set before the window opened) needs its row order built at once too.
+  std::uint64_t model_revision{virtual_table_model != nullptr ? virtual_table_model->revision() : 0};  // see VirtualTableModel::revision
   bool virtual_filter_changed{virtual_table_model != nullptr &&
                               (virtual_table_model->filtering() ||
                                virtual_table_model->row_window().kind != RowWindow::Kind::All)};
@@ -1981,6 +1982,21 @@ bool show_inhouse_html_window(const std::string& title,
       }
     }
 
+    if (virtual_table_model != nullptr && virtual_table_model->revision() != model_revision) {
+      // The model is a different table now (a stack's level was chosen): what the window kept about the old one is
+      // not true of it.
+      model_revision = virtual_table_model->revision();
+      table_column_widths.clear();
+      fitted_columns.clear();
+      layout_cache.clear();
+      table_sort_column = -1;
+      table_sort_target.clear();
+      table_sort_ascending = true;
+      scroll_model.reset();
+      virtual_filter_changed = true;
+      table_scroll_damage_only = false;
+      needs_render = true;
+    }
     if (virtual_table_model != nullptr) {
       auto query_it = input_values.find("table-search");
       if (query_it == input_values.end()) {

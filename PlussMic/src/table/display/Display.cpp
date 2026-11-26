@@ -1,4 +1,5 @@
 #include "table/display/Display.h"
+#include "table/display/StackPage.h"
 
 #include <algorithm>
 #include <array>
@@ -2408,7 +2409,7 @@ ShownRows shown_rows_(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 class DataFrameVirtualTableModel final
-    : public pluss::view::VirtualTableModel {
+    : public OptionsModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
       : cases_(display_shelf(frame.labels().values())),
@@ -2517,7 +2518,7 @@ class DataFrameVirtualTableModel final
   }
 
   // The filter, the visit and the number format of a set of options, all at once.
-  void apply(const DisplayOptions& options) const {
+  void apply(const DisplayOptions& options) const override {
     set_filter(options.filter);
     set_window(row_window_for_(options));
     set_number_format(options.number_format);
@@ -3506,7 +3507,8 @@ bool show_html_window_(const std::string& html,
                        std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {},
                        const bool offer_filter = false,
                        std::function<void(const DisplayOptions&)> on_rows = {},
-                       const bool offer_align = false) {
+                       const bool offer_align = false,
+                       const std::int64_t levels = 1) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -3716,6 +3718,47 @@ bool show_html_window_(const std::string& html,
       menu.selected = [state]() { return std::string(state->align == DisplayAlign::Tail ? "tail" : "head"); };
       window_opts.menus.push_back(std::move(menu));
     }
+    if (levels > 1) {
+      // Level: which table of a stack (an atlas's frame, an archive's catalog, an axel's registry) the window shows.
+      // The nearest ones are a click away; any other is asked for by number, since a stack can be hundreds deep.
+      pluss::view::HtmlMenu menu;
+      menu.id = "level";
+      menu.title = "Level";
+      menu.options.push_back(pluss::view::HtmlMenuOption{"first", "First"});
+      menu.options.push_back(pluss::view::HtmlMenuOption{"previous", "Previous"});
+      menu.options.push_back(pluss::view::HtmlMenuOption{"next", "Next"});
+      menu.options.push_back(pluss::view::HtmlMenuOption{"last", "Last"});
+      pluss::view::HtmlMenuOption go{"goto", "Go to..."};
+      go.prompt_title = "Go to level";
+      go.prompt_message = pluss::tils::OutputEngine::format("Levels count from 0 to {}.", levels - 1);
+      go.prompt_accept = "Go";
+      go.prompt = {{"Level", "0"}};
+      menu.options.push_back(std::move(go));
+      const auto move_to = [state, render_with, on_rows, levels](const std::int64_t level) {
+        state->level = std::clamp<std::int64_t>(level, 0, levels - 1);
+        if (on_rows) {
+          on_rows(*state);
+        }
+        return render_with(*state);
+      };
+      menu.prompt_values = [state](std::string_view) { return std::vector<std::string>{std::to_string(state->level)}; };
+      menu.render_prompted = [move_to, state](std::string_view, const std::vector<std::string>& values) {
+        std::int64_t level = state->level;
+        if (!values.empty() && !values.front().empty()) {
+          std::from_chars(values.front().data(), values.front().data() + values.front().size(), level);
+        }
+        return move_to(level);
+      };
+      menu.render = [move_to, state, levels](std::string_view id) {
+        if (id == "first") return move_to(0);
+        if (id == "previous") return move_to(state->level - 1);
+        if (id == "next") return move_to(state->level + 1);
+        if (id == "last") return move_to(levels - 1);
+        return std::string{};
+      };
+      menu.selected = []() { return std::string("off"); };
+      window_opts.menus.push_back(std::move(menu));
+    }
     {
       pluss::view::HtmlMenu menu;
       menu.id = "theme";
@@ -3890,9 +3933,15 @@ std::string format_number(const std::string& text, const NumberFormat format) {
 }
 
 std::string render_html_model_(const ModelPage& page, CatalogViews& views, const DisplayOptions& options) {
+  // A stack's page says what the level shown is; any other page says the same whatever the options.
+  std::string subtitle = page.subtitle;
+  auto cards = page.cards;
+  if (page.describe) {
+    page.describe(options, subtitle, cards);
+  }
   const std::string body =
-      tabbed_body_(summary_cards_html_(page.cards) + virtual_table_frame_(), views, options, /*lazy=*/true);
-  return html_shell_(page.title, options.visit_editing ? std::string_view(kVisitInstruction) : std::string_view(page.subtitle),
+      tabbed_body_(summary_cards_html_(cards) + virtual_table_frame_(), views, options, /*lazy=*/true);
+  return html_shell_(page.title, options.visit_editing ? std::string_view(kVisitInstruction) : std::string_view(subtitle),
                      body, options, options.visit_editing ? visit_inline_html_(options) : std::string{});
 }
 
@@ -4279,18 +4328,35 @@ void show(const Shelf& shelf, const DisplayOptions& options) {
   print(std::cout, shelf, options);
 }
 
+// An atlas in the PlussView window: one frame at a time, as a table of its own (see StackPage.h).
+static ModelPage atlas_page_(const Atlas& atlas) {
+  const Atlas held = atlas;
+  std::optional<Shelf> labels;
+  if (atlas.axis0_labels().has_value()) {
+    labels = display_shelf(*atlas.axis0_labels());
+  }
+  StackSource source;
+  source.title = "Atlas";
+  source.unit = "frame";
+  source.depth = atlas.depth();
+  source.label = [labels](const std::int64_t i) { return labels.has_value() ? shelf_value_at(*labels, i) : std::string{}; };
+  source.table = [held](const std::int64_t i) -> std::shared_ptr<OptionsModel> {
+    return std::make_shared<DataFrameVirtualTableModel>(held.frame(i));
+  };
+  source.cards = [held](const std::int64_t i) {
+    const auto frame = held.frame(i);
+    return std::vector<std::pair<std::string, std::string>>{{"Cases", std::to_string(frame.ncases())},
+                                                              {"Features", std::to_string(frame.nfeatures())}};
+  };
+  return stack_model_page(std::move(source));
+}
+
 void show(const Atlas& atlas, const DisplayOptions& options) {
   if (show_in_notebook_(render_notebook_html(atlas))) {
     return;
   }
-  const auto backend = resolve_backend_(options);
-  if (backend != DisplayBackend::Terminal) {
-    auto render_opts = options;
-    render_opts.backend = backend;
-    const auto html = render_html(atlas, render_opts);
-    if (show_html_window_(html, render_opts, "Pluss Atlas", backend)) {
-      return;
-    }
+  if (atlas.depth() > 0 && show_model(atlas_page_(atlas), options)) {
+    return;
   }
   print(std::cout, atlas, options);
 }
@@ -4329,7 +4395,7 @@ bool show_model(const ModelPage& page, const DisplayOptions& options) {
   }
   return show_html_window_(render_with(render_opts), render_opts, "Pluss " + page.title, backend, page.model,
                            /*table_viewport_scroll_only=*/true, render_with, /*offer_number_format=*/true,
-                           render_panel_with, /*offer_filter=*/true, page.on_options, page.offer_align);
+                           render_panel_with, /*offer_filter=*/true, page.on_options, page.offer_align, page.levels);
 }
 
 

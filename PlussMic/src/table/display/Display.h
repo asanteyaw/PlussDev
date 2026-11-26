@@ -112,6 +112,7 @@ struct DisplayOptions {
   std::int64_t visit_rows{10};              // First, Middle and Last
   std::int64_t visit_begin{0};              // Custom: the first position, 0-based
   std::int64_t visit_end{std::numeric_limits<std::int64_t>::max()};  // Custom: the position to stop before
+  std::int64_t level{0};      // which level of a stack (an atlas, an archive, an axel) the window shows
   bool visit_editing{false};  // the box for the custom range is open in the header, waiting for Apply
   std::int64_t terminal_width{0};  // <= 0 => detect from terminal
   std::int64_t terminal_height{0}; // <= 0 => detect from terminal
@@ -160,6 +161,12 @@ void show(const Atlas& atlas, const DisplayOptions& options = {});
 void show_info(const DataFrame& frame, const DisplayOptions& options = {});
 // A page for any model-painted table that is not a DataFrame (a ragged catalog): the title, the cards above the
 // table, the model, and what to do when a window menu changes the options (the filter, Visit, the alignment).
+// A table model that takes the window's options (the filter, Visit, number format, alignment) as they change.
+class OptionsModel : public pluss::view::VirtualTableModel {
+ public:
+  virtual void apply(const DisplayOptions& options) const = 0;
+};
+
 struct ModelPage {
   std::string title;
   std::string subtitle;
@@ -171,6 +178,11 @@ struct ModelPage {
   std::string entries_word{"entries"};  // what its items are called: entries, states
   std::function<void(const DisplayOptions&)> on_options;
   bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
+  // A stack's page: how many levels there are (a Level menu moves between them), what a level is called, and what its
+  // page says (the subtitle and the cards) when `options.level` is shown. `model` is then the stack's switchable model.
+  std::int64_t levels{1};
+  std::function<std::string(std::int64_t)> level_label;
+  std::function<void(const DisplayOptions&, std::string& subtitle, std::vector<std::pair<std::string, std::string>>& cards)> describe;
 };
 // The same for a model page (a ragged catalog): the page's own filter, visit and alignment come from the options.
 bool save_png(const ModelPage& page, const std::string& path, const DisplayOptions& options = {}, int width = 1300,

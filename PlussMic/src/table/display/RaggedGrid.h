@@ -42,7 +42,7 @@ struct RaggedColumn {
 // A column over a Shelf of values (what a catalog's stream is, and a registry's field when its cells agree).
 RaggedColumn ragged_column_from_shelf(std::string name, const Shelf& shelf);
 
-class RaggedGridModel : public pluss::view::VirtualTableModel {
+class RaggedGridModel : public OptionsModel {
  public:
   // `row_header` titles the label column ("entry" for a catalog, "state" for a registry).
   RaggedGridModel(std::string row_header, std::vector<RaggedColumn> columns);
@@ -59,7 +59,7 @@ class RaggedGridModel : public pluss::view::VirtualTableModel {
   // How numbers are written (View > Format); the stored values do not change.
   void set_number_format(NumberFormat format) const;
   // All of the above, from a set of options.
-  void apply(const DisplayOptions& options) const;
+  void apply(const DisplayOptions& options) const override;
 
   std::int64_t row_count() const noexcept override { return longest_; }
   std::int64_t column_count() const noexcept override { return columns(); }

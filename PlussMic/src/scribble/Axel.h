@@ -116,6 +116,8 @@ public:
   std::string to_string() const;
   std::string to_json() const;
   void show(std::ostream& os) const;
+  // Opens the axel in the PlussView window, one registry at a time as a ragged grid, or hands it to the notebook.
+  void show() const;
 
 private:
   explicit Axel(pluss::msharp::intrusive_ptr<detail::AxelImpl> impl);

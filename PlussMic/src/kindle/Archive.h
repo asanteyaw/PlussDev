@@ -206,6 +206,8 @@ public:
 
   std::string to_string() const;
   void show(std::ostream& os) const;
+  // Opens the archive in the PlussView window, one catalog at a time as a ragged grid, or hands it to the notebook.
+  void show() const;
 
 private:
   explicit Archive(pluss::msharp::intrusive_ptr<detail::ArchiveImpl> impl);

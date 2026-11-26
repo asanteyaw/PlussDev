@@ -3566,6 +3566,7 @@ int render_virtual_table(
     if (cached != render_config.layout_cache->tables.end()) {
       const auto& entry = cached->second;
       cached_widths = entry.node_identity == reinterpret_cast<std::uintptr_t>(model) &&
+                      entry.model_revision == model->revision() &&
                       entry.content_width == content_w &&
                       entry.column_count == static_cast<std::size_t>(column_count) &&
                       entry.column_widths.size() == static_cast<std::size_t>(column_count) + 1;
@@ -3613,6 +3614,7 @@ int render_virtual_table(
       render_config.layout_cache->tables[table_target] =
           HtmlTableGeometryCacheEntry{
               .node_identity = reinterpret_cast<std::uintptr_t>(model),
+              .model_revision = model->revision(),
               .viewport_width = content_w,
               .content_width = content_w,
               .row_count = static_cast<std::size_t>(model_row_count),

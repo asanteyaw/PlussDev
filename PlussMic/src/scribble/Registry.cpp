@@ -252,6 +252,7 @@ public:
 
 } // namespace pluss::scribble
 
+#include "scribble/RegistryGrid.h"
 #include "table/display/RaggedGrid.h"
 
 namespace pluss::scribble {
@@ -287,12 +288,7 @@ std::vector<pluss::table::display::RaggedColumn> registry_columns(const Registry
 
 namespace display {
 
-// A registry laid out for the viewer as a ragged grid: its fields side by side, each as long as its own slot.
-class RegistryGridModel final : public pluss::table::display::RaggedGridModel {
- public:
-  explicit RegistryGridModel(const Registry& registry)
-      : RaggedGridModel("state", registry_columns(registry)) {}
-};
+RegistryGridModel::RegistryGridModel(const Registry& registry) : RaggedGridModel("state", registry_columns(registry)) {}
 
 }  // namespace display
 
@@ -338,7 +334,7 @@ std::string render_notebook_html(const pluss::scribble::Registry& registry) {
   const auto states = model.shortest() == model.longest()
                           ? pluss::tils::OutputEngine::format("{} states", model.longest())
                           : pluss::tils::OutputEngine::format("{} to {} states", model.shortest(), model.longest());
-  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} fields &middot; {}", model.columns(), states));
+  return render_notebook_html(model, pluss::tils::OutputEngine::format("{} fields &middot; {}", model.fields(), states));
 }
 
 }  // namespace pluss::table::display

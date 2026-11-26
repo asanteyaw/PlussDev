@@ -20,6 +20,7 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/atlas/AtlasPlotAccessor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/display/Display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/display/RaggedGrid.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/display/StackPage.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Shelf.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DFDataset.h

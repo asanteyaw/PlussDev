@@ -66,6 +66,10 @@ class VirtualTableModel {
   // A fraction in [0, 1] drawn as a thin progress bar under a column's name (how much of the longest column this one
   // covers, say), or a negative number for no bar.
   [[nodiscard]] virtual double column_meter(std::int64_t /*column*/) const { return -1.0; }
+  // Changes when the model becomes a different table (a stack's level was chosen), so that what the window kept about
+  // the old one (its column widths, its sort, its scroll position) is dropped. A model that is always one table
+  // never changes it.
+  [[nodiscard]] virtual std::uint64_t revision() const noexcept { return 0; }
 };
 
 // A window-level menu (e.g. colour theme, number format). Choosing an option calls

@@ -209,6 +209,7 @@ struct HtmlRenderStats {
 
 struct HtmlTableGeometryCacheEntry {
   std::uintptr_t node_identity{0};
+  std::uint64_t model_revision{0};  // of the model a model-painted table asked, so a different table is measured afresh
   int viewport_width{0};
   int content_width{0};
   std::size_t row_count{0};

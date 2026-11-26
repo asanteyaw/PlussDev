@@ -12,6 +12,8 @@
 #include "kindle/display/GridModel.h"
 #include "scribble/Slot.h"
 #include "table/display/Display.h"
+#include "table/display/RaggedGrid.h"
+#include "table/display/StackPage.h"
 
 namespace {
 
@@ -324,6 +326,42 @@ void test_stacks_print_a_summary_that_does_not_grow() {
   expect(!has(large.str(), "c119"), "without listing its feature names");
 }
 
+// A stack's window paints one level at a time: choosing another level swaps the table and tells the window it changed.
+void test_stack_page_switches_levels() {
+  namespace display = pluss::table::display;
+  display::StackSource source;
+  source.title = "Archive";
+  source.unit = "catalog";
+  source.depth = 3;
+  source.table = [](const std::int64_t level) -> std::shared_ptr<display::OptionsModel> {
+    std::vector<display::RaggedColumn> columns;
+    display::RaggedColumn column;
+    column.name = "c";
+    column.entries = 2 + level;  // a different length at each level
+    column.text = [](const std::int64_t i) { return std::to_string(i); };
+    columns.push_back(std::move(column));
+    return std::make_shared<display::RaggedGridModel>("entry", std::move(columns));
+  };
+  const auto page = display::stack_model_page(std::move(source));
+  expect(page.levels == 3 && page.model != nullptr, "a stack page knows how many levels it has");
+  page.on_options(display::DisplayOptions{});
+  expect(page.model->row_count() == 2, "it opens on the first level");
+  const auto before = page.model->revision();
+  display::DisplayOptions second;
+  second.level = 2;
+  page.on_options(second);
+  expect(page.model->row_count() == 4, "choosing another level shows that level's table");
+  expect(page.model->revision() != before, "and tells the window it is a different table");
+  std::string subtitle;
+  std::vector<std::pair<std::string, std::string>> cards;
+  page.describe(second, subtitle, cards);
+  expect(has(subtitle, "catalog 3 of 3"), "the page says which level it is showing");
+  display::DisplayOptions beyond;
+  beyond.level = 99;
+  page.on_options(beyond);
+  expect(page.model->row_count() == 4, "a level past the end is the last one");
+}
+
 int main() {
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
@@ -337,6 +375,7 @@ int main() {
   test_notebook_shows_each_type_in_its_own_shape();
   test_one_dimensional_types_print_alike();
   test_stacks_print_a_summary_that_does_not_grow();
+  test_stack_page_switches_levels();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }
