@@ -1146,9 +1146,10 @@ void test_row_window_bounds() {
   const auto range = [](const std::int64_t begin, const std::int64_t end, const std::int64_t total) {
     return window_bounds(RowWindow{.kind = Kind::Range, .begin = begin, .end = end}, total);
   };
-  expect(range(3, 7, 20) == Pair(3, 7), "a range is [begin, end)");
-  expect(range(-5, 20, 20) == Pair(15, 20), "a negative begin counts from the back");
-  expect(range(15, 99, 20) == Pair(15, 20), "an end past the table is clamped to it");
+  expect(range(3, 8, 20) == Pair(3, 9), "a range includes both ends: 3 to 8 is the rows 3, 4, 5, 6, 7 and 8");
+  expect(range(5, 5, 20) == Pair(5, 6), "a range of one position is that one row");
+  expect(range(-5, 99, 20) == Pair(15, 20), "a negative begin counts from the back and an end past the table is clamped");
+  expect(range(0, -1, 20) == Pair(0, 20), "-1 is the last row, so 0 to -1 is every row");
   expect(range(9, 4, 20) == Pair(9, 9), "an end before the begin is an empty range");
 }
 

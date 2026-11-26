@@ -3303,7 +3303,7 @@ bool show_html_window_(const std::string& html,
         if (entry.visit == DisplayVisit::Custom) {
           // Asked for in a dialog where the window can show one; elsewhere the page offers the boxes (see render).
           option.prompt_title = "Visit rows";
-          option.prompt_message = std::string(kVisitInstruction);
+          option.prompt_message = "Positions count from 0 and both ends are included: 3 to 8 shows rows 3 through 8. Leave a box blank for the start or the end.";
           option.prompt_accept = "Apply";
           option.prompt = {{"From", "0"}, {"To", "1"}};
         }

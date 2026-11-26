@@ -145,9 +145,9 @@ void test_visit_custom_range() {
   options.visit_begin = 3;
   options.visit_end = 7;
   const auto out = display::render_html(numbered(20), options);
-  expect(out.find(">row-04<") != std::string::npos && out.find(">row-07<") != std::string::npos &&
-             out.find(">row-03<") == std::string::npos && out.find(">row-08<") == std::string::npos,
-         "a custom range shows positions begin up to, not including, end");
+  expect(out.find(">row-04<") != std::string::npos && out.find(">row-08<") != std::string::npos &&
+             out.find(">row-03<") == std::string::npos && out.find(">row-09<") == std::string::npos,
+         "a custom range of 3 to 7 shows the positions 3 through 7, both ends included");
   expect(out.find("visit-apply") == std::string::npos, "the range box is gone once the range is applied");
   options.visit_editing = true;
   expect(display::render_html(numbered(20), options).find("visit-apply") != std::string::npos,

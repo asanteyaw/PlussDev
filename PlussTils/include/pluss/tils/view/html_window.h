@@ -25,7 +25,8 @@ struct VirtualTableCell {
 };
 
 // Which rows of a table are visited: all of them, the first n, the middle n, the last n, or a position range.
-// Positions are 0-based; a range is [begin, end) and, like a slice, counts a negative end from the back.
+// Positions are 0-based, as in the table's case column, and a range includes both of its ends: 3 to 8 is the rows
+// 3, 4, 5, 6, 7 and 8. A negative position counts from the back (-1 is the last row).
 struct RowWindow {
   enum class Kind : std::uint8_t { All = 0, First = 1, Middle = 2, Last = 3, Range = 4 };
   Kind kind{Kind::All};

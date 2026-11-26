@@ -20,7 +20,7 @@ namespace pluss::view {
 // The rows [begin, end) a window visits out of `total`. Fewer rows than asked for just means all of them: the
 // first, middle and last 10 of 5 rows are those 5. The middle is counted from the top, so with 11 rows the middle
 // 10 are rows 2 to 11 (positions 1..10); with 12 the first, middle and last 10 are rows 1-10, 2-11 and 3-12. A
-// range follows a slice: both ends count from the back when negative, and are clamped into the table.
+// range includes both of its ends, counts a negative position from the back, and is clamped into the table.
 [[nodiscard]] inline std::pair<std::int64_t, std::int64_t> window_bounds(const RowWindow& window, const std::int64_t total) {
   const std::int64_t rows = std::max<std::int64_t>(0, total);
   const std::int64_t count = std::min(std::max<std::int64_t>(0, window.count), rows);
@@ -36,9 +36,10 @@ namespace pluss::view {
       return {begin, begin + count};
     }
     case RowWindow::Kind::Range: {
-      const auto place = [rows](const std::int64_t at) { return std::clamp(at < 0 ? rows + at : at, std::int64_t{0}, rows); };
-      const std::int64_t begin = place(window.begin);
-      return {begin, std::max(begin, place(window.end))};
+      const auto place = [rows](const std::int64_t at) { return at < 0 ? rows + at : at; };
+      const std::int64_t first = std::clamp(place(window.begin), std::int64_t{0}, rows);
+      const std::int64_t last = std::clamp(place(window.end), std::int64_t{-1}, rows - 1);  // inclusive
+      return {first, std::max(first, last + 1)};
     }
   }
   return {0, rows};
