@@ -11,7 +11,7 @@ You give `integrate(f, y0, t0, t1, options, jacobian)` a rate function `f` that 
 ```{math}
 \begin{aligned}
 &(I - h d J)\, k_1 = f(y_n), \\
-&d = \frac{1}{2 + \sqrt 2}, \quad y_{n+1} = y_n + h\, k_2 ,
+&d = \frac{1}{2 + \sqrt 2}, \quad y_{n+1} = y_n + h\, k_2 
 \end{aligned}
 ```
 

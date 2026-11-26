@@ -9,7 +9,7 @@ Most contingency, congestion and market studies need many power flows, quickly, 
 The DC power flow keeps three assumptions about the AC equations. Every voltage magnitude is `1.0` per unit. Every line is lossless, so only its reactance `x` matters. And the angle differences across the lines are small, so `sin(difference)` is the difference. Active power on a line from bus `i` to bus `j` is then `(theta_i - theta_j) / x`, the same form as a current through a resistor, and the balance of power at each bus is a linear system for the angles,
 
 ```{math}
-B \theta = P,
+B \theta = P
 ```
 
 where `B` is the susceptance matrix, `P` the net active injections and the slack angle is fixed at zero. `dc(grid)` returns a `DcResult`:

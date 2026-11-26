@@ -7,7 +7,7 @@ The chain ladder trusts the paid claims completely: it scales what has been paid
 ```{math}
 \begin{aligned}
 &\hat U_i=C_i+\mathrm{ELR}_i\,P_i\,\bigl(1-q_i\bigr), \\
-&R_i=\hat U_i-C_i=\hat U^{\text{exp}}_i\,(1-q_i),
+&R_i=\hat U_i-C_i=\hat U^{\text{exp}}_i\,(1-q_i)
 \end{aligned}
 ```
 

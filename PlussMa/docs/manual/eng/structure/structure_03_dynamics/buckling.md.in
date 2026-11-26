@@ -9,7 +9,7 @@ A slender column loaded in compression carries the load straight down until the 
 Compression stiffens nothing: it softens the member sideways. The sideways stiffness of a member under an axial compressive force `N` is its ordinary stiffness `K` minus a term proportional to `N`, the **geometric stiffness** `K_g`. The member loses its sideways stiffness when `K - lambda K_g` can be singular, and the load multiplier at which that first happens is the buckling factor `lambda`: the eigenvalue of
 
 ```{math}
-K \phi = \lambda K_g \phi,
+K \phi = \lambda K_g \phi
 ```
 
 where `K_g` is built from the axial forces that the **reference load** produces. `buckling(frame, reference_load, fix, options)` solves the structure under the reference load to find those axial forces, builds `K_g`, and returns the lowest positive factors. It returns a `BuckResult`:
@@ -29,7 +29,7 @@ The reference load is any load; the answer is a **factor** on it. Apply a refere
 A column of length `L`, bending stiffness `E I`, has Euler buckling load
 
 ```{math}
-P_{cr} = \frac{\pi^2 E I}{(K L)^2},
+P_{cr} = \frac{\pi^2 E I}{(K L)^2}
 ```
 
 where `K` is an **effective length factor** that depends on how the ends are held. The classical cases, with the loaded end free to move in the load direction and the rest as stated:

@@ -97,7 +97,7 @@ The Fourier-cosine method expands the density of {math}`\ln(S_T/K)` in a cosine 
 ```{math}
 \begin{aligned}
 &C \;\approx\; e^{-rT}\,{\sum_{n=0}^{N-1}}{}'\;\mathrm{Re}\!\Big\{\varphi\!\Big(\tfrac{n\pi}{b-a}\Big)\,e^{-in\pi\frac{a}{b-a}}\Big\}\,V_n, \\
-&[a,b]=\Big[c_1-L\sqrt{c_2+\sqrt{c_4}},\;c_1+L\sqrt{c_2+\sqrt{c_4}}\Big],
+&[a,b]=\Big[c_1-L\sqrt{c_2+\sqrt{c_4}},\;c_1+L\sqrt{c_2+\sqrt{c_4}}\Big]
 \end{aligned}
 ```
 
@@ -153,7 +153,7 @@ The Carr-Madan method prices a whole grid of strikes with one Fourier transform.
 ```{math}
 \begin{aligned}
 &C(k)=\frac{e^{-\alpha k}}{\pi}\int_0^\infty e^{-iuk}\,\psi(u)\,du, \\
-&\psi(u)=\frac{e^{-rT}\,\varphi\big(u-(\alpha+1)i\big)}{\alpha^2+\alpha-u^2+i(2\alpha+1)u},
+&\psi(u)=\frac{e^{-rT}\,\varphi\big(u-(\alpha+1)i\big)}{\alpha^2+\alpha-u^2+i(2\alpha+1)u}
 \end{aligned}
 ```
 
@@ -322,7 +322,7 @@ For Black-Scholes without dividends they have closed forms, with {math}`d_1=\dfr
 &\Gamma=\frac{\phi(d_1)}{S\sigma\sqrt T}, \\
 &\mathcal V=S\,\phi(d_1)\sqrt T, \\
 &\Theta=-\frac{S\,\phi(d_1)\,\sigma}{2\sqrt T}-rKe^{-rT}N(d_2), \\
-&\rho=KTe^{-rT}N(d_2),
+&\rho=KTe^{-rT}N(d_2)
 \end{aligned}
 ```
 

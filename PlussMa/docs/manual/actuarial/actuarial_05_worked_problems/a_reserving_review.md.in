@@ -11,7 +11,7 @@ This is the standard structure of a reserving analysis, and it uses everything i
 The cumulative claims of origin year {math}`i` at development age {math}`j` are {math}`C_{i,j}`. Chain ladder projects each year's latest figure by the factors of earlier years; it assumes that the future will develop like the past, and it is only as good as that assumption. Bornhuetter-Ferguson instead takes an a priori ultimate {math}`U_i=\text{premium}_i\times\text{expected loss ratio}` and adds to the reported amount the unreported share of it. The two are linked: with {math}`p_i=1/\mathrm{CDF}_i` the proportion reported,
 
 ```{math}
-\text{BF}_i=p_i\,\underbrace{\frac{C_i}{p_i}}_{\text{chain ladder}}+(1-p_i)\,U_i ,
+\text{BF}_i=p_i\,\underbrace{\frac{C_i}{p_i}}_{\text{chain ladder}}+(1-p_i)\,U_i
 ```
 
 so Bornhuetter-Ferguson is **a credibility-weighted average of the chain-ladder ultimate and the a priori ultimate with weight {math}`p_i`**, the proportion reported: mature years lean on the data, immature ones on the prior. Seeing that identity hold on real numbers makes the choice of method much easier to defend.

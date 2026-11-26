@@ -9,7 +9,7 @@ You want to apply a short set of weights along a signal: smooth it with a moving
 For an input `x` of length `N` and a kernel `h` of length `K`, the **full** convolution has length `N + K - 1` and entry
 
 ```{math}
-y[n] = \sum_{k} h[k]\,x[n-k],
+y[n] = \sum_{k} h[k]\,x[n-k]
 ```
 
 with samples outside the input taken as zero. The kernel is *flipped* as it slides, which is what makes convolution commutative and makes the output of a filter equal to its impulse response when the input is a single 1.

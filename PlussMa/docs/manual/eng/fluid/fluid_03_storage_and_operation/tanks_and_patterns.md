@@ -11,7 +11,7 @@ A town's demand is not constant: it peaks in the morning and the evening and sin
 A run is a sequence of **events**. At each event the network is a steady one: the demands for the current pattern period, the tank heads for the current levels, and the pump speeds and valve settings for the current controls. `steady` solves it, and the flow into each tank holds until the next event. The tank level at the next event follows from conservation of volume:
 
 ```{math}
-\text{level}(t + \Delta t) = \text{level}(t) + \frac{\Delta t \,( q_{\text{tank}} - q_{\text{spill}} )}{A} ,
+\text{level}(t + \Delta t) = \text{level}(t) + \frac{\Delta t \,( q_{\text{tank}} - q_{\text{spill}} )}{A}
 ```
 
 with the tank's cross-section `A`. The clock does not step blindly. `Schedule::step` is the longest hydraulic step, and every event that could change the solution shortens a step to land on it exactly: the end of a pattern period, a timed control, a control threshold, and the moment a tank reaches its minimum or maximum level. This is what makes the water balance exact rather than approximate.

@@ -13,7 +13,7 @@ With the law `u = -K x` the plant `x' = A x + B u` becomes `x' = (A - B K) x`, a
 The cost has an exact value along every trajectory. If `P` solves the Riccati equation, then for the LQR gain
 
 ```{math}
-\int_0^\infty \left( x^T Q x + u^T R u \right) dt = x_0^T P\,x_0,
+\int_0^\infty \left( x^T Q x + u^T R u \right) dt = x_0^T P\,x_0
 ```
 
 and for any other stabilising gain the integral is larger. The first two programs verify both statements by integrating the cost along the simulated response.

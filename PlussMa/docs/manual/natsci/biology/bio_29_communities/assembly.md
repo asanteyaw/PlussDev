@@ -9,7 +9,7 @@ You have a pool of species with known growth rates and known interactions, and y
 In the generalised Lotka-Volterra model species $i$ grows as $\dot n_i = n_i\,(r_i + \sum_j A_{ij}n_j)$. For a set $R$ of resident species the equilibrium solves $A_{RR}\,n_R = -r_R$, and an absent species $j$ can invade when its growth rate while rare,
 
 ```{math}
-\lambda_j = r_j + \sum_{i\in R} A_{ji}\,n_i^{*},
+\lambda_j = r_j + \sum_{i\in R} A_{ji}\,n_i^{*}
 ```
 
 is positive. `community::resident_equilibrium(r, a, resident)` returns the equilibrium of the residents (zero for absent species), with `resident` a mask of ones and zeros, and `community::invasion_growth_rate(r, a, resident)` returns $\lambda$ for every species (it is zero for the residents themselves). For one consumer on a nutrient in a chemostat with dilution $D$, supply $S_0$, Monod uptake $\mu(R) = \mu_{max}R/(K+R)$, mortality $m$ and yield $y$, the nutrient settles at $R^* = mK/(\mu_{max} - m)$, the lowest level the species can live on, and the consumer at

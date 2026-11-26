@@ -11,7 +11,7 @@ The Rouse chain has bead friction `zeta` and bond length `b`. In the Zimm model 
 ```{math}
 \begin{aligned}
 &H_{nm} = \delta_{nm} + \sqrt{2}\,\frac{h^*}{\sqrt{|n-m|}}\,(1-\delta_{nm}), \\
-&h^* = \frac{\zeta}{\eta_s\, b\,\sqrt{12\pi^3}} ,
+&h^* = \frac{\zeta}{\eta_s\, b\,\sqrt{12\pi^3}} 
 \end{aligned}
 ```
 

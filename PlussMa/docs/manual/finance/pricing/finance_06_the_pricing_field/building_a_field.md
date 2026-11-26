@@ -11,16 +11,17 @@ The quantity every engine computes is the discounted risk-neutral expectation of
 ```{math}
 \begin{aligned}
 &C = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(S_T-K)^+\big], \\
-&P = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(K-S_T)^+\big],
+&P = e^{-rT}\,\mathbb{E}^{\mathbb{Q}}\big[(K-S_T)^+\big]
 \end{aligned}
 ```
 
 where {math}`S_T` is the asset at maturity {math}`T`, {math}`K` the strike, {math}`r` the continuously compounded rate and {math}`q` the dividend yield. The model decides the law of {math}`S_T`. In the Black-Scholes model the asset is a geometric Brownian motion,
 
 ```{math}
-dS_t=(r-q)\,S_t\,dt+\sigma S_t\,dW_t
-\quad\Longrightarrow\quad
-S_t=S_0\exp\!\Big(\big(r-q-\tfrac12\sigma^2\big)t+\sigma W_t\Big),
+\begin{aligned}
+&dS_t=(r-q)\,S_t\,dt+\sigma S_t\,dW_t \\
+&S_t=S_0\exp\!\Big(\big(r-q-\tfrac12\sigma^2\big)t+\sigma W_t\Big)
+\end{aligned}
 ```
 
 with {math}`W_t` a Brownian motion, and the expectation has a closed form. In a stochastic-volatility model such as Heston the constant {math}`\sigma` is replaced by {math}`\sqrt{v_t}`, where the variance {math}`v_t` is itself random,
@@ -29,7 +30,7 @@ with {math}`W_t` a Brownian motion, and the expectation has a closed form. In a 
 \begin{aligned}
 &dS_t=(r-q)S_t\,dt+\sqrt{v_t}\,S_t\,dW^S_t, \\
 &dv_t=\kappa(\theta-v_t)\,dt+\sigma\sqrt{v_t}\,dW^v_t, \\
-&d\langle W^S,W^v\rangle_t=\rho\,dt,
+&d\langle W^S,W^v\rangle_t=\rho\,dt
 \end{aligned}
 ```
 

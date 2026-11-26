@@ -11,14 +11,14 @@ The holder chooses the exercise day, so the value is the best expected discounte
 ```{math}
 \begin{aligned}
 &V_0=\sup_{\tau\in\mathcal{T}}\ \mathbb{E}^{\mathbb{Q}}\!\left[e^{-r\tau}\,g(S_\tau)\right], \\
-&g(S)=(K-S)^+\ \text{for a put},\ (S-K)^+\ \text{for a call},
+&g(S)=(K-S)^+\ \text{for a put},\ (S-K)^+\ \text{for a call}
 \end{aligned}
 ```
 
 where {math}`\mathcal{T}` is the set of allowed exercise days: {math}`\{T\}` (European), {math}`\{t_1,\dots,t_m,T\}` (Bermudan) or {math}`[0,T]` (American). Working backwards from {math}`T`, the value at an allowed day is the larger of exercising and of waiting,
 
 ```{math}
-V_{t}=\max\!\Big(g(S_t),\ \,e^{-r\Delta t}\,\mathbb{E}^{\mathbb{Q}}\big[V_{t+\Delta t}\mid S_t\big]\Big),
+V_{t}=\max\!\Big(g(S_t),\ \,e^{-r\Delta t}\,\mathbb{E}^{\mathbb{Q}}\big[V_{t+\Delta t}\mid S_t\big]\Big)
 ```
 
 and at a day when exercise is not allowed only the second term remains. Everything below is a way to evaluate that conditional expectation, the **continuation value**. Two consequences are worth knowing before any number is computed. The value is never below the intrinsic value {math}`g(S_0)`, and it is never below the European value, since waiting until {math}`T` is one of the rules. And an American call on an asset that pays no dividend is *never* exercised early, so it is worth exactly the European call: giving up the option to wait forgoes the interest on the strike and the insurance against a fall, for nothing in return. A put, or a call on an asset with a dividend yield, has a genuine early-exercise premium.
@@ -54,13 +54,13 @@ The closed-form and transform engines (`Analytic`, `Fft`, `Cos`) price European 
 **The integral equation.** Let {math}`B(\tau)` be the exercise boundary of a put: the asset price below which, with time {math}`\tau` to maturity, exercising is better than waiting. The American put equals the European put plus the value of the right to exercise early, which accrues only along the boundary:
 
 ```{math}
-V(S,\tau)=v(S,\tau)+\int_0^{\tau}\Big[rK\,e^{-rs}\,\Phi\big(-d_-(s,S/B(\tau-s))\big)-qS\,e^{-qs}\,\Phi\big(-d_+(s,S/B(\tau-s))\big)\Big]\,ds,
+V(S,\tau)=v(S,\tau)+\int_0^{\tau}\Big[rK\,e^{-rs}\,\Phi\big(-d_-(s,S/B(\tau-s))\big)-qS\,e^{-qs}\,\Phi\big(-d_+(s,S/B(\tau-s))\big)\Big]\,ds
 ```
 
 where {math}`v` is the European price, {math}`\Phi` the normal distribution function and {math}`d_\pm(s,z)=\big(\ln z+(r-q\pm\tfrac12\sigma^2)s\big)/(\sigma\sqrt s)`. The boundary is not known, but it must satisfy the value-matching condition {math}`V(B(\tau),\tau)=K-B(\tau)` and the smooth-pasting condition {math}`\partial_S V=-1` there. Together they give a fixed-point equation for the boundary alone,
 
 ```{math}
-B(\tau)=K\,e^{-(r-q)\tau}\,\frac{N(\tau,B)}{D(\tau,B)},
+B(\tau)=K\,e^{-(r-q)\tau}\,\frac{N(\tau,B)}{D(\tau,B)}
 ```
 
 with {math}`N` and {math}`D` themselves integrals over the earlier values {math}`B(u)`, {math}`0<u<\tau`. The `Spectral` engine solves it as follows. The quantity {math}`\ln(X/B(\tau))^2`, with {math}`X=B(0)=K\min(1,r/q)`, is smooth in {math}`\sqrt\tau`, so it is represented by a Chebyshev interpolant in {math}`\sqrt\tau` through `nodes + 1` points; the integrals are taken by Gauss-Legendre quadrature in an angle that removes the square-root singularities at both ends; and the equation is iterated to a fixed point. The price then follows from the first formula, with the boundary read off the interpolant, and a call is priced as a put through the symmetry {math}`C(S,K,r,q)=P(K,S,q,r)`. The work does not depend on the spot or on how deep in the money the option is, and the error falls geometrically with `nodes`: 24 nodes give an error of about {math}`10^{-9}` for the options below.
@@ -82,7 +82,7 @@ of the Bermudan prices {math}`v(M)` with {math}`M` equally spaced dates; `cos.ex
 ```{math}
 \begin{aligned}
 &\partial_\tau V=\tfrac12 vS^2V_{SS}+\rho\sigma vS\,V_{Sv}+\tfrac12\sigma^2vV_{vv}+(r-q)S\,V_S+\kappa(\theta-v)V_v-rV, \\
-&V\ge(K-S)^+,
+&V\ge(K-S)^+
 \end{aligned}
 ```
 

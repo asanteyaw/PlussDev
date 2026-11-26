@@ -74,7 +74,7 @@ The round trip recovers the original probabilities to floating-point precision. 
 The Gompertz law models an exponentially increasing force of mortality,
 
 ```{math}
-\mu_x = b c^x,
+\mu_x = b c^x
 ```
 
 while Makeham adds an age-independent component,

@@ -124,7 +124,7 @@ The policy as written pays nothing if she dies before 65, so premiums paid are l
 ```{math}
 \begin{aligned}
 &G\,\ddot a_{55:\overline{10}\vert}=\text{single premium}+G\,R, \\
-&R=\sum_{k=1}^{10}k\,v^{k}\,{}_{k-1}p_{55}\,q_{55+k-1},
+&R=\sum_{k=1}^{10}k\,v^{k}\,{}_{k-1}p_{55}\,q_{55+k-1}
 \end{aligned}
 ```
 

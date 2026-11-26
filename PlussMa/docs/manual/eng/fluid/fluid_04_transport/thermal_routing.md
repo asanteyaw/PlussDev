@@ -11,7 +11,7 @@ Hot water cools as it travels. A district heating main loses heat to the ground,
 `heat` runs on the same machinery as `transport`: the hydraulics come from `run`, each pipe is cut into `cells`, quality moves from one cell to the next with the flow, the water mixes completely at junctions, and the same `RouteOptions` control the step, the Courant limit and the cell count. What is different is the reaction. A pipe of volume `V` and a total conductance `UA` to an ambient temperature `T_a` exchanges heat at the rate
 
 ```{math}
-\rho \, c_p \, V \frac{dT}{dt} = - UA \, ( T - T_a ) ,
+\rho \, c_p \, V \frac{dT}{dt} = - UA \, ( T - T_a )
 ```
 
 which has the exact solution `T(t + Δt) = T_a + (T(t) - T_a) exp(-UA Δt / (ρ c_p V))`, the update the solver uses. The density `ρ` comes from the `Liquid` of the network, and the specific heat `c_p` is `Heat::cp`, `4180` J/(kg K) by default. The model is deliberately narrow: constant properties, one-way coupled, so the temperature does not change the hydraulics, and `UA` is the whole resistance between the bulk water and the ambient, not only the film at the wall.

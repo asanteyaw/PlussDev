@@ -13,7 +13,7 @@ With {math}`h_t` the log of the annualised variance, the model is
 ```{math}
 \begin{aligned}
 h_{t+1}&=\phi\,h_t+(1-\phi)\,m+\sigma_h\sqrt{\Delta t}\;\eta_t, &\eta_t&\sim\mathcal N(0,1),\\
-r_t&=\Big(\mu-\tfrac12e^{h_t}\Big)\Delta t+\sqrt{e^{h_t}\Delta t}\;z_t, &z_t&\sim\mathcal N(0,1),
+r_t&=\Big(\mu-\tfrac12e^{h_t}\Big)\Delta t+\sqrt{e^{h_t}\Delta t}\;z_t, &z_t&\sim\mathcal N(0,1)
 \end{aligned}
 ```
 

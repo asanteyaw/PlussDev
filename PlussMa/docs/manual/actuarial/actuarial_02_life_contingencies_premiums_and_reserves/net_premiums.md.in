@@ -5,9 +5,10 @@
 A policy exchanges premiums for benefits. The **equivalence principle** sets the premium so that the exchange is fair on average: the expected present value of the premiums equals the expected present value of the benefits. A **net** premium counts only benefits and mortality and interest, with no expenses or margins. For a benefit with present value `B` paid for by a level premium `P` due at the start of each year the policy is in force for `m` years,
 
 ```{math}
-P\;\ddot a_{x:\overline m|} \;=\; B
-\qquad\Longrightarrow\qquad
-P=\frac{B}{\ddot a_{x:\overline m|}} .
+\begin{aligned}
+&P\;\ddot a_{x:\overline m|} \;=\; B \\
+&P=\frac{B}{\ddot a_{x:\overline m|}} .
+\end{aligned}
 ```
 
 The numerator and the denominator are valuations, so a premium is a quotient of two present values on the same basis. The premium for a unit endowment insurance has a dedicated function; every other premium is a quotient built from the valuation operator.

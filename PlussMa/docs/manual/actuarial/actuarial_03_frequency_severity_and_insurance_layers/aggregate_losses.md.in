@@ -5,7 +5,7 @@
 The loss a portfolio pays in a period is the sum of a random number of random amounts,
 
 ```{math}
-S=X_1+X_2+\cdots+X_N,
+S=X_1+X_2+\cdots+X_N
 ```
 
 with the claim count {math}`N` independent of the severities {math}`X_i`, which are independent and identically distributed. The **aggregate loss** {math}`S` is what premiums must fund, and its distribution is what a reserve or a reinsurance treaty is measured against.

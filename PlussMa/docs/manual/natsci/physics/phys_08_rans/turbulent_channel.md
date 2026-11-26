@@ -17,7 +17,7 @@ The eddy viscosity {math}`\nu_t` comes from a model. The library provides **Spal
 ```{math}
 \begin{aligned}
 &U^+ = \frac{1}{\kappa} \ln y^+ + B, \\
-&\kappa = 0.41,\ B \approx 5.2,
+&\kappa = 0.41,\ B \approx 5.2
 \end{aligned}
 ```
 

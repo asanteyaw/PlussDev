@@ -14,7 +14,7 @@ h_{t+1}&=\omega+\beta\,h_t+\alpha\,h_t\,(z_t+\gamma)^2 .
 Here {math}`r` is the risk-free rate per period, {math}`\lambda` is the premium per unit of volatility, and the term {math}`-\tfrac12h_t` is the convexity correction that makes {math}`e^{R_t}` a martingale when {math}`\lambda=0`. The shock {math}`z_t` raises the variance through {math}`(z_t+\gamma)^2`; with {math}`\gamma>0` a negative shock raises it more, the leverage effect. With {math}`\gamma=0` the model is GARCH(1,1). The variance is stationary when the **persistence**
 
 ```{math}
-\beta+\alpha\,(1+\gamma^2)<1,
+\beta+\alpha\,(1+\gamma^2)<1
 ```
 
 and its long-run level is {math}`\omega/(1-\beta-\alpha(1+\gamma^2))`. The bridge provides the tools to work with this model on returns.

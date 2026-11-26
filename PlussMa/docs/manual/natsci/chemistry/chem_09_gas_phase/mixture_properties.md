@@ -12,7 +12,7 @@ For a mixture with mass fractions {math}`Y_k` (they sum to one) and species mola
 \begin{aligned}
 &\frac{1}{M} = \sum_k \frac{Y_k}{M_k}, \\
 &p = \frac{\rho R T}{M}, \\
-&e = \sum_k Y_k\,\frac{RT}{M_k}\left(\frac{h_k}{RT} - 1\right),
+&e = \sum_k Y_k\,\frac{RT}{M_k}\left(\frac{h_k}{RT} - 1\right)
 \end{aligned}
 ```
 

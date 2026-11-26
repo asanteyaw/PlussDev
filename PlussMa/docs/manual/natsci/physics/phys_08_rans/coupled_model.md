@@ -11,7 +11,7 @@ The channel solver is a one-dimensional problem with a built-in mesh. To use the
 `rans::advance(state, transport, grid, density, viscosity, closure, time, step, options, body, wall_distance)` takes one step. It first advances the model variables with the resolved velocity: they are advected upwind, diffused with a variable coefficient, produced by the strain {math}`|S|` and destroyed near walls. It then forms the eddy viscosity from the updated variables,
 
 ```{math}
-\nu_t = \tilde\nu\, f_{v1}(\chi), \quad f_{v1} = \frac{\chi^3}{\chi^3 + 7.1^3}, \quad \chi = \tilde\nu/\nu \qquad\text{(Spalart-Allmaras)}, \qquad \nu_t = \frac{a_1 k}{\max(a_1 \omega,\ |S| F_2)} \qquad\text{(SST)},
+\nu_t = \tilde\nu\, f_{v1}(\chi), \quad f_{v1} = \frac{\chi^3}{\chi^3 + 7.1^3}, \quad \chi = \tilde\nu/\nu \qquad\text{(Spalart-Allmaras)}, \qquad \nu_t = \frac{a_1 k}{\max(a_1 \omega,\ |S| F_2)} \qquad\text{(SST)}
 ```
 
 and advances the momentum equation with the total viscosity {math}`\nu + \nu_t` held fixed over the stages. The model equations are operator-split from the momentum step, which makes the coupling first order in time. The call returns a `CoupledStep` with the new `flow` (a `StepResult`) and the new `transport`. On a box grid the call takes `FlowBounds` and takes the wall distance from the no-slip faces; on a periodic grid there is no wall, so you supply the distance to one as a field.

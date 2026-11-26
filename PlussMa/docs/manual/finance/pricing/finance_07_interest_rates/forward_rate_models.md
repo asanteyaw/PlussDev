@@ -19,7 +19,7 @@ df(t,\tau)=\Big[\frac{\partial f}{\partial\tau}+\sigma(\tau)\int_0^{\tau}\sigma(
 Both terms of the drift matter. The first is the **transport**: as time passes the forward for a given calendar date comes nearer, so the curve slides along the tenor axis, and a sloped curve changes at every tenor even without noise. The second is the **no-arbitrage drift** of Heath, Jarrow and Morton, fixed by the volatility: it is what makes discounted zero-coupon bond prices martingales, so that a flat starting curve prices bonds at {math}`e^{-r_0T}` exactly. The library adds a node at {math}`\tau=0`, whose volatility is that of the first tenor and whose forward is the short rate {math}`r_t=f(t,0)`, takes {math}`\sigma` piecewise constant on each tenor interval (equal to the value at its right end), approximates the slope by a forward difference along the grid, and steps explicitly:
 
 ```{math}
-f_j\;\leftarrow\;f_j+\Big[\frac{f_{j+1}-f_j}{\tau_{j+1}-\tau_j}+\sigma_j\sum_{i\le j}\sigma_i(\tau_i-\tau_{i-1})\Big]\Delta t+\sigma_j\sqrt{\Delta t}\;Z,\qquad Z\sim\mathcal N(0,1),
+f_j\;\leftarrow\;f_j+\Big[\frac{f_{j+1}-f_j}{\tau_{j+1}-\tau_j}+\sigma_j\sum_{i\le j}\sigma_i(\tau_i-\tau_{i-1})\Big]\Delta t+\sigma_j\sqrt{\Delta t}\;Z,\qquad Z\sim\mathcal N(0,1)
 ```
 
 with the same {math}`Z` for every {math}`j`. The explicit transport is stable only if the time step is not larger than the smallest spacing of the tenor grid, and the call refuses a larger step.

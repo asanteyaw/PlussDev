@@ -9,7 +9,7 @@ You have a dynamic system, a mass on a spring, a circuit, a plant to be controll
 A linear time-invariant system keeps a vector of **states** `x` that summarises everything the past has done to it. An **input** vector `u` acts on the states, and an **output** vector `y` is read from them. In continuous time
 
 ```{math}
-\dot x = A x + B u, \qquad y = C x + D u,
+\dot x = A x + B u, \qquad y = C x + D u
 ```
 
 and in discrete time, with a fixed sampling interval `T`,

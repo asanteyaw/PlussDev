@@ -9,7 +9,7 @@ A closure matters when it is put into the momentum equation and the flow is adva
 `les::advance(state, grid, density, viscosity, closure, time, step, options)` takes the same arguments as the plain incompressible `fluids::advance`, plus a `les::Closure`, and returns a `StepResult`. At every stage of the Runge-Kutta step it evaluates {math}`\nu_t` from the stage's velocity and adds it to the molecular viscosity, so the model is part of the momentum rate and the stages see it consistently. The stress divergence is in conservative form, which makes the closure drain kinetic energy at the rate
 
 ```{math}
-\varepsilon_{\text{sgs}} = \left\langle 2\,\nu_t\, S_{ij} S_{ij} \right\rangle = \left\langle \nu_t\, |S|^2 \right\rangle,
+\varepsilon_{\text{sgs}} = \left\langle 2\,\nu_t\, S_{ij} S_{ij} \right\rangle = \left\langle \nu_t\, |S|^2 \right\rangle
 ```
 
 which `les::sgs_dissipation(state, grid, closure)` returns. The energy budget of the resolved flow is then {math}`\mathrm{d}E/\mathrm{d}t = -\varepsilon_{\text{mol}} - \varepsilon_{\text{sgs}}`, and you can check any closure run against it. The closure needs an explicit time rule: the implicit-explicit rule `Imex1` assumes a single viscosity number.

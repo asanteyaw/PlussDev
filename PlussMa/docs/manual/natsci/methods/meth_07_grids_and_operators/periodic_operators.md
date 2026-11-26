@@ -13,7 +13,7 @@ The operators are finite differences built from shifts. The first derivative alo
 ```{math}
 \begin{aligned}
 &\partial_x u \approx \frac{u_{i+1} - u_{i-1}}{2h}, \\
-&\partial_x^2 u \approx \frac{u_{i+1} - 2 u_i + u_{i-1}}{h^2},
+&\partial_x^2 u \approx \frac{u_{i+1} - 2 u_i + u_{i-1}}{h^2}
 \end{aligned}
 ```
 

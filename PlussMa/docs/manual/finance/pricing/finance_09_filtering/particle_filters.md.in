@@ -11,7 +11,7 @@ When the model is not Gaussian, or not nearly linear, the posterior of the state
 The weighted cloud estimates anything about the state, for example the filtered mean {math}`\sum_iw^{(i)}x^{(i)}`, and the sum of the logarithms of the average likelihoods estimates the likelihood of the data. The concentration of the weights is measured by the **effective sample size**,
 
 ```{math}
-\text{ESS}_t=\frac{1}{\sum_i\big(w^{(i)}_t\big)^2},
+\text{ESS}_t=\frac{1}{\sum_i\big(w^{(i)}_t\big)^2}
 ```
 
 which is {math}`N` for equal weights and 1 when one particle carries everything. A filter that never resamples ends with an ESS of about 1 and a useless estimate; the usual rule resamples when ESS falls below a fraction of {math}`N`.
@@ -126,7 +126,7 @@ With any resampling method the filtered mean is within 0.013 to 0.028 of the exa
 The Gaussian filter assumes the observation noise is Gaussian, and a single wild observation then moves the estimate a great deal. A particle filter can use any likelihood. The program tracks a local level whose observations are wrong, by about one unit, with probability 6% (18 of 300 observations; the normal noise has standard deviation 0.2). It compares the Gaussian Kalman filter with a particle filter whose likelihood is a Student t with 3 degrees of freedom and scale 0.2, which expects occasional large errors,
 
 ```{math}
-\ln p(y\mid x)=-\tfrac{\nu+1}{2}\ln\Big(1+\tfrac1\nu\Big(\tfrac{y-x}{s}\Big)^2\Big)+\text{constant},
+\ln p(y\mid x)=-\tfrac{\nu+1}{2}\ln\Big(1+\tfrac1\nu\Big(\tfrac{y-x}{s}\Big)^2\Big)+\text{constant}
 ```
 
 and prints the root-mean-square and the largest error of the state estimates.

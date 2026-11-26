@@ -11,7 +11,7 @@ A state-space model describes the inside of a system. For many questions you wan
 The transfer function of a single-input, single-output system factors into a gain and the roots of two polynomials:
 
 ```{math}
-H(s) = k\,\frac{(s-z_1)(s-z_2)\cdots}{(s-p_1)(s-p_2)\cdots},
+H(s) = k\,\frac{(s-z_1)(s-z_2)\cdots}{(s-p_1)(s-p_2)\cdots}
 ```
 
 with `s` the Laplace variable for a continuous system and `z` the shift variable for a discrete one. The **poles** `p` decide stability and how fast the system responds: a continuous system is stable when every pole has a negative real part, a discrete one when every pole lies inside the unit circle. The **zeros** `z` shape the response between the poles. The **frequency response** is the transfer function evaluated along the imaginary axis, `s = j w`, for a continuous system, and around the unit circle, `z = e^{j w T}`, for a discrete one with sample time `T`. Its magnitude is the gain at the frequency `w` (radians per time unit) and its angle the phase.

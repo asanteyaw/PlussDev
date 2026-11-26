@@ -9,7 +9,7 @@ A cup of coffee cools, a room warms after the heating is switched on, a componen
 A body that holds heat has a thermal capacity `C` in joules per kelvin. Heat flowing in raises its temperature at `Q / C`, so for one body losing heat through a conductance `G` to surroundings at `T_inf`,
 
 ```{math}
-C \frac{dT}{dt} = -G\,(T - T_\infty) + q ,
+C \frac{dT}{dt} = -G\,(T - T_\infty) + q
 ```
 
 and the temperature relaxes towards `T_inf + q / G` with the **time constant** `C / G`. A network is many such bodies coupled; its response is a sum of exponentials, and the fastest of them sets how short a step must be. `tran` takes the same `Net` as `steady`, plus `Stores`, a vector of times, a `Drive` for boundaries and heats that change, and a `Start` for where the stores begin. Every array of the result gains a time axis in front of its element axis.

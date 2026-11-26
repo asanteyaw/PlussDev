@@ -6,7 +6,7 @@ Ratemaking asks what a unit of insurance should cost. Two measures answer from e
 
 ```{math}
 \text{pure premium}=\frac{\sum_t L_t}{\sum_t E_t},\qquad
-\text{loss ratio}=\frac{\sum_t L_t}{\sum_t P_t},
+\text{loss ratio}=\frac{\sum_t L_t}{\sum_t P_t}
 ```
 
 where {math}`L_t`, {math}`E_t` and {math}`P_t` are the incurred losses, the exposure and the earned premium of period {math}`t`. Both are ratios of sums, not averages of the yearly ratios: a year with more exposure counts for more. The yearly ratios are useful as curves, to see a trend, and have their own functions.

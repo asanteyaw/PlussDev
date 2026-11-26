@@ -9,7 +9,7 @@ Particles in a slurry stick together, droplets in a spray merge, polymer chains 
 The unknown here is the count `N_i` of particles in pivot bin `i`, not a density. For aggregation of particles of sizes `x_i` and `x_j` with a rate kernel `K_ij` the balance is
 
 ```{math}
-\frac{dN_k}{dt} = \frac12 \sum_{i,j} \eta_{ijk}\, K_{ij} N_i N_j \;-\; N_k \sum_j K_{kj} N_j ,
+\frac{dN_k}{dt} = \frac12 \sum_{i,j} \eta_{ijk}\, K_{ij} N_i N_j \;-\; N_k \sum_j K_{kj} N_j
 ```
 
 where `eta_ijk` is the share of a new particle of size `x_i + x_j` assigned to pivot `k`. A new particle seldom falls exactly on a pivot, so its count is split between the two pivots on either side in proportions chosen to keep the number and the mass. `build_aggregation_operator(grid, like)` builds those shares once as an array of shape `[B*B, B]`; `aggregation_rhs(counts, op, kernel)` then reads the kernel as a `[B, B]` array (or `[..., B, B]` for one kernel per lane) and returns `dN/dt` with a few matrix products and no loop over bins.

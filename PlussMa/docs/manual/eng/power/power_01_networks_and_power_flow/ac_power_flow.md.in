@@ -9,7 +9,7 @@ When voltages, reactive power or losses matter, the DC approximation is not enou
 At every bus the complex power injected equals the power the bus sends into the network,
 
 ```{math}
-S_i = V_i \overline{\sum_j Y_{ij} V_j},
+S_i = V_i \overline{\sum_j Y_{ij} V_j}
 ```
 
 where `V` is the vector of complex bus voltages and `Y` the admittance matrix of the grid. The unknowns are the angle and magnitude of every `PQ` bus and the angle of every `PV` bus, and the equations are the active and reactive power balances at the `PQ` buses and the active balance at the `PV` buses. `ac(grid, options)` starts from the voltages in the network description and applies Newton's method, an exact Jacobian and a linear solve at every iteration, until the largest mismatch falls below the tolerance. It returns an `AcResult`:

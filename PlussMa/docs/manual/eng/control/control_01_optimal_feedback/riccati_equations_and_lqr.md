@@ -11,13 +11,13 @@ You have a plant and you want a feedback law `u = -K x` that keeps its states sm
 For a continuous plant `x' = A x + B u` the LQR minimises
 
 ```{math}
-J = \int_0^\infty \left( x^T Q x + 2\,x^T N u + u^T R u \right) dt,
+J = \int_0^\infty \left( x^T Q x + 2\,x^T N u + u^T R u \right) dt
 ```
 
 where `Q` (positive semidefinite) says how much you mind each state being away from zero, `R` (positive definite) says how much you mind each unit of input, and the optional **cross term** `N` couples the two. The optimal law is `u = -K x` with
 
 ```{math}
-K = R^{-1}\left(B^T P + N^T\right),
+K = R^{-1}\left(B^T P + N^T\right)
 ```
 
 where `P` is the positive semidefinite solution of the continuous algebraic Riccati equation
@@ -29,7 +29,7 @@ A^T P + P A - (P B + N) R^{-1} (B^T P + N^T) + Q = 0.
 For a discrete plant `x[k+1] = A x[k] + B u[k]` the cost is the sum of the same terms over `k`, the equation is
 
 ```{math}
-P = A^T P A - (A^T P B + N)(R + B^T P B)^{-1}(B^T P A + N^T) + Q,
+P = A^T P A - (A^T P B + N)(R + B^T P B)^{-1}(B^T P A + N^T) + Q
 ```
 
 and `K = (R + B^T P B)^{-1}(B^T P A + N^T)`. In both cases `P` is more than a by-product: **the minimum cost from the state `x0` is `x0^T P x0`**. The closed-loop matrix is `A - B K`; the solution chosen is the one that makes it stable.

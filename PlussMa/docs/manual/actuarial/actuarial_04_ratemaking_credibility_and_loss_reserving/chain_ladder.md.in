@@ -13,7 +13,7 @@ f_j=\frac{\sum_{i}C_{i,j+1}}{\sum_{i}C_{i,j}} .
 **Cumulative development factors.** The factor from period {math}`j` to the end is the product of the remaining age-to-age factors,
 
 ```{math}
-\mathrm{CDF}_j=f_j\,f_{j+1}\cdots f_{n-2},\qquad \mathrm{CDF}_{n-1}=1 ,
+\mathrm{CDF}_j=f_j\,f_{j+1}\cdots f_{n-2},\qquad \mathrm{CDF}_{n-1}=1
 ```
 
 so a triangle of {math}`n` periods has {math}`n-1` age-to-age factors and {math}`n` cumulative factors, the last being one: the final period is taken to be ultimate.

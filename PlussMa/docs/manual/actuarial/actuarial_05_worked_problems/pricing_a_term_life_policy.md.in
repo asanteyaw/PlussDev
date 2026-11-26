@@ -11,13 +11,13 @@ This is a complete life-insurance pricing exercise in miniature, and it uses eve
 Everything follows from one principle. A premium is fair, in the actuarial sense, when the expected present value of what the insurer receives equals the expected present value of what it pays out. With {math}`A` the expected present value of a death benefit of 1 and {math}`\ddot a` that of a premium annuity of 1 per year, both over the ten-year term, the **net annual premium** per unit insured is
 
 ```{math}
-P=\frac{A_{40:\overline{10}\vert}^{1}}{\ddot a_{40:\overline{10}\vert}} ,
+P=\frac{A_{40:\overline{10}\vert}^{1}}{\ddot a_{40:\overline{10}\vert}}
 ```
 
 and the premium on a sum assured {math}`S` is {math}`SP`. Expenses are added by putting them into the same balance: the gross premium {math}`G` solves
 
 ```{math}
-G\,\ddot a=S\,A+e_0+e_1\,\ddot a+c\,G\,\ddot a ,
+G\,\ddot a=S\,A+e_0+e_1\,\ddot a+c\,G\,\ddot a
 ```
 
 where {math}`e_0` is a cost at issue, {math}`e_1` a cost each year the policy is in force and {math}`c` a commission rate on every premium. The reserve in year {math}`k` is the same balance struck at that date for the remaining term.
@@ -158,13 +158,13 @@ int main() {
 After {math}`k` years the policy has {math}`10-k` years to run and the life is {math}`40+k`. The **net premium reserve** is the expected present value of the remaining benefit less that of the remaining net premiums,
 
 ```{math}
-{}_kV=S\,A_{40+k:\overline{10-k}\vert}^{1}-SP\,\ddot a_{40+k:\overline{10-k}\vert},
+{}_kV=S\,A_{40+k:\overline{10-k}\vert}^{1}-SP\,\ddot a_{40+k:\overline{10-k}\vert}
 ```
 
 which is the same balance struck again with the later death probabilities. It is zero at issue by the equivalence principle and zero at expiry because nothing remains; in between it is positive because the premium is level while the risk rises with age, so the early premiums are more than the early claims cost and the surplus is held against the later ones. The program computes the reserve each year by revaluing the tail of the death probabilities, and then checks the recursion that every reserve must satisfy,
 
 ```{math}
-({}_kV+SP)(1+i)=q_{40+k}\,S+p_{40+k}\;{}_{k+1}V ,
+({}_kV+SP)(1+i)=q_{40+k}\,S+p_{40+k}\;{}_{k+1}V
 ```
 
 which says that the reserve plus the premium, accumulated for a year at interest, pays the expected claim and funds the expected reserve of the survivors.

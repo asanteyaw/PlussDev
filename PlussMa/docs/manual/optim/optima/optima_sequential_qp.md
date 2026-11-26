@@ -57,7 +57,7 @@ At iteration $k$, the solver forms a quadratic model around the current point $x
 \nabla f(x_k)^\top p + \tfrac12 p^\top B_k p \\
 \text{s.t.} \quad &
 c_{\mathrm{eq}}(x_k) + J_{\mathrm{eq}}(x_k) p = 0, \\
-& c_{\mathrm{ineq}}(x_k) + J_{\mathrm{ineq}}(x_k) p \le 0,
+& c_{\mathrm{ineq}}(x_k) + J_{\mathrm{ineq}}(x_k) p \le 0
 \end{aligned}
 ```
 
@@ -141,7 +141,7 @@ When `Bfgs` is active, the update is based on the standard secant pair
 ```{math}
 \begin{aligned}
 &s_k = x_{k+1} - x_k, \\
-&y_k = \nabla \phi_{k+1} - \nabla \phi_k,
+&y_k = \nabla \phi_{k+1} - \nabla \phi_k
 \end{aligned}
 ```
 
@@ -173,7 +173,7 @@ The backend supports a policy-driven solve path:
 The main merit model is an exact-penalty style scalarization:
 
 ```{math}
-\Phi(x;\rho) = f(x) + \rho \, \|v(x)\|_1,
+\Phi(x;\rho) = f(x) + \rho \, \|v(x)\|_1
 ```
 
 where $v(x)$ denotes the stacked constraint residual used by the implementation. The penalty parameter $\rho$ is adapted when feasibility reduction is lagging.
@@ -189,7 +189,7 @@ When the main SQP step fails repeatedly, the backend can switch to a restoration
 The restoration target is conceptually
 
 ```{math}
-\min_x \; \|v(x)\|,
+\min_x \; \|v(x)\|
 ```
 
 subject to the same bound handling logic, so that the solver can recover a usable feasible or near-feasible point before resuming the main SQP loop.

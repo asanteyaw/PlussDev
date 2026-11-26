@@ -9,7 +9,7 @@ Fitting a model to market prices means choosing parameters {math}`\theta` that m
 The **residual** of option {math}`i` is the model price minus the quote,
 
 ```{math}
-r_i(\theta)=P_i(\theta)-Q_i,
+r_i(\theta)=P_i(\theta)-Q_i
 ```
 
 positive where the model is too expensive. `field.residuals(quotes)` returns the vector {math}`r`. A **loss** reduces it to one number. All four are means over the {math}`n` options, with no weights:

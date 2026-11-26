@@ -9,7 +9,7 @@ You want to know how fast a released puff of molecules thins out, and how fast a
 Everything here lives in `pluss::ma::natsci::biology::biophysics::diffusion` (written `diffusion::` below) and `pluss::ma::natsci::biology::spatial`. A puff released at a point with diffusion coefficient {math}`D` has, in {math}`d` dimensions, the concentration
 
 ```{math}
-c(r, t) = (4\pi D t)^{-d/2}\,\exp\left(-\frac{r^2}{4Dt}\right),
+c(r, t) = (4\pi D t)^{-d/2}\,\exp\left(-\frac{r^2}{4Dt}\right)
 ```
 
 which `diffusion::heat_kernel(r2, D, t, dims)` evaluates at squared distances `r2`. Add logistic growth at rate {math}`r` and you get the Fisher-KPP equation {math}`u_t = D u_{xx} + r u(1 - u)`. Its fronts advance at a speed of at least {math}`2\sqrt{Dr}`, returned by `diffusion::fisher_kpp_min_speed(D, r)`; `fisher_kpp_exact_speed(D, r)` is the speed of one exact solution, and `fisher_kpp_exact(x, t, D, r)` is that solution. To watch a front form rather than assume it, `spatial::box(cells, lengths)` makes a grid, `diffusion::fisher_kpp_reaction(u, r)` is the growth term, and `spatial::integrate(u0, D, grid, reaction, t0, t1, steps)` advances a field laid out with one row per species and one column per cell.

@@ -11,7 +11,7 @@ For a pipe of length `L` and diameter `D` carrying a flow `q`, the mean velocity
 ```{math}
 \begin{aligned}
 &h = \left( f \frac{L}{D} + K \right) \frac{v |v|}{2 g}, \\
-&h = \frac{10.67 \, L \, |q|^{0.852} q}{C^{1.852} \, D^{4.8704}} + K \frac{v |v|}{2 g},
+&h = \frac{10.67 \, L \, |q|^{0.852} q}{C^{1.852} \, D^{4.8704}} + K \frac{v |v|}{2 g}
 \end{aligned}
 ```
 

@@ -9,7 +9,7 @@ A zero-coupon bond pays 1 at maturity {math}`T` and nothing before. Its price to
 ```{math}
 \begin{aligned}
 &P(\tau,r)=A(\tau)\,e^{-B(\tau)\,r}, \\
-&y(\tau)=-\frac{\ln P(\tau,r)}{\tau},
+&y(\tau)=-\frac{\ln P(\tau,r)}{\tau}
 \end{aligned}
 ```
 

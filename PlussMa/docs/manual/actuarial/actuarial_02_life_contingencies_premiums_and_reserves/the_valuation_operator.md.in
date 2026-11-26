@@ -7,7 +7,7 @@ The functions of the previous page fix the benefit and the way it is paid. Real 
 An **assumption** is a `Basis`: a mortality law and a discount. A **benefit** is a `Cashflow`: payments that are made if the life is alive at a time, and payments that are made at the end of the year of death. A `Valuation` is created once from a basis and then applied to any cashflow; the result is the expected present value as a rank-zero `Series`:
 
 ```{math}
-\text{EPV}=\sum_{t=0}^{n} s_t\,v_t\,{}_tp_x\;+\;\sum_{k=1}^{n} d_k\,v_k\,{}_{k-1}p_x\,q_{x+k-1},
+\text{EPV}=\sum_{t=0}^{n} s_t\,v_t\,{}_tp_x\;+\;\sum_{k=1}^{n} d_k\,v_k\,{}_{k-1}p_x\,q_{x+k-1}
 ```
 
 where `s_t` are the survival payments at times `0..n`, `d_k` the death payments at the ends of years `1..n`, and `v_t` the discount factors.

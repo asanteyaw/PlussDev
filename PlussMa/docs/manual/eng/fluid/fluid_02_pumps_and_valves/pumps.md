@@ -11,7 +11,7 @@ A pump puts head into the water. Where it sits in the network, how fast it turns
 A pump is a link from its suction node to its discharge node. Its **curve** says how much head it adds at a flow `q`:
 
 ```{math}
-\text{gain}(q, s) = s^2 H_0 - R \, s^{2-n} \, q^{n} ,
+\text{gain}(q, s) = s^2 H_0 - R \, s^{2-n} \, q^{n}
 ```
 
 with a shutoff head `H0` (the head at zero flow and unit speed), a resistance `R` and an exponent `n`, all in metres and cubic metres per second, and a relative speed `s` (`1` is the rated speed). The gain falls as the flow rises, from `H0` at closed valve to nothing where the curve meets the axis. The factor `s²` and the exponent `2 - n` on the speed are the affinity laws: head scales with the square of the speed and flow with its first power.

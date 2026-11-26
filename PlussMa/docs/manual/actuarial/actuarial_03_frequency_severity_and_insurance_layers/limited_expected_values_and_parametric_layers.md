@@ -7,7 +7,7 @@
 When the severity is a known law, the expected payment under a limit or a layer can be computed from the law, with no sample. The **limited expected value** at a cap {math}`c` is the expected loss when each loss is capped at {math}`c`,
 
 ```{math}
-\mathrm{LEV}(c)=E\bigl[\min(X,c)\bigr]=\int_0^c \bigl(1-F(x)\bigr)\,dx ,
+\mathrm{LEV}(c)=E\bigl[\min(X,c)\bigr]=\int_0^c \bigl(1-F(x)\bigr)\,dx
 ```
 
 and the expected payment of the layer of {math}`\ell` excess of {math}`a` is a difference of two of them,

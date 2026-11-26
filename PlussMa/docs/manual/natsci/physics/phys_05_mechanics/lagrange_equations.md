@@ -9,7 +9,10 @@ The same motion can be derived from a different function, the Lagrangian, which 
 For a Lagrangian {math}`L(q, v, t)` the canonical momentum is {math}`p = \partial L / \partial v`, the effective mass matrix is {math}`M = \partial^2 L / \partial v^2`, and the motion obeys the Euler-Lagrange equation
 
 ```{math}
-\frac{\mathrm{d}}{\mathrm{d}t}\frac{\partial L}{\partial v} = \frac{\partial L}{\partial q} \quad\Longrightarrow\quad a = M^{-1}\left(\frac{\partial L}{\partial q} - \frac{\partial^2 L}{\partial v\,\partial q}\,v - \frac{\partial^2 L}{\partial v\,\partial t}\right)
+\begin{aligned}
+&\frac{\mathrm{d}}{\mathrm{d}t}\frac{\partial L}{\partial v} = \frac{\partial L}{\partial q} \\
+&a = M^{-1}\left(\frac{\partial L}{\partial q} - \frac{\partial^2 L}{\partial v\,\partial q}\,v - \frac{\partial^2 L}{\partial v\,\partial t}\right)
+\end{aligned}
 ```
 
 A state is made with `mechanics::make_tangent(coordinate, velocity)`, and `mechanics::lagrange(L, state)` returns the `value` of the Lagrangian, the `momentum`, the `mass` matrix, and the acceleration as `flow.velocity`, all found by automatic differentiation.

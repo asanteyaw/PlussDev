@@ -13,7 +13,7 @@ The paths live on a uniform time grid from 0 to the **longest maturity** in the 
 ```{math}
 \begin{aligned}
 \ln S_{t+\Delta t}&=\ln S_t+\big(r-q-\tfrac12 v_t\big)\Delta t+\sqrt{v_t\Delta t}\;Z^S,\\
-v_{t+\Delta t}&=\max\!\Big(v_t+\kappa(\theta-v_t)\Delta t+\sigma\sqrt{v_t\Delta t}\;Z^v,\;v_{\text{floor}}\Big),\qquad Z^v=\rho Z^S+\sqrt{1-\rho^2}\,Z^\perp,
+v_{t+\Delta t}&=\max\!\Big(v_t+\kappa(\theta-v_t)\Delta t+\sigma\sqrt{v_t\Delta t}\;Z^v,\;v_{\text{floor}}\Big),\qquad Z^v=\rho Z^S+\sqrt{1-\rho^2}\,Z^\perp
 \end{aligned}
 ```
 
@@ -105,7 +105,7 @@ The shapes follow the table: 50,000 paths by 101 grid points for the levels, by 
 `asset_shocks` is not just a by-product. In the Black-Scholes model the asset is the exact solution of the stochastic differential equation, and the stored shocks are the increments of the Brownian motion that produced it:
 
 ```{math}
-S_T=S_0\exp\Big(\big(r-q-\tfrac12\sigma^2\big)T+\sigma\sqrt{\Delta t}\sum_{j=1}^{\text{steps}}Z_j\Big),
+S_T=S_0\exp\Big(\big(r-q-\tfrac12\sigma^2\big)T+\sigma\sqrt{\Delta t}\sum_{j=1}^{\text{steps}}Z_j\Big)
 ```
 
 since {math}`W_T=\sqrt{\Delta t}\sum_jZ_j`. The program draws six paths of four steps, rebuilds the terminal values from their stored shocks with this formula, and compares.
@@ -164,7 +164,7 @@ One set of paths prices many payoffs. For a payoff {math}`g` of the path the est
 ```{math}
 \begin{aligned}
 &\hat V=\frac{e^{-rT}}{N}\sum_{i=1}^{N}g\big(S^{(i)}\big), \\
-&\operatorname{se}(\hat V)=\frac{e^{-rT}}{\sqrt N}\,\hat s_g,
+&\operatorname{se}(\hat V)=\frac{e^{-rT}}{\sqrt N}\,\hat s_g
 \end{aligned}
 ```
 

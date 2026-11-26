@@ -18,7 +18,7 @@ With transport the momentum equation gains the divergence of a Newtonian stress 
 You give the coefficients in `gas::Transport` (`shear` for {math}`\mu`, `bulk` for {math}`\zeta`, `heat` for {math}`k`) and put it in `options.step.transport`. For air over a range of temperatures set `options.step.sutherland` to a `gas::SutherlandLaw` instead; it gives the viscosity as a function of the local temperature,
 
 ```{math}
-\mu(T) = \mu_0 \left(\frac{T}{T_0}\right)^{3/2} \frac{T_0 + S}{T + S},
+\mu(T) = \mu_0 \left(\frac{T}{T_0}\right)^{3/2} \frac{T_0 + S}{T + S}
 ```
 
 and the conductivity from the Prandtl number, {math}`k = \mu c_p / \mathrm{Pr}`. The Sutherland defaults are those of air (`1.716e-5` Pa s at 273.15 K, `S = 110.4` K, Pr `0.71`). `gas::transport(state, grid, model, law)` returns the fields, `gas::stress` the stress tensor and `gas::heat_flux` the heat flux of a state. Viscosity adds a second stability limit: explicit diffusion needs {math}`\Delta t \le \tfrac12 \Delta x^2/\nu_{\max}` for the largest of the momentum and thermal diffusivities, and `gas::limits` reports both limits and the smaller one.

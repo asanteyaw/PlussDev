@@ -11,7 +11,7 @@ A discrete delta hedge does not replicate the option. This page measures what is
 Between two dates the option's value changes by
 
 ```{math}
-dV=\Theta\,dt+\Delta\,dS+\tfrac12\Gamma\,(dS)^2,
+dV=\Theta\,dt+\Delta\,dS+\tfrac12\Gamma\,(dS)^2
 ```
 
 and the Black-Scholes equation says that {math}`\Theta=-\tfrac12\sigma^2S^2\Gamma` apart from the terms of the cash account. The hedge removes {math}`\Delta\,dS`. What is left, because {math}`(dS)^2` is random and not the {math}`\sigma^2S^2\,dt` that the equation assumes, is the profit of the seller in the step, the **gamma profit**,
@@ -114,7 +114,7 @@ The mean profit is within sampling error of zero at every frequency (0.029, 0.01
 The hedger does not know the volatility the asset will have. Suppose the real volatility is 20% and the hedge uses {math}`\sigma_h`. The gamma profit of a step becomes {math}`\tfrac12\Gamma_hS^2(\sigma_h^2-\sigma_{\text{real}}^2Z^2)\,\Delta t`, whose mean is
 
 ```{math}
-\mathbb{E}[\pi_i]=\tfrac12\,\Gamma_hS^2\big(\sigma_h^2-\sigma_{\text{real}}^2\big)\,\Delta t,
+\mathbb{E}[\pi_i]=\tfrac12\,\Gamma_hS^2\big(\sigma_h^2-\sigma_{\text{real}}^2\big)\,\Delta t
 ```
 
 so a hedger who hedges with a volatility above the real one earns the difference in variance times the gamma, and one who hedges below it loses. Summed over the life, and with the asset growing at the risk-free rate, the expectation has a closed form. The discounted hedge portfolio is a martingale, so the expected profit equals what the seller received from selling at the hedge volatility, minus the true value, grown to maturity:

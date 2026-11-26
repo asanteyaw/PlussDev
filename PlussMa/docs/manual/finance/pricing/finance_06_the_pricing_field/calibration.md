@@ -7,7 +7,7 @@
 Calibration finds the parameters {math}`\theta` of a model for which the model prices {math}`P_i(\theta)` reproduce the market quotes {math}`Q_i`:
 
 ```{math}
-\hat\theta=\arg\min_{\theta\in\Theta}\;L\big(P_1(\theta),\dots,P_n(\theta);\,Q_1,\dots,Q_n\big),
+\hat\theta=\arg\min_{\theta\in\Theta}\;L\big(P_1(\theta),\dots,P_n(\theta);\,Q_1,\dots,Q_n\big)
 ```
 
 where {math}`L` is one of the losses of page 4 and {math}`\Theta` is the set of parameters the model allows. A `Field` supplies everything on the left: it prices all {math}`n` options in one call for any candidate {math}`\theta`. What is left to you is the minimiser and the bookkeeping between its vector of real numbers and the model's parameters. The recipe has five steps:
@@ -80,7 +80,7 @@ A Heston model has five parameters, and a smile at one maturity may not determin
 Why can this go wrong? The expected variance at time {math}`t` is {math}`\mathbb{E}[v_t]=\theta+(v_0-\theta)e^{-\kappa t}`, and to first order a one-maturity smile depends on the variance only through its average over the option's life,
 
 ```{math}
-\bar w(T)=\frac1T\int_0^T\mathbb{E}[v_t]\,dt=\theta+(v_0-\theta)\,\frac{1-e^{-\kappa T}}{\kappa T},
+\bar w(T)=\frac1T\int_0^T\mathbb{E}[v_t]\,dt=\theta+(v_0-\theta)\,\frac{1-e^{-\kappa T}}{\kappa T}
 ```
 
 so many triples {math}`(\kappa,\theta,v_0)` give the same {math}`\bar w(1)` and nearly the same smile. The skew and the curvature fix {math}`\rho\sigma` and {math}`\sigma^2` and so identify {math}`\rho` and {math}`\sigma`; the level alone cannot separate the other three.

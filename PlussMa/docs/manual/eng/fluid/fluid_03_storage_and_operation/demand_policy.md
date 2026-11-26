@@ -25,7 +25,7 @@ with the requested demand `D`, the minimum pressure `p_min` below which nothing 
 An **emitter** is a second outflow at a junction, a leak or a sprinkler, that grows with the pressure:
 
 ```{math}
-q_{\text{emit}} = C \max(p, 0)^{\epsilon} ,
+q_{\text{emit}} = C \max(p, 0)^{\epsilon}
 ```
 
 with the coefficient `C` from `Net::nodes.emitter` and the exponent `ε` from `Options::emitter_exponent`, `0.5` by default. It is returned separately in `SteadyResult::emitter`, so ordinary delivery and loss can be told apart. Emitters work under either policy.

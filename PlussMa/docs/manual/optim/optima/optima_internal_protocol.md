@@ -27,7 +27,7 @@ The backend targets the same constrained nonlinear program:
 For inequality handling, the solver introduces slack variables
 
 ```{math}
-c_{\mathrm{ineq}}(x) + s = 0,\qquad s > 0,
+c_{\mathrm{ineq}}(x) + s = 0,\qquad s > 0
 ```
 
 and dual variables $z > 0$ for the slack equations.
@@ -58,19 +58,19 @@ The major loop is:
 The implementation follows a primal-dual barrier structure built around:
 
 ```{math}
-\nabla_x \mathcal{L}(x,\lambda,z) = 0,
+\nabla_x \mathcal{L}(x,\lambda,z) = 0
 ```
 
 ```{math}
 c_{\mathrm{eq}}(x)=0,
 \qquad
-c_{\mathrm{ineq}}(x)+s=0,
+c_{\mathrm{ineq}}(x)+s=0
 ```
 
 ```{math}
 S z = \mu \mathbf{1},
 \qquad
-s>0,\; z>0,
+s>0,\; z>0
 ```
 
 where:
@@ -115,7 +115,7 @@ In addition to the primal-dual residual system, it is useful to read the method 
 \phi_\mu(x,s) =
 f(x)
 - \mu \sum_i \log(s_i)
-+ \tfrac12 \rho \, \|c_{\mathrm{eq}}(x)\|_2^2,
++ \tfrac12 \rho \, \|c_{\mathrm{eq}}(x)\|_2^2
 ```
 
 subject to $c_{\mathrm{ineq}}(x)+s=0$. This is also the right mental model for interpreting:
@@ -216,7 +216,7 @@ Those reveal whether the backend is:
 When the main primal-dual loop stalls, the backend can switch into a feasibility-focused mode. The intent is analogous to minimizing a violation measure
 
 ```{math}
-\min_x \; \|v(x)\|,
+\min_x \; \|v(x)\|
 ```
 
 before returning to the main primal-dual trajectory.

@@ -11,7 +11,7 @@ The problem draws on [Actuarial 3](../actuarial_03_frequency_severity_and_insura
 A layer of width {math}`l` above attachment {math}`a` pays {math}`\min\big((X-a)_+,l\big)` on a claim {math}`X`, whose expected value is the difference of two limited expected values,
 
 ```{math}
-E\big[\min((X-a)_+,l)\big]=E[\min(X,a+l)]-E[\min(X,a)] ,
+E\big[\min((X-a)_+,l)\big]=E[\min(X,a+l)]-E[\min(X,a)]
 ```
 
 and with a Poisson number of claims of mean {math}`\lambda` the expected annual loss to the layer is {math}`\lambda` times that. The reinsurer's premium is that expected loss grossed up for its own expenses and profit, as in the indicated-premium formula. Each analytic number is then compared with a simulation of ten thousand years of claims, which also gives what the formulas do not: how variable each layer's loss is from year to year.

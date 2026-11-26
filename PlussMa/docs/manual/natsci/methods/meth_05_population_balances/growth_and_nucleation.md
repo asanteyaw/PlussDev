@@ -11,7 +11,7 @@ The unknown is a number density `n(L, t)`, the number of particles per unit volu
 ```{math}
 \begin{aligned}
 &\frac{\partial n}{\partial t} + \frac{\partial (G n)}{\partial L} = 0, \\
-&G(0)\, n(0, t) = B_0 ,
+&G(0)\, n(0, t) = B_0 
 \end{aligned}
 ```
 

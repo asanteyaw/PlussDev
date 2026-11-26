@@ -86,7 +86,7 @@ When the numbers are already parameters, from a calibration or a file you read, 
 \begin{aligned}
 &dS^a_t=(r_a-q_a)S^a_t\,dt+\sqrt{v^a_t}\,S^a_t\,dW^{S,a}_t, \\
 &dv^a_t=\kappa_a(\theta_a-v^a_t)\,dt+\sigma_a\sqrt{v^a_t}\,dW^{v,a}_t , \\
-&d\langle W^{S,a},W^{v,a}\rangle_t=\rho_a\,dt ,
+&d\langle W^{S,a},W^{v,a}\rangle_t=\rho_a\,dt 
 \end{aligned}
 ```
 
@@ -232,7 +232,7 @@ Every mean is near the forward of 100, since the rate and the yield are zero, up
 Nothing is estimated for you. An undefined matrix means the identity: **independent**, not "some default correlation". `price_corr` is the correlation between the price shocks of the assets, `var_corr` the correlation between their variance shocks, and `price_var_cross` the cross correlation between one asset's price shock and another's variance shock. If you give the first two, the cross correlations are built from them. Write the variance shock of asset *a* as its own price shock plus an independent remainder,
 
 ```{math}
-dW^{v,a}=\rho_a\,dW^{S,a}+\sqrt{1-\rho_a^{2}}\;dW^{\perp,a} ,
+dW^{v,a}=\rho_a\,dW^{S,a}+\sqrt{1-\rho_a^{2}}\;dW^{\perp,a}
 ```
 
 with {math}`dW^{\perp,a}` independent of every price shock. Then:

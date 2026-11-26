@@ -11,7 +11,7 @@ The code is in `pluss::ma::natsci::biology::population::ipm` (`ipm::` below). Wi
 ```{math}
 \begin{aligned}
 &n_{t+1}(z') = \int K(z', z)\,n_t(z)\,\mathrm{d}z, \\
-&K = s(z)\,G(z' \mid z) + f(z)\,D(z'),
+&K = s(z)\,G(z' \mid z) + f(z)\,D(z')
 \end{aligned}
 ```
 

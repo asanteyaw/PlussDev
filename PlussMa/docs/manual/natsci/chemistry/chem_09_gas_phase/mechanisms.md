@@ -11,7 +11,7 @@ Each reaction has a forward rate constant {math}`k_f = A\,T^{b}\,e^{-E_a/RT}`. I
 ```{math}
 \begin{aligned}
 &k = k_\infty \frac{P_r}{1+P_r}\,F, \\
-&P_r = \frac{k_0 [M]}{k_\infty},
+&P_r = \frac{k_0 [M]}{k_\infty}
 \end{aligned}
 ```
 

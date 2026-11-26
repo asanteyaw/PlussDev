@@ -5,7 +5,7 @@
 Reinsurance divides a loss among several payers, each responsible for a **layer**: the part of the loss between an *attachment point* {math}`a` and the attachment plus a *limit* {math}`\ell`. A layer pays nothing for a loss below {math}`a`, the excess above {math}`a` up to the limit, and the limit in full for a larger loss,
 
 ```{math}
-L_{a,\ell}(X)=\min\bigl((X-a)_+,\ \ell\bigr),
+L_{a,\ell}(X)=\min\bigl((X-a)_+,\ \ell\bigr)
 ```
 
 and a reinsurer that takes only a fraction {math}`s` of the layer pays {math}`s\,L_{a,\ell}(X)`. Two special cases have names. With no limit the layer is the **excess of loss** above {math}`a`, {math}`(X-a)_+`; its expected value {math}`E[(X-a)_+]` is the **stop-loss premium**.

@@ -11,7 +11,7 @@ A system with `S` species and `R` reactions is described by two objects. The sto
 From these the direct method draws, for every replicate, the time to the next event and which reaction it is. With the total propensity `a0 = sum_j a_j`, the waiting time is exponential and the reaction is chosen in proportion to its propensity:
 
 ```{math}
-\tau = \frac{\ln(1/r_1)}{a_0}, \qquad \mu = \min\Big\{ j : \sum_{j' \le j} a_{j'} > r_2\, a_0 \Big\}, \qquad x \leftarrow x + \nu_\mu ,
+\tau = \frac{\ln(1/r_1)}{a_0}, \qquad \mu = \min\Big\{ j : \sum_{j' \le j} a_{j'} > r_2\, a_0 \Big\}, \qquad x \leftarrow x + \nu_\mu
 ```
 
 where `r_1` and `r_2` are uniform random numbers. One pass of the event loop fires one event in every replicate that is still running, using whole-ensemble operations, so adding replicates costs far less than running more loops. A replicate stops for good when its next event would fall after `t_end` (the state at `t_end` is then exactly the current state, because the exponential clock has no memory) or when its total propensity is zero (it has gone extinct or reached an absorbing state). `SsaResult` holds `state` of shape `[B, S]` at `t_end`, `events` with the number of events each replicate fired, and `completed`, which is `true` only when every replicate finished within `max_events`.

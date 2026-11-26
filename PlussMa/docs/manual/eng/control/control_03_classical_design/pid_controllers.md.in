@@ -9,7 +9,7 @@ When you can measure only the output, and want a controller you can tune by hand
 The controller acts on the error `e = r - y` between a reference and the measurement. In the **parallel form** used here its transfer function is
 
 ```{math}
-C(s) = K_p + \frac{K_i}{s} + \frac{K_d\,s}{T_f\,s + 1},
+C(s) = K_p + \frac{K_i}{s} + \frac{K_d\,s}{T_f\,s + 1}
 ```
 
 with the proportional gain `Kp`, the integral gain `Ki`, the derivative gain `Kd`, and the derivative filter time constant `Tf` (the `filter` argument). The integral term removes steady-state error; the derivative term anticipates; the filter `Tf` rolls the derivative off above `1 / Tf` so that it does not amplify measurement noise without limit. A zero gain switches its term off, and `Tf = 0` is an unfiltered derivative.

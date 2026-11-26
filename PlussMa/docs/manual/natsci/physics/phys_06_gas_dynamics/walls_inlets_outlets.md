@@ -24,7 +24,7 @@ A rule can be a function of time (`gas::BoundFn`) and two rules can be mixed ove
 A stream of gas of density 1, speed -1 (towards the wall) and pressure 1 hits a closed wall at `x = 0`. The wall stops the gas, a shock runs back into the stream, and the gas behind it is at rest. For a closing speed {math}`U` and a sound speed {math}`c_1` the shock moves relative to the stream at
 
 ```{math}
-W = \tfrac{\gamma + 1}{4} U + \sqrt{\left(\tfrac{\gamma + 1}{4} U\right)^2 + c_1^2},
+W = \tfrac{\gamma + 1}{4} U + \sqrt{\left(\tfrac{\gamma + 1}{4} U\right)^2 + c_1^2}
 ```
 
 so it moves away from the wall at {math}`s = W - U`; mass and momentum balance then give the density {math}`\rho_2 = \rho_1 (s + U)/s` and the pressure {math}`p_2 = p_1 + \rho_1 U (s + U)` behind it. The program runs 400 cells to `t = 0.3` with a dimensionless gas (gas constant 1, so that {math}`T = p/\rho`) and compares with these formulas.

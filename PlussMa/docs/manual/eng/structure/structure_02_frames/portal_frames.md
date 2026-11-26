@@ -17,7 +17,7 @@ k = \frac{I_b / L}{I_c / h}.
 With fixed bases, the slope-deflection equations give
 
 ```{math}
-\delta_{\text{fixed}} = \frac{H h^3 (2 + 3k)}{12 E I_c (1 + 6k)},
+\delta_{\text{fixed}} = \frac{H h^3 (2 + 3k)}{12 E I_c (1 + 6k)}
 ```
 
 and with pinned bases

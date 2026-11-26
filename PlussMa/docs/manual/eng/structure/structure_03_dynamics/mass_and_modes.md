@@ -11,7 +11,7 @@ A structure that is disturbed and then left alone vibrates in a combination of i
 Give each member a density, and the frame has a **mass** as well as a stiffness. Free vibration without damping is governed by
 
 ```{math}
-K \phi = \omega^2 M \phi,
+K \phi = \omega^2 M \phi
 ```
 
 where `K` is the stiffness, `M` the mass, `omega` an angular frequency and `phi` a mode shape. `modes(frame, fix, options)` finds the lowest few `(omega, phi)` pairs of the structure with the constrained degrees of freedom held fixed. It returns a `ModeResult`:

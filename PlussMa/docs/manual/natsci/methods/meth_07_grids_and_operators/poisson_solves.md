@@ -9,7 +9,7 @@ Poisson's equation, `laplacian(u) = f`, turns up whenever a field is set by its 
 On a periodic domain the discrete Laplacian is diagonal in the Fourier basis, so the equation is solved by one forward transform, one division and one inverse transform. For a grid with `n` cells of width `h` the eigenvalue of the compact three-point Laplacian along one axis at integer frequency `j` is
 
 ```{math}
-\lambda_j = -\frac{4}{h^2} \sin^2\!\Big(\frac{\pi j}{n}\Big),
+\lambda_j = -\frac{4}{h^2} \sin^2\!\Big(\frac{\pi j}{n}\Big)
 ```
 
 and the eigenvalues of several axes add. The constant mode has eigenvalue zero, which is why two things follow: the source must have zero mean (nothing can balance a net source on a closed domain), and the solution is only defined up to a constant, which the solver sets so that the mean is zero. The wide stencil, the divergence of the centred gradient, has eigenvalue `-sin^2(2 pi j / n) / h^2` and also vanishes on the alternating mode of an even axis; both null components are removed.

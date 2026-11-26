@@ -13,7 +13,7 @@ This is the full ratemaking cycle of [Actuarial 4](../actuarial_04_ratemaking_cr
 For each territory {math}`i` with exposure {math}`E_i` and losses {math}`L_i`, the experience pure premium is {math}`L_i/E_i`. A territory with little exposure has a noisy figure, so it is blended with the manual figure {math}`M_i` by credibility {math}`Z_i=E_i/(E_i+K)`,
 
 ```{math}
-\hat p_i=Z_i\,\frac{L_i}{E_i}+(1-Z_i)\,M_i ,
+\hat p_i=Z_i\,\frac{L_i}{E_i}+(1-Z_i)\,M_i
 ```
 
 where {math}`K` is the exposure at which experience and manual rate get equal weight. The blended pure premium is loaded for expenses and profit, and compared with the current premium {math}`P_i`:
