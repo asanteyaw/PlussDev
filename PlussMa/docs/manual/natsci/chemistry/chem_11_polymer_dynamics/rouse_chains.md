@@ -9,10 +9,7 @@ A polymer in a melt or a dilute solution is never still: its segments jiggle, th
 Bead `n` sits at position {math}`r_n`, is joined to its neighbours by springs of constant {math}`k = 3 k_B T / b^2` (`b` is the bond length, the root-mean-square length of one spring) and feels a friction `zeta` and random thermal kicks. The springs couple the beads through the connectivity matrix `A`, which has `1` on the two chain ends, `2` on the interior diagonal and `-1` next to it. Its eigenvalues are known in closed form,
 
 ```{math}
-\begin{aligned}
-&a_p = 4 \sin^2\!\left(\frac{p\pi}{2N}\right), \\
-&p = 0, 1, \dots, N-1 ,
-\end{aligned}
+a_p = 4 \sin^2\!\left(\frac{p\pi}{2N}\right), \qquad p = 0, 1, \dots, N-1 ,
 ```
 
 and each eigenvector is an independent mode of motion. The mode `p = 0` has `a_0 = 0`: it is the translation of the whole chain. The other `N - 1` modes relax exponentially with the times

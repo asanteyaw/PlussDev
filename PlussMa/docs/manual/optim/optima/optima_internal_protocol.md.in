@@ -25,10 +25,7 @@ The backend targets the same constrained nonlinear program:
 For inequality handling, the solver introduces slack variables
 
 ```{math}
-\begin{aligned}
-&c_{\mathrm{ineq}}(x) + s = 0, \\
-&s > 0,
-\end{aligned}
+c_{\mathrm{ineq}}(x) + s = 0,\qquad s > 0,
 ```
 
 and dual variables $z > 0$ for the slack equations.
@@ -63,17 +60,15 @@ The implementation follows a primal-dual barrier structure built around:
 ```
 
 ```{math}
-\begin{aligned}
-&c_{\mathrm{eq}}(x)=0, \\
-&c_{\mathrm{ineq}}(x)+s=0,
-\end{aligned}
+c_{\mathrm{eq}}(x)=0,
+\qquad
+c_{\mathrm{ineq}}(x)+s=0,
 ```
 
 ```{math}
-\begin{aligned}
-&S z = \mu \mathbf{1}, \\
-&s>0,\; z>0,
-\end{aligned}
+S z = \mu \mathbf{1},
+\qquad
+s>0,\; z>0,
 ```
 
 where:

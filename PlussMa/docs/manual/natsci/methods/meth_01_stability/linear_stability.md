@@ -11,8 +11,7 @@ Near an equilibrium {math}`y^*` a disturbance {math}`\delta = y - y^*` obeys {ma
 ```{math}
 \begin{aligned}
 &M_k = J M_{k-1} + c_{k-1} I, \\
-&c_k = -\frac{1}{k}\operatorname{tr}(J M_k), \\
-&M_0 = 0,\ c_0 = 1
+&c_k = -\frac{1}{k}\operatorname{tr}(J M_k), \quad M_0 = 0,\ c_0 = 1
 \end{aligned}
 ```
 

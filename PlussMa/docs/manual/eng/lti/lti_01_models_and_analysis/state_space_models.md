@@ -11,19 +11,13 @@ You have a dynamic system, a mass on a spring, a circuit, a plant to be controll
 A linear time-invariant system keeps a vector of **states** `x` that summarises everything the past has done to it. An **input** vector `u` acts on the states, and an **output** vector `y` is read from them. In continuous time
 
 ```{math}
-\begin{aligned}
-&\dot x = A x + B u, \\
-&y = C x + D u,
-\end{aligned}
+\dot x = A x + B u, \qquad y = C x + D u,
 ```
 
 and in discrete time, with a fixed sampling interval `T`,
 
 ```{math}
-\begin{aligned}
-&x_{k+1} = A x_k + B u_k, \\
-&y_k = C x_k + D u_k.
-\end{aligned}
+x_{k+1} = A x_k + B u_k, \qquad y_k = C x_k + D u_k.
 ```
 
 The four matrices fix the shapes of everything: with `n` states, `m` inputs and `p` outputs, `A` is `n x n`, `B` is `n x m`, `C` is `p x n` and `D` is `p x m`. `StateSpace` stores them and reports `states()`, `inputs()` and `outputs()`. Whether the model is continuous or discrete is carried by its **sample time**: `0` (the default) is continuous, any positive number is a discrete model sampled at that interval.

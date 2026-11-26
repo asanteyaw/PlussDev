@@ -9,10 +9,7 @@ A load that changes with time, a footfall, a gust, a shock or a machine switchin
 `motion(frame, load, time, fix, initial, options)` integrates
 
 ```{math}
-\begin{aligned}
-&M \ddot u + C \dot u + K u = f(t), \\
-&C = a M + b K,
-\end{aligned}
+M \ddot u + C \dot u + K u = f(t), \qquad C = a M + b K,
 ```
 
 where `a` is the **mass damping** and `b` the **stiffness damping** (together, Rayleigh damping), `f(t)` the load history and `u` the node displacements with the constrained degrees of freedom held at zero. The inputs are:

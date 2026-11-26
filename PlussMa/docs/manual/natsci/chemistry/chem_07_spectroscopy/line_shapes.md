@@ -11,8 +11,7 @@ Three normalised profiles of the position {math}`x` around a line centre {math}`
 ```{math}
 \begin{aligned}
 &G(x) = \frac{e^{-u^2/2}}{\sigma\sqrt{2\pi}}, \\
-&L(x) = \frac{\gamma/\pi}{(x - x_0)^2 + \gamma^2}, \\
-&V = G * L, \\
+&L(x) = \frac{\gamma/\pi}{(x - x_0)^2 + \gamma^2}, \quad V = G * L, \\
 &u = \frac{x - x_0}{\sigma}
 \end{aligned}
 ```

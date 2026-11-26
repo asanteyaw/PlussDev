@@ -11,8 +11,7 @@ The state of the vessel is a vector {math}`y = (T, C_1, \dots, C_S)` with the co
 ```{math}
 \begin{aligned}
 &\frac{dT}{dt} = -\frac{\sum_k u_k\,\omega_k}{\sum_k C_k\, c_{v,k}}, \\
-&u_k = h_k - RT, \\
-&c_{v,k} = c_{p,k} - R,
+&u_k = h_k - RT, \quad c_{v,k} = c_{p,k} - R,
 \end{aligned}
 ```
 

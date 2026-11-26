@@ -9,10 +9,7 @@ The parameters returned by a fit are correlated, and so are readings that share 
 A `CorrelatedMeasurement<D>` holds values {math}`x` of dimension {math}`D` with shape `[..., n]` and their covariance {math}`C` of dimension {math}`D^2` with shape `[..., n, n]`: the variances on the diagonal and the covariances off it. A linear map with a matrix {math}`A` transforms them as
 
 ```{math}
-\begin{aligned}
-&y = A x, \\
-&C_y = A\,C\,A^{\top}
-\end{aligned}
+y = A x,\qquad C_y = A\,C\,A^{\top}
 ```
 
 `map(A)` applies this with batched matrix products. A quantity {math}`g(x)` that is not linear is handled to first order with the delta method: take {math}`A` as the gradient of {math}`g` at the estimate, a `1 x n` matrix, and the variance of {math}`g` is the single entry of {math}`C_y`. The constructor checks that the covariance is symmetric with a non-negative diagonal, and, by `CovarianceCheck`, that it is positive semidefinite (the default), positive definite or only symmetric. The type is `pluss::ma::natsci::common::CorrelatedMeasurement<Dimension>`; `values()` and `covariance()` return the quantities, and the covariance has the dimension squared. The first program uses the estimates of [the fitting page](../meth_02_fitting/nonlinear_fits.md), {math}`(V_{\max}, K_m)`, whose covariance is {math}`s^2(J^{\top}J)^{-1}`; their units differ, so they are carried as plain numbers in the units in which they were fitted.

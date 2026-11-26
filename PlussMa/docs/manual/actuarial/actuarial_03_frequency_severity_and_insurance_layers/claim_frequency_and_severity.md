@@ -44,10 +44,7 @@ A **lognormal** severity with parameters {math}`\mu` and {math}`\sigma` (the mea
 A **gamma** severity with shape {math}`a`, scale {math}`\theta` and an optional location {math}`c` (a minimum loss) has
 
 ```{math}
-\begin{aligned}
-&E[X]=a\theta+c, \\
-&\mathrm{Var}[X]=a\theta^2.
-\end{aligned}
+E[X]=a\theta+c,\qquad \mathrm{Var}[X]=a\theta^2.
 ```
 
 The location shifts every loss and so moves the mean and leaves the variance alone.

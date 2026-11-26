@@ -9,11 +9,7 @@ Many metabolic networks conserve a quantity: ATP plus ADP, NAD plus NADH, the to
 With stoichiometry $N$ (species by reactions), the concentrations obey $\dot x = N v(x)$. A *conservation law* is a row $\gamma$ with $\gamma N = 0$: the combination $\gamma x$ never changes. The conservation laws form a matrix $\Gamma$ of $C$ rows, the left null space of $N$, and the species can change only along the *free directions* $B$, the null space of $\Gamma$. `control::conservation_laws(N)` returns an orthonormal $\Gamma$ (with no rows when nothing is conserved) and `control::free_directions(Gamma)` returns $B$. The steady state solves $N v(x) = 0$ together with $\Gamma x = T$ for the totals $T$, which `control::steady_state(v, N, x0, Gamma, T)` finds by damped Newton iteration from a positive guess. At the steady state the unscaled control coefficients solve
 
 ```{math}
-\begin{aligned}
-&N\,E\,C^S = -N, \\
-&\Gamma\,C^S = 0, \\
-&C^J = I + E\,C^S
-\end{aligned}
+N\,E\,C^S = -N,\quad \Gamma\,C^S = 0,\qquad C^J = I + E\,C^S
 ```
 
 where $E = \partial v/\partial x$ holds the elasticities, and `control::coefficients(N, E, Gamma)` returns $C^S$ and $C^J$. They are scaled by `scale_elasticities`, `scale_concentration` and `scale_flux`. Two theorems audit them: the summation theorem says the scaled flux coefficients of any flux add to one and those of any concentration to zero, and the connectivity theorem says $C^J E B = 0$ and $C^S E B = -B$. `control::summation_defect` and `control::connectivity_defect` return the largest violation, which should be rounding error. For the response to a parameter $p$, `control::parameter_derivatives(v, x, p)` gives $\partial v/\partial p$ and `control::response(C, dv_dp)` gives the response coefficient $R = C\,\partial v/\partial p$. The programs use an adenylate-like pair: A (charged) and B (discharged), with $A + B$ conserved, a charging reaction $v_1 = k_1 B$ and two discharging reactions $v_2 = k_2 A$ and $v_3 = k_3 A$.

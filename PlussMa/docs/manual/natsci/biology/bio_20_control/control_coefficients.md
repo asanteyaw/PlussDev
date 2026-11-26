@@ -9,10 +9,7 @@ In a metabolic pathway no single enzyme usually limits the flux: control is shar
 The code is in `pluss::ma::natsci::biology::metabolism::control` (`control::` below). Take the pathway {math}`S \to X_1 \to X_2 \to P` with {math}`S` held fixed and a rate {math}`v_r(x)` for each step. The elasticity {math}`\epsilon_{rs} = \partial v_r/\partial x_s` says how a rate responds to a species concentration. With the stoichiometry {math}`N` (species by reactions), the steady state obeys {math}`N v(x) = 0`, and the flux control coefficient {math}`C^J_k` is the relative response of the steady flux to a relative change in the activity of step {math}`k`. They follow from the elasticities alone,
 
 ```{math}
-\begin{aligned}
-&C^S = -(N\epsilon)^{-1}N\ , \\
-&C^J = I + \epsilon\,C^S,
-\end{aligned}
+C^S = -(N\epsilon)^{-1}N\ ,\qquad C^J = I + \epsilon\,C^S,
 ```
 
 (with conserved moieties the same formulas hold on the independent species). In the program, `control::steady_state` finds the steady state, `control::elasticities(v, x)` differentiates the rates, and `control::coefficients(N, E)` returns `flux` and `concentration`. The summation theorem says the scaled flux coefficients add to one, and `control::scale_flux(C, v)` does the scaling.

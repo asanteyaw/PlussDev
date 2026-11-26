@@ -12,8 +12,7 @@ Over a step {math}`\Delta`, the Vasicek rate is an autoregression around its lev
 
 ```{math}
 \begin{aligned}
-&r_t=\theta+F\,(r_{t-1}-\theta)+w_t, \\
-&F=e^{-\kappa\Delta}, \\
+&r_t=\theta+F\,(r_{t-1}-\theta)+w_t, \quad F=e^{-\kappa\Delta}, \\
 &w_t\sim\mathcal N\Big(0,\;Q=\frac{\sigma^2(1-F^2)}{2\kappa}\Big).
 \end{aligned}
 ```

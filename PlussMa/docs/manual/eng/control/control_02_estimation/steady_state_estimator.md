@@ -11,10 +11,7 @@ You can measure some outputs of a system, but not its states, and the measuremen
 The discrete system is
 
 ```{math}
-\begin{aligned}
-&x_{k+1} = A x_k + w_k, \\
-&y_k = C x_k + v_k,
-\end{aligned}
+x_{k+1} = A x_k + w_k, \qquad y_k = C x_k + v_k,
 ```
 
 with process noise `w` of covariance `W` and measurement noise `v` of covariance `V`. A **predictor-form observer** keeps an estimate `x^` and corrects it with the innovation, the difference between the measurement and the prediction:

@@ -9,10 +9,7 @@ An epidemic spreads when each case causes, on average, more than one new case. Y
 Let $x$ be the state, with the first $m$ compartments infected. The rate of change of the infected compartments splits as $\dot x_i = F_i(x) - V_i(x)$, where $F_i$ is the rate of appearance of new infections in compartment $i$ and $V_i$ is the net rate of transfer out of it by every other means (progression, recovery, death, minus the inflow from other infected compartments). At the disease-free equilibrium $x_0$, with Jacobians $F = \partial F/\partial x$ and $V = \partial V/\partial x$ restricted to the infected block, the *next-generation matrix* is
 
 ```{math}
-\begin{aligned}
-&K = F\,V^{-1}, \\
-&R_0 = \rho(K)
-\end{aligned}
+K = F\,V^{-1}, \qquad R_0 = \rho(K)
 ```
 
 and $\rho$ is the spectral radius. Entry $K_{ij}$ is the expected number of new infections in compartment $i$ caused by one individual who starts in compartment $j$, over that individual's whole infectious life. A `epidemiology::Split` holds the two functions `infections` ($F$) and `transfers` ($V$), the number `infected` of infected compartments and, optionally, their indices. `epidemiology::next_generation(split, dfe)` differentiates both numerically at the disease-free state and returns $K$; `epidemiology::reproduction_number(split, dfe)` returns $\rho(K)$. The library supplies splits for the treatment, staged, multi-strain and vector-host models, and the parameters may have leading axes, so one call can give $R_0$ for a whole table of settings. The treatment model has the states (E, I, S, T): exposed, infectious, susceptible and treated, with infection rates $\beta_1$ (untreated) and $\beta_2$ (treated), a latency rate $\nu$, treatment rates $r_1$ for exposed and $r_2$ for infectious people, a fraction $q$ of the treated infectious that stay treated, and births equal to deaths at rate $d$.

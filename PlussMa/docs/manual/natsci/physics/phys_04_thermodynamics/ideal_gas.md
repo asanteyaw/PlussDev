@@ -63,8 +63,7 @@ On a mass basis the gas constant is {math}`R_s = R / M` for a molar mass {math}`
 
 ```{math}
 \begin{aligned}
-&c_v = \frac{R_s}{\gamma - 1}, \\
-&c_p = c_v + R_s, \\
+&c_v = \frac{R_s}{\gamma - 1}, \quad c_p = c_v + R_s, \\
 &a = \sqrt{\gamma R_s T}
 \end{aligned}
 ```
