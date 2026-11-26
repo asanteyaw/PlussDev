@@ -44,11 +44,12 @@ jobs:
         run: |
           export CC=clang-18 CXX=clang++-18
           mkdir -p shots
+          "$PREFIX/bin/pluss" run PlussTils/tools/ci/view_probe.cpp build
           for mode in table table-filter table-visit catalog catalog-tail; do
             xvfb-run -a -s "-screen 0 1400x900x24" bash -c '
               "$PREFIX/bin/pluss" run PlussTils/tools/ci/view_probe.cpp '"$mode"' > "shots/'"$mode"'.log" 2>&1 &
               pid=$!
-              sleep 90
+              sleep 20
               import -window root "shots/'"$mode"'.png" || true
               kill $pid 2>/dev/null || true
             '
@@ -79,9 +80,11 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: PlussTils/tools/ci
+      - name: Fetch the probe program
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force PlussTils/tools/ci | Out-Null
+          Invoke-WebRequest -Headers @{Authorization = "Bearer ${{ github.token }}"; Accept = "application/vnd.github.raw"} -Uri "https://api.github.com/repos/${{ github.repository }}/contents/PlussTils/tools/ci/view_probe.cpp?ref=${{ github.sha }}" -OutFile PlussTils/tools/ci/view_probe.cpp
       - uses: actions/download-artifact@v4
         with:
           name: plussii-cpp-windows-2022
@@ -96,11 +99,13 @@ jobs:
           $pluss = (Get-ChildItem -Recurse -Filter pluss.exe | Select-Object -First 1).FullName
           Set-Location ..
           New-Item -ItemType Directory -Force shots | Out-Null
+          & $pluss run PlussTils/tools/ci/view_probe.cpp build
+          if ($LASTEXITCODE -ne 0) { exit 1 }
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $bad = @()
           foreach ($mode in "table","table-filter","table-visit","catalog","catalog-tail") {
             $p = Start-Process -FilePath $pluss -ArgumentList "run","PlussTils/tools/ci/view_probe.cpp",$mode -PassThru -RedirectStandardOutput "shots/$mode.log" -RedirectStandardError "shots/$mode.err"
-            Start-Sleep -Seconds 150
+            Start-Sleep -Seconds 25
             $b = [System.Windows.Forms.SystemInformation]::VirtualScreen
             $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
             [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)

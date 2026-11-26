@@ -18,10 +18,12 @@ kernel.json:
     PLUSS_EXTRA_FLAGS  anything else clang-repl should be told, e.g. -DACCELERATE_NEW_LAPACK
 """
 import os
+import platform
 import queue
 import re
 import shlex
 import subprocess
+import sys
 import time
 import tempfile
 import threading
@@ -156,6 +158,9 @@ class PlussKernel(Kernel):
         include = os.environ.get("PLUSS_INCLUDE")
         if include:
             cmd += ["-Xcc", "-I" + include]
+        if sys.platform.startswith("linux") and platform.machine() in ("aarch64", "arm64"):
+            # Atomics become calls to libgcc helpers (__aarch64_ldadd4_*) that the engine's JIT cannot link.
+            cmd += ["-Xcc", "-mno-outline-atomics"]
         for flag in shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", "")):
             cmd += ["-Xcc", flag]
         return cmd

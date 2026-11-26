@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
   using namespace pluss::kindle::literals;
   namespace display = pluss::table::display;
   const std::string mode = argc > 1 ? argv[1] : "table";
+  if (mode == "build") return 0;  // lets a job compile the program before it opens any window
   const double nan = std::numeric_limits<double>::quiet_NaN();
   const double inf = std::numeric_limits<double>::infinity();
 
