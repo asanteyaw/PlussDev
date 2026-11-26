@@ -256,11 +256,15 @@ class Error : public std::runtime_error {
   // The traceback alone ("Traceback (most recent call last): ..."), empty for a plain error.
   [[nodiscard]] std::string traceback() const {
     if (!trace_) return {};
-    std::call_once(trace_->once, [this] {
+    // Formatted once, on first request. A mutex and a flag rather than std::call_once: its thread-local state is
+    // not something the notebook's JIT can link on Linux.
+    const std::lock_guard<std::mutex> lock(trace_->text_mutex);
+    if (!trace_->text_done) {
       trace_->text = ::pluss::codem::StackTrace::format_traceback(
           trace_->frames.data(), trace_->frames.size(), trace_->file.c_str(), trace_->line, trace_->function.c_str(),
           trace_->source.c_str());
-    });
+      trace_->text_done = true;
+    }
     return trace_->text;
   }
 
@@ -281,7 +285,7 @@ class Error : public std::runtime_error {
   [[nodiscard]] const char* what() const noexcept override {
     if (!trace_) return std::runtime_error::what();
     try {
-      const std::string tb = traceback();  // outside the lock: it has its own once flag
+      const std::string tb = traceback();  // outside the lock: it has its own mutex
       std::lock_guard<std::mutex> lock(trace_->mutex);
       if (!trace_->what_valid) {
         std::string text;
@@ -343,7 +347,8 @@ class Error : public std::runtime_error {
     std::exception_ptr cause;  // the exception being handled when this one was raised, if any
     std::string suggestion;  // " Did you mean 'x'?" or empty, decided by the error itself when raised
     std::string source;  // the text of the raising statement, kept so it can be shown without the source file
-    std::once_flag once;
+    std::mutex text_mutex;
+    bool text_done{false};
     std::string text;
     std::mutex mutex;
     bool what_valid{false};
