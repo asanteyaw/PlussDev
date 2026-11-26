@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -1184,6 +1185,69 @@ void test_table_ends_at_its_last_row() {
   expect(measure(20000).height > few.height, "a long table still fills the viewport");
 }
 
+void test_sizing_a_column_moves_only_its_right_edge() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class Five final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 20000; }
+    std::int64_t column_count() const noexcept override { return 5; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(const std::int64_t column) const override { return "c" + std::to_string(column); }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+  };
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>body { margin:0; } table { width:100%; height:300px; }</style></head><body>
+  <table id="t" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+  const Five model;
+  // Where each divider sits: the divider of column n is the right edge of column n, the left edge of the next one.
+  const auto dividers = [&](const std::unordered_map<std::string, std::unordered_map<int, int>>* widths,
+                            std::string* target) {
+    std::vector<HtmlHitRegion> hits;
+    HtmlRenderConfig config{};
+    config.draw_top_bar = false;
+    config.root_padding_px = 0;
+    config.virtual_table_model = &model;
+    config.hit_regions = &hits;
+    config.table_column_widths = widths;
+    (void)build_html_document_scene(document, SizeI{900, 400}, config);
+    std::map<int, int> at;
+    for (const auto& hit : hits) {
+      if (hit.action == "table.resize.column") {
+        at[hit.value] = hit.rect.x + hit.rect.width / 2;
+        if (target != nullptr) {
+          *target = hit.target;
+        }
+      }
+    }
+    return at;
+  };
+  std::string target;
+  const auto before = dividers(nullptr, &target);
+  expect(before.size() >= 4, "the table has dividers to drag");
+  // Drag column 3 wider: its left edge (the divider of column 2) must not move, its right edge moves right.
+  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
+  const int wider = (before.at(3) - before.at(2)) * 3 / 2;
+  widths[target][3] = wider;
+  const auto after = dividers(&widths, nullptr);
+  expect(after.at(1) == before.at(1) && after.at(2) == before.at(2),
+         "widening a column leaves every divider to its left where it was");
+  expect(after.at(3) > before.at(3), "the widened column's right edge moves right");
+  // And a fit (a double-click) is the same: the left edge stays.
+  widths[target].clear();
+  widths[target][3] = 0;
+  const auto fitted = dividers(&widths, nullptr);
+  expect(fitted.at(1) == before.at(1) && fitted.at(2) == before.at(2),
+         "fitting a column leaves every divider to its left where it was");
+}
+
 void test_virtual_table_sorts_by_a_column() {
   using namespace pluss::view;
 
@@ -1444,6 +1508,7 @@ int main() {
     test_virtual_table_double_click_fits_a_squeezed_column();
     test_no_matching_rows_is_centred();
     test_table_ends_at_its_last_row();
+    test_sizing_a_column_moves_only_its_right_edge();
     test_virtual_table_sorts_by_a_column();
     test_row_window_bounds();
     test_long_and_short_tables_draw_headers_alike();

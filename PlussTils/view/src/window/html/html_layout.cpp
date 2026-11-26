@@ -3622,19 +3622,39 @@ int render_virtual_table(
     }
   }
   row_header_w = dragged_width(0) > 0 ? dragged_width(0) : natural.label;
-  const int scrollable_view_w = std::max(16, content_w - row_header_w);
+  // What the columns have to share: the panel less the label column (the least the view can be is a sliver, so a
+  // table narrower than its own label column still has a sensible width to plan with).
+  const auto columns_view_width = [&](const int label_width) { return std::max(16, content_w - label_width); };
+  const int scrollable_view_w = columns_view_width(row_header_w);
   std::vector<int> column_widths;
   std::int64_t data_width = 0;
   {
     std::vector<int> wanted_widths = natural.columns;
     std::vector<bool> flexible(wanted_widths.size(), true);
+    std::ptrdiff_t last_sized = -1;  // the right-most column the user dragged or fitted
     for (std::size_t c = 0; c < wanted_widths.size(); ++c) {
       if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
         wanted_widths[c] = dragged;
         flexible[c] = false;
+        last_sized = static_cast<std::ptrdiff_t>(c);
       } else if (dragged_widths != nullptr && dragged_widths->count(static_cast<int>(c) + 1) > 0) {
         // A double-click asked this column to fit: it keeps the width its values need, however crowded the table.
         flexible[c] = false;
+        last_sized = static_cast<std::ptrdiff_t>(c);
+      }
+    }
+    // Sizing a column moves only its right edge: the columns to its left keep the widths they had before, so what
+    // the others share out is taken from, or given to, the columns on its right.
+    if (last_sized > 0) {
+      std::vector<int> before;
+      std::vector<bool> before_squeezed;
+      distribute_columns(natural.columns, std::vector<bool>(natural.columns.size(), true),
+                         columns_view_width(natural.label), virtual_geo, before, before_squeezed);
+      for (std::ptrdiff_t c = 0; c < last_sized; ++c) {
+        if (flexible[static_cast<std::size_t>(c)]) {
+          wanted_widths[static_cast<std::size_t>(c)] = before[static_cast<std::size_t>(c)];
+          flexible[static_cast<std::size_t>(c)] = false;
+        }
       }
     }
     std::vector<bool> squeezed;
