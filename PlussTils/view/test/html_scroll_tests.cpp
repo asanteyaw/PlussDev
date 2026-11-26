@@ -1135,6 +1135,55 @@ void test_no_matching_rows_is_centred() {
   expect(start > size.width / 3 && start < size.width / 2, "the message sits in the middle of the table, not at its left edge");
 }
 
+void test_table_ends_at_its_last_row() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class Rows final : public VirtualTableModel {
+   public:
+    explicit Rows(const std::int64_t rows) : rows_(rows) {}
+    std::int64_t row_count() const noexcept override { return rows_; }
+    std::int64_t column_count() const noexcept override { return 2; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
+    std::string column_name(const std::int64_t column) const override { return "c" + std::to_string(column); }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
+    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
+
+   private:
+    std::int64_t rows_;
+  };
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>body { margin:0; } table { width:100%; height:500px; }</style></head><body>
+  <table id="t" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+  struct Shape {
+    int height{0};
+    int font_px{0};
+  };
+  const auto measure = [&](const std::int64_t rows) {
+    const Rows model(rows);
+    HtmlRenderStats stats{};
+    HtmlRenderConfig config{};
+    config.draw_top_bar = false;
+    config.root_padding_px = 0;
+    config.virtual_table_model = &model;
+    config.render_stats = &stats;
+    (void)build_html_document_scene(document, SizeI{900, 700}, config);
+    return Shape{stats.table_viewport_rect.height, stats.table_font_px};
+  };
+  const auto few = measure(4);
+  const auto geo = resolve_table_geometry(few.font_px);
+  expect(few.height == geo.header_height + 4 * geo.row_height,
+         "a table of four rows ends at its fourth row, with nothing below it");
+  expect(measure(0).height == geo.header_height + geo.row_height,
+         "an empty table keeps one row of room for its message");
+  expect(measure(20000).height > few.height, "a long table still fills the viewport");
+}
+
 void test_virtual_table_sorts_by_a_column() {
   using namespace pluss::view;
 
@@ -1394,6 +1443,7 @@ int main() {
     test_virtual_table_columns_can_be_resized();
     test_virtual_table_double_click_fits_a_squeezed_column();
     test_no_matching_rows_is_centred();
+    test_table_ends_at_its_last_row();
     test_virtual_table_sorts_by_a_column();
     test_row_window_bounds();
     test_long_and_short_tables_draw_headers_alike();

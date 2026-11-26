@@ -2197,6 +2197,29 @@ thread_local const HtmlRenderConfig* g_layout_config = nullptr;
   return g_layout_config;
 }
 
+// The height a model-painted table takes inside its border: a rectangle that ends with its last row, so the header
+// and the rows it shows, or the room the page gives it, whichever is less. An empty table keeps one row of room for
+// its message. (A ragged catalog's rows run as far as its longest key.) The layout pass and the painting both ask
+// here, so the frame around the table is exactly as tall as the table.
+// An empty table still shows its "No matching rows" message, which takes one row of the body. It cannot be derived
+// from the geometry: it is the least a body can show a sentence in.
+constexpr std::int64_t kEmptyTableRows = 1;
+
+[[nodiscard]] int virtual_table_content_height(const ResolvedStyle& style, const HtmlRenderConfig* config) {
+  const HtmlTableGeometryPx geo = resolve_table_geometry(style.font_size);
+  const int room = std::max({geo.max_viewport_height, style.explicit_height, style.min_height});
+  if (config == nullptr || config->virtual_table_model == nullptr) {
+    return room;
+  }
+  const std::int64_t rows =
+      config->virtual_row_order != nullptr
+          ? static_cast<std::int64_t>(config->virtual_row_order->size())
+          : std::max<std::int64_t>(0, config->virtual_table_model->row_count());
+  const std::int64_t wanted =
+      static_cast<std::int64_t>(geo.header_height) + std::max<std::int64_t>(kEmptyTableRows, rows) * geo.row_height;
+  return static_cast<int>(std::min<std::int64_t>(wanted, room));
+}
+
 struct LayoutConfigScope {
   explicit LayoutConfigScope(const HtmlRenderConfig* config) noexcept : previous(g_layout_config) {
     g_layout_config = config;
@@ -2402,6 +2425,11 @@ struct TableLayout {
   const int resolved_outer_width = std::max(min_width, explicit_width > 0 ? explicit_width : width);
   const int inner_width = std::max(40, resolved_outer_width - (margin + padding + border) * 2);
 
+  // A model-painted table is as tall as its rows, up to the room the page gives it (see virtual_table_content_height).
+  if (const HtmlAttribute* virtual_flag = find_attribute(node, "data-virtual-table");
+      virtual_flag != nullptr && virtual_flag->value == "true") {
+    return (margin * 2) + (padding * 2) + (border * 2) + virtual_table_content_height(style, current_layout_config());
+  }
   // A fixed-height scrolling table does not need every cell measured during
   // the parent's height pass. The render pass computes its scroll geometry;
   // measuring all rows here duplicated that work on every scroll frame.
@@ -3478,9 +3506,7 @@ int render_virtual_table(
     return it == dragged_widths->end() || it->second <= 0 ? 0 : std::max(virtual_geo.min_resize, it->second);
   };
   int row_header_w = 0;  // the label column's width, planned with the other columns below
-  const int min_viewport_h = virtual_geo.max_viewport_height;
-  const int content_height =
-      std::max({min_viewport_h, style.explicit_height, style.min_height});
+  const int content_height = virtual_table_content_height(style, &render_config);
   const int total_h =
       margin * 2 + padding * 2 + border * 2 + content_height;
   if (y >= bottom) {
