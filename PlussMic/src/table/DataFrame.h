@@ -294,10 +294,10 @@ public:
         std::vector<pluss::Duration>>;
     using Base::Base;
 
-    std::span<const pluss::Series> series_span() const noexcept { return std::get<0>(*this); }
-    std::span<const pluss::Note> note_span() const noexcept { return std::get<1>(*this); }
-    std::span<const pluss::Timeline> timeline_span() const noexcept { return std::get<2>(*this); }
-    std::span<const pluss::Duration> duration_span() const noexcept { return std::get<3>(*this); }
+    std::span<const pluss::Series> series_span() const noexcept;
+    std::span<const pluss::Note> note_span() const noexcept;
+    std::span<const pluss::Timeline> timeline_span() const noexcept;
+    std::span<const pluss::Duration> duration_span() const noexcept;
 
     std::size_t size() const noexcept {
       return std::get<0>(*this).size() + std::get<1>(*this).size()
@@ -3211,6 +3211,20 @@ DataFrame operator>=(const char* lhs, const DataFrame& rhs);
 DataFrame operator>=(const DataFrame& lhs, const DataFrame& rhs);
 DataFrame operator>=(const DataFrame& lhs, const Shelf& rhs);
 DataFrame operator>=(const Shelf& lhs, const DataFrame& rhs);
+
+// Defined here, once the element types are complete in every compiler's library.
+inline std::span<const pluss::Series> DataFrame::MatrixValues::series_span() const noexcept {
+  return std::get<0>(*this);
+}
+inline std::span<const pluss::Note> DataFrame::MatrixValues::note_span() const noexcept {
+  return std::get<1>(*this);
+}
+inline std::span<const pluss::Timeline> DataFrame::MatrixValues::timeline_span() const noexcept {
+  return std::get<2>(*this);
+}
+inline std::span<const pluss::Duration> DataFrame::MatrixValues::duration_span() const noexcept {
+  return std::get<3>(*this);
+}
 
 } // namespace pluss::table
 
