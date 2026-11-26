@@ -2610,6 +2610,29 @@ struct TableLayout {
   return layout_math_text(text, font_size).width;
 }
 
+// `text` cut to end in "..." when it is wider than `max_width`, measured the way it is painted (the same way a
+// column's width is planned from it), so a column sized to its text never truncates it.
+[[nodiscard]] std::string truncate_to_painted_width(std::string text,
+                                                    const int font_size,
+                                                    const int font_weight,
+                                                    const std::string_view font_family,
+                                                    const int max_width) {
+  if (max_width <= 0) {
+    return {};
+  }
+  if (painted_text_width(text, font_size, font_weight, font_family) <= max_width) {
+    return text;
+  }
+  const std::string ellipsis = "...";
+  while (!text.empty()) {
+    text.pop_back();
+    if (painted_text_width(text + ellipsis, font_size, font_weight, font_family) <= max_width) {
+      return text + ellipsis;
+    }
+  }
+  return {};
+}
+
 void draw_text_lines(Scene& scene,
                      const std::vector<std::string>& lines,
                      const int font_size,
@@ -3375,7 +3398,20 @@ int render_node(Scene& scene,
   label.tag = "td";
   label.attributes.push_back(HtmlAttribute{"class", "sticky-left"});
   const ResolvedStyle accent = resolve_style(document, label, cell_lineage, &table_style, viewport_width);
+  HtmlNode head_section;
+  head_section.tag = "thead";
+  std::vector<const HtmlNode*> head_lineage = lineage;
+  head_lineage.push_back(&table);
+  head_lineage.push_back(&head_section);
+  head_lineage.push_back(&row);
+  HtmlNode head_cell;
+  head_cell.tag = "th";
+  head_cell.attributes.push_back(HtmlAttribute{"class", "sortable"});
+  const ResolvedStyle head = resolve_style(document, head_cell, head_lineage, &table_style, viewport_width);
   TablePaint paint{};
+  paint.body_padding = std::max(2, body.padding);
+  paint.header_padding = std::max(2, head.padding);
+  paint.header_weight = head.font_weight;
   paint.grid = body.border_color;
   paint.body_bg = body.has_background ? body.background_color : table_style.background_color;
   paint.track = body.border_color;
@@ -3423,7 +3459,7 @@ int render_virtual_table(
     const auto it = dragged_widths->find(key);
     return it == dragged_widths->end() || it->second <= 0 ? 0 : std::max(virtual_geo.min_resize, it->second);
   };
-  int row_header_w = dragged_width(0) > 0 ? dragged_width(0) : virtual_geo.row_label_width;
+  int row_header_w = 0;  // the label column's width, planned with the other columns below
   const int min_viewport_h = virtual_geo.max_viewport_height;
   const int content_height =
       std::max({min_viewport_h, style.explicit_height, style.min_height});
@@ -3459,9 +3495,6 @@ int render_virtual_table(
           ? parent_style->background_color
           : style.background_color;
 
-  const int min_text_column_w = virtual_geo.text_column_min;
-  const int min_numeric_column_w = virtual_geo.numeric_column_min;
-  const int max_column_w = virtual_geo.column_max;
   const std::int64_t model_row_count =
       std::max<std::int64_t>(0, model->row_count());
   const auto* row_order = render_config.virtual_row_order;
@@ -3473,39 +3506,66 @@ int render_virtual_table(
       std::max<std::int64_t>(0, model->column_count());
   const std::string table_target = node_instance_target(node, "table");
 
-  std::vector<int> column_widths;
-  std::int64_t data_width = 0;
+  // The column widths come from the same rule as a short table's: each column is as wide as its header and the
+  // values sampled from the model need (within the geometry's narrowest and widest), the label column as wide as
+  // its labels, and the table then stretches or squeezes the columns to share what the panel has (see
+  // distribute_columns). Dragged columns keep the width they were given and the others share the rest.
+  const TablePaint paint = themed_table_paint(document, lineage, node, style, viewport_width);
+  struct NaturalWidths {
+    std::vector<int> columns;
+    int label{0};
+  };
+  NaturalWidths natural;
   bool cached_widths = false;
   if (render_config.layout_cache != nullptr) {
-    const auto cached =
-        render_config.layout_cache->tables.find(table_target);
+    const auto cached = render_config.layout_cache->tables.find(table_target);
     if (cached != render_config.layout_cache->tables.end()) {
       const auto& entry = cached->second;
-      cached_widths =
-          entry.node_identity == reinterpret_cast<std::uintptr_t>(model) &&
-          entry.content_width == content_w &&
-          entry.column_count == static_cast<std::size_t>(column_count) &&
-          entry.column_widths.size() ==
-              static_cast<std::size_t>(column_count);
+      cached_widths = entry.node_identity == reinterpret_cast<std::uintptr_t>(model) &&
+                      entry.content_width == content_w &&
+                      entry.column_count == static_cast<std::size_t>(column_count) &&
+                      entry.column_widths.size() == static_cast<std::size_t>(column_count) + 1;
       if (cached_widths) {
-        column_widths = entry.column_widths;
+        natural.label = entry.column_widths.front();
+        natural.columns.assign(entry.column_widths.begin() + 1, entry.column_widths.end());
       }
     }
   }
   if (!cached_widths) {
-    column_widths.reserve(static_cast<std::size_t>(
-        std::min<std::int64_t>(column_count, 1000000)));
+    const int sort_room = render_config.table_sort_controls ? virtual_geo.sort_gutter : 0;
+    const auto text_width = [&](const std::string& text, const int weight) {
+      return painted_text_width(text, style.font_size, weight, style.font_family);
+    };
+    // The rows read to size the columns: evenly spread over the table, and always its last row.
+    std::vector<std::int64_t> sample;
+    const std::int64_t wanted = static_cast<std::int64_t>(virtual_geo.fit_sample_rows);
+    const bool read_values = static_cast<std::size_t>(column_count) <= virtual_geo.fit_max_columns;
+    for (std::int64_t k = 0; k < std::min(wanted, model_row_count); ++k) {
+      sample.push_back(k * model_row_count / std::min(wanted, model_row_count));
+    }
+    if (model_row_count > 0 && (sample.empty() || sample.back() != model_row_count - 1)) {
+      sample.push_back(model_row_count - 1);
+    }
+    natural.label = text_width(model->row_header(), paint.header_weight) + sort_room + 2 * paint.header_padding;
+    for (const auto row : sample) {
+      natural.label = std::max(natural.label, text_width(model->row_label(row), style.font_weight) + 2 * paint.body_padding);
+    }
+    natural.columns.reserve(static_cast<std::size_t>(std::min<std::int64_t>(column_count, 1000000)));
     for (std::int64_t column = 0; column < column_count; ++column) {
-      const std::string name = model->column_name(column);
-      const int preferred =
-          layout_math_text(name, style.font_size).width + 24;
-      const int minimum = model->column_numeric(column)
-                              ? min_numeric_column_w
-                              : min_text_column_w;
-      column_widths.push_back(
-          std::clamp(preferred, minimum, max_column_w));
+      int fitted = text_width(model->column_name(column), paint.header_weight) + sort_room + 2 * paint.header_padding;
+      for (const auto row : sample) {
+        if (!read_values) {
+          break;
+        }
+        fitted = std::max(fitted, text_width(model->cell(row, column).text, style.font_weight) + 2 * paint.body_padding);
+      }
+      natural.columns.push_back(std::clamp(fitted, virtual_geo.min_column, virtual_geo.max_column));
     }
     if (render_config.layout_cache != nullptr) {
+      std::vector<int> stored;
+      stored.reserve(natural.columns.size() + 1);
+      stored.push_back(natural.label);
+      stored.insert(stored.end(), natural.columns.begin(), natural.columns.end());
       render_config.layout_cache->tables[table_target] =
           HtmlTableGeometryCacheEntry{
               .node_identity = reinterpret_cast<std::uintptr_t>(model),
@@ -3513,29 +3573,25 @@ int render_virtual_table(
               .content_width = content_w,
               .row_count = static_cast<std::size_t>(model_row_count),
               .column_count = static_cast<std::size_t>(column_count),
-              .column_widths = column_widths,
+              .column_widths = std::move(stored),
           };
     }
   }
+  row_header_w = dragged_width(0) > 0 ? dragged_width(0) : natural.label;
   const int scrollable_view_w = std::max(16, content_w - row_header_w);
-  for (std::size_t c = 0; c < column_widths.size(); ++c) {
-    if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
-      column_widths[c] = dragged;
+  std::vector<int> column_widths;
+  std::int64_t data_width = 0;
+  {
+    std::vector<int> wanted_widths = natural.columns;
+    std::vector<bool> flexible(wanted_widths.size(), true);
+    for (std::size_t c = 0; c < wanted_widths.size(); ++c) {
+      if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
+        wanted_widths[c] = dragged;
+        flexible[c] = false;
+      }
     }
-  }
-  // A long table follows the same rule as a short one: the last column is the automatic column, so it takes
-  // what the other columns leave and the table always reaches the panel's right edge. It never goes below its
-  // own width, so a table with many wide columns still scrolls sideways. This runs after the cached widths are
-  // read, so the cache holds each column's own width and a resized window needs no new measuring.
-  if (virtual_geo.slack == HtmlTableSlack::LastColumn && column_widths.size() > 1) {
-    std::int64_t others = 0;
-    for (std::size_t c = 0; c + 1 < column_widths.size(); ++c) {
-      others += column_widths[c];
-    }
-    const std::int64_t remainder = static_cast<std::int64_t>(scrollable_view_w) - others;
-    if (remainder > column_widths.back()) {
-      column_widths.back() = static_cast<int>(std::min<std::int64_t>(remainder, std::numeric_limits<int>::max()));
-    }
+    std::vector<bool> squeezed;
+    distribute_columns(wanted_widths, flexible, scrollable_view_w, virtual_geo, column_widths, squeezed);
   }
   for (const int cell_w : column_widths) {
     data_width = std::min<std::int64_t>(
@@ -3598,7 +3654,7 @@ int render_virtual_table(
   };
   std::vector<VisibleColumn> visible_columns;
   visible_columns.reserve(
-      static_cast<std::size_t>(std::max(2, content_w / min_numeric_column_w + 2)));
+      static_cast<std::size_t>(std::max(2, content_w / virtual_geo.min_column + 2)));
   std::int64_t running_x = static_cast<std::int64_t>(content_x) +
                            row_header_w - scroll_x;
   const int scrollable_left = content_x + row_header_w;
@@ -3656,7 +3712,6 @@ int render_virtual_table(
   const Paint sticky_paint = probe("tbody", "td", "sticky-left", false);
   const Paint sticky_even_paint = probe("tbody", "td", "sticky-left", true);
   const Paint missing_paint = probe("tbody", "td", "num missing", false);
-  const TablePaint paint = themed_table_paint(document, lineage, node, style, viewport_width);
   const Color grid = paint.grid;
   const Color header_fill = header_paint.fill;
   const Color sticky_header_fill = sticky_header_paint.fill;
@@ -3673,12 +3728,12 @@ int render_virtual_table(
         // The same padding a short table's cells take from the stylesheet.
         const int pad = header ? header_paint.padding : odd_paint.padding;
         const int text_w = std::max(16, cell_w - pad * 2);
-        const std::string text =
-            truncate_to_width(source, font_size, text_w);
+        const int weight = missing ? missing_paint.weight : (header ? header_paint.weight : style.font_weight);
+        const std::string text = truncate_to_painted_width(source, font_size, weight, style.font_family, text_w);
         const int text_y =
             cell_y + std::max(2, ((header ? header_h : row_h) - line_h) / 2);
         draw_text_lines(
-            scene, {text}, font_size, missing ? missing_paint.weight : (header ? header_paint.weight : style.font_weight), style.font_family,
+            scene, {text}, font_size, weight, style.font_family,
             missing ? missing_paint.text : (header ? header_paint.text : style.text_color),
             cell_x + pad, text_y, line_h, header ? "center" : "left", text_w);
       };

@@ -97,7 +97,7 @@ struct DisplayOptions {
   std::int64_t visit_rows{10};              // First, Middle and Last
   std::int64_t visit_begin{0};              // Custom: the first position, 0-based
   std::int64_t visit_end{std::numeric_limits<std::int64_t>::max()};  // Custom: the position to stop before
-  bool visit_prompt_inline{false};  // Custom asked for in a box on the page, because the window cannot show a dialog
+  bool visit_editing{false};  // the box for the custom range is open in the header, waiting for Apply
   std::int64_t terminal_width{0};  // <= 0 => detect from terminal
   std::int64_t terminal_height{0}; // <= 0 => detect from terminal
   bool show_shape_footer{true};

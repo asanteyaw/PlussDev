@@ -25,6 +25,9 @@ struct TablePaint {
   Color body_bg;
   Color track;
   Color thumb;
+  int body_padding{0};     // the stylesheet's padding of a body cell and of a header cell, for sizing columns
+  int header_padding{0};
+  int header_weight{400};  // and the weight a header's text is drawn with
 };
 
 // Where a table's scrollbars go and how far it is scrolled.

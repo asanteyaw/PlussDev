@@ -71,19 +71,6 @@ enum class ShellCursor : std::uint8_t {
   ResizeColumn = 1,  // horizontal resize arrows
 };
 
-// What a prompt asks for: a title, a line of explanation, and the fields to fill in.
-struct ShellPromptField {
-  std::string label{};
-  std::string placeholder{};
-  std::string value{};  // what the field starts with
-};
-struct ShellPrompt {
-  std::string title{};
-  std::string message{};
-  std::string accept{"OK"};
-  std::vector<ShellPromptField> fields{};
-};
-
 struct ShellSaveFormat {
   std::string label{};
   std::string extension{};
@@ -139,16 +126,6 @@ class IWindowShell {
   // True when open() honours ShellConfig::menus with native controls.
   [[nodiscard]] virtual bool supports_menus() const noexcept {
     return false;
-  }
-  // A small modal dialog that asks for a few values (the first and last row to visit, say): returns what was
-  // typed, one string per field, or nothing when the user cancels. Only shells that return true from
-  // supports_prompt() can show it; the others leave the caller to ask in the page.
-  [[nodiscard]] virtual bool supports_prompt() const noexcept {
-    return false;
-  }
-  [[nodiscard]] virtual std::optional<std::vector<std::string>> prompt(const ShellPrompt& request) {
-    (void)request;
-    return std::nullopt;
   }
   [[nodiscard]] virtual bool presentation_frame_due() noexcept {
     return true;

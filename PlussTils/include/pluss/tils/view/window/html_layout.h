@@ -42,6 +42,9 @@ struct HtmlTableGeometry {
   HtmlTableSlack slack{HtmlTableSlack::LastColumn};
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
+  // A table of a model with more columns than this is sized from its headers alone: reading values for thousands of
+  // columns would cost more than the first frame is worth, and a frame that wide scrolls sideways anyway.
+  std::size_t fit_max_columns{64};
   // Lines of text a cell may use before it ends in an ellipsis. Like a spreadsheet, text does not wrap
   // unless asked to: one line per cell, so a row's height follows the font and not the column's width,
   // and resizing a column never changes a row. Raise value_max_lines (or label_max_lines) to let
@@ -84,6 +87,7 @@ struct HtmlTableGeometryPx {
   int continuation_column{0};
   HtmlTableSlack slack{HtmlTableSlack::LastColumn};
   std::size_t fit_sample_rows{0};
+  std::size_t fit_max_columns{0};
   int header_max_lines{1};
   int value_max_lines{1};
   int label_max_lines{1};
@@ -127,6 +131,7 @@ struct HtmlTableGeometryPx {
   out.continuation_column = px(g.continuation_column_em);
   out.slack = g.slack;
   out.fit_sample_rows = g.fit_sample_rows;
+  out.fit_max_columns = g.fit_max_columns;
   out.header_max_lines = std::max(1, g.header_max_lines);
   out.value_max_lines = std::max(1, g.value_max_lines);
   out.label_max_lines = std::max(1, g.label_max_lines);

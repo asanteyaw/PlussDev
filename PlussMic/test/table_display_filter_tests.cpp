@@ -144,12 +144,14 @@ void test_visit_custom_range() {
   options.visit = display::DisplayVisit::Custom;
   options.visit_begin = 3;
   options.visit_end = 7;
-  options.visit_prompt_inline = true;  // a window that cannot show a dialog asks in the page
   const auto out = display::render_html(numbered(20), options);
   expect(out.find(">row-04<") != std::string::npos && out.find(">row-07<") != std::string::npos &&
              out.find(">row-03<") == std::string::npos && out.find(">row-08<") == std::string::npos,
          "a custom range shows positions begin up to, not including, end");
-  expect(out.find("visit-apply") != std::string::npos, "the custom range box is on the page");
+  expect(out.find("visit-apply") == std::string::npos, "the range box is gone once the range is applied");
+  options.visit_editing = true;
+  expect(display::render_html(numbered(20), options).find("visit-apply") != std::string::npos,
+         "the range box is on the page while it is being edited");
 }
 
 }  // namespace

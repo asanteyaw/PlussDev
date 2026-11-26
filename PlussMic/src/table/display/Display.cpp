@@ -1093,7 +1093,8 @@ std::string theme_root_css_(const DisplayOptions& options) {
 std::string html_shell_(std::string_view title,
                         std::string_view subtitle,
                         std::string_view body,
-                        const DisplayOptions& options) {
+                        const DisplayOptions& options,
+                        std::string_view header_extra = {}) {
   const auto sortable = options.html_sortable ? "true" : "false";
   const auto search = options.html_search ? "true" : "false";
   const std::string responsive_css = R"CSS(
@@ -1197,17 +1198,36 @@ std::string html_shell_(std::string_view title,
       -webkit-appearance: none;
     }}
     .visit-bar {{
-      margin-left: 0;
-      justify-content: flex-start;
+      flex: 1 1 auto;
+      margin: 0 1em;
+      text-align: center;
+    }}
+    .visit-bar p {{
+      margin: 0 0 0.4em;
+      font-size: 0.78rem;
+    }}
+    .visit-row {{
+      display: flex;
       gap: 0.6em;
-      padding: 0.5em 0;
+      align-items: center;
+      justify-content: center;
     }}
-    .visit-bar input {{
-      min-width: 8em;
-      width: 8em;
+    .visit-row input {{
+      margin: 0;
+      min-width: 0;
+      width: 5.5em;  /* room for five digits */
+      height: 40px;
+      min-height: 40px;
+      padding: 0 0.6em;
+      border-radius: 7px;
+      border: 1px solid var(--control-border);
+      background: var(--panel);
+      color: var(--ink);
+      font: inherit;
+      text-align: center;
     }}
-    .visit-bar span {{
-      line-height: 40px;  /* the height of the boxes beside it, so the words sit level with them */
+    .visit-row button {{
+      margin: 0;
     }}
     .tools button {{
       margin: 0;
@@ -1538,6 +1558,7 @@ std::string html_shell_(std::string_view title,
           <h1>{0}</h1>
           <p>{1}</p>
         </div>
+        {7}
         <div class="tools">
           <input id="table-search" type="search" placeholder="Search visible rows" />
           <button id="reset-table-view" class="reset" type="button">Reset</button>
@@ -1866,7 +1887,8 @@ std::string html_shell_(std::string_view title,
                      sortable,
                      search,
                      responsive_css,
-                     theme_root_css_(options));
+                     theme_root_css_(options),
+                     header_extra);
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -2334,6 +2356,11 @@ class DataFrameVirtualTableModel final
         rows_(frame.ncases()) {
     numeric_.reserve(columns_.size());
     search_columns_.reserve(columns_.size());
+    for (const auto& raw : columns_) {
+      // Measurements and counts follow the Format menu; bool and text never do.
+      const bool number = is_numeric_shelf(raw) && (raw.as_series().dtype().is_floating() || raw.as_series().dtype().is_integral());
+      formattable_.push_back(number);
+    }
     std::unordered_set<const void*> shared_numeric_payloads;
     for (std::size_t index = 0; index < columns_.size(); ++index) {
       auto& column = columns_[index];
@@ -2394,6 +2421,11 @@ class DataFrameVirtualTableModel final
     const bool nonfinite = !missing && (text == "NaN" || text == "inf" || text == "-inf") && is_numeric_shelf(source);
     if (nonfinite) {
       text = (text == "NaN") ? "NAN" : (text == "inf" ? "INF" : "-INF");  // PlussView shows the loud forms
+    } else if (!missing && formattable_[static_cast<std::size_t>(column)]) {
+      const auto format = static_cast<NumberFormat>(number_format_.load(std::memory_order_acquire));
+      if (format != NumberFormat::Default) {
+        text = format_number_cell_(text, /*count_like=*/false, format);
+      }
     }
     return pluss::view::VirtualTableCell{
         .text = std::move(text),
@@ -2415,6 +2447,11 @@ class DataFrameVirtualTableModel final
 
   bool filtering() const noexcept override {
     return filtering_.load(std::memory_order_acquire);
+  }
+
+  // How numbers are written (View > Format); the stored values do not change.
+  void set_number_format(const NumberFormat format) const {
+    number_format_.store(static_cast<int>(format), std::memory_order_release);
   }
 
   // The rows the View > Visit menu visits, among those the filter, search and sort leave.
@@ -2471,6 +2508,8 @@ class DataFrameVirtualTableModel final
   mutable std::shared_ptr<const std::vector<bool>> keep_{};
   mutable pluss::view::RowWindow window_{};
   mutable std::atomic<bool> filtering_{false};
+  mutable std::atomic<int> number_format_{0};
+  std::vector<bool> formattable_{};
   std::vector<std::string> names_{};
   std::vector<bool> numeric_{};
   std::vector<std::size_t> search_columns_{};
@@ -2852,18 +2891,19 @@ constexpr std::string_view kVisitApplyId = "visit-apply";
 constexpr const char* kVisitBeginId = "visit-begin";
 constexpr const char* kVisitEndId = "visit-end";
 
-// The box that appears under View > Visit > Custom: the first position and the one to stop before, as in a slice.
+// The box that opens in the middle of the header under View > Visit > Custom: what to type on top, then the first
+// position and the one to stop before, then Apply. It goes away once applied.
 std::string visit_bar_html_(const DisplayOptions& options) {
   const auto shown = [](const std::int64_t value, const std::int64_t unset) {
     return value == unset ? std::string{} : std::to_string(value);
   };
   return pluss::tils::OutputEngine::format(
-      "<div class=\"tools visit-bar\"><span class=\"muted\">Rows from</span>"
-      "<input id=\"{0}\" type=\"text\" placeholder=\"first\" value=\"{2}\" />"
-      "<span class=\"muted\">to, not including</span>"
-      "<input id=\"{1}\" type=\"text\" placeholder=\"last\" value=\"{3}\" />"
-      "<button id=\"{4}\" type=\"button\">Apply</button>"
-      "<span class=\"muted\">positions count from 0; a negative one counts from the end</span></div>",
+      "<div class=\"visit-bar\"><p class=\"muted\">Enter numbers only. Leave the start box empty for the start, "
+      "the end box empty for the end.</p>"
+      "<div class=\"visit-row\"><input id=\"{0}\" type=\"text\" placeholder=\"0\" value=\"{2}\" />"
+      "<span class=\"muted\">to</span>"
+      "<input id=\"{1}\" type=\"text\" placeholder=\"1\" value=\"{3}\" />"
+      "<button id=\"{4}\" type=\"button\">Apply</button></div></div>",
       kVisitBeginId, kVisitEndId, shown(options.visit_begin, 0),
       shown(options.visit_end, std::numeric_limits<std::int64_t>::max()), std::string(kVisitApplyId));
 }
@@ -2882,9 +2922,8 @@ std::string render_html_table_(const DataFrame& frame,
   constexpr std::int64_t kBrowserVirtualRows = 2000;
   table_style.virtual_rows =
       options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
-  auto body = (options.visit == DisplayVisit::Custom && options.visit_prompt_inline ? visit_bar_html_(options) : std::string{}) +
-              (virtual_model ? virtual_table_body_(frame)
-                             : render_html_table_body_(frame, options, "plussmic-table", table_style));
+  auto body = virtual_model ? virtual_table_body_(frame)
+                            : render_html_table_body_(frame, options, "plussmic-table", table_style);
   if (options.html_summary) {
     struct Panel {
       std::string id;
@@ -2926,7 +2965,7 @@ std::string render_html_table_(const DataFrame& frame,
       body = std::move(panels.front().html);
     }
   }
-  return html_shell_(title, subtitle, body, options);
+  return html_shell_(title, subtitle, body, options, options.visit_editing ? visit_bar_html_(options) : std::string{});
 }
 
 std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options) {
@@ -3195,10 +3234,13 @@ bool show_html_window_(const std::string& html,
       for (const auto& entry : kNumberFormats) {
         menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
       }
-      menu.render = [state, render_with](std::string_view id) {
+      menu.render = [state, render_with, on_rows](std::string_view id) {
         for (const auto& entry : kNumberFormats) {
           if (id == entry.id) {
             state->number_format = entry.format;
+            if (on_rows) {
+              on_rows(*state);
+            }
             return render_with(*state);
           }
         }
@@ -3239,11 +3281,12 @@ bool show_html_window_(const std::string& html,
       // Going back to the Table view takes the filter and the visit off, so the table is the plain one again.
       window_opts.on_view = [state, render_with, on_rows](std::string_view button_id) {
         if (button_id != kTableTabId ||
-            (state->filter == DisplayFilter::None && state->visit == DisplayVisit::All)) {
+            (state->filter == DisplayFilter::None && state->visit == DisplayVisit::All && !state->visit_editing)) {
           return std::string{};
         }
         state->filter = DisplayFilter::None;
         state->visit = DisplayVisit::All;
+        state->visit_editing = false;
         if (on_rows) {
           on_rows(*state);
         }
@@ -3264,45 +3307,17 @@ bool show_html_window_(const std::string& html,
           {DisplayVisit::Custom, "custom", "Custom..."},
       }});
       for (const auto& entry : *visits) {
-        pluss::view::HtmlMenuOption option{entry.id, entry.label};
-        if (entry.visit == DisplayVisit::Custom) {
-          // Asked for in a dialog where the window can show one: the first position and the one to stop before.
-          option.prompt_title = "Visit rows";
-          option.prompt_message = "Positions count from 0 and a negative one counts from the end. Leave a box empty for the start or the end.";
-          option.prompt = {{"First row", "0"}, {"Stop before", "the end"}};
-        }
-        menu.options.push_back(std::move(option));
+        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
       }
-      menu.prompt_values = [state](std::string_view) {
-        const auto text = [](const std::int64_t value, const std::int64_t unset) {
-          return value == unset ? std::string{} : std::to_string(value);
-        };
-        return std::vector<std::string>{text(state->visit_begin, 0),
-                                        text(state->visit_end, std::numeric_limits<std::int64_t>::max())};
-      };
-      menu.render_prompted = [state, render_with, on_rows](std::string_view, const std::vector<std::string>& values) {
-        const auto read = [&](const std::size_t at, const std::int64_t fallback) {
-          if (at >= values.size() || values[at].empty()) {
-            return fallback;
-          }
-          std::int64_t value = fallback;
-          std::from_chars(values[at].data(), values[at].data() + values[at].size(), value);
-          return value;
-        };
-        state->visit = DisplayVisit::Custom;
-        state->visit_prompt_inline = false;
-        state->visit_begin = read(0, 0);
-        state->visit_end = read(1, std::numeric_limits<std::int64_t>::max());
-        if (on_rows) {
-          on_rows(*state);
-        }
-        return render_with(*state);
-      };
       menu.render = [state, render_with, on_rows, visits](std::string_view id) {
         for (const auto& entry : *visits) {
           if (id == entry.id) {
-            state->visit = state->visit == entry.visit ? DisplayVisit::All : entry.visit;
-            state->visit_prompt_inline = state->visit == DisplayVisit::Custom;  // no dialog here: ask in the page
+            if (entry.visit == DisplayVisit::Custom) {
+              state->visit_editing = true;  // open the box; the range applies when Apply is pressed
+            } else {
+              state->visit = state->visit == entry.visit ? DisplayVisit::All : entry.visit;
+              state->visit_editing = false;
+            }
             if (on_rows) {
               on_rows(*state);
             }
@@ -3313,7 +3328,7 @@ bool show_html_window_(const std::string& html,
       };
       menu.selected = [state, visits]() {
         for (const auto& entry : *visits) {
-          if (state->visit == entry.visit) {
+          if (state->visit == entry.visit || (state->visit_editing && entry.visit == DisplayVisit::Custom)) {
             return std::string(entry.id);
           }
         }
@@ -3337,7 +3352,7 @@ bool show_html_window_(const std::string& html,
           return value;
         };
         state->visit = DisplayVisit::Custom;
-        state->visit_prompt_inline = false;  // the range is set: the box goes away until Custom is chosen again
+        state->visit_editing = false;  // the range is set: the box goes away until Custom is chosen again
         state->visit_begin = read(kVisitBeginId, 0);
         state->visit_end = read(kVisitEndId, std::numeric_limits<std::int64_t>::max());
         if (on_rows) {
@@ -3676,14 +3691,9 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
     render_opts.backend = backend;
     const std::int64_t rows = std::max<std::int64_t>(0, frame.ncases());
     const std::int64_t columns = std::max<std::int64_t>(0, frame.nfeatures());
-    const bool use_virtual_table =
-        backend == DisplayBackend::PlussWebView &&
-        rows > 0 && columns > 0 &&
-        (rows > 10000 ||
-         columns > 256 ||
-         (rows <= std::numeric_limits<std::int64_t>::max() /
-                      std::max<std::int64_t>(1, columns) &&
-          rows * columns > 250000));
+    // PlussView paints every DataFrame table from the frame itself, at any size: one table, with the same
+    // features, whether it has five rows or five million. Only a browser view lays the rows out as HTML.
+    const bool use_virtual_table = backend == DisplayBackend::PlussWebView && rows > 0 && columns > 0;
     std::shared_ptr<const pluss::view::VirtualTableModel> virtual_model;
     const DataFrame frame_copy = frame;
     // PlussView computes each profiling view when it is first opened and keeps the result, so
@@ -3723,13 +3733,14 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                           backend == DisplayBackend::PlussWebView,
                           in_house ? std::function<std::string(const DisplayOptions&)>(render_with)
                                    : std::function<std::string(const DisplayOptions&)>{},
-                          !use_virtual_table,
+                          /*offer_number_format=*/in_house,
                           std::move(render_panel_with),
                           /*offer_filter=*/in_house,
                           [filterable_model](const DisplayOptions& current) {
                             if (filterable_model != nullptr) {
                               filterable_model->set_filter(current.filter);
                               filterable_model->set_window(row_window_for_(current));
+                              filterable_model->set_number_format(current.number_format);
                             }
                           })) {
       return;

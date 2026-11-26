@@ -1033,7 +1033,7 @@ void test_virtual_table_columns_can_be_resized() {
   const auto handle_for = [](const std::vector<HtmlHitRegion>& found, const int column) {
     return std::find_if(found.begin(), found.end(), [column](const HtmlHitRegion& h) { return h.value == column; });
   };
-  const int dragged = 7 * handle_for(handles, 1)->aux;  // far wider than the measured width
+  const int dragged = handle_for(handles, 1)->aux * 3 / 2;  // wider than measured, with its divider still on screen
   std::unordered_map<std::string, std::unordered_map<int, int>> widths;
   widths[handles.front().target][1] = dragged;
   const auto after = with_action(render(&widths, "", -1), "table.resize.column");
@@ -1209,7 +1209,9 @@ void test_virtual_table_only_materializes_viewport_cells() {
   const auto first =
       build_html_document_scene(document, SizeI{900, 520}, config);
   expect(!first.commands().empty(), "virtual table should produce a scene");
-  expect(stats.table_max_scroll_x > 100000 &&
+  // 1000 columns, none narrower than the geometry's narrowest, and 5 million rows of the fixed row height.
+  const auto geometry = resolve_table_geometry(stats.table_font_px);
+  expect(stats.table_max_scroll_x > 1000 * geometry.min_column - 900 &&
              stats.table_max_scroll_y > 100000000,
          "large virtual table should expose complete two-axis scroll ranges");
   expect(model.cell_calls > 0 && model.cell_calls < 200,
