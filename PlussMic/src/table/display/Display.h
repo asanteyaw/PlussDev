@@ -1,12 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
+
+#include "pluss/tils/view/html_window.h"
 
 namespace pluss::table {
 
@@ -40,6 +44,8 @@ enum class DisplayTheme : std::uint8_t {
   Obsidian = 6,   // charcoal and copper
   Indigo = 7,     // deep indigo and iris
   Native = 8,     // Apple's native web view palette; omitted from the Theme menu
+  Paperwhite = 9, // an e-reader's white page: serif type, hairline rules, no stripes
+  Sepia = 10,     // an e-reader's warm page
 };
 
 // How numeric cells are written in the Table view (the stored values are unchanged).
@@ -54,12 +60,6 @@ enum class NumberFormat : std::uint8_t {
   Scientific = 7,  // 1.235e+06
 };
 
-// One card of the keyed-cards view: a name, a few badges, and the values it holds.
-struct CardPanel {
-  std::string title;
-  std::vector<std::string> badges;
-  std::shared_ptr<const Shelf> values;
-};
 
 // Which rows the table shows, chosen from the View > Filter menu. Invalid is any cell that is NULL, NaN or
 // infinite; the others pick one kind. The decision is made on what each cell is, never on its text.
@@ -81,6 +81,12 @@ enum class DisplayVisit : std::uint8_t {
   Custom = 4,
 };
 
+// Where the entries of keys of different lengths sit against each other in a ragged grid.
+enum class DisplayAlign : std::uint8_t {
+  Head = 0,  // every key starts at the top
+  Tail = 1,  // every key ends at the bottom
+};
+
 struct TerminalInfo {
   std::int64_t columns{120};
   std::int64_t rows{40};
@@ -94,6 +100,7 @@ struct DisplayOptions {
   NumberFormat number_format{NumberFormat::Default};
   DisplayFilter filter{DisplayFilter::None};
   DisplayVisit visit{DisplayVisit::All};
+  DisplayAlign align{DisplayAlign::Head};
   std::int64_t visit_rows{10};              // First, Middle and Last
   std::int64_t visit_begin{0};              // Custom: the first position, 0-based
   std::int64_t visit_end{std::numeric_limits<std::int64_t>::max()};  // Custom: the position to stop before
@@ -130,9 +137,6 @@ std::string render_html(const Shelf& shelf, const DisplayOptions& options = {});
 std::string render_html(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render_html(const Atlas& atlas, const DisplayOptions& options = {});
 std::string info_html(const DataFrame& frame, const DisplayOptions& options = {});
-// A page of side-by-side cards, one per named column of values; cards may differ in length.
-std::string render_html_cards(std::string_view heading, std::string_view subtitle,
-                              const std::vector<CardPanel>& cards, const DisplayOptions& options = {});
 
 void print(std::ostream& os, const Shelf& shelf, const DisplayOptions& options = {});
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});
@@ -142,9 +146,21 @@ void show(const Shelf& shelf, const DisplayOptions& options = {});
 void show(const DataFrame& frame, const DisplayOptions& options = {});
 void show(const Atlas& atlas, const DisplayOptions& options = {});
 void show_info(const DataFrame& frame, const DisplayOptions& options = {});
-// Opens the cards page in the viewer; returns false when only a terminal is available.
-bool show_cards(std::string_view heading, std::string_view subtitle,
-                const std::vector<CardPanel>& cards, const DisplayOptions& options = {});
+// A page for any model-painted table that is not a DataFrame (a ragged catalog): the title, the cards above the
+// table, the model, and what to do when a window menu changes the options (the filter, Visit, the alignment).
+struct ModelPage {
+  std::string title;
+  std::string subtitle;
+  std::vector<std::pair<std::string, std::string>> cards;  // label, value
+  std::shared_ptr<pluss::view::VirtualTableModel> model;
+  std::function<void(const DisplayOptions&)> on_options;
+  bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
+};
+// The row window View > Visit asks for, as the viewer's own type.
+pluss::view::RowWindow row_window_for(const DisplayOptions& options);
+// Opens the page in the viewer; returns false when only a terminal is available.
+bool show_model(const ModelPage& page, const DisplayOptions& options = {});
+
 
 } // namespace display
 

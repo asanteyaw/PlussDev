@@ -116,7 +116,7 @@ void HeaderControls::add(const Cell& cell, const int row_y, const int row_h) {
 
   // Sort arrows: a stacked pair of triangles at the right of the header; the active direction of the sorted
   // column is drawn in full strength, every other arrow faint.
-  if (config_.table_sort_controls) {
+  if (config_.table_sort_controls && cell.sortable) {
     const bool active = sort_target_matches_ && config_.table_sort_column >= 0 &&
                         cell.column == static_cast<std::size_t>(config_.table_sort_column);
     // Inactive arrows: the text colour mixed most of the way into the header's own background, so they recede

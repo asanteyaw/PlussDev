@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "pluss/pluss.h"
+#include "kindle/display/GridModel.h"
 #include "table/display/Display.h"
 
 namespace {
@@ -154,6 +155,43 @@ void test_visit_custom_range() {
          "the range box is on the page while it is being edited");
 }
 
+// A ragged catalog as a grid: each column as long as its stream, nothing padded, absent is not NULL.
+void test_catalog_grid_is_ragged_not_padded() {
+  using namespace pluss::kindle::literals;
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  auto catalog = pluss::kindle::Catalog({
+      "names"_k = pluss::kindle::Stream(pluss::make_note({"John", "Pele", "Mensah"})),
+      "scores"_k = pluss::kindle::Stream(pluss::make_series({1.5, nan, 3.5, 4.5, 5.5})),
+      "flag"_k = pluss::kindle::Stream(pluss::make_series({1.0, 0.0}), pluss::make_series(std::vector<bool>{true, false})),
+  });
+  pluss::kindle::display::CatalogGridModel grid(catalog);
+  expect(grid.row_count() == 5 && grid.column_count() == 3 && grid.longest() == 5 && grid.shortest() == 2,
+         "the grid is as long as the longest key and as wide as the catalog");
+  expect(grid.column_name(0) == "names \u00B7 3" && grid.column_name(1) == "scores \u00B7 5",
+         "a header carries the key and how many entries it really has");
+  expect(!grid.sortable(), "the independent columns of a ragged catalog are not sortable as rows");
+  // Head: every key starts at the top.
+  expect(grid.cell(0, 0).text == "John" && grid.cell(2, 0).text == "Mensah" && grid.cell(3, 0).absent && grid.cell(4, 0).absent,
+         "a short key ends where its stream ends: the cells below are absent, not NULL");
+  expect(!grid.cell(3, 0).missing, "an absent cell is not a missing one");
+  expect(grid.cell(1, 2).missing && grid.cell(1, 2).text == "NULL" && !grid.cell(1, 2).absent,
+         "a real NULL inside a stream is still a NULL");
+  expect(grid.cell(1, 1).nonfinite && grid.cell(1, 1).text == "NAN", "a NaN inside a stream is shown as a NaN value");
+  // Tail: every key ends at the bottom.
+  grid.set_alignment(pluss::table::display::DisplayAlign::Tail);
+  expect(grid.cell(0, 0).absent && grid.cell(1, 0).absent && grid.cell(2, 0).text == "John" && grid.cell(4, 0).text == "Mensah",
+         "with tail alignment a short key sits at the bottom");
+  grid.set_alignment(pluss::table::display::DisplayAlign::Head);
+  // The filter keeps rows where some key holds that kind of entry, and absent cells never count.
+  grid.set_filter(pluss::table::display::DisplayFilter::Null);
+  expect(grid.filtering() && grid.row_allowed(1) && !grid.row_allowed(0) && !grid.row_allowed(4),
+         "the NULL filter keeps the row with a NULL and none of the absent ones");
+  grid.set_filter(pluss::table::display::DisplayFilter::NaN);
+  expect(grid.row_allowed(1) && !grid.row_allowed(2), "the NaN filter keeps the row with the NaN");
+  grid.set_filter(pluss::table::display::DisplayFilter::None);
+  expect(!grid.filtering() && grid.row_allowed(4), "with no filter every row is kept");
+}
+
 }  // namespace
 
 int main() {
@@ -163,6 +201,7 @@ int main() {
   test_missing_view_counts();
   test_visit_first_middle_last();
   test_visit_custom_range();
+  test_catalog_grid_is_ragged_not_padded();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

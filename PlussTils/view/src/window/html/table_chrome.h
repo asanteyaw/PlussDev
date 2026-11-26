@@ -67,6 +67,7 @@ class HeaderControls {
     Color ink{};            // the header text colour
     Color paper{};          // the header background
     bool resizable{true};   // false for the automatic last column, which has no divider to drag
+    bool sortable{true};    // false when the table cannot be sorted by this column
     int clip_left{0};       // controls are clipped to the part of the row this cell is visible in
     int clip_right{0};
   };

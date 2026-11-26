@@ -3550,7 +3550,7 @@ int render_virtual_table(
     }
   }
   if (!cached_widths) {
-    const int sort_room = render_config.table_sort_controls ? virtual_geo.sort_gutter : 0;
+    const int sort_room = render_config.table_sort_controls && model->sortable() ? virtual_geo.sort_gutter : 0;
     const auto text_width = [&](const std::string& text, const int weight) {
       return painted_text_width(text, style.font_size, weight, style.font_family);
     };
@@ -3736,6 +3736,9 @@ int render_virtual_table(
   const int font_size = std::max(10, style.font_size);
   const int line_h = resolve_line_height_value(style.line_height, font_size);
 
+  // A header with a progress bar under its name keeps the name above the bar.
+  const int meter_room =
+      column_count > 0 && model->column_meter(0) >= 0.0 ? virtual_geo.meter + virtual_geo.meter_gap : 0;
   const auto draw_cell_text =
       [&](const std::string& source,
           const int cell_x,
@@ -3749,7 +3752,7 @@ int render_virtual_table(
         const int weight = missing ? missing_paint.weight : (header ? header_paint.weight : style.font_weight);
         const std::string text = truncate_to_painted_width(source, font_size, weight, style.font_family, text_w);
         const int text_y =
-            cell_y + std::max(2, ((header ? header_h : row_h) - line_h) / 2);
+            cell_y + std::max(2, ((header ? header_h - meter_room : row_h) - line_h) / 2);
         draw_text_lines(
             scene, {text}, font_size, weight, style.font_family,
             missing ? missing_paint.text : (header ? header_paint.text : style.text_color),
@@ -3777,12 +3780,28 @@ int render_virtual_table(
     // The last column is the automatic one: its width is whatever the others leave, so it has no divider to drag.
     const bool automatic_column =
         virtual_geo.slack == HtmlTableSlack::LastColumn && column_count > 1 && column.index + 1 == column_count;
+    if (const double meter = model->column_meter(column.index); meter >= 0.0) {
+      // A thin progress bar under the name: a track the width of the cell and the part of it that is covered.
+      const int length = column.width - 2 * virtual_geo.meter_inset;
+      const int top = content_y + header_h - virtual_geo.meter_gap - virtual_geo.meter;
+      if (length > 0) {
+        const int radius = virtual_geo.meter / 2;
+        scene.add(FillRoundedRectCommand{RectI{column.x + virtual_geo.meter_inset, top, length, virtual_geo.meter}, radius,
+                                         paint.grid});
+        const int covered = static_cast<int>(std::lround(static_cast<double>(length) * meter));
+        if (covered > 0) {
+          scene.add(FillRoundedRectCommand{RectI{column.x + virtual_geo.meter_inset, top, covered, virtual_geo.meter}, radius,
+                                           paint.thumb});
+        }
+      }
+    }
     controls.add({.column = static_cast<std::size_t>(column.index) + 1,
                   .x = column.x,
                   .width = column.width,
                   .ink = header_paint.text,
                   .paper = header_fill,
                   .resizable = !automatic_column,
+                  .sortable = model->sortable(),
                   .clip_left = scrollable_left,
                   .clip_right = scrollable_right},
                  content_y, header_h);
@@ -3819,6 +3838,11 @@ int render_virtual_table(
                           PointI{content_x + content_w, row_y}, 1, grid});
     for (const auto& column : visible_columns) {
       const VirtualTableCell value = model->cell(source_row, column.index);
+      if (value.absent) {
+        // Past the end of a ragged column: the page shows through, with no cell, no lines and no text.
+        scene.add(FillRectCommand{RectI{column.x, row_y, column.width, row_h}, paint.body_bg});
+        continue;
+      }
       scene.add(LineCommand{PointI{column.x, row_y},
                             PointI{column.x, row_y + row_h}, 1, grid});
       draw_cell_text(value.text, column.x, row_y, column.width, false,
@@ -3867,6 +3891,7 @@ int render_virtual_table(
                 .ink = sticky_header_paint.text,
                 .paper = sticky_header_fill,
                 .resizable = true,
+                .sortable = model->sortable(),
                 .clip_left = content_x,
                 .clip_right = content_x + row_header_w + kResizeHandlePx / 2},
                content_y, header_h);

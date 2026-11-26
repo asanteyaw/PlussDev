@@ -6,6 +6,7 @@
 #include "scribble/registry.h"
 #include "loader/Loader.h"
 #include "kindle/display/Display.h"
+#include "kindle/display/GridModel.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"
 
@@ -149,18 +150,25 @@ void Catalog::show(std::ostream& os) const { display::print(os, *this); }
 
 void Catalog::show() const {
   PLUSS_CHECK(defined(), "Catalog::show: catalog undefined");
-  std::vector<pluss::table::display::CardPanel> cards;
-  cards.reserve(static_cast<std::size_t>(nkeys()));
-  for (const auto& key : keys()) {
-    const auto stream = keys(key);
-    pluss::table::display::CardPanel card;
-    card.title = key;
-    card.badges = {stream.dtype(), std::to_string(stream.size()) + " values"};
-    card.values = std::make_shared<const pluss::table::Shelf>(stream.to_shelf());
-    cards.push_back(std::move(card));
-  }
-  const auto subtitle = std::to_string(nkeys()) + " keys";
-  if (!pluss::table::display::show_cards("Catalog", subtitle, cards)) {
+  // The keys side by side as a ragged grid: each column is as long as its own stream and nothing is padded.
+  auto model = std::make_shared<display::CatalogGridModel>(*this);
+  pluss::table::display::ModelPage page;
+  page.title = "Catalog";
+  const bool ragged = model->longest() != model->shortest();
+  page.subtitle = ragged ? std::to_string(nkeys()) + " keys, " + std::to_string(model->shortest()) + " to " +
+                               std::to_string(model->longest()) + " entries"
+                         : std::to_string(nkeys()) + " keys, " + std::to_string(model->longest()) + " entries";
+  page.cards = {{"Keys", std::to_string(nkeys())},
+                {"Longest", std::to_string(model->longest())},
+                {"Shortest", std::to_string(model->shortest())}};
+  page.model = model;
+  page.offer_align = ragged;
+  page.on_options = [model](const pluss::table::display::DisplayOptions& options) {
+    model->set_alignment(options.align);
+    model->set_filter(options.filter);
+    model->set_window(pluss::table::display::row_window_for(options));
+  };
+  if (!pluss::table::display::show_model(page)) {
     show(std::cout);
   }
 }

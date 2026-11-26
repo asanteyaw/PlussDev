@@ -68,6 +68,10 @@ struct HtmlTableGeometry {
   double scrollbar_min_track_em{2.6};  // shortest a track is drawn
   double scrollbar_min_thumb_em{2.3};  // shortest a thumb is drawn
   double scrollbar_edge_em{1.0};       // room kept at the box's outer edge for the track
+  // The progress bar a model may draw under a column's name.
+  double meter_em{0.22};        // its thickness
+  double meter_inset_em{0.8};   // air at each end, so the bar sits inside the header cell
+  double meter_gap_em{0.35};    // air below it, up to the header's lower edge
   // Virtual (very large) tables, whose rows are fixed height.
   double header_height_em{3.0};
   double row_height_em{2.7};
@@ -102,6 +106,9 @@ struct HtmlTableGeometryPx {
   int scrollbar_min_track{0};
   int scrollbar_min_thumb{0};
   int scrollbar_edge{0};
+  int meter{0};
+  int meter_inset{0};
+  int meter_gap{0};
   int header_height{0};
   int row_height{0};
   int row_label_width{0};
@@ -146,6 +153,9 @@ struct HtmlTableGeometryPx {
   out.scrollbar_min_track = px(g.scrollbar_min_track_em);
   out.scrollbar_min_thumb = px(g.scrollbar_min_thumb_em);
   out.scrollbar_edge = px(g.scrollbar_edge_em);
+  out.meter = px(g.meter_em);
+  out.meter_inset = px(g.meter_inset_em);
+  out.meter_gap = px(g.meter_gap_em);
   out.header_height = px(g.header_height_em);
   out.row_height = px(g.row_height_em);
   out.row_label_width = px(g.row_label_width_em);

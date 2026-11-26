@@ -22,6 +22,9 @@ struct VirtualTableCell {
   bool missing{false};    // a NULL cell (no value): its text is drawn in the theme's missing colour
   bool nonfinite{false};  // NaN / inf / -inf: a value, drawn like any other
   bool infinite{false};   // with `nonfinite`: inf / -inf rather than NaN
+  // No entry here at all: a ragged column has ended, so nothing is drawn (no fill, no lines, no text). Not the
+  // same as `missing`, which is an entry whose value is unknown.
+  bool absent{false};
 };
 
 // Which rows of a table are visited: all of them, the first n, the middle n, the last n, or a position range.
@@ -57,6 +60,12 @@ class VirtualTableModel {
   // The rows to show out of those the filter, the search and the sort leave (see sort_model_rows and
   // window_bounds in table_order.h).
   [[nodiscard]] virtual RowWindow row_window() const { return {}; }
+  // False for a table whose rows are not one thing to reorder (a ragged catalog's columns are independent), so its
+  // headers carry no sort arrows.
+  [[nodiscard]] virtual bool sortable() const noexcept { return true; }
+  // A fraction in [0, 1] drawn as a thin progress bar under a column's name (how much of the longest column this one
+  // covers, say), or a negative number for no bar.
+  [[nodiscard]] virtual double column_meter(std::int64_t /*column*/) const { return -1.0; }
 };
 
 // A window-level menu (e.g. colour theme, number format). Choosing an option calls

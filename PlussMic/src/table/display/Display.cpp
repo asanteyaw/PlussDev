@@ -976,6 +976,9 @@ std::string native_window_title_(std::string_view fallback) {
   return std::string(fallback);
 }
 
+// The type face a theme reads through var(--font).
+constexpr const char* kSansFont = "\"Avenir Next\", \"Inter\", \"Segoe UI\", sans-serif";
+
 struct ThemePalette {
   DisplayTheme theme;
   const char* name;   // id, lower case (used by parse_theme / the demo)
@@ -984,6 +987,7 @@ struct ThemePalette {
   std::array<const char*, 26> v;
   const char* heat_pos;  // "r,g,b" for positive correlations
   const char* heat_neg;  // "r,g,b" for negative correlations
+  const char* font{kSansFont};
 };
 
 constexpr std::array<const char*, 26> kThemeTokens{
@@ -992,7 +996,7 @@ constexpr std::array<const char*, 26> kThemeTokens{
     "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border",
     "pill-bg", "grid"};
 
-const std::array<ThemePalette, 8> kThemes{{
+const std::array<ThemePalette, 10> kThemes{{
     {DisplayTheme::Default, "default", "Default",
      {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#c3d0e2", "#cfdae9", "#e7edf5", "#c84d58",
       "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#f8d9d9", "#dae3ee",
@@ -1028,6 +1032,18 @@ const std::array<ThemePalette, 8> kThemes{{
       "#cab4ff", "#4b347f", "#392664", "#ffffff", "#4b347f", "#392664", "#d7c8f6", "#e8dcff", "#e5dcf8",
       "#f0eafd", "#d3c0f1", "#faf8ff", "#ede5fb", "#5d4aab", "#cdbfe5", "#e8defa", "#e5dcf7"},
      "112,82,180", "147,88,130"},
+    {DisplayTheme::Paperwhite, "paperwhite", "Paperwhite",
+     {"#efeee9", "#fbfbf8", "#1d1c1a", "#111110", "#6f6d66", "#dedcd4", "#d4d1c7", "#e9e7e0", "#3b3a36",
+      "#76736a", "#2b2a27", "#2b2a27", "#fbfbf8", "#3b3a36", "#2b2a27", "#f4f3ee", "#ebe9e1",
+      "#fbfbf8", "#f6f5f0", "#fbfbf8", "#fbfbf8", "#efede6", "#9a968a", "#cfccc1",
+      "#efede6", "#e4e2da"},
+     "59,58,54", "163,42,29"},
+    {DisplayTheme::Sepia, "sepia", "Sepia",
+     {"#e9dcc3", "#f4ecd8", "#3b2f1e", "#2a2113", "#7d6b4f", "#dccfb2", "#d2c4a4", "#e6dac0", "#6b4f2a",
+      "#9b7a45", "#5a4423", "#5a4423", "#f4ecd8", "#6b4f2a", "#5a4423", "#f1e6cc", "#e6d8b8",
+      "#f4ecd8", "#efe4c9", "#f4ecd8", "#f4ecd8", "#ebdfc3", "#a89268", "#cdbd98",
+      "#ebdfc3", "#e2d5b8"},
+     "107,79,42", "156,42,26"},
     {DisplayTheme::Native, "native", "Native",
      {"#e1e9f8", "#fafcff", "#14213d", "#0f1b4d", "#5a6b8f", "#c5d3ea", "#c5d3ea", "#dbe5f4", "#0fa3a3",
       "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#e9f6fb", "#cfdcf8",
@@ -1061,6 +1077,8 @@ constexpr const char* kGulfNullInk = "#c62828";
 constexpr const char* kObsidianNullInk = "#ff6b5e";
 constexpr const char* kIndigoNullInk = "#c9184a";
 constexpr const char* kNativeNullInk = "#d63031";
+constexpr const char* kPaperwhiteNullInk = "#a32a1d";
+constexpr const char* kSepiaNullInk = "#9c2a1a";
 
 const char* null_ink_for_(const DisplayTheme theme) {
   switch (theme) {
@@ -1071,6 +1089,8 @@ const char* null_ink_for_(const DisplayTheme theme) {
     case DisplayTheme::Obsidian: return kObsidianNullInk;
     case DisplayTheme::Indigo: return kIndigoNullInk;
     case DisplayTheme::Native: return kNativeNullInk;
+    case DisplayTheme::Paperwhite: return kPaperwhiteNullInk;
+    case DisplayTheme::Sepia: return kSepiaNullInk;
     case DisplayTheme::Default:
     case DisplayTheme::Auto:
       break;
@@ -1085,7 +1105,7 @@ std::string theme_root_css_(const DisplayOptions& options) {
   for (std::size_t i = 0; i < kThemeTokens.size(); ++i) {
     css += pluss::tils::OutputEngine::format(" --{}: {};", kThemeTokens[i], palette.v[i]);
   }
-  css += pluss::tils::OutputEngine::format(" --miss-ink: {};", null_ink_for_(resolve_theme_(options)));
+  css += pluss::tils::OutputEngine::format(" --miss-ink: {}; --font: {};", null_ink_for_(resolve_theme_(options)), palette.font);
   css += " --shadow: none; }";
   return css;
 }
@@ -1134,7 +1154,7 @@ std::string html_shell_(std::string_view title,
     body {{
       margin: 0;
       color: var(--ink);
-      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      font-family: var(--font);
       background: var(--paper);
     }}
     .shell {{
@@ -1173,7 +1193,7 @@ std::string html_shell_(std::string_view title,
     }}
     .hero h1 {{
       margin: 0;
-      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      font-family: var(--font);
       font-size: 1.35rem;
       font-weight: 700;
       color: var(--title);
@@ -1529,7 +1549,7 @@ std::string html_shell_(std::string_view title,
     }}
     .atlas-frame-title {{
       margin: 0;
-      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      font-family: var(--font);
       font-size: 1rem;
       font-weight: 700;
     }}
@@ -2508,26 +2528,28 @@ class DataFrameVirtualTableModel final
 
 // Body of the data-table panel when the in-house viewer paints the rows from a model: the
 // summary cards and an empty table marked as virtual.
+// The cards above a table: a label and a value each.
+std::string summary_cards_html_(const std::vector<std::pair<std::string, std::string>>& cards) {
+  std::string out = "<div class=\"summary-grid\">";
+  for (const auto& [label, value] : cards) {
+    out += pluss::tils::OutputEngine::format(
+        "<div class=\"summary-card\"><div class=\"label\">{}</div><div class=\"value\">{}</div></div>",
+        escape_html_(label), escape_html_(value));
+  }
+  return out + "</div>";
+}
+
+// The frame and the empty table the viewer fills from a model (the same for a DataFrame and a ragged catalog).
+std::string virtual_table_frame_() {
+  return table_frame_open_() + "<table id=\"plussmic-table\" data-virtual-table=\"true\"></table>" +
+         std::string(kTableFrameClose);
+}
+
 std::string virtual_table_body_(const DataFrame& frame) {
-  std::string body;
-  body += "<div class=\"summary-grid\">";
-  body += pluss::tils::OutputEngine::format(
-      "<div class=\"summary-card\"><div class=\"label\">Cases</div><div "
-      "class=\"value\">{}</div></div>",
-      frame.ncases());
-  body += pluss::tils::OutputEngine::format(
-      "<div class=\"summary-card\"><div class=\"label\">Features</div><div "
-      "class=\"value\">{}</div></div>",
-      frame.nfeatures());
-  body += pluss::tils::OutputEngine::format(
-      "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
-      "class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.labels().values())));
-  body += "</div>";
-  body += table_frame_open_();
-  body += "<table id=\"plussmic-table\" data-virtual-table=\"true\"></table>";
-  body += kTableFrameClose;
-  return body;
+  return summary_cards_html_({{"Cases", std::to_string(frame.ncases())},
+                              {"Features", std::to_string(frame.nfeatures())},
+                              {"Case Axis", logical_dtype(frame.labels().values())}}) +
+         virtual_table_frame_();
 }
 
 // ---------------------------------------------------------------------------
@@ -3038,42 +3060,6 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
                      options);
 }
 
-std::string render_html_cards_(std::string_view heading,
-                               std::string_view subtitle,
-                               const std::vector<CardPanel>& cards,
-                               const DisplayOptions& options) {
-  std::string body = R"CSS(<style>
-    .kcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16em, 1fr)); gap: 0.7em; align-items: start; padding-top: 0.4em; }
-    .kcard { border: 1px solid var(--border); border-top: 0.3em solid var(--accent-3); border-radius: 0.5em; background: var(--panel); overflow: hidden; min-width: 0; }
-    .kcard-head { display: flex; flex-wrap: wrap; gap: 0.4em; align-items: center; justify-content: space-between; padding: 0.6em 0.7em 0.4em; }
-    .kbadges { display: flex; flex-wrap: wrap; gap: 0.4em; }
-    .kcard-title { margin: 0; font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
-    .kcard .top-bar { display: none; }
-    .kcard .table-wrap { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
-  </style>)CSS";
-  body += "<div class=\"kcards\">";
-  HtmlBodyStyle style;
-  style.corner_label = "#";
-  style.show_cards = false;
-  for (std::size_t i = 0; i < cards.size(); ++i) {
-    const auto& card = cards[i];
-    body += "<section class=\"kcard\"><div class=\"kcard-head\">";
-    body += pluss::tils::OutputEngine::format("<h2 class=\"kcard-title\">{}</h2><div class=\"kbadges\">", escape_html_(card.title));
-    for (const auto& badge : card.badges) {
-      body += pluss::tils::OutputEngine::format("<span class=\"pill\">{}</span>", escape_html_(badge));
-    }
-    body += "</div></div>";
-    if (card.values) {
-      std::vector<std::pair<std::string, Shelf>> column;
-      column.emplace_back(card.title, *card.values);
-      body += render_html_table_body_(DataFrame(std::move(column)), options,
-                                      pluss::tils::OutputEngine::format("plussmic-card-{}", i), style);
-    }
-    body += "</section>";
-  }
-  body += "</div>";
-  return html_shell_(document_title_(heading, options), subtitle, body, options);
-}
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = dataframe_columns_(frame);
@@ -3196,7 +3182,8 @@ bool show_html_window_(const std::string& html,
                        const bool offer_number_format = false,
                        std::function<std::string(const DisplayOptions&, std::string_view)> render_panel_with = {},
                        const bool offer_filter = false,
-                       std::function<void(const DisplayOptions&)> on_rows = {}) {
+                       std::function<void(const DisplayOptions&)> on_rows = {},
+                       const bool offer_align = false) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -3386,6 +3373,24 @@ bool show_html_window_(const std::string& html,
         return render_with(*state);
       };
     }
+    if (offer_align) {
+      // View > Align: where keys of different lengths sit against each other. One of the two always applies.
+      pluss::view::HtmlMenu menu;
+      menu.id = "align";
+      menu.title = "Align";
+      menu.in_view_menu = true;
+      menu.options.push_back(pluss::view::HtmlMenuOption{"head", "Head: every key from the top"});
+      menu.options.push_back(pluss::view::HtmlMenuOption{"tail", "Tail: every key to the bottom"});
+      menu.render = [state, render_with, on_rows](std::string_view id) {
+        state->align = id == "tail" ? DisplayAlign::Tail : DisplayAlign::Head;
+        if (on_rows) {
+          on_rows(*state);
+        }
+        return render_with(*state);
+      };
+      menu.selected = [state]() { return std::string(state->align == DisplayAlign::Tail ? "tail" : "head"); };
+      window_opts.menus.push_back(std::move(menu));
+    }
     {
       pluss::view::HtmlMenu menu;
       menu.id = "theme";
@@ -3550,9 +3555,15 @@ std::string render_html(const Shelf& shelf, const DisplayOptions& options) {
   return render_html_pre_(title, subtitle, render(shelf, options), options);
 }
 
-std::string render_html_cards(const std::string_view heading, const std::string_view subtitle,
-                              const std::vector<CardPanel>& cards, const DisplayOptions& options) {
-  return render_html_cards_(heading, subtitle, cards, options);
+
+pluss::view::RowWindow row_window_for(const DisplayOptions& options) {
+  return row_window_for_(options);
+}
+
+std::string render_html_model_(const ModelPage& page, const DisplayOptions& options) {
+  const std::string body = summary_cards_html_(page.cards) + virtual_table_frame_();
+  return html_shell_(page.title, page.subtitle, body, options,
+                     options.visit_editing ? visit_inline_html_(options) : std::string{});
 }
 
 std::string render_html(const Atlas& atlas, const DisplayOptions& options) {
@@ -3806,24 +3817,22 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
   print(std::cout, atlas, options);
 }
 
-bool show_cards(const std::string_view heading, const std::string_view subtitle,
-                const std::vector<CardPanel>& cards, const DisplayOptions& options) {
-  const std::string head{heading};
-  const std::string sub{subtitle};
-  if (show_in_notebook_(render_html_cards_(head, sub, cards, options))) {
-    return true;
-  }
+bool show_model(const ModelPage& page, const DisplayOptions& options) {
   const auto backend = resolve_backend_(options);
-  if (backend == DisplayBackend::Terminal) {
-    return false;
+  if (backend != DisplayBackend::PlussWebView || page.model == nullptr) {
+    return false;  // a model-painted table needs PlussView's own window
   }
   auto render_opts = options;
   render_opts.backend = backend;
-  const auto render_with = [head, sub, cards](const DisplayOptions& current) {
-    return render_html_cards_(head, sub, cards, current);
-  };
-  return show_html_window_(render_with(render_opts), render_opts, "Pluss " + head, backend, {}, false, render_with);
+  const auto render_with = [page](const DisplayOptions& current) { return render_html_model_(page, current); };
+  if (page.on_options) {
+    page.on_options(render_opts);
+  }
+  return show_html_window_(render_with(render_opts), render_opts, "Pluss " + page.title, backend, page.model,
+                           /*table_viewport_scroll_only=*/true, render_with, /*offer_number_format=*/false,
+                           /*render_panel_with=*/{}, /*offer_filter=*/true, page.on_options, page.offer_align);
 }
+
 
 void show_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto backend = resolve_backend_(options);

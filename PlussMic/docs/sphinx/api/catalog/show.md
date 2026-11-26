@@ -18,11 +18,17 @@ Two ways to look at a catalog:
 
 - **`show(os)`** writes the catalog's ASCII-table view to the stream you give it — the same
   rendering `operator<<`, [`display()`](display.md), and [`info()`](info.md) all use.
-- **`show()`** opens the catalog in the viewer window as **one card per key**. Each card carries the
-  key's name, its dtype and its own length, with the values listed underneath, so keys of different
-  lengths sit side by side without being padded to a common height. The window's Theme menu works as
-  it does for a DataFrame. When no window can be opened (a terminal-only session), `show()` prints the
-  ASCII view to `std::cout` instead. Calling it on an undefined catalog throws.
+- **`show()`** opens the catalog in the viewer window as a **ragged grid**: the keys side by side, each
+  column exactly as long as its own stream. Nothing is padded to make the columns equal. Past the end of a
+  stream a cell is *absent*: nothing is drawn there, and it is not a NULL (a NULL is an entry whose value is
+  unknown; an absent cell is no entry at all). A real NULL inside a stream is still shown in bold red, and NaN
+  and infinity are values like any other. Each header carries the key and how many entries it really has
+  (`ages · 3`), with a thin bar under it showing how much of the longest key it covers. The left column counts
+  entries. The View menu aligns keys of different lengths by their **head** (every key from the top, the
+  default) or their **tail** (every key ending at the bottom), and the Filter and Visit entries work on the
+  grid as they do on a DataFrame. The columns of a ragged catalog are independent, so the headers have no sort
+  arrows. When no window can be opened (a terminal-only session), `show()` prints the ASCII view to
+  `std::cout` instead. Calling it on an undefined catalog throws.
 
 ```{important} display(), info(), and show(os) all render identically — there is no separate metadata summary
 Unlike Shelf::info(), which prints a name/kind/dtype/null-count summary distinct from
@@ -98,8 +104,8 @@ auto ct = pluss::kindle::Catalog({
 ct.show();
 ```
 
-The window shows a `names` card with three values and a `scores` card with five, each at its own
-length. Nothing is written to the console when a window opens.
+The window shows the two keys side by side: `names` ends after three entries and `scores` carries on to
+five, with nothing drawn under `names`. Nothing is written to the console when a window opens.
 
 ## Notes
 
