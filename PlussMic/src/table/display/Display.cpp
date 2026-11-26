@@ -4036,11 +4036,33 @@ bool save_page_png_(const std::string& html, const pluss::view::VirtualTableMode
 }  // namespace
 
 bool save_png(const ModelPage& page, const std::string& path, const DisplayOptions& options, const int width,
-              const int height) {
+              const int height, const std::string& view) {
   if (page.on_options) {
     page.on_options(options);
   }
-  return save_page_png_(render_html_model(page, options), page.model.get(), path, width, height);
+  std::string html = render_html_model(page, options);
+  if (!view.empty() && view != "table") {
+    // The page holds every view; the one that is active is the one drawn.
+    const auto replace_first = [&html](const std::string& from, const std::string& to) {
+      if (const auto at = html.find(from); at != std::string::npos) {
+        html.replace(at, from.size(), to);
+      }
+    };
+    replace_first("<section id=\"panel-table\" class=\"tab-panel active\"", "<section id=\"panel-table\" class=\"tab-panel\"");
+    // The picker names the view that is open.
+    const std::string target = "data-tab-target=\"panel-" + view + "\"";
+    if (const auto at = html.find(target); at != std::string::npos) {
+      const auto open = html.find('>', at);
+      const auto close = html.find("</button>", open);
+      if (open != std::string::npos && close != std::string::npos) {
+        replace_first("<span id=\"view-current\">Table</span>",
+                      "<span id=\"view-current\">" + html.substr(open + 1, close - open - 1) + "</span>");
+      }
+    }
+    replace_first("<section id=\"panel-" + view + "\" class=\"tab-panel\"",
+                  "<section id=\"panel-" + view + "\" class=\"tab-panel active\"");
+  }
+  return save_page_png_(html, page.model.get(), path, width, height);
 }
 
 bool save_png(const DataFrame& frame, const std::string& path, const DisplayOptions& options, const int width,

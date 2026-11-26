@@ -103,7 +103,7 @@ std::cout << rg.nstate();
   call, also ragged-safe.
 - [`Registry::sample`](sample.md): the row-selection method that shares this
   same alignment requirement.
-- [`Catalog::nrows`](../catalog/nrows.md): the equivalent strict row-count check
+- [`Catalog::nentries`](../catalog/nentries.md): the equivalent strict row-count check
   on the kindle model.
 
 <div class="pluss-inline-prev-next">

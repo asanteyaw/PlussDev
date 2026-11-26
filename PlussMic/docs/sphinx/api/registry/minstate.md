@@ -71,7 +71,7 @@ std::cout << rg.minstate();
   field to share this same length.
 - [`Registry::sizes`](sizes.md): every field's individual length, rather than
   just the minimum.
-- [`Catalog::minrows`](../catalog/minrows.md): the equivalent check on the
+- [`Catalog::minentries`](../catalog/minentries.md): the equivalent check on the
   kindle model.
 
 <div class="pluss-inline-prev-next">

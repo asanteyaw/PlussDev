@@ -195,6 +195,10 @@ The **View** menu lists the same views as a table, each computed from the stream
 | Outliers | The floor and ceiling each numeric key is expected to stay between, and how many values fall outside |
 | Raggedness | Whether the catalog is ragged, the longest, shortest and spread, the mean length, how many keys are full length, and for each key its entries, absent entries, coverage of the longest key, non-NULL entries and where it sits |
 
+The Raggedness view of the weather catalog: Accra is full length, Kumasi covers 57.1% of it and Tamale 28.6%.
+
+![The Raggedness view of the weather catalog](assets/pv_catalog_layout.png)
+
 ## The plot window
 
 A plot opens in the same kind of window, with a **Theme** menu for the plot's look, a **Colors** menu for the palette, and buttons to zoom out, fit and zoom in.

@@ -164,7 +164,7 @@ struct ModelPage {
 };
 // The same for a model page (a ragged catalog): the page's own filter, visit and alignment come from the options.
 bool save_png(const ModelPage& page, const std::string& path, const DisplayOptions& options = {}, int width = 1300,
-              int height = 520);
+              int height = 520, const std::string& view = {});
 // A number's text written as View > Format asks for (the stored value does not change).
 std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.

@@ -72,7 +72,7 @@ std::cout << rg.maxstate();
 - [`Registry::nstate`](nstate.md): the strict, throwing form that requires every
   field to share this same length.
 - [`Registry::shape`](shape.md): pairs this value with the field count.
-- [`Catalog::maxrows`](../catalog/maxrows.md): the equivalent check on the
+- [`Catalog::maxentries`](../catalog/maxentries.md): the equivalent check on the
   kindle model.
 
 <div class="pluss-inline-prev-next">
