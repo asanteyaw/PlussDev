@@ -127,12 +127,23 @@ def main():
         check("a running cell can be interrupted", r["error"] is not None, r)
         r = run('std::cout << "alive2" << std::endl;')
         check("the next cell runs after an interrupt", r["text"].strip() == "alive2", r)
-        mid = kc.complete("std::cou", 8)
-        while True:
-            m = kc.get_shell_msg(timeout=60)
-            if m["parent_header"].get("msg_id") == mid:
-                check("names complete", "count" in " ".join(m["content"]["matches"]) or bool(m["content"]["matches"]), m["content"])
-                break
+        def completions(text):
+            """What the kernel offers at the end of `text` (the first request waits for the prelude's precompiled header)."""
+            mid = kc.complete(text, len(text))
+            while True:
+                m = kc.get_shell_msg(timeout=600)
+                if m["parent_header"].get("msg_id") == mid:
+                    return m["content"]["matches"]
+
+        r = run("#include <numeric>\n#include <vector>")
+        r = run("std::vector<int> nums{1, 2, 3, 4}; auto total = std::accumulate(nums.begin(), nums.end(), 0); "
+                "auto square_of = [](int x) { return x * x; }; std::cout << total << ' ' << square_of(5) << std::endl;")
+        check("plain C++ runs, not only PlussII code", r["text"].strip() == "10 25", r)
+        run("auto sv = pluss::make_series({1.0, 2.0, 3.0});")
+        names = completions("std::cou")
+        check("names complete", "cout" in names, names)
+        check("a variable from an earlier cell completes", "sv" in completions("s"), "sv not offered")
+        check("a dot offers the members of the variable", "sum" in completions("sv."), "sum not offered after sv.")
     finally:
         km.shutdown_kernel(now=True)
     print("%d check(s) failed" % len(failures))

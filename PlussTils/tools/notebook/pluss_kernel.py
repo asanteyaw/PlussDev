@@ -22,6 +22,7 @@ import platform
 import queue
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -190,6 +191,96 @@ def format_compile_error(report, code, sent, undef_lines, number):
     return "Traceback (most recent call last):\n" + "\n\n".join(sections), first_message
 
 
+# One line of the compiler's code-completion report: "COMPLETION: sum : [#Series#]sum(<#int dim#>)".
+COMPLETION = re.compile(r"^COMPLETION: (?P<name>\S+?)(?: : (?P<signature>.*))?$")
+IDENTIFIER = re.compile(r"^[A-Za-z_]\w*$")
+# How many completions one request returns. The editor filters the first reply as the user keeps typing and does not ask
+# again, so a reply has to carry every member of a type (a Series has several hundred); only a name space such as std::
+# is cut.
+MAX_COMPLETIONS = 5000
+
+
+def describe_completion(signature):
+    """A completion's signature as a reader would write it: "sum(int dim) -> Series" (clang marks the result type
+    [#...#] and each parameter <#...#>)."""
+    if not signature:
+        return ""
+    result = re.search(r"\[#(.*?)#\]", signature)
+    text = re.sub(r"\[#.*?#\]", "", signature)
+    text = re.sub(r"<#(.*?)#>", r"\1", text)
+    text = re.sub(r"\{#(.*?)#\}", r"\1", text)
+    return text + (" -> " + result.group(1) if result else "")
+
+
+class ClangCompleter:
+    """Member and name completion from the compiler itself, which knows what `s1.` offers because it has parsed the
+    type of `s1`. It runs clang in code-completion mode over the prelude, the cells that ran, and the current cell up
+    to the cursor, so a name an earlier cell declared is known. The prelude is compiled once into a precompiled header,
+    which keeps a request to a fraction of a second."""
+
+    def __init__(self, clang, flags, prelude):
+        self.clang = clang
+        self.flags = list(flags)
+        self.prelude = prelude
+        self.folder = tempfile.mkdtemp(prefix="pluss_complete_")
+        self.header = os.path.join(self.folder, "prelude.h")
+        self._lock = threading.Lock()
+        self._prepared = False
+        with open(self.header, "w") as handle:
+            handle.write(prelude)
+
+    def prepare(self):
+        """Compiles the prelude into a precompiled header (clang finds prelude.h.pch beside the header it includes).
+        Without it a request still works, only slower."""
+        with self._lock:
+            if self._prepared:
+                return
+            self._prepared = True
+            try:
+                subprocess.run([self.clang, *self.flags, "-w", "-x", "c++-header", self.header, "-o", self.header + ".pch"],
+                               capture_output=True, timeout=600)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+
+    def complete(self, history, code, cursor_pos, timeout=60):
+        """(start, matches, details) for the cursor in `code`, or None when the compiler could not be asked."""
+        start = cursor_pos
+        while start > 0 and (code[start - 1].isalnum() or code[start - 1] == "_"):
+            start -= 1
+        self.prepare()
+        earlier = "".join(cell.rstrip("\n") + "\n" for cell in history)
+        # The cell being typed is a function body: at file scope `s1.` is not an expression, so the compiler would
+        # offer declarations. What the earlier cells declared stays at file scope, as it is in the engine.
+        opening = "void pluss_cell_being_typed() {\n"
+        text = earlier + opening + code + "\n}\n"
+        before = earlier.count("\n") + opening.count("\n") + code[:cursor_pos].count("\n") + 1
+        column = len(code[:cursor_pos].split("\n")[-1].encode("utf-8")) + 1
+        source = os.path.join(self.folder, "cell.cpp")
+        with open(source, "w") as handle:
+            handle.write(text)
+        command = [self.clang, *self.flags, "-w", "-fsyntax-only", "-include", self.header, "-Xclang",
+                   "-code-completion-at=%s:%d:%d" % (source, before, column), source]
+        try:
+            done = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        found = {}
+        for line in done.stdout.split("\n"):
+            match = COMPLETION.match(line)
+            if match is None:
+                continue
+            name = match.group("name")
+            if name == "Pattern" or not IDENTIFIER.match(name):
+                continue
+            found.setdefault(name, describe_completion(match.group("signature")))
+        prefix = code[start:cursor_pos]
+        if not prefix.startswith("_"):
+            # A library's own helpers (_conj, _fw_primal) are noise in a list; they are offered once an underscore is typed.
+            found = {name: detail for name, detail in found.items() if not name.startswith("_")}
+        names = sorted(found)[:MAX_COMPLETIONS]
+        return start, names, {name: found[name] for name in names}
+
+
 class PlussKernel(Kernel):
     implementation = "pluss"
     implementation_version = "0.0.1"
@@ -212,6 +303,8 @@ class PlussKernel(Kernel):
         if include and not os.environ.get("PLUSS_PREFIX"):
             os.environ["PLUSS_PREFIX"] = os.path.dirname(include.rstrip("/"))
         self._words = None
+        self._history = []      # the cells that ran, for the compiler to read when it completes a name
+        self._completer = self._make_completer()
         self._out = queue.Queue()
         self._err = queue.Queue()
         self._proc = None
@@ -247,6 +340,29 @@ class PlussKernel(Kernel):
             cmd += ["-Xcc", flag]
         return cmd
 
+    @staticmethod
+    def _make_completer():
+        """The compiler-backed completer, or None when there is no clang to ask (completion then offers the words typed
+        so far). The compiler is clang-repl's own folder's clang++, or the one on the PATH."""
+        explicit = os.environ.get("PLUSS_CLANG")
+        repl = os.environ.get("PLUSS_CLANG_REPL", "")
+        candidates = [explicit] if explicit else []
+        if repl:
+            candidates.append(os.path.join(os.path.dirname(repl), "clang++"))
+        candidates.append(shutil.which("clang++"))
+        clang = next((c for c in candidates if c and os.path.exists(c)), None)
+        if clang is None:
+            return None
+        flags = ["-std=c++20"]
+        sysroot = os.environ.get("PLUSS_SYSROOT")
+        if sysroot:
+            flags += ["-isysroot", sysroot, "-nostdinc++", "-isystem", sysroot + "/usr/include/c++/v1"]
+        include = os.environ.get("PLUSS_INCLUDE")
+        if include:
+            flags += ["-I", include]
+        flags += shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", ""))
+        return ClangCompleter(clang, flags, PRELUDE)
+
     def _start_engine(self):
         # A new engine has new queues, so output of one that stopped can never reach the next.
         self._out = queue.Queue()
@@ -264,6 +380,9 @@ class PlussKernel(Kernel):
         # %lib is a command of its own; everything else goes in as a file.
         self._send("%lib " + os.environ["PLUSS_LIBRARY"] + "\n")
         self._run_text(PRELUDE)
+        if self._completer is not None:
+            # Compile the prelude into a precompiled header in the background, so the first completion is not slow.
+            threading.Thread(target=self._completer.prepare, daemon=True).start()
 
     @staticmethod
     def _log(kind, text):
@@ -449,6 +568,7 @@ class PlussKernel(Kernel):
                 self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": err})
         if failed:
             return self._fail(silent, "CompileError", first_error, err)
+        self._history.append(code)
         return {"status": "ok", "execution_count": self.execution_count, "payload": [], "user_expressions": {}}
 
     def _restart_engine(self):
@@ -457,6 +577,7 @@ class PlussKernel(Kernel):
                 self._proc.kill()
         finally:
             self._ready.clear()
+            self._history = []  # the earlier cells are gone with the engine
             try:
                 self._start_engine()
                 self._start_failure = None
@@ -522,6 +643,21 @@ class PlussKernel(Kernel):
         self._words.update(found)
 
     def do_complete(self, code, cursor_pos):
+        """Names for the cursor. The compiler answers when it can (what `s1.` offers, what follows `pluss::`); otherwise
+        the words typed so far in this notebook are offered."""
+        # With PLUSS_NOTEBOOK_LOG set this shows whether the editor asks the kernel for completions at all.
+        self._log("complete", code[:cursor_pos])
+        if self._completer is not None:
+            try:
+                answer = self._completer.complete(self._history, code, cursor_pos)
+            except Exception:
+                answer = None
+            if answer is not None:
+                start, names, details = answer
+                kinds = [{"text": name, "type": "function" if "(" in details[name] else "property",
+                          "signature": details[name]} for name in names]
+                return {"status": "ok", "matches": names, "cursor_start": start, "cursor_end": cursor_pos,
+                        "metadata": {"_jupyter_types_experimental": kinds}}
         start = cursor_pos
         while start > 0 and (code[start - 1].isalnum() or code[start - 1] == "_"):
             start -= 1
