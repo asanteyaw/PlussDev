@@ -22,7 +22,7 @@ The kernel starts one C++ interpreter (clang-repl) and loads PlussII into it. Ea
 | anything printed with `std::cout` | the text |
 | a compile error | the compiler's message, naming the line of the cell |
 
-`<pluss/pluss.h>`, `<pluss/tils/doc.h>` and `<pluss/tils/kit/datastore.h>` are already included and `pluss` is available, so a first cell can start with the program. The interpreter starts while the notebook opens, so by the time you have written the first cell it is usually ready.
+A notebook starts as a `main.cpp` does: `<pluss/pluss.h>` is already included, which gives you the core (Series, Note, Timeline, Duration), the table side (DataFrame, Shelf, Catalog) and the plots. Everything else is opt-in as before: include `<pluss/ma.h>`, `<pluss/ai.h>` or `<pluss/tils.h>` (or one part, such as `<pluss/tils/kit/output.h>`) in a cell of its own. The interpreter starts while the notebook opens, so by the time you have written the first cell it is usually ready.
 
 A notebook is meant to be re-run, so the kernel allows it:
 
@@ -32,7 +32,7 @@ A notebook is meant to be re-run, so the kernel allows it:
 | stop a running cell (the Interrupt button) | the cell stops and the interpreter restarts; earlier variables are gone and the message says so |
 | run code that crashes the interpreter, such as writing through a null pointer | the interpreter restarts and tells you; run the earlier cells again |
 | call `.show()` on a table or a plot | it appears under the cell instead of opening a window |
-| press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the page that `pluss::tils::doc` finds, from the documentation in the download |
+| press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the page that `pluss::tils::doc` finds, from the documentation in the download (the first request includes `<pluss/tils/doc.h>` for you) |
 
 What the preview does not do yet: run on Windows.
 
@@ -52,6 +52,10 @@ x.sum().item<double>()
 
 ```text
 6
+```
+
+```cpp
+#include <pluss/tils/kit/datastore.h>
 ```
 
 ```cpp

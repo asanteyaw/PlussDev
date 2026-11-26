@@ -37,8 +37,6 @@ MIME = "\x1e<<pluss-mime "
 # output as a marker line the kernel turns into a Jupyter display message.
 PRELUDE = r'''
 #include <pluss/pluss.h>
-#include <pluss/tils/doc.h>
-#include <pluss/tils/kit/datastore.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -452,7 +450,8 @@ class PlussKernel(Kernel):
         if not token or not self._ready.is_set() or self._start_failure is not None:
             return {"status": "ok", "found": False, "data": {}, "metadata": {}}
         try:
-            out, _ = self._run_text('pluss::tils::doc("%s");' % token.replace("\\", "").replace('"', ""))
+            # Help is answered by the documentation header, which a notebook does not include until it is asked for.
+            out, _ = self._run_text('#include <pluss/tils/doc.h>\npluss::tils::doc("%s");' % token.replace("\\", "").replace('"', ""))
         except Exception:
             return {"status": "ok", "found": False, "data": {}, "metadata": {}}
         out = out.strip()
