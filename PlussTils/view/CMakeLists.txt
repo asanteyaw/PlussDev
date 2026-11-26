@@ -92,8 +92,15 @@ if(UNIX AND NOT APPLE)
     option(PLUSSTILS_VIEW_ENABLE_X11_SHELL
            "Enable the dependency-light X11/XWayland shell for the built-in PlussWebView renderer"
            ON)
+    option(PLUSSTILS_VIEW_REQUIRE_X11_SHELL
+           "Fail the configure step instead of building without PlussView windows when X11 is missing (release builds)"
+           OFF)
     if(PLUSSTILS_VIEW_ENABLE_X11_SHELL)
         find_package(X11 QUIET)
+        if(NOT X11_FOUND AND PLUSSTILS_VIEW_REQUIRE_X11_SHELL)
+            message(FATAL_ERROR "PLUSSTILS_VIEW_REQUIRE_X11_SHELL is ON but the X11 development files were not found "
+                                "(on Ubuntu: sudo apt-get install libx11-dev libxi-dev); the build would ship without PlussView windows.")
+        endif()
         if(X11_FOUND)
             set(PLUSSTILS_VIEW_HAVE_X11_SHELL_VALUE 1)
             target_sources(PlussTilsView PRIVATE

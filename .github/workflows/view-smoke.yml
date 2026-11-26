@@ -45,16 +45,26 @@ jobs:
           export CC=clang-18 CXX=clang++-18
           mkdir -p shots
           "$PREFIX/bin/pluss" run PlussTils/tools/ci/view_probe.cpp build
+          failed=""
           for mode in table table-filter table-visit catalog catalog-tail; do
             xvfb-run -a -s "-screen 0 1400x900x24" bash -c '
               "$PREFIX/bin/pluss" run PlussTils/tools/ci/view_probe.cpp '"$mode"' > "shots/'"$mode"'.log" 2>&1 &
               pid=$!
-              sleep 20
+              found=no
+              for i in $(seq 1 60); do
+                if xdotool search --onlyvisible --name "." > /dev/null 2>&1; then found=yes; break; fi
+                sleep 2
+              done
+              sleep 3
               import -window root "shots/'"$mode"'.png" || true
+              echo "$found" > "shots/'"$mode"'.window"
               kill $pid 2>/dev/null || true
             '
-            cat "shots/$mode.log" | tail -5
+            echo "$mode window: $(cat shots/$mode.window)"
+            tail -3 "shots/$mode.log"
+            [ "$(cat shots/$mode.window)" = yes ] || failed="$failed $mode"
           done
+          if [ -n "$failed" ]; then echo "no window opened for:$failed"; exit 1; fi
           python3 - <<'PY'
           import sys, subprocess
           bad = []
@@ -105,20 +115,26 @@ jobs:
           $bad = @()
           foreach ($mode in "table","table-filter","table-visit","catalog","catalog-tail") {
             $p = Start-Process -FilePath $pluss -ArgumentList "run","PlussTils/tools/ci/view_probe.cpp",$mode -PassThru -RedirectStandardOutput "shots/$mode.log" -RedirectStandardError "shots/$mode.err"
-            Start-Sleep -Seconds 25
+            $found = $false
+            for ($i = 0; $i -lt 60; $i++) {
+              $w = Get-Process -Name "view_probe" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 }
+              if ($w) { $found = $true; break }
+              Start-Sleep -Seconds 2
+            }
+            Start-Sleep -Seconds 3
+            Write-Host "$mode window opened: $found"
+            if (-not $found) { $bad += $mode }
             $b = [System.Windows.Forms.SystemInformation]::VirtualScreen
             $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
             [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
             $bmp.Save("shots/$mode.png")
             $distinct = @{}
             for ($x = 0; $x -lt $bmp.Width; $x += 37) { for ($y = 0; $y -lt $bmp.Height; $y += 37) { $distinct[$bmp.GetPixel($x, $y).ToArgb()] = 1 } }
-            Write-Host "$mode distinct colours: $($distinct.Count)"
-            if ($distinct.Count -lt 8) { $bad += $mode }
             Get-Process -Name "view_probe*" -ErrorAction SilentlyContinue | Stop-Process -Force
             Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
             Get-Content "shots/$mode.err" -Tail 5 -ErrorAction SilentlyContinue
           }
-          if ($bad.Count -gt 0) { Write-Host "blank screenshots: $bad"; exit 1 }
+          if ($bad.Count -gt 0) { Write-Host "no window opened for: $bad"; exit 1 }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

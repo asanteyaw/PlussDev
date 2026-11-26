@@ -98,9 +98,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Linux curl development files
+      # libx11-dev and libxi-dev give the Linux archive its PlussView window shell; without them a window quietly falls
+      # back to printing text. Freetype gives it the same text rendering as the other platforms.
+      - name: Install Linux development files
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libx11-dev libxi-dev libfreetype-dev
 
       # Static libzip, Arrow and Parquet go inside the archive; users install nothing.
       - name: Build static native dependencies
@@ -142,7 +144,7 @@ jobs:
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DPLUSSMIC_BUNDLE_NATIVE_DEPS=ON -DPLUSSMIC_REQUIRE_EXCEL=ON -DPLUSSMIC_REQUIRE_PARQUET=ON ${{ runner.os == 'Linux' && '-DPLUSSTILS_VIEW_REQUIRE_X11_SHELL=ON' || '' }} -DVCPKG_TARGET_TRIPLET=$PLUSSII_VCPKG_TRIPLET -DCMAKE_TOOLCHAIN_FILE=$PLUSSII_VCPKG_TOOLCHAIN ${{ matrix.mps == 'on' && '-DPLUSSII_DISTRIBUTION_SUFFIX=mps' || '-DPLUSSQIT_ENABLE_MPS=OFF' }}
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2

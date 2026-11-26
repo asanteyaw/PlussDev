@@ -65,6 +65,17 @@ cmake --build build --config Release
 The example prints `2`. If CMake cannot locate Pluss, check that the supplied
 prefix contains `lib/cmake/Pluss/PlussConfig.cmake`.
 
+On Linux, programs that open PlussView windows (`.show()` on a table, a catalog
+or a plot) link against the X11 libraries. Install their development files
+first, for example on Ubuntu:
+
+```bash
+sudo apt-get install libx11-dev libxi-dev libfreetype-dev
+```
+
+Without a display, or without these libraries, `.show()` prints the table as
+text in the terminal instead.
+
 ## Build from the repository
 
 For a source build you need:
