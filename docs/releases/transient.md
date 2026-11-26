@@ -4,6 +4,7 @@ The latest validated development build. It carries no version number and is repl
 
 ## Changes since 0.0.6
 
+- Notebook: a table now shows as a compact HTML table in the notebook's own colours, like a data-frame table, instead of PlussView's page; a long one shows its first and last five cases. The notebook starts with `<pluss/pluss.h>` only, as a `main.cpp` does.
 - PlussView: Save As → PNG and PDF now write only the content. A plot is saved at its own size with no window chrome, and a table is saved from its column headers down, with no title card, search box or scrollbars, cropped to the columns and rows that are shown.
 - PlussView: every table size (column limits, sort-arrow size, row heights) is now one block of values in units of the font size, `HtmlTableGeometry`, so tables scale with the font and the numbers are changed in one place.
 - PlussView on Windows and Linux now matches macOS: the toolbar has View and other menus and a "Save As" button sized to its label (Linux gained a toolbar), PDF export works on every platform, and on Linux Save As asks where to save when zenity or kdialog is installed.

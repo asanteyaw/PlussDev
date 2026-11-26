@@ -217,6 +217,25 @@ void test_catalog_raggedness_view() {
 
 }  // namespace
 
+void test_notebook_table_is_a_plain_fragment() {
+  std::vector<double> values;
+  std::vector<bool> valid;
+  for (int i = 0; i < 200; ++i) {
+    values.push_back(i);
+    valid.push_back(i != 3);
+  }
+  const auto frame = DataFrame({{"x", Shelf(pluss::make_series(values), pluss::make_series(valid))}});
+  const auto html = pluss::table::display::render_notebook_html(frame);
+  expect(!has(html, "<html") && !has(html, "<body") && !has(html, "<script"),
+         "a notebook table is a fragment: no page and no scripts");
+  expect(!has(html, "min-height") && !has(html, "100vh"), "a notebook table has no height of its own");
+  expect(has(html, "class=\"pluss-table\""), "its styles are scoped to the table");
+  expect(has(html, "class=\"null\">NULL"), "a missing value is marked");
+  expect(has(html, "&hellip;"), "a long frame is cut to its first and last rows");
+  expect(has(html, "200 cases"), "the footer says how many cases there are in all");
+  expect(!has(html, "<td>100</td>"), "the cut rows are not written out");
+}
+
 int main() {
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
@@ -226,6 +245,7 @@ int main() {
   test_visit_custom_range();
   test_catalog_grid_is_ragged_not_padded();
   test_catalog_raggedness_view();
+  test_notebook_table_is_a_plain_fragment();
   std::cout << "[table_display_filter_tests] ok\n";
   return 0;
 }

@@ -3975,6 +3975,67 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// The table as a notebook shows it: a plain HTML table, not PlussView's page. A notebook has no terminal to wrap
+// wide tables in, so it needs none of PlussView's window chrome; the output is a fragment whose styles are scoped to
+// it, it takes the notebook's own colours (light or dark), and it is exactly as tall as its rows.
+// ---------------------------------------------------------------------------
+
+// A long frame is shown as its first and last rows with a row of dots between, so the output stays a page long
+// however many cases there are; the footer says how many there are in all.
+constexpr std::int64_t kNotebookRowLimit = 60;  // up to this many cases, every one is shown
+constexpr std::int64_t kNotebookEdgeRows = 5;   // beyond it, this many from each end
+
+// The look is the one a notebook reader knows from a data-frame table: no vertical rules, one rule under the header,
+// everything right-aligned, a bold case column, alternate rows tinted and the row under the pointer highlighted.
+// Every colour is here; the text and the background are the notebook's own.
+constexpr const char* kNotebookStyle =
+    ".pluss-table{--pluss-rule:rgba(128,128,128,.45);--pluss-stripe:rgba(128,128,128,.08);"
+    "--pluss-hover:rgba(128,128,128,.18);--pluss-null:#d6453d;--pluss-muted:rgba(128,128,128,.9);"
+    "display:block;overflow-x:auto;margin:.25em 0}"
+    ".pluss-table table{border-collapse:collapse;border:none;font-size:.92em;font-variant-numeric:tabular-nums}"
+    ".pluss-table th,.pluss-table td{padding:.45em .7em;border:none;text-align:right;white-space:nowrap;vertical-align:middle}"
+    ".pluss-table thead{border-bottom:1px solid var(--pluss-rule);vertical-align:bottom}"
+    ".pluss-table th{font-weight:700}"
+    ".pluss-table tbody tr:nth-child(even){background:var(--pluss-stripe)}"
+    ".pluss-table tbody tr:hover{background:var(--pluss-hover)}"
+    ".pluss-table .null{font-weight:700;color:var(--pluss-null)}"
+    ".pluss-table .gap td{text-align:center;color:var(--pluss-muted)}"
+    ".pluss-table .foot{margin-top:.3em;color:var(--pluss-muted);font-size:.85em}";
+
+std::string notebook_table_html_(const DataFrame& frame) {
+  const DataFrameVirtualTableModel model(frame);
+  const std::int64_t rows = model.row_count();
+  const std::int64_t columns = model.column_count();
+  std::string html = std::string("<div class=\"pluss-table\"><style>") + kNotebookStyle + "</style><table><thead><tr><th>" +
+                     escape_html_(model.row_header()) + "</th>";
+  for (std::int64_t c = 0; c < columns; ++c) {
+    html += "<th>" + escape_html_(model.column_name(c)) + "</th>";
+  }
+  html += "</tr></thead><tbody>";
+  const bool cut = rows > kNotebookRowLimit;
+  const auto write_row = [&](const std::int64_t row) {
+    html += "<tr><th>" + escape_html_(model.row_label(row)) + "</th>";
+    for (std::int64_t c = 0; c < columns; ++c) {
+      const auto cell = model.cell(row, c);
+      html += std::string(cell.missing ? "<td class=\"null\">" : "<td>") + escape_html_(cell.text) + "</td>";
+    }
+    html += "</tr>";
+  };
+  for (std::int64_t row = 0; row < rows; ++row) {
+    if (cut && row >= kNotebookEdgeRows && row < rows - kNotebookEdgeRows) {
+      if (row == kNotebookEdgeRows) {
+        html += "<tr class=\"gap\"><td colspan=\"" + std::to_string(columns + 1) + "\">&hellip;</td></tr>";
+      }
+      continue;
+    }
+    write_row(row);
+  }
+  html += "</tbody></table><div class=\"foot\">" +
+          pluss::tils::OutputEngine::format("{} cases &times; {} features", rows, columns) + "</div></div>";
+  return html;
+}
+
 // Inside the PlussII notebook the kernel sets PLUSS_NOTEBOOK; a table is then handed back to the notebook as
 // HTML (the marker line the kernel turns into a display message) instead of opening a window.
 static bool show_in_notebook_(const std::string& html) {
@@ -4066,8 +4127,12 @@ bool save_png(const DataFrame& frame, const std::string& path, const DisplayOpti
   return save_page_png_(html, model.get(), path, width, height);
 }
 
+std::string render_notebook_html(const DataFrame& frame) {
+  return notebook_table_html_(frame);
+}
+
 void show(const DataFrame& frame, const DisplayOptions& options) {
-  if (show_in_notebook_(render_html(frame, options))) {
+  if (show_in_notebook_(notebook_table_html_(frame))) {
     return;
   }
   const auto backend = resolve_backend_(options);
@@ -4135,7 +4200,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 void show(const Shelf& shelf, const DisplayOptions& options) {
-  if (show_in_notebook_(render_html(shelf, options))) {
+  if (show_in_notebook_(notebook_table_html_(DataFrame({{shelf.named() ? shelf.name() : std::string("values"), shelf}})))) {
     return;
   }
   const auto backend = resolve_backend_(options);

@@ -48,7 +48,7 @@ inline void emit(const std::string& mime, const std::string& body) {
 inline void show(const std::string& text) { std::cout << text << std::endl; }
 inline void show(const char* text) { std::cout << text << std::endl; }
 inline void show(const pluss::table::DataFrame& frame) {
-  emit("text/html", pluss::table::display::render_html(frame, {}));
+  emit("text/html", pluss::table::display::render_notebook_html(frame));
 }
 template <class Chart>
 auto show(Chart& chart) -> decltype(chart.save_svg(std::string()), void()) {

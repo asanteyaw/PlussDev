@@ -168,6 +168,9 @@ bool save_png(const ModelPage& page, const std::string& path, const DisplayOptio
 std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.
 pluss::view::RowWindow row_window_for(const DisplayOptions& options);
+// The frame as the compact HTML table a notebook shows: no page and no scripts, styles scoped to the table, the
+// notebook's own colours, as tall as its rows (a long frame as its first and last rows).
+std::string render_notebook_html(const DataFrame& frame);
 // The page as HTML with every view tab filled in (for a browser or a notebook, and for tests).
 std::string render_html_model(const ModelPage& page, const DisplayOptions& options = {});
 // Opens the page in the viewer; returns false when only a terminal is available.

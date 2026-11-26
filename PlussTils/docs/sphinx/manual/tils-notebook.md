@@ -16,7 +16,7 @@ The kernel starts one C++ interpreter (clang-repl) and loads PlussII into it. Ea
 
 | In a cell | The notebook shows |
 |---|---|
-| a bare expression as the last line, such as `df` or `x * 2.0` | the value; a `DataFrame` as a table, text for the rest |
+| a bare expression as the last line, such as `df` or `x * 2.0` | the value; a `DataFrame` as a compact table in the notebook's own colours (a long one shows its first and last five cases), text for the rest |
 | `pluss::nb::show(chart);` | a plot as a picture |
 | `pluss::nb::show(df);` | a table |
 | anything printed with `std::cout` | the text |
