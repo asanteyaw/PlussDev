@@ -8,7 +8,7 @@
 
 A notebook runs a program a cell at a time and keeps what earlier cells made. PlussII has a preview of a notebook kernel for Jupyter, so you can write C++ cells, keep your variables from one cell to the next, and see tables and plots in the notebook instead of a separate window. It also runs in the notebook support of editors that use Jupyter kernels.
 
-This is a preview. It comes with the download (under `share/pluss/notebook`) and is registered with one command, `pluss kernel install`. It has been tried on Apple Silicon Macs only.
+This is a preview. It comes with the download (under `share/pluss/notebook`) and is registered with one command, `pluss kernel install`. It is tested on macOS (Apple Silicon and Intel) and on Ubuntu 24.04 (x86_64 and ARM64). It does not run on Windows yet.
 
 ## How it works
 
@@ -34,7 +34,7 @@ A notebook is meant to be re-run, so the kernel allows it:
 | call `.show()` on a table or a plot | it appears under the cell instead of opening a window |
 | press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the page that `pluss::tils::doc` finds, from the documentation in the download |
 
-What the preview does not do yet: run outside macOS.
+What the preview does not do yet: run on Windows.
 
 ## Worked tour
 
@@ -89,10 +89,46 @@ answer
 
 ## Getting it
 
-You need the Jupyter kernel packages `ipykernel` and `jupyter_client` (`python3 -m pip install ipykernel jupyter_client`), a clang-repl (macOS: `brew install llvm`), and a PlussII download. Then, from the download:
+The steps differ a little by system. In each, `<download>` is the folder you extracted from the PlussII download (for the Transient build it is called `plussii-cpp-transient-<system>`), and `pluss` is the program inside its `bin` folder, not a folder of its own. You run it from there:
 
 ```text
-bin/pluss kernel install
+cd <download>/bin
+./pluss kernel install
 ```
 
-The command finds clang-repl and, on macOS, an SDK that clang-repl can read, builds one shared library of PlussII into `~/.pluss`, and registers the kernel as "PlussII C++" for Jupyter and VS Code. It takes `--clang-repl path` and `--sysroot path` when the defaults are wrong.
+The command finds clang-repl and, on macOS, an SDK that clang-repl can read, builds one shared library of PlussII into `~/.pluss`, and registers the kernel as "PlussII C++" for Jupyter and VS Code. It takes `--clang-repl path` and `--sysroot path` when the defaults are wrong. It needs two things first: the Jupyter kernel packages and a clang-repl.
+
+### macOS (Apple Silicon and Intel)
+
+```bash
+python3 -m pip install ipykernel jupyter_client
+brew install llvm
+cd <download>/bin
+./pluss kernel install
+```
+
+Homebrew's LLVM provides clang-repl. The installer looks for it in `/opt/homebrew/opt/llvm/bin` and `/usr/local/opt/llvm/bin`, and picks the newest macOS SDK that this clang-repl can read.
+
+### Linux (Ubuntu 24.04, x86_64 and ARM64)
+
+```bash
+sudo apt-get install clang-18 libclang-18-dev clang-tools-18 libcurl4-openssl-dev
+python3 -m pip install ipykernel jupyter_client
+cd <download>/bin
+./pluss kernel install
+```
+
+On Ubuntu clang-repl is installed under `/usr/lib/llvm-18/bin`, which is often not on the `PATH`. If the installer says it cannot find clang-repl, give it the path:
+
+```bash
+./pluss kernel install --clang-repl /usr/lib/llvm-18/bin/clang-repl
+```
+
+### Windows
+
+The notebook kernel is not available on Windows yet. PlussII programs and PlussView windows themselves work there; only the notebook preview does not.
+
+### Open it
+
+Start Jupyter (`jupyter lab`) or open a notebook in VS Code and choose the kernel "PlussII C++". The first cell takes a moment while the interpreter starts.
+
