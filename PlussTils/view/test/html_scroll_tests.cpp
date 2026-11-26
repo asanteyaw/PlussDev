@@ -1041,100 +1041,6 @@ void test_virtual_table_columns_can_be_resized() {
   expect(widened != after.end() && widened->aux == dragged, "a dragged width is applied to its column in a long table");
 }
 
-void test_virtual_table_double_click_fits_a_squeezed_column() {
-  using namespace pluss::view;
-  using namespace pluss::view::window;
-
-  class Crowded final : public VirtualTableModel {
-   public:
-    std::int64_t row_count() const noexcept override { return 20000; }
-    std::int64_t column_count() const noexcept override { return 12; }
-    std::string row_header() const override { return "case"; }
-    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
-    std::string column_name(const std::int64_t column) const override { return "column_" + std::to_string(column); }
-    bool column_numeric(std::int64_t) const noexcept override { return false; }
-    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override {
-      return VirtualTableCell{.text = "a fairly long cell value " + std::to_string(row)};
-    }
-    bool row_matches(std::int64_t, const std::string_view) const override { return true; }
-  };
-  const auto document = parse_html_document(R"HTML(
-<!doctype html>
-<html><head><style>body { margin:0; } table { width:100%; height:300px; }</style></head><body>
-  <table id="t" data-virtual-table="true"></table>
-</body></html>
-)HTML");
-  const Crowded model;
-  const auto column_width = [&](const std::unordered_map<std::string, std::unordered_map<int, int>>* widths) {
-    std::vector<HtmlHitRegion> hits;
-    HtmlRenderConfig config{};
-    config.draw_top_bar = false;
-    config.root_padding_px = 0;
-    config.virtual_table_model = &model;
-    config.hit_regions = &hits;
-    config.table_column_widths = widths;
-    (void)build_html_document_scene(document, SizeI{900, 400}, config);
-    std::string target;
-    int width = -1;
-    for (const auto& hit : hits) {
-      if (hit.action == "table.resize.column" && hit.value == 1) {
-        width = hit.aux;
-        target = hit.target;
-      }
-    }
-    return std::pair{target, width};
-  };
-  const auto [target, squeezed] = column_width(nullptr);
-  expect(squeezed > 0, "the squeezed column has a divider to double-click");
-  std::unordered_map<std::string, std::unordered_map<int, int>> widths;
-  widths[target][1] = 0;  // a double-click: fit
-  const int fitted = column_width(&widths).second;
-  expect(fitted > squeezed, "fitting a squeezed column of a long table makes it as wide as its values");
-  widths[target].clear();  // a second double-click: back to the shared width
-  expect(column_width(&widths).second == squeezed, "fitting again restores the shared width");
-}
-
-void test_no_matching_rows_is_centred() {
-  using namespace pluss::view;
-  using namespace pluss::view::window;
-
-  class Few final : public VirtualTableModel {
-   public:
-    std::int64_t row_count() const noexcept override { return 20000; }
-    std::int64_t column_count() const noexcept override { return 2; }
-    std::string row_header() const override { return "case"; }
-    std::string row_label(const std::int64_t row) const override { return std::to_string(row); }
-    std::string column_name(const std::int64_t column) const override { return "c" + std::to_string(column); }
-    bool column_numeric(std::int64_t) const noexcept override { return true; }
-    VirtualTableCell cell(const std::int64_t row, std::int64_t) const override { return VirtualTableCell{.text = std::to_string(row)}; }
-    bool row_matches(std::int64_t, const std::string_view) const override { return false; }
-  };
-  const auto document = parse_html_document(R"HTML(
-<!doctype html>
-<html><head><style>body { margin:0; } table { width:100%; height:300px; }</style></head><body>
-  <table id="t" data-virtual-table="true"></table>
-</body></html>
-)HTML");
-  const Few model;
-  const std::vector<std::int64_t> none;
-  HtmlRenderConfig config{};
-  config.draw_top_bar = false;
-  config.root_padding_px = 0;
-  config.virtual_table_model = &model;
-  config.virtual_row_order = &none;
-  const SizeI size{900, 400};
-  const auto scene = build_html_document_scene(document, size, config);
-  int start = -1;
-  for (const auto& command : scene.commands()) {
-    if (const auto* text = std::get_if<TextCommand>(&command); text != nullptr && text->text == "No matching rows") {
-      start = text->anchor.x;
-    }
-  }
-  expect(start > 0, "an empty table says there are no matching rows");
-  // Centred text starts left of the middle by half its own width, which is well clear of the table's left edge.
-  expect(start > size.width / 3 && start < size.width / 2, "the message sits in the middle of the table, not at its left edge");
-}
-
 void test_virtual_table_sorts_by_a_column() {
   using namespace pluss::view;
 
@@ -1392,8 +1298,6 @@ int main() {
     test_virtual_table_colours_follow_the_stylesheet();
     test_virtual_table_last_column_takes_the_slack();
     test_virtual_table_columns_can_be_resized();
-    test_virtual_table_double_click_fits_a_squeezed_column();
-    test_no_matching_rows_is_centred();
     test_virtual_table_sorts_by_a_column();
     test_row_window_bounds();
     test_long_and_short_tables_draw_headers_alike();

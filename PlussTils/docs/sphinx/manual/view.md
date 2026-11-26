@@ -129,9 +129,9 @@ Inside the **View** menu, **Format** changes how the numbers are written: the de
 
 ### Themes
 
-Open the **Theme** menu to restyle the window: Default, Ember, Nardo, Brooklands, Gulf, Obsidian, Indigo or Paperwhite. A theme keeps the view and the number format you chose. Paperwhite is the page of an e-reader: thin rules, no row stripes and a dark rule along the top.
+Open the **Theme** menu to restyle the window: Default, Ember, Nardo, Brooklands, Gulf, Obsidian, Indigo, Paperwhite or Sepia. A theme keeps the view and the number format you chose. Paperwhite and Sepia are the pages of an e-reader: thin rules, no row stripes and a dark rule along the top, in white or in warm paper.
 
-![The eight table themes](assets/pv_table_themes.png)
+![The nine table themes](assets/pv_table_themes.png)
 
 ### Sorting and column widths
 

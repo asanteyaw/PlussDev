@@ -1000,7 +1000,7 @@ constexpr std::array<const char*, 26> kThemeTokens{
     "head-bg", "case-bg", "case-head-bg", "zebra", "hover", "success", "control-border",
     "pill-bg", "grid"};
 
-const std::array<ThemePalette, 9> kThemes{{
+const std::array<ThemePalette, 10> kThemes{{
     {DisplayTheme::Default, "default", "Default",
      {"#f3f6fb", "#ffffff", "#1b2d4b", "#0b1b3c", "#697789", "#c3d0e2", "#cfdae9", "#e7edf5", "#c84d58",
       "#f27b72", "#203e67", "#152b4a", "#ffffff", "#203e67", "#152b4a", "#d8e2f1", "#f8d9d9", "#dae3ee",
@@ -1042,6 +1042,12 @@ const std::array<ThemePalette, 9> kThemes{{
       "#fbfbf8", "#f6f5f0", "#fbfbf8", "#fbfbf8", "#efede6", "#9a968a", "#cfccc1",
       "#efede6", "#e4e2da"},
      "59,58,54", "163,42,29"},
+    {DisplayTheme::Sepia, "sepia", "Sepia",
+     {"#e9dcc3", "#f4ecd8", "#3b2f1e", "#2a2113", "#7d6b4f", "#dccfb2", "#d2c4a4", "#e6dac0", "#6b4f2a",
+      "#9b7a45", "#5a4423", "#5a4423", "#f4ecd8", "#6b4f2a", "#5a4423", "#f1e6cc", "#e6d8b8",
+      "#f4ecd8", "#efe4c9", "#f4ecd8", "#f4ecd8", "#ebdfc3", "#a89268", "#cdbd98",
+      "#ebdfc3", "#e2d5b8"},
+     "107,79,42", "156,42,26"},
     {DisplayTheme::Native, "native", "Native",
      {"#e1e9f8", "#fafcff", "#14213d", "#0f1b4d", "#5a6b8f", "#c5d3ea", "#c5d3ea", "#dbe5f4", "#0fa3a3",
       "#6a5cff", "#2b3a9e", "#1c2a78", "#ffffff", "#2b3a9e", "#1c2a78", "#b4c8fb", "#e9f6fb", "#cfdcf8",
@@ -1076,6 +1082,7 @@ constexpr const char* kObsidianNullInk = "#ff6b5e";
 constexpr const char* kIndigoNullInk = "#c9184a";
 constexpr const char* kNativeNullInk = "#d63031";
 constexpr const char* kPaperwhiteNullInk = "#a32a1d";
+constexpr const char* kSepiaNullInk = "#9c2a1a";
 
 const char* null_ink_for_(const DisplayTheme theme) {
   switch (theme) {
@@ -1087,6 +1094,7 @@ const char* null_ink_for_(const DisplayTheme theme) {
     case DisplayTheme::Indigo: return kIndigoNullInk;
     case DisplayTheme::Native: return kNativeNullInk;
     case DisplayTheme::Paperwhite: return kPaperwhiteNullInk;
+    case DisplayTheme::Sepia: return kSepiaNullInk;
     case DisplayTheme::Default:
     case DisplayTheme::Auto:
       break;

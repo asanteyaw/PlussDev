@@ -3606,9 +3606,6 @@ int render_virtual_table(
       if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
         wanted_widths[c] = dragged;
         flexible[c] = false;
-      } else if (dragged_widths != nullptr && dragged_widths->count(static_cast<int>(c) + 1) > 0) {
-        // A double-click asked this column to fit: it keeps the width its values need, however crowded the table.
-        flexible[c] = false;
       }
     }
     std::vector<bool> squeezed;
@@ -3874,10 +3871,10 @@ int render_virtual_table(
   if (row_count == 0) {
     draw_text_lines(scene, {"No matching rows"}, font_size, 500,
                     style.font_family, Color::rgba(99, 111, 124, 255),
-                    content_x + row_header_w,
+                    content_x + row_header_w + 12,
                     body_y + std::max(6, (body_viewport_h - line_h) / 2),
-                    line_h, "center",
-                    std::max(20, content_w - row_header_w));
+                    line_h, "left",
+                    std::max(20, content_w - row_header_w - 24));
   }
   if (render_config.clip_table_viewport) {
     scene.add(ClearClipRectCommand{});
@@ -4481,11 +4478,11 @@ int render_table(Scene& scene,
                       style.font_weight,
                       style.font_family,
                       Color::rgba(99, 111, 124, 255),
-                      content_x,
+                      content_x + 12,
                       body_clip_y + std::max(6, (body_clip_h - line_h) / 2),
                       line_h,
-                      "center",
-                      std::max(20, content_w));
+                      "left",
+                      std::max(20, content_w - 24));
     } else {
       std::size_t first_visible = 0;
       int consumed_h = 0;
