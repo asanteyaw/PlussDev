@@ -170,8 +170,14 @@ void Catalog::show() const {
     model->set_alignment(options.align);
     model->set_filter(options.filter);
     model->set_window(pluss::table::display::row_window_for(options));
+    model->set_number_format(options.number_format);
   };
-  if (!pluss::table::display::show_model(page)) {
+  // A catalog is not a DataFrame, and opens in Ember so it looks like it unless a default theme was set.
+  pluss::table::display::DisplayOptions options;
+  if (pluss::table::display::default_theme() == pluss::table::display::DisplayTheme::Default) {
+    options.theme = pluss::table::display::DisplayTheme::Ember;
+  }
+  if (!pluss::table::display::show_model(page, options)) {
     show(std::cout);
   }
 }

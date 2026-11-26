@@ -158,6 +158,8 @@ struct ModelPage {
   std::function<void(const DisplayOptions&)> on_options;
   bool offer_align{false};  // View > Align (head, tail), for keys of different lengths
 };
+// A number's text written as View > Format asks for (the stored value does not change).
+std::string format_number(const std::string& text, NumberFormat format);
 // The row window View > Visit asks for, as the viewer's own type.
 pluss::view::RowWindow row_window_for(const DisplayOptions& options);
 // The page as HTML with every view tab filled in (for a browser or a notebook, and for tests).

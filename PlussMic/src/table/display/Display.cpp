@@ -3502,12 +3502,14 @@ bool show_html_window_(const std::string& html,
       // Going back to the Table view takes the filter and the visit off, so the table is the plain one again.
       window_opts.on_view = [state, render_with, on_rows](std::string_view button_id) {
         if (button_id != kTableTabId ||
-            (state->filter == DisplayFilter::None && state->visit == DisplayVisit::All && !state->visit_editing)) {
+            (state->filter == DisplayFilter::None && state->visit == DisplayVisit::All && !state->visit_editing &&
+             state->align == DisplayAlign::Head)) {
           return std::string{};
         }
         state->filter = DisplayFilter::None;
         state->visit = DisplayVisit::All;
         state->visit_editing = false;
+        state->align = DisplayAlign::Head;
         if (on_rows) {
           on_rows(*state);
         }
@@ -3802,6 +3804,10 @@ pluss::view::RowWindow row_window_for(const DisplayOptions& options) {
   return row_window_for_(options);
 }
 
+std::string format_number(const std::string& text, const NumberFormat format) {
+  return format == NumberFormat::Default ? text : format_number_cell_(text, /*count_like=*/false, format);
+}
+
 std::string render_html_model_(const ModelPage& page, CatalogViews& views, const DisplayOptions& options) {
   const std::string body =
       tabbed_body_(summary_cards_html_(page.cards) + virtual_table_frame_(), views, options, /*lazy=*/true);
@@ -4093,7 +4099,7 @@ bool show_model(const ModelPage& page, const DisplayOptions& options) {
     page.on_options(render_opts);
   }
   return show_html_window_(render_with(render_opts), render_opts, "Pluss " + page.title, backend, page.model,
-                           /*table_viewport_scroll_only=*/true, render_with, /*offer_number_format=*/false,
+                           /*table_viewport_scroll_only=*/true, render_with, /*offer_number_format=*/true,
                            render_panel_with, /*offer_filter=*/true, page.on_options, page.offer_align);
 }
 

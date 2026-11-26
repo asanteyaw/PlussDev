@@ -98,6 +98,10 @@ void CatalogGridModel::set_filter(const DisplayFilter filter) const {
   filtering_.store(filter != DisplayFilter::None, std::memory_order_release);
 }
 
+void CatalogGridModel::set_number_format(const pluss::table::display::NumberFormat format) const {
+  number_format_.store(static_cast<int>(format), std::memory_order_release);
+}
+
 void CatalogGridModel::set_window(const pluss::view::RowWindow& window) const {
   const std::scoped_lock lock(mutex_);
   window_ = window;
@@ -176,6 +180,12 @@ pluss::view::VirtualTableCell CatalogGridModel::cell(const std::int64_t row, con
     const bool nan = text == "nan" || text == "-nan";
     text = nan ? "NAN" : (text == "inf" ? "INF" : "-INF");  // the loud forms, as in a DataFrame
     return {.text = std::move(text), .nonfinite = true, .infinite = !nan};
+  }
+  if (c.numeric) {
+    const auto format = static_cast<pluss::table::display::NumberFormat>(number_format_.load(std::memory_order_acquire));
+    if (format != pluss::table::display::NumberFormat::Default) {
+      text = pluss::table::display::format_number(text, format);
+    }
   }
   return {.text = std::move(text)};
 }

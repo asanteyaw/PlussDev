@@ -31,6 +31,8 @@ class CatalogGridModel final : public pluss::view::VirtualTableModel {
   // Keeps the rows where some stream holds the kind of entry the filter looks for.
   void set_filter(pluss::table::display::DisplayFilter filter) const;
   void set_window(const pluss::view::RowWindow& window) const;
+  // How numbers are written (View > Format); the stored values do not change.
+  void set_number_format(pluss::table::display::NumberFormat format) const;
 
   std::int64_t row_count() const noexcept override { return longest_; }
   std::int64_t column_count() const noexcept override { return keys(); }
@@ -57,6 +59,7 @@ class CatalogGridModel final : public pluss::view::VirtualTableModel {
   std::int64_t shortest_{0};
   mutable std::atomic<bool> tail_{false};
   mutable std::atomic<bool> filtering_{false};
+  mutable std::atomic<int> number_format_{0};
   mutable std::mutex mutex_{};
   mutable pluss::table::display::DisplayFilter filter_{pluss::table::display::DisplayFilter::None};
   mutable pluss::view::RowWindow window_{};
