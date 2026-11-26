@@ -144,6 +144,7 @@ void test_visit_custom_range() {
   options.visit = display::DisplayVisit::Custom;
   options.visit_begin = 3;
   options.visit_end = 7;
+  options.visit_prompt_inline = true;  // a window that cannot show a dialog asks in the page
   const auto out = display::render_html(numbered(20), options);
   expect(out.find(">row-04<") != std::string::npos && out.find(">row-07<") != std::string::npos &&
              out.find(">row-03<") == std::string::npos && out.find(">row-08<") == std::string::npos,

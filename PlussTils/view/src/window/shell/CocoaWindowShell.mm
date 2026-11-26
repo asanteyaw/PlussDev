@@ -968,6 +968,48 @@ class CocoaWindowShell final : public IWindowShell {
 
   bool supports_menus() const noexcept override { return true; }
 
+  bool supports_prompt() const noexcept override { return true; }
+
+  // A system alert with the fields in a grid under the message: the labels in one column, the boxes lined up in
+  // the next, each as wide as this many characters of the system font.
+  std::optional<std::vector<std::string>> prompt(const ShellPrompt& request) override {
+    constexpr int kPromptFieldColumns = 16;
+    @autoreleasepool {
+      NSAlert* alert = [[NSAlert alloc] init];
+      alert.messageText = [NSString stringWithUTF8String:request.title.c_str()];
+      alert.informativeText = [NSString stringWithUTF8String:request.message.c_str()];
+      [alert addButtonWithTitle:[NSString stringWithUTF8String:request.accept.c_str()]];
+      [alert addButtonWithTitle:@"Cancel"];
+      NSFont* font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+      const CGFloat field_width = font.maximumAdvancement.width * kPromptFieldColumns;
+      NSMutableArray<NSTextField*>* inputs = [NSMutableArray array];
+      NSMutableArray* rows = [NSMutableArray array];
+      for (const auto& field : request.fields) {
+        NSTextField* label = [NSTextField labelWithString:[NSString stringWithUTF8String:field.label.c_str()]];
+        NSTextField* input = [NSTextField textFieldWithString:[NSString stringWithUTF8String:field.value.c_str()]];
+        input.placeholderString = [NSString stringWithUTF8String:field.placeholder.c_str()];
+        [input.widthAnchor constraintEqualToConstant:field_width].active = YES;
+        [inputs addObject:input];
+        [rows addObject:@[label, input]];
+      }
+      NSGridView* grid = [NSGridView gridViewWithViews:rows];
+      [grid columnAtIndex:0].xPlacement = NSGridCellPlacementTrailing;
+      grid.frame = NSMakeRect(0, 0, grid.fittingSize.width, grid.fittingSize.height);
+      alert.accessoryView = grid;
+      if (inputs.count > 0) {
+        alert.window.initialFirstResponder = inputs.firstObject;
+      }
+      if ([alert runModal] != NSAlertFirstButtonReturn) {
+        return std::nullopt;
+      }
+      std::vector<std::string> values;
+      for (NSTextField* input in inputs) {
+        values.emplace_back(input.stringValue.UTF8String != nullptr ? input.stringValue.UTF8String : "");
+      }
+      return values;
+    }
+  }
+
   void update_menus(const std::vector<ShellMenu>& menus) override {
     @autoreleasepool {
       if (host_ == nil || host_.menu_buttons == nil) {

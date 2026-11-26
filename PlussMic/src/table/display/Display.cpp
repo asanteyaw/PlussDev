@@ -1181,16 +1181,6 @@ std::string html_shell_(std::string_view title,
       margin-left: auto;
       flex-wrap: nowrap;
     }}
-    .visit-bar {{
-      margin-left: 0;
-      justify-content: flex-start;
-      gap: 0.6em;
-      padding: 0.5em 0;
-    }}
-    .visit-bar input {{
-      min-width: 8em;
-      width: 8em;
-    }}
     .tools input {{
       margin: 0;
       min-width: 220px;
@@ -1205,6 +1195,19 @@ std::string html_shell_(std::string_view title,
       line-height: 38px;
       appearance: none;
       -webkit-appearance: none;
+    }}
+    .visit-bar {{
+      margin-left: 0;
+      justify-content: flex-start;
+      gap: 0.6em;
+      padding: 0.5em 0;
+    }}
+    .visit-bar input {{
+      min-width: 8em;
+      width: 8em;
+    }}
+    .visit-bar span {{
+      line-height: 40px;  /* the height of the boxes beside it, so the words sit level with them */
     }}
     .tools button {{
       margin: 0;
@@ -2004,6 +2007,15 @@ void append_json_string_(std::string& out, const std::string_view text) {
   out.push_back('"');
 }
 
+// The frame around every table, short or long: the accent bar on top, then the scrolling area. One place, so a
+// long table and a short one cannot drift apart; the only thing a long table changes is where its rows come from.
+std::string table_frame_open_(const bool virtual_rows = false) {
+  return virtual_rows ? "<div class=\"table-wrap vwrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">"
+                      : "<div class=\"table-wrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">";
+}
+
+constexpr std::string_view kTableFrameClose = "</div></div>";
+
 std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id,
@@ -2053,8 +2065,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += "</div>";
   }
 
-  body += style.virtual_rows ? "<div class=\"table-wrap vwrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">"
-                              : "<div class=\"table-wrap\"><div class=\"top-bar\"></div><div class=\"table-scroll\">";
+  body += table_frame_open_(style.virtual_rows);
   // The label column starts at a fixed default width like every other column (nothing is sized
   // from the labels, so long feature names never blow it out); the user drags it to taste.
   constexpr int kLabelColumnPx = 140;
@@ -2484,9 +2495,9 @@ std::string virtual_table_body_(const DataFrame& frame) {
       "class=\"value\">{}</div></div>",
       escape_html_(logical_dtype(frame.labels().values())));
   body += "</div>";
-  body +=
-      "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
-      "id=\"plussmic-table\" data-virtual-table=\"true\"></table></div></div>";
+  body += table_frame_open_();
+  body += "<table id=\"plussmic-table\" data-virtual-table=\"true\"></table>";
+  body += kTableFrameClose;
   return body;
 }
 
@@ -2871,7 +2882,7 @@ std::string render_html_table_(const DataFrame& frame,
   constexpr std::int64_t kBrowserVirtualRows = 2000;
   table_style.virtual_rows =
       options.backend == DisplayBackend::NativeWebView && frame.ncases() > kBrowserVirtualRows;
-  auto body = (options.visit == DisplayVisit::Custom ? visit_bar_html_(options) : std::string{}) +
+  auto body = (options.visit == DisplayVisit::Custom && options.visit_prompt_inline ? visit_bar_html_(options) : std::string{}) +
               (virtual_model ? virtual_table_body_(frame)
                              : render_html_table_body_(frame, options, "plussmic-table", table_style));
   if (options.html_summary) {
@@ -2938,7 +2949,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "</div>";
 
   if (atlas.depth() == 0) {
-    body += "<div class=\"table-wrap\"><div class=\"table-scroll\"><div style=\"padding:18px;\" class=\"muted\">Atlas is empty.</div></div></div>";
+    body += table_frame_open_() + "<div style=\"padding:18px;\" class=\"muted\">Atlas is empty.</div>" + std::string(kTableFrameClose);
     return html_shell_(document_title_("Atlas", options),
                        "0 frames",
                        body,
@@ -3075,7 +3086,8 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   body += "</div>";
 
   body +=
-      "<div style=\"padding:8px 6px 0;\"><span class=\"pill\">Feature inventory</span></div><div class=\"table-wrap\"><div class=\"table-scroll\">";
+      "<div style=\"padding:8px 6px 0;\"><span class=\"pill\">Feature inventory</span></div>";
+  body += table_frame_open_();
   body += "<table id=\"plussmic-table\" data-filterable=\"true\"><thead><tr>";
   body += "<th class=\"sortable\" data-column-index=\"0\" data-kind=\"numeric\">#</th>";
   body += "<th class=\"sortable sticky-left\" data-column-index=\"1\" data-kind=\"text\">Feature</th>";
@@ -3252,12 +3264,45 @@ bool show_html_window_(const std::string& html,
           {DisplayVisit::Custom, "custom", "Custom..."},
       }});
       for (const auto& entry : *visits) {
-        menu.options.push_back(pluss::view::HtmlMenuOption{entry.id, entry.label});
+        pluss::view::HtmlMenuOption option{entry.id, entry.label};
+        if (entry.visit == DisplayVisit::Custom) {
+          // Asked for in a dialog where the window can show one: the first position and the one to stop before.
+          option.prompt_title = "Visit rows";
+          option.prompt_message = "Positions count from 0 and a negative one counts from the end. Leave a box empty for the start or the end.";
+          option.prompt = {{"First row", "0"}, {"Stop before", "the end"}};
+        }
+        menu.options.push_back(std::move(option));
       }
+      menu.prompt_values = [state](std::string_view) {
+        const auto text = [](const std::int64_t value, const std::int64_t unset) {
+          return value == unset ? std::string{} : std::to_string(value);
+        };
+        return std::vector<std::string>{text(state->visit_begin, 0),
+                                        text(state->visit_end, std::numeric_limits<std::int64_t>::max())};
+      };
+      menu.render_prompted = [state, render_with, on_rows](std::string_view, const std::vector<std::string>& values) {
+        const auto read = [&](const std::size_t at, const std::int64_t fallback) {
+          if (at >= values.size() || values[at].empty()) {
+            return fallback;
+          }
+          std::int64_t value = fallback;
+          std::from_chars(values[at].data(), values[at].data() + values[at].size(), value);
+          return value;
+        };
+        state->visit = DisplayVisit::Custom;
+        state->visit_prompt_inline = false;
+        state->visit_begin = read(0, 0);
+        state->visit_end = read(1, std::numeric_limits<std::int64_t>::max());
+        if (on_rows) {
+          on_rows(*state);
+        }
+        return render_with(*state);
+      };
       menu.render = [state, render_with, on_rows, visits](std::string_view id) {
         for (const auto& entry : *visits) {
           if (id == entry.id) {
             state->visit = state->visit == entry.visit ? DisplayVisit::All : entry.visit;
+            state->visit_prompt_inline = state->visit == DisplayVisit::Custom;  // no dialog here: ask in the page
             if (on_rows) {
               on_rows(*state);
             }
@@ -3292,6 +3337,7 @@ bool show_html_window_(const std::string& html,
           return value;
         };
         state->visit = DisplayVisit::Custom;
+        state->visit_prompt_inline = false;  // the range is set: the box goes away until Custom is chosen again
         state->visit_begin = read(kVisitBeginId, 0);
         state->visit_end = read(kVisitEndId, std::numeric_limits<std::int64_t>::max());
         if (on_rows) {

@@ -1710,7 +1710,25 @@ bool show_inhouse_html_window(const std::string& title,
           const auto menu_id = std::string_view(event.note).substr(0, colon);
           const auto menu = std::find_if(menus.begin(), menus.end(),
                                          [&](const HtmlMenu& m) { return m.id == menu_id; });
-          needs_render = show_page(menu->render(std::string_view(event.note).substr(colon + 1))) || needs_render;
+          const auto option_id = std::string_view(event.note).substr(colon + 1);
+          const auto option = std::find_if(menu->options.begin(), menu->options.end(),
+                                           [&](const HtmlMenuOption& o) { return o.id == option_id; });
+          if (option != menu->options.end() && !option->prompt.empty() && menu->render_prompted && shell->supports_prompt()) {
+            // An option that needs values: ask in a dialog, and act on what was typed (nothing if it is cancelled).
+            window::ShellPrompt request;
+            request.title = option->prompt_title;
+            request.message = option->prompt_message;
+            const auto starts = menu->prompt_values ? menu->prompt_values(option_id) : std::vector<std::string>{};
+            for (std::size_t i = 0; i < option->prompt.size(); ++i) {
+              request.fields.push_back(window::ShellPromptField{option->prompt[i].label, option->prompt[i].placeholder,
+                                                                i < starts.size() ? starts[i] : std::string{}});
+            }
+            if (const auto values = shell->prompt(request); values.has_value()) {
+              needs_render = show_page(menu->render_prompted(option_id, *values)) || needs_render;
+            }
+          } else {
+            needs_render = show_page(menu->render(option_id)) || needs_render;
+          }
         } else if (event.note.rfind("save_as:", 0) == 0) {
           (void)save_as(event.note.substr(8));
         } else if (event.note == "zoom_in") {

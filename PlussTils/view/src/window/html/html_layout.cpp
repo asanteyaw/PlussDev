@@ -29,6 +29,9 @@ namespace pluss::view::window {
 
 namespace {
 
+// How far a placeholder fades from the text colour towards the background of its box.
+constexpr double kPlaceholderFade = 0.55;
+
 using detail::HeaderControls;
 using detail::kResizeHandlePx;
 using detail::TablePaint;
@@ -3623,6 +3626,7 @@ int render_virtual_table(
     Color text;
     Color edge;
     int weight;
+    int padding;
   };
   const auto probe = [&](const char* section, const char* tag, const std::string& classes, const bool even_row) {
     HtmlNode section_node;
@@ -3643,18 +3647,18 @@ int render_virtual_table(
     cell_lineage.push_back(&row);
     const ResolvedStyle resolved = resolve_style(document, cell, cell_lineage, &style, viewport_width);
     return Paint{resolved.has_background ? resolved.background_color : style.background_color, resolved.text_color,
-                 resolved.border_color, resolved.font_weight};
+                 resolved.border_color, resolved.font_weight, std::max(2, resolved.padding)};
   };
   const Paint header_paint = probe("thead", "th", "sortable", false);
   const Paint sticky_header_paint = probe("thead", "th", "sortable sticky-left", false);
   const Paint odd_paint = probe("tbody", "td", "", false);
   const Paint even_paint = probe("tbody", "td", "", true);
   const Paint sticky_paint = probe("tbody", "td", "sticky-left", false);
+  const Paint sticky_even_paint = probe("tbody", "td", "sticky-left", true);
   const Paint missing_paint = probe("tbody", "td", "num missing", false);
   const TablePaint paint = themed_table_paint(document, lineage, node, style, viewport_width);
   const Color grid = paint.grid;
   const Color header_fill = header_paint.fill;
-  const Color sticky_fill = sticky_paint.fill;
   const Color sticky_header_fill = sticky_header_paint.fill;
   const int font_size = std::max(10, style.font_size);
   const int line_h = resolve_line_height_value(style.line_height, font_size);
@@ -3666,7 +3670,8 @@ int render_virtual_table(
           const int cell_w,
           const bool header,
           const bool missing) {
-        const int pad = 10;
+        // The same padding a short table's cells take from the stylesheet.
+        const int pad = header ? header_paint.padding : odd_paint.padding;
         const int text_w = std::max(16, cell_w - pad * 2);
         const std::string text =
             truncate_to_width(source, font_size, text_w);
@@ -3760,7 +3765,7 @@ int render_virtual_table(
             ? (*row_order)[static_cast<std::size_t>(display_row)]
             : display_row;
     scene.add(FillRectCommand{
-        RectI{content_x, row_y, row_header_w, row_h}, sticky_fill});
+        RectI{content_x, row_y, row_header_w, row_h}, (display_row % 2 == 1 ? sticky_even_paint : sticky_paint).fill});
     scene.add(LineCommand{PointI{content_x, row_y},
                           PointI{content_x + row_header_w, row_y}, 1, grid});
     draw_cell_text(model->row_label(source_row), content_x, row_y,
@@ -4577,7 +4582,15 @@ int render_node(Scene& scene,
     }
     const bool has_value = (use_override && !render_config.active_input_value.empty()) ||
                            (!use_override && value_attr != nullptr && !value_attr->value.empty());
-    const Color text_color = has_value ? style.text_color : Color::rgba(132, 141, 151, 255);
+    // A placeholder is the box's own text colour faded into its background, so it is grey in any theme.
+    const Color box_background = style.has_background ? style.background_color : Color::rgba(255, 255, 255, 255);
+    const auto fade = [](const int text, const int paper) {
+      return static_cast<std::uint8_t>(std::lround(text * (1.0 - kPlaceholderFade) + paper * kPlaceholderFade));
+    };
+    const Color placeholder_color = Color::rgba(fade(style.text_color.r, box_background.r),
+                                                fade(style.text_color.g, box_background.g),
+                                                fade(style.text_color.b, box_background.b), 255);
+    const Color text_color = has_value ? style.text_color : placeholder_color;
     const int input_font = style.font_size + 2;  // text boxes read a little larger than body text
     const std::string transformed = apply_text_transform(text, style.text_transform);
     const std::string clipped =
