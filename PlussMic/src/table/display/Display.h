@@ -45,7 +45,6 @@ enum class DisplayTheme : std::uint8_t {
   Indigo = 7,     // deep indigo and iris
   Native = 8,     // Apple's native web view palette; omitted from the Theme menu
   Paperwhite = 9, // an e-reader's white page: serif type, hairline rules, no stripes
-  Sepia = 10,     // an e-reader's warm page
 };
 
 // How numeric cells are written in the Table view (the stored values are unchanged).
