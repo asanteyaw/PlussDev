@@ -1130,11 +1130,7 @@ bool show_inhouse_html_window(const std::string& title,
     shell_menus = build_menus();
   }
   std::string last_view_button;  // survives re-renders
-  // A menu or view choice may have changed the row filter. A table that opens already filtered or visiting a range
-  // (its options were set before the window opened) needs its row order built at once too.
-  bool virtual_filter_changed{virtual_table_model != nullptr &&
-                              (virtual_table_model->filtering() ||
-                               virtual_table_model->row_window().kind != RowWindow::Kind::All)};
+  bool virtual_filter_changed{false};  // a menu or view choice may have changed the row filter
   // Selecting a view first fills its panel if that is still empty (views are computed on demand).
   const auto select_view = [&](const std::string_view button_id) {
     if (const auto* tab = find_node_by_id(document.root, button_id)) {
