@@ -13,10 +13,11 @@ std::string Archive::to_string() const
 
 ## What It Does
 
-Renders the archive's boxed-table summary as a `std::string` — one row per catalog,
-showing depth-index, depth label (if any), key count, min/max record count across the
-archive, and the key list. Same rendering `operator<<` and [`show()`](show.md) write to a
-stream, minus the trailing newline those two append.
+Renders the archive's summary as a `std::string`: a short list of facts that stays the same
+length however deep the archive is — how many catalogs it stacks, how many keys they hold and
+how long those keys run (a range when they differ), whether the key names are the same in every
+catalog, a tally of the kinds of value, and the depth labels. Same rendering `operator<<` and
+[`show(os)`](show.md) write to a stream, minus the trailing newline those two append.
 
 ## Parameters
 
@@ -25,7 +26,7 @@ stream, minus the trailing newline those two append.
 ## Returns
 
 `std::string`
-    The rendered archive summary table, without a trailing newline.
+    The rendered archive summary, without a trailing newline.
 
 ## Examples
 
@@ -44,12 +45,16 @@ std::cout << archive.to_string();
 
 ```text
 ========================================================================================================================
-kindle::Archive  depth=1
-depth_labels=yes
+Archive
 ------------------------------------------------------------------------------------------------------------------------
-frame  | label                  | keys     | min_cs | max_cs | keys                                                     
+fact            | value
 ------------------------------------------------------------------------------------------------------------------------
-0      | jan                    | 1        | 2      | 2      | [id]                                                     
+depth           | 1 catalogs
+keys            | 1 each
+entries per key | 2 each
+key names       | the same in every catalog
+ptypes          | Series × 1
+depth labels    | jan to jan
 ========================================================================================================================
 ```
 
@@ -74,8 +79,8 @@ std::cout << "show length: " << oss.str().size();
 ### Output
 
 ```text
-to_string length: 766
-show length: 767
+to_string length: 691
+show length: 692
 ```
 
 ## Notes

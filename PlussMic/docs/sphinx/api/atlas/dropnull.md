@@ -59,13 +59,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropnull();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=5, cols=2)
 frame[0]
 =================
      | a     b
@@ -113,13 +114,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropnull().dropnan().dropinf();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=1, cols=2)
 frame[0]
 =================
      | a     b
@@ -154,13 +156,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropnull();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b

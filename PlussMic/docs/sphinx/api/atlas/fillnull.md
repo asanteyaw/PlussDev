@@ -61,13 +61,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillnull(0.0);
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b
@@ -118,15 +119,19 @@ auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillnull(0.0);
 auto nans = out.isnan();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 std::cout << "isnan\n";
-std::cout << nans << "\n";
+for (std::int64_t i = 0; i < nans.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << nans.frame(i) << "\n";
+}
+
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b
@@ -151,9 +156,7 @@ frame[1]
 5    | 6     60
 -----------------
 [6 cs x 2 feat]
-
 isnan
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -203,13 +206,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillnull(0.0).fillnan(-1.0).fillposinf(100.0).fillneginf(-100.0);
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b
@@ -247,13 +251,14 @@ auto frame = DataFrame({{"city", Shelf(pluss::make_note({"Accra", "", "Tema"}), 
 auto x = Atlas(std::vector<DataFrame>{frame, frame});
 
 auto out = x.fillnull("Unknown");
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=3, cols=1)
 frame[0]
 ==============
      | city
@@ -285,13 +290,14 @@ auto frame = DataFrame({{"opened", Shelf(pluss::make_timeline({"2024-01-01T00:00
 auto x = Atlas(std::vector<DataFrame>{frame, frame});
 
 auto out = x.fillnull(pluss::make_timeline({"2000-01-01T00:00:00Z"}));
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=3, cols=1)
 frame[0]
 =================
      | opened
@@ -323,13 +329,14 @@ auto frame = DataFrame({{"elapsed", Shelf(pluss::duration::nanos({1'000'000'000L
 auto x = Atlas(std::vector<DataFrame>{frame, frame});
 
 auto out = x.fillnull(pluss::duration::nanos(9));
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=3, cols=1)
 frame[0]
 =====================
      | elapsed

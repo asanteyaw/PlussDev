@@ -64,25 +64,15 @@ std::cout << rg;
 ### Output
 
 ```text
-{
-  "_type": "Registry",
-  "defined": true,
-  "nfields": 2,
-  "fields": {
-    "city": {
-      "size": 3,
-      "types": {
-        "Note": 3
-      }
-    },
-    "population": {
-      "size": 3,
-      "types": {
-        "Series": 3
-      }
-    }
-  }
-}
+========================================================================================================================
+scribble::Registry  fields=2
+states=3
+------------------------------------------------------------------------------------------------------------------------
+field      | ptype  | states | preview
+------------------------------------------------------------------------------------------------------------------------
+city       | Note   | 3      | [Accra, Tema, Kumasi]
+population | Series | 3      | [2500000, 161000, 3000000]
+========================================================================================================================
 ```
 
 Example 2. An unrecognized format name throws.
@@ -117,9 +107,10 @@ Registry::load: unsupported source type 'xml'
   method; the three-argument overload additionally accepts a generic `Config` scribble.
 - Every underlying `load_*()` method's own throw conditions (missing file, malformed
   content, unsupported build configuration for Excel/Parquet) apply once dispatched.
-- Unlike [`Catalog`](../catalog/load.md), `Registry`'s printed form is a JSON summary
-  (field names, sizes, per-type counts), not a box table — see any example's output
-  above.
+- A `Registry` prints as an overview with one row per field (what its slot holds, how
+  many states it has, and a preview of them), as a [`Catalog`](../catalog/load.md)
+  prints one row per key — see any example's output above. [`to_string()`](to_string.md)
+  is the full JSON dump.
 
 ## See Also
 

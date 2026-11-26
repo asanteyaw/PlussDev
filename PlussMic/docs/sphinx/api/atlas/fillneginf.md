@@ -63,13 +63,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillneginf(-1000.0);
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ==================
      | a      b
@@ -120,15 +121,19 @@ auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillneginf(-1000.0);
 auto still_null = out.isnull();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 std::cout << "isnull\n";
-std::cout << still_null << "\n";
+for (std::int64_t i = 0; i < still_null.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << still_null.frame(i) << "\n";
+}
+
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ==================
      | a      b
@@ -153,9 +158,7 @@ frame[1]
 5    | 6     60
 -----------------
 [6 cs x 2 feat]
-
 isnull
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -205,13 +208,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.fillnull(0.0).fillnan(-1.0).fillposinf(100.0).fillneginf(-100.0);
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b

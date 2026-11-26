@@ -4,7 +4,9 @@ The latest validated development build. It carries no version number and is repl
 
 ## Changes since 0.0.6
 
-- Notebook: a table now shows as a compact HTML table in the notebook's own colours, like a data-frame table, instead of PlussView's page; a long one shows its first and last five cases. The notebook starts with `<pluss/pluss.h>` only, as a `main.cpp` does.
+- Notebook: each type shows in the shape that suits it. A `DataFrame` is a compact HTML table in the notebook's own colours (a long one shows its first and last five cases). A `Catalog` or a `Registry` is a ragged table, blank where a key has no entry. An `Atlas`, an `Archive` or an `Axel` is a short summary of how many tables are stacked and what they hold. A `Shelf`, a `Stream` or a `Slot` is text, as in the terminal. A compile error is a traceback about your own line. The notebook starts with `<pluss/pluss.h>` only, as a `main.cpp` does.
+- Terminal: a `Stream` prints exactly as a `Shelf` does, and a `Slot` as a table of its cells with a `ptype` footer (`Mixed` when the cells are of different kinds), not as JSON. A `Registry` prints an overview with one row per field. An `Atlas`, an `Archive` and an `Axel` print a short list of facts that does not grow with their depth or width.
+- PlussView: `Registry.show()` opens the ragged window a `Catalog` opens, and `Atlas.show()`, `Archive.show()` and `Axel.show()` open one window with a Level menu to move between their tables (a frame, or a catalog or registry as a ragged grid). Double-click on a divider fits a column and a second double-click undoes it, a table ends at its last row, and sizing a column moves only its right edge.
 - PlussView: Save As → PNG and PDF now write only the content. A plot is saved at its own size with no window chrome, and a table is saved from its column headers down, with no title card, search box or scrollbars, cropped to the columns and rows that are shown.
 - PlussView: every table size (column limits, sort-arrow size, row heights) is now one block of values in units of the font size, `HtmlTableGeometry`, so tables scale with the font and the numbers are changed in one place.
 - PlussView on Windows and Linux now matches macOS: the toolbar has View and other menus and a "Save As" button sized to its label (Linux gained a toolbar), PDF export works on every platform, and on Linux Save As asks where to save when zenity or kdialog is installed.
@@ -48,6 +50,7 @@ Free functions now live in the lowercase namespaces, and the types hold only met
 - `pluss::duration::range` is now `pluss::duration::range`.
 - `pluss::note::undefined()` is now `pluss::note::undefined()`.
 - `pluss::table::examples()` and `example(name)` are now `pluss::loader::datastores()` and `datastore(name)`.
+- `Stream::show(os)` and `Slot::show(os)` are removed: a one-dimensional type is printed, not shown. Use `std::cout << stream` and `std::cout << slot`. `show()` belongs to the two- and three-dimensional types.
 - `Catalog::nrows()`, `minrows()` and `maxrows()` are now `nentries()`, `minentries()` and `maxentries()`, and `Catalog::cloc` is now `Catalog::eloc`. A catalog's rows are its entries. `Registry::cloc` is now `Registry::sloc`: a registry's rows are its states.
 
 ## Compatibility

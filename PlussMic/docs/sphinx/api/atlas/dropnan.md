@@ -61,13 +61,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropnan();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=4, cols=2)
 frame[0]
 =================
      | a     b
@@ -115,16 +116,20 @@ auto x = Atlas(std::vector<DataFrame>{frame, other});
 auto without_missing = x.dropnull();
 auto without_this = x.dropnan();
 std::cout << "dropnull\n";
-std::cout << without_missing << "\n";
+for (std::int64_t i = 0; i < without_missing.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << without_missing.frame(i) << "\n";
+}
 std::cout << "dropnan\n";
-std::cout << without_this << "\n";
+for (std::int64_t i = 0; i < without_this.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << without_this.frame(i) << "\n";
+}
+
 ```
 
 ### Output
 
 ```text
 dropnull
-Atlas(depth=2, rows=5, cols=2)
 frame[0]
 =================
      | a     b
@@ -147,9 +152,7 @@ frame[1]
 5    | 6     60
 -----------------
 [5 cs x 2 feat]
-
 dropnan
-Atlas(depth=2, rows=4, cols=2)
 frame[0]
 =================
      | a     b
@@ -190,13 +193,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropnan();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b

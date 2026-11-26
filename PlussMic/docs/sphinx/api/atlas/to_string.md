@@ -13,10 +13,12 @@ std::string Atlas::to_string(const display::DisplayOptions& options = {}) const
 
 ## What It Does
 
-Renders the atlas's boxed-table summary as a `std::string` — one section per frame, each
-prefixed with `frame[i]` (and its depth label, if set), followed by that frame's own
-table rendering. Same rendering `operator<<` and [`show(std::ostream&)`](show.md) write to
-a stream, minus the trailing newline those two append.
+Renders the atlas's summary as a `std::string`: a short list of facts that stays the same
+length however many frames the atlas stacks or however many columns they have — how deep it
+is, the range of cases and features per frame, whether the feature names are the same in
+every frame, a tally of the column kinds, and the depth labels. Same rendering `operator<<`
+and [`show(std::ostream&)`](show.md) write to a stream, minus the trailing newline those two
+append.
 
 ## Parameters
 
@@ -45,15 +47,18 @@ std::cout << atlas.to_string();
 ### Output
 
 ```text
-Atlas(depth=1, rows=2, cols=1)
-frame[0] case=jan
-===========
-     | id  
------------
-0    | 1   
-1    | 2   
------------
-[2 cs x 1 feat]
+========================================================================================================================
+Atlas
+------------------------------------------------------------------------------------------------------------------------
+fact          | value
+------------------------------------------------------------------------------------------------------------------------
+depth         | 1 frames
+cases         | 2 each
+features      | 1 each
+feature names | the same in every frame
+ptypes        | Series × 1
+depth labels  | Note: jan to jan
+========================================================================================================================
 ```
 
 Example 2. `to_string()` is one byte shorter than the equivalent
@@ -77,14 +82,15 @@ std::cout << "show length: " << oss.str().size();
 ### Output
 
 ```text
-to_string length: 136
-show length: 137
+to_string length: 683
+show length: 684
 ```
 
 ## Notes
 
-- This is a summary view — one section per frame — not a single flat table; each frame's
-  own content is rendered separately.
+- This is a summary, not the frames: it never lists feature names or cases. To see a frame's
+  own table, print `atlas.frame(i)`; to browse them all, open the window with
+  [`show()`](show.md), which shows one frame at a time.
 - One byte shorter than [`show(std::ostream&)`](show.md)/`operator<<`'s output — see
   Example 2.
 

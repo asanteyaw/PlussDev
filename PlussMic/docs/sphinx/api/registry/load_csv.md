@@ -61,25 +61,15 @@ std::cout << rg;
 ### Output
 
 ```text
-{
-  "_type": "Registry",
-  "defined": true,
-  "nfields": 2,
-  "fields": {
-    "city": {
-      "size": 3,
-      "types": {
-        "Note": 3
-      }
-    },
-    "population": {
-      "size": 3,
-      "types": {
-        "Series": 3
-      }
-    }
-  }
-}
+========================================================================================================================
+scribble::Registry  fields=2
+states=3
+------------------------------------------------------------------------------------------------------------------------
+field      | ptype  | states | preview
+------------------------------------------------------------------------------------------------------------------------
+city       | Note   | 3      | [Accra, Tema, Kumasi]
+population | Series | 3      | [2500000, 161000, 3000000]
+========================================================================================================================
 ```
 
 Numeric columns (`id`, `population`) are inferred as `Series`-kind; the text column
@@ -105,29 +95,19 @@ std::cout << rg;
 ### Output
 
 ```text
-{
-  "_type": "Registry",
-  "defined": true,
-  "nfields": 2,
-  "fields": {
-    "city": {
-      "size": 2,
-      "types": {
-        "Note": 2
-      }
-    },
-    "population": {
-      "size": 2,
-      "types": {
-        "Series": 2
-      }
-    }
-  }
-}
+========================================================================================================================
+scribble::Registry  fields=2
+states=2
+------------------------------------------------------------------------------------------------------------------------
+field      | ptype  | states | preview
+------------------------------------------------------------------------------------------------------------------------
+city       | Note   | 2      | [Accra, Tema]
+population | Series | 2      | [2500000, 161000]
+========================================================================================================================
 ```
 
 ```{important} Config's row-limit key is "ncases", not "nrows"
-Every field's `size` drops from `3` to `2` — confirming `Config{{"ncases", 2}}` is the
+Every field's `states` count drops from `3` to `2` — confirming `Config{{"ncases", 2}}` is the
 correct key. A key named `"nrows"` is silently ignored (unrecognized `Config` keys
 never throw or warn), leaving every row loaded — verified directly against this
 build's `pluss::loader::csv_read_options_from_config` translation logic.
@@ -140,8 +120,8 @@ build's `pluss::loader::csv_read_options_from_config` translation logic.
   overload.
 - See the important callout above before reaching for a `Config`-based row limit —
   the recognized key is `"ncases"`.
-- Unlike [`Catalog::load_csv`](../catalog/load_csv.md), `Registry`'s printed form is a
-  JSON summary (field sizes and per-type counts), not a box table.
+- Like [`Catalog::load_csv`](../catalog/load_csv.md), a `Registry` prints as an overview
+  with one row per field (what its slot holds, how many states it has, and a preview).
 
 ## See Also
 

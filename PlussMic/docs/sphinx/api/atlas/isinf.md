@@ -68,13 +68,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.isinf();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -127,18 +128,24 @@ auto missing = x.isnull();
 auto asked = x.isinf();
 auto either = x.invalid();
 std::cout << "isnull\n";
-std::cout << missing << "\n";
+for (std::int64_t i = 0; i < missing.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << missing.frame(i) << "\n";
+}
 std::cout << "isinf\n";
-std::cout << asked << "\n";
+for (std::int64_t i = 0; i < asked.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << asked.frame(i) << "\n";
+}
 std::cout << "invalid\n";
-std::cout << either << "\n";
+for (std::int64_t i = 0; i < either.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << either.frame(i) << "\n";
+}
+
 ```
 
 ### Output
 
 ```text
 isnull
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -163,9 +170,7 @@ frame[1]
 5    | false  false
 -------------------
 [6 cs x 2 feat]
-
 isinf
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -190,9 +195,7 @@ frame[1]
 5    | false  false
 -------------------
 [6 cs x 2 feat]
-
 invalid
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b
@@ -237,13 +240,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.isinf();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 ===================
      | a      b

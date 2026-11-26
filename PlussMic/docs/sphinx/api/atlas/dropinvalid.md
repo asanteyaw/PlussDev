@@ -59,13 +59,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropinvalid();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=2, cols=2)
 frame[0]
 =================
      | a     b
@@ -109,16 +110,20 @@ auto x = Atlas(std::vector<DataFrame>{frame, other});
 auto chained = x.dropnull().dropnan().dropinf();
 auto at_once = x.dropinvalid();
 std::cout << "dropnull().dropnan().dropinf()\n";
-std::cout << chained << "\n";
+for (std::int64_t i = 0; i < chained.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << chained.frame(i) << "\n";
+}
 std::cout << "dropinvalid\n";
-std::cout << at_once << "\n";
+for (std::int64_t i = 0; i < at_once.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << at_once.frame(i) << "\n";
+}
+
 ```
 
 ### Output
 
 ```text
 dropnull().dropnan().dropinf()
-Atlas(depth=2, rows=1, cols=2)
 frame[0]
 =================
      | a     b
@@ -133,9 +138,7 @@ frame[1]
 0    | 1     10
 -----------------
 [1 cs x 2 feat]
-
 dropinvalid
-Atlas(depth=2, rows=2, cols=2)
 frame[0]
 =================
      | a     b
@@ -172,13 +175,14 @@ auto other = DataFrame({
 auto x = Atlas(std::vector<DataFrame>{frame, other});
 
 auto out = x.dropinvalid();
-std::cout << out << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) {
+    std::cout << "frame[" << i << "]\n" << out.frame(i) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Atlas(depth=2, rows=6, cols=2)
 frame[0]
 =================
      | a     b

@@ -1,21 +1,27 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 86826e14ef4e -->
+<!-- pluss-signature-hash: 273d577926cc -->
 
 # Archive::show
 
 [Back to Archive API Reference](../../archive_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 void Archive::show(std::ostream& os) const
+void Archive::show() const
 ```
 
 ## What It Does
 
-Writes the archive's boxed-table summary to `os` — the same rendering `operator<<` writes,
-and the same content [`to_string()`](to_string.md) returns as a string, plus a trailing
-newline `to_string()` omits.
+The `std::ostream&` overload writes the archive's summary to `os` (a short list of facts; see
+[`to_string()`](to_string.md)) — the same rendering `operator<<` writes, and the same content
+`to_string()` returns as a string, plus a trailing newline `to_string()` omits.
+
+The no-argument overload opens the archive in the PlussView window: one catalog at a time, as
+the ragged grid a [`Catalog`](../catalog/show.md) opens, with a **Level** menu (First,
+Previous, Next, Last, Go to…) to move between catalogs. Inside a PlussII notebook it hands the
+archive to the notebook as the same summary instead of opening a window.
 
 ## Parameters
 
@@ -45,12 +51,16 @@ archive.show(std::cout);
 
 ```text
 ========================================================================================================================
-kindle::Archive  depth=1
-depth_labels=yes
+Archive
 ------------------------------------------------------------------------------------------------------------------------
-frame  | label                  | keys     | min_cs | max_cs | keys                                                     
+fact            | value
 ------------------------------------------------------------------------------------------------------------------------
-0      | jan                    | 1        | 2      | 2      | [id]                                                     
+depth           | 1 catalogs
+keys            | 1 each
+entries per key | 2 each
+key names       | the same in every catalog
+ptypes          | Series × 1
+depth labels    | jan to jan
 ========================================================================================================================
 ```
 

@@ -66,19 +66,13 @@ std::cout << out << "\n";
 ### Output
 
 ```text
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[bool]  records=6
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value
-------------------------------------------------------------------------------------------------------------------------
-0            | false
-1            | false
-2            | true
-3            | false
-4            | false
-5            | false
-========================================================================================================================
+0  false
+1  false
+2  true
+3  false
+4  false
+5  false
+ptype: Series
 ```
 
 Position 0 and 5 are ordinary numbers, position 1 is a `NaN`, positions 2 and 3 are `+inf` and `-inf`, and position 4 is `NULL`. `isposinf` gives [false, false, true, false, false, false].
@@ -110,49 +104,31 @@ std::cout << either << "\n";
 
 ```text
 isnull
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[bool]  records=6
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value
-------------------------------------------------------------------------------------------------------------------------
-0            | false
-1            | false
-2            | false
-3            | false
-4            | true
-5            | false
-========================================================================================================================
+0  false
+1  false
+2  false
+3  false
+4  true
+5  false
+ptype: Series
 
 isposinf
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[bool]  records=6
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value
-------------------------------------------------------------------------------------------------------------------------
-0            | false
-1            | false
-2            | true
-3            | false
-4            | false
-5            | false
-========================================================================================================================
+0  false
+1  false
+2  true
+3  false
+4  false
+5  false
+ptype: Series
 
 invalid
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[bool]  records=6
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value
-------------------------------------------------------------------------------------------------------------------------
-0            | false
-1            | true
-2            | true
-3            | true
-4            | true
-5            | false
-========================================================================================================================
+0  false
+1  true
+2  true
+3  true
+4  true
+5  false
+ptype: Series
 ```
 
 `isnull` is `true` only for the `NULL` position. `isposinf` answers the question about `+inf` and is never `true` for `NULL`. `invalid` is `true` for all three kinds of not-an-ordinary-number at once: `NULL`, `NaN` and the infinities. The three are different questions; none of them is a synonym for another.
@@ -171,19 +147,13 @@ std::cout << out << "\n";
 ### Output
 
 ```text
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[bool]  records=6
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value
-------------------------------------------------------------------------------------------------------------------------
-0            | false
-1            | false
-2            | false
-3            | false
-4            | false
-5            | false
-========================================================================================================================
+0  false
+1  false
+2  false
+3  false
+4  false
+5  false
+ptype: Series
 ```
 
 An integer record is never a `NaN` and never infinite, so `isposinf` is `false` for all of them. There is no error and no conversion to a floating type: the question simply has the answer "no".

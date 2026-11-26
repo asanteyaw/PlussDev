@@ -14,10 +14,13 @@ void Atlas::show(std::ostream& os, const display::DisplayOptions& options = {}) 
 
 ## What It Does
 
-Writes the atlas's boxed-table summary — the same rendering [`to_string()`](to_string.md)
-returns as a string, plus a trailing newline `to_string()` omits. The `std::ostream&`
-overload writes to the given stream; the no-argument overload is meant to write to
-`std::cout` directly.
+The `std::ostream&` overload writes the atlas's summary — the same rendering
+[`to_string()`](to_string.md) returns as a string, plus a trailing newline `to_string()`
+omits. The no-argument overload opens the PlussView window: one frame at a time as a table
+of its own, with a **Level** menu (First, Previous, Next, Last, Go to…) to move between
+frames and the same sorting, filter, Visit, number-format and theme menus a `DataFrame`
+window has. Inside a PlussII notebook it hands the atlas to the notebook as the same
+summary instead of opening a window.
 
 ```{important} The no-argument overload is confirmed to hang outside an interactive terminal
 `Atlas::show()` (no `std::ostream&` argument) has been directly verified to hang
@@ -60,15 +63,18 @@ atlas.show(std::cout);
 ### Output
 
 ```text
-Atlas(depth=1, rows=2, cols=1)
-frame[0] case=jan
-===========
-     | id  
------------
-0    | 1   
-1    | 2   
------------
-[2 cs x 1 feat]
+========================================================================================================================
+Atlas
+------------------------------------------------------------------------------------------------------------------------
+fact          | value
+------------------------------------------------------------------------------------------------------------------------
+depth         | 1 frames
+cases         | 2 each
+features      | 1 each
+feature names | the same in every frame
+ptypes        | Series × 1
+depth labels  | Note: jan to jan
+========================================================================================================================
 ```
 
 Example 2. Capture into an `std::ostringstream`; confirm it's one byte longer than

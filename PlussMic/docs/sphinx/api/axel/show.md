@@ -1,25 +1,33 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 86826e14ef4e -->
+<!-- pluss-signature-hash: 273d577926cc -->
 
 # Axel::show
 
 [Back to Axel API Reference](../../axel_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 void Axel::show(std::ostream& os) const
+void Axel::show() const
 ```
 
 ## What It Does
 
-Writes the exact same summary string [`to_string()`](to_string.md)
-produces to `os`. `operator<<` for `Axel` calls this method internally,
-so `os << axel` and `axel.show(os)` are equivalent.
+The `std::ostream&` overload writes the axel's summary: a short list of facts that stays the
+same length however many registries it stacks or however many fields they have — how deep it
+is, the range of fields per registry and of states per field, whether the field names are the
+same in every registry, a tally of what the slots hold, and the depth labels. It is the same
+text `operator<<` writes. [`to_string()`](to_string.md) is different: it is a JSON dump.
+
+The no-argument overload opens the axel in the PlussView window: one registry at a time, as
+the ragged grid a [`Registry`](../registry/show.md) opens, with a **Level** menu (First,
+Previous, Next, Last, Go to…) to move between registries. Inside a PlussII notebook it hands the
+axel to the notebook as the same summary instead of opening a window.
 
 ## Parameters
 
-**os** (`std::ostream&`)
+**os** (`std::ostream&`, stream overload)
 
 The stream to write the summary to.
 
@@ -29,16 +37,48 @@ The stream to write the summary to.
 
 ## Examples
 
-Example 1. `show()`'s output matches `to_string()`'s return value
-exactly.
+Example 1. Print an axel's summary.
+
+```cpp
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
+});
+
+axel.show(std::cout);
+```
+
+### Output
+
+```text
+========================================================================================================================
+Axel
+------------------------------------------------------------------------------------------------------------------------
+fact             | value
+------------------------------------------------------------------------------------------------------------------------
+depth            | 2 registries
+fields           | 1 each
+states per field | 1 to 2 (3 in all)
+field names      | the same in every registry
+ptypes           | Series × 2
+depth labels     | none
+========================================================================================================================
+```
+
+Example 2. `show(os)` writes the same text as `operator<<`.
 
 ```cpp
 auto axel = pluss::scribble::Axel({
     pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
-std::ostringstream oss;
-axel.show(oss);
-std::cout << std::boolalpha << (oss.str() == axel.to_string());
+
+std::ostringstream via_show;
+axel.show(via_show);
+
+std::ostringstream via_operator;
+via_operator << axel;
+
+std::cout << std::boolalpha << (via_show.str() == via_operator.str());
 ```
 
 ### Output
@@ -49,18 +89,14 @@ true
 
 ## Notes
 
-- `show()` is `to_string()`'s content routed to a stream — see
-  [`to_string()`](to_string.md) for the format, including its
-  depth-`6` truncation behavior and the important asymmetry with
-  [`to_json()`](to_json.md).
-- `std::ostream& operator<<(std::ostream&, const Axel&)` calls `show()`
-  internally, so `std::cout << axel` is equivalent to
-  `axel.show(std::cout)`.
+- The summary never lists field names or states, so it is as short for an axel of hundreds of
+  registries as for one of two. To see a registry, take it with `axel.registry(i)`, or open the
+  window with `show()`.
 
 ## See Also
 
-- [`Axel::to_string`](to_string.md): the string this method streams.
-- [`Axel::to_json`](to_json.md): the alternative, unabridged dump.
+- [`Axel::to_string`](to_string.md): a JSON dump of the axel.
+- [`Archive::show`](../archive/show.md): the same method for a stack of catalogs.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rename.html">

@@ -11,6 +11,7 @@
 #include "kindle/Stream.h"
 #include "kindle/display/GridModel.h"
 #include "scribble/Slot.h"
+#include "scribble/registry.h"
 #include "table/display/Display.h"
 #include "table/display/RaggedGrid.h"
 #include "table/display/StackPage.h"
@@ -287,6 +288,16 @@ void test_one_dimensional_types_print_alike() {
   mixed_text << mixed;
   expect(has(mixed_text.str(), "NULL") && has(mixed_text.str(), "ptype: Mixed (Series, Note)"),
          "a slot of different kinds says so, and a cell with no value is NULL");
+
+  // A cell made from a single value is a 0-dimensional Series or Note; a registry prints it as its value.
+  const auto scalar_registry = pluss::scribble::Registry({
+      {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+      {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+  });
+  std::ostringstream scalar_text;
+  scalar_text << scalar_registry;
+  expect(has(scalar_text.str(), "[1, 2]") && has(scalar_text.str(), "[Accra, Tema]"),
+         "a registry of one-value cells prints their values");
 
   // Only the rows that are shown are asked for, however long the sequence is.
   std::int64_t asked = 0;

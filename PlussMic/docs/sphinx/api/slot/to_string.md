@@ -51,8 +51,8 @@ true
 
 - [`Slot::to_json`](to_json.md): the method this one forwards to, with the
   full output format documented.
-- [`Slot::show`](show.md): writes this same string to a caller-provided
-  stream instead of returning it.
+- `operator<<`: prints the slot as a table (each cell's position and value, then a
+  `ptype` footer), not as this JSON.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_json.html">

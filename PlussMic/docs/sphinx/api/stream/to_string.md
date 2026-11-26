@@ -13,15 +13,15 @@ std::string Stream::to_string() const
 
 ## What It Does
 
-Renders the stream's boxed-table view as a `std::string` — the same rendering
-`operator<<` and [`show()`](show.md) write to a stream, minus the trailing newline those
-two append.
+Renders the stream as the text a Shelf prints — its labels beside its values, with a
+`ptype` footer saying what it holds — as a `std::string`. It is the same rendering
+`operator<<` writes to a stream, minus the trailing newline that appends.
 
-```{important} Not quite byte-identical to show()/operator<< — a trailing newline
-`show(ostream)`/`operator<<` end their output with `\n`; `to_string()` does not. Two
-otherwise-identical captures differ by exactly that one trailing byte — verified directly:
-`to_string().size()` is one less than an `ostringstream` populated via `show()`. If you're
-comparing rendered output across these three, account for the difference.
+```{important} Not quite byte-identical to operator<< — a trailing newline
+`operator<<` ends its output with `\n`; `to_string()` does not. Two otherwise-identical
+captures differ by exactly that one trailing byte — verified directly: `to_string().size()`
+is one less than an `ostringstream` populated via `operator<<`. If you're comparing
+rendered output across the two, account for the difference.
 ```
 
 ## Parameters
@@ -46,19 +46,13 @@ std::cout << stream.to_string();
 ### Output
 
 ```text
-========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[float64]  records=3
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value                                                                                                    
-------------------------------------------------------------------------------------------------------------------------
-0            | 1                                                                                                        
-1            | 2                                                                                                        
-2            | 3                                                                                                        
-========================================================================================================================
+0  1
+1  2
+2  3
+ptype: Series
 ```
 
-Example 2. `to_string()` is one byte shorter than the equivalent `show()` capture — the
+Example 2. `to_string()` is one byte shorter than the equivalent `operator<<` capture — the
 missing trailing newline.
 
 ```cpp
@@ -66,30 +60,29 @@ auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}));
 
 auto str = stream.to_string();
 std::ostringstream oss;
-stream.show(oss);
+oss << stream;
 
 std::cout << "to_string length: " << str.size() << "\n";
-std::cout << "show length: " << oss.str().size();
+std::cout << "operator<< length: " << oss.str().size();
 ```
 
 ### Output
 
 ```text
-to_string length: 1055
-show length: 1056
+to_string length: 28
+operator<< length: 29
 ```
 
 ## Notes
 
-- One byte shorter than [`show()`](show.md)/`operator<<`'s output — see the important
-  callout above.
+- One byte shorter than `operator<<`'s output — see the important callout above.
 - A distinct text representation from [`to_json()`](to_json.md), which returns a
-  structural JSON document rather than this plain-text table.
+  structural JSON document rather than this plain text.
 
 ## See Also
 
-- [`Stream::show`](show.md): the same rendering, written to a stream instead of returned
-  as a string, with a trailing newline this method omits.
+- `operator<<`: the same rendering, written to a stream instead of returned as a string,
+  with a trailing newline this method omits.
 - [`Stream::to_json`](to_json.md): a structural JSON dump of the same stream, distinct
   from this plain-text rendering.
 

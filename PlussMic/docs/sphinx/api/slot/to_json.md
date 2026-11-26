@@ -17,14 +17,15 @@ Renders the slot as a JSON object: `_type`, `defined`, `size`, and a
 `values` array with one type tag per value (e.g. `"Series[int64]"`,
 `"Note[numel=1]"`).
 
-```{important} Identical to to_string() and show() — unlike Registry
+```{important} Identical to to_string() — unlike Registry
 Unlike [`Registry::to_json()`](../registry/to_json.md), which renders
 different (and more detailed) content than
 [`Registry::to_string()`](../registry/to_string.md), `Slot::to_json()` is
-byte-identical to [`Slot::to_string()`](to_string.md) and
-[`Slot::show()`](show.md) — all three (plus `operator<<`) call the exact
+byte-identical to [`Slot::to_string()`](to_string.md) — both call the exact
 same rendering path. There's no separate "compact tally" form at the
-`Slot` level the way there is at the `Registry` level.
+`Slot` level the way there is at the `Registry` level. `operator<<` is different
+from both: it prints the slot as a table (each cell's position and value, then a
+`ptype` footer), not as JSON.
 ```
 
 ## Parameters
@@ -85,8 +86,7 @@ std::cout << undef.to_json();
 
 ## See Also
 
-- [`Slot::to_string`](to_string.md) / [`Slot::show`](show.md): identical
-  renderings under different names.
+- [`Slot::to_string`](to_string.md): the identical rendering under another name.
 - [`Slot::type_counts`](type_counts.md): a per-kind tally instead of a
   per-value list.
 

@@ -65,7 +65,13 @@ std::string slot_cell_text(const Slot::Value& cell) {
         if constexpr (std::is_same_v<T, std::monostate>) {
           return "NULL";
         } else if (v.numel() == 1) {
-          return pluss::table::display::first_cell_text(pluss::table::Shelf(v));
+          // A single value is stored as a 0-dimensional Series or Note, and a Shelf is one-dimensional: view it as one
+          // value in a row. (A Timeline or a Duration of one value is one-dimensional already.)
+          if constexpr (std::is_same_v<T, pluss::Series> || std::is_same_v<T, pluss::Note>) {
+            return pluss::table::display::first_cell_text(pluss::table::Shelf(v.dim() == 0 ? v.reshape({1}) : v));
+          } else {
+            return pluss::table::display::first_cell_text(pluss::table::Shelf(v));
+          }
         } else {
           return pluss::tils::OutputEngine::format("[{} values]", v.numel());
         }
