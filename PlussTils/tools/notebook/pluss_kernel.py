@@ -81,6 +81,14 @@ class EngineStopped(RuntimeError):
     """The clang-repl process ended, for example because a cell crashed it."""
 
 
+class EngineBroken(EngineStopped):
+    """The engine is running but can no longer link what it compiles; `report` is what it said before that."""
+
+    def __init__(self, report):
+        super().__init__("the engine can no longer link compiled code")
+        self.report = report
+
+
 def rename_identifier(code, base, new):
     """Replace the identifier `base` by `new` in C++ code, leaving strings, characters and comments alone."""
     out, i, n = [], 0, len(code)
@@ -117,7 +125,12 @@ def rename_identifier(code, base, new):
 
 TYPE_DEFINITION = re.compile(r"\b(?:struct|class|union|enum(?:\s+class|\s+struct)?)\s+(\w+)\s*(?:final\s*)?(?::[^;{]*)?\{")
 VERSION = re.compile(r"(\w+?)__v\d+\b")
-REDEFINED = re.compile(r"redefinition of '(\w+)'")
+# A cell run again defines its names again; that is renamed and retried. A name that clashes with a library's (a variable
+# called `nan` beside the C library's nan()) is "a different kind of symbol": that is the user's error to see, not a rerun.
+REDEFINED = re.compile(r"redefinition of '(\w+)'(?! as different kind of symbol)")
+# What the engine says when its compiled code can no longer be linked (after a failed cell left half-made definitions): it
+# will not finish the cell, so waiting for it would wait forever.
+ENGINE_BROKEN = ("JIT session error", "Failed to materialize symbols")
 
 # One line of the compiler's report that starts a diagnostic: "cell:1:17: error: use of undeclared identifier 'b'".
 DIAGNOSTIC = re.compile(r"^(?P<file>\S[^:]*):(?P<line>\d+):(?P<column>\d+): (?P<kind>fatal error|error|warning|note): (?P<message>.*)$")
@@ -435,19 +448,30 @@ class PlussKernel(Kernel):
         marker = 'std::cout << "\\x1e<<pluss-end>>" << std::endl; std::cerr << "\\x1e<<pluss-end>>" << std::endl;\n'
         self._send('#include "%s"\n' % path + marker)
         self._last_path = path
-        collected = []
-        for source in (self._out, self._err):
-            buffer = b""
-            while True:
-                chunk = source.get()
+        # Both outputs are read together, so a broken engine is seen as soon as it says so instead of after a marker
+        # that will never come.
+        sources = (self._out, self._err)
+        buffers = [b"", b""]
+        done = [False, False]
+        while not all(done):
+            for i, source in enumerate(sources):
+                if done[i]:
+                    continue
+                try:
+                    chunk = source.get(timeout=0.05)
+                except queue.Empty:
+                    continue
                 if chunk is None:
                     raise EngineStopped()
-                buffer += chunk
-                if END.encode() in buffer:
-                    buffer = buffer.split(END.encode())[0]
-                    break
-            collected.append(buffer.decode(errors="replace"))
-        return collected[0], collected[1].replace(self._last_path, "cell")
+                buffers[i] += chunk
+                if END.encode() in buffers[i]:
+                    buffers[i] = buffers[i].split(END.encode())[0]
+                    done[i] = True
+            said = buffers[1].decode(errors="replace")
+            if any(sign in said for sign in ENGINE_BROKEN):
+                before = min(said.find(sign) for sign in ENGINE_BROKEN if sign in said)
+                raise EngineBroken(said[:before].replace(self._last_path, "cell"))
+        return buffers[0].decode(errors="replace"), buffers[1].decode(errors="replace").replace(self._last_path, "cell")
 
     # ---- cells ----------------------------------------------------------------------------------
 
@@ -537,6 +561,7 @@ class PlussKernel(Kernel):
         """Run a cell. A name the cell declares again is bound to a new definition, as running a cell again
         rebinds a name in a notebook: the old definition keeps its place for the code compiled against it."""
         text = self._show_last_expression(code)
+        self._cell_info = (code, text, 0)  # what an error report is about, until the run below says more
         macros = dict(self._macros)
         # The engine cannot recover from a type defined twice, so a type that already exists is renamed up front.
         for base in TYPE_DEFINITION.findall(text):
@@ -579,6 +604,19 @@ class PlussKernel(Kernel):
             self._restart_engine()
             message = "Interrupted. The C++ engine was restarted, so the variables and functions from earlier cells are gone: run them again."
             return self._fail(silent, "KeyboardInterrupt", message, message)
+        except EngineBroken as broken:
+            # The cell's error left the engine unable to link anything more: show the error, and start it afresh.
+            self._restart_engine()
+            note = ("The C++ engine could not go on after this error and has been restarted, so the variables and functions "
+                    "from earlier cells are gone: fix the cell and run the earlier cells again.")
+            report = "\n".join(line for line in self._tidy(broken.report).split("\n")
+                               if line.strip() != "error: Parsing failed." and not re.match(r"^\d+ errors? generated", line.strip()))
+            shown = ""
+            if "error:" in report:
+                code_sent, source_sent, undef = getattr(self, "_cell_info", (code, code, 0))
+                report, shown = format_compile_error(report, code_sent, source_sent, undef, self.execution_count)
+            text = (report.rstrip() + "\n\n" if shown else "") + note
+            return self._fail(silent, "CompileError" if shown else "EngineRestarted", shown or note, text)
         except (EngineStopped, BrokenPipeError):
             self._restart_engine()
             message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
