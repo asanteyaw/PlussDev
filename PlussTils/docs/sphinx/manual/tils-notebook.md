@@ -136,6 +136,23 @@ The notebook kernel is not available on Windows yet. PlussII programs and PlussV
 
 Start Jupyter (`jupyter lab`) or open a notebook in VS Code and choose the kernel "PlussII C++". The first cell takes a moment while the interpreter starts.
 
+### Several kernels side by side
+
+Like the environments of other languages, you can install as many kernels as you want, each under a name of your own: one per download, say, or a Steady and a Transient. `--name` is the kernel's name (letters, digits, `.`, `_` and `-`) and `--display-name` is what Jupyter and VS Code show for it. Without them the kernel is called `pluss` and shown as "PlussII C++".
+
+```text
+./pluss kernel install --name transient-mps --display-name "PlussII (Transient, MPS)"
+```
+
+Each kernel has its own shared library, so installing one never replaces another. Each notebook remembers which kernel it uses.
+
+```text
+pluss kernel list
+pluss kernel remove transient-mps
+```
+
+`list` shows the kernels with their names and the download each one runs. `remove` unregisters a kernel and deletes its shared library. It leaves the download and your notebooks alone. `pluss kernel check --name transient-mps` checks one of them.
+
 ### VS Code: suggestions as you type
 
 VS Code asks a kernel for suggestions only for the languages named in its setting `jupyter.completionTriggerCharacters`, and C++ is not one of them. With the entry below, typing `s1.` offers the members of `s1`, a name offers the variables and functions of earlier cells, and `pluss::` offers the library's names.

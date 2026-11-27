@@ -17,8 +17,10 @@ The command finds everything from where it sits, so it works wherever the downlo
 | `pluss run file.cpp [more.cpp ...] [-- arguments]` | builds the files against this PlussII and runs the program |
 | `pluss new name` | creates a project folder with a `CMakeLists.txt`, a `main.cpp`, a CMake preset that points at this download, a `.gitignore` and a short README |
 | `pluss doctor` | builds and runs a test program against this download, and says what is missing if it cannot |
-| `pluss kernel install` | registers the notebook kernel for Jupyter and VS Code (see "Notebooks (preview)") |
-| `pluss kernel check [--fix] [notebook ...]` | checks the kernel and VS Code, and the notebooks named |
+| `pluss kernel install [--name name] [--display-name "shown name"]` | registers a notebook kernel for Jupyter and VS Code, under a name of your own if you give one (see "Notebooks (preview)") |
+| `pluss kernel check [--name name] [--fix] [notebook ...]` | checks a kernel and VS Code, and the notebooks named |
+| `pluss kernel list` | the installed kernels, with the download each runs |
+| `pluss kernel remove name` | unregisters a kernel and deletes its shared library |
 | `pluss version` | prints the version and channel |
 
 `run` accepts these options before the program's own arguments.

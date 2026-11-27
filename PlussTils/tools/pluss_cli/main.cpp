@@ -268,7 +268,10 @@ void usage() {
             << "      --clean                 discard the cached build first\n"
             << "  pluss new name                                     start a project in a new folder\n"
             << "  pluss kernel install [options]                     add the PlussII C++ kernel to Jupyter and VS Code\n"
+            << "  pluss kernel install --name n --display-name \"s\"  another kernel beside the others, named n and shown as s\n"
             << "  pluss kernel check [--fix] [notebook ...]          check the kernel and VS Code, and the notebooks named\n"
+            << "  pluss kernel list                                  the installed kernels and the download each runs\n"
+            << "  pluss kernel remove name                           unregister a kernel and delete its library\n"
             << "  pluss doctor                                       check that this machine can build\n"
             << "  pluss version                                      print the version\n\n"
             << "Set PLUSS_CMAKE_ARGS to add arguments to the CMake configure step.\n";
@@ -734,13 +737,15 @@ int command_kernel(const std::vector<std::string>& args) {
   // `install` registers the kernel; `check` checks it and the editor that talks to it. Both are one Python program each,
   // sharing the checks, and both stay in the download beside the kernel.
   const std::string what = args.empty() ? "" : args[0];
-  if (what != "install" && what != "check") {
-    std::cerr << "usage: pluss kernel install [--clang-repl path] [--sysroot path] [--yes]\n"
-                 "       pluss kernel check [--fix] [notebook.ipynb ...]\n";
+  if (what != "install" && what != "check" && what != "list" && what != "remove") {
+    std::cerr << "usage: pluss kernel install [--name name] [--display-name \"shown name\"] [--clang-repl path] [--sysroot path] [--yes]\n"
+                 "       pluss kernel check [--name name] [--fix] [notebook.ipynb ...]\n"
+                 "       pluss kernel list\n"
+                 "       pluss kernel remove name\n";
     return 2;
   }
   const fs::path prefix = sdk_prefix();
-  const std::string file = what == "install" ? "install_kernel.py" : "kernel_check.py";
+  const std::string file = what == "install" ? "install_kernel.py" : what == "check" ? "kernel_check.py" : "kernel_manage.py";
   const fs::path script = prefix / "share" / "pluss" / "notebook" / file;
   if (prefix.empty() || !fs::exists(script)) {
     std::cerr << "pluss: the notebook kernel files are not in this download (share/pluss/notebook/" << file << ").\n";
@@ -753,6 +758,7 @@ int command_kernel(const std::vector<std::string>& args) {
 #endif
   const char* chosen = std::getenv("PLUSS_PYTHON");
   std::vector<std::string> command{chosen != nullptr && *chosen != '\0' ? chosen : default_python, script.string(), "--prefix", prefix.string()};
+  if (what == "list" || what == "remove") command.push_back(what);  // kernel_manage.py takes the action itself
   command.insert(command.end(), args.begin() + 1, args.end());
   const auto outcome = run_program(command, false);
   if (outcome.code == 127 || outcome.code < 0) {

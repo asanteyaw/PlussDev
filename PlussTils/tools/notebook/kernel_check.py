@@ -1,6 +1,6 @@
 """Check the PlussII notebook kernel and the editor that talks to it, and say what to change.
 
-    pluss kernel check [--fix] [notebook.ipynb ...]
+    pluss kernel check [--name name] [--fix] [notebook.ipynb ...]
 
 It looks at the installed kernel (does it belong to the download you are running, does it declare the language the
 editors ask for completions under, do clang-repl and the shared library work) and at VS Code (is the setting that turns
@@ -132,16 +132,21 @@ def apply_setting(path):
 
 # ---- notebooks ------------------------------------------------------------------------------------------
 
-def stale_cells(notebook):
+def ours(kernelspec, names):
+    """Whether a notebook's kernel is a PlussII kernel: one of `names`, or one that says it is by its display name."""
+    return kernelspec.get("name") in names or str(kernelspec.get("display_name", "")).startswith(installer.DEFAULT_DISPLAY_NAME)
+
+
+def stale_cells(notebook, names=(KERNEL_NAME,)):
     """How many cells carry a language tag an older kernel left, and whether the notebook's own kernel language is old."""
     cells = sum(1 for cell in notebook.get("cells", [])
                 if (cell.get("metadata", {}).get("vscode", {}) or {}).get("languageId") in STALE_LANGUAGES)
     kernelspec = notebook.get("metadata", {}).get("kernelspec", {})
-    old_spec = kernelspec.get("name") == KERNEL_NAME and kernelspec.get("language") in STALE_LANGUAGES
+    old_spec = ours(kernelspec, names) and kernelspec.get("language") in STALE_LANGUAGES
     return cells, old_spec
 
 
-def clean_notebook(notebook):
+def clean_notebook(notebook, names=(KERNEL_NAME,)):
     """The notebook without the stale cell tags and with the kernel language this kernel declares."""
     for cell in notebook.get("cells", []):
         meta = cell.get("metadata", {})
@@ -151,7 +156,7 @@ def clean_notebook(notebook):
             if not tag:
                 del meta["vscode"]
     metadata = notebook.get("metadata", {})
-    if metadata.get("kernelspec", {}).get("name") == KERNEL_NAME:
+    if ours(metadata.get("kernelspec", {}), names):
         metadata["kernelspec"]["language"] = KERNEL_LANGUAGE
         if isinstance(metadata.get("language_info"), dict):
             metadata["language_info"]["name"] = KERNEL_LANGUAGE
@@ -182,7 +187,7 @@ class Report:
         self.problems += 1
 
 
-def check_kernel(report, prefix):
+def check_kernel(report, prefix, name=KERNEL_NAME):
     try:
         from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
     except ImportError:
@@ -190,11 +195,13 @@ def check_kernel(report, prefix):
                    "run  %s -m pip install ipykernel jupyter_client  and try again" % sys.executable)
         return None
     try:
-        spec = KernelSpecManager().get_kernel_spec(KERNEL_NAME)
+        spec = KernelSpecManager().get_kernel_spec(name)
     except NoSuchKernel:
-        report.bad("the PlussII C++ kernel is not installed", "run  pluss kernel install")
+        others = [other for other, _ in installer.pluss_kernels()]
+        report.bad("no PlussII kernel is called '%s'%s" % (name, " (installed: %s)" % ", ".join(others) if others else ""),
+                   "run  pluss kernel install%s" % ("" if name == KERNEL_NAME else " --name " + name))
         return None
-    report.ok("the PlussII C++ kernel is installed (%s)" % spec.resource_dir)
+    report.ok("the kernel '%s' (%s) is installed (%s)" % (name, spec.display_name, spec.resource_dir))
     env = spec.env or {}
     include = os.path.realpath(env.get("PLUSS_INCLUDE", ""))
     script = os.path.realpath(spec.argv[1]) if len(spec.argv) > 1 else ""
@@ -261,32 +268,33 @@ def check_editors(report, fix):
                        "run  pluss kernel check --fix  to add it, then reload the window")
 
 
-def check_notebooks(report, paths, fix):
+def check_notebooks(report, paths, fix, names=(KERNEL_NAME,)):
     for path in paths:
         try:
             notebook = json.load(open(path, encoding="utf-8"))
         except (OSError, ValueError) as error:
             report.bad("%s could not be read (%s)" % (path, error), "check the path")
             continue
-        cells, old_spec = stale_cells(notebook)
+        cells, old_spec = stale_cells(notebook, names)
         if not cells and not old_spec:
             report.ok("%s has no language tags from an older kernel" % path)
         elif fix:
             kept = save_beside(path, ".pluss-backup")
-            write_notebook(path, clean_notebook(notebook))
+            write_notebook(path, clean_notebook(notebook, names))
             report.ok("%s: removed %d stale cell tag(s) (the original is kept as %s)" % (path, cells, os.path.basename(kept)))
         else:
             report.bad("%s has %d cell(s) tagged with the language of an older kernel, and VS Code will not run them" % (path, cells),
                        "run  pluss kernel check --fix %s" % path)
 
 
-def run_checks(prefix, fix=False, notebooks=()):
+def run_checks(prefix, fix=False, notebooks=(), name=KERNEL_NAME):
     """Prints the report and returns the number of problems."""
     report = Report()
-    print("PlussII notebook kernel\n")
-    check_kernel(report, prefix)
+    print("PlussII notebook kernel '%s'\n" % name)
+    check_kernel(report, prefix, name)
     check_editors(report, fix)
-    check_notebooks(report, notebooks, fix)
+    names = {name} | ({other for other, _ in installer.pluss_kernels()} if notebooks else set())
+    check_notebooks(report, notebooks, fix, names)
     print("\n%s" % ("Everything looks right." if report.problems == 0 else "%d thing(s) to fix." % report.problems))
     return report.problems
 
@@ -294,10 +302,11 @@ def run_checks(prefix, fix=False, notebooks=()):
 def main():
     parser = argparse.ArgumentParser(description="Check the PlussII notebook kernel and the editor that talks to it.")
     parser.add_argument("--prefix", default=os.path.abspath(os.path.join(HERE, "..", "..", "..")), help="the extracted PlussII download")
+    parser.add_argument("--name", default=KERNEL_NAME, help="the kernel to check (default: %s; see pluss kernel list)" % KERNEL_NAME)
     parser.add_argument("--fix", action="store_true", help="add the VS Code setting and clean the notebooks named (the originals are kept)")
     parser.add_argument("notebooks", nargs="*", help="notebooks to scan for tags an older kernel left in their cells")
     args = parser.parse_args()
-    return 1 if run_checks(args.prefix, args.fix, args.notebooks) else 0
+    return 1 if run_checks(args.prefix, args.fix, args.notebooks, args.name.lower()) else 0
 
 
 if __name__ == "__main__":

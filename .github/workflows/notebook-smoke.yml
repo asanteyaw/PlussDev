@@ -85,6 +85,7 @@ jobs:
           python PlussTils/tools/notebook/test_kernel_check.py
           # No editor is installed on the runner, so the kernel checks are what is tested here.
           "$PREFIX/bin/pluss" kernel check
+          "$PREFIX/bin/pluss" kernel list
 
       - name: Run the notebook smoke test
         run: |
