@@ -36,6 +36,10 @@ MIME = "\x1e<<pluss-mime "
 
 # What the kernel adds in front of the first cell. `pluss::nb::show` writes a rich value to the
 # output as a marker line the kernel turns into a Jupyter display message.
+# The library is built with these on (a CMake project gets them from the pluss target); without them the compiler sees
+# Timeline and Duration without their methods, and PlussTils headers such as bi/studio.h fail to compile.
+SURFACE_DEFINES = ["-DCODEH_ENABLE_TIMELINE_SURFACE", "-DCODEH_ENABLE_INDEX_ACCESSOR_SURFACE", "-DCODEH_ENABLE_DURATION_SURFACE"]
+
 PRELUDE = r'''
 #include <pluss/pluss.h>
 #include <fstream>
@@ -61,7 +65,8 @@ auto show(Chart& chart) -> decltype(chart.save_svg(std::string()), void()) {
   const std::string path = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/pluss_nb_chart.svg";
   chart.save_svg(path);
   std::ifstream in(path, std::ios::binary);
-  emit("image/svg+xml", std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()));
+  emit("text/html", pluss::table::display::render_notebook_plot_html(
+      std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>())));
 }
 template <class T>
 auto show(const T& value) -> decltype(std::cout << value, void()) { std::cout << value << std::endl; }
@@ -336,7 +341,7 @@ class PlussKernel(Kernel):
         if sys.platform.startswith("linux") and platform.machine() in ("aarch64", "arm64"):
             # Atomics become calls to libgcc helpers (__aarch64_ldadd4_*) that the engine's JIT cannot link.
             cmd += ["-Xcc", "-mno-outline-atomics"]
-        for flag in shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", "")):
+        for flag in SURFACE_DEFINES + shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", "")):
             cmd += ["-Xcc", flag]
         return cmd
 
@@ -360,7 +365,7 @@ class PlussKernel(Kernel):
         include = os.environ.get("PLUSS_INCLUDE")
         if include:
             flags += ["-I", include]
-        flags += shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", ""))
+        flags += SURFACE_DEFINES + shlex.split(os.environ.get("PLUSS_EXTRA_FLAGS", ""))
         return ClangCompleter(clang, flags, PRELUDE)
 
     def _start_engine(self):

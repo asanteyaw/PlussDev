@@ -539,7 +539,24 @@ void test_feature_selection_precedence() {
 
 } // namespace
 
+// Several rows can share one x label (a month with a row per city); the axis gets one tick per distinct label.
+void test_repeated_x_labels_give_one_tick_each() {
+  const auto frame = DataFrame({
+      {"month", Shelf(pluss::make_note(std::vector<std::string>{"2024-01", "2024-01", "2024-02", "2024-02", "2024-03", "2024-03"}))},
+      {"revenue", Shelf(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 2.0, 1.0, 4.0}))},
+  });
+  const auto svg = frame.plot().line("month", "revenue").to_svg();
+  for (const std::string_view label : {">2024-01</text>", ">2024-02</text>", ">2024-03</text>"}) {
+    std::size_t count = 0;
+    for (auto at = svg.find(label); at != std::string::npos; at = svg.find(label, at + 1)) {
+      ++count;
+    }
+    expect(count == 1, "a repeated x label should be ticked once");
+  }
+}
+
 int main() {
+  test_repeated_x_labels_give_one_tick_each();
   test_default_columns_and_date_axis();
   test_feature_selection_precedence();
   test_shelf_plot_apis();

@@ -3,6 +3,7 @@
 #include "table/FlashDatasetInterop.h"
 
 #include <algorithm>
+#include <unordered_set>
 #include <array>
 #include <cctype>
 #include <cmath>
@@ -346,13 +347,25 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
 std::pair<std::vector<double>, std::vector<std::string>> sampled_labeled_ticks(
     const ResolvedPlotAxis& axis,
     std::int64_t max_ticks) {
-  const auto total = std::min(axis.values.size(), axis.labels.size());
-  if (total == 0) {
+  const auto rows = std::min(axis.values.size(), axis.labels.size());
+  if (rows == 0) {
     return {};
   }
+  // One tick per distinct x value, in order of first appearance: several rows can share a label (a month with one row
+  // per city), and sampling rows instead would repeat that label and space the ticks unevenly.
+  std::vector<double> distinct_values;
+  std::vector<std::string> distinct_labels;
+  std::unordered_set<std::string_view> seen;
+  for (const auto row : std::views::iota(std::size_t{0}, rows)) {
+    if (seen.insert(std::string_view(axis.labels[row])).second) {
+      distinct_values.push_back(axis.values[row]);
+      distinct_labels.push_back(axis.labels[row]);
+    }
+  }
+  const auto total = distinct_values.size();
   const std::size_t capped = static_cast<std::size_t>(std::max<std::int64_t>(2, max_ticks));
   if (total <= capped) {
-    return {axis.values, axis.labels};
+    return {std::move(distinct_values), std::move(distinct_labels)};
   }
 
   std::vector<double> sampled_values;
@@ -367,8 +380,8 @@ std::pair<std::vector<double>, std::vector<std::string>> sampled_labeled_ticks(
     if (idx == prev) {
       continue;
     }
-    sampled_values.push_back(axis.values[idx]);
-    sampled_labels.push_back(axis.labels[idx]);
+    sampled_values.push_back(distinct_values[idx]);
+    sampled_labels.push_back(distinct_labels[idx]);
     prev = idx;
   }
   return {std::move(sampled_values), std::move(sampled_labels)};

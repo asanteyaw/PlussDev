@@ -373,7 +373,18 @@ void test_stack_page_switches_levels() {
   expect(page.model->row_count() == 4, "a level past the end is the last one");
 }
 
+// A plot is shown scaled to the width of the output, with a Copy and a Save button, and without the XML declaration.
+void test_notebook_plot_is_a_scaling_fragment() {
+  const auto html = pluss::table::display::render_notebook_plot_html(
+      "<?xml version=\"1.0\"?>\n<svg width=\"1280\" height=\"820\" viewBox=\"0 0 1280 820\"></svg>");
+  expect(!has(html, "<?xml") && !has(html, "<html"), "a notebook plot is a fragment");
+  expect(has(html, "<svg width=\"1280\"") && has(html, "viewBox"), "the drawing is kept whole");
+  expect(has(html, "max-width:100%") && has(html, "height:auto"), "the drawing shrinks to the width of the output");
+  expect(has(html, ">Copy</button>") && has(html, ">Save</button>"), "a plot has a copy and a save button");
+}
+
 int main() {
+  test_notebook_plot_is_a_scaling_fragment();
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
   test_each_kind_alone();

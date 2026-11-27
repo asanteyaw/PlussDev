@@ -114,7 +114,11 @@ def main():
         r = run("df.show();")
         check(".show() on a table goes inline", "text/html" in r["mime"], r)
         r = run('auto chart = df.plot().line({"units", "revenue"}); pluss::nb::show(chart);')
-        check("a plot is shown inline", "image/svg+xml" in r["mime"], r)
+        check("a plot is shown inline", "text/html" in r["mime"], r)
+        r = run("#include <pluss/tils.h>", timeout=180)  # the whole PlussTils umbrella, which pulls the BI headers
+        check("the PlussTils umbrella includes without an error", r["error"] is None, r)
+        r = run('std::cout << pluss::timeline::make("2024-03-05").strftime("%Y") << std::endl;')
+        check("a Timeline method is available in a cell", "2024" in r["text"], r)
         run("#include <pluss/tils/doc.h>")
         r = run('pluss::tils::doc("DataFrame");')
         check("doc() answers offline from the download", len(r["text"].strip()) > 50 and "not found" not in r["text"].lower(), r)
