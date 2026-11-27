@@ -160,7 +160,7 @@ VS Code asks a kernel for suggestions only for the languages named in its settin
 "jupyter.completionTriggerCharacters": { "cpp": [".", ":", ">"] }
 ```
 
-`pluss kernel install` offers to add this to your user settings (`--yes` adds it without asking). The original file is kept beside the edited one as `settings.json.pluss-backup`. Reload the VS Code window afterwards.
+`pluss kernel install` offers to add this to your user settings, together with the PlussII Notebook extension, which underlines errors in a cell as you type, the way the kernel reports them when the cell runs (`--yes` adds both without asking). The original file is kept beside the edited one as `settings.json.pluss-backup`. Reload the VS Code window afterwards.
 
 ### Showing a value and hiding it
 

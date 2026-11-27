@@ -116,6 +116,77 @@ def build_engine(clang_repl, output):
     return True, ""
 
 
+VSCODE_EXTENSION_ID = "plussii.pluss-notebook"
+
+
+def code_command():
+    """VS Code's command-line tool: on the PATH, or inside the app where macOS installs it."""
+    found = shutil.which("code")
+    if found:
+        return found
+    for app in ("/Applications/Visual Studio Code.app", os.path.expanduser("~/Applications/Visual Studio Code.app")):
+        candidate = os.path.join(app, "Contents", "Resources", "app", "bin", "code")
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def build_vsix(output):
+    """Packs the extension in vscode/ (package.json and extension.js) as a .vsix, the file VS Code installs."""
+    import zipfile
+    folder = os.path.join(HERE, "vscode")
+    package = json.load(open(os.path.join(folder, "package.json"), encoding="utf-8"))
+    manifest = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">\n'
+        '  <Metadata>\n'
+        '    <Identity Language="en-US" Id="%s" Version="%s" Publisher="%s"/>\n'
+        '    <DisplayName>%s</DisplayName>\n'
+        '    <Description xml:space="preserve">%s</Description>\n'
+        '    <Properties><Property Id="Microsoft.VisualStudio.Code.Engine" Value="%s"/></Properties>\n'
+        '  </Metadata>\n'
+        '  <Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation>\n'
+        '  <Dependencies/>\n'
+        '  <Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets>\n'
+        '</PackageManifest>\n') % (package["name"], package["version"], package["publisher"], package["displayName"],
+                                     package["description"], package["engines"]["vscode"])
+    types = ('<?xml version="1.0" encoding="utf-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+             '<Default Extension=".json" ContentType="application/json"/><Default Extension=".js" ContentType="application/javascript"/>'
+             '<Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>\n')
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("[Content_Types].xml", types)
+        archive.writestr("extension.vsixmanifest", manifest)
+        for name in ("package.json", "extension.js"):
+            archive.write(os.path.join(folder, name), "extension/" + name)
+    return output
+
+
+def vscode_extension_installed():
+    """True or False when VS Code can be asked, None when its command-line tool is not found."""
+    code = code_command()
+    if code is None:
+        return None
+    try:
+        listed = subprocess.run([code, "--list-extensions"], capture_output=True, text=True, timeout=120).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return VSCODE_EXTENSION_ID in listed.lower().split()
+
+
+def install_vscode_extension():
+    """Builds and installs the PlussII Notebook extension; (True, "") or (False, why)."""
+    code = code_command()
+    if code is None:
+        return False, "VS Code's command-line tool (code) was not found"
+    vsix = build_vsix(os.path.join(os.path.expanduser("~"), ".pluss", "vscode", "pluss-notebook.vsix"))
+    try:
+        done = subprocess.run([code, "--install-extension", vsix, "--force"], capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return False, str(error)
+    return (done.returncode == 0, "" if done.returncode == 0 else (done.stderr or done.stdout).strip())
+
+
 def find_sysroot(clang_repl):
     """On macOS, the newest SDK of the Command Line Tools that this clang-repl can read."""
     if sys.platform != "darwin" or not clang_repl:
@@ -200,9 +271,14 @@ def main():
     import kernel_check
     fix = args.yes
     missing = kernel_check.editors_missing_setting()
-    if missing and not fix and sys.stdin.isatty():
-        names = ", ".join(editor for editor, _ in missing)
-        answer = input("%s needs the setting %s to offer completions for C++ cells.\nAdd it to the user settings now? [y/N] " % (names, kernel_check.SETTING))
+    without_extension = vscode_extension_installed() is False
+    if (missing or without_extension) and not fix and sys.stdin.isatty():
+        wanted = []
+        if missing:
+            wanted.append("the setting %s (completions for C++ cells)" % kernel_check.SETTING)
+        if without_extension:
+            wanted.append("the PlussII Notebook extension (underlines errors in cells as you type)")
+        answer = input("VS Code needs %s.\nAdd %s now? [y/N] " % (" and ".join(wanted), "them" if len(wanted) > 1 else "it"))
         fix = answer.strip().lower() in ("y", "yes")
     kernel_check.run_checks(args.prefix, fix=fix, name=args.name)
 

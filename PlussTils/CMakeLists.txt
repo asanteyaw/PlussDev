@@ -80,8 +80,11 @@ if(PLUSS_BUILD_CLI)
     endif()
     install(TARGETS pluss_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     # The Jupyter kernel that `pluss kernel install` registers.
-    install(FILES tools/notebook/pluss_kernel.py tools/notebook/install_kernel.py tools/notebook/kernel_check.py tools/notebook/kernel_manage.py tools/notebook/engine.cpp tools/notebook/make_library.py
+    install(FILES tools/notebook/pluss_kernel.py tools/notebook/install_kernel.py tools/notebook/kernel_check.py tools/notebook/kernel_manage.py tools/notebook/engine.cpp tools/notebook/cell_check.py tools/notebook/make_library.py
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pluss/notebook)
+    # The VS Code extension that underlines errors in cells; `pluss kernel install` packs and installs it.
+    install(FILES tools/notebook/vscode/package.json tools/notebook/vscode/extension.js
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pluss/notebook/vscode)
 endif()
 
 add_library(PlussTils INTERFACE)

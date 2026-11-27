@@ -258,6 +258,20 @@ def check_editors(report, fix):
     if not editors:
         report.note("VS Code was not found; for Jupyter or JupyterLab no editor setting is needed")
         return
+    installed = installer.vscode_extension_installed()
+    if installed:
+        report.ok("VS Code has the PlussII Notebook extension (errors are underlined as you type)")
+    elif installed is False and fix:
+        done, why = installer.install_vscode_extension()
+        if done:
+            report.ok("installed the PlussII Notebook extension in VS Code; reload the window to use it")
+        else:
+            report.bad("the PlussII Notebook extension could not be installed: %s" % why, "run  pluss kernel check --fix  again")
+    elif installed is False:
+        report.bad("VS Code does not have the PlussII Notebook extension, so errors are only reported when a cell runs",
+                   "run  pluss kernel check --fix  to install it, then reload the window")
+    else:
+        report.note("VS Code's command-line tool (code) was not found, so the PlussII Notebook extension could not be checked")
     for editor, path in editors:
         text = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
         settings = read_settings(text)

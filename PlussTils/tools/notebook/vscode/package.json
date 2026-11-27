@@ -1,0 +1,24 @@
+{
+  "name": "pluss-notebook",
+  "displayName": "PlussII Notebook",
+  "description": "Underlines errors in the C++ cells of PlussII notebooks as you type, the way the kernel would report them when the cell runs.",
+  "version": "0.0.1",
+  "publisher": "plussii",
+  "license": "SEE LICENSE IN the PlussII download",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Notebooks", "Linters"],
+  "activationEvents": ["onNotebook:jupyter-notebook"],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "PlussII Notebook",
+      "properties": {
+        "plussNotebook.checkDelayMs": {
+          "type": "number",
+          "default": 500,
+          "description": "How long to wait after the last keystroke before a cell is checked."
+        }
+      }
+    }
+  }
+}
