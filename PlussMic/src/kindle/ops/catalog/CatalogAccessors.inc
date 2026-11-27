@@ -266,37 +266,6 @@ CatalogResolvedAxis catalog_resolve_self_axis(const Stream& stream,
   return catalog_resolve_axis_from_shelf(*stream.label(), "record", "Catalog::plot", options);
 }
 
-std::pair<std::vector<double>, std::vector<std::string>> catalog_sampled_labeled_ticks(
-    const CatalogResolvedAxis& axis,
-    std::int64_t max_ticks) {
-  const auto total = std::min(axis.values.size(), axis.labels.size());
-  if (total == 0) {
-    return {};
-  }
-  const std::size_t capped = static_cast<std::size_t>(std::max<std::int64_t>(2, max_ticks));
-  if (total <= capped) {
-    return {axis.values, axis.labels};
-  }
-
-  std::vector<double> sampled_values;
-  std::vector<std::string> sampled_labels;
-  sampled_values.reserve(capped);
-  sampled_labels.reserve(capped);
-
-  std::size_t prev = std::numeric_limits<std::size_t>::max();
-  for (std::size_t i = 0; i < capped; ++i) {
-    const auto idx = static_cast<std::size_t>(
-        std::llround(static_cast<double>(i) * static_cast<double>(total - 1) / static_cast<double>(capped - 1)));
-    if (idx == prev) {
-      continue;
-    }
-    sampled_values.push_back(axis.values[idx]);
-    sampled_labels.push_back(axis.labels[idx]);
-    prev = idx;
-  }
-  return {std::move(sampled_values), std::move(sampled_labels)};
-}
-
 void catalog_apply_axis(Pane& pane,
                         const CatalogResolvedAxis& axis,
                         const pluss::table::DataFramePlotOptions& options,
@@ -305,12 +274,12 @@ void catalog_apply_axis(Pane& pane,
   if (!axis.uses_labels || axis.labels.empty()) {
     return;
   }
-  const auto [tick_values, tick_labels] = catalog_sampled_labeled_ticks(axis, options.max_labeled_ticks);
-  const auto tick_label_views = catalog_label_views(tick_labels);
-  pane.x_ticks(tick_values, pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
+  const auto ticks = pluss::pl::flash::distinct_labeled_ticks(axis.values, axis.labels, options.max_labeled_ticks);
+  const auto tick_label_views = catalog_label_views(ticks.labels);
+  pane.x_ticks(pluss::make_series(ticks.positions), pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
   if (const auto rot = catalog_resolved_x_tick_rotation(options); rot.has_value()) {
     pane.x_tick_rotation(*rot);
-  } else if (default_if_crowded || axis.labels.size() > tick_labels.size()) {
+  } else if (default_if_crowded || ticks.thinned) {
     pane.x_tick_rotation(45.0);
   }
 }

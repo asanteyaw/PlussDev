@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <unordered_set>
 
 namespace pluss::pl {
 namespace {
@@ -1232,6 +1234,42 @@ void Pane::sync_grid_style_() noexcept {
   } else {
     grid_style_ = GridStyle::None;
   }
+}
+
+LabeledTicks distinct_labeled_ticks(std::span<const double> positions,
+                                    std::span<const std::string> labels,
+                                    std::int64_t max_ticks) {
+  const auto rows = std::min(positions.size(), labels.size());
+  std::vector<double> distinct_positions;
+  std::vector<std::string> distinct_labels;
+  std::unordered_set<std::string_view> seen;
+  for (std::size_t row = 0; row < rows; ++row) {
+    if (seen.insert(std::string_view(labels[row])).second) {
+      distinct_positions.push_back(positions[row]);
+      distinct_labels.push_back(labels[row]);
+    }
+  }
+  const auto total = distinct_positions.size();
+  const auto capped = static_cast<std::size_t>(std::max<std::int64_t>(2, max_ticks));
+  if (total <= capped) {
+    return {std::move(distinct_positions), std::move(distinct_labels), false};
+  }
+  LabeledTicks out;
+  out.thinned = true;
+  out.positions.reserve(capped);
+  out.labels.reserve(capped);
+  std::size_t previous = std::numeric_limits<std::size_t>::max();
+  for (std::size_t i = 0; i < capped; ++i) {
+    const auto index = static_cast<std::size_t>(
+        std::llround(static_cast<double>(i) * static_cast<double>(total - 1) / static_cast<double>(capped - 1)));
+    if (index == previous) {
+      continue;
+    }
+    out.positions.push_back(distinct_positions[index]);
+    out.labels.push_back(distinct_labels[index]);
+    previous = index;
+  }
+  return out;
 }
 
 } // namespace pluss::pl

@@ -41,6 +41,29 @@ namespace {
 
 } // namespace
 
+TEST_CASE("PlussPl ticks each distinct label once and thins evenly", "[plusspl][ticks]") {
+  // A month with one row per city: the label repeats, the position of its first row is kept.
+  const std::vector<double> positions{0, 1, 2, 3, 4, 5};
+  const std::vector<std::string> labels{"2024-01", "2024-01", "2024-02", "2024-02", "2024-03", "2024-03"};
+  const auto ticks = pluss::pl::distinct_labeled_ticks(positions, labels, 14);
+  REQUIRE(ticks.labels == std::vector<std::string>{"2024-01", "2024-02", "2024-03"});
+  REQUIRE(ticks.positions == std::vector<double>{0, 2, 4});
+  REQUIRE_FALSE(ticks.thinned);
+
+  // More distinct labels than the cap: evenly thinned, ends kept, and said to be thinned.
+  std::vector<double> many_positions;
+  std::vector<std::string> many_labels;
+  for (int i = 0; i < 100; ++i) {
+    many_positions.push_back(i);
+    many_labels.push_back("c" + std::to_string(i));
+  }
+  const auto thin = pluss::pl::distinct_labeled_ticks(many_positions, many_labels, 10);
+  REQUIRE(thin.thinned);
+  REQUIRE(thin.labels.size() == 10);
+  REQUIRE(thin.labels.front() == "c0");
+  REQUIRE(thin.labels.back() == "c99");
+}
+
 TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   using namespace pluss::pl;
 

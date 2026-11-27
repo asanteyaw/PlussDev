@@ -344,49 +344,6 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
   return axis;
 }
 
-std::pair<std::vector<double>, std::vector<std::string>> sampled_labeled_ticks(
-    const ResolvedPlotAxis& axis,
-    std::int64_t max_ticks) {
-  const auto rows = std::min(axis.values.size(), axis.labels.size());
-  if (rows == 0) {
-    return {};
-  }
-  // One tick per distinct x value, in order of first appearance: several rows can share a label (a month with one row
-  // per city), and sampling rows instead would repeat that label and space the ticks unevenly.
-  std::vector<double> distinct_values;
-  std::vector<std::string> distinct_labels;
-  std::unordered_set<std::string_view> seen;
-  for (const auto row : std::views::iota(std::size_t{0}, rows)) {
-    if (seen.insert(std::string_view(axis.labels[row])).second) {
-      distinct_values.push_back(axis.values[row]);
-      distinct_labels.push_back(axis.labels[row]);
-    }
-  }
-  const auto total = distinct_values.size();
-  const std::size_t capped = static_cast<std::size_t>(std::max<std::int64_t>(2, max_ticks));
-  if (total <= capped) {
-    return {std::move(distinct_values), std::move(distinct_labels)};
-  }
-
-  std::vector<double> sampled_values;
-  std::vector<std::string> sampled_labels;
-  sampled_values.reserve(capped);
-  sampled_labels.reserve(capped);
-
-  std::size_t prev = std::numeric_limits<std::size_t>::max();
-  for (const auto i : std::views::iota(std::size_t{0}, capped)) {
-    const auto idx = static_cast<std::size_t>(
-        std::llround(static_cast<double>(i) * static_cast<double>(total - 1) / static_cast<double>(capped - 1)));
-    if (idx == prev) {
-      continue;
-    }
-    sampled_values.push_back(distinct_values[idx]);
-    sampled_labels.push_back(distinct_labels[idx]);
-    prev = idx;
-  }
-  return {std::move(sampled_values), std::move(sampled_labels)};
-}
-
 bool looks_like_ymd_prefix(std::string_view text) {
   return text.size() >= 10
          && std::isdigit(static_cast<unsigned char>(text[0]))
@@ -427,14 +384,15 @@ template <std::ranges::input_range Range>
 void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOptions& options) {
   pane.x_label(axis.label);
   if (!axis.labels.empty()) {
-    const auto [tick_values, tick_labels] = sampled_labeled_ticks(axis, options.max_labeled_ticks);
-    std::vector<std::string> normalized_labels;
-    normalized_labels.reserve(tick_labels.size());
-    std::transform(tick_labels.begin(), tick_labels.end(), std::back_inserter(normalized_labels),
+    // The labels are made readable first, so two rows whose labels differ only by a midnight time share one tick.
+    std::vector<std::string> readable_labels;
+    readable_labels.reserve(axis.labels.size());
+    std::transform(axis.labels.begin(), axis.labels.end(), std::back_inserter(readable_labels),
                    [](const std::string& label) { return simplify_midnight_datetime_label(label); });
-    const auto tick_label_views = label_views(normalized_labels);
-    pane.x_ticks(tick_values, pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
-    apply_x_tick_rotation(pane, options, axis.labels.size() > tick_labels.size());
+    const auto ticks = pluss::pl::flash::distinct_labeled_ticks(axis.values, readable_labels, options.max_labeled_ticks);
+    const auto tick_label_views = label_views(ticks.labels);
+    pane.x_ticks(pluss::make_series(ticks.positions), pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
+    apply_x_tick_rotation(pane, options, ticks.thinned);
   }
 }
 

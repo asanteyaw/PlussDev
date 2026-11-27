@@ -31,6 +31,7 @@
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <span>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -1529,6 +1530,11 @@ inline void label_clustered_axis(Pane& pane, bool x_axis, const std::vector<doub
 }
 
 } // namespace detail
+
+// Axis ticks for labelled positions are built by PlussPl (one tick per distinct label, thinned evenly); flash plots and
+// every caller of flash use the same function.
+using pluss::pl::LabeledTicks;
+using pluss::pl::distinct_labeled_ticks;
 
 struct Dataset {
   std::optional<Note> feature_order{};

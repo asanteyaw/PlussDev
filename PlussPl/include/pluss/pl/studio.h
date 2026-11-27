@@ -14,6 +14,7 @@
 #include <optional>
 #include <ranges>
 #include <stdexcept>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -1583,5 +1584,18 @@ class Studio {
 };
 
 [[nodiscard]] Studio studio(std::string name = {});
+
+// The ticks of an axis whose positions carry labels, when several positions can share one label (a month with a row per
+// city): one tick for each distinct label, at the first position that has it, in order. When more than `max_ticks`
+// labels remain they are thinned evenly, and `thinned` says so (the labels are then crowded). Every plot that labels an
+// axis from its data builds its ticks here, so a label is never ticked twice and the ticks are never spaced by row.
+struct LabeledTicks {
+  std::vector<double> positions;
+  std::vector<std::string> labels;
+  bool thinned{false};
+};
+[[nodiscard]] LabeledTicks distinct_labeled_ticks(std::span<const double> positions,
+                                                  std::span<const std::string> labels,
+                                                  std::int64_t max_ticks);
 
 } // namespace pluss::pl
