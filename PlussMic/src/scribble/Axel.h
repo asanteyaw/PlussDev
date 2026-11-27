@@ -61,8 +61,8 @@ public:
   const std::vector<Registry>& registries() const;
   const std::optional<Slot>& labels() const;
 
-  Axel head(std::int64_t n) const;
-  Axel tail(std::int64_t n) const;
+  Axel head(std::int64_t n = 5) const;
+  Axel tail(std::int64_t n = 5) const;
   Axel slice(std::int64_t start, std::int64_t stop) const;
   Axel map(const std::function<Registry(const Registry&)>& fn) const;
   Axel drop(std::span<const std::string_view> fields) const;

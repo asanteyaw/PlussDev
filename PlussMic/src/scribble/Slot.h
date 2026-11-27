@@ -72,8 +72,8 @@ public:
 
   Slot push(const Value& value) const;
   Slot& push_(const Value& value);
-  Slot head(std::int64_t n) const;
-  Slot tail(std::int64_t n) const;
+  Slot head(std::int64_t n = 5) const;
+  Slot tail(std::int64_t n = 5) const;
   Slot slice(std::int64_t start, std::int64_t stop) const;
   Slot take(std::span<const std::int64_t> indices) const;
   Slot filter(const std::function<bool(const Value&)>& predicate) const;

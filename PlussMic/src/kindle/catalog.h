@@ -350,8 +350,8 @@ public:
   std::optional<Stream> get(std::string_view key) const;
 
   // Vectorized stream delegation.
-  Catalog head(std::int64_t n) const;
-  Catalog tail(std::int64_t n) const;
+  Catalog head(std::int64_t n = 5) const;
+  Catalog tail(std::int64_t n = 5) const;
   Catalog slice(std::int64_t start, std::int64_t stop) const;
   Catalog eloc(std::int64_t entry) const;
   Catalog eloc(std::int64_t start, std::int64_t stop) const;

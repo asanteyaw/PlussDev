@@ -108,8 +108,8 @@ public:
   std::optional<Slot> get(std::string_view key) const;
 
   // Registry-level delegation over slots.
-  Registry head(std::int64_t n) const;
-  Registry tail(std::int64_t n) const;
+  Registry head(std::int64_t n = 5) const;
+  Registry tail(std::int64_t n = 5) const;
   Registry slice(std::int64_t start, std::int64_t stop) const;
   Registry sloc(std::int64_t state) const;
   Registry sloc(std::int64_t start, std::int64_t stop) const;

@@ -188,8 +188,8 @@ public:
   pluss::scribble::Slot scribbelize() const;
 
   // 1D row-space operations.
-  Stream head(std::int64_t n) const;
-  Stream tail(std::int64_t n) const;
+  Stream head(std::int64_t n = 5) const;
+  Stream tail(std::int64_t n = 5) const;
   Stream slice(std::int64_t start, std::int64_t stop) const;
   Stream take(std::span<const std::int64_t> indices) const;
   // Rebuild the stream through one source record per output row. Record r of
