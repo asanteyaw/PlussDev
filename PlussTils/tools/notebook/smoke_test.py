@@ -111,6 +111,13 @@ def main():
               r["error"] is not None and "an_undeclared_name" in r.get("traceback", "") and "pluss::nb::show" not in r.get("traceback", ""), r)
         r = run("std::cout << v << std::endl;")
         check("the engine survives a compile error", r["text"].strip() == "2", r)
+        # A cell that does not compile after one that brought in new template code (a vector of pairs) used to break the
+        # engine for good, so it waited forever; now it is checked first and never reaches the engine.
+        run("std::vector<std::pair<std::string, pluss::kindle::Stream>> pairs_before;")
+        r = run("std::vector<std::pair<std::string, pluss::scribble::Slot>> more;\nmore.reserve(not_declared_anywhere);", timeout=120)
+        check("a cell that does not compile is reported, not waited on", r["error"] is not None and "not_declared_anywhere" in r.get("traceback", ""), r)
+        r = run("std::cout << pairs_before.size() << std::endl;")
+        check("and the engine keeps what earlier cells made", r["text"].strip() == "0", r)
         r = run("const double nan = 1.0;\nstd::vector<double> uses_it{nan, nan};", timeout=120)
         check("a name that clashes with a library's (nan) is reported, not waited on", r["error"] is not None and "nan" in r.get("traceback", ""), r)
         r = run('std::cout << "after a clash" << std::endl;')

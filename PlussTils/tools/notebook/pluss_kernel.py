@@ -264,7 +264,9 @@ class ClangCompleter:
 
     def __init__(self, clang, flags, prelude):
         self.clang = clang
-        self.flags = list(flags)
+        # Top-level statements (a loop outside a function), as the engine accepts them; the precompiled prelude is built
+        # with the same option, since a precompiled header must match the language options of what includes it.
+        self.flags = list(flags) + ["-Xclang", "-fincremental-extensions"]
         self.prelude = prelude
         self.folder = tempfile.mkdtemp(prefix="pluss_complete_")
         self.header = os.path.join(self.folder, "prelude.h")
@@ -285,6 +287,29 @@ class ClangCompleter:
                                capture_output=True, timeout=600)
             except (OSError, subprocess.TimeoutExpired):
                 pass
+
+    def check(self, earlier, text, timeout=120):
+        """The compile errors of a cell's text after the text of the cells that ran, as the engine would report them
+        (the cell's file is named "cell"), or "" when it compiles. Nothing runs. A cell that does not compile is never
+        sent to the engine, which a failed cell can leave unable to link anything more."""
+        self.prepare()
+        ran = os.path.join(self.folder, "ran.cpp")
+        cell = os.path.join(self.folder, "checked_cell.cpp")
+        unit = os.path.join(self.folder, "check.cpp")
+        with open(ran, "w") as handle:
+            handle.write("".join(piece.rstrip("\n") + "\n" for piece in earlier))
+        with open(cell, "w") as handle:
+            handle.write(text.rstrip("\n") + "\n")
+        with open(unit, "w") as handle:
+            handle.write('#include "%s"\n#include "%s"\n' % (ran, cell))
+        command = [self.clang, *self.flags, "-w", "-fsyntax-only", "-ferror-limit=20", "-include", self.header, unit]
+        try:
+            done = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+        except (OSError, subprocess.TimeoutExpired):
+            return ""  # the check could not be made: the engine is asked, as before
+        if "error:" not in done.stderr:
+            return ""
+        return done.stderr.replace(cell, "cell").replace(unit, "cell")
 
     def complete(self, history, code, cursor_pos, timeout=60):
         """(start, matches, details) for the cursor in `code`, or None when the compiler could not be asked."""
@@ -419,6 +444,7 @@ class PlussKernel(Kernel):
         self._versions = {}  # name -> how many times a cell has redefined it
         self._types = set()  # types defined so far
         self._macros = {}    # name -> the name its latest definition has
+        self._ran = []       # the text of each cell the engine ran, as sent: what a new cell is checked against
         self._proc = subprocess.Popen(
             self._command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
         )
@@ -617,11 +643,25 @@ class PlussKernel(Kernel):
                 macros[base] = new
                 text = rename_identifier(text, base, new)
         source = text
+        out, err = "", ""
         for _ in range(4):
-            out, err = self._run_text(self._guarded(source, macros))
-            names = {VERSION.sub(r"\1", name) for name in REDEFINED.findall(err)}
-            if not names:
+            guarded = self._guarded(source, macros)
+            # The cell is compiled against the cells that ran before the engine sees it: a cell with an error is reported
+            # without touching the engine (whose state a failed cell can break). A name defined again (a cell run
+            # again) is renamed and checked again; only code that compiles goes to the engine.
+            problems = self._completer.check(self._ran, guarded) if self._completer is not None else ""
+            names = {VERSION.sub(r"\1", name) for name in REDEFINED.findall(problems)}
+            others = [line for line in problems.split("\n") if "error:" in line and not REDEFINED.search(line)]
+            if others:
+                out, err = "", problems
                 break
+            if not names:
+                out, err = self._run_text(guarded)
+                names = {VERSION.sub(r"\1", name) for name in REDEFINED.findall(err)}
+                if not names:
+                    if "error:" not in err:
+                        self._ran.append(guarded)
+                    break
             for base in names:
                 version = self._versions.get(base, 1) + 1
                 self._versions[base] = version
