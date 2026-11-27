@@ -43,9 +43,29 @@ SURFACE_DEFINES = ["-DCODEH_ENABLE_TIMELINE_SURFACE", "-DCODEH_ENABLE_INDEX_ACCE
 
 PRELUDE = r'''
 #include <pluss/pluss.h>
+#include <exception>
 #include <iostream>
 #include <type_traits>
 namespace pluss::nb {
+// An exception that escapes a cell ends the engine; before it does, its message (a PlussII error's what() is its
+// traceback) is written behind a marker, so the kernel can show what went wrong instead of only that the engine stopped.
+inline const bool uncaught_reported = [] {
+  std::set_terminate([] {
+    if (const auto error = std::current_exception()) {
+      std::cerr << "\x1e<<pluss-uncaught>>";
+      try {
+        std::rethrow_exception(error);
+      } catch (const std::exception& e) {
+        std::cerr << e.what();
+      } catch (...) {
+        std::cerr << "an exception that is not a std::exception";
+      }
+      std::cerr << "\x1e<<pluss-uncaught-end>>" << std::flush;
+    }
+    std::abort();
+  });
+  return true;
+}();
 inline void emit(const std::string& mime, const std::string& body) {
   std::cout << "\x1e<<pluss-mime " << mime << " " << body.size() << ">>\n" << body << std::flush;
 }
@@ -78,15 +98,18 @@ void show(T&& value) {
 
 
 class EngineStopped(RuntimeError):
-    """The clang-repl process ended, for example because a cell crashed it."""
+    """The clang-repl process ended, for example because a cell crashed it; `report` is what it said before."""
+
+    def __init__(self, report=""):
+        super().__init__("the engine stopped")
+        self.report = report
 
 
 class EngineBroken(EngineStopped):
     """The engine is running but can no longer link what it compiles; `report` is what it said before that."""
 
     def __init__(self, report):
-        super().__init__("the engine can no longer link compiled code")
-        self.report = report
+        super().__init__(report)
 
 
 def rename_identifier(code, base, new):
@@ -462,7 +485,7 @@ class PlussKernel(Kernel):
                 except queue.Empty:
                     continue
                 if chunk is None:
-                    raise EngineStopped()
+                    raise EngineStopped(buffers[1].decode(errors="replace").replace(self._last_path, "cell"))
                 buffers[i] += chunk
                 if END.encode() in buffers[i]:
                     buffers[i] = buffers[i].split(END.encode())[0]
@@ -617,7 +640,19 @@ class PlussKernel(Kernel):
                 report, shown = format_compile_error(report, code_sent, source_sent, undef, self.execution_count)
             text = (report.rstrip() + "\n\n" if shown else "") + note
             return self._fail(silent, "CompileError" if shown else "EngineRestarted", shown or note, text)
-        except (EngineStopped, BrokenPipeError):
+        except EngineStopped as stopped:
+            self._restart_engine()
+            # An error the cell threw and did not catch: show it as the error it is.
+            thrown = re.search(r"\x1e<<pluss-uncaught>>(.*?)\x1e<<pluss-uncaught-end>>", stopped.report, re.S)
+            if thrown:
+                text = (thrown.group(1).rstrip() + "\n\nThe error was not caught in the cell, which ends the C++ engine: it has been "
+                        "restarted, so the variables and functions from earlier cells are gone: run them again.")
+                first = thrown.group(1).strip().split("\n")[-1] if thrown.group(1).strip() else "an error was thrown"
+                return self._fail(silent, "UncaughtError", first, text)
+            message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
+                       "It has been restarted, so the variables and functions from earlier cells are gone: run them again.")
+            return self._fail(silent, "EngineRestarted", message, message)
+        except BrokenPipeError:
             self._restart_engine()
             message = ("The C++ engine stopped while running this cell (a crash in the code, such as using a null pointer, ends it). "
                        "It has been restarted, so the variables and functions from earlier cells are gone: run them again.")
