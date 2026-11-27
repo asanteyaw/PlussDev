@@ -16,9 +16,8 @@ The kernel starts one C++ interpreter (clang-repl) and loads PlussII into it. Ea
 
 | In a cell | The notebook shows |
 |---|---|
-| a bare expression as the last line, such as `df` or `x * 2.0` | the value, in the shape that suits it: a `DataFrame` as a compact table in the notebook's own colours (a long one shows its first and last five cases); a `Catalog` or a `Registry` as a ragged table, blank where a key has no entry; an `Atlas`, an `Archive` or an `Axel` as a short summary of how many tables are stacked and what they hold; a `Shelf`, a `Stream` or a `Slot` as text, the way the terminal shows it; text for the rest |
-| `pluss::nb::show(chart);` | a plot as a picture |
-| `pluss::nb::show(df);` | a table |
+| a bare expression as the last line, such as `df` or `x * 2.0` | the value, in the shape that suits it: a `DataFrame`, and every frame a method returns (`df.head()`, `df.describe()`), as a compact table in the notebook's own colours (a long one shows its first and last five cases); a `Catalog` or a `Registry` as a ragged table, blank where a key has no entry; an `Atlas`, an `Archive` or an `Axel` as a short summary of how many tables are stacked and what they hold; a `Shelf`, a `Stream` or a `Slot` as text, the way the terminal shows it; text for the rest. A plot on the last line shows nothing: a plot appears when you call `.show()` |
+| `df.plot().line("month", "revenue").show();` | the plot, as a picture as wide as the output (the editor's own buttons save it or open it larger) |
 | anything printed with `std::cout` | the text |
 | a compile error | the compiler's message, naming the line of the cell |
 
@@ -32,7 +31,7 @@ A notebook is meant to be re-run, so the kernel allows it:
 | stop a running cell (the Interrupt button) | the cell stops and the interpreter restarts; earlier variables are gone and the message says so |
 | run code that crashes the interpreter, such as writing through a null pointer | the interpreter restarts and tells you; run the earlier cells again |
 | call `.show()` on a table or a plot | it appears under the cell instead of opening a window |
-| press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the page that `pluss::tils::doc` finds, from the documentation in the download (the first request includes `<pluss/tils/doc.h>` for you) |
+| press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the name's signature and what it does, from the documentation in the download |
 
 What the preview does not do yet: run on Windows.
 
@@ -66,11 +65,10 @@ df
 The table appears as a table in the notebook.
 
 ```cpp
-auto chart = df.plot().line({"units", "revenue"});
-pluss::nb::show(chart);
+df.plot().line({"units", "revenue"}).show();
 ```
 
-The plot appears as a picture.
+The plot appears as a picture, as wide as the output.
 
 ```cpp
 int answer = ;

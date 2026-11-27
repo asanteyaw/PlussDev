@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
@@ -250,12 +251,17 @@ std::string render_notebook_html(const Atlas& atlas);
 // Whether the code is running inside the PlussII notebook (its kernel sets PLUSS_NOTEBOOK). Only a DataFrame is shown
 // there as a table; a shelf, an atlas and a catalog are shown as the text the terminal shows.
 bool in_notebook();
+// The values a notebook shows as an HTML table: a frame, and every frame a method returns (head(), tail(), describe()
+// return frames too), a catalog, an archive, a registry, an axel and an atlas. Everything else is shown as the terminal
+// shows it. The kernel and every show() ask this one question.
+template <class T>
+concept NotebookTable = std::derived_from<T, DataFrame> || std::same_as<T, pluss::kindle::Catalog> ||
+                        std::same_as<T, pluss::kindle::Archive> || std::same_as<T, pluss::scribble::Registry> ||
+                        std::same_as<T, pluss::scribble::Axel> || std::same_as<T, Atlas>;
+
 // The frame as the compact HTML table a notebook shows: no page and no scripts, styles scoped to the table, the
 // notebook's own colours, as tall as its rows (a long frame as its first and last rows).
 std::string render_notebook_html(const DataFrame& frame);
-// A plot's SVG for a notebook: the picture itself (the editor's own Save and plot viewer apply to it), as wide as the
-// output and as tall as that width needs, never wider than it was drawn.
-std::string render_notebook_plot_svg(std::string_view svg);
 // The page as HTML with every view tab filled in (for a browser or a notebook, and for tests).
 std::string render_html_model(const ModelPage& page, const DisplayOptions& options = {});
 // Opens the page in the viewer; returns false when only a terminal is available.

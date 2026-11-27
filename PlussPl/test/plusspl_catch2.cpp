@@ -41,6 +41,18 @@ namespace {
 
 } // namespace
 
+TEST_CASE("PlussPl fits a figure to a notebook's output and keeps its real size", "[plusspl][notebook]") {
+  const auto svg = pluss::pl::detail::notebook_svg(
+      "<?xml version=\"1.0\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1280\" height=\"820\"><rect width=\"10\" height=\"5\"/></svg>");
+  REQUIRE(svg.rfind("<svg", 0) == 0);                                     // no XML declaration inside a page
+  REQUIRE(svg.find("viewBox=\"0 0 1280 820\"") != std::string::npos);    // its proportions
+  REQUIRE(svg.find("width=\"1280\" height=\"820\"") != std::string::npos);  // its real size, for a saved copy
+  REQUIRE(svg.find("width:100%") != std::string::npos);                    // as wide as the output
+  REQUIRE(svg.find("max-width:1280px") != std::string::npos);              // never wider than drawn
+  REQUIRE(svg.find("height:auto") != std::string::npos);
+  REQUIRE(svg.find("<rect width=\"10\" height=\"5\"/>") != std::string::npos);  // the drawing is untouched
+}
+
 TEST_CASE("PlussPl ticks each distinct label once and thins evenly", "[plusspl][ticks]") {
   // A month with one row per city: the label repeats, the position of its first row is kept.
   const std::vector<double> positions{0, 1, 2, 3, 4, 5};

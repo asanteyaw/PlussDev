@@ -1598,4 +1598,10 @@ struct LabeledTicks {
                                                   std::span<const std::string> labels,
                                                   std::int64_t max_ticks);
 
+namespace detail {
+// A figure's SVG as a notebook shows it: as wide as the output and as tall as that needs, never wider than drawn, keeping
+// its own width and height so a saved copy has its real size.
+[[nodiscard]] std::string notebook_svg(std::string_view svg);
+}  // namespace detail
+
 } // namespace pluss::pl

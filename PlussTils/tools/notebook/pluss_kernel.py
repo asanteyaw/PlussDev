@@ -43,34 +43,36 @@ SURFACE_DEFINES = ["-DCODEH_ENABLE_TIMELINE_SURFACE", "-DCODEH_ENABLE_INDEX_ACCE
 
 PRELUDE = r'''
 #include <pluss/pluss.h>
-#include <fstream>
 #include <iostream>
-#include <iterator>
-#include <sstream>
+#include <type_traits>
 namespace pluss::nb {
 inline void emit(const std::string& mime, const std::string& body) {
   std::cout << "\x1e<<pluss-mime " << mime << " " << body.size() << ">>\n" << body << std::flush;
 }
-inline void show(const std::string& text) { std::cout << text << std::endl; }
-inline void show(const char* text) { std::cout << text << std::endl; }
-inline void show(const pluss::table::DataFrame& frame) {
-  emit("text/html", pluss::table::display::render_notebook_html(frame));
-}
-inline void show(const pluss::kindle::Catalog& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
-inline void show(const pluss::kindle::Archive& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
-inline void show(const pluss::scribble::Registry& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
-inline void show(const pluss::scribble::Axel& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
-inline void show(const pluss::table::Atlas& value) { emit("text/html", pluss::table::display::render_notebook_html(value)); }
-template <class Chart>
-auto show(Chart& chart) -> decltype(chart.save_svg(std::string()), void()) {
-  const std::string path = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/pluss_nb_chart.svg";
-  chart.save_svg(path);
-  std::ifstream in(path, std::ios::binary);
-  emit("image/svg+xml", pluss::table::display::render_notebook_plot_svg(
-      std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>())));
+// What a cell's last value looks like, chosen once for every type, best first: a figure shows nothing (a figure appears
+// only when its show() is called, as in a program), a table type is an HTML table (see
+// pluss::table::display::NotebookTable: a frame and every frame a method returns, head() and describe() included), and
+// anything else that prints is shown as the terminal shows it.
+struct as_text {};
+struct as_table : as_text {};
+struct as_figure : as_table {};
+template <class T>
+auto show_(T& figure, as_figure) -> decltype(figure.save_svg(std::string()), void()) {
+  (void)figure;
 }
 template <class T>
-auto show(const T& value) -> decltype(std::cout << value, void()) { std::cout << value << std::endl; }
+  requires pluss::table::display::NotebookTable<std::remove_cvref_t<T>>
+void show_(T& table, as_table) {
+  emit("text/html", pluss::table::display::render_notebook_html(table));
+}
+template <class T>
+auto show_(T& value, as_text) -> decltype(std::cout << value, void()) {
+  std::cout << value << std::endl;
+}
+template <class T>
+void show(T&& value) {
+  show_(value, as_figure{});
+}
 }  // namespace pluss::nb
 '''
 

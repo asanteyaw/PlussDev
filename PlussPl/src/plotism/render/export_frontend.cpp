@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <regex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -588,14 +589,50 @@ static bool capture_shown_svg_(const std::string& studio_name, const std::string
   return true;
 }
 
-// Inside the PlussII notebook (the kernel sets PLUSS_NOTEBOOK) a figure goes back to the notebook as an image,
-// through the marker line the kernel turns into a display message, instead of opening a window.
+namespace detail {
+
+// A figure for a notebook: the SVG itself, so the editor treats it as a picture (VS Code adds its own Save button and opens
+// it in its plot viewer), made to fit the output's width. Its outer tag gets a viewBox (its proportions) and a style that
+// makes it as wide as the output and as tall as that width needs, never wider than drawn; its own width and height stay,
+// so a saved copy keeps its real size.
+std::string notebook_svg(std::string_view svg) {
+  if (svg.starts_with("<?xml")) {
+    const auto end = svg.find("?>");
+    svg.remove_prefix(end == std::string_view::npos ? 0 : end + 2);
+    while (!svg.empty() && (svg.front() == '\n' || svg.front() == '\r')) {
+      svg.remove_prefix(1);
+    }
+  }
+  const auto open = svg.find("<svg");
+  const auto close = open == std::string_view::npos ? std::string_view::npos : svg.find('>', open);
+  if (close == std::string_view::npos) return std::string(svg);
+  std::string tag(svg.substr(open, close - open));
+  const auto attribute = [&](const std::string& name) {
+    const std::regex pattern("\\s" + name + "=\"([^\"]*)\"");
+    std::smatch found;
+    return std::regex_search(tag, found, pattern) ? found[1].str() : std::string();
+  };
+  const std::string width = attribute("width");
+  const std::string height = attribute("height");
+  if (attribute("viewBox").empty() && !width.empty() && !height.empty()) tag += " viewBox=\"0 0 " + width + " " + height + "\"";
+  // The width and height stay, so a saved file opens at the size it was drawn; the style, which a page applies over them,
+  // fits the picture to the output.
+  tag += " style=\"display:block;width:100%;max-width:" + (width.empty() ? std::string("100%") : width + "px") + ";height:auto\"";
+  return std::string(svg.substr(0, open)) + tag + std::string(svg.substr(close));
+}
+
+}  // namespace detail
+
+// Inside the PlussII notebook (the kernel sets PLUSS_NOTEBOOK) a figure goes back to the notebook as an image, fitted to the
+// output's width, through the marker line the kernel turns into a display message, instead of opening a window. This is
+// the one way a figure reaches a notebook: the kernel shows a figure left on a cell's last line by calling show().
 static bool show_in_notebook_(const std::string& svg) {
   const char* flag = std::getenv("PLUSS_NOTEBOOK");
   if (flag == nullptr || *flag == '\0') {
     return false;
   }
-  std::cout << "\x1e<<pluss-mime image/svg+xml " << svg.size() << ">>\n" << svg << std::flush;
+  const std::string fitted = detail::notebook_svg(svg);
+  std::cout << "\x1e<<pluss-mime image/svg+xml " << fitted.size() << ">>\n" << fitted << std::flush;
   return true;
 }
 

@@ -373,19 +373,22 @@ void test_stack_page_switches_levels() {
   expect(page.model->row_count() == 4, "a level past the end is the last one");
 }
 
-// A plot is the SVG itself, without the XML declaration, styled to fit the output's width while keeping its real size.
-void test_notebook_plot_fits_the_output() {
-  const auto svg = pluss::table::display::render_notebook_plot_svg(
-      "<?xml version=\"1.0\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1280\" height=\"820\"><rect width=\"10\" height=\"5\"/></svg>");
-  expect(!has(svg, "<?xml") && svg.rfind("<svg", 0) == 0, "a notebook plot is the drawing, without the declaration");
-  expect(has(svg, "viewBox=\"0 0 1280 820\""), "its proportions are kept");
-  expect(has(svg, "width=\"1280\" height=\"820\""), "its real size stays, for a saved copy");
-  expect(has(svg, "width:100%") && has(svg, "height:auto") && has(svg, "max-width:1280px"), "it fits the output and is never wider than drawn");
-  expect(has(svg, "<rect width=\"10\" height=\"5\"/>"), "the drawing inside is untouched");
+// A notebook shows a frame as an HTML table, and so every frame a method returns (head(), tail(), describe() return views,
+// which are frames); a shelf is text, as in the terminal.
+void test_notebook_tables_are_every_frame() {
+  using pluss::table::display::NotebookTable;
+  static_assert(NotebookTable<DataFrame>);
+  static_assert(NotebookTable<pluss::table::DataFrameView>);
+  static_assert(NotebookTable<pluss::table::Atlas>);
+  static_assert(!NotebookTable<Shelf>);
+  static_assert(!NotebookTable<pluss::Series>);
+  const auto frame = DataFrame({{"x", Shelf(pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}))}});
+  const auto head = frame.head(3);
+  expect(has(pluss::table::display::render_notebook_html(head), "class=\"pluss-table\""), "head() is shown as a table too");
 }
 
 int main() {
-  test_notebook_plot_fits_the_output();
+  test_notebook_tables_are_every_frame();
   test_no_filter_shows_every_row();
   test_invalid_keeps_null_nan_and_infinity();
   test_each_kind_alone();

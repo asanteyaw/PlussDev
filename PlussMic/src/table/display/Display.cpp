@@ -4236,36 +4236,6 @@ std::string render_notebook_summary(const SummaryView& view, const std::string& 
 
 bool show_in_notebook(const std::string& html) { return show_in_notebook_(html); }
 
-// A plot for a notebook: the SVG itself, so the editor treats it as a picture (VS Code adds its own Save button and opens it
-// in its plot viewer), made to fit the output's width. Its outer tag gets a viewBox (its proportions) and a style that
-// makes it as wide as the output and as tall as that width needs, never wider than drawn; its own width and height stay,
-// so a saved copy keeps its real size.
-std::string render_notebook_plot_svg(std::string_view svg) {
-  if (svg.starts_with("<?xml")) {
-    const auto end = svg.find("?>");
-    svg.remove_prefix(end == std::string_view::npos ? 0 : end + 2);
-    while (!svg.empty() && (svg.front() == '\n' || svg.front() == '\r')) {
-      svg.remove_prefix(1);
-    }
-  }
-  const auto open = svg.find("<svg");
-  const auto close = open == std::string_view::npos ? std::string_view::npos : svg.find('>', open);
-  if (close == std::string_view::npos) return std::string(svg);
-  std::string tag(svg.substr(open, close - open));
-  const auto attribute = [&](const std::string& name) {
-    const std::regex pattern("\\s" + name + "=\"([^\"]*)\"");
-    std::smatch found;
-    return std::regex_search(tag, found, pattern) ? found[1].str() : std::string();
-  };
-  const std::string width = attribute("width");
-  const std::string height = attribute("height");
-  if (attribute("viewBox").empty() && !width.empty() && !height.empty()) tag += " viewBox=\"0 0 " + width + " " + height + "\"";
-  // The width and height stay, so a saved file opens at the size it was drawn; the style, which a page applies over them,
-  // fits the picture to the output.
-  tag += " style=\"display:block;width:100%;max-width:" + (width.empty() ? std::string("100%") : width + "px") + ";height:auto\"";
-  return std::string(svg.substr(0, open)) + tag + std::string(svg.substr(close));
-}
-
 std::string render_notebook_html(const Atlas& atlas) { return render_notebook_stack_facts(atlas_facts_(atlas)); }
 
 std::string render_notebook_html(const DataFrame& frame) {
