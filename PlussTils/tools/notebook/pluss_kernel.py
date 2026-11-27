@@ -373,7 +373,8 @@ class PlussKernel(Kernel):
     # ---- the engine -----------------------------------------------------------------------------
 
     def _command(self):
-        repl = os.environ.get("PLUSS_CLANG_REPL", "clang-repl")
+        # The PlussII engine when the install could build it (a cell that throws does not end it), clang-repl otherwise.
+        repl = os.environ.get("PLUSS_ENGINE") or os.environ.get("PLUSS_CLANG_REPL", "clang-repl")
         cmd = [repl, "-Xcc", "-std=c++20"]
         sysroot = os.environ.get("PLUSS_SYSROOT")
         if sysroot:
@@ -556,6 +557,27 @@ class PlussKernel(Kernel):
         split = PlussKernel._split_last_expression(code)
         return code if split is None else split[0]
 
+    @staticmethod
+    def _user_traceback(text):
+        """An error's traceback without the frames of the engine itself (its own program, clang's interpreter and the
+        compiled cells it cannot name), which say nothing about the user's code."""
+        lines = text.split("\n")
+        kept, skip_source = [], False
+        for line in lines:
+            frame = re.match(r'\s*File "([^"]*)"', line)
+            if frame:
+                skip_source = frame.group(1) in ("pluss-engine", "<unknown>") or frame.group(1).startswith("libclang-cpp")
+                if skip_source:
+                    continue
+            elif skip_source and line.startswith("    "):
+                continue
+            else:
+                skip_source = False
+            if "frames without a line were built without debug information" in line:
+                continue
+            kept.append(line)
+        return "\n".join(kept)
+
     def _fail(self, silent, ename, evalue, text):
         """Report a failed cell the way a notebook expects: an error message on the output channel (so the cell is
         marked failed and Run All stops) and an error reply. The text is the traceback shown under the cell."""
@@ -645,7 +667,7 @@ class PlussKernel(Kernel):
             # An error the cell threw and did not catch: show it as the error it is.
             thrown = re.search(r"\x1e<<pluss-uncaught>>(.*?)\x1e<<pluss-uncaught-end>>", stopped.report, re.S)
             if thrown:
-                text = (thrown.group(1).rstrip() + "\n\nThe error was not caught in the cell, which ends the C++ engine: it has been "
+                text = (self._user_traceback(thrown.group(1)).rstrip() + "\n\nThe error was not caught in the cell, which ends the C++ engine: it has been "
                         "restarted, so the variables and functions from earlier cells are gone: run them again.")
                 first = thrown.group(1).strip().split("\n")[-1] if thrown.group(1).strip() else "an error was thrown"
                 return self._fail(silent, "UncaughtError", first, text)
@@ -658,6 +680,16 @@ class PlussKernel(Kernel):
                        "It has been restarted, so the variables and functions from earlier cells are gone: run them again.")
             return self._fail(silent, "EngineRestarted", message, message)
         out, err = self._tidy(out), self._tidy(err)
+        thrown = re.search(r"\x1e<<pluss-uncaught>>(.*?)\x1e<<pluss-uncaught-end>>\n?", err, re.S)
+        if thrown:
+            # The engine reported an error the cell threw and carried on: everything earlier cells made is still there.
+            err = err[:thrown.start()] + err[thrown.end():]
+            if not silent:
+                self._publish(out)
+            self._history.append(self._declarations_of(code))
+            message = self._user_traceback(thrown.group(1))
+            first = message.strip().split("\n")[-1] if message.strip() else "an error was thrown"
+            return self._fail(silent, "UncaughtError", first, message.rstrip())
         failed = "error:" in err
         first_error = next((line for line in err.split("\n") if "error:" in line), err.strip().split("\n")[0] if err.strip() else "")
         if failed:

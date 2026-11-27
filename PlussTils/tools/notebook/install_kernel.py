@@ -87,6 +87,35 @@ def sysroot_works(clang_repl, sysroot):
     return b"error" not in done.stderr + done.stdout
 
 
+ENGINE_NAME = "pluss-engine"
+# What a Linux machine needs to build the engine, named in the message when it cannot be built there.
+ENGINE_PACKAGES = "macOS: brew install llvm; Ubuntu: sudo apt install libclang-cpp18-dev llvm-18-dev"
+
+
+def build_engine(clang_repl, output):
+    """Builds engine.cpp into `output` against the LLVM that provides clang_repl: the engine that keeps earlier cells
+    when a cell throws. (True, "") when it was built, (False, why) when it could not be (the kernel then uses clang-repl)."""
+    prefix = os.path.dirname(os.path.dirname(os.path.realpath(clang_repl)))
+    if not os.path.exists(os.path.join(prefix, "include", "clang", "Interpreter", "Interpreter.h")):
+        return False, "clang's development headers are not in %s (%s)" % (prefix, ENGINE_PACKAGES)
+    compiler = os.path.join(prefix, "bin", "clang++")
+    if not os.path.exists(compiler):
+        compiler = shutil.which("clang++") or "c++"
+    try:
+        resource = subprocess.run([compiler, "-print-resource-dir"], capture_output=True, text=True, timeout=60).stdout.strip()
+        library_dir = os.path.join(prefix, "lib")
+        command = [compiler, "-std=c++17", "-frtti", "-O1", os.path.join(HERE, "engine.cpp"), "-I", os.path.join(prefix, "include"),
+                   "-L", library_dir, "-lclang-cpp", "-lLLVM", "-Wl,-rpath," + library_dir,
+                   '-DPLUSS_RESOURCE_DIR="%s"' % resource, "-o", output]
+        done = subprocess.run(command, capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return False, str(error)
+    if done.returncode != 0 or not os.path.exists(output):
+        last = [line for line in done.stderr.splitlines() if "error" in line][:1]
+        return False, (last[0] if last else "the build failed") + " (%s)" % ENGINE_PACKAGES
+    return True, ""
+
+
 def find_sysroot(clang_repl):
     """On macOS, the newest SDK of the Command Line Tools that this clang-repl can read."""
     if sys.platform != "darwin" or not clang_repl:
@@ -135,12 +164,20 @@ def main():
     library = kernel_library(args.name)
     os.makedirs(os.path.dirname(library), exist_ok=True)
     subprocess.run([sys.executable, os.path.join(HERE, "make_library.py"), args.prefix, library], check=True)
+    engine = os.path.join(os.path.dirname(library), ENGINE_NAME)
+    built, why = build_engine(args.clang_repl, engine)
+    if built:
+        print("built the notebook engine (a cell that throws keeps the variables of earlier cells)")
+    else:
+        print("could not build the notebook engine, so clang-repl runs the cells and a cell that throws restarts it: " + why)
+        engine = ""
     spec = {
         "argv": [sys.executable, os.path.join(HERE, "pluss_kernel.py"), "-f", "{connection_file}"],
         "display_name": display_name,
         "language": KERNEL_LANGUAGE,
         "env": {
             "PLUSS_CLANG_REPL": args.clang_repl,
+            "PLUSS_ENGINE": engine,
             "PLUSS_SYSROOT": args.sysroot,
             "PLUSS_INCLUDE": os.path.join(args.prefix, "include"),
             "PLUSS_LIBRARY": library,

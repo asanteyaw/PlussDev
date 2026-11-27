@@ -229,6 +229,12 @@ def check_kernel(report, prefix, name=KERNEL_NAME):
     else:
         report.bad("clang-repl was not found at %s" % (clang or "(not recorded)"),
                    "install LLVM (macOS: brew install llvm; Ubuntu: sudo apt install clang) and run  pluss kernel install")
+    engine = env.get("PLUSS_ENGINE", "")
+    if engine and os.path.exists(engine):
+        report.ok("the notebook engine is built (a cell that throws keeps the variables of earlier cells)")
+    else:
+        report.bad("the notebook engine is not built, so a cell that throws restarts clang-repl and earlier cells are lost",
+                   "install clang's development files (%s) and run  pluss kernel install" % installer.ENGINE_PACKAGES)
     library = env.get("PLUSS_LIBRARY", "")
     if library and os.path.exists(library):
         report.ok("the shared library is built (%s)" % library)

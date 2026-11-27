@@ -69,7 +69,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-18 libclang-18-dev libcurl4-openssl-dev
+          sudo apt-get install -y clang-18 libclang-18-dev libclang-cpp18-dev llvm-18-dev libcurl4-openssl-dev
           sudo apt-get install -y clang-tools-18 || true
           ls /usr/lib/llvm-18/bin | grep -i repl || true
 

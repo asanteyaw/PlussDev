@@ -80,7 +80,7 @@ if(PLUSS_BUILD_CLI)
     endif()
     install(TARGETS pluss_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     # The Jupyter kernel that `pluss kernel install` registers.
-    install(FILES tools/notebook/pluss_kernel.py tools/notebook/install_kernel.py tools/notebook/kernel_check.py tools/notebook/kernel_manage.py tools/notebook/make_library.py
+    install(FILES tools/notebook/pluss_kernel.py tools/notebook/install_kernel.py tools/notebook/kernel_check.py tools/notebook/kernel_manage.py tools/notebook/engine.cpp tools/notebook/make_library.py
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pluss/notebook)
 endif()
 

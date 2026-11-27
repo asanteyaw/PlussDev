@@ -29,6 +29,7 @@ A notebook is meant to be re-run, so the kernel allows it:
 |---|---|
 | run a cell again that defines a function, a variable or a type again | the new definition replaces the old one for the cells you run from then on |
 | stop a running cell (the Interrupt button) | the cell stops and the interpreter restarts; earlier variables are gone and the message says so |
+| a cell throws an error it does not catch, such as a key that is not in a registry | the error is shown with its message and the line it came from; the variables and functions of earlier cells stay |
 | run code that crashes the interpreter, such as writing through a null pointer | the interpreter restarts and tells you; run the earlier cells again |
 | call `.show()` on a table or a plot | it appears under the cell instead of opening a window |
 | press Tab, or ask for help on a name | names from your cells and from PlussII are offered; help shows the name's signature and what it does, from the documentation in the download |
@@ -98,7 +99,7 @@ cd <download>/bin
 ./pluss kernel install
 ```
 
-The command finds clang-repl and, on macOS, an SDK that clang-repl can read, builds one shared library of PlussII into `~/.pluss`, and registers the kernel as "PlussII C++" for Jupyter and VS Code. It takes `--clang-repl path` and `--sysroot path` when the defaults are wrong. It needs two things first: the Jupyter kernel packages and a clang-repl.
+The command finds clang-repl and, on macOS, an SDK that clang-repl can read, builds one shared library of PlussII and the notebook engine (from the LLVM that provides clang-repl) into `~/.pluss`, and registers the kernel as "PlussII C++" for Jupyter and VS Code. It takes `--clang-repl path` and `--sysroot path` when the defaults are wrong. It needs two things first: the Jupyter kernel packages and a clang-repl.
 
 ### macOS (Apple Silicon and Intel)
 
@@ -114,7 +115,7 @@ Homebrew's LLVM provides clang-repl. The installer looks for it in `/opt/homebre
 ### Linux (Ubuntu 24.04, x86_64 and ARM64)
 
 ```bash
-sudo apt-get install clang-18 libclang-18-dev clang-tools-18 libcurl4-openssl-dev
+sudo apt-get install clang-18 libclang-18-dev libclang-cpp18-dev llvm-18-dev clang-tools-18 libcurl4-openssl-dev
 python3 -m pip install ipykernel jupyter_client
 cd <download>/bin
 ./pluss kernel install
