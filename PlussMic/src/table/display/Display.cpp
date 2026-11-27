@@ -2,6 +2,7 @@
 #include "table/display/StackPage.h"
 
 #include <algorithm>
+#include <regex>
 #include <array>
 #include <atomic>
 #include <charconv>
@@ -4235,35 +4236,10 @@ std::string render_notebook_summary(const SummaryView& view, const std::string& 
 
 bool show_in_notebook(const std::string& html) { return show_in_notebook_(html); }
 
-// The look of the buttons is the notebook's own text colour with a faint outline, as the table's rules are.
-constexpr const char* kNotebookPlotStyle =
-    ".pluss-plot{display:block;max-width:100%;margin:.25em 0}"
-    ".pluss-plot svg{display:block;max-width:100%;height:auto}"
-    ".pluss-plot .bar{display:flex;gap:.4em;justify-content:flex-end;margin-bottom:.25em}"
-    ".pluss-plot button{font:inherit;font-size:.85em;color:inherit;background:transparent;cursor:pointer;"
-    "border:1px solid rgba(128,128,128,.45);border-radius:.3em;padding:.15em .6em}"
-    ".pluss-plot button:hover{background:rgba(128,128,128,.18)}";
-
-// Copy draws the SVG on a canvas at the screen's pixel ratio (so the picture is as sharp as the screen shows it) and puts
-// the PNG on the clipboard (the SVG text when the page may not write images); Save downloads the SVG itself. How long the
-// "copied" note stays is the one number, `hold`, at the top of the script.
-constexpr const char* kNotebookPlotScript =
-    "(function(root){var hold=1500,svg=root.querySelector('svg'),note=root.querySelector('.note');"
-    "function say(t){note.textContent=t;setTimeout(function(){note.textContent=''},hold)}"
-    "function text(){return new XMLSerializer().serializeToString(svg)}"
-    "root.querySelector('.copy').onclick=function(){var box=svg.viewBox.baseVal,img=new Image();"
-    "img.onload=function(){var k=window.devicePixelRatio||1,c=document.createElement('canvas');"
-    "c.width=box.width*k;c.height=box.height*k;"
-    "var g=c.getContext('2d');g.scale(k,k);g.drawImage(img,0,0,box.width,box.height);"
-    "c.toBlob(function(b){navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){say('copied')},"
-    "function(){navigator.clipboard.writeText(text()).then(function(){say('copied as SVG')},function(){say('copy is not allowed here')})})})};"
-    "img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(text())};"
-    "root.querySelector('.save').onclick=function(){var a=document.createElement('a');"
-    "a.href=URL.createObjectURL(new Blob([text()],{type:'image/svg+xml'}));a.download='plot.svg';a.click()};"
-    "})(document.currentScript.parentNode);";
-
-std::string render_notebook_plot_html(std::string_view svg) {
-  // Without the XML declaration (it is not allowed inside a page), and with the drawing allowed to shrink with its box.
+// A plot for a notebook: the SVG itself, so the editor treats it as a picture (VS Code adds its own Save button and opens it
+// in its plot viewer), made to fit the output's width. The drawing's fixed width and height are taken off its outer tag
+// and its proportions are kept in the viewBox, so it is as wide as the output and as tall as that width needs, never wider.
+std::string render_notebook_plot_svg(std::string_view svg) {
   if (svg.starts_with("<?xml")) {
     const auto end = svg.find("?>");
     svg.remove_prefix(end == std::string_view::npos ? 0 : end + 2);
@@ -4271,10 +4247,21 @@ std::string render_notebook_plot_html(std::string_view svg) {
       svg.remove_prefix(1);
     }
   }
-  return std::string("<div class=\"pluss-plot\"><style>") + kNotebookPlotStyle +
-         "</style><div class=\"bar\"><span class=\"note\"></span><button class=\"copy\">Copy</button>"
-         "<button class=\"save\">Save</button></div>" + std::string(svg) + "<script>" + kNotebookPlotScript +
-         "</script></div>";
+  const auto open = svg.find("<svg");
+  const auto close = open == std::string_view::npos ? std::string_view::npos : svg.find('>', open);
+  if (close == std::string_view::npos) return std::string(svg);
+  std::string tag(svg.substr(open, close - open));
+  const auto attribute = [&](const std::string& name) {
+    const std::regex pattern("\\s" + name + "=\"([^\"]*)\"");
+    std::smatch found;
+    return std::regex_search(tag, found, pattern) ? found[1].str() : std::string();
+  };
+  const std::string width = attribute("width");
+  const std::string height = attribute("height");
+  if (attribute("viewBox").empty() && !width.empty() && !height.empty()) tag += " viewBox=\"0 0 " + width + " " + height + "\"";
+  tag = std::regex_replace(tag, std::regex("\\s(width|height)=\"[^\"]*\""), "");
+  tag += " style=\"display:block;width:100%;max-width:" + (width.empty() ? std::string("100%") : width + "px") + ";height:auto\"";
+  return std::string(svg.substr(0, open)) + tag + std::string(svg.substr(close));
 }
 
 std::string render_notebook_html(const Atlas& atlas) { return render_notebook_stack_facts(atlas_facts_(atlas)); }

@@ -66,7 +66,7 @@ auto show(Chart& chart) -> decltype(chart.save_svg(std::string()), void()) {
   const std::string path = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/pluss_nb_chart.svg";
   chart.save_svg(path);
   std::ifstream in(path, std::ios::binary);
-  emit("text/html", pluss::table::display::render_notebook_plot_html(
+  emit("image/svg+xml", pluss::table::display::render_notebook_plot_svg(
       std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>())));
 }
 template <class T>

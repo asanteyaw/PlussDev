@@ -253,9 +253,9 @@ bool in_notebook();
 // The frame as the compact HTML table a notebook shows: no page and no scripts, styles scoped to the table, the
 // notebook's own colours, as tall as its rows (a long frame as its first and last rows).
 std::string render_notebook_html(const DataFrame& frame);
-// A plot's SVG as the HTML a notebook shows: the drawing scaled down to the width of the output, never wider, with a Copy
-// button (the picture, as an image) and a Save button (the SVG file). No page; styles and the one small script are scoped.
-std::string render_notebook_plot_html(std::string_view svg);
+// A plot's SVG for a notebook: the picture itself (the editor's own Save and plot viewer apply to it), as wide as the
+// output and as tall as that width needs, never wider than it was drawn.
+std::string render_notebook_plot_svg(std::string_view svg);
 // The page as HTML with every view tab filled in (for a browser or a notebook, and for tests).
 std::string render_html_model(const ModelPage& page, const DisplayOptions& options = {});
 // Opens the page in the viewer; returns false when only a terminal is available.
