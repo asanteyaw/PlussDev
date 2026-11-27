@@ -4056,7 +4056,10 @@ constexpr const char* kNotebookStyle =
     ".pluss-table tbody tr:hover{background:var(--pluss-hover)}"
     ".pluss-table .null{font-weight:700;color:var(--pluss-null)}"
     ".pluss-table .gap td{text-align:center;color:var(--pluss-muted)}"
-    ".pluss-table .foot{margin-top:.3em;color:var(--pluss-muted);font-size:.85em}";
+    ".pluss-table .foot{margin-top:.3em;color:var(--pluss-muted);font-size:.85em}"
+    // The bar under a ragged column's name: a faint track as wide as the header, filled for the column's share.
+    ".pluss-table .meter{height:.25em;margin-top:.35em;border-radius:.125em;background:var(--pluss-stripe);overflow:hidden}"
+    ".pluss-table .meter span{display:block;height:100%;background:currentColor;opacity:.55}";
 
 // The notebook table of any model PlussView can paint (a frame, a catalog's ragged grid, a registry's): the header, the
 // rows (the first and last few of a long one), blank where a column has no entry, and the footer line. Only the rows
@@ -4067,7 +4070,14 @@ std::string notebook_model_html_(const pluss::view::VirtualTableModel& model, co
   std::string html = std::string("<div class=\"pluss-table\"><style>") + kNotebookStyle + "</style><table><thead><tr><th>" +
                      escape_html_(model.row_header()) + "</th>";
   for (std::int64_t c = 0; c < columns; ++c) {
-    html += "<th>" + escape_html_(model.column_name(c)) + "</th>";
+    html += "<th>" + escape_html_(model.column_name(c));
+    // A model can carry a share under each column's name (a ragged column's length against the longest), drawn as the
+    // window draws it: a thin bar under the name.
+    if (const double meter = model.column_meter(c); meter >= 0.0) {
+      html += pluss::tils::OutputEngine::format("<div class=\"meter\"><span style=\"width:{:.1f}%\"></span></div>",
+                                                100.0 * std::min(1.0, meter));
+    }
+    html += "</th>";
   }
   html += "</tr></thead><tbody>";
   const bool cut = rows > kNotebookRowLimit;

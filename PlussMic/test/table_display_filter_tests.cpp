@@ -264,6 +264,9 @@ void test_notebook_shows_each_type_in_its_own_shape() {
   expect(has(catalog_text, "pluss-mime text/html") && has(catalog_text, "<table"), "a catalog is an HTML table");
   expect(has(catalog_text, "a &middot; 3") || has(catalog_text, "a \u00b7 3"), "whose headers say how long each key is");
   expect(has(catalog_text, "<td></td>"), "and whose missing entries are blank");
+  expect(has(catalog_text, "class=\"meter\"><span style=\"width:100.0%\"") &&
+             has(catalog_text, "class=\"meter\"><span style=\"width:33.3%\""),
+         "and whose headers show each key's length against the longest as a bar, as the window does");
 }
 
 // A Shelf, a Stream and a Slot are one-dimensional and print alike, and printing costs the rows shown, not the length.
