@@ -373,13 +373,13 @@ void test_stack_page_switches_levels() {
   expect(page.model->row_count() == 4, "a level past the end is the last one");
 }
 
-// A plot is the SVG itself, without the XML declaration and without a fixed size, so it fits the output's width.
+// A plot is the SVG itself, without the XML declaration, styled to fit the output's width while keeping its real size.
 void test_notebook_plot_fits_the_output() {
   const auto svg = pluss::table::display::render_notebook_plot_svg(
       "<?xml version=\"1.0\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1280\" height=\"820\"><rect width=\"10\" height=\"5\"/></svg>");
   expect(!has(svg, "<?xml") && svg.rfind("<svg", 0) == 0, "a notebook plot is the drawing, without the declaration");
   expect(has(svg, "viewBox=\"0 0 1280 820\""), "its proportions are kept");
-  expect(!has(svg, "<svg xmlns=\"http://www.w3.org/2000/svg\" width="), "its fixed size is taken off");
+  expect(has(svg, "width=\"1280\" height=\"820\""), "its real size stays, for a saved copy");
   expect(has(svg, "width:100%") && has(svg, "height:auto") && has(svg, "max-width:1280px"), "it fits the output and is never wider than drawn");
   expect(has(svg, "<rect width=\"10\" height=\"5\"/>"), "the drawing inside is untouched");
 }
