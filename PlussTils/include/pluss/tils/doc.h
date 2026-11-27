@@ -47,6 +47,9 @@ std::string file_in(const DocPage& page, std::string* why, std::string_view pref
 void print_in(std::string_view name, std::ostream& out, std::string_view prefix);
 void link_in(std::string_view name, std::ostream& out, std::string_view prefix);
 bool open_in(std::string_view name, std::ostream& out, std::string_view prefix);
+// A few lines for an editor's hover: the page's first signature (or its title), the first paragraph of what it does and
+// its address. Empty when no page is called `name` or the page cannot be read.
+std::string brief_in(std::string_view name, std::string_view prefix);
 }  // namespace doc_detail
 
 #ifndef PLUSS_SDK_PREFIX

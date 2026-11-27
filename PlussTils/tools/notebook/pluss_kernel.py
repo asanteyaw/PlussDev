@@ -17,6 +17,7 @@ kernel.json:
     PLUSS_LIBRARY      one shared library holding PlussII (see make_library.py)
     PLUSS_EXTRA_FLAGS  anything else clang-repl should be told, e.g. -DACCELERATE_NEW_LAPACK
 """
+import ctypes
 import os
 import platform
 import queue
@@ -308,6 +309,8 @@ class PlussKernel(Kernel):
         if include and not os.environ.get("PLUSS_PREFIX"):
             os.environ["PLUSS_PREFIX"] = os.path.dirname(include.rstrip("/"))
         self._words = None
+        self._doc_lib = None    # the documentation lookup in the shared library (False when it cannot be loaded)
+        self._last_completion = None
         self._history = []      # the cells that ran, for the compiler to read when it completes a name
         self._completer = self._make_completer()
         self._out = queue.Queue()
@@ -678,6 +681,14 @@ class PlussKernel(Kernel):
                 answer = None
             if answer is not None:
                 start, names, details = answer
+                context = code[:start]
+                # In a member list the compiler also offers the class's own name (Series, shown as "Series::"): it says
+                # which class the members belong to, which the hover needs, and is no use to type, so it is not offered.
+                member_class = None
+                if context.rstrip().endswith((".", "->")):
+                    member_class = next((name for name in names if details.get(name) == name + "::"), None)
+                    names = [name for name in names if name != member_class]
+                self._last_completion = {"context": context, "names": names, "details": details, "member_class": member_class}
                 kinds = [{"text": name, "type": "function" if "(" in details[name] else "property",
                           "signature": details[name]} for name in names]
                 return {"status": "ok", "matches": names, "cursor_start": start, "cursor_end": cursor_pos,
@@ -690,23 +701,81 @@ class PlussKernel(Kernel):
         matches = sorted(w for w in words if w.startswith(prefix) and w != prefix) if prefix else []
         return {"status": "ok", "matches": matches[:200], "cursor_start": start, "cursor_end": cursor_pos, "metadata": {}}
 
-    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
+    def _doc_library(self):
+        """The shared library's documentation lookup, loaded once; None when it cannot be (an older library)."""
+        if self._doc_lib is None:
+            try:
+                lib = ctypes.CDLL(os.environ["PLUSS_LIBRARY"])
+                lib.pluss_tils_doc_brief.restype = ctypes.c_void_p
+                lib.pluss_tils_doc_brief.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+                lib.pluss_tils_free.argtypes = [ctypes.c_void_p]
+                self._doc_lib = lib
+            except (OSError, AttributeError, KeyError):
+                self._doc_lib = False
+        return self._doc_lib or None
+
+    def _brief(self, name):
+        """A few lines about `name` from the documentation (signature, what it does, address), or ''."""
+        lib = self._doc_library()
+        if lib is None or not name:
+            return ""
+        raw = lib.pluss_tils_doc_brief(name.encode("utf-8"), os.environ.get("PLUSS_PREFIX", "").encode("utf-8"))
+        if not raw:
+            return ""
+        try:
+            return ctypes.string_at(raw).decode("utf-8", "replace")
+        finally:
+            lib.pluss_tils_free(raw)
+
+    @staticmethod
+    def _type_name(type_text):
+        """"const pluss::Series &" -> "Series": the name a documentation page is called by."""
+        text = re.sub(r"<.*>", "", type_text).replace("const", "").replace("&", "").replace("*", "").strip()
+        return text.split("::")[-1].strip()
+
+    def _inspect_target(self, code, cursor_pos):
+        """(name to look up, line to show with it, show that line even when a page is found) for the cursor.
+
+        An editor asking about a suggestion in the list sends text that ends with the suggestion's name (VS Code sends
+        the first characters of the cell and the name, which is only right on a one-line cell), so the name is matched
+        against the list this kernel just offered, which also says what it belongs to."""
+        before = code[:cursor_pos]
+        last = getattr(self, "_last_completion", None)
+        if last:
+            fits = [name for name in last["names"] if before.endswith(name)]
+            if fits:
+                name = max(fits, key=len)
+                detail = last["details"].get(name, "")
+                if last["member_class"]:
+                    return last["member_class"] + "::" + name, last["member_class"] + "::" + detail, False
+                qualifier = re.search(r"((?:[A-Za-z_]\w*::)+)$", last["context"])
+                if qualifier:
+                    return qualifier.group(1) + name, qualifier.group(1) + detail, False
+                if " -> " in detail and "(" not in detail:  # a variable: its type, then what the type is
+                    kind = detail.split(" -> ", 1)[1]
+                    return self._type_name(kind), "%s: %s" % (name, kind), True
+                return name, detail, False
         end = cursor_pos
         while end < len(code) and (code[end].isalnum() or code[end] in "_:"):
             end += 1
         start = cursor_pos
         while start > 0 and (code[start - 1].isalnum() or code[start - 1] in "_:"):
             start -= 1
-        token = code[start:end].strip(":")
-        if not token or not self._ready.is_set() or self._start_failure is not None:
+        return code[start:end].strip(":"), "", False
+
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
+        """The hover for a suggestion or for the name under the cursor, from the documentation that came with the
+        download. It does not run anything in the notebook's session."""
+        name, line, always = self._inspect_target(code, cursor_pos)
+        # Pages are called by the name a reader uses (Series, not pluss::Series): the last part is tried after the whole.
+        text = self._brief(name) or (self._brief(name.split("::")[-1]) if "::" in name else "")
+        if always and line:
+            text = line + ("\n\n" + text if text else "")
+        elif not text:
+            text = line
+        if not text:
             return {"status": "ok", "found": False, "data": {}, "metadata": {}}
-        try:
-            # Help is answered by the documentation header, which a notebook does not include until it is asked for.
-            out, _ = self._run_text('#include <pluss/tils/doc.h>\npluss::tils::doc("%s");' % token.replace("\\", "").replace('"', ""))
-        except Exception:
-            return {"status": "ok", "found": False, "data": {}, "metadata": {}}
-        out = out.strip()
-        return {"status": "ok", "found": bool(out), "data": {"text/plain": out} if out else {}, "metadata": {}}
+        return {"status": "ok", "found": True, "data": {"text/plain": text}, "metadata": {}}
 
     def do_shutdown(self, restart):
         if self._proc and self._proc.poll() is None:

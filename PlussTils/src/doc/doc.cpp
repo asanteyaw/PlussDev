@@ -5,14 +5,17 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <array>
 #include <map>
 #include <mutex>
+#include <regex>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -502,4 +505,102 @@ bool open_in(std::string_view name, std::ostream& out, std::string_view prefix) 
 
 }  // namespace doc_detail
 
+
+namespace {
+
+// Inline markup out of one line of a page: `code`, **bold**, [text](address) and {role}`text` become their text.
+std::string plain_line(std::string text) {
+  static const std::regex role(R"(\{[a-z]+\}`([^`]*)`)");
+  static const std::regex link(R"(\[([^\]]*)\]\([^)]*\))");
+  static const std::regex emphasis(R"(\*\*([^*]*)\*\*)");
+  text = std::regex_replace(text, role, "$1");
+  text = std::regex_replace(text, link, "$1");
+  text = std::regex_replace(text, emphasis, "$1");
+  text.erase(std::remove(text.begin(), text.end(), '`'), text.end());
+  return text;
+}
+
+// The first paragraph of prose at or after line `from`: lines up to a blank one, past headings, code, tables and the
+// site's own lines.
+std::string first_paragraph(const std::vector<std::string>& lines, std::size_t from) {
+  std::string paragraph;
+  bool in_code = false;
+  for (std::size_t i = from; i < lines.size(); ++i) {
+    const std::string& line = lines[i];
+    if (line.rfind("```", 0) == 0) {
+      in_code = !in_code;
+      if (!paragraph.empty()) break;
+      continue;
+    }
+    if (in_code) continue;
+    const bool prose = !line.empty() && line[0] != '#' && line[0] != '|' && line[0] != '<' && line.rfind("[Back", 0) != 0;
+    if (!prose) {
+      if (!paragraph.empty()) break;
+      continue;
+    }
+    paragraph += (paragraph.empty() ? "" : " ") + plain_line(line);
+  }
+  return paragraph;
+}
+
+}  // namespace
+
+namespace doc_detail {
+
+std::string brief_in(std::string_view name, std::string_view prefix) {
+  const auto page = doc_find(name);
+  if (!page) return {};
+  const auto raw = page_text(*page, prefix, nullptr);
+  if (!raw) return {};
+  std::vector<std::string> lines;
+  std::istringstream in(*raw);
+  for (std::string line; std::getline(in, line);) {
+    if (!line.empty() && line.back() == '\r') line.pop_back();
+    lines.push_back(line);
+  }
+  std::string signature;
+  std::size_t does = lines.size();
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (lines[i] == "## Signature" && signature.empty()) {
+      for (std::size_t j = i + 1; j < lines.size() && lines[j].rfind("## ", 0) != 0; ++j) {
+        if (lines[j].empty() || lines[j].rfind("```", 0) == 0) continue;
+        // A long signature is written over several lines: read on until its brackets close.
+        signature = lines[j];
+        for (std::size_t k = j + 1; k < lines.size() && std::count(signature.begin(), signature.end(), '(') > std::count(signature.begin(), signature.end(), ')'); ++k) {
+          const auto start = lines[k].find_first_not_of(" \t");
+          if (start != std::string::npos) signature += (signature.back() == '(' ? "" : " ") + lines[k].substr(start);
+        }
+        break;
+      }
+    } else if (lines[i] == "## What It Does") {
+      does = i + 1;
+    }
+  }
+  std::string summary = does < lines.size() ? first_paragraph(lines, does) : std::string();
+  if (summary.empty()) {
+    const auto title = std::find_if(lines.begin(), lines.end(), [](const std::string& line) { return line.rfind("# ", 0) == 0; });
+    summary = first_paragraph(lines, title == lines.end() ? 0 : static_cast<std::size_t>(title - lines.begin()) + 1);
+  }
+  return (signature.empty() ? page->title : signature) + (summary.empty() ? "" : "\n\n" + summary) + "\n\n" + page->url;
+}
+
+}  // namespace doc_detail
+
 }  // namespace pluss::tils
+
+#if defined(_WIN32)
+#define PLUSS_TILS_C_EXPORT __declspec(dllexport)
+#else
+#define PLUSS_TILS_C_EXPORT __attribute__((visibility("default")))
+#endif
+
+// For the notebook kernel, which reads the hover text from the shared library without going through the user's session.
+// The string is the caller's to release with pluss_tils_free.
+extern "C" PLUSS_TILS_C_EXPORT char* pluss_tils_doc_brief(const char* name, const char* prefix) {
+  const std::string text = pluss::tils::doc_detail::brief_in(name != nullptr ? name : "", prefix != nullptr ? prefix : "");
+  char* out = static_cast<char*>(std::malloc(text.size() + 1));
+  if (out != nullptr) std::memcpy(out, text.c_str(), text.size() + 1);
+  return out;
+}
+
+extern "C" PLUSS_TILS_C_EXPORT void pluss_tils_free(char* text) { std::free(text); }

@@ -152,6 +152,20 @@ def main():
         run("pluss::Series after_shown = pluss::make_series({4.0, 5.0});")
         check("a variable declared after a cell that only showed a value completes", "after_shown" in completions("after_s"), "after_shown not offered")
         check("and its members", "sum" in completions("after_shown."), "sum not offered after after_shown.")
+
+        def hover(code):
+            """What the kernel says about the end of `code`, as an editor asks for a suggestion's help."""
+            mid = kc.inspect(code, len(code))
+            while True:
+                m = kc.get_shell_msg(timeout=120)
+                if m["parent_header"].get("msg_id") == mid:
+                    return m["content"]
+
+        completions("sv.")
+        r = hover("sv.sum")
+        check("a member's help comes from the documentation", r.get("found") and "Series::sum" in r["data"].get("text/plain", ""), r)
+        r = hover("no_such_name_anywhere")
+        check("a name with no page has no help popup", not r.get("found"), r)
     finally:
         km.shutdown_kernel(now=True)
     print("%d check(s) failed" % len(failures))
