@@ -159,13 +159,13 @@ s;                                               // shows nothing
 ### Checking the setup
 
 ```text
-pluss kernel doctor
+pluss kernel check
 ```
 
 checks that the kernel belongs to the download you are running, that it declares the language editors ask for suggestions under, that clang-repl can read the SDK and the shared library is built, and, in VS Code, that the setting above is present. It changes nothing unless you add `--fix`, which adds the VS Code setting. Name notebooks after it to scan them:
 
 ```text
-pluss kernel doctor --fix analysis.ipynb
+pluss kernel check --fix analysis.ipynb
 ```
 
 A notebook made with an earlier kernel can carry a language tag in its cells that makes VS Code skip them when you press Run. The command removes those tags and keeps the original as `analysis.ipynb.pluss-backup`.

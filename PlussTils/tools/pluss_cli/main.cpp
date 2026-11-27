@@ -268,7 +268,7 @@ void usage() {
             << "      --clean                 discard the cached build first\n"
             << "  pluss new name                                     start a project in a new folder\n"
             << "  pluss kernel install [options]                     add the PlussII C++ kernel to Jupyter and VS Code\n"
-            << "  pluss kernel doctor [--fix] [notebook ...]         check the kernel and VS Code, and the notebooks named\n"
+            << "  pluss kernel check [--fix] [notebook ...]          check the kernel and VS Code, and the notebooks named\n"
             << "  pluss doctor                                       check that this machine can build\n"
             << "  pluss version                                      print the version\n\n"
             << "Set PLUSS_CMAKE_ARGS to add arguments to the CMake configure step.\n";
@@ -724,19 +724,19 @@ int command_doctor() {
   ok("the test program ran");
   std::cout << "\n" << ran.output;
   std::cout << (problems == 0 ? "\nEverything needed is in place.\n" : "\nSome checks failed; see above.\n");
-  std::cout << "To check the notebook kernel and VS Code instead, run: pluss kernel doctor\n";
+  std::cout << "To check the notebook kernel and VS Code instead, run: pluss kernel check\n";
   return problems == 0 ? 0 : 1;
 }
 
 // ---- kernel: the Jupyter kernel that comes with the download -------------------------------------
 
 int command_kernel(const std::vector<std::string>& args) {
-  // `install` registers the kernel; `doctor` checks it and the editor that talks to it. Both are one Python program each,
+  // `install` registers the kernel; `check` checks it and the editor that talks to it. Both are one Python program each,
   // sharing the checks, and both stay in the download beside the kernel.
   const std::string what = args.empty() ? "" : args[0];
-  if (what != "install" && what != "doctor") {
+  if (what != "install" && what != "check") {
     std::cerr << "usage: pluss kernel install [--clang-repl path] [--sysroot path] [--yes]\n"
-                 "       pluss kernel doctor [--fix] [notebook.ipynb ...]\n";
+                 "       pluss kernel check [--fix] [notebook.ipynb ...]\n";
     return 2;
   }
   const fs::path prefix = sdk_prefix();

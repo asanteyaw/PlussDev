@@ -1,6 +1,6 @@
 """Check the PlussII notebook kernel and the editor that talks to it, and say what to change.
 
-    pluss kernel doctor [--fix] [notebook.ipynb ...]
+    pluss kernel check [--fix] [notebook.ipynb ...]
 
 It looks at the installed kernel (does it belong to the download you are running, does it declare the language the
 editors ask for completions under, do clang-repl and the shared library work) and at VS Code (is the setting that turns
@@ -258,7 +258,7 @@ def check_editors(report, fix):
                 report.bad("%s: %s" % (editor, message), "then reload the window")
         else:
             report.bad("%s does not ask the kernel for completions: %s has no '%s' entry" % (editor, SETTING, KERNEL_LANGUAGE),
-                       "run  pluss kernel doctor --fix  to add it, then reload the window")
+                       "run  pluss kernel check --fix  to add it, then reload the window")
 
 
 def check_notebooks(report, paths, fix):
@@ -277,7 +277,7 @@ def check_notebooks(report, paths, fix):
             report.ok("%s: removed %d stale cell tag(s) (the original is kept as %s)" % (path, cells, os.path.basename(kept)))
         else:
             report.bad("%s has %d cell(s) tagged with the language of an older kernel, and VS Code will not run them" % (path, cells),
-                       "run  pluss kernel doctor --fix %s" % path)
+                       "run  pluss kernel check --fix %s" % path)
 
 
 def run_checks(prefix, fix=False, notebooks=()):

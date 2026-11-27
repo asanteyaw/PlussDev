@@ -18,7 +18,7 @@ The command finds everything from where it sits, so it works wherever the downlo
 | `pluss new name` | creates a project folder with a `CMakeLists.txt`, a `main.cpp`, a CMake preset that points at this download, a `.gitignore` and a short README |
 | `pluss doctor` | builds and runs a test program against this download, and says what is missing if it cannot |
 | `pluss kernel install` | registers the notebook kernel for Jupyter and VS Code (see "Notebooks (preview)") |
-| `pluss kernel doctor [--fix] [notebook ...]` | checks the kernel and VS Code, and the notebooks named |
+| `pluss kernel check [--fix] [notebook ...]` | checks the kernel and VS Code, and the notebooks named |
 | `pluss version` | prints the version and channel |
 
 `run` accepts these options before the program's own arguments.

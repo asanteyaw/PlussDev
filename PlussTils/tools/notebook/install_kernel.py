@@ -108,7 +108,7 @@ def main():
     path = KernelSpecManager().install_kernel_spec(spec_dir, kernel_name=KERNEL_NAME, user=True)
     print("installed the PlussII C++ kernel at", path)
     print("Open Jupyter or VS Code and pick the kernel 'PlussII C++'.\n")
-    # The same checks as `pluss kernel doctor`. VS Code needs one setting to ask the kernel for completions; it is added
+    # The same checks as `pluss kernel check`. VS Code needs one setting to ask the kernel for completions; it is added
     # only when --yes was given or the answer to the question is yes.
     import kernel_check
     fix = args.yes
