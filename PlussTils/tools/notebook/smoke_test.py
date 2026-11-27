@@ -50,6 +50,9 @@ def main():
     from jupyter_client.manager import start_new_kernel
 
     km, kc = start_new_kernel(kernel_name="pluss", startup_timeout=600)
+    kc.kernel_info()
+    info = kc.get_shell_msg(timeout=60)["content"].get("language_info", {})
+    check("the kernel reports the language its registration declares", info.get("name") == "cpp", info)
 
     def show_log():
         if os.path.exists(log):

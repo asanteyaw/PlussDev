@@ -290,10 +290,12 @@ class ClangCompleter:
 class PlussKernel(Kernel):
     implementation = "pluss"
     implementation_version = "0.0.1"
-    language = "c++"
+    # The language as editors name it ("cpp" is VS Code's id for C++, which it gives new cells and asks for completions
+    # under); the same value install_kernel.py writes, so the kernel and its registration never disagree.
+    language = "cpp"
     language_version = "20"
     language_info = {
-        "name": "c++",
+        "name": "cpp",
         "mimetype": "text/x-c++src",
         "file_extension": ".cpp",
         "codemirror_mode": "text/x-c++src",

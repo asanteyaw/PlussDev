@@ -142,7 +142,9 @@ def stale_cells(notebook, names=(KERNEL_NAME,)):
     cells = sum(1 for cell in notebook.get("cells", [])
                 if (cell.get("metadata", {}).get("vscode", {}) or {}).get("languageId") in STALE_LANGUAGES)
     kernelspec = notebook.get("metadata", {}).get("kernelspec", {})
-    old_spec = ours(kernelspec, names) and kernelspec.get("language") in STALE_LANGUAGES
+    info = notebook.get("metadata", {}).get("language_info", {})
+    old_spec = ours(kernelspec, names) and (kernelspec.get("language") in STALE_LANGUAGES or
+                                            (isinstance(info, dict) and info.get("name") in STALE_LANGUAGES))
     return cells, old_spec
 
 
