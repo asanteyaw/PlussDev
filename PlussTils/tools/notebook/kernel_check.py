@@ -281,9 +281,11 @@ def check_notebooks(report, paths, fix, names=(KERNEL_NAME,)):
         elif fix:
             kept = save_beside(path, ".pluss-backup")
             write_notebook(path, clean_notebook(notebook, names))
-            report.ok("%s: removed %d stale cell tag(s) (the original is kept as %s)" % (path, cells, os.path.basename(kept)))
+            changes = (["removed %d stale cell tag(s)" % cells] if cells else []) + (["set its kernel language to '%s'" % KERNEL_LANGUAGE] if old_spec else [])
+            report.ok("%s: %s (the original is kept as %s)" % (path, " and ".join(changes), os.path.basename(kept)))
         else:
-            report.bad("%s has %d cell(s) tagged with the language of an older kernel, and VS Code will not run them" % (path, cells),
+            found = "%d cell(s) tagged with the language of an older kernel, which VS Code will not run" % cells if cells else "the kernel language of an older kernel ('c++')"
+            report.bad("%s has %s" % (path, found),
                        "run  pluss kernel check --fix %s" % path)
 
 
