@@ -144,7 +144,7 @@ def main():
         r = run('throw std::runtime_error("boom from a cell");')
         check("an error a cell throws is shown with its own message", r["error"] is not None and "boom from a cell" in r.get("traceback", ""), r)
         r = run("pluss::series::arange(0.0, 6.0, 1.0).reshape({5});")
-        check("a PlussII error at run time is shown with its message", r["error"] is not None and "reshape" in r.get("traceback", "").lower(), r)
+        check("a PlussII error at run time is shown with its message", r["error"] is not None and "must match" in r.get("traceback", ""), r)
         r = run("std::cout << kept_through_an_error + 1 << std::endl;")
         check("a cell that throws keeps the variables of earlier cells", r["text"].strip() == "42", r)
         r = run("int* n = nullptr; *n = 1;")

@@ -27,9 +27,27 @@ import pluss_kernel as kernel  # noqa: E402  (the kernel's compiler setup and ce
 DIAGNOSTIC = re.compile(r"^cell:(\d+):(\d+): (error|warning): (.*)$")
 
 
+def shown_line_shift(cell, text):
+    """(line, where the display call's argument begins, how far it moved): the kernel shows a cell's last bare expression
+    by wrapping it in its display call, which moves that expression right; a position on it is moved back."""
+    before, after = cell.rstrip().split("\n"), text.rstrip().split("\n")
+    if before == after:
+        return None
+    line = len(after)
+    call = after[-1].find(kernel.SHOW_CALL)
+    if call < 0:
+        return None
+    argument = call + len(kernel.SHOW_CALL)
+    original = before[-1]
+    start = kernel.PlussKernel._last_statement_start(original)
+    start += len(original[start:]) - len(original[start:].lstrip())
+    return line, argument, argument - start
+
+
 def diagnostics(compiler, earlier, cell):
     ran = [kernel.PlussKernel._declarations_of(text) for text in earlier if text.strip()]
     text = kernel.PlussKernel._show_last_expression(cell)
+    shift = shown_line_shift(cell, text)
     report = compiler.check(ran, text)
     found = []
     for line in report.split("\n"):
@@ -39,7 +57,10 @@ def diagnostics(compiler, earlier, cell):
         message = match.group(4)
         if kernel.REDEFINED.search(line):
             continue  # a cell run again: the kernel renames it
-        found.append({"line": int(match.group(1)), "column": int(match.group(2)), "severity": match.group(3),
+        row, column = int(match.group(1)), int(match.group(2))
+        if shift is not None and row == shift[0]:
+            column = max(1, column - shift[2]) if column > shift[1] else max(1, shift[1] - shift[2] + 1)
+        found.append({"line": row, "column": column, "severity": match.group(3),
                       "message": message.replace("pluss::nb::show(", "").rstrip()})
     return found
 

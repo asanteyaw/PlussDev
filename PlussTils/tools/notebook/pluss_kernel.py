@@ -837,7 +837,8 @@ class PlussKernel(Kernel):
                 if context.rstrip().endswith((".", "->")):
                     member_class = next((name for name in names if details.get(name) == name + "::"), None)
                     names = [name for name in names if name != member_class]
-                self._last_completion = {"context": context, "names": names, "details": details, "member_class": member_class}
+                self._last_completion = {"context": context, "names": names, "details": details, "member_class": member_class,
+                                         "code": code, "start": start}
                 kinds = [{"text": name, "type": "function" if "(" in details[name] else "property",
                           "signature": details[name]} for name in names]
                 return {"status": "ok", "matches": names, "cursor_start": start, "cursor_end": cursor_pos,
@@ -891,7 +892,17 @@ class PlussKernel(Kernel):
         before = code[:cursor_pos]
         last = getattr(self, "_last_completion", None)
         if last:
-            fits = [name for name in last["names"] if before.endswith(name)]
+            # Either the whole word before the cursor is a suggestion (a client that sends the text as it is), or the
+            # text is exactly what VS Code sends for one: the cell's first characters, as many as the suggestion's
+            # column, then the suggestion. A name that merely ends like a suggestion (no_such_name_anywhere and
+            # "where") is neither.
+            column = last["start"] - (last["code"].rfind("\n", 0, last["start"]) + 1)
+            garbled = last["code"][:column]
+            word_start = len(before)
+            while word_start > 0 and (before[word_start - 1].isalnum() or before[word_start - 1] == "_"):
+                word_start -= 1
+            word = before[word_start:]
+            fits = [name for name in last["names"] if word == name or before == garbled + name]
             if fits:
                 name = max(fits, key=len)
                 detail = last["details"].get(name, "")
