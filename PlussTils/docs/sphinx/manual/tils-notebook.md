@@ -136,3 +136,37 @@ The notebook kernel is not available on Windows yet. PlussII programs and PlussV
 
 Start Jupyter (`jupyter lab`) or open a notebook in VS Code and choose the kernel "PlussII C++". The first cell takes a moment while the interpreter starts.
 
+### VS Code: suggestions as you type
+
+VS Code asks a kernel for suggestions only for the languages named in its setting `jupyter.completionTriggerCharacters`, and C++ is not one of them. With the entry below, typing `s1.` offers the members of `s1`, a name offers the variables and functions of earlier cells, and `pluss::` offers the library's names.
+
+```json
+"jupyter.completionTriggerCharacters": { "cpp": [".", ":", ">"] }
+```
+
+`pluss kernel install` offers to add this to your user settings (`--yes` adds it without asking). The original file is kept beside the edited one as `settings.json.pluss-backup`. Reload the VS Code window afterwards.
+
+### Showing a value and hiding it
+
+A cell whose last statement is an expression shows its value, as a notebook does. End that statement with a semicolon to hide the value.
+
+```cpp
+auto s = pluss::series::arange(0.0, 6.0, 1.0);   // nothing is shown: the cell ends in a declaration
+s                                                // shows s
+s;                                               // shows nothing
+```
+
+### Checking the setup
+
+```text
+pluss kernel doctor
+```
+
+checks that the kernel belongs to the download you are running, that it declares the language editors ask for suggestions under, that clang-repl can read the SDK and the shared library is built, and, in VS Code, that the setting above is present. It changes nothing unless you add `--fix`, which adds the VS Code setting. Name notebooks after it to scan them:
+
+```text
+pluss kernel doctor --fix analysis.ipynb
+```
+
+A notebook made with an earlier kernel can carry a language tag in its cells that makes VS Code skip them when you press Run. The command removes those tags and keeps the original as `analysis.ipynb.pluss-backup`.
+

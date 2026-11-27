@@ -268,6 +268,7 @@ void usage() {
             << "      --clean                 discard the cached build first\n"
             << "  pluss new name                                     start a project in a new folder\n"
             << "  pluss kernel install [options]                     add the PlussII C++ kernel to Jupyter and VS Code\n"
+            << "  pluss kernel doctor [--fix] [notebook ...]         check the kernel and VS Code, and the notebooks named\n"
             << "  pluss doctor                                       check that this machine can build\n"
             << "  pluss version                                      print the version\n\n"
             << "Set PLUSS_CMAKE_ARGS to add arguments to the CMake configure step.\n";
@@ -723,20 +724,26 @@ int command_doctor() {
   ok("the test program ran");
   std::cout << "\n" << ran.output;
   std::cout << (problems == 0 ? "\nEverything needed is in place.\n" : "\nSome checks failed; see above.\n");
+  std::cout << "To check the notebook kernel and VS Code instead, run: pluss kernel doctor\n";
   return problems == 0 ? 0 : 1;
 }
 
 // ---- kernel: the Jupyter kernel that comes with the download -------------------------------------
 
 int command_kernel(const std::vector<std::string>& args) {
-  if (args.empty() || args[0] != "install") {
-    std::cerr << "usage: pluss kernel install [--clang-repl path] [--sysroot path]\n";
+  // `install` registers the kernel; `doctor` checks it and the editor that talks to it. Both are one Python program each,
+  // sharing the checks, and both stay in the download beside the kernel.
+  const std::string what = args.empty() ? "" : args[0];
+  if (what != "install" && what != "doctor") {
+    std::cerr << "usage: pluss kernel install [--clang-repl path] [--sysroot path] [--yes]\n"
+                 "       pluss kernel doctor [--fix] [notebook.ipynb ...]\n";
     return 2;
   }
   const fs::path prefix = sdk_prefix();
-  const fs::path script = prefix / "share" / "pluss" / "notebook" / "install_kernel.py";
+  const std::string file = what == "install" ? "install_kernel.py" : "kernel_check.py";
+  const fs::path script = prefix / "share" / "pluss" / "notebook" / file;
   if (prefix.empty() || !fs::exists(script)) {
-    std::cerr << "pluss: the notebook kernel files are not in this download (share/pluss/notebook/install_kernel.py).\n";
+    std::cerr << "pluss: the notebook kernel files are not in this download (share/pluss/notebook/" << file << ").\n";
     return 1;
   }
 #if defined(_WIN32)

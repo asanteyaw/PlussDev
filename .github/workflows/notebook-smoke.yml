@@ -79,6 +79,13 @@ jobs:
           "$PREFIX/bin/pluss" kernel install
           ls "$JUPYTER_DATA_DIR/kernels/pluss"
 
+      - name: Check the kernel with pluss kernel doctor
+        run: |
+          export PLUSS_PYTHON=$(which python)
+          python PlussTils/tools/notebook/test_kernel_check.py
+          # No editor is installed on the runner, so the kernel checks are what is tested here.
+          "$PREFIX/bin/pluss" kernel doctor
+
       - name: Run the notebook smoke test
         run: |
           if [ "${{ inputs.repo_kernel }}" = "true" ]; then

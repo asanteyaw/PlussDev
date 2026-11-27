@@ -17,6 +17,11 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# The kernel's name, and the language it declares. Editors ask a kernel for completions under the language it declares,
+# and VS Code names its C++ cells "cpp", so the two must match; kernel_check.py reads these same two values.
+KERNEL_NAME = "pluss"
+KERNEL_LANGUAGE = "cpp"
+
 
 def find_clang_repl():
     """clang-repl from the PATH, or from the usual LLVM install folders."""
@@ -65,6 +70,7 @@ def main():
     parser.add_argument("--sysroot", default=None, help="SDK to compile against (macOS)")
     parser.add_argument("--extra-flags", default="-DACCELERATE_NEW_LAPACK" if sys.platform == "darwin" else "")
     parser.add_argument("--user", action="store_true", help="install for the current user (default)")
+    parser.add_argument("--yes", action="store_true", help="also add the VS Code setting that turns on completions, without asking")
     args = parser.parse_args()
     if args.sysroot is None:
         args.sysroot = find_sysroot(args.clang_repl)
@@ -88,7 +94,7 @@ def main():
     spec = {
         "argv": [sys.executable, os.path.join(HERE, "pluss_kernel.py"), "-f", "{connection_file}"],
         "display_name": "PlussII C++",
-        "language": "cpp",  # a VS Code language id: the Jupyter extension asks a kernel for completions under this exact name
+        "language": KERNEL_LANGUAGE,
         "env": {
             "PLUSS_CLANG_REPL": args.clang_repl,
             "PLUSS_SYSROOT": args.sysroot,
@@ -99,9 +105,19 @@ def main():
     }
     with open(os.path.join(spec_dir, "kernel.json"), "w") as handle:
         json.dump(spec, handle, indent=2)
-    path = KernelSpecManager().install_kernel_spec(spec_dir, kernel_name="pluss", user=True)
+    path = KernelSpecManager().install_kernel_spec(spec_dir, kernel_name=KERNEL_NAME, user=True)
     print("installed the PlussII C++ kernel at", path)
-    print("Open Jupyter or VS Code and pick the kernel 'PlussII C++'.")
+    print("Open Jupyter or VS Code and pick the kernel 'PlussII C++'.\n")
+    # The same checks as `pluss kernel doctor`. VS Code needs one setting to ask the kernel for completions; it is added
+    # only when --yes was given or the answer to the question is yes.
+    import kernel_check
+    fix = args.yes
+    missing = kernel_check.editors_missing_setting()
+    if missing and not fix and sys.stdin.isatty():
+        names = ", ".join(editor for editor, _ in missing)
+        answer = input("%s needs the setting %s to offer completions for C++ cells.\nAdd it to the user settings now? [y/N] " % (names, kernel_check.SETTING))
+        fix = answer.strip().lower() in ("y", "yes")
+    kernel_check.run_checks(args.prefix, fix=fix)
 
 
 if __name__ == "__main__":
