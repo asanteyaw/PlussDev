@@ -1046,6 +1046,7 @@ void test_virtual_table_double_click_fits_a_squeezed_column() {
   using namespace pluss::view;
   using namespace pluss::view::window;
 
+  constexpr std::int64_t kLongRow = 12345;
   class Crowded final : public VirtualTableModel {
    public:
     std::int64_t row_count() const noexcept override { return 20000; }
@@ -1055,7 +1056,8 @@ void test_virtual_table_double_click_fits_a_squeezed_column() {
     std::string column_name(const std::int64_t column) const override { return "column_" + std::to_string(column); }
     bool column_numeric(std::int64_t) const noexcept override { return false; }
     VirtualTableCell cell(const std::int64_t row, std::int64_t) const override {
-      return VirtualTableCell{.text = "a fairly long cell value " + std::to_string(row)};
+      // One row deep in the table, which the rows read for the first layout do not reach, is much the longest.
+      return VirtualTableCell{.text = row == kLongRow ? std::string(40, 'W') : "a fairly long cell value " + std::to_string(row)};
     }
     bool row_matches(std::int64_t, const std::string_view) const override { return true; }
   };
@@ -1091,8 +1093,15 @@ void test_virtual_table_double_click_fits_a_squeezed_column() {
   widths[target][1] = 0;  // a double-click: fit
   const int fitted = column_width(&widths).second;
   expect(fitted > squeezed, "fitting a squeezed column of a long table makes it as wide as its values");
-  widths[target].clear();  // a second double-click: back to the shared width
-  expect(column_width(&widths).second == squeezed, "fitting again restores the shared width");
+  const auto geo = resolve_table_geometry(13);
+  expect(fitted > geo.max_column,
+         "the fit reaches the widest value over every row, not only the rows read for the first layout");
+  widths[target][1] = 0;  // a second double-click: the column stays fitted (a guide, not a toggle)
+  expect(column_width(&widths).second == fitted, "double-clicking a fitted column leaves it as it is");
+  widths[target][1] = geo.min_resize;  // dragged narrow
+  expect(column_width(&widths).second < fitted, "a drag still sizes the column freely");
+  widths[target][1] = 0;  // and a double-click brings it back to the fit
+  expect(column_width(&widths).second == fitted, "double-clicking a dragged column returns it to the fit");
 }
 
 void test_no_matching_rows_is_centred() {

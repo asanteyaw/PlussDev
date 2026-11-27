@@ -2337,7 +2337,7 @@ struct TableLayout {
         if (width <= 0) {
           // Double-click on a border: fit the header and every displayed value.
           const auto source = plan.source_indices[static_cast<std::size_t>(column)];
-          target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()),
+          target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()) + geometry_px.fit_margin,
                               geometry_px.min_resize,
                               static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
         }
@@ -3498,13 +3498,7 @@ int render_virtual_table(
       dragged_widths = &found->second;
     }
   }
-  const auto dragged_width = [&](const int key) {
-    if (dragged_widths == nullptr) {
-      return 0;
-    }
-    const auto it = dragged_widths->find(key);
-    return it == dragged_widths->end() || it->second <= 0 ? 0 : std::max(virtual_geo.min_resize, it->second);
-  };
+
   int row_header_w = 0;  // the label column's width, planned with the other columns below
   const int content_height = virtual_table_content_height(style, &render_config);
   const int total_h =
@@ -3576,11 +3570,11 @@ int render_virtual_table(
       }
     }
   }
+  const int sort_room = render_config.table_sort_controls && model->sortable() ? virtual_geo.sort_gutter : 0;
+  const auto text_width = [&](const std::string& text, const int weight) {
+    return painted_text_width(text, style.font_size, weight, style.font_family);
+  };
   if (!cached_widths) {
-    const int sort_room = render_config.table_sort_controls && model->sortable() ? virtual_geo.sort_gutter : 0;
-    const auto text_width = [&](const std::string& text, const int weight) {
-      return painted_text_width(text, style.font_size, weight, style.font_family);
-    };
     // The rows read to size the columns: evenly spread over the table, and always its last row.
     std::vector<std::int64_t> sample;
     const std::int64_t wanted = static_cast<std::int64_t>(virtual_geo.fit_sample_rows);
@@ -3623,7 +3617,57 @@ int render_virtual_table(
           };
     }
   }
-  row_header_w = dragged_width(0) > 0 ? dragged_width(0) : natural.label;
+  // Double-click on a divider (a width of 0 among the user's widths) fits that column the way a spreadsheet does: as wide
+  // as its header and its widest value over every row of the model, plus a margin so the divider does not touch the
+  // text. The widths are measured once per column and kept until the model changes.
+  HtmlTableGeometryCacheEntry* fit_cache = nullptr;
+  if (render_config.layout_cache != nullptr) {
+    const auto found = render_config.layout_cache->tables.find(table_target);
+    if (found != render_config.layout_cache->tables.end() && found->second.model_revision == model->revision() &&
+        found->second.node_identity == reinterpret_cast<std::uintptr_t>(model)) {
+      fit_cache = &found->second;
+    }
+  }
+  const auto fit_all = [&](const int key) {
+    if (fit_cache != nullptr) {
+      if (const auto known = fit_cache->fitted_widths.find(key); known != fit_cache->fitted_widths.end()) return known->second;
+    }
+    const auto text_of = [&](const std::int64_t row) {
+      return key == 0 ? model->row_label(row) : model->cell(row, key - 1).text;
+    };
+    // Measuring every value's painted width would cost a font lookup per row; the widest text is among the longest
+    // strings, so the rows are scanned for length and only the longest few are measured.
+    constexpr std::size_t kMeasuredCandidates = 16;  // enough to cover narrow and wide glyphs of the same length
+    std::vector<std::pair<std::size_t, std::int64_t>> longest;  // (length, row), shortest first once full
+    for (std::int64_t row = 0; row < model_row_count; ++row) {
+      const std::size_t length = text_of(row).size();
+      if (longest.size() < kMeasuredCandidates) {
+        longest.emplace_back(length, row);
+        std::push_heap(longest.begin(), longest.end(), std::greater<>{});
+      } else if (length > longest.front().first) {
+        std::pop_heap(longest.begin(), longest.end(), std::greater<>{});
+        longest.back() = {length, row};
+        std::push_heap(longest.begin(), longest.end(), std::greater<>{});
+      }
+    }
+    int widest = text_width(key == 0 ? model->row_header() : model->column_name(key - 1), paint.header_weight) + sort_room +
+                 2 * paint.header_padding;
+    for (const auto& [length, row] : longest) {
+      widest = std::max(widest, text_width(text_of(row), style.font_weight) + 2 * paint.body_padding);
+    }
+    const int fitted = std::min(widest + virtual_geo.fit_margin,
+                                std::max(virtual_geo.min_resize, static_cast<int>(std::lround(content_w * virtual_geo.max_autofit_viewports))));
+    if (fit_cache != nullptr) fit_cache->fitted_widths[key] = fitted;
+    return fitted;
+  };
+  // What the user set for a column: a dragged width, the fit of a double-click, or 0 when the column is left as laid out.
+  const auto user_width = [&](const int key) {
+    if (dragged_widths == nullptr) return 0;
+    const auto it = dragged_widths->find(key);
+    if (it == dragged_widths->end()) return 0;
+    return it->second > 0 ? std::max(virtual_geo.min_resize, it->second) : fit_all(key);
+  };
+  row_header_w = user_width(0) > 0 ? user_width(0) : natural.label;
   // What the columns have to share: the panel less the label column (the least the view can be is a sliver, so a
   // table narrower than its own label column still has a sensible width to plan with).
   const auto columns_view_width = [&](const int label_width) { return std::max(16, content_w - label_width); };
@@ -3635,7 +3679,7 @@ int render_virtual_table(
     std::vector<bool> flexible(wanted_widths.size(), true);
     std::ptrdiff_t last_sized = -1;  // the right-most column the user dragged or fitted
     for (std::size_t c = 0; c < wanted_widths.size(); ++c) {
-      if (const int dragged = dragged_width(static_cast<int>(c) + 1); dragged > 0) {
+      if (const int dragged = user_width(static_cast<int>(c) + 1); dragged > 0) {
         wanted_widths[c] = dragged;
         flexible[c] = false;
         last_sized = static_cast<std::ptrdiff_t>(c);

@@ -137,7 +137,7 @@ Open the **Theme** menu to restyle the window: Default, Ember, Nardo, Brooklands
 
 Each column header has two small stacked triangles. One sorts that column ascending and the other descending. Clicking elsewhere on the header does not sort. Column names are bold. Everything in this section works the same whatever the size of the table: a frame of five rows and one of five million are painted by the same code.
 
-Drag the border between two headers to resize the column to its left, or double-click the border to fit the column to its contents and double-click again to return it. Only that column changes. The last column has no border to drag: it is the table's automatic column, so it takes whatever room the others leave and the table always fills the window. Here the `units` column has been dragged narrower and `revenue` has taken the room:
+Drag the border between two headers to resize the column to its left, or double-click the border to fit the column to its contents: as wide as its header and its longest value in the whole table, with a little room after it. Double-clicking a fitted column leaves it as it is, and double-clicking a column you dragged brings it back to the fit. Only that column changes. The last column has no border to drag: it is the table's automatic column, so it takes whatever room the others leave and the table always fills the window. Here the `units` column has been dragged narrower and `revenue` has taken the room:
 
 ![The units column dragged narrower, with revenue taking the room](assets/pv_table_resized.png)
 

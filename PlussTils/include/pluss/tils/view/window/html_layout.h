@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -41,6 +42,7 @@ struct HtmlTableGeometry {
   double continuation_column_em{8.0};
   HtmlTableSlack slack{HtmlTableSlack::LastColumn};
   double max_autofit_viewports{2.0};  // auto-fit never exceeds this many viewport widths
+  double fit_margin_em{0.6};        // room a double-click fit leaves after the widest text, so the divider does not touch it
   std::size_t fit_sample_rows{48};  // rows read to size a column that has not been resized
   // A table of a model with more columns than this is sized from its headers alone: reading values for thousands of
   // columns would cost more than the first frame is worth, and a frame that wide scrolls sideways anyway.
@@ -117,6 +119,7 @@ struct HtmlTableGeometryPx {
   int column_max{0};
   int max_viewport_height{0};
   double max_autofit_viewports{0.0};
+  int fit_margin{0};
   std::string numeric_overflow_marker{};
 };
 
@@ -164,6 +167,7 @@ struct HtmlTableGeometryPx {
   out.column_max = px(g.column_max_em);
   out.max_viewport_height = px(g.max_viewport_height_em);
   out.max_autofit_viewports = g.max_autofit_viewports;
+  out.fit_margin = px(g.fit_margin_em);
   out.numeric_overflow_marker = g.numeric_overflow_marker;
   return out;
 }
@@ -226,6 +230,7 @@ struct HtmlTableGeometryCacheEntry {
   std::vector<bool> column_single_line{};  // after the user's widths are applied
   std::shared_ptr<void> measure_state{};   // per-cell measurements a column resize reuses
   std::vector<int> cell_heights{};
+  std::map<int, int> fitted_widths{};  // a model-painted table's double-click fits, by column key, for this revision
 };
 
 struct HtmlLayoutCache {

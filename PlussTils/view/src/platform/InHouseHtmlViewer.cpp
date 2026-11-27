@@ -1047,9 +1047,16 @@ bool show_inhouse_html_window(const std::string& title,
     int start_width{0};
     bool moved{false};  // the pointer has left the divider's handle: a press and release in place is a click
   } resize_drag;
+  // The last press on a column divider, to recognise a double-click where the system does not count clicks itself.
+  // The interval is the usual system double-click time; it is used only to pair two presses on the same divider.
+  constexpr double kDoubleClickSeconds = 0.5;
+  struct LastBorderPress {
+    std::string target{};
+    int column{-1};
+    std::chrono::steady_clock::time_point at{};
+  } last_border_press;
   std::string hover_resize_target;  // column border under the pointer
   int hover_resize_column = -1;
-  std::set<std::pair<std::string, int>> fitted_columns;  // columns currently auto-fitted (double-click toggles)
   std::string active_input_target;
   std::unordered_map<std::string, std::string> input_values;
   double widget_scale = 1.0;
@@ -1797,12 +1804,11 @@ bool show_inhouse_html_window(const std::string& title,
         // Dragging a header border: the column follows the pointer, wrapping live.
         const int dx = static_cast<int>(std::lround(event.x)) - resize_drag.start_x;
         // A click is not a drag: the pointer must leave the divider's own handle first. A trackpad moves a pixel or
-        // two during a double-click, and that must not count as resizing (it would cancel the fit it toggles).
+        // two during a double-click, and that must not count as resizing (it would undo the fit).
         if (!resize_drag.moved && std::abs(dx) <= window::detail::kResizeHandlePx / 2) {
           continue;
         }
         resize_drag.moved = true;
-        fitted_columns.erase({resize_drag.target, resize_drag.column});
         const auto geo = window::resolve_table_geometry(render_stats.table_font_px);
         table_column_widths[resize_drag.target][resize_drag.column] = std::clamp(
             resize_drag.start_width + dx, geo.min_resize,
@@ -1839,16 +1845,17 @@ bool show_inhouse_html_window(const std::string& title,
             // The header itself is only a target for hovering and layout; sorting belongs to the
             // up and down triangles (table.sort.asc / table.sort.desc), so a click here is ignored.
           } else if (hit.action == "table.resize.column") {
-            if (event.click_count >= 2) {
-              // Double-click on a border toggles that column: fit to its widest value (width 0 =
-              // auto-fit), then back to the default width, then fit again.
-              const std::pair<std::string, int> key{hit.target, hit.value};
-              if (fitted_columns.erase(key) > 0) {
-                table_column_widths[hit.target].erase(hit.value);
-              } else {
-                table_column_widths[hit.target][hit.value] = 0;
-                fitted_columns.insert(key);
-              }
+            const auto now = std::chrono::steady_clock::now();
+            const bool paired = last_border_press.target == hit.target && last_border_press.column == hit.value &&
+                                std::chrono::duration<double>(now - last_border_press.at).count() <= kDoubleClickSeconds;
+            last_border_press = {hit.target, hit.value, now};
+            if (event.click_count >= 2 || paired) {
+              last_border_press = {};  // a third press starts a new pair
+              // Double-click on a border fits that column to its header and widest value, as a spreadsheet does (a
+              // width of 0 asks the layout for the fit). It is a guide, not a toggle: a fitted column stays fitted,
+              // and a dragged one goes back to the fit.
+              resize_drag = ResizeDrag{};
+              table_column_widths[hit.target][hit.value] = 0;
               table_scroll_damage_only = false;
               needs_render = true;
             } else {
@@ -1879,7 +1886,6 @@ bool show_inhouse_html_window(const std::string& title,
               (void)save_svg();
             } else if (hit.target == "reset-table-view") {
               table_column_widths.clear();
-              fitted_columns.clear();
               layout_cache.clear();
               input_values["table-search"].clear();
               active_input_target.clear();
@@ -1987,7 +1993,6 @@ bool show_inhouse_html_window(const std::string& title,
       // not true of it.
       model_revision = virtual_table_model->revision();
       table_column_widths.clear();
-      fitted_columns.clear();
       layout_cache.clear();
       table_sort_column = -1;
       table_sort_target.clear();
