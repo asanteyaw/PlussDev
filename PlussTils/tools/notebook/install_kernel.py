@@ -88,7 +88,7 @@ def main():
     spec = {
         "argv": [sys.executable, os.path.join(HERE, "pluss_kernel.py"), "-f", "{connection_file}"],
         "display_name": "PlussII C++",
-        "language": "c++",
+        "language": "cpp",  # a VS Code language id: the Jupyter extension asks a kernel for completions under this exact name
         "env": {
             "PLUSS_CLANG_REPL": args.clang_repl,
             "PLUSS_SYSROOT": args.sysroot,

@@ -467,21 +467,40 @@ class PlussKernel(Kernel):
         return start
 
     @staticmethod
-    def _show_last_expression(code):
-        """A cell whose last statement is a bare expression shows it, as a notebook does: `df` on its own line, or
-        `auto df = load(); df` on one line."""
+    def _split_last_expression(code):
+        """(everything before it, the expression) when the last statement of the cell is a bare expression, such as `df`
+        on its own line or the `df` of `auto df = load(); df`; None when the cell ends with a declaration or a statement."""
         lines = code.rstrip().split("\n")
         line = lines[-1]
         if line.strip().startswith(("#", "%", "//")):
-            return code
+            return None
         start = PlussKernel._last_statement_start(line)
         head, last = line[:start], line[start:].strip()
         if not last or last[-1] in ";{}":
-            return code
+            return None
         if code.count("{") != code.count("}") or code.count("(") != code.count(")"):
+            return None
+        return "\n".join(lines[:-1] + [head]) if head else "\n".join(lines[:-1]), last
+
+    @staticmethod
+    def _show_last_expression(code):
+        """A cell whose last statement is a bare expression shows it, as a notebook does: `df` on its own line, or
+        `auto df = load(); df` on one line."""
+        split = PlussKernel._split_last_expression(code)
+        if split is None:
             return code
+        before, last = split
+        lines = code.rstrip().split("\n")
+        head = lines[-1][:PlussKernel._last_statement_start(lines[-1])]
         lines[-1] = head + " pluss::nb::show(" + last + ");" if head else "pluss::nb::show(" + last + ");"
         return "\n".join(lines)
+
+    @staticmethod
+    def _declarations_of(code):
+        """The cell as the completer reads it: without a final bare expression, which only shows a value, declares
+        nothing, and without a semicolon would run into the next cell's first line."""
+        split = PlussKernel._split_last_expression(code)
+        return code if split is None else split[0]
 
     def _fail(self, silent, ename, evalue, text):
         """Report a failed cell the way a notebook expects: an error message on the output channel (so the cell is
@@ -573,7 +592,7 @@ class PlussKernel(Kernel):
                 self.send_response(self.iopub_socket, "stream", {"name": "stderr", "text": err})
         if failed:
             return self._fail(silent, "CompileError", first_error, err)
-        self._history.append(code)
+        self._history.append(self._declarations_of(code))
         return {"status": "ok", "execution_count": self.execution_count, "payload": [], "user_expressions": {}}
 
     def _restart_engine(self):

@@ -148,6 +148,10 @@ def main():
         check("names complete", "cout" in names, names)
         check("a variable from an earlier cell completes", "sv" in completions("s"), "sv not offered")
         check("a dot offers the members of the variable", "sum" in completions("sv."), "sum not offered after sv.")
+        run("sv")  # a cell that ends in a bare expression shows its value and declares nothing
+        run("pluss::Series after_shown = pluss::make_series({4.0, 5.0});")
+        check("a variable declared after a cell that only showed a value completes", "after_shown" in completions("after_s"), "after_shown not offered")
+        check("and its members", "sum" in completions("after_shown."), "sum not offered after after_shown.")
     finally:
         km.shutdown_kernel(now=True)
     print("%d check(s) failed" % len(failures))
