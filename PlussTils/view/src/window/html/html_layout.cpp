@@ -2340,6 +2340,7 @@ struct TableLayout {
           target = std::clamp(fit_column_width_px(document, rows, source, style, viewport_width, rows.size()) + geometry_px.fit_margin,
                               geometry_px.min_resize,
                               static_cast<int>(std::lround(content_w * geometry_px.max_autofit_viewports)));
+          target = std::max(target, -width);  // a fit only widens: never narrower than the column was
         }
         plan.widths[static_cast<std::size_t>(column)] = std::max(geometry_px.min_resize, target);
         plan.single_line[static_cast<std::size_t>(column)] = false;  // a column the user sized is not squeezed
@@ -3617,9 +3618,9 @@ int render_virtual_table(
           };
     }
   }
-  // Double-click on a divider (a width of 0 among the user's widths) fits that column the way a spreadsheet does: as wide
-  // as its header and its widest value over every row of the model, plus a margin so the divider does not touch the
-  // text. The widths are measured once per column and kept until the model changes.
+  // Double-click on a divider (a width of 0 or less among the user's widths) fits that column the way a spreadsheet does:
+  // as wide as its header and its widest value over every row of the model, plus a margin so the divider does not touch
+  // the text, and never narrower than it was. The widths are measured once per column and kept until the model changes.
   HtmlTableGeometryCacheEntry* fit_cache = nullptr;
   if (render_config.layout_cache != nullptr) {
     const auto found = render_config.layout_cache->tables.find(table_target);
@@ -3665,7 +3666,8 @@ int render_virtual_table(
     if (dragged_widths == nullptr) return 0;
     const auto it = dragged_widths->find(key);
     if (it == dragged_widths->end()) return 0;
-    return it->second > 0 ? std::max(virtual_geo.min_resize, it->second) : fit_all(key);
+    // A width of 0 or less is a double-click's fit, which only widens: never narrower than -width, the column's width then.
+    return it->second > 0 ? std::max(virtual_geo.min_resize, it->second) : std::max(fit_all(key), -it->second);
   };
   row_header_w = user_width(0) > 0 ? user_width(0) : natural.label;
   // What the columns have to share: the panel less the label column (the least the view can be is a sliver, so a

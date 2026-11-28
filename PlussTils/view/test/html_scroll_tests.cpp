@@ -1099,9 +1099,14 @@ void test_virtual_table_double_click_fits_a_squeezed_column() {
   widths[target][1] = 0;  // a second double-click: the column stays fitted (a guide, not a toggle)
   expect(column_width(&widths).second == fitted, "double-clicking a fitted column leaves it as it is");
   widths[target][1] = geo.min_resize;  // dragged narrow
-  expect(column_width(&widths).second < fitted, "a drag still sizes the column freely");
-  widths[target][1] = 0;  // and a double-click brings it back to the fit
-  expect(column_width(&widths).second == fitted, "double-clicking a dragged column returns it to the fit");
+  const int narrow = column_width(&widths).second;
+  expect(narrow < fitted, "a drag still sizes the column freely");
+  widths[target][1] = -narrow;  // a double-click (the viewer passes the column's width as it is)
+  expect(column_width(&widths).second == fitted, "double-clicking a narrowed column widens it to the fit");
+  widths[target][1] = fitted + 200;  // dragged wider than its content
+  const int wide = column_width(&widths).second;
+  widths[target][1] = -wide;  // a double-click
+  expect(column_width(&widths).second == wide, "double-clicking never narrows a column: only a drag does");
 }
 
 void test_no_matching_rows_is_centred() {

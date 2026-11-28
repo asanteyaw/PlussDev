@@ -1851,11 +1851,11 @@ bool show_inhouse_html_window(const std::string& title,
             last_border_press = {hit.target, hit.value, now};
             if (event.click_count >= 2 || paired) {
               last_border_press = {};  // a third press starts a new pair
-              // Double-click on a border fits that column to its header and widest value, as a spreadsheet does (a
-              // width of 0 asks the layout for the fit). It is a guide, not a toggle: a fitted column stays fitted,
-              // and a dragged one goes back to the fit.
+              // Double-click on a border widens that column to its header and widest value, as a spreadsheet does, and
+              // never narrows it (narrowing is the drag's). A width of 0 or less asks the layout for the fit, and its
+              // size is the least the column keeps: the width it has now (hit.aux).
               resize_drag = ResizeDrag{};
-              table_column_widths[hit.target][hit.value] = 0;
+              table_column_widths[hit.target][hit.value] = -std::max(0, hit.aux);
               table_scroll_damage_only = false;
               needs_render = true;
             } else {
