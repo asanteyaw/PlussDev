@@ -16,8 +16,7 @@ function originFor(request) {
   const origin = request.headers.origin;
   if (origin && origin !== `https://${host}` && origin !== `http://${host}` &&
       origin !== 'https://chatgpt.com') return null;
-  return preview || production && deployed ? `https://${deployed}` :
-    local ? `http://${host}` : `https://${host}`;
+  return local ? `http://${host}` : `https://${host}`;
 }
 
 function handlerFor(origin) {
