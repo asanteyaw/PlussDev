@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: fed5918830cc -->
+<!-- pluss-signature-hash: 3041f4c7bf86 -->
 
 # Slot::head
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slot Slot::head(std::int64_t n) const
+Slot Slot::head(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Returns a new slot holding the first `n` values.
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of leading values to keep. Clamped to `[0, size()]` — never
 throws for an out-of-range `n`.
@@ -58,6 +58,29 @@ std::cout << out.size();
 ```text
 3
 ```
+
+Example 3. Call `head()` with no argument on a slot of seven cells, Series and Note mixed; `n` defaults to 5.
+
+```cpp
+auto slot = pluss::scribble::Slot({
+    pluss::make_series(1), pluss::make_note("two"), pluss::make_series(3), pluss::make_note("four"),
+    pluss::make_series(5), pluss::make_note("six"), pluss::make_series(7)});
+
+std::cout << slot.head();
+```
+
+### Output
+
+```text
+0  1
+1  two
+2  3
+3  four
+4  5
+ptype: Mixed (Series, Note)
+```
+
+The first five cells come back with their kinds unchanged, so the footer still reads Mixed.
 
 ## Notes
 

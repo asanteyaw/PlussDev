@@ -93,6 +93,16 @@ template <class T>
 void show(T&& value) {
   show_(value, as_figure{});
 }
+// A cell's last expression is sent as display(((expression), shown{})): a value meets this comma operator and is shown;
+// an expression with no value (df.info() prints its report itself and returns nothing) meets the built-in comma and is
+// only run. A lambda would say the same more plainly, but clang's interpreter cannot run one that returns a value here.
+struct shown {};
+template <class T>
+shown operator,(T&& value, shown) {
+  show(value);
+  return {};
+}
+inline void display(shown) {}
 }  // namespace pluss::nb
 '''
 
@@ -157,8 +167,10 @@ ENGINE_BROKEN = ("JIT session error", "Failed to materialize symbols")
 
 # One line of the compiler's report that starts a diagnostic: "cell:1:17: error: use of undeclared identifier 'b'".
 DIAGNOSTIC = re.compile(r"^(?P<file>\S[^:]*):(?P<line>\d+):(?P<column>\d+): (?P<kind>fatal error|error|warning|note): (?P<message>.*)$")
-# What the kernel wraps a cell's last expression in so that it is shown; a reader never sees it.
-SHOW_CALL = "pluss::nb::show("
+# What the kernel wraps a cell's last expression in so that it is shown; a reader never sees it. One that has no value
+# (df.info() prints and returns void) is run instead of shown (see display() in the prelude).
+SHOW_CALL = "pluss::nb::display((("
+SHOW_END = "), pluss::nb::shown{}));"
 
 
 def format_compile_error(report, code, sent, undef_lines, number):
@@ -573,7 +585,7 @@ class PlussKernel(Kernel):
         before, last = split
         lines = code.rstrip().split("\n")
         head = lines[-1][:PlussKernel._last_statement_start(lines[-1])]
-        lines[-1] = head + " pluss::nb::show(" + last + ");" if head else "pluss::nb::show(" + last + ");"
+        lines[-1] = head + " " + SHOW_CALL + last + SHOW_END if head else SHOW_CALL + last + SHOW_END
         return "\n".join(lines)
 
     @staticmethod

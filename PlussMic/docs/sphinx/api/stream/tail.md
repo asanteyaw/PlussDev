@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 647145cc82f1 -->
+<!-- pluss-signature-hash: aec77d2a8c00 -->
 
 # Stream::tail
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream Stream::tail(std::int64_t n) const
+Stream Stream::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -19,7 +19,7 @@ clamps to the whole stream, and `n <= 0` returns an empty stream, rather than th
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of trailing rows to keep.
 
@@ -45,6 +45,27 @@ std::cout << stream.tail(2);
 1  50
 ptype: Series
 ```
+
+Example 2. Call `tail()` with no argument on a stream of eight values; `n` defaults to 5.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0}));
+
+std::cout << stream.tail();
+```
+
+### Output
+
+```text
+0  40
+1  50
+2  60
+3  70
+4  80
+ptype: Series
+```
+
+With no argument the stream keeps its last five entries, the values 40 to 80.
 
 ## Notes
 

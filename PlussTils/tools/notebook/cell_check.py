@@ -25,6 +25,13 @@ sys.path.insert(0, HERE)
 import pluss_kernel as kernel  # noqa: E402  (the kernel's compiler setup and cell rules, so the two never differ)
 
 DIAGNOSTIC = re.compile(r"^cell:(\d+):(\d+): (error|warning): (.*)$")
+# What is underlined while typing: code that does not parse and names that do not exist. Everything else the compiler can
+# say (a type that does not fit, an overload that does not match) is reported when the cell runs, where it can be read
+# whole; underlining it as it is typed would mostly flag code that is half written.
+UNDERLINED = re.compile(
+    r"^(expected |use of undeclared identifier|unknown type name|no member named|no type named|no template named|"
+    r"undeclared identifier|unterminated|extraneous|missing terminating|unknown (?:class|namespace)|"
+    r"'[^']*' is not a (?:class, namespace, or enumeration|member of|type))")
 
 
 def shown_line_shift(cell, text):
@@ -57,11 +64,13 @@ def diagnostics(compiler, earlier, cell):
         message = match.group(4)
         if kernel.REDEFINED.search(line):
             continue  # a cell run again: the kernel renames it
+        if match.group(3) != "error" or not UNDERLINED.match(message):
+            continue
         row, column = int(match.group(1)), int(match.group(2))
         if shift is not None and row == shift[0]:
             column = max(1, column - shift[2]) if column > shift[1] else max(1, shift[1] - shift[2] + 1)
         found.append({"line": row, "column": column, "severity": match.group(3),
-                      "message": message.replace("pluss::nb::show(", "").rstrip()})
+                      "message": message.replace(kernel.SHOW_CALL, "").replace(kernel.SHOW_END, "").rstrip()})
     return found
 
 

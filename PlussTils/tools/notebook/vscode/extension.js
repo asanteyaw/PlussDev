@@ -128,6 +128,10 @@ async function checkCell(notebook, cell) {
   const version = cell.document.version;
   const found = await checker.check(earlier, cell.document.getText());
   if (cell.document.version !== version) return;  // typed on since: a newer check is coming
+  if (found.length === 0) {
+    problems.delete(cell.document.uri);  // fixed: nothing stays underlined
+    return;
+  }
   problems.set(cell.document.uri, found.map((d) => {
     const diagnostic = new vscode.Diagnostic(rangeOf(cell.document, d.line, d.column), d.message,
       d.severity === "warning" ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
@@ -154,8 +158,10 @@ function activate(context) {
   problems = vscode.languages.createDiagnosticCollection("PlussII");
   context.subscriptions.push(problems);
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
+    // The cell is found by its document's address: the event's document object is not always the one the notebook holds.
+    const changed = event.document.uri.toString();
     for (const notebook of vscode.workspace.notebookDocuments) {
-      const cell = notebook.getCells().find((c) => c.document === event.document);
+      const cell = notebook.getCells().find((c) => c.document.uri.toString() === changed);
       if (cell) scheduleFrom(notebook, cell.index);
     }
   }));

@@ -4042,14 +4042,18 @@ constexpr std::int64_t kNotebookRowLimit = 60;  // up to this many cases, every 
 constexpr std::int64_t kNotebookEdgeRows = 5;   // beyond it, this many from each end
 
 // The look is the one a notebook reader knows from a data-frame table: no vertical rules, one rule under the header,
-// everything right-aligned, a bold case column, alternate rows tinted and the row under the pointer highlighted.
+// values starting in one line (left-aligned, a number's minus sign standing just before it), a bold case column,
+// alternate rows tinted and the row under the pointer highlighted.
 // Every colour is here; the text and the background are the notebook's own.
 constexpr const char* kNotebookStyle =
     ".pluss-table{--pluss-rule:rgba(128,128,128,.45);--pluss-stripe:rgba(128,128,128,.08);"
     "--pluss-hover:rgba(128,128,128,.18);--pluss-null:#d6453d;--pluss-muted:rgba(128,128,128,.9);"
     "display:block;overflow-x:auto;margin:.25em 0}"
     ".pluss-table table{border-collapse:collapse;border:none;font-size:.92em;font-variant-numeric:tabular-nums}"
-    ".pluss-table th,.pluss-table td{padding:.45em .7em;border:none;text-align:right;white-space:nowrap;vertical-align:middle}"
+    ".pluss-table th,.pluss-table td{padding:.45em .7em;border:none;text-align:left;white-space:nowrap;vertical-align:middle}"
+    // A number column keeps a slot for the minus sign in front of every value, so values start in one line and a
+    // negative one's sign stands just left of it.
+    ".pluss-table .sign{display:inline-block;width:.45em;text-align:right}"
     ".pluss-table thead{border-bottom:1px solid var(--pluss-rule);vertical-align:bottom}"
     ".pluss-table th{font-weight:700}"
     ".pluss-table tbody tr:nth-child(even){background:var(--pluss-stripe)}"
@@ -4081,6 +4085,15 @@ std::string notebook_model_html_(const pluss::view::VirtualTableModel& model, co
   }
   html += "</tr></thead><tbody>";
   const bool cut = rows > kNotebookRowLimit;
+  std::vector<bool> numeric(static_cast<std::size_t>(std::max<std::int64_t>(columns, 0)));
+  for (std::int64_t c = 0; c < columns; ++c) numeric[static_cast<std::size_t>(c)] = model.column_numeric(c);
+  // A value of a number column, after the sign slot: "-INF" puts its minus in the slot, so INF lines up with 42 and NULL.
+  const auto value_html = [&](const std::string& text, const std::int64_t column) {
+    if (!numeric[static_cast<std::size_t>(column)]) return escape_html_(text);
+    const bool negative = !text.empty() && text.front() == '-';
+    return std::string("<span class=\"sign\">") + (negative ? "-" : "") + "</span>" +
+           escape_html_(negative ? text.substr(1) : text);
+  };
   const auto write_row = [&](const std::int64_t row) {
     html += "<tr><th>" + escape_html_(model.row_label(row)) + "</th>";
     for (std::int64_t c = 0; c < columns; ++c) {
@@ -4088,7 +4101,7 @@ std::string notebook_model_html_(const pluss::view::VirtualTableModel& model, co
       if (cell.absent) {
         html += "<td></td>";  // the column has no entry here: nothing is drawn, and it is not a NULL
       } else {
-        html += std::string(cell.missing ? "<td class=\"null\">" : "<td>") + escape_html_(cell.text) + "</td>";
+        html += std::string(cell.missing ? "<td class=\"null\">" : "<td>") + value_html(cell.text, c) + "</td>";
       }
     }
     html += "</tr>";

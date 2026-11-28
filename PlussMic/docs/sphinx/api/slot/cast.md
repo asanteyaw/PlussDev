@@ -56,7 +56,7 @@ Example 2. Pass `options` to force a specific target dtype.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
 pluss::table::ShelfCastOptions options;
-options.series_dtype = pluss::codem::ScalarType::Float64;
+options.series_dtype = pluss::ScalarType::Float64;
 auto out = slot.cast(options).series();
 std::cout << std::get<pluss::Series>(out.at(0)).host<double>()[0];
 ```

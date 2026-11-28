@@ -237,7 +237,7 @@ void test_notebook_table_is_a_plain_fragment() {
          "a notebook table is a fragment: no page and no scripts");
   expect(!has(html, "min-height") && !has(html, "100vh"), "a notebook table has no height of its own");
   expect(has(html, "class=\"pluss-table\""), "its styles are scoped to the table");
-  expect(has(html, "class=\"null\">NULL"), "a missing value is marked");
+  expect(has(html, "class=\"null\"><span class=\"sign\"></span>NULL"), "a missing value is marked, in line with the values");
   expect(has(html, "&hellip;"), "a long frame is cut to its first and last rows");
   expect(has(html, "200 cases"), "the footer says how many cases there are in all");
   expect(!has(html, "<td>100</td>"), "the cut rows are not written out");
@@ -264,6 +264,10 @@ void test_notebook_shows_each_type_in_its_own_shape() {
   expect(has(catalog_text, "pluss-mime text/html") && has(catalog_text, "<table"), "a catalog is an HTML table");
   expect(has(catalog_text, "a &middot; 3") || has(catalog_text, "a \u00b7 3"), "whose headers say how long each key is");
   expect(has(catalog_text, "<td></td>"), "and whose missing entries are blank");
+  const auto signs = DataFrame({{"v", Shelf(pluss::make_series(std::vector<double>{-2.5, 3.0}))}});
+  const auto signs_html = pluss::table::display::render_notebook_html(signs);
+  expect(has(signs_html, "<span class=\"sign\">-</span>2.5") && has(signs_html, "<span class=\"sign\"></span>3"),
+         "a number column's values start in one line, a minus sign standing just before its value");
   expect(has(catalog_text, "class=\"meter\"><span style=\"width:100.0%\"") &&
              has(catalog_text, "class=\"meter\"><span style=\"width:33.3%\""),
          "and whose headers show each key's length against the longest as a bar, as the window does");

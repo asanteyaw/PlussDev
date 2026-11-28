@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ea5e08ef860c -->
+<!-- pluss-signature-hash: c2e40205cfb3 -->
 
 # Catalog::tail
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog Catalog::tail(std::int64_t n) const
+Catalog Catalog::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -19,7 +19,7 @@ independently per stream, so it works even on a ragged catalog.
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 Number of trailing rows to keep from each stream.
 
@@ -51,12 +51,41 @@ std::cout << out;
 kindle::Catalog  keys=2
 keys: [id, city]
 ------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
+key                      | kind         | dtype            | cs      | preview
 ------------------------------------------------------------------------------------------------------------------------
-id                       | Series       | Series[float64]  | 2       | [4, 5]                                           
-city                     | Note         | Note             | 2       | [Ho, Cape Coast]                                 
+id                       | Series       | Series[float64]  | 2       | [4, 5]
+city                     | Note         | Note             | 2       | [Ho, Cape Coast]
 ========================================================================================================================
 ```
+
+Example 2. Call `tail()` with no argument on a catalog whose `id` stream has seven entries and whose `city` stream has three; `n` defaults to 5.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k   = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+std::cout << ct.tail();
+```
+
+### Output
+
+```text
+========================================================================================================================
+kindle::Catalog  keys=2
+keys: [id, city]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview
+------------------------------------------------------------------------------------------------------------------------
+id                       | Series       | Series[float64]  | 5       | [3, 4, 5, ..., 7]
+city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]
+========================================================================================================================
+```
+
+Each stream is cut on its own: `id` keeps its last five entries, 3 to 7, while `city` has fewer than five and keeps all three.
 
 ## Notes
 

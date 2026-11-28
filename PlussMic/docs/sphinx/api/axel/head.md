@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 77488733cfce -->
+<!-- pluss-signature-hash: 92848f5e6b98 -->
 
 # Axel::head
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Axel Axel::head(std::int64_t n) const
+Axel Axel::head(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -18,7 +18,7 @@ Returns the first `n` registry frames (depth-wise), clamped to
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of leading frames to keep. Values greater than `depth()`
 are clamped down to `depth()`; negative values are clamped up to
@@ -71,6 +71,46 @@ std::cout << out.depth();
 ```text
 2
 ```
+
+Example 3. Call `head()` with no argument on a axel of seven registries; `n` defaults to 5.
+
+```cpp
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(0)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(4)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(5)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(6)})}}),
+});
+
+auto out = axel.head();
+std::cout << "depth " << out.depth() << "\n";
+for (std::int64_t i = 0; i < out.depth(); ++i) std::cout << out.registry(i).fields("ids") << "\n";
+```
+
+### Output
+
+```text
+depth 5
+0  0
+ptype: Series
+
+0  1
+ptype: Series
+
+0  2
+ptype: Series
+
+0  3
+ptype: Series
+
+0  4
+ptype: Series
+```
+
+With no argument the axel keeps its first five registries, so the depth is 5 and the ids run 0 to 4.
 
 ## Notes
 

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 6b60baa6026e -->
+<!-- pluss-signature-hash: 8c660d74cd56 -->
 
 # Stream::head
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream Stream::head(std::int64_t n) const
+Stream Stream::head(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -19,7 +19,7 @@ stream rather than throwing; `n <= 0` returns an empty stream rather than throwi
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of leading rows to keep.
 
@@ -64,6 +64,27 @@ head(100) size: 3
 head(0) size: 0
 head(-1) size: 0
 ```
+
+Example 3. Call `head()` with no argument on a stream of eight values; `n` defaults to 5.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0}));
+
+std::cout << stream.head();
+```
+
+### Output
+
+```text
+0  10
+1  20
+2  30
+3  40
+4  50
+ptype: Series
+```
+
+With no argument the stream keeps its first five entries, positions 0 to 4.
 
 ## Notes
 

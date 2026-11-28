@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slot Slot::astype(pluss::codem::ScalarType dtype) const
+Slot Slot::astype(pluss::ScalarType dtype) const
 ```
 
 ## What It Does
@@ -18,7 +18,7 @@ shorthand for `cast(ShelfCastOptions{.series_dtype = dtype}).series()`.
 
 ## Parameters
 
-**dtype** (`pluss::codem::ScalarType`)
+**dtype** (`pluss::ScalarType`)
 
 The target numeric scalar dtype (e.g. `Int64`, `Float64`, `Bool`).
 
@@ -33,7 +33,7 @@ Example 1. Cast an `int64` `Series` slot to `float64`.
 
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
-auto out = slot.astype(pluss::codem::ScalarType::Float64);
+auto out = slot.astype(pluss::ScalarType::Float64);
 std::cout << out.to_json();
 ```
 
@@ -56,7 +56,7 @@ does.
 
 ```cpp
 auto single = pluss::scribble::Slot({pluss::make_series(1)});
-auto out = single.astype(pluss::codem::ScalarType::Float64);
+auto out = single.astype(pluss::ScalarType::Float64);
 std::cout << out.to_json();
 ```
 

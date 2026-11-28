@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2969d40a1dd5 -->
+<!-- pluss-signature-hash: 39eae28fe7ff -->
 
 # Registry::head
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Registry Registry::head(std::int64_t n) const
+Registry Registry::head(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ ragged registry, `head(n)` can leave fields with different sizes than each other
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of leading values to keep per field. Values less than `0` are
 clamped to `0`.
@@ -82,6 +82,37 @@ std::cout << "a: " << sizes["a"] << ", b: " << sizes["b"];
 ```text
 a: 3, b: 2
 ```
+
+Example 3. Call `head()` with no argument on a registry whose `id` field has seven cells and whose `city` field has three; `n` defaults to 5.
+
+```cpp
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3), pluss::make_series(4),
+                                  pluss::make_series(5), pluss::make_series(6), pluss::make_series(7)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.head();
+std::cout << out.fields("id") << "\n" << out.fields("city");
+```
+
+### Output
+
+```text
+0  1
+1  2
+2  3
+3  4
+4  5
+ptype: Series
+
+0  Accra
+1  Tema
+2  Kumasi
+ptype: Note
+```
+
+Each field is cut on its own: `id` keeps five cells, while `city` has only three and keeps them all.
 
 ## Notes
 

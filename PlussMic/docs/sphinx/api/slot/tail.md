@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 8c9916d4ad94 -->
+<!-- pluss-signature-hash: 69e9a946d502 -->
 
 # Slot::tail
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slot Slot::tail(std::int64_t n) const
+Slot Slot::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Returns a new slot holding the last `n` values.
 
 ## Parameters
 
-**n** (`std::int64_t`)
+**n** (`std::int64_t`, default `5`)
 
 The number of trailing values to keep. Clamped to `[0, size()]` —
 never throws for an out-of-range `n`.
@@ -44,6 +44,29 @@ std::cout << "size=" << out.size() << " vals="
 ```text
 size=2 vals=2,3
 ```
+
+Example 2. Call `tail()` with no argument on a slot of seven cells, Series and Note mixed; `n` defaults to 5.
+
+```cpp
+auto slot = pluss::scribble::Slot({
+    pluss::make_series(1), pluss::make_note("two"), pluss::make_series(3), pluss::make_note("four"),
+    pluss::make_series(5), pluss::make_note("six"), pluss::make_series(7)});
+
+std::cout << slot.tail();
+```
+
+### Output
+
+```text
+0  3
+1  four
+2  5
+3  six
+4  7
+ptype: Mixed (Series, Note)
+```
+
+The last five cells come back with their kinds unchanged, so the footer still reads Mixed.
 
 ## Notes
 

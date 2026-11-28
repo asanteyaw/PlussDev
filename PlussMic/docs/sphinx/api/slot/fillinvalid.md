@@ -47,27 +47,15 @@ Example 1. Replace every NULL, NaN and infinity with `0.0`.
 ```cpp
 using namespace pluss::scribble;
 
-const double nan = std::numeric_limits<double>::quiet_NaN();
-const double inf = std::numeric_limits<double>::infinity();
-
-// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
-auto column = [](const Slot& slot) {
-    std::vector<double> values;
-    std::vector<bool> present;
-    for (std::int64_t i = 0; i < slot.size(); ++i) {
-        const auto& cell = slot.at(i);
-        present.push_back(!std::holds_alternative<std::monostate>(cell));
-        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
-    }
-    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
-};
+const double nan = pluss::series::scalar_nan;
+const double inf = pluss::series::scalar_inf;
 
 auto x = Slot({
     pluss::make_series({1.0}), pluss::make_series({nan}), pluss::make_series({inf}),
     pluss::make_series({-inf}), std::monostate{}, pluss::make_series({5.0})});
 
 auto out = x.fillinvalid(0.0);
-std::cout << column(out) << "\n";
+std::cout << out << "\n";
 ```
 
 ### Output
@@ -89,27 +77,15 @@ Example 2. A different value for each kind: chain the single-kind fills instead.
 ```cpp
 using namespace pluss::scribble;
 
-const double nan = std::numeric_limits<double>::quiet_NaN();
-const double inf = std::numeric_limits<double>::infinity();
-
-// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
-auto column = [](const Slot& slot) {
-    std::vector<double> values;
-    std::vector<bool> present;
-    for (std::int64_t i = 0; i < slot.size(); ++i) {
-        const auto& cell = slot.at(i);
-        present.push_back(!std::holds_alternative<std::monostate>(cell));
-        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
-    }
-    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
-};
+const double nan = pluss::series::scalar_nan;
+const double inf = pluss::series::scalar_inf;
 
 auto x = Slot({
     pluss::make_series({1.0}), pluss::make_series({nan}), pluss::make_series({inf}),
     pluss::make_series({-inf}), std::monostate{}, pluss::make_series({5.0})});
 
 auto out = x.fillnull(0.0).fillnan(-1.0).fillposinf(100.0).fillneginf(-100.0);
-std::cout << column(out) << "\n";
+std::cout << out << "\n";
 ```
 
 ### Output
@@ -131,24 +107,12 @@ Example 3. Integer data holds nothing to fill (and has no NULL here), so it is u
 ```cpp
 using namespace pluss::scribble;
 
-// A slot cell holds a Series; print a slot of one-number cells the way a column prints (an empty cell is NULL, a true/false cell is 1/0).
-auto column = [](const Slot& slot) {
-    std::vector<double> values;
-    std::vector<bool> present;
-    for (std::int64_t i = 0; i < slot.size(); ++i) {
-        const auto& cell = slot.at(i);
-        present.push_back(!std::holds_alternative<std::monostate>(cell));
-        values.push_back(present.back() ? std::get<pluss::Series>(cell).to(pluss::codem::ScalarType::Float64).host<double>()[0] : 0.0);
-    }
-    return pluss::table::Shelf(pluss::make_series(values), pluss::make_series(present));
-};
-
 auto x = Slot({
     pluss::make_series(std::vector<std::int64_t>{1}), pluss::make_series(std::vector<std::int64_t>{2}), pluss::make_series(std::vector<std::int64_t>{3}),
     pluss::make_series(std::vector<std::int64_t>{4}), pluss::make_series(std::vector<std::int64_t>{5}), pluss::make_series(std::vector<std::int64_t>{6})});
 
 auto out = x.fillinvalid(0.0);
-std::cout << column(out) << "\n";
+std::cout << out << "\n";
 ```
 
 ### Output
@@ -170,8 +134,8 @@ Example 4. A fill reaches inside a cell that holds a list.
 ```cpp
 using namespace pluss::scribble;
 
-const double nan = std::numeric_limits<double>::quiet_NaN();
-const double inf = std::numeric_limits<double>::infinity();
+const double nan = pluss::series::scalar_nan;
+const double inf = pluss::series::scalar_inf;
 
 auto x = Slot({
     pluss::make_series({1.0, 2.0}), pluss::make_series({1.0, nan}), pluss::make_series({2.0, inf}),
