@@ -56,13 +56,16 @@ export function createDocsCatalog(readText, { baseUrl = 'https://plussible.org',
     const requested = terms(query);
     if (!requested.length) throw new Error('Provide a specific API name or computing task to search');
     const phrase = normalize(query).trim();
+    const canonicalPhrase = phrase.replace(/[^\p{L}\p{N}_]+/gu, ' ').trim().replace(/\s+/g, ' ');
     const scored = [];
     for (const entry of current.entries) {
       if (space && entry.space !== space) continue;
       const title = normalize(entry.title);
+      const canonicalTitle = title.replace(/[^\p{L}\p{N}_]+/gu, ' ').trim().replace(/\s+/g, ' ');
       const slug = normalize(entry.slug);
       const source = normalize(entry.source);
-      let score = title.includes(phrase) ? 50 : 0;
+      let score = canonicalTitle === canonicalPhrase ? 100 :
+        canonicalTitle.includes(canonicalPhrase) ? 50 : title.includes(phrase) ? 50 : 0;
       let hits = 0;
       for (const term of requested) {
         if (title.includes(term)) { score += 12; hits++; }

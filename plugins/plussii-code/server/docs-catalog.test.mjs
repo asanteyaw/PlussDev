@@ -21,6 +21,8 @@ test('searches the published index without reading every page', async () => {
   assert.equal(reads, 2);
   await catalog.search('Series mean');
   assert.equal(reads, 2);
+  const exact = await catalog.search('Series mean');
+  assert.equal(exact.results[0].slug, 'qit/api/series/mean');
 });
 
 test('reads only selected pages and pins the revision', async () => {
