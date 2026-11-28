@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "plussii-code",
+  "version": "0.1.0",
+  "description": "Write and explain PlussII C++ programs using the published documentation.",
+  "author": {
+    "name": "Plussible",
+    "url": "https://plussible.org"
+  },
+  "homepage": "https://plussible.org",
+  "license": "BSD-3-Clause",
+  "keywords": ["plussii", "c++", "technical-computing"]
+}
